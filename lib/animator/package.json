@@ -13,7 +13,7 @@
     "three": "^0.184.0"
   },
   "dependencies": {
-    "@workspace/assets": "*"
+    "@workspace/assets": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

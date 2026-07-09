@@ -6,6 +6,8 @@ import { addStudioLights, STUDIO_FOG, STUDIO_TONE_MAPPING_EXPOSURE } from "./stu
 import { DjBooth } from "./DjBooth";
 import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
+import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
+import { parseGrudgeAvatarId } from "../lib/raceModel";
 import { Controller } from "./Controller";
 import { Recoil, fovKick, screenCenterRay } from "./aim/AimSystem";
 import { Vfx } from "./Vfx";
@@ -865,13 +867,33 @@ export class Studio {
 
   private async spawnCharacter(id: string) {
     const token = ++this.loadToken;
+    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race FBX
+    // (the active fleet character's race); anything else is a catalog rig.
+    const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
-    const next: Avatar = def.procedural ? new ExplorerCharacter(def) : new Character(def);
+    let next: Avatar = grudge
+      ? new GrudgeAvatar(grudge.raceId, grudge.presetId)
+      : def.procedural
+        ? new ExplorerCharacter(def)
+        : new Character(def);
     try {
       await next.load();
     } catch (err) {
       console.error("[Studio] character load failed", err);
-      return;
+      // The grudge6 race FBX can fail (asset host / CORS); fall back to the
+      // procedural Explorer so the surface always has a playable avatar.
+      if (!grudge) return;
+      next.dispose();
+      if (this.disposed || token !== this.loadToken) return;
+      const exDef = getCharacter("explorer");
+      next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
+      try {
+        await next.load();
+      } catch (err2) {
+        console.error("[Studio] fallback character load failed", err2);
+        return;
+      }
+      id = exDef.id;
     }
     // Discard stale loads — only the most recent selection may commit.
     if (this.disposed || token !== this.loadToken) {

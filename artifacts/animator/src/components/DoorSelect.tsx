@@ -1,13 +1,14 @@
 interface Props {
-  onEnter: (mode: "danger" | "voxel" | "editor" | "lobby" | "ledmask") => void;
+  onEnter: (
+    mode: "danger" | "voxel" | "editor" | "lobby" | "ledmask" | "zones" | "brawl",
+  ) => void;
 }
 
 /**
- * The facility entrance: five glowing doors. The first drops into the live
- * Danger Room combat sandbox; the second opens the Voxel Map Editor; the third
- * opens the Dressing Room (character models, weapons, animations & effects);
- * the fourth opens the multiplayer / community Lobby; the last opens the Voxel
- * LED Mask studio.
+ * The facility entrance: glowing doors into every surface. Danger Room (live
+ * combat sandbox), Voxel Map Editor, Dressing Room (models, weapons, anims &
+ * effects), the multiplayer / community Lobby, GRUDOX Zones (the shared GRUDOX
+ * world), the native Ruins Brawler co-op mode, and the Voxel LED Mask studio.
  */
 export function DoorSelect({ onEnter }: Props) {
   return (
@@ -50,6 +51,22 @@ export function DoorSelect({ onEnter }: Props) {
           </div>
           <h3>The Lobby</h3>
           <p>Join a multiplayer room, or browse community maps &amp; scenes to play instantly.</p>
+        </button>
+
+        <button className="door door-zones" onClick={() => onEnter("zones")}>
+          <div className="door-frame">
+            <div className="door-glyph">◆</div>
+          </div>
+          <h3>GRUDOX Zones</h3>
+          <p>Enter the shared GRUDOX world — brawler, racer, sword survival &amp; the open world, character in tow.</p>
+        </button>
+
+        <button className="door door-brawl" onClick={() => onEnter("brawl")}>
+          <div className="door-frame">
+            <div className="door-glyph">⛨</div>
+          </div>
+          <h3>Ruins Brawler</h3>
+          <p>Top-down twin-stick co-op survival — live multiplayer in the GRUDOX ruins.</p>
         </button>
 
         <button className="door door-ledmask" onClick={() => onEnter("ledmask")}>

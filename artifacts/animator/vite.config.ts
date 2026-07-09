@@ -45,6 +45,10 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/carrier-net/src/index.ts",
       ),
+      "@workspace/brawl-net": path.resolve(
+        import.meta.dirname,
+        "../../lib/brawl-net/src/index.ts",
+      ),
       "@workspace/animator": path.resolve(
         import.meta.dirname,
         "../../lib/animator/src/index.ts",

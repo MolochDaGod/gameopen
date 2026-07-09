@@ -21,6 +21,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Boxes,
   ChevronDown,
+  Crosshair,
+  Globe,
   Grid3x3,
   Home,
   ScanFace,
@@ -35,7 +37,16 @@ import { useDevice } from "../hooks/useDevice";
 import "./appShell.css";
 
 /** Every mode the shell can route to. Mirrors App's `Mode` union. */
-export type ShellMode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask";
+export type ShellMode =
+  | "doors"
+  | "danger"
+  | "voxel"
+  | "play"
+  | "editor"
+  | "lobby"
+  | "ledmask"
+  | "zones"
+  | "brawl";
 
 interface NavItem {
   mode: ShellMode;
@@ -51,6 +62,8 @@ const NAV: NavItem[] = [
   { mode: "voxel", label: "Voxel Editor", hint: "Build & test maps", icon: <Boxes size={20} />, tone: "#7ee0a0" },
   { mode: "editor", label: "Dressing Room", hint: "Dress up a rig", icon: <Shirt size={20} />, tone: "#ffb24d" },
   { mode: "lobby", label: "Lobby", hint: "Rooms & community", icon: <Users size={20} />, tone: "#9d8bff" },
+  { mode: "zones", label: "GRUDOX Zones", hint: "Shared GRUDOX world", icon: <Globe size={20} />, tone: "#5fe0ff" },
+  { mode: "brawl", label: "Ruins Brawler", hint: "Live co-op survival", icon: <Crosshair size={20} />, tone: "#ff7a7a" },
   { mode: "ledmask", label: "LED Mask", hint: "AI face companion", icon: <ScanFace size={20} />, tone: "#5fe0ff" },
 ];
 

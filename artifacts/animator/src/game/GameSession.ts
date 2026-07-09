@@ -7,7 +7,7 @@ import { getMode, type GameModeDef, type GameModeId } from "./modes";
 import { biasForStrategy, profileForStrategy } from "./strategyProfiles";
 import type { FighterBias } from "../three/ai/FighterBrain";
 import type { GrudgeAccount, GrudgeCharacter } from "../lib/grudgeAuth";
-import { initFleetAuth } from "../lib/grudgeAuth";
+import { fetchCharacters, initFleetAuth } from "../lib/grudgeAuth";
 
 export type GameSessionSnapshot = {
   mode: GameModeDef;
@@ -22,11 +22,31 @@ export type GameSessionSnapshot = {
 
 type Listener = () => void;
 
+/** Session-scoped key persisting the active fleet character across surfaces. */
+const SELECTED_CHAR_KEY = "grudge.open.selectedCharacterId";
+
+function loadSelectedCharacterId(): string | null {
+  try {
+    return sessionStorage.getItem(SELECTED_CHAR_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeSelectedCharacterId(id: string | null): void {
+  try {
+    if (id) sessionStorage.setItem(SELECTED_CHAR_KEY, id);
+    else sessionStorage.removeItem(SELECTED_CHAR_KEY);
+  } catch {
+    /* private mode */
+  }
+}
+
 class GameSession {
   private modeId: GameModeId = "danger-room";
   private account: GrudgeAccount | null = null;
   private characters: GrudgeCharacter[] = [];
-  private selectedCharacterId: string | null = null;
+  private selectedCharacterId: string | null = loadSelectedCharacterId();
   private ready = false;
   private listeners = new Set<Listener>();
 
@@ -60,19 +80,49 @@ class GameSession {
 
   selectCharacter(id: string | null) {
     this.selectedCharacterId = id;
+    storeSelectedCharacterId(id);
     this.emit();
+  }
+
+  /** The active fleet character record, or null when none is selected/loaded. */
+  selectedCharacter(): GrudgeCharacter | null {
+    if (!this.selectedCharacterId) return null;
+    return this.characters.find((c) => c.id === this.selectedCharacterId) ?? null;
   }
 
   async boot(): Promise<GameSessionSnapshot> {
     const { account, characters } = await initFleetAuth();
     this.account = account;
     this.characters = characters;
+    // Keep a persisted selection only if it still resolves to a loaded character.
+    if (this.selectedCharacterId && !characters.some((c) => c.id === this.selectedCharacterId)) {
+      this.selectedCharacterId = null;
+    }
     if (!this.selectedCharacterId && characters[0]) {
       this.selectedCharacterId = characters[0].id;
     }
+    storeSelectedCharacterId(this.selectedCharacterId);
     this.ready = true;
     this.emit();
     return this.snapshot;
+  }
+
+  /**
+   * Re-pull the fleet character roster from the SSOT
+   * (`grudgeAuth.fetchCharacters()`) and reconcile the active selection. Used by
+   * the Lobby character picker's reload action.
+   */
+  async refreshCharacters(): Promise<GrudgeCharacter[]> {
+    const characters = await fetchCharacters();
+    this.characters = characters;
+    if (this.selectedCharacterId && !characters.some((c) => c.id === this.selectedCharacterId)) {
+      this.selectedCharacterId = characters[0]?.id ?? null;
+    } else if (!this.selectedCharacterId && characters[0]) {
+      this.selectedCharacterId = characters[0].id;
+    }
+    storeSelectedCharacterId(this.selectedCharacterId);
+    this.emit();
+    return characters;
   }
 
   /** Enemy AI profile for current mode (host uses for FighterBrain bias). */
