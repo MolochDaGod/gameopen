@@ -11,6 +11,14 @@ Combat sandbox client for **Grudge Studio** — races, weapons, VFX, full Mixamo
 | Auth | **Grudge ID** | `id.grudge-studio.com` |
 | Characters SSOT | **GrudgeBuilder Railway** | Proxied `/api/characters` |
 
+## Live
+
+| URL | Role |
+|-----|------|
+| https://gameopen.vercel.app | Production client |
+| https://gameopen-production.up.railway.app/api/healthz | Railway API |
+| https://github.com/MolochDaGod/gameopen | Source |
+
 ## Asset pack (all used)
 
 | Category | Count | Path |
