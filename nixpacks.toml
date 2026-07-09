@@ -1,12 +1,13 @@
+# Railway fallback if Dockerfile is not selected in the dashboard.
+# Prefer Dockerfile (ships content/ for /api/content/*).
 [phases.setup]
 nixPkgs = ["nodejs_22"]
 
 [phases.install]
-cmds = ["npm install --no-fund --no-audit"]
+cmds = ["echo no-install-standalone"]
 
 [phases.build]
-cmds = ["npm run build -w @workspace/api-server"]
+cmds = ["echo using-standalone-api"]
 
 [start]
-cmd = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
-
+cmd = "node server/standalone.mjs"
