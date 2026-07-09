@@ -1,0 +1,34 @@
+{
+  "name": "Grudge Open",
+  "id": "gameopen",
+  "version": 1,
+  "description": "Combat sandbox — weapons/skills content SSOT + Forge-editable scenes",
+  "playUrl": "https://gameopen.vercel.app/",
+  "forgeUrl": "https://forge.grudge-studio.com/editor",
+  "contentApi": "https://gameopen-production.up.railway.app/api/content",
+  "scenes": [
+    {
+      "key": "weapon-lab",
+      "file": "content/scenes/weapon-lab.gfscene.json",
+      "label": "Weapon Lab"
+    },
+    {
+      "key": "combat-sandbox",
+      "file": "content/scenes/combat-sandbox.gfscene.json",
+      "label": "Combat Sandbox"
+    },
+    {
+      "key": "catalog-plaza",
+      "file": "content/scenes/catalog-plaza.gfscene.json",
+      "label": "Catalog Plaza"
+    }
+  ],
+  "conventions": {
+    "weaponGold": "wpn_sword_iron_01",
+    "docs": [
+      "content/docs/WEAPON_PREFAB.md",
+      "content/docs/FORGE_SCENES.md",
+      "content/docs/UMMORPG_ADOPTION.md"
+    ]
+  }
+}

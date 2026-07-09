@@ -35,13 +35,30 @@ Path aliases are generated on install/build so the minified client also finds:
 - Bare `voxel-zombie-*.glb` / `barrel-*.glb` next to canonical folders
 - Flat pirate FBX names at site root
 
+## Content SSOT (weapons / skills / items)
+
+Authoring lives under **`content/`** — see [`content/README.md`](content/README.md) and [`content/docs/WEAPON_PREFAB.md`](content/docs/WEAPON_PREFAB.md).
+
+```bash
+pnpm content:index              # rebuild manifests
+pnpm readiness:weapons          # readiness table (gold: wpn_sword_iron_01)
+pnpm scaffold:weapon -- --family bow --slug oak_recurve
+```
+
+API (Railway / local `pnpm start:api`):
+
+- `GET /api/content/weapons`
+- `GET /api/content/skills`
+- `GET /api/content/readiness`
+
 ## Local
 
 ```bash
 pnpm install
 pnpm assets:manifest
-pnpm --filter @gameopen/server dev   # :8080
-pnpm --filter @gameopen/client dev   # :5173 static
+pnpm content:index
+pnpm start:api                   # :8080 standalone
+# client: artifacts/animator or client package
 ```
 
 ## Deploy

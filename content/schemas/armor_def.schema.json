@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/armor_def.schema.json",
+  "title": "ArmorDef",
+  "type": "object",
+  "required": ["id", "itemId", "slot", "defense", "readiness"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^arm_" },
+    "itemId": { "type": "string", "pattern": "^itm_" },
+    "slot": {
+      "enum": ["head", "body", "arms", "legs", "shoulders", "offHand"]
+    },
+    "defense": { "type": "number", "minimum": 0 },
+    "resistance": { "type": "object" },
+    "raceMesh": {
+      "type": "object",
+      "properties": {
+        "race": { "type": "string" },
+        "meshName": { "type": "string" }
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["data", "mesh", "present"],
+      "properties": {
+        "data": { "enum": ["ready", "placeholder", "missing"] },
+        "mesh": { "enum": ["ready", "placeholder", "missing"] },
+        "present": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    }
+  }
+}

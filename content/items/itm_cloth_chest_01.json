@@ -1,0 +1,14 @@
+{
+  "id": "itm_cloth_chest_01",
+  "kind": "armor",
+  "name": "Traveler Cloth",
+  "description": "Light cloth body — armor pipeline stub.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 8,
+  "tags": ["armor", "body", "stub"],
+  "icon": {
+    "path": "icons/armor/cloth_chest_01.png",
+    "status": "placeholder"
+  }
+}
