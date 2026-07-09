@@ -1,36 +1,54 @@
 {
-  "id": "wpn_sword_iron_01",
-  "itemId": "itm_sword_iron_01",
-  "family": "sword",
-  "slot": "mainHand",
-  "twoHanded": false,
-  "baseDamage": 18,
-  "attackSpeed": 1.0,
-  "animPack": "sword",
-  "skills": [
-    "sword.slash",
-    "sword.two_hit",
-    "sword.spin_high",
-    "sword.dash"
-  ],
-  "mesh": {
-    "path": "models/weapons/voxel/00.obj",
-    "format": "obj",
-    "grip": {
-      "bone": "Bip001_R_Hand",
-      "pos": [0, 0, 0],
-      "rot": [0, 0, 0],
-      "scale": 1
-    },
-    "status": "placeholder",
-    "notes": "Voxel pack slot 00 as stand-in until a dedicated iron longsword GLB is authored."
-  },
-  "tags": ["gold-standard", "ship"],
-  "ship": true,
-  "readiness": {
-    "data": "ready",
-    "mesh": "placeholder",
-    "combat": "ready",
-    "present": "placeholder"
-  }
+    "id":  "wpn_sword_iron_01",
+    "itemId":  "itm_sword_iron_01",
+    "family":  "sword",
+    "slot":  "mainHand",
+    "twoHanded":  false,
+    "baseDamage":  18,
+    "attackSpeed":  1.0,
+    "animPack":  "sword",
+    "skills":  [
+                   "sword.slash",
+                   "sword.two_hit",
+                   "sword.spin_high",
+                   "sword.dash"
+               ],
+    "mesh":  {
+                 "path":  "models/weapons/voxel/00.obj",
+                 "format":  "obj",
+                 "grip":  {
+                              "bone":  "Bip001_R_Hand",
+                              "pos":  [
+                                          0,
+                                          0,
+                                          0
+                                      ],
+                              "rot":  [
+                                          0,
+                                          0,
+                                          0
+                                      ],
+                              "scale":  1
+                          },
+                 "status":  "placeholder",
+                 "notes":  "Voxel pack slot 00 as stand-in until a dedicated iron longsword GLB is authored."
+             },
+    "tags":  [
+                 "gold-standard",
+                 "ship"
+             ],
+    "ship":  true,
+    "readiness":  {
+                      "data":  "ready",
+                      "mesh":  "placeholder",
+                      "combat":  "ready",
+                      "present":  "placeholder",
+                      "icon":  "ready"
+                  },
+    "icon":  {
+                 "path":  "icons/pack/weapons/Sword_01.png",
+                 "cdnUrl":  "https://assets.grudge-studio.com/icons/pack/weapons/Sword_01.png",
+                 "source":  "objectstore-master-weaponSkills@3.1.0",
+                 "status":  "ready"
+             }
 }
