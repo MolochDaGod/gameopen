@@ -1,0 +1,8 @@
+server/node_modules
+server/dist
+scripts/upload-r2.mjs
+Dockerfile
+nixpacks.toml
+railway.json
+*.md
+.env*

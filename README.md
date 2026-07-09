@@ -1,0 +1,102 @@
+# Grudge Open (`gameopen`)
+
+Combat sandbox client for **Grudge Studio** — races, weapons, VFX, full Mixamo-style animation packs, arena maps, and fleet identity.
+
+| Surface | Platform | Role |
+|---------|----------|------|
+| Client SPA | **Vercel** | Static `client/public` (Three.js engine + assets) |
+| API | **Railway** | Health, effects catalog, character proxy, co-op WS |
+| Binaries (optional) | **Cloudflare R2** | `assets.grudge-studio.com/gameopen/*` |
+| Catalog | **ObjectStore** | `objectstore.grudge-studio.com/api/v1` |
+| Auth | **Grudge ID** | `id.grudge-studio.com` |
+| Characters SSOT | **GrudgeBuilder Railway** | Proxied `/api/characters` |
+
+## Asset pack (all used)
+
+| Category | Count | Path |
+|----------|------:|------|
+| Animations (FBX packs) | 168 | `/anim/animations/{ambient,bow,climb,extra,farming,knife,magic,magic-loco,pistol,reactions,rifle,striker,swim,sword}/` |
+| Models (GLB/GLTF) | 80+ | `/models/{races,weapons,vfx,props,enemies,destructibles,heroes,pirate}/` + arena/dungeon maps |
+| HUD icons | 50 | `/icons/*.png` |
+| Menu UI | 7 | `/ui/menu/*.png` |
+| Pirate props + texture | 12 | `/models/pirate/` (includes `TX_PirateShipInterior_Color.png`) |
+
+Path aliases are generated on install/build so the minified client also finds:
+
+- `/anim/striker/flip_kick.fbx` → `animations/striker/Flip_Kick.fbx`
+- Bare `voxel-zombie-*.glb` / `barrel-*.glb` next to canonical folders
+- Flat pirate FBX names at site root
+
+## Local
+
+```bash
+pnpm install
+pnpm assets:manifest
+pnpm --filter @gameopen/server dev   # :8080
+pnpm --filter @gameopen/client dev   # :5173 static
+```
+
+## Deploy
+
+### Vercel (frontend)
+
+```bash
+# from repo root
+vercel link
+vercel env add VITE_USE_R2 production   # true after R2 upload
+vercel --prod
+```
+
+`vercel.json` already rewrites:
+
+- `/api/characters*` → GrudgeBuilder Railway  
+- `/api/auth/*` → id.grudge-studio.com  
+- `/api/*` → gameopen Railway API  
+- SPA fallback → `index.html`
+
+### Railway (backend)
+
+```bash
+cd server   # or root with railway.json
+railway link
+railway up
+railway domain
+```
+
+Set `ALLOWED_ORIGINS` to your Vercel URL(s). Health: `GET /api/healthz`.
+
+Optional WebSocket: `wss://<railway>/api/carrier?room=CODE`
+
+### R2 upload (recommended for large GLB/FBX)
+
+```bash
+export R2_ACCOUNT_ID=...
+export R2_ACCESS_KEY_ID=...
+export R2_SECRET_ACCESS_KEY=...
+export R2_BUCKET=grudge-assets
+export R2_PREFIX=gameopen
+pnpm add -wD @aws-sdk/client-s3   # once
+pnpm assets:upload-r2
+```
+
+Then set Vercel `VITE_USE_R2=true` so the bootstrap rewrites `/models|/anim|/icons|/ui` to the CDN.
+
+## Fleet diagram
+
+```
+Browser (Vercel SPA)
+  ├── /api/characters  → GrudgeBuilder Railway (Postgres characters)
+  ├── /api/effects     → gameopen Railway (local VFX catalog + ObjectStore merge)
+  ├── /api/auth/*      → id.grudge-studio.com
+  ├── /api/*           → gameopen Railway
+  ├── /models|/anim    → Vercel static OR assets.grudge-studio.com/gameopen
+  └── optional WS      → wss://gameopen-api…/api/carrier
+```
+
+## Source of the build
+
+Packaged from `D:\Games\Models\gameopen\dist\public` (title: Grudges Survival / Grudge Open combat client). Engine + app are production Vite chunks; this repo adds fleet wiring, API, aliases, and deploy targets.
+
+## License
+
+MIT — Grudge Studio. Third-party packs retain their original licenses (see `models/hex-forcefield/LICENSE.txt`).

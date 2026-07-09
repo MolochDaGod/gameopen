@@ -1,0 +1,26 @@
+{
+  "name": "gameopen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grudge Open — combat sandbox client (Vercel) + API (Railway) + Cloudflare R2 assets",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node server/standalone.mjs",
+    "dev:client": "npx --yes serve client/public -l 5173",
+    "build": "node scripts/prepare-client.mjs",
+    "build:client": "node scripts/prepare-client.mjs",
+    "start": "node server/standalone.mjs",
+    "assets:manifest": "node scripts/generate-asset-manifest.mjs",
+    "assets:alias": "node scripts/fix-asset-aliases.mjs",
+    "assets:upload-r2": "node scripts/upload-r2.mjs",
+    "postinstall": "node scripts/fix-asset-aliases.mjs"
+  },
+
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}

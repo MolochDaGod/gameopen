@@ -1,0 +1,24 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eaf3ff"/>
+      <stop offset="1" stop-color="#4fc3ff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)" transform="translate(8 4)">
+    <!-- sword blade -->
+    <path d="M20 2 L24 6 L13 30 L11 30 L9 26 Z" fill="url(#blade)" stroke="#4fc3ff" stroke-width="0.6"/>
+    <!-- guard -->
+    <rect x="6.5" y="29.5" width="13" height="3.2" rx="1.4" fill="#9fc4ff"/>
+    <!-- grip -->
+    <rect x="11" y="32.5" width="4" height="7" rx="1.6" fill="#8fa8cc"/>
+    <!-- pommel -->
+    <circle cx="13" cy="41" r="2.4" fill="#4fc3ff"/>
+  </g>
+  <text x="44" y="24" font-family="'Inter', system-ui, sans-serif" font-size="17" font-weight="800" letter-spacing="2" fill="#cfe3ff">DUNGEON</text>
+  <text x="44" y="42" font-family="'Inter', system-ui, sans-serif" font-size="17" font-weight="800" letter-spacing="2" fill="#4fc3ff">CRAWLER</text>
+</svg>

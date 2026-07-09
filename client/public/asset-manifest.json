@@ -1,0 +1,4574 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-09T06:20:05.752Z",
+  "game": "gameopen",
+  "count": 506,
+  "byKind": {
+    "icon": 2,
+    "page": 1,
+    "texture": 59,
+    "text": 2,
+    "animation": 358,
+    "code": 3,
+    "model": 79,
+    "bin": 1,
+    "data": 1
+  },
+  "totalBytes": 145573300,
+  "assets": [
+    {
+      "id": "GO-7b59bb7e8cba",
+      "path": "/favicon.svg",
+      "rel": "favicon.svg",
+      "kind": "icon",
+      "ext": "svg",
+      "bytes": 163,
+      "category": "root"
+    },
+    {
+      "id": "GO-f6013a00b362",
+      "path": "/index.html",
+      "rel": "index.html",
+      "kind": "page",
+      "ext": "html",
+      "bytes": 2723,
+      "category": "root"
+    },
+    {
+      "id": "GO-145770c269c5",
+      "path": "/logo.svg",
+      "rel": "logo.svg",
+      "kind": "icon",
+      "ext": "svg",
+      "bytes": 1262,
+      "category": "root"
+    },
+    {
+      "id": "GO-85f38fad1662",
+      "path": "/opengraph.jpg",
+      "rel": "opengraph.jpg",
+      "kind": "texture",
+      "ext": "jpg",
+      "bytes": 27731,
+      "category": "root"
+    },
+    {
+      "id": "GO-377f6a321ea4",
+      "path": "/robots.txt",
+      "rel": "robots.txt",
+      "kind": "text",
+      "ext": "txt",
+      "bytes": 23,
+      "category": "root"
+    },
+    {
+      "id": "GO-ccd0225b4b8d",
+      "path": "/anim/animations/ambient/look-around.fbx",
+      "rel": "anim/animations/ambient/look-around.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 331456,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-aeb3805a7e4c",
+      "path": "/anim/animations/ambient/look-over-shoulder.fbx",
+      "rel": "anim/animations/ambient/look-over-shoulder.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 269088,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-5264c182c8c5",
+      "path": "/anim/animations/ambient/sitting-idle.fbx",
+      "rel": "anim/animations/ambient/sitting-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-7bc3bb42ccdc",
+      "path": "/anim/animations/ambient/standing-torch-idle-2.fbx",
+      "rel": "anim/animations/ambient/standing-torch-idle-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 424624,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-9a14e5ab7749",
+      "path": "/anim/animations/ambient/standing-torch-idle.fbx",
+      "rel": "anim/animations/ambient/standing-torch-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 424624,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-92c9be664c09",
+      "path": "/anim/animations/ambient/torch-inspect-downward.fbx",
+      "rel": "anim/animations/ambient/torch-inspect-downward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 339216,
+      "category": "anim/animations/ambient"
+    },
+    {
+      "id": "GO-cb3cfe76d259",
+      "path": "/anim/animations/bow/fall-a-land-to-standing-idle-01.fbx",
+      "rel": "anim/animations/bow/fall-a-land-to-standing-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-81dfc290911a",
+      "path": "/anim/animations/bow/fall-a-loop.fbx",
+      "rel": "anim/animations/bow/fall-a-loop.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 157665,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-140ab3a5fdee",
+      "path": "/anim/animations/bow/standing-aim-overdraw.fbx",
+      "rel": "anim/animations/bow/standing-aim-overdraw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 273153,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-01ddfe8e3609",
+      "path": "/anim/animations/bow/standing-aim-recoil.fbx",
+      "rel": "anim/animations/bow/standing-aim-recoil.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 140017,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-ee202937d369",
+      "path": "/anim/animations/bow/standing-aim-walk-back.fbx",
+      "rel": "anim/animations/bow/standing-aim-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175377,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-46fd6a47789e",
+      "path": "/anim/animations/bow/standing-aim-walk-forward.fbx",
+      "rel": "anim/animations/bow/standing-aim-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-b9105ce3b8f3",
+      "path": "/anim/animations/bow/standing-aim-walk-left.fbx",
+      "rel": "anim/animations/bow/standing-aim-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-bbafa57fa431",
+      "path": "/anim/animations/bow/standing-aim-walk-right.fbx",
+      "rel": "anim/animations/bow/standing-aim-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 168001,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-2d522edf13b3",
+      "path": "/anim/animations/bow/standing-block.fbx",
+      "rel": "anim/animations/bow/standing-block.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198993,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-2b30b9d54430",
+      "path": "/anim/animations/bow/standing-death-forward-01.fbx",
+      "rel": "anim/animations/bow/standing-death-forward-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 250657,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-48b99f2f910a",
+      "path": "/anim/animations/bow/standing-disarm-bow.fbx",
+      "rel": "anim/animations/bow/standing-disarm-bow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-9828b7c33997",
+      "path": "/anim/animations/bow/standing-dive-forward.fbx",
+      "rel": "anim/animations/bow/standing-dive-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 182753,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-fcf2558c0a2c",
+      "path": "/anim/animations/bow/standing-dodge-backward.fbx",
+      "rel": "anim/animations/bow/standing-dodge-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 182753,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-39dbf9cd6c79",
+      "path": "/anim/animations/bow/standing-dodge-forward.fbx",
+      "rel": "anim/animations/bow/standing-dodge-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-c06ec55c3813",
+      "path": "/anim/animations/bow/standing-dodge-left.fbx",
+      "rel": "anim/animations/bow/standing-dodge-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153233,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-0d5655f2d1dd",
+      "path": "/anim/animations/bow/standing-dodge-right.fbx",
+      "rel": "anim/animations/bow/standing-dodge-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153233,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-18c5c01d2bda",
+      "path": "/anim/animations/bow/standing-draw-arrow.fbx",
+      "rel": "anim/animations/bow/standing-draw-arrow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153953,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-0613d8aafab8",
+      "path": "/anim/animations/bow/standing-equip-bow.fbx",
+      "rel": "anim/animations/bow/standing-equip-bow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 150289,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-dc1585bb9656",
+      "path": "/anim/animations/bow/standing-idle-01.fbx",
+      "rel": "anim/animations/bow/standing-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 281953,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-1fced60f5357",
+      "path": "/anim/animations/bow/standing-melee-kick.fbx",
+      "rel": "anim/animations/bow/standing-melee-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 173905,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-6d3f896021d1",
+      "path": "/anim/animations/bow/standing-melee-punch.fbx",
+      "rel": "anim/animations/bow/standing-melee-punch.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153633,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-b0f9f66b3646",
+      "path": "/anim/animations/bow/standing-react-small-from-front.fbx",
+      "rel": "anim/animations/bow/standing-react-small-from-front.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-03c603ea8395",
+      "path": "/anim/animations/bow/standing-run-back.fbx",
+      "rel": "anim/animations/bow/standing-run-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-b220b31cd4b0",
+      "path": "/anim/animations/bow/standing-run-forward.fbx",
+      "rel": "anim/animations/bow/standing-run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 148801,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-9d0ef1ca53ea",
+      "path": "/anim/animations/bow/standing-run-left.fbx",
+      "rel": "anim/animations/bow/standing-run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-b3091d1c7cca",
+      "path": "/anim/animations/bow/standing-run-right.fbx",
+      "rel": "anim/animations/bow/standing-run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-61fbb0be7d66",
+      "path": "/anim/animations/bow/standing-turn-90-left.fbx",
+      "rel": "anim/animations/bow/standing-turn-90-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-e630ae9b8725",
+      "path": "/anim/animations/bow/standing-turn-90-right.fbx",
+      "rel": "anim/animations/bow/standing-turn-90-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-6aaf664e8383",
+      "path": "/anim/animations/bow/standing-walk-back.fbx",
+      "rel": "anim/animations/bow/standing-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175377,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-c26390ba754f",
+      "path": "/anim/animations/bow/standing-walk-forward.fbx",
+      "rel": "anim/animations/bow/standing-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-124af8d840e1",
+      "path": "/anim/animations/bow/standing-walk-left.fbx",
+      "rel": "anim/animations/bow/standing-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-ef6df6185ac3",
+      "path": "/anim/animations/bow/standing-walk-right.fbx",
+      "rel": "anim/animations/bow/standing-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-5d055bee6c4c",
+      "path": "/anim/animations/bow/unarmed-idle-01.fbx",
+      "rel": "anim/animations/bow/unarmed-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 290753,
+      "category": "anim/animations/bow"
+    },
+    {
+      "id": "GO-75be33ee8912",
+      "path": "/anim/animations/climb/climbing-down-wall.fbx",
+      "rel": "anim/animations/climb/climbing-down-wall.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-615b78aa723d",
+      "path": "/anim/animations/climb/climbing-to-top.fbx",
+      "rel": "anim/animations/climb/climbing-to-top.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 287552,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-8db33c7d07a7",
+      "path": "/anim/animations/climb/climbing-up-wall.fbx",
+      "rel": "anim/animations/climb/climbing-up-wall.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-5286ea91e952",
+      "path": "/anim/animations/climb/climbing.fbx",
+      "rel": "anim/animations/climb/climbing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 280160,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-fd193cfe0a11",
+      "path": "/anim/animations/extra/aerial-evade.fbx",
+      "rel": "anim/animations/extra/aerial-evade.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 272784,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-d00d223a2803",
+      "path": "/anim/animations/extra/baseball-hit.fbx",
+      "rel": "anim/animations/extra/baseball-hit.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 239920,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-280cb08a9fa8",
+      "path": "/anim/animations/extra/butterfly-twirl.fbx",
+      "rel": "anim/animations/extra/butterfly-twirl.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 248816,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-efa0ffdd0b66",
+      "path": "/anim/animations/extra/corkscrew-evade.fbx",
+      "rel": "anim/animations/extra/corkscrew-evade.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 221136,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-6d86ec0bc662",
+      "path": "/anim/animations/extra/corkscrew-kip-up.fbx",
+      "rel": "anim/animations/extra/corkscrew-kip-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 238976,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-aaf494d50a2f",
+      "path": "/anim/animations/extra/crouched-to-sprinting.fbx",
+      "rel": "anim/animations/extra/crouched-to-sprinting.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176848,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-037e97ae98f7",
+      "path": "/anim/animations/extra/frisbee-throw.fbx",
+      "rel": "anim/animations/extra/frisbee-throw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 256560,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-f480f29a026d",
+      "path": "/anim/animations/extra/front-flip.fbx",
+      "rel": "anim/animations/extra/front-flip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 160608,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-021f9781246e",
+      "path": "/anim/animations/extra/front-twist-flip.fbx",
+      "rel": "anim/animations/extra/front-twist-flip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 207840,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-e5113c7d65f2",
+      "path": "/anim/animations/extra/grenade-throw.fbx",
+      "rel": "anim/animations/extra/grenade-throw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 234144,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-9b00cf0b092f",
+      "path": "/anim/animations/extra/hurricane-kick.fbx",
+      "rel": "anim/animations/extra/hurricane-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153984,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-45455504ad4e",
+      "path": "/anim/animations/extra/jumping-down.fbx",
+      "rel": "anim/animations/extra/jumping-down.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 228512,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-ddd8283f7c85",
+      "path": "/anim/animations/extra/kip-up.fbx",
+      "rel": "anim/animations/extra/kip-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 240176,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-558cdd41b195",
+      "path": "/anim/animations/extra/male-dynamic-pose.fbx",
+      "rel": "anim/animations/extra/male-dynamic-pose.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-c1a624755c3e",
+      "path": "/anim/animations/extra/pushing.fbx",
+      "rel": "anim/animations/extra/pushing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 169472,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-3fce275eaded",
+      "path": "/anim/animations/extra/quick-roll-to-run.fbx",
+      "rel": "anim/animations/extra/quick-roll-to-run.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 172416,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-8ae5c030ee0b",
+      "path": "/anim/animations/extra/running-slide.fbx",
+      "rel": "anim/animations/extra/running-slide.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 178320,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-2aaac7d9eb62",
+      "path": "/anim/animations/extra/spinning.fbx",
+      "rel": "anim/animations/extra/spinning.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 189168,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-40feea529c71",
+      "path": "/anim/animations/extra/start-swinging.fbx",
+      "rel": "anim/animations/extra/start-swinging.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 200464,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-6291589980e4",
+      "path": "/anim/animations/extra/utility-kick.fbx",
+      "rel": "anim/animations/extra/utility-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 260976,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-262df311e9d9",
+      "path": "/anim/animations/farming/dig-and-plant-seeds.fbx",
+      "rel": "anim/animations/farming/dig-and-plant-seeds.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 303905,
+      "category": "anim/animations/farming"
+    },
+    {
+      "id": "GO-f68c84076bb3",
+      "path": "/anim/animations/farming/pick-fruit.fbx",
+      "rel": "anim/animations/farming/pick-fruit.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 387297,
+      "category": "anim/animations/farming"
+    },
+    {
+      "id": "GO-e88a47d7b9c7",
+      "path": "/anim/animations/farming/plant-tree.fbx",
+      "rel": "anim/animations/farming/plant-tree.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 422913,
+      "category": "anim/animations/farming"
+    },
+    {
+      "id": "GO-c10d3fd2519b",
+      "path": "/anim/animations/farming/pull-plant.fbx",
+      "rel": "anim/animations/farming/pull-plant.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 274881,
+      "category": "anim/animations/farming"
+    },
+    {
+      "id": "GO-cc990ab800b8",
+      "path": "/anim/animations/farming/watering.fbx",
+      "rel": "anim/animations/farming/watering.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 307105,
+      "category": "anim/animations/farming"
+    },
+    {
+      "id": "GO-307bf303efac",
+      "path": "/anim/animations/knife/double-dagger-stab.fbx",
+      "rel": "anim/animations/knife/double-dagger-stab.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 248432,
+      "category": "anim/animations/knife"
+    },
+    {
+      "id": "GO-e053b36aabbb",
+      "path": "/anim/animations/knife/dual-weapon-combo.fbx",
+      "rel": "anim/animations/knife/dual-weapon-combo.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 271600,
+      "category": "anim/animations/knife"
+    },
+    {
+      "id": "GO-1b0e7025d88a",
+      "path": "/anim/animations/knife/knife-idle.fbx",
+      "rel": "anim/animations/knife/knife-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 267984,
+      "category": "anim/animations/knife"
+    },
+    {
+      "id": "GO-ee592d2163ed",
+      "path": "/anim/animations/knife/stabbing.fbx",
+      "rel": "anim/animations/knife/stabbing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 227024,
+      "category": "anim/animations/knife"
+    },
+    {
+      "id": "GO-e0b1b83e6b8b",
+      "path": "/anim/animations/magic/standing-1h-cast-spell-01.fbx",
+      "rel": "anim/animations/magic/standing-1h-cast-spell-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 210801,
+      "category": "anim/animations/magic"
+    },
+    {
+      "id": "GO-19ad405472c8",
+      "path": "/anim/animations/magic/standing-1h-magic-attack-01.fbx",
+      "rel": "anim/animations/magic/standing-1h-magic-attack-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213537,
+      "category": "anim/animations/magic"
+    },
+    {
+      "id": "GO-76ddc5225135",
+      "path": "/anim/animations/magic/standing-1h-magic-attack-02.fbx",
+      "rel": "anim/animations/magic/standing-1h-magic-attack-02.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 209217,
+      "category": "anim/animations/magic"
+    },
+    {
+      "id": "GO-6516f6914730",
+      "path": "/anim/animations/magic/standing-1h-magic-attack-03.fbx",
+      "rel": "anim/animations/magic/standing-1h-magic-attack-03.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213937,
+      "category": "anim/animations/magic"
+    },
+    {
+      "id": "GO-f48ed27bb860",
+      "path": "/anim/animations/magic/standing-2h-magic-area-attack-01.fbx",
+      "rel": "anim/animations/magic/standing-2h-magic-area-attack-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 242945,
+      "category": "anim/animations/magic"
+    },
+    {
+      "id": "GO-86fd01e1f77d",
+      "path": "/anim/animations/magic-loco/standing-idle.fbx",
+      "rel": "anim/animations/magic-loco/standing-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 193089,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-101e851e018b",
+      "path": "/anim/animations/magic-loco/standing-jump-running.fbx",
+      "rel": "anim/animations/magic-loco/standing-jump-running.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 157665,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-b597d56373bb",
+      "path": "/anim/animations/magic-loco/standing-land-to-standing-idle.fbx",
+      "rel": "anim/animations/magic-loco/standing-land-to-standing-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-7de7c83ed2fb",
+      "path": "/anim/animations/magic-loco/standing-run-back.fbx",
+      "rel": "anim/animations/magic-loco/standing-run-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 138481,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-1eca314a13d3",
+      "path": "/anim/animations/magic-loco/standing-run-forward.fbx",
+      "rel": "anim/animations/magic-loco/standing-run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 142897,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-d154b6463ad9",
+      "path": "/anim/animations/magic-loco/standing-run-left.fbx",
+      "rel": "anim/animations/magic-loco/standing-run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-9bc8c1ecf99f",
+      "path": "/anim/animations/magic-loco/standing-run-right.fbx",
+      "rel": "anim/animations/magic-loco/standing-run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-8008bf95f867",
+      "path": "/anim/animations/magic-loco/standing-turn-left-90.fbx",
+      "rel": "anim/animations/magic-loco/standing-turn-left-90.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 193089,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-97cd0aa484b7",
+      "path": "/anim/animations/magic-loco/standing-turn-right-90.fbx",
+      "rel": "anim/animations/magic-loco/standing-turn-right-90.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 183185,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-b8d8b706d859",
+      "path": "/anim/animations/magic-loco/standing-walk-back.fbx",
+      "rel": "anim/animations/magic-loco/standing-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-ce4bc9ffdaa6",
+      "path": "/anim/animations/magic-loco/standing-walk-forward.fbx",
+      "rel": "anim/animations/magic-loco/standing-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 160609,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-82f58e090e71",
+      "path": "/anim/animations/magic-loco/standing-walk-left.fbx",
+      "rel": "anim/animations/magic-loco/standing-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162097,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-ae981cafcdcd",
+      "path": "/anim/animations/magic-loco/standing-walk-right.fbx",
+      "rel": "anim/animations/magic-loco/standing-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/animations/magic-loco"
+    },
+    {
+      "id": "GO-99649537bbdb",
+      "path": "/anim/animations/pistol/charged-pistol.fbx",
+      "rel": "anim/animations/pistol/charged-pistol.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-374d3d4f319c",
+      "path": "/anim/animations/pistol/drawing-gun.fbx",
+      "rel": "anim/animations/pistol/drawing-gun.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-59f653096340",
+      "path": "/anim/animations/pistol/gunplay.fbx",
+      "rel": "anim/animations/pistol/gunplay.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-2788666c4bea",
+      "path": "/anim/animations/pistol/idle.fbx",
+      "rel": "anim/animations/pistol/idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166593,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-6b162e5bf03f",
+      "path": "/anim/animations/pistol/jump-2.fbx",
+      "rel": "anim/animations/pistol/jump-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 145857,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-8f86353e7f13",
+      "path": "/anim/animations/pistol/jump.fbx",
+      "rel": "anim/animations/pistol/jump.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198993,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-bad363cbc814",
+      "path": "/anim/animations/pistol/knee-jabs-uppercut.fbx",
+      "rel": "anim/animations/pistol/knee-jabs-uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 309328,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-d5b9e077ce15",
+      "path": "/anim/animations/pistol/kneel-to-stand.fbx",
+      "rel": "anim/animations/pistol/kneel-to-stand.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170945,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-349e5fcc70bd",
+      "path": "/anim/animations/pistol/kneeling-idle.fbx",
+      "rel": "anim/animations/pistol/kneeling-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 274593,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-8064053752cd",
+      "path": "/anim/animations/pistol/mma-kick.fbx",
+      "rel": "anim/animations/pistol/mma-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-cc6556e19316",
+      "path": "/anim/animations/pistol/pistol-jump.fbx",
+      "rel": "anim/animations/pistol/pistol-jump.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 285088,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-c6ab68fbf8f6",
+      "path": "/anim/animations/pistol/pistol-whip.fbx",
+      "rel": "anim/animations/pistol/pistol-whip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 224080,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-37232891257d",
+      "path": "/anim/animations/pistol/run-arc-left.fbx",
+      "rel": "anim/animations/pistol/run-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-3c57746554f0",
+      "path": "/anim/animations/pistol/run-arc-right.fbx",
+      "rel": "anim/animations/pistol/run-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 138481,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-323b69dc3f13",
+      "path": "/anim/animations/pistol/run-backward-arc-left.fbx",
+      "rel": "anim/animations/pistol/run-backward-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-c730c6c8cee0",
+      "path": "/anim/animations/pistol/run-backward-arc-right.fbx",
+      "rel": "anim/animations/pistol/run-backward-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-8ed364ef2385",
+      "path": "/anim/animations/pistol/run-backward.fbx",
+      "rel": "anim/animations/pistol/run-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 134049,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-424a36b6cf95",
+      "path": "/anim/animations/pistol/run-forward.fbx",
+      "rel": "anim/animations/pistol/run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-62a845931eef",
+      "path": "/anim/animations/pistol/stand-to-kneel.fbx",
+      "rel": "anim/animations/pistol/stand-to-kneel.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153633,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-1dae8db9eb11",
+      "path": "/anim/animations/pistol/strafe-left.fbx",
+      "rel": "anim/animations/pistol/strafe-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 135521,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-52b721bbfc76",
+      "path": "/anim/animations/pistol/strafe-right.fbx",
+      "rel": "anim/animations/pistol/strafe-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-c678c7a997a7",
+      "path": "/anim/animations/pistol/uppercut.fbx",
+      "rel": "anim/animations/pistol/uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176304,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-597032608ba8",
+      "path": "/anim/animations/pistol/walk-arc-left.fbx",
+      "rel": "anim/animations/pistol/walk-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 142897,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-84a3435e0c27",
+      "path": "/anim/animations/pistol/walk-arc-right.fbx",
+      "rel": "anim/animations/pistol/walk-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-ba6d82e95414",
+      "path": "/anim/animations/pistol/walk-backward-arc-left.fbx",
+      "rel": "anim/animations/pistol/walk-backward-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-8f7e00f9a8bb",
+      "path": "/anim/animations/pistol/walk-backward-arc-right.fbx",
+      "rel": "anim/animations/pistol/walk-backward-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-9f630d9395cc",
+      "path": "/anim/animations/pistol/walk-backward.fbx",
+      "rel": "anim/animations/pistol/walk-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 156193,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-7951cb882f04",
+      "path": "/anim/animations/pistol/walk-forward.fbx",
+      "rel": "anim/animations/pistol/walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 145857,
+      "category": "anim/animations/pistol"
+    },
+    {
+      "id": "GO-8bbdd1539bd7",
+      "path": "/anim/animations/reactions/fallen.fbx",
+      "rel": "anim/animations/reactions/fallen.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141424,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-b2f607671442",
+      "path": "/anim/animations/reactions/falling.fbx",
+      "rel": "anim/animations/reactions/falling.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 491696,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-3df8f9d6aac9",
+      "path": "/anim/animations/reactions/get-up.fbx",
+      "rel": "anim/animations/reactions/get-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-3c63c840b136",
+      "path": "/anim/animations/reactions/hit-to-head.fbx",
+      "rel": "anim/animations/reactions/hit-to-head.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-902e56773258",
+      "path": "/anim/animations/reactions/jogging-stumble.fbx",
+      "rel": "anim/animations/reactions/jogging-stumble.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162096,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-6cfa80bb8656",
+      "path": "/anim/animations/reactions/parry.fbx",
+      "rel": "anim/animations/reactions/parry.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162272,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-da97bf0b8186",
+      "path": "/anim/animations/reactions/running-crawl.fbx",
+      "rel": "anim/animations/reactions/running-crawl.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159136,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-624c40666ac9",
+      "path": "/anim/animations/reactions/stunned.fbx",
+      "rel": "anim/animations/reactions/stunned.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-ca690000882d",
+      "path": "/anim/animations/reactions/wall-crash.fbx",
+      "rel": "anim/animations/reactions/wall-crash.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 219648,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-e79838805cf0",
+      "path": "/anim/animations/rifle/death-from-front-headshot.fbx",
+      "rel": "anim/animations/rifle/death-from-front-headshot.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 236433,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-940ce4ff391c",
+      "path": "/anim/animations/rifle/idle-aiming.fbx",
+      "rel": "anim/animations/rifle/idle-aiming.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 196609,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-532211dc89c3",
+      "path": "/anim/animations/rifle/idle-crouching.fbx",
+      "rel": "anim/animations/rifle/idle-crouching.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198881,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-051617416cb2",
+      "path": "/anim/animations/rifle/idle.fbx",
+      "rel": "anim/animations/rifle/idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198881,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-967bb0a9a475",
+      "path": "/anim/animations/rifle/run-backward.fbx",
+      "rel": "anim/animations/rifle/run-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 174289,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-20f21e70cada",
+      "path": "/anim/animations/rifle/run-forward.fbx",
+      "rel": "anim/animations/rifle/run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176209,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-dec315962650",
+      "path": "/anim/animations/rifle/run-left.fbx",
+      "rel": "anim/animations/rifle/run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-31b53e3cb346",
+      "path": "/anim/animations/rifle/run-right.fbx",
+      "rel": "anim/animations/rifle/run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175841,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-484cbedc0385",
+      "path": "/anim/animations/rifle/turn-90-left.fbx",
+      "rel": "anim/animations/rifle/turn-90-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-c3687f0aaadd",
+      "path": "/anim/animations/rifle/turn-90-right.fbx",
+      "rel": "anim/animations/rifle/turn-90-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 155681,
+      "category": "anim/animations/rifle"
+    },
+    {
+      "id": "GO-50f36676f0b6",
+      "path": "/anim/animations/striker/Back_Flip_To_Uppercut.fbx",
+      "rel": "anim/animations/striker/Back_Flip_To_Uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 315760,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-a9e0858bd12d",
+      "path": "/anim/animations/striker/Falling_To_Roll.fbx",
+      "rel": "anim/animations/striker/Falling_To_Roll.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-8128ccafe2e2",
+      "path": "/anim/animations/striker/fight-idle.fbx",
+      "rel": "anim/animations/striker/fight-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 369840,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-b1ee3da39897",
+      "path": "/anim/animations/striker/Flip_Kick.fbx",
+      "rel": "anim/animations/striker/Flip_Kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 235104,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-2313121a81ea",
+      "path": "/anim/animations/striker/kicking.fbx",
+      "rel": "anim/animations/striker/kicking.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 207840,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-87663055b2bc",
+      "path": "/anim/animations/striker/strike-down.fbx",
+      "rel": "anim/animations/striker/strike-down.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-2e4953ee6bc4",
+      "path": "/anim/animations/striker/vampiric-bite.fbx",
+      "rel": "anim/animations/striker/vampiric-bite.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 244752,
+      "category": "anim/animations/striker"
+    },
+    {
+      "id": "GO-c8e84aa5d2ef",
+      "path": "/anim/animations/swim/swimming-to-edge.fbx",
+      "rel": "anim/animations/swim/swimming-to-edge.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 287184,
+      "category": "anim/animations/swim"
+    },
+    {
+      "id": "GO-ee537faea346",
+      "path": "/anim/animations/swim/swimming.fbx",
+      "rel": "anim/animations/swim/swimming.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 368192,
+      "category": "anim/animations/swim"
+    },
+    {
+      "id": "GO-f8e7f07225b3",
+      "path": "/anim/animations/swim/treading-water.fbx",
+      "rel": "anim/animations/swim/treading-water.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 230304,
+      "category": "anim/animations/swim"
+    },
+    {
+      "id": "GO-5f9baf4b667b",
+      "path": "/anim/animations/sword/draw-sword-1.fbx",
+      "rel": "anim/animations/sword/draw-sword-1.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-3bbc2862d50b",
+      "path": "/anim/animations/sword/great-sword-slide-attack.fbx",
+      "rel": "anim/animations/sword/great-sword-slide-attack.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 206288,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-5478fe005caa",
+      "path": "/anim/animations/sword/outward-slash.fbx",
+      "rel": "anim/animations/sword/outward-slash.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198272,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-6a1028ef1b49",
+      "path": "/anim/animations/sword/sheath-sword-1.fbx",
+      "rel": "anim/animations/sword/sheath-sword-1.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-811e85b0a649",
+      "path": "/anim/animations/sword/sword-and-shield-attack-2.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-attack-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170401,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-04761164779c",
+      "path": "/anim/animations/sword/sword-and-shield-attack-3.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-attack-3.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 190897,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-9388b92bf361",
+      "path": "/anim/animations/sword/sword-and-shield-attack-4.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-attack-4.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-af03204fbf8f",
+      "path": "/anim/animations/sword/sword-and-shield-attack-5.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-attack-5.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213744,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-e987a21abc34",
+      "path": "/anim/animations/sword/sword-and-shield-attack.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-attack.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213745,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-077de5d90f87",
+      "path": "/anim/animations/sword/sword-and-shield-block-idle.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-block-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170913,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-3d9ad414d7f0",
+      "path": "/anim/animations/sword/sword-and-shield-block.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-block.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 135521,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-c01aace80f12",
+      "path": "/anim/animations/sword/sword-and-shield-casting.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-casting.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 242816,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-cf0a1fb1647d",
+      "path": "/anim/animations/sword/sword-and-shield-death.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-death.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 212273,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-5cd25fd0dbb2",
+      "path": "/anim/animations/sword/sword-and-shield-idle.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222609,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-e11279e581ad",
+      "path": "/anim/animations/sword/sword-and-shield-run-2.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-run-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 134049,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-26351779f418",
+      "path": "/anim/animations/sword/sword-and-shield-run.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-run.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-b758e973cdf3",
+      "path": "/anim/animations/sword/sword-and-shield-strafe-2.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-strafe-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-42b29bda5109",
+      "path": "/anim/animations/sword/sword-and-shield-strafe.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-strafe.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-bda4a9fdddfd",
+      "path": "/anim/animations/sword/sword-and-shield-turn-2.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-turn-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-9b73af5bbb27",
+      "path": "/anim/animations/sword/sword-and-shield-turn.fbx",
+      "rel": "anim/animations/sword/sword-and-shield-turn.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-f6f09f966434",
+      "path": "/anim/animations/sword/two-hand-sword-combo.fbx",
+      "rel": "anim/animations/sword/two-hand-sword-combo.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 257600,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-ba0b0a55f26d",
+      "path": "/anim/striker/flip_kick.fbx",
+      "rel": "anim/striker/flip_kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 235104,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-1d3870e8db14",
+      "path": "/anim/striker/backflip.fbx",
+      "rel": "anim/striker/backflip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 315760,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-6afce09acd62",
+      "path": "/anim/striker/back_flip_to_uppercut.fbx",
+      "rel": "anim/striker/back_flip_to_uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 315760,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-839063c448f3",
+      "path": "/anim/striker/roll.fbx",
+      "rel": "anim/striker/roll.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-be2cc20fd33c",
+      "path": "/anim/striker/falling_to_roll.fbx",
+      "rel": "anim/striker/falling_to_roll.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-ec283b0ac23c",
+      "path": "/anim/striker/fight-idle.fbx",
+      "rel": "anim/striker/fight-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 369840,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-6c4a6c21a553",
+      "path": "/anim/striker/kicking.fbx",
+      "rel": "anim/striker/kicking.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 207840,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-3bbd5f6716be",
+      "path": "/anim/striker/strike-down.fbx",
+      "rel": "anim/striker/strike-down.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-73bb84947a76",
+      "path": "/anim/striker/vampiric-bite.fbx",
+      "rel": "anim/striker/vampiric-bite.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 244752,
+      "category": "anim/striker"
+    },
+    {
+      "id": "GO-3293563033fb",
+      "path": "/anim/ambient/look-around.fbx",
+      "rel": "anim/ambient/look-around.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 331456,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-937bb90d299f",
+      "path": "/anim/ambient/look-over-shoulder.fbx",
+      "rel": "anim/ambient/look-over-shoulder.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 269088,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-5b2a1aa5235a",
+      "path": "/anim/ambient/sitting-idle.fbx",
+      "rel": "anim/ambient/sitting-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-61080158478d",
+      "path": "/anim/ambient/standing-torch-idle-2.fbx",
+      "rel": "anim/ambient/standing-torch-idle-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 424624,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-25e0798580c2",
+      "path": "/anim/ambient/standing-torch-idle.fbx",
+      "rel": "anim/ambient/standing-torch-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 424624,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-42a40eda2315",
+      "path": "/anim/ambient/torch-inspect-downward.fbx",
+      "rel": "anim/ambient/torch-inspect-downward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 339216,
+      "category": "anim/ambient"
+    },
+    {
+      "id": "GO-54b3f548cbd7",
+      "path": "/anim/bow/fall-a-land-to-standing-idle-01.fbx",
+      "rel": "anim/bow/fall-a-land-to-standing-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-ab70592746df",
+      "path": "/anim/bow/fall-a-loop.fbx",
+      "rel": "anim/bow/fall-a-loop.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 157665,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-acd3c1482a6c",
+      "path": "/anim/bow/standing-aim-overdraw.fbx",
+      "rel": "anim/bow/standing-aim-overdraw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 273153,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-1c2157a1158e",
+      "path": "/anim/bow/standing-aim-recoil.fbx",
+      "rel": "anim/bow/standing-aim-recoil.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 140017,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-fb7070e76f42",
+      "path": "/anim/bow/standing-aim-walk-back.fbx",
+      "rel": "anim/bow/standing-aim-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175377,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-967a0f67eb97",
+      "path": "/anim/bow/standing-aim-walk-forward.fbx",
+      "rel": "anim/bow/standing-aim-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-5e13c2b50ed2",
+      "path": "/anim/bow/standing-aim-walk-left.fbx",
+      "rel": "anim/bow/standing-aim-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-ea282c72914a",
+      "path": "/anim/bow/standing-aim-walk-right.fbx",
+      "rel": "anim/bow/standing-aim-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 168001,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-7b569577fe71",
+      "path": "/anim/bow/standing-block.fbx",
+      "rel": "anim/bow/standing-block.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198993,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-9f4f833c39b1",
+      "path": "/anim/bow/standing-death-forward-01.fbx",
+      "rel": "anim/bow/standing-death-forward-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 250657,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-7a2f77f53b9d",
+      "path": "/anim/bow/standing-disarm-bow.fbx",
+      "rel": "anim/bow/standing-disarm-bow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-e5e48df6ad47",
+      "path": "/anim/bow/standing-dive-forward.fbx",
+      "rel": "anim/bow/standing-dive-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 182753,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-f39aaf3a1f57",
+      "path": "/anim/bow/standing-dodge-backward.fbx",
+      "rel": "anim/bow/standing-dodge-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 182753,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-30d9f977bc6f",
+      "path": "/anim/bow/standing-dodge-forward.fbx",
+      "rel": "anim/bow/standing-dodge-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-49cf1472267d",
+      "path": "/anim/bow/standing-dodge-left.fbx",
+      "rel": "anim/bow/standing-dodge-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153233,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-1c8cea9967a5",
+      "path": "/anim/bow/standing-dodge-right.fbx",
+      "rel": "anim/bow/standing-dodge-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153233,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-3f4ae68ef920",
+      "path": "/anim/bow/standing-draw-arrow.fbx",
+      "rel": "anim/bow/standing-draw-arrow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153953,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-5023a5d33c01",
+      "path": "/anim/bow/standing-equip-bow.fbx",
+      "rel": "anim/bow/standing-equip-bow.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 150289,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-3e38dc5805cf",
+      "path": "/anim/bow/standing-idle-01.fbx",
+      "rel": "anim/bow/standing-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 281953,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-0a783b23c75d",
+      "path": "/anim/bow/standing-melee-kick.fbx",
+      "rel": "anim/bow/standing-melee-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 173905,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-030b631d4b91",
+      "path": "/anim/bow/standing-melee-punch.fbx",
+      "rel": "anim/bow/standing-melee-punch.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153633,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-191f65da7b69",
+      "path": "/anim/bow/standing-react-small-from-front.fbx",
+      "rel": "anim/bow/standing-react-small-from-front.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-466ccf20d2af",
+      "path": "/anim/bow/standing-run-back.fbx",
+      "rel": "anim/bow/standing-run-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-646889379ed5",
+      "path": "/anim/bow/standing-run-forward.fbx",
+      "rel": "anim/bow/standing-run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 148801,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-d04a28a93241",
+      "path": "/anim/bow/standing-run-left.fbx",
+      "rel": "anim/bow/standing-run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-d0d0c3ab33e2",
+      "path": "/anim/bow/standing-run-right.fbx",
+      "rel": "anim/bow/standing-run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-37ab3138a43d",
+      "path": "/anim/bow/standing-turn-90-left.fbx",
+      "rel": "anim/bow/standing-turn-90-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-64ead26db3a6",
+      "path": "/anim/bow/standing-turn-90-right.fbx",
+      "rel": "anim/bow/standing-turn-90-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-65f8f3bbecd9",
+      "path": "/anim/bow/standing-walk-back.fbx",
+      "rel": "anim/bow/standing-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175377,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-1313dd746367",
+      "path": "/anim/bow/standing-walk-forward.fbx",
+      "rel": "anim/bow/standing-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-46af578e5f17",
+      "path": "/anim/bow/standing-walk-left.fbx",
+      "rel": "anim/bow/standing-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-d5d5cb8b3802",
+      "path": "/anim/bow/standing-walk-right.fbx",
+      "rel": "anim/bow/standing-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-73cf0d190a09",
+      "path": "/anim/bow/unarmed-idle-01.fbx",
+      "rel": "anim/bow/unarmed-idle-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 290753,
+      "category": "anim/bow"
+    },
+    {
+      "id": "GO-9c965aadacd8",
+      "path": "/anim/climb/climbing-down-wall.fbx",
+      "rel": "anim/climb/climbing-down-wall.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-b54cebabc260",
+      "path": "/anim/climb/climbing-to-top.fbx",
+      "rel": "anim/climb/climbing-to-top.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 287552,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-1db8a990ab27",
+      "path": "/anim/climb/climbing-up-wall.fbx",
+      "rel": "anim/climb/climbing-up-wall.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-a2c3bc00433c",
+      "path": "/anim/climb/climbing.fbx",
+      "rel": "anim/climb/climbing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 280160,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-ab82b7439ae5",
+      "path": "/anim/extra/aerial-evade.fbx",
+      "rel": "anim/extra/aerial-evade.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 272784,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-1ca367d44189",
+      "path": "/anim/extra/baseball-hit.fbx",
+      "rel": "anim/extra/baseball-hit.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 239920,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-e6376ac7035c",
+      "path": "/anim/extra/butterfly-twirl.fbx",
+      "rel": "anim/extra/butterfly-twirl.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 248816,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-1d81b02df4c9",
+      "path": "/anim/extra/corkscrew-evade.fbx",
+      "rel": "anim/extra/corkscrew-evade.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 221136,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-dd5299eb2164",
+      "path": "/anim/extra/corkscrew-kip-up.fbx",
+      "rel": "anim/extra/corkscrew-kip-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 238976,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-9a78af7d992e",
+      "path": "/anim/extra/crouched-to-sprinting.fbx",
+      "rel": "anim/extra/crouched-to-sprinting.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176848,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-92723aba7d83",
+      "path": "/anim/extra/frisbee-throw.fbx",
+      "rel": "anim/extra/frisbee-throw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 256560,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-ac360afba45f",
+      "path": "/anim/extra/front-flip.fbx",
+      "rel": "anim/extra/front-flip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 160608,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-935395d0df26",
+      "path": "/anim/extra/front-twist-flip.fbx",
+      "rel": "anim/extra/front-twist-flip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 207840,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-968e1ac893fe",
+      "path": "/anim/extra/grenade-throw.fbx",
+      "rel": "anim/extra/grenade-throw.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 234144,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-65c6f0a13241",
+      "path": "/anim/extra/hurricane-kick.fbx",
+      "rel": "anim/extra/hurricane-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153984,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-693d6a78cac2",
+      "path": "/anim/extra/jumping-down.fbx",
+      "rel": "anim/extra/jumping-down.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 228512,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-ada6160c6b7d",
+      "path": "/anim/extra/kip-up.fbx",
+      "rel": "anim/extra/kip-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 240176,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-734c35760310",
+      "path": "/anim/extra/male-dynamic-pose.fbx",
+      "rel": "anim/extra/male-dynamic-pose.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 112704,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-6f405e9c0859",
+      "path": "/anim/extra/pushing.fbx",
+      "rel": "anim/extra/pushing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 169472,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-aa3b62454b41",
+      "path": "/anim/extra/quick-roll-to-run.fbx",
+      "rel": "anim/extra/quick-roll-to-run.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 172416,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-cc85272322b3",
+      "path": "/anim/extra/running-slide.fbx",
+      "rel": "anim/extra/running-slide.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 178320,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-a82fa74c10e8",
+      "path": "/anim/extra/spinning.fbx",
+      "rel": "anim/extra/spinning.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 189168,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-5efabf3fe9e4",
+      "path": "/anim/extra/start-swinging.fbx",
+      "rel": "anim/extra/start-swinging.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 200464,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-7d82a6d53871",
+      "path": "/anim/extra/utility-kick.fbx",
+      "rel": "anim/extra/utility-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 260976,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-71fc875d50b7",
+      "path": "/anim/farming/dig-and-plant-seeds.fbx",
+      "rel": "anim/farming/dig-and-plant-seeds.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 303905,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-621a581c911e",
+      "path": "/anim/farming/pick-fruit.fbx",
+      "rel": "anim/farming/pick-fruit.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 387297,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-763bc41c0870",
+      "path": "/anim/farming/plant-tree.fbx",
+      "rel": "anim/farming/plant-tree.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 422913,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-fdcab50be800",
+      "path": "/anim/farming/pull-plant.fbx",
+      "rel": "anim/farming/pull-plant.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 274881,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-496e9dd67d78",
+      "path": "/anim/farming/watering.fbx",
+      "rel": "anim/farming/watering.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 307105,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-7dbcffbdd4f1",
+      "path": "/anim/knife/double-dagger-stab.fbx",
+      "rel": "anim/knife/double-dagger-stab.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 248432,
+      "category": "anim/knife"
+    },
+    {
+      "id": "GO-bc864517a3c7",
+      "path": "/anim/knife/dual-weapon-combo.fbx",
+      "rel": "anim/knife/dual-weapon-combo.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 271600,
+      "category": "anim/knife"
+    },
+    {
+      "id": "GO-a7bf1695d226",
+      "path": "/anim/knife/knife-idle.fbx",
+      "rel": "anim/knife/knife-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 267984,
+      "category": "anim/knife"
+    },
+    {
+      "id": "GO-30dff65f8219",
+      "path": "/anim/knife/stabbing.fbx",
+      "rel": "anim/knife/stabbing.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 227024,
+      "category": "anim/knife"
+    },
+    {
+      "id": "GO-786ab8c4270b",
+      "path": "/anim/magic/standing-1h-cast-spell-01.fbx",
+      "rel": "anim/magic/standing-1h-cast-spell-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 210801,
+      "category": "anim/magic"
+    },
+    {
+      "id": "GO-271951bbf2f8",
+      "path": "/anim/magic/standing-1h-magic-attack-01.fbx",
+      "rel": "anim/magic/standing-1h-magic-attack-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213537,
+      "category": "anim/magic"
+    },
+    {
+      "id": "GO-7502c07913c4",
+      "path": "/anim/magic/standing-1h-magic-attack-02.fbx",
+      "rel": "anim/magic/standing-1h-magic-attack-02.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 209217,
+      "category": "anim/magic"
+    },
+    {
+      "id": "GO-aff52698a1c4",
+      "path": "/anim/magic/standing-1h-magic-attack-03.fbx",
+      "rel": "anim/magic/standing-1h-magic-attack-03.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213937,
+      "category": "anim/magic"
+    },
+    {
+      "id": "GO-8d25354f29c4",
+      "path": "/anim/magic/standing-2h-magic-area-attack-01.fbx",
+      "rel": "anim/magic/standing-2h-magic-area-attack-01.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 242945,
+      "category": "anim/magic"
+    },
+    {
+      "id": "GO-3d056683b739",
+      "path": "/anim/magic-loco/standing-idle.fbx",
+      "rel": "anim/magic-loco/standing-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 193089,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-b569c9d16117",
+      "path": "/anim/magic-loco/standing-jump-running.fbx",
+      "rel": "anim/magic-loco/standing-jump-running.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 157665,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-eea064e4d017",
+      "path": "/anim/magic-loco/standing-land-to-standing-idle.fbx",
+      "rel": "anim/magic-loco/standing-land-to-standing-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159137,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-9cbf13ed8ecd",
+      "path": "/anim/magic-loco/standing-run-back.fbx",
+      "rel": "anim/magic-loco/standing-run-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 138481,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-2f1dd541260e",
+      "path": "/anim/magic-loco/standing-run-forward.fbx",
+      "rel": "anim/magic-loco/standing-run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 142897,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-052e2831243d",
+      "path": "/anim/magic-loco/standing-run-left.fbx",
+      "rel": "anim/magic-loco/standing-run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-4ebd9da11dec",
+      "path": "/anim/magic-loco/standing-run-right.fbx",
+      "rel": "anim/magic-loco/standing-run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-0e5cc1c27054",
+      "path": "/anim/magic-loco/standing-turn-left-90.fbx",
+      "rel": "anim/magic-loco/standing-turn-left-90.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 193089,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-4a660c524953",
+      "path": "/anim/magic-loco/standing-turn-right-90.fbx",
+      "rel": "anim/magic-loco/standing-turn-right-90.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 183185,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-4c56c7074736",
+      "path": "/anim/magic-loco/standing-walk-back.fbx",
+      "rel": "anim/magic-loco/standing-walk-back.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-6149a445133b",
+      "path": "/anim/magic-loco/standing-walk-forward.fbx",
+      "rel": "anim/magic-loco/standing-walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 160609,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-00a5a31f6b25",
+      "path": "/anim/magic-loco/standing-walk-left.fbx",
+      "rel": "anim/magic-loco/standing-walk-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162097,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-e7659d2c6859",
+      "path": "/anim/magic-loco/standing-walk-right.fbx",
+      "rel": "anim/magic-loco/standing-walk-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 163569,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-0f46d05d6b4a",
+      "path": "/anim/pistol/charged-pistol.fbx",
+      "rel": "anim/pistol/charged-pistol.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-970f1dadb72d",
+      "path": "/anim/pistol/drawing-gun.fbx",
+      "rel": "anim/pistol/drawing-gun.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-537e1afd6178",
+      "path": "/anim/pistol/gunplay.fbx",
+      "rel": "anim/pistol/gunplay.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-af1d050e815f",
+      "path": "/anim/pistol/idle.fbx",
+      "rel": "anim/pistol/idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166593,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-217b99257775",
+      "path": "/anim/pistol/jump-2.fbx",
+      "rel": "anim/pistol/jump-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 145857,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-97f43953c4a1",
+      "path": "/anim/pistol/jump.fbx",
+      "rel": "anim/pistol/jump.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198993,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-20aa232ebeca",
+      "path": "/anim/pistol/knee-jabs-uppercut.fbx",
+      "rel": "anim/pistol/knee-jabs-uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 309328,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-6834761fe758",
+      "path": "/anim/pistol/kneel-to-stand.fbx",
+      "rel": "anim/pistol/kneel-to-stand.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170945,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-bb5298129c67",
+      "path": "/anim/pistol/kneeling-idle.fbx",
+      "rel": "anim/pistol/kneeling-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 274593,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-4e0ffc622844",
+      "path": "/anim/pistol/mma-kick.fbx",
+      "rel": "anim/pistol/mma-kick.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198992,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-56512527fd14",
+      "path": "/anim/pistol/pistol-jump.fbx",
+      "rel": "anim/pistol/pistol-jump.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 285088,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-065e9b8083e7",
+      "path": "/anim/pistol/pistol-whip.fbx",
+      "rel": "anim/pistol/pistol-whip.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 224080,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-5ba0c33b4d3e",
+      "path": "/anim/pistol/run-arc-left.fbx",
+      "rel": "anim/pistol/run-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-0d29451ca235",
+      "path": "/anim/pistol/run-arc-right.fbx",
+      "rel": "anim/pistol/run-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 138481,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-b91510c2e024",
+      "path": "/anim/pistol/run-backward-arc-left.fbx",
+      "rel": "anim/pistol/run-backward-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-b8215b48a105",
+      "path": "/anim/pistol/run-backward-arc-right.fbx",
+      "rel": "anim/pistol/run-backward-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-1de1568752c7",
+      "path": "/anim/pistol/run-backward.fbx",
+      "rel": "anim/pistol/run-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 134049,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-b0c279e081e8",
+      "path": "/anim/pistol/run-forward.fbx",
+      "rel": "anim/pistol/run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-3e1564addc0f",
+      "path": "/anim/pistol/stand-to-kneel.fbx",
+      "rel": "anim/pistol/stand-to-kneel.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 153633,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-f32f28c71005",
+      "path": "/anim/pistol/strafe-left.fbx",
+      "rel": "anim/pistol/strafe-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 135521,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-be104d72b767",
+      "path": "/anim/pistol/strafe-right.fbx",
+      "rel": "anim/pistol/strafe-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-8251bcb06b18",
+      "path": "/anim/pistol/uppercut.fbx",
+      "rel": "anim/pistol/uppercut.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176304,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-d93583a03628",
+      "path": "/anim/pistol/walk-arc-left.fbx",
+      "rel": "anim/pistol/walk-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 142897,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-bbfbc283890b",
+      "path": "/anim/pistol/walk-arc-right.fbx",
+      "rel": "anim/pistol/walk-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 144385,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-6d7bfcf59666",
+      "path": "/anim/pistol/walk-backward-arc-left.fbx",
+      "rel": "anim/pistol/walk-backward-arc-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-b199c2df3e8b",
+      "path": "/anim/pistol/walk-backward-arc-right.fbx",
+      "rel": "anim/pistol/walk-backward-arc-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-39cb93260618",
+      "path": "/anim/pistol/walk-backward.fbx",
+      "rel": "anim/pistol/walk-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 156193,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-6ad0af7b6a63",
+      "path": "/anim/pistol/walk-forward.fbx",
+      "rel": "anim/pistol/walk-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 145857,
+      "category": "anim/pistol"
+    },
+    {
+      "id": "GO-5757ba8daac4",
+      "path": "/anim/reactions/fallen.fbx",
+      "rel": "anim/reactions/fallen.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141424,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-6bb93fee1047",
+      "path": "/anim/reactions/falling.fbx",
+      "rel": "anim/reactions/falling.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 491696,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-e4a6f70c5577",
+      "path": "/anim/reactions/get-up.fbx",
+      "rel": "anim/reactions/get-up.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-ee75489bcfe3",
+      "path": "/anim/reactions/hit-to-head.fbx",
+      "rel": "anim/reactions/hit-to-head.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222608,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-35641a54bd8b",
+      "path": "/anim/reactions/jogging-stumble.fbx",
+      "rel": "anim/reactions/jogging-stumble.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162096,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-14fa327d9b61",
+      "path": "/anim/reactions/parry.fbx",
+      "rel": "anim/reactions/parry.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 162272,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-c983df3f8286",
+      "path": "/anim/reactions/running-crawl.fbx",
+      "rel": "anim/reactions/running-crawl.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 159136,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-dd49aa63e3b9",
+      "path": "/anim/reactions/stunned.fbx",
+      "rel": "anim/reactions/stunned.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 204896,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-9651f03e8ae3",
+      "path": "/anim/reactions/wall-crash.fbx",
+      "rel": "anim/reactions/wall-crash.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 219648,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-22301a0f5815",
+      "path": "/anim/rifle/death-from-front-headshot.fbx",
+      "rel": "anim/rifle/death-from-front-headshot.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 236433,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-fd6eebc613ce",
+      "path": "/anim/rifle/idle-aiming.fbx",
+      "rel": "anim/rifle/idle-aiming.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 196609,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-494282ca9291",
+      "path": "/anim/rifle/idle-crouching.fbx",
+      "rel": "anim/rifle/idle-crouching.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198881,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-bdd1691ed056",
+      "path": "/anim/rifle/idle.fbx",
+      "rel": "anim/rifle/idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198881,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-d81698a489b5",
+      "path": "/anim/rifle/run-backward.fbx",
+      "rel": "anim/rifle/run-backward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 174289,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-9a36c101c515",
+      "path": "/anim/rifle/run-forward.fbx",
+      "rel": "anim/rifle/run-forward.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176209,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-fecf8b741ac7",
+      "path": "/anim/rifle/run-left.fbx",
+      "rel": "anim/rifle/run-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-1176db736d85",
+      "path": "/anim/rifle/run-right.fbx",
+      "rel": "anim/rifle/run-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 175841,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-217dd498a95a",
+      "path": "/anim/rifle/turn-90-left.fbx",
+      "rel": "anim/rifle/turn-90-left.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-02d8971fc91f",
+      "path": "/anim/rifle/turn-90-right.fbx",
+      "rel": "anim/rifle/turn-90-right.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 155681,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-3e0bab5a603a",
+      "path": "/anim/swim/swimming-to-edge.fbx",
+      "rel": "anim/swim/swimming-to-edge.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 287184,
+      "category": "anim/swim"
+    },
+    {
+      "id": "GO-4c731abc2bd5",
+      "path": "/anim/swim/swimming.fbx",
+      "rel": "anim/swim/swimming.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 368192,
+      "category": "anim/swim"
+    },
+    {
+      "id": "GO-ad9394f08078",
+      "path": "/anim/swim/treading-water.fbx",
+      "rel": "anim/swim/treading-water.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 230304,
+      "category": "anim/swim"
+    },
+    {
+      "id": "GO-408ba2c33896",
+      "path": "/anim/sword/draw-sword-1.fbx",
+      "rel": "anim/sword/draw-sword-1.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 176849,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-9ccf6f9ebeb8",
+      "path": "/anim/sword/great-sword-slide-attack.fbx",
+      "rel": "anim/sword/great-sword-slide-attack.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 206288,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-ef076586c395",
+      "path": "/anim/sword/outward-slash.fbx",
+      "rel": "anim/sword/outward-slash.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 198272,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-c7580b83ff00",
+      "path": "/anim/sword/sheath-sword-1.fbx",
+      "rel": "anim/sword/sheath-sword-1.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 166513,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-b94c996b94a1",
+      "path": "/anim/sword/sword-and-shield-attack-2.fbx",
+      "rel": "anim/sword/sword-and-shield-attack-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170401,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-19b856df866f",
+      "path": "/anim/sword/sword-and-shield-attack-3.fbx",
+      "rel": "anim/sword/sword-and-shield-attack-3.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 190897,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-df042883b852",
+      "path": "/anim/sword/sword-and-shield-attack-4.fbx",
+      "rel": "anim/sword/sword-and-shield-attack-4.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-be53b09254ca",
+      "path": "/anim/sword/sword-and-shield-attack-5.fbx",
+      "rel": "anim/sword/sword-and-shield-attack-5.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213744,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-593ce71f1a62",
+      "path": "/anim/sword/sword-and-shield-attack.fbx",
+      "rel": "anim/sword/sword-and-shield-attack.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 213745,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-eb8477292508",
+      "path": "/anim/sword/sword-and-shield-block-idle.fbx",
+      "rel": "anim/sword/sword-and-shield-block-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 170913,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-15534f2060bd",
+      "path": "/anim/sword/sword-and-shield-block.fbx",
+      "rel": "anim/sword/sword-and-shield-block.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 135521,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-5c3cb1488b57",
+      "path": "/anim/sword/sword-and-shield-casting.fbx",
+      "rel": "anim/sword/sword-and-shield-casting.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 242816,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-4bced5bbe0f1",
+      "path": "/anim/sword/sword-and-shield-death.fbx",
+      "rel": "anim/sword/sword-and-shield-death.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 212273,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-e3ab47b3f7ba",
+      "path": "/anim/sword/sword-and-shield-idle.fbx",
+      "rel": "anim/sword/sword-and-shield-idle.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 222609,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-cbf4d6cface7",
+      "path": "/anim/sword/sword-and-shield-run-2.fbx",
+      "rel": "anim/sword/sword-and-shield-run-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 134049,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-82974871ebc6",
+      "path": "/anim/sword/sword-and-shield-run.fbx",
+      "rel": "anim/sword/sword-and-shield-run.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-93831e50ccc7",
+      "path": "/anim/sword/sword-and-shield-strafe-2.fbx",
+      "rel": "anim/sword/sword-and-shield-strafe-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 141425,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-d21a606f3239",
+      "path": "/anim/sword/sword-and-shield-strafe.fbx",
+      "rel": "anim/sword/sword-and-shield-strafe.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-dc036991c34d",
+      "path": "/anim/sword/sword-and-shield-turn-2.fbx",
+      "rel": "anim/sword/sword-and-shield-turn-2.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-fb607a7bfc91",
+      "path": "/anim/sword/sword-and-shield-turn.fbx",
+      "rel": "anim/sword/sword-and-shield-turn.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-fbb82fbf0f8c",
+      "path": "/anim/sword/two-hand-sword-combo.fbx",
+      "rel": "anim/sword/two-hand-sword-combo.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 257600,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-15a19afe7203",
+      "path": "/assets/engine-Bwz_QAs3.js",
+      "rel": "assets/engine-Bwz_QAs3.js",
+      "kind": "code",
+      "ext": "js",
+      "bytes": 2964011,
+      "category": "assets"
+    },
+    {
+      "id": "GO-e3c7aa7e9292",
+      "path": "/assets/index-Ct_6_1sk.js",
+      "rel": "assets/index-Ct_6_1sk.js",
+      "kind": "code",
+      "ext": "js",
+      "bytes": 853450,
+      "category": "assets"
+    },
+    {
+      "id": "GO-6114a4ff7e1e",
+      "path": "/assets/index-Dv5_Znb5.css",
+      "rel": "assets/index-Dv5_Znb5.css",
+      "kind": "code",
+      "ext": "css",
+      "bytes": 69363,
+      "category": "assets"
+    },
+    {
+      "id": "GO-1341e20ee4f8",
+      "path": "/icons/action-bar.png",
+      "rel": "icons/action-bar.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 62459,
+      "category": "icons"
+    },
+    {
+      "id": "GO-febf0c61826f",
+      "path": "/icons/ai-worker.png",
+      "rel": "icons/ai-worker.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 65116,
+      "category": "icons"
+    },
+    {
+      "id": "GO-6a67e5668410",
+      "path": "/icons/ambush.png",
+      "rel": "icons/ambush.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 83921,
+      "category": "icons"
+    },
+    {
+      "id": "GO-209c830842f9",
+      "path": "/icons/anim-test.png",
+      "rel": "icons/anim-test.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 67135,
+      "category": "icons"
+    },
+    {
+      "id": "GO-5a18fff76611",
+      "path": "/icons/animation-editor.png",
+      "rel": "icons/animation-editor.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 58596,
+      "category": "icons"
+    },
+    {
+      "id": "GO-219ba765c6d8",
+      "path": "/icons/animator.png",
+      "rel": "icons/animator.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 67980,
+      "category": "icons"
+    },
+    {
+      "id": "GO-7d4cb9b0aca9",
+      "path": "/icons/asset-manager.png",
+      "rel": "icons/asset-manager.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 65740,
+      "category": "icons"
+    },
+    {
+      "id": "GO-dea7dff273f0",
+      "path": "/icons/attack.png",
+      "rel": "icons/attack.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 86656,
+      "category": "icons"
+    },
+    {
+      "id": "GO-312eabc63c9e",
+      "path": "/icons/build.png",
+      "rel": "icons/build.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 85383,
+      "category": "icons"
+    },
+    {
+      "id": "GO-a1741eb0a538",
+      "path": "/icons/building-kit.png",
+      "rel": "icons/building-kit.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 77474,
+      "category": "icons"
+    },
+    {
+      "id": "GO-1d1c84ee5e46",
+      "path": "/icons/camera.png",
+      "rel": "icons/camera.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 67320,
+      "category": "icons"
+    },
+    {
+      "id": "GO-2763a1433257",
+      "path": "/icons/charge.png",
+      "rel": "icons/charge.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 86953,
+      "category": "icons"
+    },
+    {
+      "id": "GO-99038c2bdbc7",
+      "path": "/icons/clip-library.png",
+      "rel": "icons/clip-library.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 64538,
+      "category": "icons"
+    },
+    {
+      "id": "GO-1a7c1a03ebe1",
+      "path": "/icons/combat-pad.png",
+      "rel": "icons/combat-pad.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 74391,
+      "category": "icons"
+    },
+    {
+      "id": "GO-32f6148eb5e7",
+      "path": "/icons/defend.png",
+      "rel": "icons/defend.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 86026,
+      "category": "icons"
+    },
+    {
+      "id": "GO-471fdd201b40",
+      "path": "/icons/disband.png",
+      "rel": "icons/disband.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 76845,
+      "category": "icons"
+    },
+    {
+      "id": "GO-74ad8446fb5f",
+      "path": "/icons/draggable-dock.png",
+      "rel": "icons/draggable-dock.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 59188,
+      "category": "icons"
+    },
+    {
+      "id": "GO-b3bbaf3d3c48",
+      "path": "/icons/equip.png",
+      "rel": "icons/equip.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 89295,
+      "category": "icons"
+    },
+    {
+      "id": "GO-d4c25327020b",
+      "path": "/icons/explore.png",
+      "rel": "icons/explore.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 83860,
+      "category": "icons"
+    },
+    {
+      "id": "GO-fd30d7ba510a",
+      "path": "/icons/foot-planting.png",
+      "rel": "icons/foot-planting.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 68700,
+      "category": "icons"
+    },
+    {
+      "id": "GO-703e0cfbae63",
+      "path": "/icons/gear-trial.png",
+      "rel": "icons/gear-trial.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 67339,
+      "category": "icons"
+    },
+    {
+      "id": "GO-60df05c50878",
+      "path": "/icons/guard.png",
+      "rel": "icons/guard.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 86779,
+      "category": "icons"
+    },
+    {
+      "id": "GO-c4d75ddefdb8",
+      "path": "/icons/harvest.png",
+      "rel": "icons/harvest.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 88460,
+      "category": "icons"
+    },
+    {
+      "id": "GO-c648355846bf",
+      "path": "/icons/hold.png",
+      "rel": "icons/hold.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 82979,
+      "category": "icons"
+    },
+    {
+      "id": "GO-85b6f76077d1",
+      "path": "/icons/hud-settings.png",
+      "rel": "icons/hud-settings.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 60372,
+      "category": "icons"
+    },
+    {
+      "id": "GO-a9232f272432",
+      "path": "/icons/inventory.png",
+      "rel": "icons/inventory.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 82908,
+      "category": "icons"
+    },
+    {
+      "id": "GO-f8fe6a58c4bf",
+      "path": "/icons/loadout-card.png",
+      "rel": "icons/loadout-card.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 70575,
+      "category": "icons"
+    },
+    {
+      "id": "GO-4a1958fcb8c7",
+      "path": "/icons/loot.png",
+      "rel": "icons/loot.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 83037,
+      "category": "icons"
+    },
+    {
+      "id": "GO-885a8dd0d601",
+      "path": "/icons/move.png",
+      "rel": "icons/move.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 88010,
+      "category": "icons"
+    },
+    {
+      "id": "GO-1e0b0113aa4c",
+      "path": "/icons/movement-pad.png",
+      "rel": "icons/movement-pad.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 66547,
+      "category": "icons"
+    },
+    {
+      "id": "GO-78a785be6396",
+      "path": "/icons/parkour.png",
+      "rel": "icons/parkour.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 70084,
+      "category": "icons"
+    },
+    {
+      "id": "GO-f5a67f9be4fc",
+      "path": "/icons/patrol.png",
+      "rel": "icons/patrol.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 83586,
+      "category": "icons"
+    },
+    {
+      "id": "GO-06caf0d2fe82",
+      "path": "/icons/physics.png",
+      "rel": "icons/physics.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 71762,
+      "category": "icons"
+    },
+    {
+      "id": "GO-3fdfdd6d2e1b",
+      "path": "/icons/pray.png",
+      "rel": "icons/pray.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 84696,
+      "category": "icons"
+    },
+    {
+      "id": "GO-8287b4e2cdf7",
+      "path": "/icons/rally.png",
+      "rel": "icons/rally.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 87343,
+      "category": "icons"
+    },
+    {
+      "id": "GO-b7b04ffa09ac",
+      "path": "/icons/repair.png",
+      "rel": "icons/repair.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 84293,
+      "category": "icons"
+    },
+    {
+      "id": "GO-fcb73adef300",
+      "path": "/icons/resizable-panel.png",
+      "rel": "icons/resizable-panel.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 58111,
+      "category": "icons"
+    },
+    {
+      "id": "GO-3ba1a6d02718",
+      "path": "/icons/rest.png",
+      "rel": "icons/rest.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 81811,
+      "category": "icons"
+    },
+    {
+      "id": "GO-d89b937ed328",
+      "path": "/icons/retreat.png",
+      "rel": "icons/retreat.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 84431,
+      "category": "icons"
+    },
+    {
+      "id": "GO-b3100c010434",
+      "path": "/icons/scout.png",
+      "rel": "icons/scout.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 83794,
+      "category": "icons"
+    },
+    {
+      "id": "GO-9ca953ff0ca5",
+      "path": "/icons/scriptable-skills.png",
+      "rel": "icons/scriptable-skills.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 72027,
+      "category": "icons"
+    },
+    {
+      "id": "GO-ceff42660ea0",
+      "path": "/icons/siege.png",
+      "rel": "icons/siege.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 86198,
+      "category": "icons"
+    },
+    {
+      "id": "GO-eda215250496",
+      "path": "/icons/skill-slot.png",
+      "rel": "icons/skill-slot.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 78567,
+      "category": "icons"
+    },
+    {
+      "id": "GO-5ccde66d2894",
+      "path": "/icons/skill-vfx-lab.png",
+      "rel": "icons/skill-vfx-lab.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 73845,
+      "category": "icons"
+    },
+    {
+      "id": "GO-9a6310ae791b",
+      "path": "/icons/stop.png",
+      "rel": "icons/stop.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 87543,
+      "category": "icons"
+    },
+    {
+      "id": "GO-51f70d12def7",
+      "path": "/icons/trade.png",
+      "rel": "icons/trade.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 85032,
+      "category": "icons"
+    },
+    {
+      "id": "GO-0a69121b400a",
+      "path": "/icons/unequip.png",
+      "rel": "icons/unequip.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 84604,
+      "category": "icons"
+    },
+    {
+      "id": "GO-b09278746ce4",
+      "path": "/icons/vfx-editor.png",
+      "rel": "icons/vfx-editor.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 74171,
+      "category": "icons"
+    },
+    {
+      "id": "GO-af1a9d080504",
+      "path": "/icons/weapon-mesh.png",
+      "rel": "icons/weapon-mesh.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 67145,
+      "category": "icons"
+    },
+    {
+      "id": "GO-06b791f05fb9",
+      "path": "/icons/world-editor.png",
+      "rel": "icons/world-editor.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 81110,
+      "category": "icons"
+    },
+    {
+      "id": "GO-571006165627",
+      "path": "/models/arena-war-zone.glb",
+      "rel": "models/arena-war-zone.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 7919296,
+      "category": "models"
+    },
+    {
+      "id": "GO-3d9525d76f3e",
+      "path": "/models/calvin-hat.glb",
+      "rel": "models/calvin-hat.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 9479392,
+      "category": "models"
+    },
+    {
+      "id": "GO-409706a0e677",
+      "path": "/models/dungeon.glb",
+      "rel": "models/dungeon.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 5903604,
+      "category": "models"
+    },
+    {
+      "id": "GO-f426f9a9e0e6",
+      "path": "/models/haunting-door.glb",
+      "rel": "models/haunting-door.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 4286116,
+      "category": "models"
+    },
+    {
+      "id": "GO-aee26df20917",
+      "path": "/models/karate-boss.glb",
+      "rel": "models/karate-boss.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 954560,
+      "category": "models"
+    },
+    {
+      "id": "GO-8922bde60d03",
+      "path": "/models/orc.glb",
+      "rel": "models/orc.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 68244,
+      "category": "models"
+    },
+    {
+      "id": "GO-47da0a1723c4",
+      "path": "/models/sanji.glb",
+      "rel": "models/sanji.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 153824,
+      "category": "models"
+    },
+    {
+      "id": "GO-b5910558e37d",
+      "path": "/models/skeleton-warrior.glb",
+      "rel": "models/skeleton-warrior.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 606476,
+      "category": "models"
+    },
+    {
+      "id": "GO-62f24ef7690c",
+      "path": "/models/destructibles/barrel-01.glb",
+      "rel": "models/destructibles/barrel-01.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 112956,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-a0983016192f",
+      "path": "/models/destructibles/barrel-02.glb",
+      "rel": "models/destructibles/barrel-02.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 125996,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-5a1267f0437f",
+      "path": "/models/destructibles/barrel-04.glb",
+      "rel": "models/destructibles/barrel-04.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 135796,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-d7c98ead5e04",
+      "path": "/models/destructibles/barrel-05.glb",
+      "rel": "models/destructibles/barrel-05.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 140408,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-44a434be049b",
+      "path": "/models/destructibles/barrel-06.glb",
+      "rel": "models/destructibles/barrel-06.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 155740,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-bccb73d26795",
+      "path": "/models/destructibles/barrel-07.glb",
+      "rel": "models/destructibles/barrel-07.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 114180,
+      "category": "models/destructibles"
+    },
+    {
+      "id": "GO-edc90aa28a7a",
+      "path": "/models/enemies/voxel-zombies/voxel-zombie-1.glb",
+      "rel": "models/enemies/voxel-zombies/voxel-zombie-1.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 50984,
+      "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-e5a18cf86f86",
+      "path": "/models/enemies/voxel-zombies/voxel-zombie-2.glb",
+      "rel": "models/enemies/voxel-zombies/voxel-zombie-2.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 38424,
+      "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-e04285ffc32e",
+      "path": "/models/enemies/voxel-zombies/voxel-zombie-3.glb",
+      "rel": "models/enemies/voxel-zombies/voxel-zombie-3.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 39128,
+      "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-f074ace4c57e",
+      "path": "/models/heroes/hero.glb",
+      "rel": "models/heroes/hero.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 220048,
+      "category": "models/heroes"
+    },
+    {
+      "id": "GO-6c0055cd3e76",
+      "path": "/models/hex-forcefield/LICENSE.txt",
+      "rel": "models/hex-forcefield/LICENSE.txt",
+      "kind": "text",
+      "ext": "txt",
+      "bytes": 726,
+      "category": "models/hex-forcefield"
+    },
+    {
+      "id": "GO-6ac4ff2f6a86",
+      "path": "/models/hex-forcefield/scene.bin",
+      "rel": "models/hex-forcefield/scene.bin",
+      "kind": "bin",
+      "ext": "bin",
+      "bytes": 371392,
+      "category": "models/hex-forcefield"
+    },
+    {
+      "id": "GO-2a03a8865849",
+      "path": "/models/hex-forcefield/scene.gltf",
+      "rel": "models/hex-forcefield/scene.gltf",
+      "kind": "model",
+      "ext": "gltf",
+      "bytes": 6654,
+      "category": "models/hex-forcefield"
+    },
+    {
+      "id": "GO-987b7bba6b8c",
+      "path": "/models/pirate/Barrel_Horizontal_00.fbx",
+      "rel": "models/pirate/Barrel_Horizontal_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 32800,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-b809ca81218b",
+      "path": "/models/pirate/black-tide.glb",
+      "rel": "models/pirate/black-tide.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1074596,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-516989f23c3a",
+      "path": "/models/pirate/Cannon_00.fbx",
+      "rel": "models/pirate/Cannon_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 51648,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-42f61b89b2c4",
+      "path": "/models/pirate/Cannon_Ball_00.fbx",
+      "rel": "models/pirate/Cannon_Ball_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 27856,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-40599b3228ec",
+      "path": "/models/pirate/Crate_Big-10_00.fbx",
+      "rel": "models/pirate/Crate_Big-10_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 47712,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-635301cd4d0a",
+      "path": "/models/pirate/Crate_Small_00.fbx",
+      "rel": "models/pirate/Crate_Small_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 28736,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-e251538b548d",
+      "path": "/models/pirate/Decor_PirateFlag_00.fbx",
+      "rel": "models/pirate/Decor_PirateFlag_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 26528,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-95144fb774ac",
+      "path": "/models/pirate/Decor_SterWheel_00.fbx",
+      "rel": "models/pirate/Decor_SterWheel_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 31232,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-7882cf2e5ae2",
+      "path": "/models/pirate/Decor_Sword-2_00.fbx",
+      "rel": "models/pirate/Decor_Sword-2_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 30336,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-253d937799ed",
+      "path": "/models/pirate/Rope_Short_00.fbx",
+      "rel": "models/pirate/Rope_Short_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 34496,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-9d4e4de0e9a3",
+      "path": "/models/pirate/Tools_Map_00.fbx",
+      "rel": "models/pirate/Tools_Map_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 28064,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-969601173ee4",
+      "path": "/models/pirate/TX_PirateShipInterior_Color.png",
+      "rel": "models/pirate/TX_PirateShipInterior_Color.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 318127,
+      "category": "models/pirate"
+    },
+    {
+      "id": "GO-011d775c7f6a",
+      "path": "/models/props/altar.glb",
+      "rel": "models/props/altar.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 5984572,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-9c60788f8adb",
+      "path": "/models/props/bear-trap.glb",
+      "rel": "models/props/bear-trap.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 30392,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-e7fb5a64ae7e",
+      "path": "/models/props/grimoire.glb",
+      "rel": "models/props/grimoire.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 25740,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-26e11771f192",
+      "path": "/models/props/hand-grenade.glb",
+      "rel": "models/props/hand-grenade.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 87952,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-da70e761e6a8",
+      "path": "/models/props/magic-hexarings.glb",
+      "rel": "models/props/magic-hexarings.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 62024,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-8d8f181eb710",
+      "path": "/models/props/punching-bag.glb",
+      "rel": "models/props/punching-bag.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 3378628,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-98eaee78b8b1",
+      "path": "/models/props/torch-burning.glb",
+      "rel": "models/props/torch-burning.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 386232,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-276ffe1ceb0d",
+      "path": "/models/props/torch.glb",
+      "rel": "models/props/torch.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 386232,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-7a1755d3ae3c",
+      "path": "/models/races/barbarian.glb",
+      "rel": "models/races/barbarian.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 530136,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-6c8d08e3ede1",
+      "path": "/models/races/dwarf.glb",
+      "rel": "models/races/dwarf.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 484796,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-8133dc1ea486",
+      "path": "/models/races/high_elf.glb",
+      "rel": "models/races/high_elf.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 551924,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-8709b78fdb7b",
+      "path": "/models/races/human.glb",
+      "rel": "models/races/human.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 499084,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-6cb37d89688a",
+      "path": "/models/races/orc.glb",
+      "rel": "models/races/orc.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 511148,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-9b48e40a9d49",
+      "path": "/models/races/undead.glb",
+      "rel": "models/races/undead.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 547560,
+      "category": "models/races"
+    },
+    {
+      "id": "GO-0e4e742dc566",
+      "path": "/models/vfx/aoe-warning.glb",
+      "rel": "models/vfx/aoe-warning.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 96292,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-835a2ab8babf",
+      "path": "/models/vfx/attack-slashes.glb",
+      "rel": "models/vfx/attack-slashes.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1372316,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-6fc975c82b11",
+      "path": "/models/vfx/chaos-glyph.glb",
+      "rel": "models/vfx/chaos-glyph.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1321684,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-59262fdcb1a5",
+      "path": "/models/vfx/crystals.glb",
+      "rel": "models/vfx/crystals.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 927048,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-2785f2b1b4b0",
+      "path": "/models/vfx/energy-beam.glb",
+      "rel": "models/vfx/energy-beam.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1766372,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-82c926f994f8",
+      "path": "/models/vfx/explosion.glb",
+      "rel": "models/vfx/explosion.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 4211960,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-20bb013d5521",
+      "path": "/models/vfx/explosive-orb.glb",
+      "rel": "models/vfx/explosive-orb.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 69792,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-241e007529fe",
+      "path": "/models/vfx/fireball.glb",
+      "rel": "models/vfx/fireball.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1719060,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-67ba9b3b8926",
+      "path": "/models/vfx/laser-beam.glb",
+      "rel": "models/vfx/laser-beam.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 49476,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-4f0f9185ded6",
+      "path": "/models/vfx/light-beam.glb",
+      "rel": "models/vfx/light-beam.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 420428,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-01ac436cac2d",
+      "path": "/models/vfx/light-of-slash.glb",
+      "rel": "models/vfx/light-of-slash.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 17576,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-a6531031946b",
+      "path": "/models/vfx/lightning.glb",
+      "rel": "models/vfx/lightning.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 47948,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-989c0476f5d7",
+      "path": "/models/vfx/location.glb",
+      "rel": "models/vfx/location.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 97048,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-d88f3b41bcdc",
+      "path": "/models/vfx/muzzle.glb",
+      "rel": "models/vfx/muzzle.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1699172,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-459eaab1c5e3",
+      "path": "/models/vfx/ring-green.glb",
+      "rel": "models/vfx/ring-green.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 131148,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-2637896c01ef",
+      "path": "/models/vfx/ring-red.glb",
+      "rel": "models/vfx/ring-red.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 293768,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-fdda6e04618e",
+      "path": "/models/vfx/spell-glyph.glb",
+      "rel": "models/vfx/spell-glyph.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 2927532,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-862429bc5a50",
+      "path": "/models/vfx/strawberry-strike.glb",
+      "rel": "models/vfx/strawberry-strike.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 1610948,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-b4c652765af6",
+      "path": "/models/vfx/yellow-light.glb",
+      "rel": "models/vfx/yellow-light.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 25256,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-b9426a7a8ea7",
+      "path": "/models/weapons/axe.glb",
+      "rel": "models/weapons/axe.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 14812,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-444ed01df28e",
+      "path": "/models/weapons/bow.glb",
+      "rel": "models/weapons/bow.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 11564,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-3e254c3d18d2",
+      "path": "/models/weapons/dagger.glb",
+      "rel": "models/weapons/dagger.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 6680,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-2896cc5710ce",
+      "path": "/models/weapons/greatsword.glb",
+      "rel": "models/weapons/greatsword.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 7716,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-18d3b64c30fe",
+      "path": "/models/weapons/hammer.glb",
+      "rel": "models/weapons/hammer.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 10552,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-abf7fe64b4b4",
+      "path": "/models/weapons/mace.glb",
+      "rel": "models/weapons/mace.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 570192,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-a76d167684cb",
+      "path": "/models/weapons/pistol.glb",
+      "rel": "models/weapons/pistol.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 34380,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-20d5f59010f8",
+      "path": "/models/weapons/revolver.glb",
+      "rel": "models/weapons/revolver.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 67484,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-884bad1f4d59",
+      "path": "/models/weapons/rifle.glb",
+      "rel": "models/weapons/rifle.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 106996,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-ecf89b1e5d2a",
+      "path": "/models/weapons/sculk-sword.glb",
+      "rel": "models/weapons/sculk-sword.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 140468,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-42e043ce5279",
+      "path": "/models/weapons/shield.glb",
+      "rel": "models/weapons/shield.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 8860,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-396db18115c1",
+      "path": "/models/weapons/spear.glb",
+      "rel": "models/weapons/spear.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 8184,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-51e0f3de5316",
+      "path": "/models/weapons/staff.glb",
+      "rel": "models/weapons/staff.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 8840,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-b39afacdbfeb",
+      "path": "/models/weapons/stone-sword.glb",
+      "rel": "models/weapons/stone-sword.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 159664,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-88ca56927e98",
+      "path": "/models/weapons/sword.glb",
+      "rel": "models/weapons/sword.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 8404,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-ebca6e0e918c",
+      "path": "/models/weapons/war-claw.glb",
+      "rel": "models/weapons/war-claw.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 167716,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-d15357698225",
+      "path": "/models/weapons/war-spear.glb",
+      "rel": "models/weapons/war-spear.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 915840,
+      "category": "models/weapons"
+    },
+    {
+      "id": "GO-619775826898",
+      "path": "/ui/menu/grudge-arena.png",
+      "rel": "ui/menu/grudge-arena.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 200602,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-3afe47f784e2",
+      "path": "/ui/menu/grudge-logo.png",
+      "rel": "ui/menu/grudge-logo.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 91898,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-0057eb34c959",
+      "path": "/ui/menu/leaderboard.png",
+      "rel": "ui/menu/leaderboard.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 166655,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-d4194ac7b760",
+      "path": "/ui/menu/pve.png",
+      "rel": "ui/menu/pve.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 118614,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-1a3bada576cf",
+      "path": "/ui/menu/pvp.png",
+      "rel": "ui/menu/pvp.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 209999,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-75914d4ee502",
+      "path": "/ui/menu/settings.png",
+      "rel": "ui/menu/settings.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 155551,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-84e6700f8f71",
+      "path": "/ui/menu/shop.png",
+      "rel": "ui/menu/shop.png",
+      "kind": "texture",
+      "ext": "png",
+      "bytes": 165728,
+      "category": "ui/menu"
+    },
+    {
+      "id": "GO-53e43bd9d784",
+      "path": "/Barrel_Horizontal_00.fbx",
+      "rel": "Barrel_Horizontal_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 32800,
+      "category": "root"
+    },
+    {
+      "id": "GO-d77b99ab48fc",
+      "path": "/Cannon_00.fbx",
+      "rel": "Cannon_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 51648,
+      "category": "root"
+    },
+    {
+      "id": "GO-8736b82f52f8",
+      "path": "/Cannon_Ball_00.fbx",
+      "rel": "Cannon_Ball_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 27856,
+      "category": "root"
+    },
+    {
+      "id": "GO-3d66ee01af0c",
+      "path": "/Crate_Big-10_00.fbx",
+      "rel": "Crate_Big-10_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 47712,
+      "category": "root"
+    },
+    {
+      "id": "GO-7999e569a6ee",
+      "path": "/Crate_Small_00.fbx",
+      "rel": "Crate_Small_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 28736,
+      "category": "root"
+    },
+    {
+      "id": "GO-7cbd94866ba5",
+      "path": "/Decor_PirateFlag_00.fbx",
+      "rel": "Decor_PirateFlag_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 26528,
+      "category": "root"
+    },
+    {
+      "id": "GO-15c96014bdb1",
+      "path": "/Decor_SterWheel_00.fbx",
+      "rel": "Decor_SterWheel_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 31232,
+      "category": "root"
+    },
+    {
+      "id": "GO-9f37541edbbc",
+      "path": "/Decor_Sword-2_00.fbx",
+      "rel": "Decor_Sword-2_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 30336,
+      "category": "root"
+    },
+    {
+      "id": "GO-660ed514c557",
+      "path": "/Rope_Short_00.fbx",
+      "rel": "Rope_Short_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 34496,
+      "category": "root"
+    },
+    {
+      "id": "GO-695708fc000f",
+      "path": "/Tools_Map_00.fbx",
+      "rel": "Tools_Map_00.fbx",
+      "kind": "animation",
+      "ext": "fbx",
+      "bytes": 28064,
+      "category": "root"
+    },
+    {
+      "id": "GO-adade27de262",
+      "path": "/voxel-zombie-1.glb",
+      "rel": "voxel-zombie-1.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 50984,
+      "category": "root"
+    },
+    {
+      "id": "GO-4689f6e4a6d2",
+      "path": "/voxel-zombie-2.glb",
+      "rel": "voxel-zombie-2.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 38424,
+      "category": "root"
+    },
+    {
+      "id": "GO-d90e7cf45a40",
+      "path": "/voxel-zombie-3.glb",
+      "rel": "voxel-zombie-3.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 39128,
+      "category": "root"
+    },
+    {
+      "id": "GO-b8a877cfeb7b",
+      "path": "/barrel-01.glb",
+      "rel": "barrel-01.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 112956,
+      "category": "root"
+    },
+    {
+      "id": "GO-2202882efe7c",
+      "path": "/barrel-02.glb",
+      "rel": "barrel-02.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 125996,
+      "category": "root"
+    },
+    {
+      "id": "GO-51e60da3d49d",
+      "path": "/barrel-04.glb",
+      "rel": "barrel-04.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 135796,
+      "category": "root"
+    },
+    {
+      "id": "GO-59f60e1397ff",
+      "path": "/barrel-05.glb",
+      "rel": "barrel-05.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 140408,
+      "category": "root"
+    },
+    {
+      "id": "GO-b220af0fbdc6",
+      "path": "/barrel-06.glb",
+      "rel": "barrel-06.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 155740,
+      "category": "root"
+    },
+    {
+      "id": "GO-65bb80df6864",
+      "path": "/barrel-07.glb",
+      "rel": "barrel-07.glb",
+      "kind": "model",
+      "ext": "glb",
+      "bytes": 114180,
+      "category": "root"
+    },
+    {
+      "id": "GO-b398190a6e51",
+      "path": "/.gameopen-build.json",
+      "rel": ".gameopen-build.json",
+      "kind": "data",
+      "ext": "json",
+      "bytes": 57,
+      "category": "root"
+    }
+  ]
+}

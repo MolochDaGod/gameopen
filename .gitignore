@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.vercel/
+.railway/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+.turbo/
+coverage/
+*.tsbuildinfo
+.wrangler/
+client/public/**/*.br
+client/public/**/*.gz

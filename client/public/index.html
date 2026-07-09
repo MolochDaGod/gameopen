@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Grudge Open — Combat Sandbox | Grudge Studio</title>
+    <meta name="description" content="Grudges Survival — a fantasy survival action game. Build your camp, forge heroes, and fight to survive." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Grudges Survival" />
+    <meta property="og:description" content="Grudges Survival — a fantasy survival action game. Build your camp, forge heroes, and fight to survive." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Grudges Survival" />
+    <meta property="og:image" content="/opengraph.jpg" />
+    <meta property="og:url" content="https://open.grudge-studio.com/" />
+    <meta name="twitter:description" content="Grudges Survival — a fantasy survival action game. Build your camp, forge heroes, and fight to survive." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-Ct_6_1sk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/engine-Bwz_QAs3.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Dv5_Znb5.css">
+    <script>
+  // Grudge fleet: prefer R2 CDN for heavy assets when configured
+  window.__GAMEOPEN__ = window.__GAMEOPEN__ || {
+    assetsCdn: "https://assets.grudge-studio.com/gameopen",
+    useR2: true,
+    apiBase: "",
+  };
+  // Rewrite relative /models /anim /icons to CDN when R2 flag on and not localhost
+  (function () {
+    if (!window.__GAMEOPEN__.useR2) return;
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
+    var cdn = window.__GAMEOPEN__.assetsCdn.replace(/\/$/, "");
+    var prefixes = ["/models/", "/anim/", "/icons/", "/ui/"];
+    var origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      try {
+        var url = typeof input === "string" ? input : (input && input.url) || "";
+        if (url.startsWith("/") && prefixes.some(function (p) { return url.startsWith(p); })) {
+          return origFetch(cdn + url, init);
+        }
+      } catch (e) {}
+      return origFetch(input, init);
+    };
+  })();
+</script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

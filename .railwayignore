@@ -1,0 +1,9 @@
+client/public/models
+client/public/anim
+client/public/icons
+client/public/ui
+client/public/assets
+node_modules
+.vercel
+.git
+*.log
