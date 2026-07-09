@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "count": 3,
+  "items": [
+    {
+      "id": "itm_axe_iron_01",
+      "kind": "weapon",
+      "name": "Iron 01"
+    },
+    {
+      "id": "itm_cloth_chest_01",
+      "kind": "armor",
+      "name": "Traveler Cloth"
+    },
+    {
+      "id": "itm_sword_iron_01",
+      "kind": "weapon",
+      "name": "Iron Longsword"
+    }
+  ]
+}

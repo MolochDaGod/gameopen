@@ -1,0 +1,70 @@
+{
+  "id": "sword.dash",
+  "weaponFamily": "sword",
+  "label": "Dash Strike",
+  "description": "Close distance with a thrusting slide attack.",
+  "rank": 2,
+  "hotbarSlot": 4,
+  "slotKind": "secondary",
+  "animKey": "sword_dash",
+  "anim": {
+    "path": "models/animations/sword/great-sword-slide-attack.fbx",
+    "status": "ready"
+  },
+  "power": 1.4,
+  "cost": { "stamina": 18 },
+  "cooldown": 8,
+  "damageType": "physical",
+  "effects": ["fx.warrior.cleave"],
+  "hitWindows": [
+    { "t": 0.35, "kind": "melee", "radius": 1.6, "angleDeg": 60 }
+  ],
+  "vfx": {
+    "castTimeMs": 0,
+    "charge": { "enabled": false, "color": "#d8c38a", "size": 0.4 },
+    "cast": { "enabled": true, "color": "#f4e4c1", "size": 0.45 },
+    "slashTrail": {
+      "enabled": true,
+      "color": "#fff2c4",
+      "reach": 2.2,
+      "arcDeg": 40,
+      "wave": false,
+      "knockback": 1.5
+    },
+    "travel": {
+      "mode": "directional",
+      "distance": 3.5,
+      "arc": 0,
+      "speed": 14,
+      "color": "#e8d9a0",
+      "startAnchor": "feet",
+      "endAnchor": "forward"
+    },
+    "impact": { "enabled": true, "color": "#ffd27a", "size": 0.55 },
+    "ground": { "enabled": true, "color": "#a08040" },
+    "aoe": { "radius": 0, "aroundPlayer": false },
+    "physics": { "impulse": 5, "up": 0.3, "falloff": true },
+    "afterimage": {
+      "enabled": true,
+      "color": "#d8c38a",
+      "count": 4,
+      "spacingMs": 35,
+      "fadeMs": 180,
+      "scale": 1
+    }
+  },
+  "icon": {
+    "path": "icons/skills/sword_dash.png",
+    "status": "placeholder"
+  },
+  "sfx": {
+    "cast": "sfx/melee/dash",
+    "hit": "sfx/melee/hit_blade"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "ready",
+    "vfx": "ready",
+    "icon": "placeholder"
+  }
+}

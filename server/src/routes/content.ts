@@ -7,7 +7,14 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const contentRoot = join(__dirname, "../../../content");
+// Express routes live under server/src/routes — content may be server/content (Docker)
+// or repo-root content/ (local monorepo).
+const contentRootCandidates = [
+  join(__dirname, "../../content"),
+  join(__dirname, "../../../content"),
+];
+const contentRoot =
+  contentRootCandidates.find((p) => existsSync(p)) || contentRootCandidates[0];
 
 function loadCollection(name: string): unknown[] {
   const dir = join(contentRoot, name);

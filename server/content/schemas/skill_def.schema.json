@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/skill_def.schema.json",
+  "title": "SkillDef",
+  "type": "object",
+  "required": [
+    "id",
+    "weaponFamily",
+    "label",
+    "animKey",
+    "power",
+    "vfx",
+    "icon",
+    "readiness"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "weaponFamily": { "type": "string" },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "rank": { "type": "integer", "minimum": 1 },
+    "hotbarSlot": { "type": "integer", "minimum": 1, "maximum": 6 },
+    "slotKind": { "enum": ["primary", "secondary", "ability", "ultimate"] },
+    "animKey": { "type": "string" },
+    "anim": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    },
+    "power": { "type": "number", "minimum": 0 },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "stamina": { "type": "number" },
+        "mana": { "type": "number" }
+      }
+    },
+    "cooldown": { "type": "number", "minimum": 0 },
+    "damageType": { "enum": ["physical", "magical"] },
+    "effects": { "type": "array", "items": { "type": "string" } },
+    "hitWindows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["t", "kind"],
+        "properties": {
+          "t": { "type": "number" },
+          "kind": { "enum": ["melee", "projectile", "aoe"] },
+          "radius": { "type": "number" },
+          "angleDeg": { "type": "number" },
+          "speed": { "type": "number" }
+        }
+      }
+    },
+    "vfx": { "type": "object" },
+    "icon": {
+      "type": "object",
+      "required": ["path", "status"],
+      "properties": {
+        "path": { "type": "string" },
+        "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    },
+    "sfx": {
+      "type": "object",
+      "properties": {
+        "cast": { "type": "string" },
+        "hit": { "type": "string" }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["data", "anim", "vfx", "icon"],
+      "properties": {
+        "data": { "enum": ["ready", "placeholder", "missing"] },
+        "anim": { "enum": ["ready", "placeholder", "missing"] },
+        "vfx": { "enum": ["ready", "placeholder", "missing"] },
+        "icon": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    }
+  }
+}

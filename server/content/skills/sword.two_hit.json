@@ -1,0 +1,71 @@
+{
+  "id": "sword.two_hit",
+  "weaponFamily": "sword",
+  "label": "Two-Hit Combo",
+  "description": "Solid two-hit sword combo — strong when timed.",
+  "rank": 1,
+  "hotbarSlot": 2,
+  "slotKind": "primary",
+  "animKey": "sword_two_hit",
+  "anim": {
+    "path": "models/animations/sword/sword-and-shield-attack-2.fbx",
+    "status": "ready"
+  },
+  "power": 1.15,
+  "cost": { "stamina": 8 },
+  "cooldown": 0,
+  "damageType": "physical",
+  "effects": ["fx.warrior.cleave"],
+  "hitWindows": [
+    { "t": 0.18, "kind": "melee", "radius": 1.35, "angleDeg": 80 },
+    { "t": 0.42, "kind": "melee", "radius": 1.45, "angleDeg": 100 }
+  ],
+  "vfx": {
+    "castTimeMs": 0,
+    "charge": { "enabled": false, "color": "#d8c38a", "size": 0.4 },
+    "cast": { "enabled": false, "color": "#d8c38a", "size": 0.5 },
+    "slashTrail": {
+      "enabled": true,
+      "color": "#f0e0a8",
+      "reach": 1.7,
+      "arcDeg": 110,
+      "wave": false,
+      "knockback": 0.55
+    },
+    "travel": {
+      "mode": "none",
+      "distance": 0,
+      "arc": 0,
+      "speed": 0,
+      "color": "#d8c38a",
+      "startAnchor": "weaponTip",
+      "endAnchor": "forward"
+    },
+    "impact": { "enabled": true, "color": "#d8c38a", "size": 0.4 },
+    "ground": { "enabled": false, "color": "#c79a5b" },
+    "aoe": { "radius": 0, "aroundPlayer": false },
+    "physics": { "impulse": 2.4, "up": 0.25, "falloff": true },
+    "afterimage": {
+      "enabled": false,
+      "color": "#d8c38a",
+      "count": 0,
+      "spacingMs": 0,
+      "fadeMs": 0,
+      "scale": 1
+    }
+  },
+  "icon": {
+    "path": "icons/skills/sword_two_hit.png",
+    "status": "placeholder"
+  },
+  "sfx": {
+    "cast": "sfx/melee/swing_med",
+    "hit": "sfx/melee/hit_blade"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "ready",
+    "vfx": "ready",
+    "icon": "placeholder"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "itm_sword_iron_01",
+  "kind": "weapon",
+  "name": "Iron Longsword",
+  "description": "Reliable crusade steel. Gold-standard weapon prefab for Grudge Open.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 25,
+  "tags": ["melee", "sword", "gold-standard"],
+  "icon": {
+    "path": "icons/weapons/sword_iron_01.png",
+    "status": "placeholder"
+  }
+}

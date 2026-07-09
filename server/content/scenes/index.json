@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-09T12:03:53.410Z",
+  "forgeEditor": "https://forge.grudge-studio.com/editor",
+  "gameopenPlay": "https://gameopen.vercel.app/",
+  "contentApi": "https://gameopen-production.up.railway.app/api/content",
+  "scenes": [
+    {
+      "key": "weapon-lab",
+      "title": "GameOpen Weapon Lab",
+      "description": "Gold-standard sword prefab lab. Edit in Forge AI; play at gameopen.vercel.app.",
+      "entityCount": 20,
+      "file": "content/scenes/weapon-lab.gfscene.json",
+      "urls": {
+        "json": "https://gameopen-production.up.railway.app/api/content/scenes/weapon-lab",
+        "forge": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fweapon-lab",
+        "forgeEdit": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fweapon-lab&edit=1",
+        "play": "https://gameopen.vercel.app/"
+      }
+    },
+    {
+      "key": "combat-sandbox",
+      "title": "GameOpen Combat Sandbox",
+      "description": "Encampment map, player, hostiles, fire VFX. Open in Forge to edit + AI; play live on gameopen.vercel.app.",
+      "entityCount": 11,
+      "file": "content/scenes/combat-sandbox.gfscene.json",
+      "urls": {
+        "json": "https://gameopen-production.up.railway.app/api/content/scenes/combat-sandbox",
+        "forge": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fcombat-sandbox",
+        "forgeEdit": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fcombat-sandbox&edit=1",
+        "play": "https://gameopen.vercel.app/"
+      }
+    },
+    {
+      "key": "catalog-plaza",
+      "title": "GameOpen Weapon Catalog Plaza",
+      "description": "One pedestal per content/weapons entry. Walk up and inspect via AI / dialog.",
+      "entityCount": 11,
+      "file": "content/scenes/catalog-plaza.gfscene.json",
+      "urls": {
+        "json": "https://gameopen-production.up.railway.app/api/content/scenes/catalog-plaza",
+        "forge": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fcatalog-plaza",
+        "forgeEdit": "https://forge.grudge-studio.com/editor?scene=https%3A%2F%2Fgameopen-production.up.railway.app%2Fapi%2Fcontent%2Fscenes%2Fcatalog-plaza&edit=1",
+        "play": "https://gameopen.vercel.app/"
+      }
+    }
+  ]
+}

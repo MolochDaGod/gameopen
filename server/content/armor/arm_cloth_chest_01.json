@@ -1,0 +1,20 @@
+{
+  "id": "arm_cloth_chest_01",
+  "itemId": "itm_cloth_chest_01",
+  "slot": "body",
+  "defense": 4,
+  "resistance": {},
+  "raceMesh": {
+    "race": "western-kingdoms",
+    "meshName": "WK_Units_Body_B"
+  },
+  "mesh": {
+    "path": "",
+    "status": "placeholder"
+  },
+  "readiness": {
+    "data": "ready",
+    "mesh": "placeholder",
+    "present": "placeholder"
+  }
+}
