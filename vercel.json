@@ -28,7 +28,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://gameopen-api-production.up.railway.app/api/:path*"
+      "destination": "https://gameopen-production.up.railway.app/api/:path*"
     },
     { "source": "/((?!assets/|models/|anim/|icons/|ui/|favicon|logo|opengraph|robots|asset-manifest|.*\\..*).*)", "destination": "/index.html" }
   ],
