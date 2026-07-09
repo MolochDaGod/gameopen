@@ -154,11 +154,15 @@ const server = http.createServer(async (req, res) => {
   if (path === "/" || path === "") {
     return json(res, 200, {
       service: "gameopen-api",
+      version: "1.1.0-fleet",
       health: "/api/healthz",
       effects: "/api/effects",
       characters: "/api/characters",
+      modes: "/api/modes",
       fleet: "/api/fleet/config",
       carrier: "ws /api/carrier?room=CODE",
+      hasDatabase: Boolean(process.env.DATABASE_URL),
+      hasJwt: Boolean(process.env.JWT_SECRET),
     });
   }
 

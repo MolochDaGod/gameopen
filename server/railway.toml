@@ -1,0 +1,3 @@
+﻿[deploy]
+startCommand = "node standalone.mjs"
+healthcheckPath = "/api/healthz"
