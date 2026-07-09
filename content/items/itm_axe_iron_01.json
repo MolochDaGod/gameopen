@@ -1,0 +1,17 @@
+{
+  "id": "itm_axe_iron_01",
+  "kind": "weapon",
+  "name": "Iron 01",
+  "description": "Iron 01 — scaffolded weapon package.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 10,
+  "tags": [
+    "axe",
+    "scaffolded"
+  ],
+  "icon": {
+    "path": "icons/weapons/axe_iron_01.png",
+    "status": "missing"
+  }
+}

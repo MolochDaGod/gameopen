@@ -13,6 +13,10 @@
     "start:api": "node server/standalone.mjs",
     "assets:merge": "node scripts/merge-gameopen-assets.mjs",
     "assets:manifest": "node scripts/generate-asset-manifest.mjs",
-    "assets:alias": "node scripts/fix-asset-aliases.mjs"
+    "assets:alias": "node scripts/fix-asset-aliases.mjs",
+    "content:index": "node scripts/content-index.mjs",
+    "readiness:weapons": "node scripts/readiness-weapons.mjs",
+    "scaffold:weapon": "node scripts/scaffold-weapon.mjs",
+    "scenes:build": "node scripts/build-forge-scenes.mjs"
   }
 }

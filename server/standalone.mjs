@@ -4,7 +4,7 @@
  */
 import http from "node:http";
 import { URL } from "node:url";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -157,6 +157,7 @@ const server = http.createServer(async (req, res) => {
       version: "1.1.0-fleet",
       health: "/api/healthz",
       effects: "/api/effects",
+      content: "/api/content",
       characters: "/api/characters",
       modes: "/api/modes",
       fleet: "/api/fleet/config",
@@ -164,6 +165,115 @@ const server = http.createServer(async (req, res) => {
       hasDatabase: Boolean(process.env.DATABASE_URL),
       hasJwt: Boolean(process.env.JWT_SECRET),
     });
+  }
+
+  // ── Weapon / skill / item content catalog (SSOT: content/) ───────────────
+  if (path === "/api/content" || path === "/api/content/") {
+    return json(res, 200, {
+      service: "gameopen-content",
+      docs: [
+        "content/docs/WEAPON_PREFAB.md",
+        "content/docs/SKILL_PREFAB.md",
+        "content/docs/ITEM_DB.md",
+        "content/docs/UMMORPG_ADOPTION.md",
+      ],
+      endpoints: {
+        weapons: "/api/content/weapons",
+        weaponById: "/api/content/weapons/:id",
+        skills: "/api/content/skills",
+        skillById: "/api/content/skills/:id",
+        items: "/api/content/items",
+        armor: "/api/content/armor",
+        readiness: "/api/content/readiness",
+        manifests: "/api/content/manifests/:name",
+      },
+    });
+  }
+
+  if (path.startsWith("/api/content/")) {
+    const contentRoot = join(__dirname, "../content");
+    const loadCollection = (name) => {
+      const dir = join(contentRoot, name);
+      if (!existsSync(dir)) return [];
+      return readdirSync(dir)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+        .map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")));
+    };
+
+    if (path === "/api/content/weapons") {
+      const weapons = loadCollection("weapons");
+      return json(res, 200, { count: weapons.length, weapons });
+    }
+    if (path.startsWith("/api/content/weapons/")) {
+      const id = decodeURIComponent(path.slice("/api/content/weapons/".length));
+      const file = join(contentRoot, "weapons", `${id}.json`);
+      if (!existsSync(file)) return json(res, 404, { error: "weapon not found", id });
+      return json(res, 200, JSON.parse(readFileSync(file, "utf8")));
+    }
+    if (path === "/api/content/skills") {
+      const skills = loadCollection("skills");
+      return json(res, 200, { count: skills.length, skills });
+    }
+    if (path.startsWith("/api/content/skills/")) {
+      const id = decodeURIComponent(path.slice("/api/content/skills/".length));
+      const file = join(contentRoot, "skills", `${id}.json`);
+      if (!existsSync(file)) return json(res, 404, { error: "skill not found", id });
+      return json(res, 200, JSON.parse(readFileSync(file, "utf8")));
+    }
+    if (path === "/api/content/items") {
+      const items = loadCollection("items");
+      return json(res, 200, { count: items.length, items });
+    }
+    if (path === "/api/content/armor") {
+      const armor = loadCollection("armor");
+      return json(res, 200, { count: armor.length, armor });
+    }
+    if (path === "/api/content/readiness") {
+      const file = join(contentRoot, "manifests", "readiness.json");
+      if (!existsSync(file)) {
+        return json(res, 200, {
+          version: 0,
+          note: "run pnpm content:index locally",
+          weapons: [],
+          skills: [],
+        });
+      }
+      return json(res, 200, JSON.parse(readFileSync(file, "utf8")));
+    }
+    if (path === "/api/content/scenes" || path === "/api/content/scenes/") {
+      const indexFile = join(contentRoot, "scenes", "index.json");
+      if (!existsSync(indexFile)) {
+        return json(res, 200, {
+          version: 0,
+          note: "run pnpm scenes:build",
+          scenes: [],
+        });
+      }
+      return json(res, 200, JSON.parse(readFileSync(indexFile, "utf8")));
+    }
+    if (path.startsWith("/api/content/scenes/")) {
+      const key = decodeURIComponent(
+        path.slice("/api/content/scenes/".length).replace(/\.gfscene\.json$/, ""),
+      );
+      const file = join(contentRoot, "scenes", `${key}.gfscene.json`);
+      if (!existsSync(file)) {
+        return json(res, 404, { error: "scene not found", key });
+      }
+      // CORS * so forge.grudge-studio.com can fetch ?scene=
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=60");
+      return json(res, 200, JSON.parse(readFileSync(file, "utf8")));
+    }
+    if (path.startsWith("/api/content/manifests/")) {
+      const name = path
+        .slice("/api/content/manifests/".length)
+        .replace(/\.json$/, "");
+      const file = join(contentRoot, "manifests", `${name}.json`);
+      if (!existsSync(file)) return json(res, 404, { error: "manifest not found", name });
+      return json(res, 200, JSON.parse(readFileSync(file, "utf8")));
+    }
+    return json(res, 404, { error: "unknown content route", path });
   }
 
   if (path === "/api/healthz" || path === "/healthz" || path === "/api/health") {

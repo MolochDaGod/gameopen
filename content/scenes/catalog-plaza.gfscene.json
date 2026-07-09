@@ -1,0 +1,352 @@
+{
+  "entities": [
+    {
+      "id": "cata-0000",
+      "name": "Ground",
+      "type": "plane",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          -1.5707963267948966,
+          0,
+          0
+        ],
+        "scale": [
+          48,
+          48,
+          1
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#141822",
+        "metalness": 0.1,
+        "roughness": 0.92
+      },
+      "layer": "Terrain",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "cata-0001",
+      "name": "Key Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          6,
+          10,
+          4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "directional",
+        "color": "#fff2d6",
+        "intensity": 1.2
+      }
+    },
+    {
+      "id": "cata-0002",
+      "name": "Fill Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          -5,
+          4,
+          -3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "point",
+        "color": "#6a9fff",
+        "intensity": 8,
+        "distance": 28
+      }
+    },
+    {
+      "id": "cata-0003",
+      "name": "Rim Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          0,
+          3,
+          -8
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "point",
+        "color": "#d4a84b",
+        "intensity": 5,
+        "distance": 20
+      }
+    },
+    {
+      "id": "cata-0004",
+      "name": "Pedestal_wpn_axe_iron_01",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          0,
+          0.35,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.35,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#2a3344",
+        "metalness": 0.4,
+        "roughness": 0.5
+      },
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "cata-0005",
+      "name": "wpn_axe_iron_01",
+      "type": "model",
+      "model": {
+        "url": "https://assets.grudge-studio.com/gameopen/",
+        "label": "wpn_axe_iron_01"
+      },
+      "transform": {
+        "position": [
+          0,
+          1.1,
+          6
+        ],
+        "rotation": [
+          0,
+          3.141592653589793,
+          0
+        ],
+        "scale": [
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "parentId": null
+    },
+    {
+      "id": "cata-0006",
+      "name": "Info_wpn_axe_iron_01",
+      "type": "empty",
+      "transform": {
+        "position": [
+          0,
+          2,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "wpn_axe_iron_01 · family axe · dmg 16 · skills axe.primary, axe.secondary, axe.ability, axe.ultimate · https://gameopen-production.up.railway.app/api/content/weapons/wpn_axe_iron_01"
+    },
+    {
+      "id": "cata-0007",
+      "name": "Pedestal_wpn_sword_iron_01",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          7.347880794884119e-16,
+          0.35,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.35,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#2a3344",
+        "metalness": 0.4,
+        "roughness": 0.5
+      },
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "cata-0008",
+      "name": "wpn_sword_iron_01",
+      "type": "model",
+      "model": {
+        "url": "https://assets.grudge-studio.com/gameopen/models/weapons/voxel/00.obj",
+        "label": "wpn_sword_iron_01"
+      },
+      "transform": {
+        "position": [
+          7.347880794884119e-16,
+          1.1,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "parentId": null
+    },
+    {
+      "id": "cata-0009",
+      "name": "Info_wpn_sword_iron_01",
+      "type": "empty",
+      "transform": {
+        "position": [
+          7.347880794884119e-16,
+          2,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "wpn_sword_iron_01 · family sword · dmg 18 · skills sword.slash, sword.two_hit, sword.spin_high, sword.dash · https://gameopen-production.up.railway.app/api/content/weapons/wpn_sword_iron_01"
+    },
+    {
+      "id": "cata-000a",
+      "name": "Player",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-survivor-male",
+        "label": "Editor"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "controllerKind": "thirdPerson",
+      "behavior": "player-rpg",
+      "layer": "Player",
+      "physics": {
+        "bodyType": "kinematicPosition",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0,
+        "friction": 0.8
+      }
+    }
+  ],
+  "environment": {
+    "skyColor": "#0a0e18",
+    "groundColor": "#1a1a2e",
+    "ambientIntensity": 0.5,
+    "sunIntensity": 1.2,
+    "gravity": [
+      0,
+      -9.81,
+      0
+    ],
+    "cameraMode": "editor",
+    "cameraTargetEntityId": null,
+    "playerMoveSpeed": 6,
+    "mouseSensitivity": 0.0025
+  }
+}

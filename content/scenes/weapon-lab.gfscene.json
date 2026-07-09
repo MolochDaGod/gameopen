@@ -1,0 +1,649 @@
+{
+  "entities": [
+    {
+      "id": "wlab-0000",
+      "name": "Ground",
+      "type": "plane",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          -1.5707963267948966,
+          0,
+          0
+        ],
+        "scale": [
+          32,
+          32,
+          1
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#141822",
+        "metalness": 0.1,
+        "roughness": 0.92
+      },
+      "layer": "Terrain",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "wlab-0001",
+      "name": "Key Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          6,
+          10,
+          4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "directional",
+        "color": "#fff2d6",
+        "intensity": 1.4
+      }
+    },
+    {
+      "id": "wlab-0002",
+      "name": "Fill Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          -5,
+          4,
+          -3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "point",
+        "color": "#6a9fff",
+        "intensity": 8,
+        "distance": 28
+      }
+    },
+    {
+      "id": "wlab-0003",
+      "name": "Rim Light",
+      "type": "light",
+      "transform": {
+        "position": [
+          0,
+          3,
+          -8
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "point",
+        "color": "#d4a84b",
+        "intensity": 5,
+        "distance": 20
+      }
+    },
+    {
+      "id": "wlab-0004",
+      "name": "Player",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-survivor-male",
+        "label": "You",
+        "clip": "idle"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          4
+        ],
+        "rotation": [
+          0,
+          3.141592653589793,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "controllerKind": "thirdPerson",
+      "behavior": "player-rpg",
+      "layer": "Player",
+      "physics": {
+        "bodyType": "kinematicPosition",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0,
+        "friction": 0.8
+      }
+    },
+    {
+      "id": "wlab-0005",
+      "name": "IronLongsword",
+      "type": "model",
+      "model": {
+        "url": "https://assets.grudge-studio.com/gameopen/models/weapons/voxel/00.obj",
+        "label": "wpn_sword_iron_01"
+      },
+      "transform": {
+        "position": [
+          0.28,
+          1.15,
+          0.22
+        ],
+        "rotation": [
+          0,
+          1.5707963267948966,
+          0
+        ],
+        "scale": [
+          0.85,
+          0.85,
+          0.85
+        ]
+      },
+      "parentId": "wlab-0004"
+    },
+    {
+      "id": "wlab-0006",
+      "name": "Dummy_sword.dash",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          -3.5999999999999996,
+          0.9,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.45,
+          0.9,
+          0.45
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#8b3a3a",
+        "metalness": 0.1,
+        "roughness": 0.65
+      },
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "wlab-0007",
+      "name": "SkillMarker_sword.dash",
+      "type": "empty",
+      "transform": {
+        "position": [
+          -3.5999999999999996,
+          2.2,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "Dash Strike · sword.dash · power 1.4 · anim sword_dash · https://gameopen-production.up.railway.app/api/content/skills/sword.dash"
+    },
+    {
+      "id": "wlab-0008",
+      "name": "Dummy_sword.slash",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          -1.2,
+          0.9,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.45,
+          0.9,
+          0.45
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#8b3a3a",
+        "metalness": 0.1,
+        "roughness": 0.65
+      },
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "wlab-0009",
+      "name": "SkillMarker_sword.slash",
+      "type": "empty",
+      "transform": {
+        "position": [
+          -1.2,
+          2.2,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "Slash · sword.slash · power 1 · anim sword_slash · https://gameopen-production.up.railway.app/api/content/skills/sword.slash"
+    },
+    {
+      "id": "wlab-000a",
+      "name": "Dummy_sword.spin_high",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          1.2,
+          0.9,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.45,
+          0.9,
+          0.45
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#8b3a3a",
+        "metalness": 0.1,
+        "roughness": 0.65
+      },
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "wlab-000b",
+      "name": "SkillMarker_sword.spin_high",
+      "type": "empty",
+      "transform": {
+        "position": [
+          1.2,
+          2.2,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "High Spin · sword.spin_high · power 1.35 · anim sword_spin_high · https://gameopen-production.up.railway.app/api/content/skills/sword.spin_high"
+    },
+    {
+      "id": "wlab-000c",
+      "name": "Dummy_sword.two_hit",
+      "type": "cylinder",
+      "transform": {
+        "position": [
+          3.5999999999999996,
+          0.9,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.45,
+          0.9,
+          0.45
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#8b3a3a",
+        "metalness": 0.1,
+        "roughness": 0.65
+      },
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "wlab-000d",
+      "name": "SkillMarker_sword.two_hit",
+      "type": "empty",
+      "transform": {
+        "position": [
+          3.5999999999999996,
+          2.2,
+          -4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "Two-Hit Combo · sword.two_hit · power 1.15 · anim sword_two_hit · https://gameopen-production.up.railway.app/api/content/skills/sword.two_hit"
+    },
+    {
+      "id": "wlab-000e",
+      "name": "GameOpenCatalog",
+      "type": "empty",
+      "transform": {
+        "position": [
+          0,
+          0.1,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "npcLine": "{\"game\":\"gameopen\",\"playUrl\":\"https://gameopen.vercel.app/\",\"contentApi\":\"https://gameopen-production.up.railway.app/api/content\",\"goldWeapon\":\"wpn_sword_iron_01\",\"docs\":\"content/docs/WEAPON_PREFAB.md\"}"
+    },
+    {
+      "id": "wlab-000f",
+      "name": "Crate_0",
+      "type": "box",
+      "transform": {
+        "position": [
+          -6,
+          0.4,
+          -1.5
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#6b5344",
+        "metalness": 0.1,
+        "roughness": 0.85
+      },
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.35,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "wlab-000g",
+      "name": "Crate_1",
+      "type": "box",
+      "transform": {
+        "position": [
+          -5.1,
+          0.4,
+          -1.5
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#6b5344",
+        "metalness": 0.1,
+        "roughness": 0.85
+      },
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.35,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "wlab-000h",
+      "name": "Crate_2",
+      "type": "box",
+      "transform": {
+        "position": [
+          -4.2,
+          0.4,
+          -1.5
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#6b5344",
+        "metalness": 0.1,
+        "roughness": 0.85
+      },
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.35,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "wlab-000i",
+      "name": "Crate_3",
+      "type": "box",
+      "transform": {
+        "position": [
+          -3.3,
+          0.4,
+          -1.5
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#6b5344",
+        "metalness": 0.1,
+        "roughness": 0.85
+      },
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.35,
+        "friction": 0.6
+      }
+    },
+    {
+      "id": "wlab-000j",
+      "name": "Crate_4",
+      "type": "box",
+      "transform": {
+        "position": [
+          -2.4,
+          0.4,
+          -1.5
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#6b5344",
+        "metalness": 0.1,
+        "roughness": 0.85
+      },
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.35,
+        "friction": 0.6
+      }
+    }
+  ],
+  "environment": {
+    "skyColor": "#080c14",
+    "groundColor": "#141822",
+    "ambientIntensity": 0.45,
+    "sunIntensity": 1.1,
+    "gravity": [
+      0,
+      -9.81,
+      0
+    ],
+    "cameraMode": "editor",
+    "cameraTargetEntityId": null,
+    "playerMoveSpeed": 6,
+    "mouseSensitivity": 0.0025
+  }
+}
