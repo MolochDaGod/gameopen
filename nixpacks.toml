@@ -2,11 +2,11 @@
 nixPkgs = ["nodejs_22"]
 
 [phases.install]
-cmds = ["echo skip-install"]
+cmds = ["npm install --no-fund --no-audit"]
 
 [phases.build]
-cmds = ["echo zero-dep-server"]
+cmds = ["npm run build -w @workspace/api-server"]
 
 [start]
-cmd = "node server/standalone.mjs"
+cmd = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
 

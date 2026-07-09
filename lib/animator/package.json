@@ -1,0 +1,24 @@
+{
+  "name": "@workspace/animator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "three": "^0.184.0"
+  },
+  "dependencies": {
+    "@workspace/assets": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/three": "^0.184.1",
+    "three": "^0.184.0",
+    "vite": "^6.3.5"
+  }
+}

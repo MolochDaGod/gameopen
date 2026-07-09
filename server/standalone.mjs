@@ -244,11 +244,68 @@ const server = http.createServer(async (req, res) => {
     return proxyJson(req, res, target);
   }
 
+  // Fleet auth / account — proxy to Grudge ID + GrudgeBuilder
+  if (path.startsWith("/api/auth")) {
+    const rest = path.slice("/api/auth".length) || "";
+    // Prefer GrudgeBuilder for puter/login/session; ID for /auth/*
+    const toBuilder = ["/puter", "/login", "/register", "/me", "/verify", "/session"].some(
+      (p) => rest === p || rest.startsWith(p + "/") || rest.startsWith(p + "?"),
+    );
+    if (toBuilder || rest === "/me" || rest.startsWith("/me?")) {
+      const target = `${GRUDGE_BUILDER}/api/auth${rest}${url.search}`;
+      return proxyJson(req, res, target);
+    }
+    const target = `${GRUDGE_ID}/api/auth${rest}${url.search}`;
+    return proxyJson(req, res, target);
+  }
+
+  if (path.startsWith("/api/account")) {
+    const rest = path.slice("/api/account".length) || "";
+    const target = `${GRUDGE_BUILDER}/api/account${rest}${url.search}`;
+    return proxyJson(req, res, target);
+  }
+
   if (path.startsWith("/api/objectstore")) {
     const rest = path.slice("/api/objectstore".length) || "";
     const base = OBJECTSTORE.replace(/\/api\/v1$/, "");
     const target = `${base}${rest}${url.search}`;
     return proxyJson(req, res, target);
+  }
+
+  // Game modes + AI strategy catalog (static, for lobby/tools)
+  if (path === "/api/game/modes" || path === "/api/modes") {
+    return json(res, 200, {
+      modes: [
+        "danger-room",
+        "sparring",
+        "boss-rush",
+        "horde",
+        "duel",
+        "coop-assault",
+        "arena-war",
+        "dungeon-crawl",
+        "pirate-siege",
+      ],
+      strategies: [
+        "aggressive-rusher",
+        "cautious-duelist",
+        "ranged-skirmisher",
+        "support-healer",
+        "tank-guard",
+        "boss-phased",
+        "swarm-horde",
+        "flanker",
+        "commander",
+      ],
+      fleet: {
+        auth: GRUDGE_ID,
+        gameData: GRUDGE_BUILDER,
+        assets: ASSETS_CDN,
+        objectStore: OBJECTSTORE,
+      },
+      hasDatabase: Boolean(process.env.DATABASE_URL),
+      hasJwt: Boolean(process.env.JWT_SECRET),
+    });
   }
 
   json(res, 404, { error: "not_found", path });

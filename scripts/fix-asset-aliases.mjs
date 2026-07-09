@@ -7,7 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const publicDir = path.resolve(__dirname, "../client/public");
+const publicDir = path.resolve(__dirname, "../artifacts/animator/public");
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -87,4 +87,4 @@ if (fs.existsSync(packRoot)) {
   }
 }
 
-console.log("[fix-asset-aliases] path aliases ready under client/public");
+console.log("[fix-asset-aliases] path aliases ready under artifacts/animator/public");

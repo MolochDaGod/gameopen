@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const publicDir = path.resolve(__dirname, "../client/public");
+const publicDir = path.resolve(__dirname, "../artifacts/animator/public");
 
 function walk(dir, base = dir) {
   if (!fs.existsSync(dir)) return [];
