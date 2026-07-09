@@ -191,10 +191,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (path.startsWith("/api/content/")) {
-    // Docker (server root): /app/content — monorepo: ../content
+    // Docker (/app/content), server-root Docker (./content), monorepo (../content)
     const contentRoot = [
       join(__dirname, "content"),
       join(__dirname, "../content"),
+      "/app/content",
     ].find((p) => existsSync(p)) || join(__dirname, "content");
     const loadCollection = (name) => {
       const dir = join(contentRoot, name);
