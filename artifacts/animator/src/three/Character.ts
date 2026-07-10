@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { sharedGltfLoader } from "./loaders/gltf";
 import type { AnimRole, CharacterDef } from "./types";
 import { CHARACTER_HEIGHT_M } from "./types";
 import { asset } from "./assets";
@@ -73,7 +73,7 @@ export class Character {
   }
 
   async load(): Promise<void> {
-    const loader = new GLTFLoader();
+    const loader = sharedGltfLoader();
     const url = asset(this.def.file);
     const gltf = await loader.loadAsync(url);
     if (this.disposed) {

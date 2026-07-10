@@ -20,6 +20,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "../assets";
+import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
 import {
   MIMIC_ATTACKS,
@@ -42,6 +43,8 @@ const MM_TO_M = 0.06;
 
 const PLAYER_MAX_HP = 100;
 const MIMIC_MAX_HP = 120;
+/** Baked grudge6 roster index for the player avatar (a grudge6 rts_toon character, never a primitive shape). */
+const PLAYER_CHAR_INDEX = 0;
 const PLAYER_SPEED = 5.5;
 const MIMIC_SPEED = 2.6;
 const MELEE_REACH = 2.4;
@@ -90,6 +93,7 @@ export class MimicDungeon {
 
   // Player
   private player = new THREE.Group();
+  private playerModel: THREE.Object3D | null = null;
   private playerYaw = 0;
   private playerHp = PLAYER_MAX_HP;
   private playerAtkCd = 0;
@@ -143,7 +147,7 @@ export class MimicDungeon {
     this.mimicRoot.add(this.mimicPose);
     this.scene.add(this.decoy);
     this.buildLights();
-    this.buildPlayer();
+    void this.buildPlayer();
 
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
@@ -169,22 +173,23 @@ export class MimicDungeon {
     this.scene.add(new THREE.AmbientLight(0x2a3350, 0.4));
   }
 
-  private buildPlayer() {
-    const geo = new THREE.CapsuleGeometry(0.35, 1.1, 6, 12);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x4f9bff, roughness: 0.5, metalness: 0.1 });
-    const body = new THREE.Mesh(geo, mat);
-    body.position.y = 0.9;
-    body.castShadow = true;
-    this.player.add(body);
-    // A snout so the facing reads.
-    const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.14, 0.4, 10),
-      new THREE.MeshStandardMaterial({ color: 0xdfe9ff, roughness: 0.4 }),
-    );
-    nose.rotation.x = Math.PI / 2;
-    nose.position.set(0, 1.1, 0.45);
-    this.player.add(nose);
+  /**
+   * Player avatar: a baked grudge6 (rts_toon) character — never a primitive
+   * shape. The model's geometry + materials are SHARED with the roster cache
+   * (owned for the app lifetime), so `dispose()` skips this subtree rather than
+   * freeing them. Async: the transform group is added immediately and the mesh
+   * attaches when the (cached) baked GLB resolves.
+   */
+  private async buildPlayer() {
     this.scene.add(this.player);
+    try {
+      const model = await getBakedCharacter(PLAYER_CHAR_INDEX);
+      if (this.disposed) return;
+      this.playerModel = model;
+      this.player.add(model);
+    } catch (err) {
+      console.error("[MimicDungeon] grudge6 player load failed", err);
+    }
   }
 
   private async load() {
@@ -689,12 +694,14 @@ export class MimicDungeon {
     this.vfx.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
-      if (m.isMesh) {
-        m.geometry?.dispose();
-        const mat = m.material;
-        if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
-        else mat?.dispose();
-      }
+      if (!m.isMesh) return;
+      // The baked grudge6 player shares geometry + materials with the roster
+      // cache (owned app-wide) — never dispose that subtree here.
+      if (this.playerModel && this.isDescendant(m, this.playerModel)) return;
+      m.geometry?.dispose();
+      const mat = m.material;
+      if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
+      else mat?.dispose();
     });
     this.renderer.dispose();
   }

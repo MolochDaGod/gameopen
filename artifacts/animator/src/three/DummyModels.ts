@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { sharedGltfLoader } from "./loaders/gltf";
 import { asset } from "./assets";
 import { BEAR_ATTACK_DURATION, bearAttackPose, type BearAttackName } from "./bear/bearAttacks";
 
@@ -84,7 +84,7 @@ interface Template {
   mats: Set<THREE.Material>;
 }
 
-const loader = new GLTFLoader();
+const loader = sharedGltfLoader();
 
 /**
  * Shared loader/cache for the passive dummy GLBs. One {@link Template} per kind

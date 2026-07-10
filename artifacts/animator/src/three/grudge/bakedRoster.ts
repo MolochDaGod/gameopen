@@ -17,8 +17,8 @@
  * `D:\Games\Models\30characters-source-2048.glb`.
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "../assets";
+import { sharedGltfLoader } from "../loaders/gltf";
 import { PRESET_IDS, type PresetId } from "./gearPresets";
 import { RACE_IDS, type RaceId } from "./raceAssets";
 
@@ -49,7 +49,7 @@ let rosterPromise: Promise<THREE.Object3D[]> | null = null;
 /** Load the baked GLB once and return the 30 character sub-groups (cached). */
 function loadRoster(): Promise<THREE.Object3D[]> {
   if (!rosterPromise) {
-    rosterPromise = new GLTFLoader()
+    rosterPromise = sharedGltfLoader()
       .loadAsync(asset(GLB_URL))
       .then((gltf) => {
         // The 30 characters are the children of the group with the most
