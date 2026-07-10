@@ -6,6 +6,8 @@ import { addStudioLights, STUDIO_FOG, STUDIO_TONE_MAPPING_EXPOSURE } from "./stu
 import { DjBooth } from "./DjBooth";
 import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
+import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
+import { parseGrudgeAvatarId } from "../lib/raceModel";
 import { Controller } from "./Controller";
 import { Recoil, fovKick, screenCenterRay } from "./aim/AimSystem";
 import { Vfx } from "./Vfx";
@@ -34,7 +36,6 @@ import { isInWaterBand, traversalModeFor } from "./dungeon/water";
 import { VoxelArena } from "./voxel/VoxelArena";
 import type { VoxelMap } from "./voxel/types";
 import { PhysicsSystem } from "./PhysicsSystem";
-import { PunchingBags } from "./PunchingBags";
 import {
   aoeFalloff,
   meleeStrike,
@@ -371,7 +372,6 @@ export class Studio {
   /** Guards against re-triggering the async arena load. */
   private enteringArena = false;
   private physics: PhysicsSystem | null = null;
-  private bags: PunchingBags | null = null;
   private input: InputState;
   /** True on touch devices: suppress pointer-lock on tap (on-screen controls). */
   private touchMode = false;
@@ -760,6 +760,10 @@ export class Studio {
             break;
           case "perfectParry":
             this.setCombatFlash("PERFECT PARRY!", 1.5);
+            // Anime clash spark where the incoming blow is turned aside. The
+            // parried enemy's own stun reaction + flash fire from onEnemyState
+            // when its CC enters the vulnerable state (parry attackerReaction).
+            if (pos) this.vfx.parryClash(pos);
             break;
           case "blockStop":
             if (result.defenderReaction === "stunned") {
@@ -813,9 +817,9 @@ export class Studio {
   }
 
   /**
-   * Bring up the Rapier physics core + the hung punching bags. Async (the wasm
-   * runtime + bag GLB load off-thread), so the render loop guards on `bags`
-   * being present and bails cleanly if the Studio is disposed mid-load.
+   * Bring up the Rapier physics core (+ a solid ground plane). Async (the wasm
+   * runtime loads off-thread), so the render loop guards on `physics` being
+   * present and bails cleanly if the Studio is disposed mid-load.
    */
   private async initPhysics() {
     const physics = new PhysicsSystem();
@@ -832,27 +836,11 @@ export class Studio {
     // Solid ground so the player capsule and dynamic props rest on it instead of
     // hovering over the Danger Room's purely-visual floor plane.
     physics.addGroundPlane(0);
-    const bags = new PunchingBags(this.scene, physics.world);
-    try {
-      await bags.load();
-    } catch (err) {
-      console.error("[Studio] punching bags load failed", err);
-      bags.dispose();
-      physics.dispose();
-      return;
-    }
-    if (this.disposed) {
-      bags.dispose();
-      physics.dispose();
-      return;
-    }
     this.physics = physics;
-    this.bags = bags;
   }
 
-  /** Knock any punching bags inside `radius` of `center` (melee/skill impacts). */
+  /** Knock any authored arena training bags inside `radius` of `center` (melee/skill impacts). */
   private hitBags(center: THREE.Vector3, radius: number, force: number, damage = 0) {
-    this.bags?.blast(center, radius, force, damage);
     this.arena?.blastBags(center, radius, force, damage);
   }
 
@@ -865,13 +853,33 @@ export class Studio {
 
   private async spawnCharacter(id: string) {
     const token = ++this.loadToken;
+    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race FBX
+    // (the active fleet character's race); anything else is a catalog rig.
+    const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
-    const next: Avatar = def.procedural ? new ExplorerCharacter(def) : new Character(def);
+    let next: Avatar = grudge
+      ? new GrudgeAvatar(grudge.raceId, grudge.presetId)
+      : def.procedural
+        ? new ExplorerCharacter(def)
+        : new Character(def);
     try {
       await next.load();
     } catch (err) {
       console.error("[Studio] character load failed", err);
-      return;
+      // The grudge6 race FBX can fail (asset host / CORS); fall back to the
+      // procedural Explorer so the surface always has a playable avatar.
+      if (!grudge) return;
+      next.dispose();
+      if (this.disposed || token !== this.loadToken) return;
+      const exDef = getCharacter("explorer");
+      next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
+      try {
+        await next.load();
+      } catch (err2) {
+        console.error("[Studio] fallback character load failed", err2);
+        return;
+      }
+      id = exDef.id;
     }
     // Discard stale loads — only the most recent selection may commit.
     if (this.disposed || token !== this.loadToken) {
@@ -1897,6 +1905,7 @@ export class Studio {
           this.setCombatFlash("PARRIED!", 1.2);
           this.sfx?.play("block", pos, { volume: 1, rate: 0.85 });
           this.blockShield(pos, true);
+          this.vfx.parryClash(pos);
           this.vfx.burst(pos, 0xffe0a0, 40, 6);
           this.vfx.shockwave(new THREE.Vector3(pos.x, 0.05, pos.z), 0xffd060, 2.5, 0.5);
           this.playPlayerReaction("wallCrash");
@@ -1906,6 +1915,7 @@ export class Studio {
           // Blade rang off the enemy's guard — a clean stance recoil, short beat.
           this.sfx?.play("block", pos, { volume: 0.85, rate: 1.1 });
           this.blockShield(pos);
+          this.vfx.parryClash(pos, 0xbcd0ff);
           this.vfx.burst(pos, 0x88aaff, 20, 3.5);
           this.setCombatFlash("DEFLECTED", 0.7);
           this.reactWithClip(defenseClips(this.playerGroup()).parry, 0.1);
@@ -4849,9 +4859,8 @@ export class Studio {
       }
     }
     this.character?.update(dt);
-    // Step real physics + slave the punching-bag visuals to their bodies.
+    // Step the Rapier physics core (dungeon/arena colliders + dynamic props).
     this.physics?.step(dt);
-    this.bags?.sync(dt, this.camera);
     // Drive the sparring opponents with the live player position + damage hooks.
     if (this.character) {
       this.sparCtx.playerPos.copy(this.character.root.position);
@@ -6817,7 +6826,6 @@ export class Studio {
     this.targets.dispose();
     this.dangerTargets?.dispose();
     this.arena?.dispose();
-    this.bags?.dispose();
     this.physics?.dispose();
     this.status.dispose();
     this.mech.dispose();

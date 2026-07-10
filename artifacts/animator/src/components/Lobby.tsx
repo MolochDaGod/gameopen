@@ -18,6 +18,7 @@ import {
   type RoomPresetId,
 } from "../three/RoomPresets";
 import { EnvThumb } from "./EnvThumb";
+import { CharacterPicker } from "./CharacterPicker";
 
 interface Props {
   /** Load a posted voxel map into the editor. */
@@ -240,6 +241,9 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }:
           </button>
         </div>
       </div>
+
+      {/* ── Active fleet character (shared avatar + GRUDOX handoff) ────────── */}
+      <CharacterPicker />
 
       {/* ── Multiplayer rooms ─────────────────────────────────────────────── */}
       <section className="rooms">

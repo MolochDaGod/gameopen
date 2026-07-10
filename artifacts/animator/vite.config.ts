@@ -45,10 +45,24 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/carrier-net/src/index.ts",
       ),
+      "@workspace/brawl-net": path.resolve(
+        import.meta.dirname,
+        "../../lib/brawl-net/src/index.ts",
+      ),
       "@workspace/animator": path.resolve(
         import.meta.dirname,
         "../../lib/animator/src/index.ts",
       ),
+      // The @workspace/* libs above are aliased to their TS SOURCE, so their
+      // bare external imports (e.g. @tanstack/react-query in the generated
+      // api-client) must resolve to THIS app's installed copies regardless of
+      // the importing file's location on disk. Without these, Rollup fails with
+      // "failed to resolve import '@tanstack/react-query' from lib/...".
+      "@tanstack/react-query": path.resolve(
+        import.meta.dirname,
+        "node_modules/@tanstack/react-query",
+      ),
+      zod: path.resolve(import.meta.dirname, "node_modules/zod"),
     },
     dedupe: ["react", "react-dom", "three"],
   },

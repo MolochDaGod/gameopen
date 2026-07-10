@@ -41,9 +41,15 @@ import { TouchControls } from "./components/TouchControls";
 import { StatusBar } from "./components/StatusBar";
 import { StatusDock } from "./components/StatusDock";
 import { DoorSelect } from "./components/DoorSelect";
+import { IntroCinematic } from "./components/IntroCinematic";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
+import { RuinsBrawler } from "./components/RuinsBrawler";
+import { GrudoxZones } from "./components/GrudoxZones";
+import { MimicDungeon } from "./components/MimicDungeon";
+import { gameSession } from "./game/GameSession";
+import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { VoxelEditorUI } from "./components/VoxelEditorUI";
 import { VoxelMapsPanel } from "./components/VoxelMapsPanel";
@@ -71,14 +77,24 @@ import { resolveHudVars } from "./hud/hudConfig";
 import "./index.css";
 import "./components/dock/dock.css";
 
-type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask";
+type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic";
 
-// Optional deep-link: `?door=editor|danger|voxel|lobby` opens that door on load
-// (handy for sharing a direct link and for testing a single surface).
+// Optional deep-link: `?door=editor|danger|voxel|lobby|zones|brawl` opens that
+// door on load (handy for sharing a direct link and for testing a single surface).
 function initialMode(): Mode {
   try {
     const d = new URLSearchParams(window.location.search).get("door");
-    if (d === "editor" || d === "danger" || d === "voxel" || d === "lobby" || d === "ledmask") return d;
+    if (
+      d === "editor" ||
+      d === "danger" ||
+      d === "voxel" ||
+      d === "lobby" ||
+      d === "ledmask" ||
+      d === "zones" ||
+      d === "brawl" ||
+      d === "mimic"
+    )
+      return d;
   } catch {
     /* no-op */
   }
@@ -117,6 +133,21 @@ export default function App() {
     setEquipOpen(false);
   }, [mode]);
   const [characterId, setCharacterId] = useState("explorer");
+  // Drive the in-game avatar from the active fleet character: resolve its race
+  // to a grudge6 FBX (`grudge:<race>:<preset>`) and push it to the engine. Studio
+  // falls back to the Explorer rig if the race asset can't load, so this is safe
+  // even when no character is selected (default stays "explorer").
+  useEffect(() => {
+    const applyAvatar = () => {
+      const ch = gameSession.selectedCharacter();
+      if (!ch) return;
+      const { avatarId } = resolveRaceModel(ch);
+      setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
+      studioRef.current?.setCharacter(avatarId);
+    };
+    applyAvatar();
+    return gameSession.subscribe(applyAvatar);
+  }, []);
   const [weaponId, setWeaponId] = useState<WeaponId>("sword");
   const [offHand, setOffHandState] = useState<WeaponId | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
@@ -231,7 +262,7 @@ export default function App() {
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
-      studio = new Studio(mountRef.current, "explorer", (h) => hudRef.current(h));
+      studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
       studio.onCharacterLoaded = () => {
         refreshAnim();
         // A networked room with a chosen map loads it once the rig is ready.
@@ -284,7 +315,7 @@ export default function App() {
     }
     let studio: Studio | null = null;
     try {
-      studio = new Studio(mountRef.current, "explorer", (h) => hudRef.current(h));
+      studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
       studio.onCharacterLoaded = () => {
         refreshAnim();
         void studioRef.current?.enterArena(map);
@@ -795,7 +826,7 @@ export default function App() {
         placeholder: "Spawn 3 sword enemies, set difficulty hard…",
       };
     }
-    if (mode === "doors" || mode === "voxel" || mode === "lobby") {
+    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones") {
       return {
         surface: "guide",
         title: "Companion",
@@ -840,7 +871,14 @@ export default function App() {
   }, []);
 
   if (mode === "doors") {
-    return shell(withScreenTheme(<DoorSelect onEnter={navigate} />));
+    return shell(
+      withScreenTheme(
+        <div className="doors-cinematic">
+          <IntroCinematic />
+          <DoorSelect onEnter={navigate} />
+        </div>,
+      ),
+    );
   }
 
   if (mode === "editor") {
@@ -870,6 +908,22 @@ export default function App() {
       />,
       ),
     );
+  }
+
+  if (mode === "zones") {
+    return shell(
+      withScreenTheme(
+        <GrudoxZones onEnterNative={() => navigate("brawl")} onExit={() => navigate("doors")} />,
+      ),
+    );
+  }
+
+  if (mode === "brawl") {
+    return shell(<RuinsBrawler onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "mimic") {
+    return shell(<MimicDungeon onExit={() => navigate("doors")} />);
   }
 
   const dangerPanels: DockPanelDef[] = [

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "../assets";
+import { attachTorchFlame } from "../fx/torchFlame";
 import { PROPS, type PropId } from "./types";
 
 /**
@@ -59,5 +60,13 @@ async function buildTemplate(id: PropId): Promise<THREE.Group> {
 
   const wrap = new THREE.Group();
   wrap.add(model);
+
+  // Torches get a live flame + warm point light. The flame animates via the
+  // shared flame clock and survives the per-placement clone (clones share the
+  // material); the light is baked at a warm base intensity per instance.
+  if (id === "torch") {
+    attachTorchFlame(wrap, def.targetHeight, { dying: 0.6, flameScale: 0.9 });
+  }
+
   return wrap;
 }

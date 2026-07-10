@@ -3,22 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <title>Animator</title>
-    <meta name="description" content="Animator — built on Replit. Update this description to reflect the app." />
+    <title>Grudge Open — Combat Sandbox | Grudge Studio</title>
+    <meta name="description" content="Grudge Open — Danger Room combat sandbox. Train with races, weapons, bosses, allies, and goal-driven AI. Fleet auth via Grudge ID." />
     <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="Animator" />
-    <meta property="og:description" content="Animator — built on Replit. Update this description to reflect the app." />
+    <meta property="og:title" content="Grudge Open" />
+    <meta property="og:description" content="Danger Room combat sandbox by Grudge Studio — modes, bosses, fleet characters." />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="/opengraph.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Animator" />
-    <meta name="twitter:description" content="Animator — built on Replit. Update this description to reflect the app." />
+    <meta name="twitter:title" content="Grudge Open" />
+    <meta name="twitter:description" content="Danger Room combat sandbox by Grudge Studio." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      html, body { margin: 0; background: #05070d; }
+      #root { min-height: 100vh; }
+      .boot-splash {
+        position: fixed; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 14px;
+        background: radial-gradient(ellipse at 50% 40%, #0b1220 0%, #05070d 70%);
+        color: #8fa8cc; font-family: Inter, system-ui, sans-serif;
+      }
+      .boot-splash strong { color: #eaf3ff; font-size: 1.15rem; letter-spacing: 0.04em; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-splash" aria-busy="true">
+        <strong>Grudge Open</strong>
+        <span>Loading combat sandbox…</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

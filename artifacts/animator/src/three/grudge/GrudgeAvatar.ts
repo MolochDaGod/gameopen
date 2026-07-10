@@ -1,19 +1,13 @@
 import * as THREE from "three";
 import type { AnimRole, Avatar, CharacterDef } from "../types";
 import {
-  ANIM_PACK_CLIPS,
-  SPRINT_CLIP,
-  applyBodyTexture,
-  applyGearPreset,
   findHandBone,
   getPreset,
-  loadBakedClip,
-  loadBodyTexture,
-  loadCharacterModel,
   RACE_ASSETS,
   type PresetId,
   type RaceId,
 } from "./index";
+import { loadBakedGrudgeCharacter } from "./bakedRoster";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -98,76 +92,27 @@ export class GrudgeAvatar implements Avatar {
   }
 
   async load(): Promise<void> {
-    const race = RACE_ASSETS[this.raceId];
-    const preset = getPreset(this.raceId, this.presetId);
+    // Load the correctly-textured BAKED grudge6 character from the single
+    // self-contained roster GLB (30 characters, per-character baked atlas). This
+    // replaces the old per-race FBX + remote `.webp` atlas path that produced the
+    // untextured "yellow model" when the remote atlas failed/mismatched.
+    const group = await loadBakedGrudgeCharacter(this.raceId, this.presetId);
+    if (this.disposed) return; // wrapper is GC'd; cache-shared geometry is never disposed here
 
-    const loaded = await loadCharacterModel(race.modelUrl);
-    if (this.disposed) {
-      this.disposeObject3D(loaded.group);
-      return;
-    }
-    applyGearPreset(loaded.group, preset.visibleMeshes);
+    // Baked characters are STATIC meshes (no skins/clips in the GLB), so there is
+    // no mixer: locomotion is driven by the Controller moving `root`, and the
+    // Avatar's animation methods no-op safely (guarded on `this.mixer`).
+    this.model = group;
+    this.mixer = null;
+    this.holder.add(group);
 
-    const tex = await loadBodyTexture(race.textureUrl);
-    if (this.disposed) {
-      tex.dispose();
-      this.disposeObject3D(loaded.group);
-      return;
-    }
-    this.bodyTexture = tex;
-    this.bodyMaterial = applyBodyTexture(loaded.group, tex);
-
-    this.model = loaded.group;
-    this.mixer = loaded.mixer;
-    this.holder.add(loaded.group);
-
-    // Stream the baked locomotion/attack clips for this preset's anim pack and
-    // bind them under stable logical keys (role name) — keys, not clip names, so
-    // packs that reuse a base clip (e.g. run + sprint both "running") never
-    // collide in the action map.
-    const pack = ANIM_PACK_CLIPS[preset.animPack];
-    const wanted: { key: string; role: AnimRole | null; rel: string }[] = [
-      { key: "idle", role: "idle", rel: pack.idle },
-      { key: "walk", role: "walk", rel: pack.walk },
-      { key: "run", role: "run", rel: pack.run },
-      { key: "attack", role: "attack", rel: pack.attack },
-      { key: "sprint", role: null, rel: SPRINT_CLIP },
-    ];
-    const loadedClips = await Promise.all(
-      wanted.map(async (w) => {
-        try {
-          const clip = await loadBakedClip(w.rel);
-          return { ...w, clip };
-        } catch (err) {
-          console.error(`[GrudgeAvatar] clip "${w.rel}" failed`, err);
-          return { ...w, clip: null as THREE.AnimationClip | null };
-        }
-      }),
-    );
-    if (this.disposed || !this.mixer) {
-      this.teardownGpu();
-      return;
-    }
-    for (const { key, role, clip } of loadedClips) {
-      if (!clip) continue;
-      clip.name = key;
-      const action = this.mixer.clipAction(clip);
-      this.actions.set(key, action);
-      if (role) this.roleClip.set(role, key);
-    }
-    // Cross-fill locomotion so movement always reads even if a clip 404'd.
-    if (!this.roleClip.has("idle") && this.actions.size) {
-      this.roleClip.set("idle", [...this.actions.keys()][0]);
-    }
-    if (!this.roleClip.has("walk") && this.roleClip.has("run")) this.roleClip.set("walk", this.roleClip.get("run")!);
-    if (!this.roleClip.has("run") && this.roleClip.has("walk")) this.roleClip.set("run", this.roleClip.get("walk")!);
-
-    this.model.updateMatrixWorld(true);
-    this.rightHand = findHandBone(this.model, "R");
-    this.leftHand = findHandBone(this.model, "L");
-    this.findArmBones(this.model);
+    group.updateMatrixWorld(true);
+    // The baked characters carry the grudge6 hand containers, so weapons still
+    // mount to the right/left hand.
+    this.rightHand = findHandBone(group, "R");
+    this.leftHand = findHandBone(group, "L");
+    this.findArmBones(group);
     this.holder.rotation.y = this.modelYaw;
-    this.playRole("idle", 0);
   }
 
   clipNames(): string[] {
@@ -487,17 +432,14 @@ export class GrudgeAvatar implements Avatar {
     }
   }
 
-  /** Dispose the geometry of an owned Object3D graph (materials handled separately). */
-  private disposeObject3D(root: THREE.Object3D): void {
-    root.traverse((n) => {
-      const m = n as THREE.Mesh;
-      if (m.isMesh) m.geometry?.dispose();
-    });
-  }
-
-  /** Free GPU resources: geometries + the single shared body material + texture. */
+  /**
+   * Free per-instance GPU resources. The baked character's geometry + materials
+   * are owned by the shared roster cache (clones share them), so they are NOT
+   * disposed here — doing so would corrupt every other avatar sharing the cache.
+   * The legacy body material/texture (unused by the baked path) are freed
+   * defensively in case an older code path set them.
+   */
   private teardownGpu(): void {
-    if (this.model) this.disposeObject3D(this.model);
     this.bodyMaterial?.dispose();
     this.bodyTexture?.dispose();
     this.bodyMaterial = null;
