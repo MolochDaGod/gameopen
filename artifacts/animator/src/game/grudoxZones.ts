@@ -58,6 +58,7 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     title: "VoxGrudge: Open World",
     blurb: "The GRUDOX open voxel world — explore, build, and party up.",
     tone: "#5fe0ff",
+    native: true,
   },
 ] as const;
 
