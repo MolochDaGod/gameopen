@@ -7,6 +7,8 @@
  */
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { BrawlerScene, type BrawlerState } from "../three/brawler/BrawlerScene";
+import { getStoredToken } from "../lib/grudgeAuth";
+import { gameSession } from "../game/GameSession";
 
 interface Props {
   onExit: () => void;
@@ -32,6 +34,20 @@ export function ThreeBrawler({ onExit }: Props) {
   const sceneRef = useRef<BrawlerScene | null>(null);
   const [state, setState] = useState<BrawlerState>(DEFAULT_STATE);
   const [locked, setLocked] = useState(false);
+
+  // Derive player identity from fleet account / character for future BrawlClient auth.
+  // BrawlerScene does not yet accept playerName in its constructor — when BrawlClient
+  // is upgraded to send authenticated presence, pass `grudgeToken` and `playerName` via
+  // a scene.setIdentity(token, name) method.
+  // getStoredToken() is available here for that wiring.
+  const grudgeToken = getStoredToken();
+  const playerName =
+    gameSession.selectedCharacter()?.name ||
+    gameSession.snapshot.account?.displayName ||
+    gameSession.snapshot.account?.grudgeId ||
+    "Open Player";
+  void grudgeToken; // referenced above — will be consumed by future BrawlClient auth
+  void playerName;  // will be passed to BrawlerScene once constructor supports it
 
   // Mount / dispose the 3D scene.
   useEffect(() => {
