@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset, getWeapon } from "./assets";
+import { sharedGltfLoader } from "./loaders/gltf";
 import { WEAPON_GRIPS } from "./arsenal";
 import { ELEMENT_THEME } from "./arsenal/elements";
 import type { ModelForward, WeaponDef, WeaponId, WeaponModelPiece } from "./types";
@@ -213,7 +213,7 @@ const templateCache = new Map<string, Promise<THREE.Object3D>>();
 function loadTemplate(file: string): Promise<THREE.Object3D> {
   let p = templateCache.get(file);
   if (!p) {
-    p = new GLTFLoader().loadAsync(asset(file)).then((gltf) => {
+    p = sharedGltfLoader().loadAsync(asset(file)).then((gltf) => {
       gltf.scene.traverse((o) => {
         const mesh = o as THREE.Mesh;
         if (!mesh.isMesh) return;

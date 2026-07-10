@@ -36,6 +36,7 @@ import { isInWaterBand, traversalModeFor } from "./dungeon/water";
 import { VoxelArena } from "./voxel/VoxelArena";
 import type { VoxelMap } from "./voxel/types";
 import { PhysicsSystem } from "./PhysicsSystem";
+import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
 import {
   aoeFalloff,
   meleeStrike,
@@ -372,6 +373,8 @@ export class Studio {
   /** Guards against re-triggering the async arena load. */
   private enteringArena = false;
   private physics: PhysicsSystem | null = null;
+  /** Shared pmndrs post-processing composer over the main scene (null = direct render). */
+  private postfx: MysticalComposer | null = null;
   private input: InputState;
   /** True on touch devices: suppress pointer-lock on tap (on-screen controls). */
   private touchMode = false;
@@ -813,6 +816,7 @@ export class Studio {
     this.resize();
     void this.spawnCharacter(this.characterId);
     void this.initPhysics();
+    this.initPostFx();
     this.loop();
   }
 
@@ -842,6 +846,41 @@ export class Studio {
   /** Knock any authored arena training bags inside `radius` of `center` (melee/skill impacts). */
   private hitBags(center: THREE.Vector3, radius: number, force: number, damage = 0) {
     this.arena?.blastBags(center, radius, force, damage);
+  }
+
+  /**
+   * Bring up the shared post-processing composer (pmndrs) over the main scene.
+   * Tuned SUBTLE for gameplay — clean HDR bloom + ACES with a faint vignette /
+   * saturation lift — so combat stays readable; the heavier mystical grade is
+   * reserved for the opening cinematic. Falls back to direct rendering (and
+   * restores the renderer tone mapping) if the composer can't be built.
+   */
+  private initPostFx() {
+    const prevTone = this.renderer.toneMapping;
+    try {
+      this.postfx = createMysticalComposer(this.renderer, this.scene, this.camera, {
+        bloomIntensity: 0.5,
+        bloomThreshold: 0.55,
+        bloomRadius: 0.6,
+        saturation: 0.05,
+        vignetteDarkness: 0.24,
+        chromatic: 0.00016,
+        grain: 0.018,
+      });
+      const w = this.container.clientWidth || window.innerWidth;
+      const h = this.container.clientHeight || window.innerHeight;
+      if (w > 0 && h > 0) this.postfx.setSize(w, h);
+    } catch (err) {
+      console.warn("[Studio] post-processing init failed; using direct render", err);
+      this.renderer.toneMapping = prevTone;
+      this.postfx = null;
+    }
+  }
+
+  /** Render one frame through the post-fx composer when present, else direct. */
+  private renderFrame(dt: number) {
+    if (this.postfx) this.postfx.render(dt);
+    else this.renderer.render(this.scene, this.camera);
   }
 
   private setupLights() {
@@ -4593,6 +4632,7 @@ export class Studio {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+    this.postfx?.setSize(w, h);
   }
 
   /**
@@ -4654,7 +4694,7 @@ export class Studio {
       const views = this.targets instanceof Targets ? this.targets.fighterViews() : [];
       this.ale.updateReplay(rdt, views);
       this.ale.applyCamera(this.camera);
-      this.renderer.render(this.scene, this.camera);
+      this.renderFrame(rdt);
       this.hudAccum += rdt;
       if (this.hudAccum >= 0.1) {
         this.hudAccum = 0;
@@ -4997,7 +5037,7 @@ export class Studio {
     // duel can be watched from a selected POV/drone view without touching the
     // player Controller.
     this.ale.applyCamera(this.camera);
-    this.renderer.render(this.scene, this.camera);
+    this.renderFrame(dt);
 
     this.hudAccum += dt;
     if (this.hudAccum >= 0.1) {
@@ -6842,6 +6882,7 @@ export class Studio {
         else mat?.dispose();
       }
     });
+    this.postfx?.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
