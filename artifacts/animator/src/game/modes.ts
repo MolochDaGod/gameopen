@@ -12,7 +12,8 @@ export type GameModeId =
   | "sparring"
   | "arena-war"
   | "dungeon-crawl"
-  | "pirate-siege";
+  | "pirate-siege"
+  | "warlord-genesis";
 
 export type FactionRole = "player" | "ally" | "enemy" | "boss" | "neutral";
 
@@ -163,6 +164,18 @@ export const GAME_MODES: readonly GameModeDef[] = [
     bossStrategy: "boss-phased",
     mapKey: "pirate-black-tide",
     multiplayer: true,
+  },
+  {
+    id: "warlord-genesis",
+    title: "Warlord Genesis",
+    blurb: "Choose your race. Enter the arena. Survive 4 waves to claim the Warlord title.",
+    icon: "/icons/combat-pad.png",
+    spawn: { maxEnemies: 10, maxAllies: 0, bosses: 1, waves: 4, introGraceSec: 3 },
+    enemyStrategy: "swarm-horde",
+    allyStrategy: "tank-guard",
+    bossStrategy: "boss-phased",
+    mapKey: "arena-war-zone",
+    multiplayer: false,
   },
 ] as const;
 
