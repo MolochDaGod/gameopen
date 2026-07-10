@@ -1,0 +1,370 @@
+{
+  "entities": [
+    {
+      "id": "csbx-0000",
+      "name": "Map",
+      "type": "model",
+      "model": {
+        "url": "builtin:map-encampment"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.55,
+          0.55,
+          0.55
+        ]
+      },
+      "parentId": null
+    },
+    {
+      "id": "csbx-0001",
+      "name": "Ground",
+      "type": "plane",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          -1.5707963267948966,
+          0,
+          0
+        ],
+        "scale": [
+          60,
+          60,
+          1
+        ]
+      },
+      "parentId": null,
+      "material": {
+        "color": "#1a1a1a",
+        "metalness": 0.1,
+        "roughness": 0.65
+      },
+      "layer": "Terrain",
+      "physics": {
+        "bodyType": "fixed",
+        "colliderType": "cuboid",
+        "mass": 0,
+        "restitution": 0.2,
+        "friction": 1
+      }
+    },
+    {
+      "id": "csbx-0002",
+      "name": "Sun",
+      "type": "light",
+      "transform": {
+        "position": [
+          8,
+          14,
+          6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "directional",
+        "color": "#ffe8c0",
+        "intensity": 1.5
+      }
+    },
+    {
+      "id": "csbx-0003",
+      "name": "Warm Fill",
+      "type": "light",
+      "transform": {
+        "position": [
+          -4,
+          3,
+          2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "light": {
+        "kind": "point",
+        "color": "#ff9a4a",
+        "intensity": 10,
+        "distance": 24
+      }
+    },
+    {
+      "id": "csbx-0004",
+      "name": "Player",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-survivor-male",
+        "label": "Player"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          6
+        ],
+        "rotation": [
+          0,
+          3.141592653589793,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "controllerKind": "thirdPerson",
+      "behavior": "player-rpg",
+      "layer": "Player",
+      "physics": {
+        "bodyType": "kinematicPosition",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0,
+        "friction": 0.8
+      }
+    },
+    {
+      "id": "csbx-0005",
+      "name": "Enemy_0",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-skeleton-sword",
+        "label": "Hostile 1"
+      },
+      "transform": {
+        "position": [
+          4,
+          0,
+          -3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "enemy-rpg",
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.1,
+        "friction": 0.7
+      }
+    },
+    {
+      "id": "csbx-0006",
+      "name": "Enemy_1",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-bandit",
+        "label": "Hostile 2"
+      },
+      "transform": {
+        "position": [
+          -4,
+          0,
+          -2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "enemy-rpg",
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.1,
+        "friction": 0.7
+      }
+    },
+    {
+      "id": "csbx-0007",
+      "name": "Enemy_2",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-skeleton-sword",
+        "label": "Hostile 3"
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          -6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "enemy-rpg",
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.1,
+        "friction": 0.7
+      }
+    },
+    {
+      "id": "csbx-0008",
+      "name": "Enemy_3",
+      "type": "model",
+      "model": {
+        "url": "builtin:char-bandit",
+        "label": "Hostile 4"
+      },
+      "transform": {
+        "position": [
+          7,
+          0,
+          1
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "enemy-rpg",
+      "layer": "NPC",
+      "physics": {
+        "bodyType": "dynamic",
+        "colliderType": "cuboid",
+        "mass": 1,
+        "restitution": 0.1,
+        "friction": 0.7
+      }
+    },
+    {
+      "id": "csbx-0009",
+      "name": "GameOpenHub",
+      "type": "empty",
+      "transform": {
+        "position": [
+          0,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null,
+      "behavior": "npc-dialog",
+      "npcLine": "Grudge Open combat sandbox · https://gameopen.vercel.app/ · content API /api/content · AI: ask Forge to equip wpn_sword_iron_01 skills"
+    },
+    {
+      "id": "csbx-000a",
+      "name": "Campfire",
+      "type": "model",
+      "model": {
+        "url": "builtin:vfx-fire-anim"
+      },
+      "transform": {
+        "position": [
+          2.5,
+          0,
+          2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "parentId": null
+    }
+  ],
+  "environment": {
+    "skyColor": "#0c1018",
+    "groundColor": "#1a1a1a",
+    "ambientIntensity": 0.4,
+    "sunIntensity": 1,
+    "gravity": [
+      0,
+      -9.81,
+      0
+    ],
+    "cameraMode": "editor",
+    "cameraTargetEntityId": null,
+    "playerMoveSpeed": 6,
+    "mouseSensitivity": 0.0025
+  }
+}

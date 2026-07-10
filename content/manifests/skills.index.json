@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "count": 8,
+  "skills": [
+    {
+      "id": "axe.ability",
+      "weaponFamily": "axe",
+      "hotbarSlot": 3,
+      "animKey": "axe_ability"
+    },
+    {
+      "id": "axe.primary",
+      "weaponFamily": "axe",
+      "hotbarSlot": 1,
+      "animKey": "axe_primary"
+    },
+    {
+      "id": "axe.secondary",
+      "weaponFamily": "axe",
+      "hotbarSlot": 2,
+      "animKey": "axe_primary"
+    },
+    {
+      "id": "axe.ultimate",
+      "weaponFamily": "axe",
+      "hotbarSlot": 4,
+      "animKey": "axe_ultimate"
+    },
+    {
+      "id": "sword.dash",
+      "weaponFamily": "sword",
+      "hotbarSlot": 4,
+      "animKey": "sword_dash"
+    },
+    {
+      "id": "sword.slash",
+      "weaponFamily": "sword",
+      "hotbarSlot": 1,
+      "animKey": "sword_slash"
+    },
+    {
+      "id": "sword.spin_high",
+      "weaponFamily": "sword",
+      "hotbarSlot": 3,
+      "animKey": "sword_spin_high"
+    },
+    {
+      "id": "sword.two_hit",
+      "weaponFamily": "sword",
+      "hotbarSlot": 2,
+      "animKey": "sword_two_hit"
+    }
+  ]
+}

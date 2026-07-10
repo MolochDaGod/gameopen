@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/weapon_def.schema.json",
+  "title": "WeaponDef",
+  "type": "object",
+  "required": [
+    "id",
+    "itemId",
+    "family",
+    "slot",
+    "baseDamage",
+    "skills",
+    "mesh",
+    "readiness"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^wpn_" },
+    "itemId": { "type": "string", "pattern": "^itm_" },
+    "family": {
+      "enum": [
+        "sword",
+        "axe",
+        "hammer",
+        "mace",
+        "spear",
+        "staff",
+        "bow",
+        "dagger",
+        "gun",
+        "shield"
+      ]
+    },
+    "slot": { "enum": ["mainHand", "offHand", "either"] },
+    "twoHanded": { "type": "boolean" },
+    "baseDamage": { "type": "number", "minimum": 0 },
+    "attackSpeed": { "type": "number", "minimum": 0.1 },
+    "animPack": { "type": "string" },
+    "skills": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "mesh": {
+      "type": "object",
+      "required": ["path", "status"],
+      "properties": {
+        "path": { "type": "string" },
+        "format": { "enum": ["glb", "fbx", "obj"] },
+        "grip": {
+          "type": "object",
+          "properties": {
+            "bone": { "type": "string" },
+            "pos": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "rot": {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "scale": { "type": "number" }
+          }
+        },
+        "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "ship": { "type": "boolean", "description": "If true, readiness must be 100% for CI" },
+    "readiness": {
+      "type": "object",
+      "required": ["data", "mesh", "combat", "present"],
+      "properties": {
+        "data": { "enum": ["ready", "placeholder", "missing"] },
+        "mesh": { "enum": ["ready", "placeholder", "missing"] },
+        "combat": { "enum": ["ready", "placeholder", "missing"] },
+        "present": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    }
+  }
+}

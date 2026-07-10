@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "count": 2,
+  "weapons": [
+    {
+      "id": "wpn_axe_iron_01",
+      "itemId": "itm_axe_iron_01",
+      "family": "axe",
+      "skills": [
+        "axe.primary",
+        "axe.secondary",
+        "axe.ability",
+        "axe.ultimate"
+      ],
+      "ship": false
+    },
+    {
+      "id": "wpn_sword_iron_01",
+      "itemId": "itm_sword_iron_01",
+      "family": "sword",
+      "skills": [
+        "sword.slash",
+        "sword.two_hit",
+        "sword.spin_high",
+        "sword.dash"
+      ],
+      "ship": true
+    }
+  ]
+}

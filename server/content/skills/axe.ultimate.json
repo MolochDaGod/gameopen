@@ -1,0 +1,99 @@
+{
+    "id":  "axe.ultimate",
+    "weaponFamily":  "axe",
+    "label":  "Ultimate",
+    "description":  "Iron 01 Ultimate â€” fill anim/VFX/icon.",
+    "rank":  2,
+    "hotbarSlot":  4,
+    "slotKind":  "ultimate",
+    "animKey":  "axe_ultimate",
+    "anim":  {
+                 "path":  "",
+                 "status":  "missing"
+             },
+    "power":  2,
+    "cost":  {
+                 "stamina":  28
+             },
+    "cooldown":  16,
+    "damageType":  "physical",
+    "effects":  [
+                    "fx.warrior.cleave"
+                ],
+    "hitWindows":  [
+                       {
+                           "t":  0.25,
+                           "kind":  "melee",
+                           "radius":  1.4,
+                           "angleDeg":  90
+                       }
+                   ],
+    "vfx":  {
+                "castTimeMs":  0,
+                "charge":  {
+                               "enabled":  false,
+                               "color":  "#d8c38a",
+                               "size":  0.4
+                           },
+                "cast":  {
+                             "enabled":  false,
+                             "color":  "#d8c38a",
+                             "size":  0.5
+                         },
+                "slashTrail":  {
+                                   "enabled":  true,
+                                   "color":  "#e8d9a0",
+                                   "reach":  1.5,
+                                   "arcDeg":  90,
+                                   "wave":  false,
+                                   "knockback":  0.5
+                               },
+                "travel":  {
+                               "mode":  "none",
+                               "distance":  0,
+                               "arc":  0,
+                               "speed":  0,
+                               "color":  "#d8c38a",
+                               "startAnchor":  "weaponTip",
+                               "endAnchor":  "forward"
+                           },
+                "impact":  {
+                               "enabled":  true,
+                               "color":  "#d8c38a",
+                               "size":  0.4
+                           },
+                "ground":  {
+                               "enabled":  false,
+                               "color":  "#c79a5b"
+                           },
+                "aoe":  {
+                            "radius":  0,
+                            "aroundPlayer":  false
+                        },
+                "physics":  {
+                                "impulse":  2,
+                                "up":  0.2,
+                                "falloff":  true
+                            },
+                "afterimage":  {
+                                   "enabled":  false,
+                                   "color":  "#d8c38a",
+                                   "count":  0,
+                                   "spacingMs":  0,
+                                   "fadeMs":  0,
+                                   "scale":  1
+                               }
+            },
+    "icon":  {
+                 "path":  "icons/pack/misc/Chaos_2.png",
+                 "cdnUrl":  "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+                 "source":  "objectstore-master-weaponSkills@3.1.0",
+                 "status":  "ready"
+             },
+    "readiness":  {
+                      "data":  "ready",
+                      "anim":  "missing",
+                      "vfx":  "placeholder",
+                      "icon":  "ready"
+                  }
+}

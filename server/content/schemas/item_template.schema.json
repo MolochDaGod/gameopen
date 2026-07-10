@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/item_template.schema.json",
+  "title": "ItemTemplate",
+  "type": "object",
+  "required": ["id", "kind", "name", "rarity", "icon"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^itm_" },
+    "kind": { "enum": ["weapon", "armor", "consumable", "material"] },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "rarity": { "enum": ["common", "uncommon", "rare", "epic", "legendary"] },
+    "maxStack": { "type": "integer", "minimum": 1, "default": 1 },
+    "sellValue": { "type": "integer", "minimum": 0 },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "icon": {
+      "type": "object",
+      "required": ["path", "status"],
+      "properties": {
+        "path": { "type": "string" },
+        "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    }
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-09T12:03:53.495Z",
+  "weapons": [
+    {
+      "id": "wpn_axe_iron_01",
+      "family": "axe",
+      "ship": false,
+      "readiness": {
+        "data": "ready",
+        "mesh": "missing",
+        "combat": "placeholder",
+        "present": "missing"
+      },
+      "pct": 38,
+      "issues": [],
+      "shipBlocked": false,
+      "skills": [
+        "axe.primary",
+        "axe.secondary",
+        "axe.ability",
+        "axe.ultimate"
+      ]
+    },
+    {
+      "id": "wpn_sword_iron_01",
+      "family": "sword",
+      "ship": true,
+      "readiness": {
+        "data": "ready",
+        "mesh": "placeholder",
+        "combat": "ready",
+        "present": "placeholder"
+      },
+      "pct": 75,
+      "issues": [],
+      "shipBlocked": false,
+      "skills": [
+        "sword.slash",
+        "sword.two_hit",
+        "sword.spin_high",
+        "sword.dash"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "axe.ability",
+      "family": "axe",
+      "readiness": {
+        "data": "ready",
+        "anim": "missing",
+        "vfx": "placeholder",
+        "icon": "missing"
+      },
+      "pct": 38,
+      "issues": []
+    },
+    {
+      "id": "axe.primary",
+      "family": "axe",
+      "readiness": {
+        "data": "ready",
+        "anim": "missing",
+        "vfx": "placeholder",
+        "icon": "missing"
+      },
+      "pct": 38,
+      "issues": []
+    },
+    {
+      "id": "axe.secondary",
+      "family": "axe",
+      "readiness": {
+        "data": "ready",
+        "anim": "missing",
+        "vfx": "placeholder",
+        "icon": "missing"
+      },
+      "pct": 38,
+      "issues": []
+    },
+    {
+      "id": "axe.ultimate",
+      "family": "axe",
+      "readiness": {
+        "data": "ready",
+        "anim": "missing",
+        "vfx": "placeholder",
+        "icon": "missing"
+      },
+      "pct": 38,
+      "issues": []
+    },
+    {
+      "id": "sword.dash",
+      "family": "sword",
+      "readiness": {
+        "data": "ready",
+        "anim": "ready",
+        "vfx": "ready",
+        "icon": "placeholder"
+      },
+      "pct": 88,
+      "issues": []
+    },
+    {
+      "id": "sword.slash",
+      "family": "sword",
+      "readiness": {
+        "data": "ready",
+        "anim": "ready",
+        "vfx": "ready",
+        "icon": "placeholder"
+      },
+      "pct": 88,
+      "issues": []
+    },
+    {
+      "id": "sword.spin_high",
+      "family": "sword",
+      "readiness": {
+        "data": "ready",
+        "anim": "ready",
+        "vfx": "ready",
+        "icon": "placeholder"
+      },
+      "pct": 88,
+      "issues": []
+    },
+    {
+      "id": "sword.two_hit",
+      "family": "sword",
+      "readiness": {
+        "data": "ready",
+        "anim": "ready",
+        "vfx": "ready",
+        "icon": "placeholder"
+      },
+      "pct": 88,
+      "issues": []
+    }
+  ],
+  "summary": {
+    "weapons": 2,
+    "skills": 8,
+    "items": 3,
+    "armor": 1,
+    "shipBlocked": 0,
+    "avgWeaponPct": 57
+  }
+}

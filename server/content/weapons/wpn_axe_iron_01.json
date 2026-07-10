@@ -1,0 +1,52 @@
+{
+    "id":  "wpn_axe_iron_01",
+    "itemId":  "itm_axe_iron_01",
+    "family":  "axe",
+    "slot":  "mainHand",
+    "twoHanded":  false,
+    "baseDamage":  16,
+    "attackSpeed":  1,
+    "animPack":  "axe",
+    "skills":  [
+                   "axe.primary",
+                   "axe.secondary",
+                   "axe.ability",
+                   "axe.ultimate"
+               ],
+    "mesh":  {
+                 "path":  "",
+                 "format":  "glb",
+                 "grip":  {
+                              "bone":  "Bip001_R_Hand",
+                              "pos":  [
+                                          0,
+                                          0,
+                                          0
+                                      ],
+                              "rot":  [
+                                          0,
+                                          0,
+                                          0
+                                      ],
+                              "scale":  1
+                          },
+                 "status":  "missing"
+             },
+    "tags":  [
+                 "scaffolded"
+             ],
+    "ship":  false,
+    "readiness":  {
+                      "data":  "ready",
+                      "mesh":  "missing",
+                      "combat":  "placeholder",
+                      "present":  "missing",
+                      "icon":  "ready"
+                  },
+    "icon":  {
+                 "path":  "icons/pack/weapons/Axe_01.png",
+                 "cdnUrl":  "https://assets.grudge-studio.com/icons/pack/weapons/Axe_01.png",
+                 "source":  "objectstore-master-weaponSkills@3.1.0",
+                 "status":  "ready"
+             }
+}
