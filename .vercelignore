@@ -1,8 +1,15 @@
 server/node_modules
 server/dist
+artifacts/api-server/node_modules
+artifacts/api-server/dist
+artifacts/animator/node_modules
+legacy-static
+client/public/assets
 scripts/upload-r2.mjs
 Dockerfile
 nixpacks.toml
 railway.json
-*.md
 .env*
+**/*.br
+**/*.gz
+

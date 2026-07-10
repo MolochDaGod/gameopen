@@ -1,6 +1,6 @@
 interface Props {
   onEnter: (
-    mode: "danger" | "voxel" | "editor" | "lobby" | "ledmask" | "zones" | "brawl",
+    mode: "danger" | "voxel" | "editor" | "lobby" | "ledmask" | "zones" | "brawl" | "mimic",
   ) => void;
 }
 
@@ -67,6 +67,14 @@ export function DoorSelect({ onEnter }: Props) {
           </div>
           <h3>Ruins Brawler</h3>
           <p>Top-down twin-stick co-op survival — live multiplayer in the GRUDOX ruins.</p>
+        </button>
+
+        <button className="door door-mimic" onClick={() => onEnter("mimic")}>
+          <div className="door-frame">
+            <div className="door-glyph">🛢</div>
+          </div>
+          <h3>Test Dungeon</h3>
+          <p>Vol scene — open a barrel and fight the Mimic (fast melee lunge + arcing acid AoE).</p>
         </button>
 
         <button className="door door-ledmask" onClick={() => onEnter("ledmask")}>

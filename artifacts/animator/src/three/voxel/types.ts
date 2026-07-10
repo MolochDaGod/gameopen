@@ -10,7 +10,7 @@ export type DeployableKind = "npc" | "heavyBag" | "physicsBag" | "prop" | "start
 export type PropCategory = "bench" | "build";
 
 /** The set of GLB props that can be deployed (crafting benches + build helpers). */
-export type PropId = "brewingStand" | "alchemistsChest" | "modularFortress";
+export type PropId = "brewingStand" | "alchemistsChest" | "modularFortress" | "torch";
 
 /** Static metadata for a deployable GLB prop. */
 export interface PropDef {
@@ -65,6 +65,16 @@ export const PROPS: Record<PropId, PropDef> = {
     targetHeight: 3,
     footprintRadius: 2.79,
     collide: true,
+  },
+  torch: {
+    id: "torch",
+    label: "Torch",
+    glyph: "🔥",
+    category: "build",
+    file: "models/props/dying-torch.glb",
+    targetHeight: 1.9,
+    footprintRadius: 0.3,
+    collide: false,
   },
 };
 

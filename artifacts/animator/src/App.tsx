@@ -41,11 +41,13 @@ import { TouchControls } from "./components/TouchControls";
 import { StatusBar } from "./components/StatusBar";
 import { StatusDock } from "./components/StatusDock";
 import { DoorSelect } from "./components/DoorSelect";
+import { IntroCinematic } from "./components/IntroCinematic";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
 import { RuinsBrawler } from "./components/RuinsBrawler";
 import { GrudoxZones } from "./components/GrudoxZones";
+import { MimicDungeon } from "./components/MimicDungeon";
 import { gameSession } from "./game/GameSession";
 import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
@@ -75,7 +77,7 @@ import { resolveHudVars } from "./hud/hudConfig";
 import "./index.css";
 import "./components/dock/dock.css";
 
-type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones";
+type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic";
 
 // Optional deep-link: `?door=editor|danger|voxel|lobby|zones|brawl` opens that
 // door on load (handy for sharing a direct link and for testing a single surface).
@@ -89,7 +91,8 @@ function initialMode(): Mode {
       d === "lobby" ||
       d === "ledmask" ||
       d === "zones" ||
-      d === "brawl"
+      d === "brawl" ||
+      d === "mimic"
     )
       return d;
   } catch {
@@ -868,7 +871,14 @@ export default function App() {
   }, []);
 
   if (mode === "doors") {
-    return shell(withScreenTheme(<DoorSelect onEnter={navigate} />));
+    return shell(
+      withScreenTheme(
+        <div className="doors-cinematic">
+          <IntroCinematic />
+          <DoorSelect onEnter={navigate} />
+        </div>,
+      ),
+    );
   }
 
   if (mode === "editor") {
@@ -910,6 +920,10 @@ export default function App() {
 
   if (mode === "brawl") {
     return shell(<RuinsBrawler onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "mimic") {
+    return shell(<MimicDungeon onExit={() => navigate("doors")} />);
   }
 
   const dangerPanels: DockPanelDef[] = [

@@ -46,7 +46,8 @@ export type ShellMode =
   | "lobby"
   | "ledmask"
   | "zones"
-  | "brawl";
+  | "brawl"
+  | "mimic";
 
 interface NavItem {
   mode: ShellMode;
@@ -64,6 +65,7 @@ const NAV: NavItem[] = [
   { mode: "lobby", label: "Lobby", hint: "Rooms & community", icon: <Users size={20} />, tone: "#9d8bff" },
   { mode: "zones", label: "GRUDOX Zones", hint: "Shared GRUDOX world", icon: <Globe size={20} />, tone: "#5fe0ff" },
   { mode: "brawl", label: "Ruins Brawler", hint: "Live co-op survival", icon: <Crosshair size={20} />, tone: "#ff7a7a" },
+  { mode: "mimic", label: "Test Dungeon", hint: "Mimic encounter", icon: <Boxes size={20} />, tone: "#9cff5a" },
   { mode: "ledmask", label: "LED Mask", hint: "AI face companion", icon: <ScanFace size={20} />, tone: "#5fe0ff" },
 ];
 

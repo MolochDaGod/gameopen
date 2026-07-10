@@ -2,10 +2,11 @@
  * Compact fleet identity + mode strip.
  * Grudge ID login, character count, current game mode.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
 import { GAME_MODES, type GameModeId } from "../game/modes";
 import { loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+
 
 export function FleetBar() {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
@@ -101,7 +102,7 @@ export function FleetBar() {
   );
 }
 
-const btnStyle: React.CSSProperties = {
+const btnStyle: CSSProperties = {
   border: "1px solid rgba(79,195,255,0.25)",
   background: "transparent",
   color: "#cfe0fa",
@@ -111,9 +112,10 @@ const btnStyle: React.CSSProperties = {
   fontSize: 12,
 };
 
-const btnPrimary: React.CSSProperties = {
+const btnPrimary: CSSProperties = {
   ...btnStyle,
   background: "#4f7bff",
   color: "#fff",
   border: "none",
 };
+

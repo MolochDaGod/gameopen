@@ -70,6 +70,11 @@ const MODEL_VFX = {
   javelin: ["models/weapons/javelin.glb", 1.7],
 } as const satisfies Record<string, readonly [string, number]>;
 
+/** Toxic-green acid palette for the Mimic's lob + AoE burst. */
+const ACID_CORE = 0xeaffb0;
+const ACID_BODY = 0x7cff3a;
+const ACID_DARK = 0x3f9e1f;
+
 /**
  * Self-contained procedural VFX. No external particle library — every effect is
  * built from additive points/meshes and disposed when its lifetime ends.
@@ -2490,6 +2495,120 @@ export class Vfx {
     this.burst(pos, color, 14, scale * 2);
     // Instanced smoke pop adds volume + airborne debris on the hit.
     this.smoke.smokePop(pos, color, scale * 0.5);
+  }
+
+  /**
+   * Anime parry CLASH spark: a crisp double burst of bright metallic sparks at
+   * the point where a blow is turned aside — a hot white core inside a coloured
+   * flare, plus the shared impact glow — so a perfect parry / deflect by either
+   * fighter reads as a ringing clash of steel rather than a soft flash. Purely
+   * cosmetic; composes existing primitives and adds no per-frame state.
+   */
+  parryClash(at: THREE.Vector3, color = 0xfff2c0) {
+    this.impact(at, color, 1.4);
+    this.burst(at, color, 30, 4.2);
+    this.burst(at, 0xffffff, 18, 2.6);
+  }
+
+  // ---- Acid (Mimic) -------------------------------------------------------
+
+  /**
+   * Lob an arcing acid glob from `from` to a FIXED `to` (the player's position
+   * captured at launch — it does NOT home), bursting in a `radius`-metre acid
+   * AoE where it lands. A ground telegraph ring marks the landing zone the
+   * instant it fires so the player can roll clear. Purely procedural (no GLB).
+   */
+  acidLob(from: THREE.Vector3, to: THREE.Vector3, radius = 3, onHit?: (p: THREE.Vector3) => void) {
+    const dist = Math.max(0.5, from.distanceTo(to));
+    const mid = from.clone().lerp(to, 0.5);
+    mid.y += Math.min(5, dist * 0.5) + 1.2; // raised control point → readable arc
+    const curve = new THREE.QuadraticBezierCurve3(from.clone(), mid, to.clone());
+    // Telegraph the landing zone up front.
+    this.auraRing(new THREE.Vector3(to.x, 0.06, to.z), ACID_BODY, radius, Math.max(0.6, dist / 11));
+
+    const geo = new THREE.IcosahedronGeometry(0.16, 1);
+    const mat = new THREE.MeshBasicMaterial({
+      color: ACID_BODY,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const glob = new THREE.Mesh(geo, mat);
+    glob.position.copy(from);
+    this.addTrail(glob, ACID_BODY, { width: 0.2 });
+    const speed = 11;
+    const life = dist / speed;
+    let hit: ((p: THREE.Vector3) => void) | undefined = onHit;
+    let dripT = 0;
+    this.add({
+      obj: glob,
+      age: 0,
+      life,
+      geos: [geo],
+      mats: [mat],
+      update: (e, dt) => {
+        const t = Math.min(1, e.age / e.life);
+        curve.getPoint(t, glob.position);
+        glob.rotation.x += dt * 6;
+        dripT += dt;
+        if (dripT > 0.08) {
+          dripT = 0;
+          this.burst(glob.position.clone(), ACID_DARK, 3, 1.2, { spread: 0.1, sizeScale: 0.5 });
+        }
+        if (e.age + dt >= e.life && hit) {
+          this.acidBurst(to.clone(), radius);
+          hit(to.clone());
+          hit = undefined;
+        }
+      },
+    });
+  }
+
+  /**
+   * A `radius`-metre acid AoE explosion: an expanding green shockwave ring, a
+   * bright toxic flash, a droplet spray, and a lingering acid pool that dissolves
+   * over a couple of seconds. Landing effect for {@link acidLob}.
+   */
+  acidBurst(pos: THREE.Vector3, radius = 3) {
+    const ground = new THREE.Vector3(pos.x, 0.05, pos.z);
+    this.shockwave(ground, ACID_BODY, radius, 0.7);
+    this.impact(pos, ACID_CORE, radius * 0.55);
+    this.burst(
+      new THREE.Vector3(pos.x, pos.y + 0.2, pos.z),
+      ACID_BODY,
+      Math.round(28 + radius * 8),
+      4.5 * (radius / 3),
+    );
+    this.smoke.smokePop(pos, ACID_DARK, radius * 0.4);
+
+    // Lingering acid pool: a translucent green disc that grows to `radius`, then
+    // slowly dissolves. Mirrors the shockwave's shared-plane + ring-texture idiom.
+    const poolMat = new THREE.MeshBasicMaterial({
+      color: ACID_DARK,
+      map: ringTexture(),
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      opacity: 0,
+    });
+    const pool = new THREE.Mesh(unitGroundPlane(), poolMat);
+    pool.position.set(pos.x, 0.04, pos.z);
+    this.add({
+      obj: pool,
+      age: 0,
+      life: 2.2,
+      geos: [],
+      mats: [poolMat],
+      sharedMaps: true,
+      update: (e) => {
+        const t = e.age / e.life;
+        const grow = Math.min(1, t / 0.2);
+        const s = radius * 2.5 * grow;
+        pool.scale.set(s, s, s);
+        poolMat.opacity = (t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8) * 0.55;
+      },
+    });
   }
 
   /**

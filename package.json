@@ -9,10 +9,12 @@
   },
   "scripts": {
     "dev": "npm --prefix artifacts/animator run dev",
-    "build": "npm --prefix artifacts/animator run build",
+    "build": "node scripts/vercel-build.mjs",
     "start:api": "node server/standalone.mjs",
     "assets:merge": "node scripts/merge-gameopen-assets.mjs",
     "assets:manifest": "node scripts/generate-asset-manifest.mjs",
-    "assets:alias": "node scripts/fix-asset-aliases.mjs"
+    "assets:alias": "node scripts/fix-asset-aliases.mjs",
+    "deploy:prod": "node scripts/vercel-build.mjs && npx vercel deploy --prod --yes"
   }
+
 }
