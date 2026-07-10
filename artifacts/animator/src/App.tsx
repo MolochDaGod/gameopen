@@ -45,9 +45,11 @@ import { IntroCinematic } from "./components/IntroCinematic";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
-import { RuinsBrawler } from "./components/RuinsBrawler";
+import { ThreeBrawler } from "./components/ThreeBrawler";
 import { GrudoxZones } from "./components/GrudoxZones";
 import { MimicDungeon } from "./components/MimicDungeon";
+import { WarlordGenesis } from "./components/WarlordGenesis";
+import { VoxGrudgeNative } from "./components/VoxGrudgeNative";
 import { gameSession } from "./game/GameSession";
 import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
@@ -77,7 +79,7 @@ import { resolveHudVars } from "./hud/hudConfig";
 import "./index.css";
 import "./components/dock/dock.css";
 
-type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic";
+type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic" | "genesis" | "voxgrudge-native";
 
 // Optional deep-link: `?door=editor|danger|voxel|lobby|zones|brawl` opens that
 // door on load (handy for sharing a direct link and for testing a single surface).
@@ -92,7 +94,9 @@ function initialMode(): Mode {
       d === "ledmask" ||
       d === "zones" ||
       d === "brawl" ||
-      d === "mimic"
+      d === "mimic" ||
+      d === "genesis" ||
+      d === "voxgrudge-native"
     )
       return d;
   } catch {
@@ -826,7 +830,7 @@ export default function App() {
         placeholder: "Spawn 3 sword enemies, set difficulty hard…",
       };
     }
-    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones") {
+    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones" || mode === "genesis" || mode === "voxgrudge-native") {
       return {
         surface: "guide",
         title: "Companion",
@@ -913,17 +917,28 @@ export default function App() {
   if (mode === "zones") {
     return shell(
       withScreenTheme(
-        <GrudoxZones onEnterNative={() => navigate("brawl")} onExit={() => navigate("doors")} />,
+        <GrudoxZones
+          onEnterNative={(id) => navigate(id === "voxgrudge" ? "voxgrudge-native" : "brawl")}
+          onExit={() => navigate("doors")}
+        />,
       ),
     );
   }
 
   if (mode === "brawl") {
-    return shell(<RuinsBrawler onExit={() => navigate("doors")} />);
+    return shell(<ThreeBrawler onExit={() => navigate("doors")} />);
   }
 
   if (mode === "mimic") {
     return shell(<MimicDungeon onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "genesis") {
+    return shell(<WarlordGenesis onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "voxgrudge-native") {
+    return shell(<VoxGrudgeNative onExit={() => navigate("doors")} />);
   }
 
   const dangerPanels: DockPanelDef[] = [

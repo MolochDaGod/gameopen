@@ -1,0 +1,19 @@
+# Edge proxy: open.grudge-studio.com -> gameopen.vercel.app
+#
+# Serves the gameopen SPA (and its Vercel /api, /auth, /models rewrites) under a
+# stable grudge-studio.com subdomain, same-origin so auth cookies work. This is
+# the house pattern (see grudge-stack skill): app on Vercel, subdomain fronted by
+# a Cloudflare Worker on the grudge-studio.com zone.
+#
+# Deploy:  cd infra/cloudflare/open && wrangler deploy
+# Detach:  wrangler delete  (removes the Worker + its custom-domain DNS record)
+name = "gameopen-open-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# custom_domain provisions the proxied DNS record + SSL for the subdomain and
+# routes ALL its traffic to this Worker (requires the grudge-studio.com zone to
+# be in the authenticated Cloudflare account).
+[[routes]]
+pattern = "open.grudge-studio.com"
+custom_domain = true
