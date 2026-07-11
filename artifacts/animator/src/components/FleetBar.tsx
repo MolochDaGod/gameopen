@@ -75,14 +75,29 @@ export function FleetBar() {
           <>
             <span style={{ color: "#8ec3ff" }}>{snap.account.displayName || snap.account.grudgeId}</span>
             <span style={{ opacity: 0.7 }}>{snap.characters.length} chars</span>
-            <button type="button" onClick={() => logoutGrudge()} style={btnStyle}>
+            <button
+              type="button"
+              onClick={() => {
+                logoutGrudge();
+                // force=true so we always redirect after logout (bypasses token check).
+                void loginWithGrudgeId(true);
+              }}
+              style={btnStyle}
+            >
               Log out
             </button>
           </>
         ) : (
           <>
             <span style={{ opacity: 0.75 }}>Guest</span>
-            <button type="button" onClick={() => loginWithGrudgeId()} style={btnPrimary}>
+            <button
+              type="button"
+              onClick={() => {
+                // loginWithGrudgeId is async+smart: skips redirect if already logged in.
+                void loginWithGrudgeId(false);
+              }}
+              style={btnPrimary}
+            >
               Grudge ID
             </button>
           </>

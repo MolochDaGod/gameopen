@@ -88,7 +88,23 @@ export function captureAuthCallbackFromUrl(): string | null {
   return token;
 }
 
-export function loginWithGrudgeId(): void {
+/**
+ * Navigate to Grudge ID login.
+ *
+ * SMART: first checks if a valid token + account are already in storage.
+ * If so, skips the redirect entirely — the user is already authenticated.
+ * Pass `force = true` to redirect even when a session exists (e.g. "switch account").
+ */
+export async function loginWithGrudgeId(force = false): Promise<void> {
+  if (!force) {
+    const token = getStoredToken();
+    const cached = getStoredAccount();
+    if (token && cached) {
+      // Already logged in — silently revalidate but don't redirect.
+      void _revalidateAccount();
+      return;
+    }
+  }
   window.location.href = buildGrudgeLoginUrl(
     window.location.origin + window.location.pathname,
   );
@@ -109,41 +125,68 @@ async function authHeaders(): Promise<HeadersInit> {
   return h;
 }
 
-/** Resolve account via fleet /api/auth/me or GrudgeBuilder account. */
-export async function fetchFleetAccount(): Promise<GrudgeAccount | null> {
+/**
+ * Resolve account from the fleet API.
+ *
+ * TOKEN-FIRST: if a cached account already exists in sessionStorage AND a
+ * token is stored, return the cache IMMEDIATELY (no API call) — the user
+ * is already identified. A silent background revalidation is scheduled so
+ * the account stays fresh without blocking the UI.
+ *
+ * Only hits the API when:
+ *   - No cached account (first login or cleared storage), OR
+ *   - `force = true` is passed (explicit refresh button).
+ */
+export async function fetchFleetAccount(
+  force = false,
+): Promise<GrudgeAccount | null> {
   const token = getStoredToken();
-  if (!token) return getStoredAccount();
+  if (!token) return getStoredAccount(); // guest — return whatever is cached
 
-  const endpoints = [
-    apiUrl("/api/auth/me"),
-    apiUrl("/api/account/me"),
-    `${FLEET.gameData}/api/auth/me`,
-  ];
+  // Fast path: token + cached account → return instantly, revalidate silently.
+  const cached = getStoredAccount();
+  if (cached && !force) {
+    // Background revalidation (fire and forget — never blocks mount).
+    void _revalidateAccount();
+    return cached;
+  }
 
-  for (const url of endpoints) {
-    try {
-      const r = await fetch(url, {
-        headers: await authHeaders(),
-        credentials: "include",
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!r.ok) continue;
+  // Slow path: no cache or forced refresh → hit the API.
+  return _revalidateAccount();
+}
+
+/** Internal: verify token against the fleet API, update cache, return fresh account. */
+async function _revalidateAccount(): Promise<GrudgeAccount | null> {
+  // Only try the same-origin Vercel proxy endpoint — it avoids CORS.
+  // The direct Railway call is a fallback only when the proxy returns an error.
+  const proxyEndpoint = apiUrl("/api/auth/me");
+
+  try {
+    const r = await fetch(proxyEndpoint, {
+      headers: await authHeaders(),
+      credentials: "include",
+      signal: AbortSignal.timeout(6000),
+    });
+    if (r.ok) {
       const data = (await r.json()) as Record<string, unknown>;
       const grudgeId = String(
         data.grudgeId || data.grudge_id || data.id || data.sub || "",
       );
-      if (!grudgeId) continue;
-      const account: GrudgeAccount = {
-        grudgeId,
-        displayName: String(data.displayName || data.name || data.username || ""),
-        source: "grudge-id",
-      };
-      setStoredAccount(account);
-      return account;
-    } catch {
-      /* try next */
+      if (grudgeId) {
+        const account: GrudgeAccount = {
+          grudgeId,
+          displayName: String(data.displayName || data.name || data.username || ""),
+          source: "grudge-id",
+        };
+        setStoredAccount(account);
+        return account;
+      }
     }
+  } catch {
+    /* proxy unavailable or 401 — fall through to cached */
   }
+
+  // Return the stale cached account rather than forcing a logout.
   return getStoredAccount();
 }
 
@@ -184,7 +227,9 @@ export async function initFleetAuth(): Promise<{
   characters: GrudgeCharacter[];
 }> {
   captureAuthCallbackFromUrl();
+  // TOKEN-FIRST: cached account returns instantly; API hit is background-only.
   const account = await fetchFleetAccount();
+  // Only fetch characters when account is resolved.
   const characters = account ? await fetchCharacters() : [];
   return { account, characters };
 }

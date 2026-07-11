@@ -329,7 +329,7 @@ export class BrawlerScene {
   // ── Networking ─────────────────────────────────────────────────────────────
   private async initNetwork() {
     try {
-      const { BrawlClient } = await import("../net/BrawlClient");
+      const { BrawlClient } = await import("../../net/BrawlClient");
       if (this.disposed) return;
       const client = new BrawlClient();
       this.client = client;
