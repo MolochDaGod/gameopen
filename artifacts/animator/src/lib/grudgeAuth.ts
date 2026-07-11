@@ -103,8 +103,9 @@ async function authHeaders(): Promise<HeadersInit> {
   const token = getStoredToken();
   const h: Record<string, string> = { Accept: "application/json" };
   if (token) h.Authorization = `Bearer ${token}`;
-  const acct = getStoredAccount();
-  if (acct?.grudgeId) h["x-grudge-id"] = acct.grudgeId;
+  // NOTE: Do NOT add custom headers like x-grudge-id here — they trigger a
+  // CORS preflight and Railway's grudge-api-production does not allow them in
+  // Access-Control-Allow-Headers. The Bearer token already carries identity.
   return h;
 }
 
