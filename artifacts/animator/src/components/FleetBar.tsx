@@ -6,6 +6,36 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
 import { GAME_MODES, type GameModeId } from "../game/modes";
 import { loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+import { assetUrl } from "../lib/fleet";
+
+/** Icon filename for each combat game mode. */
+const MODE_ICON: Partial<Record<GameModeId, string>> = {
+  "danger-room":    "combat-pad",
+  "boss-rush":      "siege",
+  "horde":          "ambush",
+  "duel":           "attack",
+  "coop-assault":   "rally",
+  "sparring":       "defend",
+  "arena-war":      "charge",
+  "dungeon-crawl":  "explore",
+  "pirate-siege":   "loot",
+  "warlord-genesis":"skill-vfx-lab",
+};
+
+function ModeIcon({ id }: { id: GameModeId }) {
+  const icon = MODE_ICON[id];
+  if (!icon) return null;
+  return (
+    <img
+      src={assetUrl(`icons/${icon}.png`)}
+      alt=""
+      width={16}
+      height={16}
+      draggable={false}
+      style={{ objectFit: "contain", verticalAlign: "middle", marginRight: 4 }}
+    />
+  );
+}
 
 
 export function FleetBar() {
@@ -59,24 +89,44 @@ export function FleetBar() {
         )}
       </div>
 
-      <select
-        value={snap.mode.id}
-        onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
+      <div
         style={{
-          ...btnStyle,
-          background: "rgba(7,11,20,0.92)",
-          border: "1px solid rgba(79,195,255,0.28)",
-          color: "#eaf4ff",
-          maxWidth: 180,
+          display: "flex",
+          alignItems: "center",
+          gap: 5,
+          padding: "0 4px 0 8px",
+          borderRadius: 10,
+          background: "rgba(7,11,20,0.88)",
+          border: "1px solid rgba(79,195,255,0.22)",
         }}
-        title={snap.mode.blurb}
       >
-        {GAME_MODES.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.title}
-          </option>
-        ))}
-      </select>
+        <ModeIcon id={snap.mode.id} />
+        <span style={{ fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "#5d80a8", whiteSpace: "nowrap" }}>Mode</span>
+        <select
+          value={snap.mode.id}
+          onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#eaf4ff",
+            fontSize: 12,
+            padding: "6px 4px",
+            cursor: "pointer",
+            maxWidth: 160,
+            outline: "none",
+          }}
+          title={snap.mode.blurb}
+        >
+          {GAME_MODES.map((m) => (
+            // Native <option> can't render images, so we use Unicode indicators:
+            // combat modes get ⚔ prefix, stealth=🗡, support=🛡, world=🌍
+            <option key={m.id} value={m.id} style={{ background: "#0a0e1a" }}
+              title={m.blurb}>
+              {MODE_ICON[m.id] ? "◆ " : "  "}{m.title}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {snap.account && snap.characters.length === 0 && (
         <div

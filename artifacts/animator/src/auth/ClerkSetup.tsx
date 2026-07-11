@@ -18,13 +18,12 @@ import {
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 
-// Resolve the key from window.location.hostname so the same build serves
-// multiple Clerk custom domains. Falls back to the env key when the host
-// doesn't map to a custom domain (dev).
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+// Only use VITE_CLERK_PUBLISHABLE_KEY from env. Do NOT derive a key from
+// window.location.hostname when the env key is absent — publishableKeyFromHost
+// generates a syntactically-valid but non-existent key like
+// `pk_live_Z2FtZW9wZW4udmVyY2VsLmFwcCQ` which causes Clerk to try loading
+// from a non-existent `clerk.gameopen.vercel.app` subdomain (ERR_CONNECTION_CLOSED).
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || null;
 
 // Empty in dev (Clerk hits dev FAPI directly), auto-set in prod. Do not gate on
 // import.meta.env.PROD / NODE_ENV — the empty dev value is intentional.

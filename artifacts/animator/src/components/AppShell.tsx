@@ -18,23 +18,26 @@
  */
 import { useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Boxes,
-  ChevronDown,
-  Crosshair,
-  Globe,
-  Grid3x3,
-  Home,
-  ScanFace,
-  Shirt,
-  Swords,
-  Users,
-  X,
-} from "lucide-react";
+import { ChevronDown, Grid3x3, Home, X } from "lucide-react";
 import { AiAssistant } from "../ai/AiAssistant";
 import { AssistantSurfaceContext, type AssistantConfig } from "../ai/AssistantSurface";
 import { useDevice } from "../hooks/useDevice";
+import { assetUrl } from "../lib/fleet";
 import "./appShell.css";
+
+/** Tiny themed game icon from public/icons/. Falls back to a tinted square. */
+function GameIcon({ name, tone, size = 20 }: { name: string; tone: string; size?: number }) {
+  return (
+    <img
+      src={assetUrl(`icons/${name}.png`)}
+      alt=""
+      draggable={false}
+      width={size}
+      height={size}
+      style={{ objectFit: "contain", filter: `drop-shadow(0 0 4px ${tone}55)` }}
+    />
+  );
+}
 
 /** Every mode the shell can route to. Mirrors App's `Mode` union. */
 export type ShellMode =
@@ -60,17 +63,17 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { mode: "doors", label: "Home", hint: "Facility entrance", icon: <Home size={20} />, tone: "#7fb0ff" },
-  { mode: "danger", label: "Danger Room", hint: "Combat sandbox", icon: <Swords size={20} />, tone: "#ff7a7a" },
-  { mode: "voxel", label: "Voxel Editor", hint: "Build & test maps", icon: <Boxes size={20} />, tone: "#7ee0a0" },
-  { mode: "editor", label: "Dressing Room", hint: "Dress up a rig", icon: <Shirt size={20} />, tone: "#ffb24d" },
-  { mode: "lobby", label: "Lobby", hint: "Rooms & community", icon: <Users size={20} />, tone: "#9d8bff" },
-  { mode: "zones", label: "GRUDOX Zones", hint: "Shared GRUDOX world", icon: <Globe size={20} />, tone: "#5fe0ff" },
-  { mode: "brawl", label: "Ruins Brawler", hint: "Live co-op survival", icon: <Crosshair size={20} />, tone: "#ff7a7a" },
-  { mode: "mimic", label: "Test Dungeon", hint: "Mimic encounter", icon: <Boxes size={20} />, tone: "#9cff5a" },
-  { mode: "genesis", label: "Warlord Genesis", hint: "Choose race, fight waves", icon: <Swords size={20} />, tone: "#ffd24d" },
-  { mode: "voxgrudge-native", label: "VoxGrudge", hint: "Open voxel world", icon: <Boxes size={20} />, tone: "#5fe0ff" },
-  { mode: "ledmask", label: "LED Mask", hint: "AI face companion", icon: <ScanFace size={20} />, tone: "#5fe0ff" },
+  { mode: "doors",           label: "Home",            hint: "Facility entrance",    icon: <Home size={20} />,                                       tone: "#7fb0ff" },
+  { mode: "danger",          label: "Danger Room",     hint: "Combat sandbox",       icon: <GameIcon name="combat-pad"      tone="#ff7a7a" />,          tone: "#ff7a7a" },
+  { mode: "genesis",         label: "Warlord Genesis", hint: "Choose race, fight",   icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d" },
+  { mode: "brawl",           label: "Ruins Brawler",   hint: "Live co-op survival",  icon: <GameIcon name="attack"          tone="#ff7a7a" />,          tone: "#ff9a7a" },
+  { mode: "mimic",           label: "Test Dungeon",    hint: "Mimic encounter",      icon: <GameIcon name="ambush"          tone="#9cff5a" />,          tone: "#9cff5a" },
+  { mode: "voxel",           label: "Voxel Editor",    hint: "Build & test maps",    icon: <GameIcon name="world-editor"    tone="#7ee0a0" />,          tone: "#7ee0a0" },
+  { mode: "voxgrudge-native",label: "VoxGrudge",       hint: "Open voxel world",     icon: <GameIcon name="explore"         tone="#5fe0ff" />,          tone: "#5fe0ff" },
+  { mode: "editor",          label: "Dressing Room",   hint: "Equip & preview",      icon: <GameIcon name="equip"           tone="#ffb24d" />,          tone: "#ffb24d" },
+  { mode: "lobby",           label: "Lobby",           hint: "Rooms & community",    icon: <GameIcon name="inventory"       tone="#9d8bff" />,          tone: "#9d8bff" },
+  { mode: "zones",           label: "GRUDOX Zones",    hint: "Shared GRUDOX world",  icon: <GameIcon name="loot"            tone="#5fe0ff" />,          tone: "#5fe0ff" },
+  { mode: "ledmask",         label: "LED Mask",        hint: "AI face companion",    icon: <GameIcon name="animation-editor" tone="#a78bff" />,         tone: "#a78bff" },
 ];
 
 /** The launcher pill reflects the active surface (play folds into the editor). */
@@ -119,7 +122,7 @@ export function AppShell({ mode, onNavigate, assistant, hideAssistant, children 
         title="Switch system"
       >
         <span className="shell-launcher-icon" style={{ color: current.tone }}>
-          {navOpen ? <X size={18} /> : <Grid3x3 size={18} />}
+          {navOpen ? <X size={18} /> : current.mode === "doors" ? <Grid3x3 size={18} /> : current.icon}
         </span>
         <span className="shell-launcher-label">{current.label}</span>
         <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
