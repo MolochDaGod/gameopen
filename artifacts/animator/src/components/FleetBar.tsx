@@ -59,24 +59,40 @@ export function FleetBar() {
         )}
       </div>
 
-      <select
-        value={snap.mode.id}
-        onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
+      <div
         style={{
-          ...btnStyle,
-          background: "rgba(7,11,20,0.92)",
-          border: "1px solid rgba(79,195,255,0.28)",
-          color: "#eaf4ff",
-          maxWidth: 180,
+          display: "flex",
+          alignItems: "center",
+          gap: 5,
+          padding: "0 4px 0 8px",
+          borderRadius: 10,
+          background: "rgba(7,11,20,0.88)",
+          border: "1px solid rgba(79,195,255,0.22)",
         }}
-        title={snap.mode.blurb}
       >
-        {GAME_MODES.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.title}
-          </option>
-        ))}
-      </select>
+        <span style={{ fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "#5d80a8", whiteSpace: "nowrap" }}>Mode</span>
+        <select
+          value={snap.mode.id}
+          onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#eaf4ff",
+            fontSize: 12,
+            padding: "6px 4px",
+            cursor: "pointer",
+            maxWidth: 160,
+            outline: "none",
+          }}
+          title={snap.mode.blurb}
+        >
+          {GAME_MODES.map((m) => (
+            <option key={m.id} value={m.id} style={{ background: "#0a0e1a" }}>
+              {m.title}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {snap.account && snap.characters.length === 0 && (
         <div
