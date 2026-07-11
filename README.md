@@ -11,12 +11,38 @@ Combat sandbox client for **Grudge Studio** — races, weapons, VFX, full Mixamo
 | Auth | **Grudge ID** | `id.grudge-studio.com` |
 | Characters SSOT | **GrudgeBuilder Railway** | Proxied `/api/characters` |
 
+## Auth (return-to-origin SSO)
+
+Canonical login always returns to **this** origin with tokens the app can store.
+
+| Piece | Detail |
+|-------|--------|
+| Login URL builder | `artifacts/animator/src/lib/fleet.ts` → `buildGrudgeLoginUrl()` |
+| Token pickup / bridge | `artifacts/animator/src/lib/grudgeAuth.ts` |
+| Sign-in UI entry | Fleet bar → `loginWithGrudgeId()` |
+| Id hub | `https://id.grudge-studio.com/login?redirect_uri=https://gameopen.vercel.app/` |
+
+**Contract (must match GrudgeBuilder `docs/GRUDGE_AUTH_CONNECT.md`):**
+
+1. **Dual-write return params** on the way to id: `redirect_uri` + `redirect` + `return` + `return_to` + `origin` + `app=gameopen`.
+2. After login, id handoff attaches **`sso_token`** (full session JWT) and **`grudge_token`** (short launch) in **query and hash**.
+3. On boot, **prefer `sso_token` / `token`** over `grudge_token`. Never use launch JWT alone as Bearer.
+4. If only launch is present → `POST /api/auth/session/exchange` (or grudge-bridge) with `audience=https://gameopen.vercel.app`.
+5. Store under fleet keys: `grudge_auth_token`, `grudge_session_token`, `grudge.token`, `sso_token`, plus `grudge.open.token`.
+6. **No custom identity headers** (e.g. `x-grudge-id`) — CORS preflight fails on Railway; Bearer carries identity.
+
+```bash
+# Probe id dual-write (expect 302 with both redirect_uri and redirect)
+curl -sI "https://id.grudge-studio.com/auth/sso-check?return=https://gameopen.vercel.app/"
+```
+
 ## Live
 
 | URL | Role |
 |-----|------|
 | https://gameopen.vercel.app | Production client |
 | https://gameopen-production.up.railway.app/api/healthz | Railway API |
+| https://id.grudge-studio.com/login?redirect_uri=https%3A%2F%2Fgameopen.vercel.app%2F | Fleet login → return here |
 | https://github.com/MolochDaGod/gameopen | Source |
 
 ## Asset pack (all used)
@@ -110,9 +136,11 @@ Then set Vercel `VITE_USE_R2=true` so the bootstrap rewrites `/models|/anim|/ico
 
 ```
 Browser (Vercel SPA)
+  ├── Sign in          → id.grudge-studio.com/login?redirect_uri=this-origin (dual params)
+  │                      ← return ?sso_token=&grudge_token= (+ hash mirror)
   ├── /api/characters  → GrudgeBuilder Railway (Postgres characters)
   ├── /api/effects     → gameopen Railway (local VFX catalog + ObjectStore merge)
-  ├── /api/auth/*      → id.grudge-studio.com
+  ├── /api/auth/*      → id.grudge-studio.com (me, refresh, session/exchange)
   ├── /api/*           → gameopen Railway
   ├── /models|/anim    → Vercel static OR assets.grudge-studio.com/gameopen
   └── optional WS      → wss://gameopen-api…/api/carrier
