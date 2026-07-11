@@ -78,6 +78,30 @@ export function FleetBar() {
         ))}
       </select>
 
+      {snap.account && snap.characters.length === 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 10px",
+            borderRadius: 10,
+            background: "rgba(7,11,20,0.88)",
+            border: "1px solid rgba(79,195,255,0.22)",
+          }}
+        >
+          <span style={{ fontSize: 12, opacity: 0.75, color: "#cfe0fa" }}>No characters</span>
+          <a
+            href="https://character.grudge-studio.com?era=warlords&from=gameopen"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
+          >
+            Create character →
+          </a>
+        </div>
+      )}
+
       {snap.characters.length > 0 && (
         <select
           value={snap.selectedCharacterId || ""}
@@ -94,6 +118,7 @@ export function FleetBar() {
             <option key={c.id} value={c.id}>
               {c.name}
               {c.raceId ? ` (${c.raceId})` : ""}
+              {c.level ? ` lv${c.level}` : ""}
             </option>
           ))}
         </select>

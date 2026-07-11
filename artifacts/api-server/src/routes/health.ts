@@ -8,4 +8,8 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+router.get("/health", (_req, res) => {
+  res.json({ ok: true, status: "ok", service: "gameopen-api" });
+});
+
 export default router;

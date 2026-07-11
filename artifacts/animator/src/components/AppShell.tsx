@@ -47,7 +47,9 @@ export type ShellMode =
   | "ledmask"
   | "zones"
   | "brawl"
-  | "mimic";
+  | "mimic"
+  | "genesis"
+  | "voxgrudge-native";
 
 interface NavItem {
   mode: ShellMode;
@@ -66,6 +68,8 @@ const NAV: NavItem[] = [
   { mode: "zones", label: "GRUDOX Zones", hint: "Shared GRUDOX world", icon: <Globe size={20} />, tone: "#5fe0ff" },
   { mode: "brawl", label: "Ruins Brawler", hint: "Live co-op survival", icon: <Crosshair size={20} />, tone: "#ff7a7a" },
   { mode: "mimic", label: "Test Dungeon", hint: "Mimic encounter", icon: <Boxes size={20} />, tone: "#9cff5a" },
+  { mode: "genesis", label: "Warlord Genesis", hint: "Choose race, fight waves", icon: <Swords size={20} />, tone: "#ffd24d" },
+  { mode: "voxgrudge-native", label: "VoxGrudge", hint: "Open voxel world", icon: <Boxes size={20} />, tone: "#5fe0ff" },
   { mode: "ledmask", label: "LED Mask", hint: "AI face companion", icon: <ScanFace size={20} />, tone: "#5fe0ff" },
 ];
 

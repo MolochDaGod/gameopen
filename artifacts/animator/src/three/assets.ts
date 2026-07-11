@@ -4,11 +4,22 @@ import { resolveCombat } from "./arsenal/holdStyle";
 
 export { WEAPONS };
 
-const base = import.meta.env.BASE_URL; // e.g. "/animator/"
+const _viteBase = import.meta.env.BASE_URL; // e.g. "/" or "/animator/"
 
-/** Resolve a public asset path under the artifact base URL. */
+/** Resolve a public asset path. CDN-routed when VITE_USE_R2=true + not localhost. */
 export function asset(path: string): string {
-  return base.replace(/\/$/, "") + "/" + path.replace(/^\//, "");
+  const clean = path.replace(/^\//, "");
+  const useR2 = import.meta.env.VITE_USE_R2 === "true";
+  const isLocal =
+    typeof location !== "undefined" &&
+    (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  if (useR2 && !isLocal) {
+    const cdn =
+      (import.meta.env.VITE_ASSET_BASE_URL as string) ||
+      "https://assets.grudge-studio.com/gameopen";
+    return `${cdn.replace(/\/$/, "")}/${clean}`;
+  }
+  return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
 }
 
 export const CHARACTERS: CharacterDef[] = [

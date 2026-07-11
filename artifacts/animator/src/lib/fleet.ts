@@ -54,3 +54,15 @@ export function buildGrudgeLoginUrl(returnTo?: string): string {
   const q = new URLSearchParams({ redirect_uri: redirect });
   return `${FLEET.auth}/login?${q.toString()}`;
 }
+
+/**
+ * Resolve a path under the ObjectStore definitions CDN.
+ * Use for weapon/item/recipe/skill definition JSON — never for character state.
+ * Example: contentUrl("master-items.json") → https://objectstore.../api/v1/master-items.json
+ */
+export function contentUrl(path: string): string {
+  const base =
+    (import.meta.env.VITE_OBJECTSTORE_URL as string) ||
+    FLEET.objectStore;
+  return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+}

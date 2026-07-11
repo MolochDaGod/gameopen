@@ -36,7 +36,24 @@ app.use(
 // Mount the Clerk proxy before body parsers (it streams raw bytes).
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors({ credentials: true, origin: true }));
+const RAW_ORIGINS = process.env.ALLOWED_ORIGINS || "";
+const ORIGIN_LIST = RAW_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean);
+
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, cb) => {
+      // Allow server-to-server (no Origin header) + listed origins + localhost.
+      if (!origin) return cb(null, true);
+      const isAllowed =
+        ORIGIN_LIST.length === 0 || // no list = open (dev default)
+        ORIGIN_LIST.includes(origin) ||
+        origin.startsWith("http://localhost") ||
+        origin.startsWith("http://127.0.0.1");
+      cb(isAllowed ? null : new Error(`CORS: ${origin} not in allowlist`), isAllowed);
+    },
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

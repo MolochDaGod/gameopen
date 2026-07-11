@@ -14,8 +14,8 @@ import { GRUDOX_ZONES, grudoxDeepLink } from "../game/grudoxZones";
 import { getStoredToken } from "../lib/grudgeAuth";
 
 interface Props {
-  /** Launch the native in-gameopen Ruins Brawler surface. */
-  onEnterNative: () => void;
+  /** Launch the native in-gameopen surface for a zone. */
+  onEnterNative: (zoneId: string) => void;
   /** Return to the door select. */
   onExit: () => void;
 }
@@ -82,7 +82,7 @@ export function GrudoxZones({ onEnterNative, onExit }: Props) {
             <p>{zone.blurb}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
               {zone.native && (
-                <button type="button" style={btnPrimary} onClick={onEnterNative}>
+              <button type="button" style={btnPrimary} onClick={() => onEnterNative(zone.id)}>
                   Play here
                 </button>
               )}
