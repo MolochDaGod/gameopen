@@ -1,6 +1,9 @@
 /**
  * Grudge Studio fleet endpoints — same-origin first, absolute fallbacks second.
  * Prefer relative /api/* so Vercel rewrites keep cookies + skip CORS preflight.
+ *
+ * Auth contract: docs/GRUDGE_AUTH_CONNECT.md (GrudgeBuilder)
+ * Login must dual-write redirect_uri + redirect + return so id-gateway never drops return.
  */
 
 export const FLEET = {
@@ -11,6 +14,15 @@ export const FLEET = {
   gameData: "https://grudge-api-production-0d46.up.railway.app",
   ai: "https://ai.grudge-studio.com",
 } as const;
+
+/** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap). */
+export const FLEET_TOKEN_KEYS = [
+  "grudge_auth_token",
+  "grudge_session_token",
+  "grudge.token",
+  "sso_token",
+  "grudge_token",
+] as const;
 
 /** Build a URL under the app BASE_URL for public/ files. */
 export function publicUrl(rel: string): string {
@@ -46,13 +58,36 @@ export function apiUrl(path: string): string {
   return `/api${p}`;
 }
 
-/** Grudge ID login redirect (fleet SSO). */
-export function buildGrudgeLoginUrl(returnTo?: string): string {
+/**
+ * Canonical Grudge ID login URL.
+ * Dual-writes every return alias the gateway / auth-page accept so handoff
+ * always returns to THIS origin (e.g. https://gameopen.vercel.app/).
+ */
+export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean; app?: string }): string {
   const redirect =
     returnTo ||
-    (typeof window !== "undefined" ? window.location.origin + window.location.pathname : "");
-  const q = new URLSearchParams({ redirect_uri: redirect });
-  return `${FLEET.auth}/login?${q.toString()}`;
+    (typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}${window.location.search || ""}`.replace(
+          /[?&](grudge_token|sso_token|token|launch_token)=[^&]*/g,
+          "",
+        )
+      : "https://gameopen.vercel.app/");
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://gameopen.vercel.app";
+  const q = new URLSearchParams({
+    redirect_uri: redirect,
+    redirect,
+    return: redirect,
+    return_to: redirect,
+    origin,
+    app: opts?.app || "gameopen",
+  });
+  const base = FLEET.auth.replace(/\/$/, "");
+  if (opts?.force) {
+    return `${base}/login?${q.toString()}`;
+  }
+  // sso-check: silent re-entry when studio cookie exists, else → /login with dual return
+  return `${base}/auth/sso-check?${q.toString()}`;
 }
 
 /**
