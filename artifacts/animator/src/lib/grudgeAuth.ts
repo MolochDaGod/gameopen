@@ -2,15 +2,21 @@
  * Grudge Studio identity bridge — links gameopen to fleet accounts.
  *
  * Priority:
- *  1. Grudge ID SSO token (id.grudge-studio.com / ?grudge_token= / session)
+ *  1. Grudge ID SSO token (id.grudge-studio.com / ?sso_token= / #sso_token / session)
  *  2. Clerk session (optional, when VITE_CLERK_PUBLISHABLE_KEY is set)
  *  3. Guest play (local roster only)
  *
  * Characters SSOT: GrudgeBuilder Railway via same-origin /api/characters
  * (Vercel rewrite → grudge-api-production).
+ *
+ * Handoff contract (must match docs/GRUDGE_AUTH_CONNECT.md + ID_SSO_PRODUCTION.md):
+ *  - Prefer **sso_token** / **token** (full session JWT) over **grudge_token** (short launch)
+ *  - Read query AND hash (auth-page dual-writes both)
+ *  - Bridge launch token via /api/auth/session/exchange when only grudge_token present
+ *  - Store under fleet keys + grudge.open.token
  */
 
-import { FLEET, apiUrl, buildGrudgeLoginUrl } from "./fleet";
+import { FLEET, FLEET_TOKEN_KEYS, apiUrl, buildGrudgeLoginUrl } from "./fleet";
 
 const TOKEN_KEY = "grudge.open.token";
 const ACCOUNT_KEY = "grudge.open.account";
@@ -31,12 +37,70 @@ export type GrudgeCharacter = {
   saveData?: Record<string, unknown>;
 };
 
+function paramFromSearchOrHash(name: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(window.location.href);
+    const q = url.searchParams.get(name);
+    if (q) return q;
+    if (url.hash && url.hash.length > 1) {
+      const hp = new URLSearchParams(url.hash.replace(/^#/, ""));
+      return hp.get(name);
+    }
+  } catch {
+    /* */
+  }
+  return null;
+}
+
+function cleanHandoffParamsFromUrl(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    const keys = [
+      "grudge_token",
+      "launch_token",
+      "sso_token",
+      "token",
+      "access_token",
+      "grudge_id",
+      "grudgeId",
+      "username",
+      "grudge_username",
+      "provider",
+      "error",
+    ];
+    for (const k of keys) url.searchParams.delete(k);
+    if (url.hash && url.hash.length > 1) {
+      const hp = new URLSearchParams(url.hash.replace(/^#/, ""));
+      let changed = false;
+      for (const k of keys) {
+        if (hp.has(k)) {
+          hp.delete(k);
+          changed = true;
+        }
+      }
+      if (changed) url.hash = hp.toString() || "";
+    }
+    const q = url.searchParams.toString();
+    window.history.replaceState({}, "", url.pathname + (q ? `?${q}` : "") + (url.hash || ""));
+  } catch {
+    /* */
+  }
+}
+
 export function getStoredToken(): string | null {
   try {
-    return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+    const open = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+    if (open) return open;
+    for (const k of FLEET_TOKEN_KEYS) {
+      const t = localStorage.getItem(k) || sessionStorage.getItem(k);
+      if (t) return t;
+    }
   } catch {
-    return null;
+    /* */
   }
+  return null;
 }
 
 export function setStoredToken(token: string | null, persist = true): void {
@@ -44,10 +108,17 @@ export function setStoredToken(token: string | null, persist = true): void {
     if (!token) {
       sessionStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(TOKEN_KEY);
+      for (const k of FLEET_TOKEN_KEYS) {
+        localStorage.removeItem(k);
+        sessionStorage.removeItem(k);
+      }
       return;
     }
     sessionStorage.setItem(TOKEN_KEY, token);
-    if (persist) localStorage.setItem(TOKEN_KEY, token);
+    if (persist) {
+      localStorage.setItem(TOKEN_KEY, token);
+      for (const k of FLEET_TOKEN_KEYS) localStorage.setItem(k, token);
+    }
   } catch {
     /* private mode */
   }
@@ -71,51 +142,157 @@ export function setStoredAccount(account: GrudgeAccount | null): void {
   }
 }
 
-/** Capture ?grudge_token= / ?sso_token= from fleet SSO return. */
+/**
+ * Capture fleet SSO handoff from query + hash.
+ * CRITICAL: prefer full session JWT (sso_token) over short launch (grudge_token).
+ */
 export function captureAuthCallbackFromUrl(): string | null {
   if (typeof window === "undefined") return null;
-  const url = new URL(window.location.href);
-  const token =
-    url.searchParams.get("grudge_token") ||
-    url.searchParams.get("sso_token") ||
-    url.searchParams.get("token");
-  if (!token) return null;
-  setStoredToken(token, true);
-  url.searchParams.delete("grudge_token");
-  url.searchParams.delete("sso_token");
-  url.searchParams.delete("token");
-  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-  return token;
+
+  const sso =
+    paramFromSearchOrHash("sso_token") ||
+    paramFromSearchOrHash("token") ||
+    paramFromSearchOrHash("access_token");
+  const launch =
+    paramFromSearchOrHash("grudge_token") || paramFromSearchOrHash("launch_token");
+  const grudgeId =
+    paramFromSearchOrHash("grudge_id") || paramFromSearchOrHash("grudgeId") || "";
+  const username =
+    paramFromSearchOrHash("username") || paramFromSearchOrHash("grudge_username") || "";
+
+  if (!sso && !launch) return getStoredToken();
+
+  // Prefer long-lived session token for Bearer API calls
+  if (sso && sso.length > 20) {
+    setStoredToken(sso, true);
+    if (grudgeId) {
+      try {
+        localStorage.setItem("grudge_id", grudgeId);
+        localStorage.setItem("grudge_account_id", grudgeId);
+      } catch {
+        /* */
+      }
+      setStoredAccount({
+        grudgeId,
+        displayName: username || undefined,
+        source: "grudge-id",
+      });
+    }
+    cleanHandoffParamsFromUrl();
+    // Bridge launch in background if present (optional)
+    if (launch) void bridgeLaunchToken(launch).catch(() => undefined);
+    return sso;
+  }
+
+  if (launch) {
+    cleanHandoffParamsFromUrl();
+    // Synchronous path: store launch briefly; initFleetAuth will await bridge
+    setStoredToken(launch, true);
+    return launch;
+  }
+
+  return null;
+}
+
+/** Exchange short launch JWT for full session JWT. */
+export async function bridgeLaunchToken(launchToken: string): Promise<string | null> {
+  const body = JSON.stringify({
+    token: launchToken,
+    audience: typeof window !== "undefined" ? window.location.origin : "https://gameopen.vercel.app",
+  });
+  const urls = [
+    apiUrl("/api/auth/session/exchange"),
+    apiUrl("/api/auth/grudge-bridge"),
+    `${FLEET.auth}/api/auth/session/exchange`,
+    `${FLEET.auth}/api/auth/grudge-bridge`,
+    `${FLEET.gameData}/api/auth/session/exchange`,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body,
+        credentials: url.startsWith("http") && !url.includes("id.grudge-studio") ? "omit" : "include",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!r.ok) continue;
+      const data = (await r.json()) as Record<string, unknown>;
+      const t = String(data.sessionToken || data.token || "");
+      if (!t) continue;
+      setStoredToken(t, true);
+      const gid = String(
+        data.grudgeId ||
+          (data.user as { grudgeId?: string } | undefined)?.grudgeId ||
+          "",
+      );
+      const uname = String(
+        data.username ||
+          (data.user as { username?: string; displayName?: string } | undefined)?.displayName ||
+          (data.user as { username?: string } | undefined)?.username ||
+          "",
+      );
+      if (gid) {
+        try {
+          localStorage.setItem("grudge_id", gid);
+          localStorage.setItem("grudge_account_id", gid);
+        } catch {
+          /* */
+        }
+        setStoredAccount({
+          grudgeId: gid,
+          displayName: uname || undefined,
+          source: "grudge-id",
+        });
+      }
+      return t;
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
 }
 
 export function loginWithGrudgeId(): void {
+  // Force full login UI with dual return params (never drop gameopen origin)
   window.location.href = buildGrudgeLoginUrl(
-    window.location.origin + window.location.pathname,
+    `${window.location.origin}${window.location.pathname}`,
+    { force: true, app: "gameopen" },
   );
 }
 
 export function logoutGrudge(): void {
   setStoredToken(null);
   setStoredAccount(null);
+  try {
+    localStorage.removeItem("grudge_id");
+    localStorage.removeItem("grudge_account_id");
+    localStorage.removeItem("grudge_username");
+  } catch {
+    /* */
+  }
 }
 
 async function authHeaders(): Promise<HeadersInit> {
   const token = getStoredToken();
   const h: Record<string, string> = { Accept: "application/json" };
   if (token) h.Authorization = `Bearer ${token}`;
-  // NOTE: Do NOT add custom headers like x-grudge-id here — they trigger a
-  // CORS preflight and Railway's grudge-api-production does not allow them in
-  // Access-Control-Allow-Headers. The Bearer token already carries identity.
+  // Do NOT add custom headers like x-grudge-id — they trigger a CORS preflight
+  // and Railway grudge-api-production does not allow them in Access-Control-Allow-Headers.
+  // The Bearer token already carries identity.
   return h;
 }
 
 /** Resolve account via fleet /api/auth/me or GrudgeBuilder account. */
 export async function fetchFleetAccount(): Promise<GrudgeAccount | null> {
-  const token = getStoredToken();
+  let token = getStoredToken();
   if (!token) return getStoredAccount();
 
+  // If token looks like a short launch JWT, bridge first
+  // Launch tokens are typically shorter-lived and typed differently; retry me after bridge fail.
   const endpoints = [
     apiUrl("/api/auth/me"),
+    `${FLEET.auth}/api/auth/me`,
     apiUrl("/api/account/me"),
     `${FLEET.gameData}/api/auth/me`,
   ];
@@ -127,6 +304,14 @@ export async function fetchFleetAccount(): Promise<GrudgeAccount | null> {
         credentials: "include",
         signal: AbortSignal.timeout(8000),
       });
+      if (r.status === 401 && token) {
+        // Maybe we only have a launch token — try bridge once
+        const bridged = await bridgeLaunchToken(token);
+        if (bridged) {
+          token = bridged;
+          continue;
+        }
+      }
       if (!r.ok) continue;
       const data = (await r.json()) as Record<string, unknown>;
       const grudgeId = String(
@@ -164,15 +349,20 @@ export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
         : Array.isArray(data?.results)
           ? data.results
           : [];
-    return list.map((c: Record<string, unknown>) => ({
-      id: String(c.id || c.uuid || c.characterId || ""),
-      name: String(c.name || c.displayName || "Hero"),
-      raceId: c.raceId ? String(c.raceId) : c.race ? String(c.race) : undefined,
-      classId: c.classId ? String(c.classId) : c.class ? String(c.class) : undefined,
-      level: typeof c.level === "number" ? c.level : undefined,
-      config: (c.config as Record<string, unknown>) || undefined,
-      saveData: (c.saveData as Record<string, unknown>) || (c.save_data as Record<string, unknown>) || undefined,
-    })).filter((c: GrudgeCharacter) => c.id);
+    return list
+      .map((c: Record<string, unknown>) => ({
+        id: String(c.id || c.uuid || c.characterId || ""),
+        name: String(c.name || c.displayName || "Hero"),
+        raceId: c.raceId ? String(c.raceId) : c.race ? String(c.race) : undefined,
+        classId: c.classId ? String(c.classId) : c.class ? String(c.class) : undefined,
+        level: typeof c.level === "number" ? c.level : undefined,
+        config: (c.config as Record<string, unknown>) || undefined,
+        saveData:
+          (c.saveData as Record<string, unknown>) ||
+          (c.save_data as Record<string, unknown>) ||
+          undefined,
+      }))
+      .filter((c: GrudgeCharacter) => c.id);
   } catch {
     return [];
   }
@@ -183,7 +373,25 @@ export async function initFleetAuth(): Promise<{
   account: GrudgeAccount | null;
   characters: GrudgeCharacter[];
 }> {
+  // Read before capture (capture strips query/hash)
+  const hadSso = !!(
+    paramFromSearchOrHash("sso_token") ||
+    paramFromSearchOrHash("token") ||
+    paramFromSearchOrHash("access_token")
+  );
+  const launchOnly =
+    !hadSso &&
+    !!(paramFromSearchOrHash("grudge_token") || paramFromSearchOrHash("launch_token"));
+  const launch =
+    paramFromSearchOrHash("grudge_token") || paramFromSearchOrHash("launch_token") || "";
+
   captureAuthCallbackFromUrl();
+
+  // Only bridge when handoff had launch JWT but no full session JWT
+  if (launchOnly && launch) {
+    await bridgeLaunchToken(launch);
+  }
+
   const account = await fetchFleetAccount();
   const characters = account ? await fetchCharacters() : [];
   return { account, characters };
