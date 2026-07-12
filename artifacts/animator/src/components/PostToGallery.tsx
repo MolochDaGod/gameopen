@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useOptionalUser, isClerkEnabled } from "../auth/clerkOptional";
+import { loginWithGrudgeId, getStoredToken } from "../lib/grudgeAuth";
 import {
   useCreatePost,
   type CreatePostPayload,
@@ -31,7 +32,9 @@ export function PostToGallery({
   label = "Post",
   className = "ve-btn",
 }: Props) {
-  const { isSignedIn } = useUser();
+  const { isSignedIn: clerkSignedIn } = useOptionalUser();
+  const fleetSignedIn = Boolean(getStoredToken());
+  const isSignedIn = isClerkEnabled ? clerkSignedIn : fleetSignedIn;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(defaultName);
   const [isPublic, setIsPublic] = useState(true);
@@ -40,10 +43,17 @@ export function PostToGallery({
   const create = useCreatePost();
 
   if (!isSignedIn) {
+    if (isClerkEnabled) {
+      return (
+        <a className={className} href={`${basePath}/sign-in`}>
+          Sign in to Post
+        </a>
+      );
+    }
     return (
-      <a className={className} href={`${basePath}/sign-in`}>
+      <button type="button" className={className} onClick={() => loginWithGrudgeId()}>
         Sign in to Post
-      </a>
+      </button>
     );
   }
 

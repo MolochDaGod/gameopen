@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useOptionalUser } from "../auth/clerkOptional";
 import { getPost, useListPosts, type Post } from "@workspace/api-client-react";
 import type {
   ContentRef,
@@ -84,7 +84,7 @@ function timeAgo(iso: string): string {
  * the content for a multiplayer room.
  */
 export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }: Props) {
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn } = useOptionalUser();
   const { data, isLoading, isError, refetch, isFetching } = useListPosts();
 
   const posts = useMemo<Post[]>(() => data ?? [], [data]);

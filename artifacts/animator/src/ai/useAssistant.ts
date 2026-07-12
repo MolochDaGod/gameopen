@@ -8,7 +8,7 @@
  *   live engine, attaching result chips to the turn.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useOptionalAuth } from "../auth/clerkOptional";
 import {
   createOpenaiConversation,
   getOpenaiConversation,
@@ -49,9 +49,8 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
   // Aborts the active stream on unmount / surface change.
   const abortRef = useRef<AbortController | null>(null);
 
-  // Clerk bearer token for the manual SSE fetch (the generated client attaches
-  // it automatically, but streamAssistant uses a raw fetch).
-  const { getToken } = useAuth();
+  // Bearer token for SSE: Clerk when enabled, else Grudge fleet JWT (optional).
+  const { getToken } = useOptionalAuth();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
 

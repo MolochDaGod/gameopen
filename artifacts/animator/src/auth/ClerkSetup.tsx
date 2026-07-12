@@ -3,11 +3,9 @@ import {
   ClerkProvider,
   SignIn,
   SignUp,
-  useAuth,
   useClerk,
 } from "@clerk/clerk-react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { dark } from "@clerk/themes";
 import {
   Switch,
@@ -17,6 +15,8 @@ import {
 } from "wouter";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
+import { useOptionalAuth, isClerkEnabled as clerkEnabled } from "./clerkOptional";
+import { getStoredToken } from "../lib/grudgeAuth";
 
 // Only use VITE_CLERK_PUBLISHABLE_KEY from env. Do NOT derive a key from
 // window.location.hostname when the env key is absent — publishableKeyFromHost
@@ -42,9 +42,9 @@ function stripBase(path: string): string {
 /**
  * Grudge fleet: Clerk is optional. When VITE_CLERK_PUBLISHABLE_KEY is unset,
  * AppShell runs in guest mode so the Danger Room works without Replit/Clerk.
- * Prefer Grudge ID for production identity (see lib/fleet.ts).
+ * Prefer Grudge ID for production identity (see lib/fleet.ts + clerkOptional.ts).
+ * clerkEnabled is imported from clerkOptional (single source of truth).
  */
-const clerkEnabled = Boolean(clerkPubKey);
 
 
 const clerkAppearance = {
@@ -122,20 +122,31 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-// Attach the live Clerk session token to every api-client request so
-// authenticated routes (post create / my posts) work once signed in.
+// Attach the live session token to every api-client request.
+// Clerk when enabled; Grudge fleet JWT otherwise (guest / Grudge ID path).
 function ApiAuthBridge() {
-  const { getToken } = useAuth();
+  const { getToken } = useOptionalAuth();
   useEffect(() => {
     setAuthTokenGetter(async () => {
       try {
-        return (await getToken()) ?? null;
+        const clerkOrFleet = await getToken();
+        if (clerkOrFleet) return clerkOrFleet;
+        return getStoredToken();
       } catch {
-        return null;
+        return getStoredToken();
       }
     });
     return () => setAuthTokenGetter(null);
   }, [getToken]);
+  return null;
+}
+
+/** Guest shell: still attach Grudge SSO tokens for /api/* when present. */
+function FleetApiAuthBridge() {
+  useEffect(() => {
+    setAuthTokenGetter(async () => getStoredToken());
+    return () => setAuthTokenGetter(null);
+  }, []);
   return null;
 }
 
@@ -144,7 +155,7 @@ function ClerkProviderWithRoutes({ home }: { home: ReactNode }) {
 
   return (
     <ClerkProvider
-      publishableKey={clerkPubKey}
+      publishableKey={clerkPubKey as string}
       proxyUrl={clerkProxyUrl}
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
@@ -168,24 +179,32 @@ function ClerkProviderWithRoutes({ home }: { home: ReactNode }) {
 function GuestShell({ home }: { home: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
+      <FleetApiAuthBridge />
       <Switch>
         <Route path="/sign-in/*?">
           <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 bg-[#070b14] px-4 text-center text-[#cfe0fa]">
             <p className="text-lg font-semibold text-[#eaf4ff]">Grudge Open</p>
             <p className="max-w-md text-sm text-[#9bb3d4]">
-              Guest mode — set <code className="text-[#8ec3ff]">VITE_CLERK_PUBLISHABLE_KEY</code> for
-              Clerk, or use{" "}
+              Sign in with{" "}
               <a className="text-[#8ec3ff] underline" href="https://id.grudge-studio.com/login">
                 Grudge ID
               </a>{" "}
-              for fleet SSO.
+              for characters &amp; fleet SSO, or continue as guest.
             </p>
-            <a
-              className="rounded-lg bg-[#4f7bff] px-4 py-2 text-sm font-medium text-white hover:bg-[#3f6bef]"
-              href={basePath || "/"}
-            >
-              Continue as guest
-            </a>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <a
+                className="rounded-lg bg-[#4f7bff] px-4 py-2 text-sm font-medium text-white hover:bg-[#3f6bef]"
+                href={`https://id.grudge-studio.com/login?redirect_uri=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin + "/" : "https://gameopen.vercel.app/")}`}
+              >
+                Sign in with Grudge ID
+              </a>
+              <a
+                className="rounded-lg border border-[#26375a] px-4 py-2 text-sm font-medium text-[#cfe0fa] hover:border-[#4f7bff]"
+                href={basePath || "/"}
+              >
+                Continue as guest
+              </a>
+            </div>
           </div>
         </Route>
         <Route path="/sign-up/*?">
