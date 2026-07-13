@@ -76,80 +76,20 @@ import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboa
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
 import { resolveHudVars } from "./hud/hudConfig";
+import {
+  type AppMode,
+  resolveModeFromLocation,
+  syncUrlToMode,
+} from "./lib/openRoutes";
 import "./index.css";
 import "./components/dock/dock.css";
 
-type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic" | "genesis" | "voxgrudge-native";
+/** Engine surface modes — URL map lives in `lib/openRoutes.ts`. */
+type Mode = AppMode;
 
-/**
- * Arcade cabinet ID → app Mode.
- * Matches /arcade/play/<cabinetId> deep-links from grudox.grudge-studio.com / open.grudge-studio.com.
- */
-const ARCADE_CABINET_MAP: Record<string, Mode> = {
-  explorer:         "editor",   // Three.js dressing room — ?dressing=1 or bare
-  "dressing-room":  "editor",
-  dressing:         "editor",
-  danger:           "danger",
-  "danger-room":    "danger",
-  brawler:          "brawl",
-  brawl:            "brawl",
-  "ruins-brawler":  "brawl",
-  voxgrudge:        "voxgrudge-native",
-  "vox-grudge":     "voxgrudge-native",
-  genesis:          "genesis",
-  "warlord-genesis":"genesis",
-  mimic:            "mimic",
-  dungeon:          "mimic",
-  voxel:            "voxel",
-  "voxel-editor":   "voxel",
-  lobby:            "lobby",
-  zones:            "zones",
-  ledmask:          "ledmask",
-  "led-mask":       "ledmask",
-};
-
-/**
- * Resolve the initial app mode from:
- *   1. ?door=<mode>  — simple query param deep-link
- *   2. /arcade/play/<id>[?dressing=1]  — GRUDOX arcade cabinet deep-link
- *      open.grudge-studio.com proxies here via CF Worker;
- *      grudox.grudge-studio.com redirects /arcade/play/explorer?dressing=1 to open.grudge-studio.com
- */
+/** Resolve initial mode from path slug / arcade deep-link / query. */
 function initialMode(): Mode {
-  try {
-    const q = new URLSearchParams(window.location.search);
-
-    // 1. ?door= explicit override (original deep-link format).
-    const d = q.get("door");
-    if (
-      d === "editor" || d === "danger" || d === "voxel" || d === "lobby" ||
-      d === "ledmask" || d === "zones" || d === "brawl" || d === "mimic" ||
-      d === "genesis" || d === "voxgrudge-native"
-    ) return d;
-
-    // 2. /arcade/play/<cabinetId> path-based routing for GRUDOX cabinet deep-links.
-    const pathMatch = window.location.pathname.match(/^\/arcade\/play\/([\w-]+)/);
-    if (pathMatch) {
-      const cabinetId = pathMatch[1].toLowerCase();
-
-      // Special case: explorer?dressing=1 → Dressing Room (Three.js avatar editor).
-      // explorer without dressing= → Danger Room (default combat mode).
-      if (cabinetId === "explorer") {
-        return q.get("dressing") === "1" ? "editor" : "danger";
-      }
-
-      const mapped = ARCADE_CABINET_MAP[cabinetId];
-      if (mapped) return mapped;
-    }
-
-    // 3. ?mode=<cabinetId> shorthand (used by some GRUDOX launchers).
-    const m = q.get("mode");
-    if (m && ARCADE_CABINET_MAP[m]) return ARCADE_CABINET_MAP[m]!;
-
-  } catch {
-    /* no-op */
-  }
-  return "doors";
+  return resolveModeFromLocation();
 }
 
 const DEFAULT_BRUSH: BrushState = {
@@ -173,6 +113,20 @@ type DangerPanelId = "admin" | "editor" | "anim";
 
 export default function App() {
   const [mode, setMode] = useState<Mode>(initialMode);
+  const urlBootRef = useRef(true);
+  // Keep URL path in sync with mode (shareable /danger, /voxel, /brawl, …).
+  useEffect(() => {
+    syncUrlToMode(mode, { replace: urlBootRef.current });
+    urlBootRef.current = false;
+  }, [mode]);
+  // Browser back/forward → restore mode from path.
+  useEffect(() => {
+    const onPop = () => {
+      setMode(resolveModeFromLocation());
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const mountRef = useRef<HTMLDivElement>(null);
   const studioRef = useRef<Studio | null>(null);
   const [hud, setHud] = useState<HudSnapshot | null>(null);
@@ -850,6 +804,7 @@ export default function App() {
 
   // Unified system switch for the persistent shell launcher. Leaving a
   // multiplayer Danger Room drops the relay so we don't linger in the room.
+  // URL path is synced by the mode effect (openRoutes.syncUrlToMode).
   const navigate = useCallback((next: Mode) => {
     setMode((prev) => {
       if (next === prev) return prev;

@@ -1,45 +1,56 @@
 import { assetUrl } from "../lib/fleet";
+import {
+  type AppMode,
+  type OpenSurface,
+  hubDoorSurfaces,
+  HUB_GROUP_ORDER,
+  SURFACE_GROUP_LABEL,
+  pathForMode,
+} from "../lib/openRoutes";
 
 /** Resolve a room poster from public/rooms/<name>-scene.png (CDN-aware). */
 const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
 
 interface Props {
-  onEnter: (
-    mode:
-      | "danger" | "voxel" | "editor" | "lobby" | "ledmask"
-      | "zones" | "brawl" | "mimic" | "genesis" | "voxgrudge-native",
-  ) => void;
+  onEnter: (mode: Exclude<AppMode, "doors" | "play">) => void;
 }
 
-/** One door card — poster image on top, info below. */
+/** One door card — poster image on top, info below. Slug shown for deep-link discoverability. */
 function Door({
-  mode, label, img, blurb, tags, accent, onEnter,
+  surface,
+  onEnter,
 }: {
-  mode: Parameters<Props["onEnter"]>[0];
-  label: string;
-  img: string;
-  blurb: string;
-  tags: [string, string];
-  accent: string;
+  surface: OpenSurface;
   onEnter: Props["onEnter"];
 }) {
+  const mode = surface.mode as Exclude<AppMode, "doors" | "play">;
+  const img = surface.poster ? poster(surface.poster) : poster("lobby");
+  const path = pathForMode(surface.mode);
+  const tags = surface.tags ?? (["Open", "Lab"] as const);
+  const accent = surface.accent ?? "#d4a843";
+
   return (
     <button
-      className={`door door-img`}
+      className="door door-img"
       style={{ "--door-accent": accent } as React.CSSProperties}
       onClick={() => onEnter(mode)}
-      title={label}
+      title={`${surface.title} · open.grudge-studio.com${path}`}
+      data-mode={surface.mode}
+      data-slug={surface.slug || "hub"}
     >
       <div className="door-art-wrap">
-        <img className="door-art" src={img} alt={label} draggable={false} />
+        <img className="door-art" src={img} alt={surface.title} draggable={false} />
         <div className="door-art-badge">{tags[0]}</div>
       </div>
       <div className="door-info">
-        <h3>{label}</h3>
-        <p>{blurb}</p>
+        <h3>{surface.title}</h3>
+        <p>{surface.blurb}</p>
         <div className="door-tags">
-          <span className="door-tag" style={{ color: accent }}>{tags[0]}</span>
+          <span className="door-tag" style={{ color: accent }}>
+            {tags[0]}
+          </span>
           <span className="door-tag">{tags[1]}</span>
+          <span className="door-tag door-slug">{path}</span>
         </div>
       </div>
     </button>
@@ -47,32 +58,40 @@ function Door({
 }
 
 /**
- * The facility entrance: 10 poster-image door cards.
- * Each card shows a full-bleed dark scene poster (rooms/*-scene.png) at top,
- * with title + blurb + tags in the info strip below.
+ * Facility entrance: poster door cards grouped by system family.
+ * Catalog SSOT: `lib/openRoutes.ts` (OPEN_SURFACES).
  */
 export function DoorSelect({ onEnter }: Props) {
+  const doors = hubDoorSurfaces();
+  const byGroup = HUB_GROUP_ORDER.map((g) => ({
+    group: g,
+    label: SURFACE_GROUP_LABEL[g],
+    items: doors.filter((d) => d.group === g),
+  })).filter((g) => g.items.length > 0);
+
   return (
     <div className="doors">
       <div className="doors-head">
         <span className="brand">
           GRUDGE<span className="brand-accent">OPEN</span>
         </span>
-        <p className="doors-sub">Choose your arena</p>
+        <p className="doors-sub">Choose your arena · deep-link any door via path slug</p>
+        <p className="doors-slugs-hint">
+          e.g. <code>/danger</code> <code>/voxel</code> <code>/brawl</code>{" "}
+          <code>/world</code> <code>/dressing</code> <code>/lobby</code>
+        </p>
       </div>
 
-      <div className="doors-row">
-        <Door mode="danger"         label="Danger Room"      img={poster("danger")}    blurb="Live combat sandbox — fight training targets with every weapon and skill."                              tags={["★ Combat",   "PvP"]}        accent="#ff7a7a" onEnter={onEnter} />
-        <Door mode="genesis"        label="Warlord Genesis"  img={poster("genesis")}   blurb="Choose your race. Human, Orc, Elf, Dwarf, Barbarian or Undead — survive 4 waves to claim the title." tags={["★ New",      "Boss Rush"]}  accent="#ffd24d" onEnter={onEnter} />
-        <Door mode="brawl"          label="Ruins Brawler"    img={poster("brawl")}     blurb="3D twin-stick co-op survival — live multiplayer in the GRUDOX ruins arena."                           tags={["3D Live",    "Co-op"]}      accent="#4fc3ff" onEnter={onEnter} />
-        <Door mode="mimic"          label="Test Dungeon"     img={poster("mimic")}     blurb="Vol scene — open a barrel and fight the Mimic (fast melee lunge + arcing acid AoE)."                  tags={["Encounter",  "Boss"]}       accent="#9cff5a" onEnter={onEnter} />
-        <Door mode="voxel"          label="Voxel Editor"     img={poster("voxel")}     blurb="Build a custom map — voxel blocks, deployable NPCs & bags, and dungeon authoring."                    tags={["Build",      "Create"]}     accent="#7ee0a0" onEnter={onEnter} />
-        <Door mode="voxgrudge-native" label="VoxGrudge"      img={poster("voxgrudge")} blurb="Open voxel world — explore, build, and party up with the multiplayer open world server."              tags={["★ New",      "Open World"]} accent="#5fe0ff" onEnter={onEnter} />
-        <Door mode="editor"         label="Dressing Room"    img={poster("dressing")}  blurb="Dress up a character — swap models & skins, attach weapons & gear, preview animations and effects."   tags={["Customize",  "Preview"]}    accent="#ffb24d" onEnter={onEnter} />
-        <Door mode="lobby"          label="The Lobby"        img={poster("lobby")}     blurb="Join a multiplayer room, or browse community maps & scenes to play instantly."                        tags={["Multiplayer","Community"]}  accent="#9d8bff" onEnter={onEnter} />
-        <Door mode="zones"          label="GRUDOX Zones"     img={poster("zones")}     blurb="Enter the shared GRUDOX world — brawler, racer, sword survival & the open world."                     tags={["External",   "GRUDOX"]}     accent="#5fe0ff" onEnter={onEnter} />
-        <Door mode="ledmask"        label="LED Mask"         img={poster("avatar")}    blurb="Drive a cube voxel head with an LED visor — pick expressions, run a scrolling banner, trigger poses." tags={["AI Face",    "LED"]}        accent="#a78bff" onEnter={onEnter} />
-      </div>
+      {byGroup.map(({ group, label, items }) => (
+        <section key={group} className="doors-section" data-group={group}>
+          <h2 className="doors-section-title">{label}</h2>
+          <div className="doors-row">
+            {items.map((surface) => (
+              <Door key={surface.mode} surface={surface} onEnter={onEnter} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

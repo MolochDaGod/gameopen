@@ -40,10 +40,33 @@ curl -sI "https://id.grudge-studio.com/auth/sso-check?return=https://gameopen.ve
 
 | URL | Role |
 |-----|------|
-| https://gameopen.vercel.app | Production client |
+| https://open.grudge-studio.com | **Canonical** production client |
+| https://gameopen.vercel.app | Alias / Vercel project |
 | https://gameopen-production.up.railway.app/api/healthz | Railway API |
-| https://id.grudge-studio.com/login?redirect_uri=https%3A%2F%2Fgameopen.vercel.app%2F | Fleet login → return here |
+| https://id.grudge-studio.com/login?redirect_uri=https%3A%2F%2Fopen.grudge-studio.com%2F | Fleet login → return here |
 | https://github.com/MolochDaGod/gameopen | Source |
+
+### Path slugs (surfaces)
+
+Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/src/lib/openRoutes.ts) · practices: [`docs/OPEN_SYSTEMS.md`](docs/OPEN_SYSTEMS.md)
+
+| Path | Surface |
+|------|---------|
+| `/` | Hub (door select) |
+| `/danger` | Danger Room combat lab |
+| `/play` | Play authored map |
+| `/genesis` | Warlord Genesis waves |
+| `/brawl` | Ruins Brawler |
+| `/mimic` | Mimic dungeon encounter |
+| `/voxel` | Voxel map editor |
+| `/world` | VoxGrudge open world |
+| `/dressing` | Dressing room |
+| `/lobby` | Multiplayer lobby |
+| `/zones` | GRUDOX zone launcher |
+| `/ledmask` | LED mask tool |
+| `/arcade/play/<id>` | GRUDOX cabinet deep-link |
+
+Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).
 
 ## Asset pack (all used)
 
