@@ -58,7 +58,7 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/genesis` | Warlord Genesis waves |
 | `/brawl` | Ruins Brawler |
 | `/mimic` | Mimic dungeon encounter |
-| `/voxel` | Voxel map editor |
+| `/voxel` | Voxel map editor (canonical block types) |
 | `/world` | VoxGrudge open world |
 | `/dressing` | Dressing room |
 | `/lobby` | Multiplayer lobby |
@@ -67,6 +67,19 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/arcade/play/<id>` | GRUDOX cabinet deep-link |
 
 Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).
+
+## Voxel canonical (GRUDOX / editors / games)
+
+Block types, scene interchange, and the 250-block Codex come from **Voxel Realms** (mine-loader):
+
+| Piece | URL / path |
+|-------|------------|
+| Codex UI | https://mine-loader.replit.app/#/defs |
+| Catalog API | `GET /api/blocks` (proxied; upstream mine-loader) |
+| Package | `@workspace/voxel-canonical` → `lib/voxel-canonical` |
+| Doc | [`docs/VOXEL_CANONICAL.md`](docs/VOXEL_CANONICAL.md) |
+
+The Open Voxel Editor places **type ids** (`stone`, `grass`, `cat:alloy-frame`, …) and exports dual-format interchange so maps work in GRUDOX zone games and Voxel Realms.
 
 ## Asset pack (all used)
 

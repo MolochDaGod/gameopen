@@ -29,6 +29,7 @@ import type {
   GizmoMode,
   VoxelMap,
 } from "./three/voxel/types";
+import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { Hud } from "./components/Hud";
 import { MechHud } from "./components/MechHud";
@@ -95,7 +96,8 @@ function initialMode(): Mode {
 const DEFAULT_BRUSH: BrushState = {
   tool: "block",
   shape: "block",
-  color: 0x6ea8ff,
+  blockType: DEFAULT_BLOCK_TYPE,
+  color: colorForBlockType(DEFAULT_BLOCK_TYPE),
   deployKind: "npc",
   weapon: "sword",
   difficulty: "normal",
@@ -648,7 +650,11 @@ export default function App() {
   const onBrush = useCallback((patch: Partial<BrushState>) => {
     setBrush((b) => {
       const next = { ...b, ...patch };
-      voxelRef.current?.setBrush(patch);
+      // Keep solid color in sync when picking a canonical block type.
+      if (patch.blockType && patch.color === undefined) {
+        next.color = colorForBlockType(patch.blockType);
+      }
+      voxelRef.current?.setBrush(next);
       return next;
     });
   }, []);

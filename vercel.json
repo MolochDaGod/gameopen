@@ -70,6 +70,10 @@
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/carrier"
     },
     {
+      "source": "/api/blocks",
+      "destination": "https://mine-loader.replit.app/api/blocks"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://gameopen-production.up.railway.app/api/:path*"
     },

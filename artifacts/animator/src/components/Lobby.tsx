@@ -9,6 +9,10 @@ import type {
 } from "@workspace/danger-net";
 import type { DangerClient } from "../net/DangerClient";
 import type { VoxelMap } from "../three/voxel/types";
+import {
+  normalizeVoxelRealmsScene,
+  realmsSceneToOpenMap,
+} from "@workspace/voxel-canonical";
 import type { SceneDescriptor } from "../three/editor/types";
 import {
   ROOM_PRESET_LIST,
@@ -44,6 +48,21 @@ interface Props {
 function asVoxelMap(payload: unknown): VoxelMap | null {
   if (!payload || typeof payload !== "object") return null;
   const p = payload as Record<string, unknown>;
+  // Dual-format interchange from voxel-canonical export.
+  if (p.open && typeof p.open === "object") return asVoxelMap(p.open);
+  if (Array.isArray(p.blockEdits)) {
+    try {
+      const open = realmsSceneToOpenMap(normalizeVoxelRealmsScene(p));
+      return {
+        version: open.version,
+        dungeon: open.dungeon,
+        blocks: open.blocks as VoxelMap["blocks"],
+        deployables: open.deployables as VoxelMap["deployables"],
+      };
+    } catch {
+      return null;
+    }
+  }
   if (!Array.isArray(p.blocks)) return null;
   return {
     version: typeof p.version === "number" ? p.version : 1,

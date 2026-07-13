@@ -74,6 +74,7 @@ Guest play is allowed offline; **roster features** require Grudge ID.
 | Weapon / skill defs | `content/` + Railway `/api/content/*` |
 | Heavy GLB / anim packs | R2 or `/models` `/anim` (pruned on deploy) |
 | Room posters | `/rooms/*-scene.png` |
+| **Voxel blocks / scenes** | `@workspace/voxel-canonical` · [VOXEL_CANONICAL.md](./VOXEL_CANONICAL.md) · Codex https://mine-loader.replit.app/#/defs · `GET /api/blocks` |
 
 ### 3.4 Multiplayer
 
