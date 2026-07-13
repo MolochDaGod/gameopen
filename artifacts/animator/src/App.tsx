@@ -920,7 +920,13 @@ export default function App() {
     return shell(
       withScreenTheme(
         <GrudoxZones
-          onEnterNative={(id) => navigate(id === "voxgrudge" ? "voxgrudge-native" : "brawl")}
+          onEnterNative={(id) => {
+            // One combat stack for every arcade combat cabinet:
+            // Danger Room controller + weapons + skills + lock (Studio).
+            if (id === "voxgrudge") navigate("voxgrudge-native");
+            else if (id === "brawler") navigate("brawl");
+            else navigate("danger"); // racer, zombie, z-brawl, …
+          }}
           onExit={() => navigate("doors")}
         />,
       ),

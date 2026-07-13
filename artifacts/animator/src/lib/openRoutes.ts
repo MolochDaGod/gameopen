@@ -73,7 +73,26 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     mode: "danger",
     slug: "danger",
     aliases: ["danger-room", "combat", "train", "sandbox"],
-    cabinets: ["danger", "danger-room", "explorer"],
+    // EVERY combat-capable GRUDOX cabinet → Danger Room stack (controller,
+    // weapons, skills, soft/hard lock). Racer/zombie/etc. are not separate
+    // broken shells — same Studio engine as /danger.
+    cabinets: [
+      "danger",
+      "danger-room",
+      "explorer",
+      "racer",
+      "race",
+      "velocity",
+      "voxel-velocity",
+      "zombie",
+      "undead",
+      "sword-master",
+      "swordmaster",
+      "z-brawl",
+      "zbrawl",
+      "arena",
+      "combat",
+    ],
     title: "Danger Room",
     blurb: "Live combat sandbox — weapons, skills, training targets.",
     group: "combat",
@@ -271,6 +290,9 @@ export function resolveModeFromLocation(
       }
       const mapped = ARCADE_CABINET_MAP[cabinetId];
       if (mapped) return mapped;
+      // Unknown cabinet still enters Danger Room combat stack — never a dead hub.
+      // Dedicated racers/worlds with native modes are listed in ARCADE_CABINET_MAP.
+      return "danger";
     } else {
       // /danger, /world, /dressing, /hub, …
       const fromPath = modeFromSlug(segs[0]!);

@@ -8,6 +8,7 @@ import {
   type RaceId,
 } from "./index";
 import { loadBakedGrudgeCharacter } from "./bakedRoster";
+import { loadGrudge6CombatRig } from "./grudge6Runtime";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -92,23 +93,58 @@ export class GrudgeAvatar implements Avatar {
   }
 
   async load(): Promise<void> {
-    // Load the correctly-textured BAKED grudge6 character from the single
-    // self-contained roster GLB (30 characters, per-character baked atlas). This
-    // replaces the old per-race FBX + remote `.webp` atlas path that produced the
-    // untextured "yellow model" when the remote atlas failed/mismatched.
-    const group = await loadBakedGrudgeCharacter(this.raceId, this.presetId);
-    if (this.disposed) return; // wrapper is GC'd; cache-shared geometry is never disposed here
+    // PRODUCTION PATH — same stack as grudge-arena Danger Room:
+    // skinned race GLB (Bip001) + baked Bip001 JSON packs → AnimationMixer.
+    // Static 30characters roster is LAST RESORT only (T-pose / no combat anims).
+    try {
+      const rig = await loadGrudge6CombatRig(this.raceId, this.presetId);
+      if (this.disposed) {
+        rig.mixer.stopAllAction();
+        return;
+      }
+      this.model = rig.model;
+      this.mixer = rig.mixer;
+      this.holder.add(rig.root);
 
-    // Baked characters are STATIC meshes (no skins/clips in the GLB), so there is
-    // no mixer: locomotion is driven by the Controller moving `root`, and the
-    // Avatar's animation methods no-op safely (guarded on `this.mixer`).
+      // Register clips under role names so playRole / setLocomotion work.
+      for (const [role, clip] of rig.clips) {
+        const action = this.mixer.clipAction(clip);
+        this.actions.set(role, action);
+        this.actions.set(clip.name, action);
+        this.roleClip.set(role as AnimRole, role);
+      }
+      // Cross-fill roles for Controller
+      if (!this.roleClip.has("jump") && this.roleClip.has("attack")) {
+        this.roleClip.set("jump", "attack");
+      }
+      if (!this.roleClip.has("hurt") && this.roleClip.has("idle")) {
+        this.roleClip.set("hurt", "idle");
+      }
+      if (!this.roleClip.has("death") && this.roleClip.has("idle")) {
+        this.roleClip.set("death", "idle");
+      }
+
+      this.model.updateMatrixWorld(true);
+      this.rightHand = findHandBone(this.model, "R");
+      this.leftHand = findHandBone(this.model, "L");
+      this.findArmBones(this.model);
+      this.holder.rotation.y = this.modelYaw;
+      this.playRole("idle", 0);
+      console.info(
+        `[GrudgeAvatar] grudge6 runtime ready race=${this.raceId} pack=${rig.animPack} clips=${[...rig.clips.keys()].join(",")}`,
+      );
+      return;
+    } catch (err) {
+      console.warn("[GrudgeAvatar] grudge6 skinned+baked path failed — static fallback", err);
+    }
+
+    // Fallback: textured static roster (visible but NO skeletal animation).
+    const group = await loadBakedGrudgeCharacter(this.raceId, this.presetId);
+    if (this.disposed) return;
     this.model = group;
     this.mixer = null;
     this.holder.add(group);
-
     group.updateMatrixWorld(true);
-    // The baked characters carry the grudge6 hand containers, so weapons still
-    // mount to the right/left hand.
     this.rightHand = findHandBone(group, "R");
     this.leftHand = findHandBone(group, "L");
     this.findArmBones(group);
@@ -171,6 +207,19 @@ export class GrudgeAvatar implements Avatar {
 
   setLocomotionRate(rate: number): void {
     if (this.current) this.current.setEffectiveTimeScale(rate * this.overdrive);
+  }
+
+  /**
+   * Continuous locomotion for Controller (same contract as Character).
+   * Maps 0..1 speed → idle / walk / run roles with crossfade.
+   */
+  setLocomotion(speed: number): void {
+    if (!this.mixer || this.oneShot) return;
+    const s = Math.max(0, Math.min(1, speed));
+    if (s > 0.72 && this.hasRole("run")) this.playRole("run");
+    else if (s > 0.08 && this.hasRole("walk")) this.playRole("walk");
+    else this.playRole("idle");
+    this.setLocomotionRate(s > 0.72 ? 1 + (s - 0.72) * 0.8 : 0.85 + s * 0.4);
   }
 
   // ── Skill Lab authoring API ────────────────────────────────────────────────

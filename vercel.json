@@ -34,6 +34,14 @@
       "destination": "https://assets.grudge-studio.com/gameopen/:path*"
     },
     {
+      "source": "/anims/baked/:path*",
+      "destination": "https://grudge-arena.grudge-studio.com/anims/baked/:path*"
+    },
+    {
+      "source": "/cdn/assets/characters/:path*",
+      "destination": "https://grudge-arena.grudge-studio.com/cdn/assets/characters/:path*"
+    },
+    {
       "source": "/api/space",
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/space"
     },

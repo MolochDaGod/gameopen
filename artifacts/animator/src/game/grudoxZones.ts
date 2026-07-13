@@ -38,20 +38,25 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "racer",
     title: "Voxel Velocity",
-    blurb: "Arcade voxel racing across GRUDOX circuits.",
+    // Native = Danger Room combat stack (controller, weapons, skills, lock).
+    // Dedicated racer physics is not a separate broken shell.
+    blurb: "Arcade combat circuit — full Danger Room weapons, skills & target lock.",
     tone: "#ffd24d",
+    native: true,
   },
   {
     id: "zombie",
     title: "Voxel Undead: Sword Master",
-    blurb: "Improved sword survival against the voxel undead horde.",
+    blurb: "Sword survival — same controller/weapons/skills as Danger Room.",
     tone: "#7ee0a0",
+    native: true,
   },
   {
     id: "z-brawl",
     title: "Z-Brawl",
-    blurb: "Voxel fight — Z-Brawl: Protocol Extinction arena combat.",
+    blurb: "Arena combat — Danger Room stack (soft lock, RMB block, skills).",
     tone: "#9d8bff",
+    native: true,
   },
   {
     id: "voxgrudge",

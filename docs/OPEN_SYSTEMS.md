@@ -37,7 +37,7 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | `/lobby` `/rooms` | lobby | Multiplayer lobby |
 | `/zones` `/grudox` | zones | GRUDOX zone list |
 | `/ledmask` | ledmask | LED face tool |
-| `/arcade/play/<id>` | mapped | GRUDOX cabinet deep-link |
+| `/arcade/play/<id>` | **Danger Room** (default) | All combat cabinets share Studio stack: controller, weapons, skills, soft lock. `racer`/`zombie`/`z-brawl` → danger. `brawler` → brawl. `voxgrudge` → world. Unknown → danger (never empty hub). |
 
 Query overrides (legacy): `?door=<mode>` · `?mode=<cabinetId>`.
 
