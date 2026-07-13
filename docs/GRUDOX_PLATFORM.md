@@ -60,12 +60,18 @@ voxgrudge repo                    ← open-world content + room client patterns
 
 ## 3. Characters (your Open design)
 
-### Live character lab (media SSOT)
-**https://threejs-rapier-react-three-controll.vercel.app/**  
-= Animator monorepo (`threejs-rapier-react-three-controller`) — full **Heroes of Grudge**  
-`models/grudge/{race}_{class}.glb` (6×4), weapons, combo/swim GLBs, controller.
+### Post-login hub (UX SSOT)
+**`Fantasy-Scene-Creator/artifacts/charactersgrudox`**  
+= 3D lobby + wood menu (PvE / PvP / Arena / Shop / **GRUDOX**) + free first character.  
+After Clerk login on the Animator stack, players land **here**, not raw Danger Room.
 
-Open (`open.grudge-studio.com`) must **load those characters**, not a thinner incomplete deploy tree.
+See: `charactersgrudox/docs/HUB_FLOW.md`
+
+### Live character media lab
+**https://threejs-rapier-react-three-controll.vercel.app/**  
+= full **Heroes of Grudge** GLBs / weapons / combos (CDN for meshes).
+
+Deploy **charactersgrudox** as the root of that Vercel project so login → lobby is one site.
 
 Characters are **not** invented per game:
 
