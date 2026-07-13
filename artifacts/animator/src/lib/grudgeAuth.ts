@@ -327,10 +327,11 @@ async function _revalidateAccountBackground(
   token: string,
 ): Promise<GrudgeAccount | null> {
   // Try same-origin proxy first (avoids CORS), then ID hub directly.
+  // /api/auth/me is the identity probe (401 when guest = expected).
+  // Do NOT call /api/account/me — Railway has no such route (404 spam).
   const endpoints = [
     apiUrl("/api/auth/me"),
     `${FLEET.auth}/api/auth/me`,
-    apiUrl("/api/account/me"),
   ];
 
   for (const url of endpoints) {

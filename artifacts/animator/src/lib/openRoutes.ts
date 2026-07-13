@@ -73,26 +73,9 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     mode: "danger",
     slug: "danger",
     aliases: ["danger-room", "combat", "train", "sandbox"],
-    // EVERY combat-capable GRUDOX cabinet → Danger Room stack (controller,
-    // weapons, skills, soft/hard lock). Racer/zombie/etc. are not separate
-    // broken shells — same Studio engine as /danger.
-    cabinets: [
-      "danger",
-      "danger-room",
-      "explorer",
-      "racer",
-      "race",
-      "velocity",
-      "voxel-velocity",
-      "zombie",
-      "undead",
-      "sword-master",
-      "swordmaster",
-      "z-brawl",
-      "zbrawl",
-      "arena",
-      "combat",
-    ],
+    // Danger Room only — do NOT steal GRUDOX Voxel Arcade cabinets
+    // (racer = Voxel Velocity, zombie, z-brawl live on grudox.grudge-studio.com).
+    cabinets: ["danger", "danger-room", "explorer"],
     title: "Danger Room",
     blurb: "Live combat sandbox — weapons, skills, training targets.",
     group: "combat",
@@ -288,11 +271,36 @@ export function resolveModeFromLocation(
       if (cabinetId === "explorer") {
         return q.get("dressing") === "1" ? "editor" : "danger";
       }
+      // GRUDOX Voxel Arcade cabinets (Voxel Velocity = racer, etc.) do not run
+      // inside gameopen. Edge proxy should send /arcade/* to grudox; if we still
+      // hit this SPA, hard-redirect to the real arcade host.
+      const GRUDOX_ARCADE = new Set([
+        "racer",
+        "race",
+        "velocity",
+        "voxel-velocity",
+        "zombie",
+        "undead",
+        "sword-master",
+        "swordmaster",
+        "z-brawl",
+        "zbrawl",
+        "sailing",
+        "carrier",
+      ]);
+      if (GRUDOX_ARCADE.has(cabinetId) && typeof window !== "undefined") {
+        const dest = new URL(
+          `https://grudox.grudge-studio.com/arcade/play/${encodeURIComponent(cabinetId)}`,
+        );
+        dest.search = search.startsWith("?") ? search : search ? `?${search}` : "";
+        if (!dest.searchParams.has("open")) dest.searchParams.set("open", "1");
+        window.location.replace(dest.toString());
+        return "doors"; // brief shell while navigating away
+      }
       const mapped = ARCADE_CABINET_MAP[cabinetId];
       if (mapped) return mapped;
-      // Unknown cabinet still enters Danger Room combat stack — never a dead hub.
-      // Dedicated racers/worlds with native modes are listed in ARCADE_CABINET_MAP.
-      return "danger";
+      // Unknown arcade id → hub, never invent Danger Room as a fake racer.
+      return "doors";
     } else {
       // /danger, /world, /dressing, /hub, …
       const fromPath = modeFromSlug(segs[0]!);

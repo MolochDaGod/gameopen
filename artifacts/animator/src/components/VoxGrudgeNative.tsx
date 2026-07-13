@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { VoxelEditor } from "../three/voxel/VoxelEditor";
+import { zoneWsUrl } from "../lib/zone";
 
 interface Props {
   onExit: () => void;
@@ -65,7 +66,9 @@ export function VoxGrudgeNative({ onExit }: Props) {
   // ── WebSocket presence ───────────────────────────────────────────────────────
 
   useEffect(() => {
-    const wsUrl = window.location.origin.replace(/^http/, "ws") + "/api/space";
+    // GRUDOX room server — never same-origin on open.grudge-studio.com
+    // (Vercel does not terminate WebSockets on rewrites reliably).
+    const wsUrl = zoneWsUrl("/api/space");
     let ws: WebSocket;
     let disposed = false;
     let pingInterval: ReturnType<typeof setInterval> | null = null;

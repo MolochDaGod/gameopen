@@ -921,11 +921,10 @@ export default function App() {
       withScreenTheme(
         <GrudoxZones
           onEnterNative={(id) => {
-            // One combat stack for every arcade combat cabinet:
-            // Danger Room controller + weapons + skills + lock (Studio).
+            // Only zones with real native engines in Open.
+            // Voxel Velocity (racer) is NOT native — card uses GRUDOX deep-link.
             if (id === "voxgrudge") navigate("voxgrudge-native");
             else if (id === "brawler") navigate("brawl");
-            else navigate("danger"); // racer, zombie, z-brawl, …
           }}
           onExit={() => navigate("doors")}
         />,

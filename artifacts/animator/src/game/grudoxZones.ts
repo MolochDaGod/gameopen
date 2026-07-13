@@ -1,85 +1,92 @@
 /**
- * GRUDOX zones exposed inside gameopen.
+ * GRUDOX zones — launcher cards inside Grudge Open.
  *
- * These are the selected GRUDOX modes surfaced as launcher cards. Each card
- * deep-links into the GRUDOX web shell's arcade cabinet carrying the fleet SSO
- * token + the active fleet character, so the same Grudge ID and character carry
- * across gameopen and GRUDOX:
+ * SSOT for cabinet games:
+ *   https://grudox.grudge-studio.com/arcade/play/<id>
  *
- *   https://open.grudge-studio.com/arcade/play/<id>?grudge_token=<jwt>&characterId=<id>&open=1
+ * Voxel Arcade (on GRUDOX) owns:
+ *   racer  → Voxel Velocity (street racing) — NOT Danger Room
+ *   zombie → Voxel Undead
+ *   z-brawl → Z-Brawl
+ *   brawler → Ruins Brawler (also has native gameopen surface)
+ *   voxgrudge → open world (also native)
  *
- * `brawler` also has a NATIVE in-gameopen surface (Ruins Brawler) that connects
- * straight to the GRUDOX `/api/brawl` room; the card here is the GRUDOX-hosted
- * cabinet equivalent.
+ * Never deep-link these back to open.grudge-studio.com (that was a self-loop).
+ * Never remap Voxel Velocity to Danger Room.
  */
 
-/** GRUDOX web-shell host the arcade cabinets are deep-linked into. */
-export const GRUDOX_HOST = "https://open.grudge-studio.com";
+/** Canonical GRUDOX host for Voxel Arcade + fleet zone shell. */
+export const GRUDOX_HOST = "https://grudox.grudge-studio.com";
 
 export interface GrudoxZone {
-  /** Roster id — the `/arcade/play/:id` cabinet slug in the GRUDOX shell. */
+  /** Cabinet id — `/arcade/play/:id` on GRUDOX. */
   id: string;
   title: string;
   blurb: string;
-  /** Accent colour for the card. */
   tone: string;
-  /** True when gameopen also hosts a native surface for this zone. */
+  /**
+   * True only when gameopen hosts a real native engine for this zone.
+   * false → always open GRUDOX arcade (e.g. Voxel Velocity).
+   */
   native?: boolean;
+  /** Native AppMode when `native` (optional hint for Open). */
+  nativeMode?: "brawl" | "voxgrudge-native" | "danger";
 }
 
 export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "brawler",
     title: "Ruins Brawler",
-    blurb: "Top-down twin-stick co-op survival in the shared GRUDOX ruins.",
+    blurb: "Twin-stick co-op survival — native Open surface or GRUDOX arcade.",
     tone: "#ff7a7a",
     native: true,
+    nativeMode: "brawl",
   },
   {
     id: "racer",
     title: "Voxel Velocity",
-    // Native = Danger Room combat stack (controller, weapons, skills, lock).
-    // Dedicated racer physics is not a separate broken shell.
-    blurb: "Arcade combat circuit — full Danger Room weapons, skills & target lock.",
+    blurb: "Arcade street racing — GRUDOX Voxel Arcade cabinet (real racer).",
     tone: "#ffd24d",
-    native: true,
+    native: false,
   },
   {
     id: "zombie",
     title: "Voxel Undead: Sword Master",
-    blurb: "Sword survival — same controller/weapons/skills as Danger Room.",
+    blurb: "Sword survival — GRUDOX Voxel Arcade cabinet.",
     tone: "#7ee0a0",
-    native: true,
+    native: false,
   },
   {
     id: "z-brawl",
     title: "Z-Brawl",
-    blurb: "Arena combat — Danger Room stack (soft lock, RMB block, skills).",
+    blurb: "Protocol Extinction arena — GRUDOX Voxel Arcade cabinet.",
     tone: "#9d8bff",
-    native: true,
+    native: false,
   },
   {
     id: "voxgrudge",
     title: "VoxGrudge: Open World",
-    blurb: "The GRUDOX open voxel world — explore, build, and party up.",
+    blurb: "Open voxel world — native Open surface or GRUDOX.",
     tone: "#5fe0ff",
     native: true,
+    nativeMode: "voxgrudge-native",
   },
 ] as const;
 
+/** Cabinets that must never be treated as Danger Room / Open modes. */
+export const GRUDOX_ARCADE_ONLY_CABINETS = new Set(
+  GRUDOX_ZONES.filter((z) => !z.native).map((z) => z.id),
+);
+
 export interface GrudoxLinkParams {
-  /** Fleet SSO token (grudge_token). Omitted from the link when absent. */
   token?: string | null;
-  /** Active fleet character id. Omitted from the link when absent. */
   characterId?: string | null;
-  /** Override the GRUDOX host (defaults to {@link GRUDOX_HOST}). */
   host?: string;
 }
 
 /**
- * Build the GRUDOX arcade deep-link for a zone, carrying the fleet token + the
- * active character so identity + character persist across the handoff. `open=1`
- * always marks the launch as originating from Grudge Open.
+ * Build GRUDOX arcade deep-link.
+ * Always targets grudox.grudge-studio.com unless host override is explicit.
  */
 export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): string {
   const host = (params.host || GRUDOX_HOST).replace(/\/+$/, "");
