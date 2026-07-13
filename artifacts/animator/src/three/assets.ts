@@ -13,13 +13,37 @@ export function asset(path: string): string {
   const isLocal =
     typeof location !== "undefined" &&
     (location.hostname === "localhost" || location.hostname === "127.0.0.1");
-  if (useR2 && !isLocal) {
+  // Scene packs that ship in Vercel public/ but may be missing from R2 gameopen/*
+  // Prefer same-origin so Test Dungeon (vol.glb) never falls through to placeholders.
+  const preferSameOrigin =
+    /^models\/vol\.glb$/i.test(clean) ||
+    /^models\/dungeon\.glb$/i.test(clean) ||
+    /^models\/arena-war-zone\.glb$/i.test(clean);
+  if (useR2 && !isLocal && !preferSameOrigin) {
     const cdn =
       (import.meta.env.VITE_ASSET_BASE_URL as string) ||
       "https://assets.grudge-studio.com/gameopen";
     return `${cdn.replace(/\/$/, "")}/${clean}`;
   }
   return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
+}
+
+/** Candidate URLs for a public asset (same-origin first, then R2, then known hosts). */
+export function assetCandidates(path: string): string[] {
+  const clean = path.replace(/^\//, "");
+  const base = (_viteBase || "").replace(/\/$/, "");
+  const same = `${base}/${clean}`;
+  const cdnBase =
+    ((import.meta.env.VITE_ASSET_BASE_URL as string) ||
+      "https://assets.grudge-studio.com/gameopen").replace(/\/$/, "");
+  const cdn = `${cdnBase}/${clean}`;
+  const hosts = [
+    same,
+    cdn,
+    `https://open.grudge-studio.com/${clean}`,
+    `https://gameopen.vercel.app/${clean}`,
+  ];
+  return [...new Set(hosts.filter(Boolean))];
 }
 
 export const CHARACTERS: CharacterDef[] = [
