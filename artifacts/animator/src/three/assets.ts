@@ -1,4 +1,4 @@
-import type { CharacterDef, WeaponCombat, WeaponDef } from "./types";
+import type { CharacterDef, WeaponCombat, WeaponDef, WeaponId } from "./types";
 import { WEAPONS } from "./arsenal";
 import { resolveCombat } from "./arsenal/holdStyle";
 
@@ -6,40 +6,64 @@ export { WEAPONS };
 
 const _viteBase = import.meta.env.BASE_URL; // e.g. "/" or "/animator/"
 
-/** Resolve a public asset path. CDN-routed when VITE_USE_R2=true + not localhost. */
+/**
+ * Character + combat media SSOT — full Heroes of Grudge pack, combo GLBs, weapons.
+ * Live lab: https://threejs-rapier-react-three-controll.vercel.app/
+ * (Open/gameopen often deploys a thinner public/ tree; never 404 when this has the mesh.)
+ */
+export const ANIMATOR_ASSET_CDN =
+  "https://threejs-rapier-react-three-controll.vercel.app";
+
+/** Resolve a public asset path. Prefer Animator CDN for models/anim in production. */
 export function asset(path: string): string {
   const clean = path.replace(/^\//, "");
-  const useR2 = import.meta.env.VITE_USE_R2 === "true";
   const isLocal =
     typeof location !== "undefined" &&
     (location.hostname === "localhost" || location.hostname === "127.0.0.1");
-  // Scene packs that ship in Vercel public/ but may be missing from R2 gameopen/*
-  // Prefer same-origin so Test Dungeon (vol.glb) never falls through to placeholders.
+  // Local scene overrides still same-origin when present on disk.
   const preferSameOrigin =
     /^models\/vol\.glb$/i.test(clean) ||
     /^models\/dungeon\.glb$/i.test(clean) ||
     /^models\/arena-war-zone\.glb$/i.test(clean);
-  if (useR2 && !isLocal && !preferSameOrigin) {
-    const cdn =
-      (import.meta.env.VITE_ASSET_BASE_URL as string) ||
-      "https://assets.grudge-studio.com/gameopen";
+  if (isLocal || preferSameOrigin) {
+    return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
+  }
+  const cdn =
+    (import.meta.env.VITE_ASSET_BASE_URL as string) || ANIMATOR_ASSET_CDN;
+  // Heroes of Grudge + combat media always from Animator CDN (complete pack).
+  if (
+    /^models\/grudge\//i.test(clean) ||
+    /^models\/weapons\//i.test(clean) ||
+    /^anim\//i.test(clean) ||
+    /^models\/(karate-boss|orc|sanji|racalvin|numbuh|spider|iron-spider)/i.test(clean)
+  ) {
     return `${cdn.replace(/\/$/, "")}/${clean}`;
   }
-  return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
+  // Optional R2 gameopen bucket when explicitly enabled
+  if (import.meta.env.VITE_USE_R2 === "true") {
+    const r2 =
+      (import.meta.env.VITE_ASSET_BASE_URL as string) ||
+      "https://assets.grudge-studio.com/gameopen";
+    return `${r2.replace(/\/$/, "")}/${clean}`;
+  }
+  // Default production: Animator CDN for full character lab parity
+  return `${cdn.replace(/\/$/, "")}/${clean}`;
 }
 
-/** Candidate URLs for a public asset (same-origin first, then R2, then known hosts). */
+/** Candidate URLs for a public asset (Animator CDN first for character media). */
 export function assetCandidates(path: string): string[] {
   const clean = path.replace(/^\//, "");
   const base = (_viteBase || "").replace(/\/$/, "");
   const same = `${base}/${clean}`;
-  const cdnBase =
+  const animator = `${ANIMATOR_ASSET_CDN}/${clean}`;
+  const r2Base =
     ((import.meta.env.VITE_ASSET_BASE_URL as string) ||
       "https://assets.grudge-studio.com/gameopen").replace(/\/$/, "");
-  const cdn = `${cdnBase}/${clean}`;
+  const r2 = `${r2Base}/${clean}`;
   const hosts = [
+    animator,
     same,
-    cdn,
+    r2,
     `https://open.grudge-studio.com/${clean}`,
     `https://gameopen.vercel.app/${clean}`,
   ];
@@ -514,6 +538,103 @@ export const CHARACTERS: CharacterDef[] = [
     modelYaw: Math.PI,
   },
 ];
+
+// ---- Heroes of Grudge (6 races × 4 classes = 24 playable prefabs) ----
+// SSOT models: threejs-rapier-react-three-controll.vercel.app/models/grudge/*
+// Ported from the Animator character lab — Open must use these, not empty roster.
+
+type GrudgeClass = "knight" | "warrior" | "ranger" | "mage";
+
+interface GrudgeRace {
+  slug: string;
+  name: string;
+}
+
+const GRUDGE_RACES: GrudgeRace[] = [
+  { slug: "barbarians", name: "Barbarian" },
+  { slug: "dwarves", name: "Dwarf" },
+  { slug: "high-elves", name: "High Elf" },
+  { slug: "orcs", name: "Orc" },
+  { slug: "undead", name: "Undead" },
+  { slug: "western-kingdoms", name: "Kingdom" },
+];
+
+const GRUDGE_HIDE = "weapon|shield|quiver|xtra|_container";
+
+interface GrudgeKit {
+  label: string;
+  loadout: WeaponId[];
+  offHand?: WeaponId;
+  clips: CharacterDef["clips"];
+  signatureSkills: CharacterDef["signatureSkills"];
+}
+
+const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
+  knight: {
+    label: "Knight",
+    loadout: ["sword", "mace"],
+    offHand: "shield",
+    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    signatureSkills: [
+      { label: "Blade Rush", clip: "sword_dash_attack", kind: "slash", mode: "dash" },
+      { label: "Combo Finisher", clip: "sword_combo_finisher", kind: "slash" },
+      { label: "Shield Bash", clip: "shield_bash", kind: "slam" },
+      { label: "Rising Strike", clip: "unarmed_uppercut", kind: "thrust" },
+    ],
+  },
+  warrior: {
+    label: "Warrior",
+    loadout: ["greataxe", "spear"],
+    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    signatureSkills: [
+      { label: "War Charge", clip: "sword_dash_attack", kind: "slam", mode: "dash" },
+      { label: "Cleave", clip: "sword_combo_finisher", kind: "slash" },
+      { label: "Ground Slam", clip: "shield_bash", kind: "nova" },
+      { label: "Overhead Crush", clip: "unarmed_uppercut", kind: "slam" },
+    ],
+  },
+  ranger: {
+    label: "Ranger",
+    loadout: ["bow", "dagger"],
+    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    signatureSkills: [
+      { label: "Aimed Shot", clip: "bow_aim_walk_fwd", kind: "bolt" },
+      { label: "Piercing Arrow", clip: "attack", kind: "bolt" },
+      { label: "Evasive Roll", clip: "front_flip", kind: "muzzle", mode: "dash" },
+      { label: "Rising Kick", clip: "unarmed_uppercut", kind: "thrust" },
+    ],
+  },
+  mage: {
+    label: "Mage",
+    loadout: ["staffFire", "staffStorm"],
+    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    signatureSkills: [
+      { label: "Elemental Blast", clip: "attack", kind: "fireDragon" },
+      { label: "Cataclysm", clip: "attack", kind: "meteor" },
+      { label: "Arcane Nova", clip: "magic_walk_fwd", kind: "nova" },
+      { label: "Bolt", clip: "attack", kind: "bolt" },
+    ],
+  },
+};
+
+for (const race of GRUDGE_RACES) {
+  for (const cls of Object.keys(GRUDGE_KITS) as GrudgeClass[]) {
+    const kit = GRUDGE_KITS[cls];
+    CHARACTERS.push({
+      id: `grudge-${race.slug}-${cls}`,
+      name: `${race.name} ${kit.label}`,
+      file: `models/grudge/${race.slug}_${cls}.glb`,
+      scale: 1,
+      clips: kit.clips,
+      signatureSkills: kit.signatureSkills,
+      loadout: kit.loadout,
+      offHand: kit.offHand,
+      hideNodes: GRUDGE_HIDE,
+      handBone: "Hand",
+      modelYaw: Math.PI + Math.PI / 2,
+    });
+  }
+}
 
 export function getWeapon(id: string): WeaponDef {
   return WEAPONS.find((w) => w.id === id) ?? WEAPONS[0];

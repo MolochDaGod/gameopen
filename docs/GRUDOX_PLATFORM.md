@@ -60,12 +60,19 @@ voxgrudge repo                    ← open-world content + room client patterns
 
 ## 3. Characters (your Open design)
 
+### Live character lab (media SSOT)
+**https://threejs-rapier-react-three-controll.vercel.app/**  
+= Animator monorepo (`threejs-rapier-react-three-controller`) — full **Heroes of Grudge**  
+`models/grudge/{race}_{class}.glb` (6×4), weapons, combo/swim GLBs, controller.
+
+Open (`open.grudge-studio.com`) must **load those characters**, not a thinner incomplete deploy tree.
+
 Characters are **not** invented per game:
 
-1. **Create / edit** → Character Studio / Open dressing + fleet Railway  
-2. **Combat feel** → Danger Room `Studio` + `Controller` + weapons + skills + lock  
-3. **Visual SSOT** → grudge6 race mesh + gear presets + baked Bip001 packs (arena pipeline)  
-4. **Carry into GRUDOX** → SSO `sso_token` / `grudge_token` + `characterId` on arcade deep-links  
+1. **Playable prefabs** → Animator CDN / Open catalog `grudge-{race}-{class}`  
+2. **Create / edit account heroes** → Character Studio / Open dressing + fleet Railway  
+3. **Combat feel** → Danger Room `Studio` + `Controller` + weapons + skills + lock  
+4. **Carry into GRUDOX** → SSO + `characterId` on arcade deep-links  
 
 Every arcade game should **consume** that character contract, not own a private roster.
 
