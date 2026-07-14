@@ -1,25 +1,4 @@
 /**
- * BrawlerScene — self-contained 3D Ruins Brawler.
- *
- * Follows the MimicDungeon pattern: WebGLRenderer on a canvas, ResizeObserver,
- * clock-based RAF loop, keyboard + pointer-lock mouse input, simple ground-plane
- * collision (y=0 floor), and a clean dispose() path.
- *
- * Architecture:
- *  • Loads arena-war-zone.glb as static environment (shadows, no interaction).
- *  • Player avatar via getBakedCharacter(0) — baked grudge6 character, never a primitive.
- *  • Third-person camera: 4m behind, 1.8m above, lerp(0.1) smoothed.
- *  • Up to 12 voxel-zombie enemies; simple seek AI, attack on contact.
- *  • BrawlClient networking with graceful offline fallback.
- *  • Safe zone (6m radius ring at origin) — heals 2hp/s.
- *  • VFX via Vfx (blastImpact on enemy death, impact on melee).
- *  • Emits BrawlerState each frame (change-only diff via lastSig).
- */
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
-import { getBakedCharacter } from "../grudge/bakedRoster";
-import { Vfx } from "../Vfx";
  * BrawlerScene — Ruins Brawler on the standard Character animation pipeline.
  *
  * Standard Three.js combat avatar loop (same contract as Danger Room / Studio):
@@ -33,7 +12,7 @@ import { Vfx } from "../Vfx";
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset, getCharacter } from "../assets";
+import { asset, assetCandidates, getCharacter } from "../assets";
 import { Character } from "../Character";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
@@ -44,14 +23,6 @@ const PLAYER_MAX_HP = 150;
 const PLAYER_BASE_ARMOR = 30;
 const PLAYER_BASE_AMMO = 60;
 const PLAYER_SPEED = 5;
-const DASH_SPEED = 8;
-const DASH_DURATION = 0.3;
-const DASH_COOLDOWN = 2.0;
-const JUMP_DURATION = 0.4;
-const JUMP_HEIGHT = 2;
-const ATTACK_REACH = 2.5;
-const ATTACK_DAMAGE = 30;
-const ATTACK_CD = 0.45;
 const DASH_SPEED = 9;
 const DASH_DURATION = 0.28;
 const DASH_COOLDOWN = 2.0;
@@ -67,13 +38,12 @@ const ENEMY_DAMAGE = 15;
 const SPAWN_INTERVAL = 4;
 const SPAWN_RADIUS = 28;
 const SAFE_ZONE_RADIUS = 6;
-const HEAL_RATE = 2; // hp/s in safe zone
-const NET_TICK_HZ = 20;
-const WEAPON_NAMES = ["Sword", "Axe", "Dagger", "Bow"];
-
-// ── Public types ──────────────────────────────────────────────────────────────
 const HEAL_RATE = 2;
 const NET_TICK_HZ = 20;
+/** Soft-lock acquire radius (Danger Room style). */
+const FOCUS_ACQUIRE_RANGE = 18;
+/** Drop lock if target leaves this distance. */
+const FOCUS_BREAK_RANGE = 28;
 
 const WEAPON_CYCLE: WeaponId[] = ["sword", "axe", "dagger", "bow"];
 const WEAPON_FILE: Partial<Record<WeaponId, string>> = {
@@ -116,12 +86,15 @@ export interface BrawlerState {
   playerCount: number;
   inSafeZone: boolean;
   wave: number;
-}
-
-// ── Internal types ────────────────────────────────────────────────────────────
   skills: BrawlerSkillSlot[];
   moving: boolean;
   loadError: string | null;
+  /** RMB focus / soft-lock engaged (Danger Room parity). */
+  focusLocked: boolean;
+  /** True when a living enemy is currently soft-locked. */
+  hasTarget: boolean;
+  targetHp: number;
+  targetMaxHp: number;
 }
 
 export interface BrawlerSceneOptions {
@@ -160,7 +133,6 @@ type StateCb = (s: BrawlerState) => void;
 
 // ── BrawlerScene ──────────────────────────────────────────────────────────────
 export class BrawlerScene {
-  // Core Three.js
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
@@ -170,9 +142,6 @@ export class BrawlerScene {
   private ro?: ResizeObserver;
   private vfx: Vfx;
 
-  // Player
-  private player = new THREE.Group();
-  private playerModel: THREE.Object3D | null = null;
   // Player root + standard Character avatar
   private player = new THREE.Group();
   private avatar: Character | null = null;
@@ -193,12 +162,6 @@ export class BrawlerScene {
   private jumpT = 0;
   private selectedWeapon = 0;
   private phase: BrawlerState["phase"] = "loading";
-
-  // Camera smoothing
-  private camPos = new THREE.Vector3(0, 1.8, 8);
-  private camLook = new THREE.Vector3(0, 1, 0);
-
-  // Input
   private moving = false;
   private loadError: string | null = null;
   private characterName = "Brawler";
@@ -214,19 +177,19 @@ export class BrawlerScene {
 
   private keys = new Set<string>();
   private lmbDown = false;
+  private rmbDown = false;
+  /** Sticky focus mode (RMB click toggles); rmbDown also holds soft-lock while held. */
+  private focusEnabled = false;
+  private focusTarget: EnemyObj | null = null;
   private pointerLocked = false;
   private canvas: HTMLCanvasElement;
 
-  // Enemies
   private enemies: EnemyObj[] = [];
   private enemyTemplates: (THREE.Group | null)[] = [null, null, null];
   private spawnTimer = 0;
+  /** Ground ring under soft-locked enemy (world reticle). */
+  private focusRing: THREE.Mesh | null = null;
 
-  // Safe zone
-  private safeZoneRing: THREE.Mesh | null = null;
-  private inSafeZone = false;
-
-  // Networking
   private safeZoneRing: THREE.Mesh | null = null;
   private inSafeZone = false;
 
@@ -238,14 +201,6 @@ export class BrawlerScene {
   private remoteMeshes = new Map<string, THREE.Group>();
   private netTimer = 0;
   private netSeq = 0;
-
-  // State
-  private onState: StateCb;
-  private lastSig = "";
-
-  constructor(canvas: HTMLCanvasElement, onState: StateCb) {
-    this.canvas = canvas;
-    this.onState = onState;
   private netFailCount = 0;
 
   private onState: StateCb;
@@ -262,7 +217,6 @@ export class BrawlerScene {
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
 
-    // ── Renderer ────────────────────────────────────────────────────────────
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -276,15 +230,6 @@ export class BrawlerScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // ── Scene ───────────────────────────────────────────────────────────────
-    this.scene.background = new THREE.Color(0x0a0c12);
-    this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.015);
-    this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
-
-    // ── VFX ────────────────────────────────────────────────────────────────
-    this.vfx = new Vfx(this.scene);
-
-    // ── Build scene ────────────────────────────────────────────────────────
     this.scene.background = new THREE.Color(0x0a0c12);
     this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.015);
     this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
@@ -292,16 +237,10 @@ export class BrawlerScene {
 
     this.buildLights();
     this.buildSafeZoneRing();
+    this.buildFocusRing();
     this.scene.add(this.player);
     this.player.position.set(0, 0, 8);
 
-    // ── Async loads ────────────────────────────────────────────────────────
-    void this.buildPlayer();
-    void this.loadEnemyTemplates();
-    void this.loadEnvironment();
-    void this.initNetwork();
-
-    // ── Input ──────────────────────────────────────────────────────────────
     // Start RAF immediately so loading HUD paints and input works even if assets stall.
     this.raf = requestAnimationFrame(this.animate);
 
@@ -311,19 +250,13 @@ export class BrawlerScene {
     window.addEventListener("keyup", this.onKeyUp);
     canvas.addEventListener("mousedown", this.onMouseDown);
     window.addEventListener("mouseup", this.onMouseUp);
+    canvas.addEventListener("contextmenu", this.onContextMenu);
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("pointerlockchange", this.onPointerLockChange);
+    window.addEventListener("blur", this.onWindowBlur);
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
-
-    this.emitState();
-  }
-
-  // ── Scene setup ────────────────────────────────────────────────────────────
-  private buildLights() {
-    this.scene.add(new THREE.HemisphereLight(0x9fb8ff, 0x20160f, 0.6));
-
     this.emitState();
   }
 
@@ -335,7 +268,24 @@ export class BrawlerScene {
     ]);
     if (this.disposed) return;
     this.setPhase("playing");
+    // Immediate wave presence — don't wait for first SPAWN_INTERVAL tick.
+    for (let i = 0; i < 4; i++) this.spawnEnemy();
     void this.initNetwork();
+  }
+
+  /** Load GLB trying same-origin + CDN candidates (brawl enemies are gameopen-only). */
+  private async loadGltf(path: string) {
+    const loader = new GLTFLoader();
+    const urls = assetCandidates(path);
+    let lastErr: unknown;
+    for (const url of urls) {
+      try {
+        return await loader.loadAsync(url);
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr ?? new Error(`Failed to load ${path}`);
   }
 
   private buildLights() {
@@ -347,10 +297,6 @@ export class BrawlerScene {
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 90;
     const sc = key.shadow.camera as THREE.OrthographicCamera;
-    sc.left = -40; sc.right = 40; sc.top = 40; sc.bottom = -40;
-    this.scene.add(key);
-
-    // Accent point lights for moody arena glow
     sc.left = -40;
     sc.right = 40;
     sc.top = 40;
@@ -362,7 +308,6 @@ export class BrawlerScene {
     const p2 = new THREE.PointLight(0x4080ff, 1.0, 20);
     p2.position.set(14, 2, 12);
     this.scene.add(p2);
-
     this.scene.add(new THREE.AmbientLight(0x2a3350, 0.4));
   }
 
@@ -382,18 +327,23 @@ export class BrawlerScene {
     this.safeZoneRing = ring;
   }
 
+  private buildFocusRing() {
+    const geo = new THREE.RingGeometry(0.55, 0.75, 48);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xff6a4a,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.visible = false;
+    this.scene.add(ring);
+    this.focusRing = ring;
+  }
+
   /**
-   * Player avatar: baked grudge6 character — never a primitive shape. The group
-   * is added immediately; the model attaches when the (cached) baked GLB resolves.
-   */
-  private async buildPlayer() {
-    try {
-      const model = await getBakedCharacter(0);
-      if (this.disposed) return;
-      this.playerModel = model;
-      this.player.add(model);
-    } catch (err) {
-      console.error("[BrawlerScene] player model load failed", err);
    * Standard Character pipeline: try rigged GLBs with clips first (skeletal anim),
    * then static baked grudge6 as last-resort visual.
    */
@@ -526,49 +476,58 @@ export class BrawlerScene {
   }
 
   private async loadEnemyTemplates() {
-    const loader = new GLTFLoader();
     for (let i = 0; i < 3; i++) {
-      try {
-        const gltf = await loader.loadAsync(
-          asset(`models/enemies/voxel-zombies/voxel-zombie-${i + 1}.glb`),
-        );
-        if (this.disposed) return;
-        const root = gltf.scene;
-        // Normalise to ~1.6m height.
-        const box = new THREE.Box3().setFromObject(root);
-        const size = box.getSize(new THREE.Vector3());
-        root.scale.setScalar(1.6 / (size.y || 1));
-        root.updateMatrixWorld(true);
-        const b2 = new THREE.Box3().setFromObject(root);
-        root.position.y -= b2.min.y;
-        root.traverse((o) => {
-          const m = o as THREE.Mesh;
-          if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; }
-          if (m.isMesh) {
-            m.castShadow = true;
-            m.receiveShadow = true;
-          }
-        });
-        this.enemyTemplates[i] = root as THREE.Group;
-      } catch (err) {
-        console.warn(`[BrawlerScene] voxel-zombie-${i + 1}.glb failed`, err);
+      const n = i + 1;
+      // Prefer packaged path; also try public root aliases used by older deploys.
+      const paths = [
+        `models/enemies/voxel-zombies/voxel-zombie-${n}.glb`,
+        `voxel-zombie-${n}.glb`,
+      ];
+      let loaded = false;
+      for (const path of paths) {
+        try {
+          const gltf = await this.loadGltf(path);
+          if (this.disposed) return;
+          const root = gltf.scene;
+          const box = new THREE.Box3().setFromObject(root);
+          const size = box.getSize(new THREE.Vector3());
+          root.scale.setScalar(1.6 / (size.y || 1));
+          root.updateMatrixWorld(true);
+          const b2 = new THREE.Box3().setFromObject(root);
+          root.position.y -= b2.min.y;
+          root.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (m.isMesh) {
+              m.castShadow = true;
+              m.receiveShadow = true;
+              m.userData.selectable = "hostile";
+            }
+          });
+          root.userData.selectable = "hostile";
+          this.enemyTemplates[i] = root as THREE.Group;
+          loaded = true;
+          break;
+        } catch {
+          /* try next path */
+        }
+      }
+      if (!loaded) {
+        console.warn(`[BrawlerScene] voxel-zombie-${n}.glb failed on all candidates`);
       }
     }
   }
 
   private async loadEnvironment() {
     try {
-      const gltf = await new GLTFLoader().loadAsync(asset("models/arena-war-zone.glb"));
+      const gltf = await this.loadGltf("models/arena-war-zone.glb");
       if (this.disposed) return;
       const root = gltf.scene;
-      // Auto-scale to ~40u footprint.
       const box = new THREE.Box3().setFromObject(root);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.z) || 1;
       if (maxDim > 300) root.scale.setScalar(0.01);
       else if (maxDim < 40) root.scale.setScalar(40 / maxDim);
       root.updateMatrixWorld(true);
-      // Re-centre, feet at y=0.
       const b2 = new THREE.Box3().setFromObject(root);
       const c2 = b2.getCenter(new THREE.Vector3());
       root.position.x -= c2.x;
@@ -587,11 +546,6 @@ export class BrawlerScene {
       });
       this.scene.add(root);
     } catch (err) {
-      console.warn("[BrawlerScene] arena-war-zone.glb failed — using fallback", err);
-      this.buildFallbackGround();
-    }
-    this.setPhase("playing");
-    this.raf = requestAnimationFrame(this.animate);
       console.warn("[BrawlerScene] arena-war-zone.glb failed — fallback ground", err);
       this.buildFallbackGround();
     }
@@ -607,15 +561,6 @@ export class BrawlerScene {
     this.scene.add(g);
   }
 
-  // ── Networking ─────────────────────────────────────────────────────────────
-  private async initNetwork() {
-    try {
-      const { BrawlClient } = await import("../net/BrawlClient");
-      if (this.disposed) return;
-      const client = new BrawlClient();
-      this.client = client;
-      client.on("open", () => { this.connected = true; this.emitState(); });
-      client.on("close", () => { this.connected = false; this.emitState(); });
   private async initNetwork() {
     try {
       const { BrawlClient } = await import("../../net/BrawlClient");
@@ -641,8 +586,6 @@ export class BrawlerScene {
         this.emitState();
       });
       client.connect();
-      client.join("BrawlerPlayer");
-    } catch (err) {
       client.join(this.characterName.slice(0, 24) || "Brawler");
     } catch (err) {
       this.netFailCount++;
@@ -650,22 +593,17 @@ export class BrawlerScene {
     }
   }
 
-  private async syncRemotePlayers(
-    players: { id: string; px?: number; pz?: number }[],
-  ) {
   private async syncRemotePlayers(players: { id: string; px?: number; pz?: number }[]) {
     for (const p of players) {
       if (p.id === this.selfId) continue;
       if (!this.remoteMeshes.has(p.id)) {
         try {
-          const model = await getBakedCharacter(1);
           const model = await getBakedCharacter((this.rosterIndex + 1) % 30);
           if (this.disposed) return;
           const grp = new THREE.Group();
           grp.add(model);
           this.scene.add(grp);
           this.remoteMeshes.set(p.id, grp);
-        } catch { /* remote mesh optional */ }
         } catch {
           /* optional */
         }
@@ -673,10 +611,6 @@ export class BrawlerScene {
       const mesh = this.remoteMeshes.get(p.id);
       if (mesh) mesh.position.set(p.px ?? 0, 0, p.pz ?? 0);
     }
-    // Remove stale remote players.
-    const ids = new Set(players.map((p) => p.id));
-    for (const [id, mesh] of this.remoteMeshes) {
-      if (!ids.has(id)) { this.scene.remove(mesh); this.remoteMeshes.delete(id); }
     const ids = new Set(players.map((p) => p.id));
     for (const [id, mesh] of this.remoteMeshes) {
       if (!ids.has(id)) {
@@ -691,9 +625,10 @@ export class BrawlerScene {
     const k = e.key.toLowerCase();
     this.keys.add(k);
     if (k === " " && !this.isJumping) this.beginJump();
-    if (["1", "2", "3", "4"].includes(k)) {
-      this.selectedWeapon = parseInt(k) - 1;
-      this.emitState();
+    // Tab / Middle-mouse alternate: hard-toggle focus without RMB
+    if (k === "tab") {
+      e.preventDefault();
+      this.toggleFocus();
     }
     // Weapon cycle 1-4 also fire skills; Shift+digit = weapon only is unused
     if (k === "1" || k === "2" || k === "3" || k === "4") {
@@ -710,48 +645,96 @@ export class BrawlerScene {
   };
   private onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
 
+  private onContextMenu = (e: Event) => {
+    e.preventDefault();
+  };
+
   private onMouseDown = (e: MouseEvent) => {
     if (e.button === 0) {
       this.lmbDown = true;
       if (!this.pointerLocked) this.canvas.requestPointerLock();
       else this.triggerSkill(1);
+      return;
+    }
+    // RMB — Danger Room focus lock (toggle sticky + hold soft-lock stance)
+    if (e.button === 2) {
+      e.preventDefault();
+      this.rmbDown = true;
+      if (!this.pointerLocked) this.canvas.requestPointerLock();
+      this.toggleFocus();
+      this.acquireFocusTarget();
+      this.emitState();
     }
   };
   private onMouseUp = (e: MouseEvent) => {
     if (e.button === 0) this.lmbDown = false;
+    if (e.button === 2) {
+      this.rmbDown = false;
+      // Sticky focusEnabled remains; only clear hold flag.
+      this.emitState();
+    }
   };
   private onMouseMove = (e: MouseEvent) => {
     if (!this.pointerLocked) return;
-    this.playerYaw -= e.movementX * 0.002;
+    // When hard-focused on a target, damp yaw so soft-lock can hold facing;
+    // still allow fine aim adjustment.
+    const sens = this.isFocusActive() && this.focusTarget ? 0.0012 : 0.002;
+    this.playerYaw -= e.movementX * sens;
   };
   private onPointerLockChange = () => {
     this.pointerLocked = document.pointerLockElement === this.canvas;
+    if (!this.pointerLocked) {
+      this.lmbDown = false;
+      this.rmbDown = false;
+    }
+  };
+  private onWindowBlur = () => {
+    this.lmbDown = false;
+    this.rmbDown = false;
+    this.keys.clear();
   };
 
   private beginJump() {
     this.isJumping = true;
     this.jumpT = 0;
+    this.avatar?.playRoleOnce("jump", 0.08);
   }
 
-  // ── Combat ─────────────────────────────────────────────────────────────────
-  private doAttack() {
-    if (this.atkCd > 0 || this.phase !== "playing") return;
-    this.atkCd = ATTACK_CD;
-    // Forward-lunge visual: tilt playerModel (consumed in updatePlayer).
-    const dir = new THREE.Vector3(Math.sin(this.playerYaw), 0, Math.cos(this.playerYaw));
-    const hitPos = this.player.position.clone().addScaledVector(dir, 1.5);
-    hitPos.y += 1;
-    this.vfx.impact(hitPos, 0x9fe8ff, 0.8);
+  private toggleFocus() {
+    this.focusEnabled = !this.focusEnabled;
+    if (!this.focusEnabled) {
+      this.focusTarget = null;
+    } else {
+      this.acquireFocusTarget();
+    }
+  }
 
-    // Damage nearest enemy within reach.
-    let nearest: EnemyObj | null = null;
-    let nearDist = ATTACK_REACH;
+  private isFocusActive(): boolean {
+    return this.focusEnabled || this.rmbDown;
+  }
+
+  /** Soft-lock: nearest living enemy within acquire range (Danger Room parity). */
+  private acquireFocusTarget(): EnemyObj | null {
+    if (!this.isFocusActive()) {
+      this.focusTarget = null;
+      return null;
+    }
+    // Keep existing target if still valid
+    if (this.focusTarget && this.enemies.includes(this.focusTarget)) {
+      const d = this.player.position.distanceTo(this.focusTarget.pos);
+      if (d <= FOCUS_BREAK_RANGE) return this.focusTarget;
+    }
+    let best: EnemyObj | null = null;
+    let bestD = FOCUS_ACQUIRE_RANGE;
     for (const en of this.enemies) {
       const d = this.player.position.distanceTo(en.pos);
-      if (d < nearDist) { nearDist = d; nearest = en; }
+      if (d < bestD) {
+        bestD = d;
+        best = en;
+      }
     }
-    if (nearest) this.damageEnemy(nearest, ATTACK_DAMAGE);
-    this.avatar?.playRoleOnce("jump", 0.08);
+    this.focusTarget = best;
+    return best;
   }
 
   // ── Combat ─────────────────────────────────────────────────────────────────
@@ -762,6 +745,22 @@ export class BrawlerScene {
 
     skill.cd = skill.cdMax;
     this.atkCd = Math.max(this.atkCd, 0.15);
+
+    // Prefer focused target; fall back to nearest in reach
+    this.acquireFocusTarget();
+    let target = this.focusTarget;
+    if (target) {
+      // Face the lock before lunging
+      const to = new THREE.Vector3(
+        target.pos.x - this.player.position.x,
+        0,
+        target.pos.z - this.player.position.z,
+      );
+      if (to.lengthSq() > 0.001) {
+        // playerYaw uses the same convention as camera: facing = -sin/-cos
+        this.playerYaw = Math.atan2(-to.x, -to.z);
+      }
+    }
 
     // Animation one-shot on the Character mixer
     if (this.avatar) {
@@ -776,10 +775,7 @@ export class BrawlerScene {
       }
     }
 
-    // MM lunge
-    const dir = new THREE.Vector3(Math.sin(this.playerYaw), 0, Math.cos(this.playerYaw));
-    // Facing convention: camera is behind player along +sin/cos; lunge toward look.
-    // Match movement forward which uses -sin/-cos:
+    // Lunge toward facing (or locked target)
     const fwd = new THREE.Vector3(-Math.sin(this.playerYaw), 0, -Math.cos(this.playerYaw));
     this.lungeVel.copy(fwd).multiplyScalar(skill.lunge);
     this.lungeT = 0.22;
@@ -788,9 +784,18 @@ export class BrawlerScene {
     hitPos.y += 1;
     this.vfx.impact(hitPos, 0x9fe8ff, 0.7 + skill.damage / 80);
 
-    // Damage nearest enemy in reach
+    // Damage focused enemy first if in generous soft-lock reach, else nearest
+    const softReach = skill.reach + (this.isFocusActive() ? 1.2 : 0);
+    if (target) {
+      const d = this.player.position.distanceTo(target.pos);
+      if (d <= softReach) {
+        this.damageEnemy(target, skill.damage);
+        this.emitState();
+        return;
+      }
+    }
     let nearest: EnemyObj | null = null;
-    let nearDist = skill.reach;
+    let nearDist = softReach;
     for (const en of this.enemies) {
       const d = this.player.position.distanceTo(en.pos);
       if (d < nearDist) {
@@ -798,12 +803,25 @@ export class BrawlerScene {
         nearest = en;
       }
     }
-    if (nearest) this.damageEnemy(nearest, skill.damage);
+    if (nearest) {
+      this.focusTarget = nearest;
+      this.damageEnemy(nearest, skill.damage);
+    }
     this.emitState();
   }
 
   private damageEnemy(en: EnemyObj, amount: number) {
     en.hp = Math.max(0, en.hp - amount);
+    // Brief hit flash on focus ring
+    if (this.focusRing && en === this.focusTarget) {
+      const mat = this.focusRing.material as THREE.MeshBasicMaterial;
+      mat.color.setHex(0xffe080);
+      setTimeout(() => {
+        if (!this.disposed && this.focusRing) {
+          (this.focusRing.material as THREE.MeshBasicMaterial).color.setHex(0xff6a4a);
+        }
+      }, 80);
+    }
     if (en.hp <= 0) this.killEnemy(en);
   }
 
@@ -813,9 +831,12 @@ export class BrawlerScene {
     this.vfx.blastImpact(pos, 0xff4400, 0.6);
     this.scene.remove(en.mesh);
     this.enemies = this.enemies.filter((e) => e !== en);
+    if (this.focusTarget === en) this.focusTarget = null;
     this.kills++;
     this.credits += 10;
     if (this.kills % 10 === 0) this.wave++;
+    // Re-acquire next target while still in focus mode
+    if (this.isFocusActive()) this.acquireFocusTarget();
     this.emitState();
   }
 
@@ -823,14 +844,6 @@ export class BrawlerScene {
     if (this.phase !== "playing") return;
     const effective = Math.max(1, amount - this.playerArmor * 0.1);
     this.playerHp = Math.max(0, this.playerHp - effective);
-    const p = this.player.position.clone();
-    p.y += 1;
-    this.vfx.burst(p, 0xff5a5a, 10, 3);
-    if (this.playerHp <= 0) this.setPhase("dead");
-    this.emitState();
-  }
-
-  // ── Enemy management ───────────────────────────────────────────────────────
     this.avatar?.playRoleOnce("hurt", 0.08);
     const p = this.player.position.clone();
     p.y += 1;
@@ -857,7 +870,6 @@ export class BrawlerScene {
     if (tpl) {
       mesh.add(tpl.clone(true));
     } else {
-      // Procedural fallback.
       const fb = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 1.6, 0.5),
         new THREE.MeshStandardMaterial({ color: 0x4a7a30, roughness: 0.9 }),
@@ -867,11 +879,12 @@ export class BrawlerScene {
       mesh.add(fb);
     }
     mesh.position.copy(pos);
+    mesh.userData.selectable = "hostile";
     this.scene.add(mesh);
     this.enemies.push({
       mesh,
-      hp: ENEMY_HP,
-      maxHp: ENEMY_HP,
+      hp: ENEMY_HP + Math.floor((this.wave - 1) * 8),
+      maxHp: ENEMY_HP + Math.floor((this.wave - 1) * 8),
       pos: pos.clone(),
       speed: ENEMY_SPEED * (0.8 + Math.random() * 0.4),
       attackCd: 0,
@@ -883,7 +896,6 @@ export class BrawlerScene {
     const pp = this.player.position;
     for (const en of this.enemies) {
       en.attackCd = Math.max(0, en.attackCd - dt);
-      // Seek player.
       const dir = new THREE.Vector3(pp.x - en.pos.x, 0, pp.z - en.pos.z);
       const dist = dir.length();
       if (dist > 0.1) {
@@ -892,11 +904,6 @@ export class BrawlerScene {
         en.mesh.position.copy(en.pos);
         en.mesh.rotation.y = Math.atan2(dir.x, dir.z);
       }
-      // Bobbing walk animation.
-      en.walkClock += dt * 4;
-      en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
-
-      // Attack player on contact.
       en.walkClock += dt * 4;
       en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
       if (dist <= ENEMY_ATTACK_REACH && en.attackCd <= 0) {
@@ -906,7 +913,6 @@ export class BrawlerScene {
     }
   }
 
-  // ── RAF loop ───────────────────────────────────────────────────────────────
   // ── RAF ────────────────────────────────────────────────────────────────────
   private animate = () => {
     if (this.disposed) return;
@@ -924,14 +930,7 @@ export class BrawlerScene {
     if (this.phase === "playing") {
       this.updatePlayer(dt);
       this.updateEnemies(dt);
-
-      this.spawnTimer += dt;
-      if (this.spawnTimer >= SPAWN_INTERVAL) { this.spawnTimer = 0; this.spawnEnemy(); }
-
-      this.updateSafeZone(dt);
-      this.sendNetInput(dt);
-
-      if (this.lmbDown && this.atkCd === 0) this.doAttack();
+      this.updateFocus(dt);
       this.spawnTimer += dt;
       if (this.spawnTimer >= SPAWN_INTERVAL) {
         this.spawnTimer = 0;
@@ -944,6 +943,7 @@ export class BrawlerScene {
       // Still update avatar idle while loading/dead
       this.avatar?.setLocomotion(0);
       this.avatar?.update(dt);
+      if (this.focusRing) this.focusRing.visible = false;
     }
 
     this.updateCamera();
@@ -951,8 +951,41 @@ export class BrawlerScene {
     this.renderer.render(this.scene, this.camera);
   };
 
+  /** Soft-lock maintain + world reticle under focused enemy. */
+  private updateFocus(dt: number) {
+    void dt;
+    if (!this.isFocusActive()) {
+      this.focusTarget = null;
+      if (this.focusRing) this.focusRing.visible = false;
+      return;
+    }
+    this.acquireFocusTarget();
+    const t = this.focusTarget;
+    if (!t || !this.focusRing) {
+      if (this.focusRing) this.focusRing.visible = false;
+      return;
+    }
+    this.focusRing.visible = true;
+    this.focusRing.position.set(t.pos.x, 0.06, t.pos.z);
+    const pulse = 0.75 + Math.sin(performance.now() * 0.008) * 0.15;
+    this.focusRing.scale.setScalar(pulse);
+    // Soft-steer yaw toward target while focus active (strafe-friendly lock)
+    const to = new THREE.Vector3(
+      t.pos.x - this.player.position.x,
+      0,
+      t.pos.z - this.player.position.z,
+    );
+    if (to.lengthSq() > 0.25) {
+      const desiredYaw = Math.atan2(-to.x, -to.z);
+      let dy = desiredYaw - this.playerYaw;
+      while (dy > Math.PI) dy -= Math.PI * 2;
+      while (dy < -Math.PI) dy += Math.PI * 2;
+      // Gentle pull so mouse aim still works
+      this.playerYaw += dy * Math.min(1, 4 * dt);
+    }
+  }
+
   private updatePlayer(dt: number) {
-    // Dash trigger (Shift key).
     if (this.keys.has("shift") && this.dashCd <= 0 && !this.isDashing) {
       this.isDashing = true;
       this.dashT = DASH_DURATION;
@@ -963,10 +996,6 @@ export class BrawlerScene {
     if (this.isDashing) {
       this.dashT -= dt;
       speed = DASH_SPEED;
-      if (this.dashT <= 0) { this.isDashing = false; this.dashT = 0; }
-    }
-
-    // WASD — W always moves forward away from camera (Fortnite-style yaw).
       if (this.dashT <= 0) {
         this.isDashing = false;
         this.dashT = 0;
@@ -980,7 +1009,6 @@ export class BrawlerScene {
     if (this.keys.has("s")) move.addScaledVector(fwd, -1);
     if (this.keys.has("a")) move.addScaledVector(right, -1);
     if (this.keys.has("d")) move.addScaledVector(right, 1);
-    if (move.lengthSq() > 0) {
 
     const moving = move.lengthSq() > 0;
     this.moving = moving;
@@ -989,13 +1017,6 @@ export class BrawlerScene {
       this.player.position.addScaledVector(move, speed * dt);
     }
 
-    // Simple parabolic jump (y=0 floor).
-    if (this.isJumping) {
-      this.jumpT += dt;
-      const t = this.jumpT / JUMP_DURATION;
-      if (t <= 1) {
-        this.player.position.y = Math.sin(t * Math.PI) * JUMP_HEIGHT;
-      } else {
     if (this.isJumping) {
       this.jumpT += dt;
       const t = this.jumpT / JUMP_DURATION;
@@ -1011,10 +1032,6 @@ export class BrawlerScene {
 
     this.player.rotation.y = this.playerYaw;
 
-    // Forward-lunge attack animation (oscillate playerModel on X).
-    if (this.playerModel) {
-      this.playerModel.rotation.x =
-        this.atkCd > 0 ? Math.sin((1 - this.atkCd / ATTACK_CD) * Math.PI) * 0.35 : 0;
     // Standard locomotion → mixer blend (0 idle … 1 sprint)
     const loco = moving ? (this.isDashing || this.keys.has("shift") ? 1 : 0.55) : 0;
     if (this.avatar) {
@@ -1034,7 +1051,6 @@ export class BrawlerScene {
     if (this.inSafeZone) {
       this.playerHp = Math.min(PLAYER_MAX_HP, this.playerHp + HEAL_RATE * dt);
     }
-    // Pulse safe zone ring colour.
     if (this.safeZoneRing) {
       const mat = this.safeZoneRing.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.25 + Math.abs(Math.sin(Date.now() * 0.0025)) * 0.2;
@@ -1063,7 +1079,6 @@ export class BrawlerScene {
         dash: this.isDashing,
         weapon: this.selectedWeapon,
       });
-    } catch { /* network optional */ }
     } catch {
       /* optional */
     }
@@ -1071,22 +1086,19 @@ export class BrawlerScene {
 
   private updateCamera() {
     const pp = this.player.position;
-    const look = new THREE.Vector3(pp.x, pp.y + 1.0, pp.z);
-    const behind = new THREE.Vector3(
-      Math.sin(this.playerYaw) * 4,
-      1.8,
-      Math.cos(this.playerYaw) * 4,
-    );
-    const desired = look.clone().add(behind);
-    this.camPos.lerp(desired, 0.1);
-    this.camLook.lerp(look, 0.1);
+    // Slightly elevated combat camera; bias look toward focus target when locked
     const look = new THREE.Vector3(pp.x, pp.y + 1.15, pp.z);
+    if (this.isFocusActive() && this.focusTarget) {
+      look.x = THREE.MathUtils.lerp(look.x, this.focusTarget.pos.x, 0.22);
+      look.z = THREE.MathUtils.lerp(look.z, this.focusTarget.pos.z, 0.22);
+      look.y = 1.2;
+    }
     const behind = new THREE.Vector3(
       Math.sin(this.playerYaw) * 4.2,
       1.9,
       Math.cos(this.playerYaw) * 4.2,
     );
-    const desired = look.clone().add(behind);
+    const desired = new THREE.Vector3(pp.x, pp.y + 1.15, pp.z).add(behind);
     this.camPos.lerp(desired, 0.12);
     this.camLook.lerp(look, 0.12);
     this.camera.position.copy(this.camPos);
@@ -1101,7 +1113,6 @@ export class BrawlerScene {
     this.renderer.setSize(w, h, false);
   }
 
-  // ── State ──────────────────────────────────────────────────────────────────
   private setPhase(p: BrawlerState["phase"]) {
     this.phase = p;
     this.emitState();
@@ -1109,6 +1120,7 @@ export class BrawlerScene {
 
   private emitState() {
     const weaponId = WEAPON_CYCLE[this.selectedWeapon] ?? "sword";
+    const ft = this.focusTarget;
     const s: BrawlerState = {
       phase: this.phase,
       playerHp: Math.round(this.playerHp),
@@ -1117,7 +1129,6 @@ export class BrawlerScene {
       ammo: this.ammo,
       credits: this.credits,
       kills: this.kills,
-      weaponName: WEAPON_NAMES[this.selectedWeapon] ?? "Sword",
       weaponName: weaponId.charAt(0).toUpperCase() + weaponId.slice(1),
       weaponId,
       characterName: this.characterName,
@@ -1126,8 +1137,6 @@ export class BrawlerScene {
       playerCount: this.playerCount,
       inSafeZone: this.inSafeZone,
       wave: this.wave,
-    };
-    const sig = `${s.phase}|${s.playerHp}|${s.kills}|${s.credits}|${s.connected ? 1 : 0}|${s.playerCount}|${s.inSafeZone ? 1 : 0}|${s.wave}|${s.ammo}|${s.weaponName}`;
       skills: this.skills.map((sk) => ({
         slot: sk.slot,
         label: sk.label,
@@ -1138,6 +1147,10 @@ export class BrawlerScene {
       })),
       moving: this.moving,
       loadError: this.loadError,
+      focusLocked: this.isFocusActive(),
+      hasTarget: !!ft,
+      targetHp: ft ? Math.round(ft.hp) : 0,
+      targetMaxHp: ft ? Math.round(ft.maxHp) : 0,
     };
     const sig = JSON.stringify({
       p: s.phase,
@@ -1153,13 +1166,15 @@ export class BrawlerScene {
       sk: s.skills.map((x) => Math.round(x.cd * 10)),
       m: s.moving ? 1 : 0,
       le: s.loadError || "",
+      fl: s.focusLocked ? 1 : 0,
+      ht: s.hasTarget ? 1 : 0,
+      th: s.targetHp,
     });
     if (sig === this.lastSig) return;
     this.lastSig = sig;
     this.onState(s);
   }
 
-  // ── Public API (called by ThreeBrawler React component) ────────────────────
   // ── Public API ─────────────────────────────────────────────────────────────
   respawn() {
     this.playerHp = PLAYER_MAX_HP;
@@ -1214,20 +1229,21 @@ export class BrawlerScene {
     window.removeEventListener("keyup", this.onKeyUp);
     this.canvas.removeEventListener("mousedown", this.onMouseDown);
     window.removeEventListener("mouseup", this.onMouseUp);
+    this.canvas.removeEventListener("contextmenu", this.onContextMenu);
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("pointerlockchange", this.onPointerLockChange);
+    window.removeEventListener("blur", this.onWindowBlur);
     if (document.pointerLockElement === this.canvas) document.exitPointerLock();
     this.client?.dispose?.();
     this.vfx.dispose();
     this.avatar?.dispose();
     this.avatar = null;
+    this.focusTarget = null;
     for (const [, mesh] of this.remoteMeshes) this.scene.remove(mesh);
     this.remoteMeshes.clear();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
-      // Shared baked character geometry is owned by the roster cache — never dispose it here.
-      if (this.playerModel && isDescendant(m, this.playerModel)) return;
       // Baked roster geometry is shared — skip disposing those children.
       if (this.fallbackModel && isDescendant(m, this.fallbackModel)) return;
       m.geometry?.dispose();
@@ -1239,10 +1255,6 @@ export class BrawlerScene {
   }
 }
 
-function isDescendant(node: THREE.Object3D, ancestor: THREE.Object3D): boolean {
-  let p: THREE.Object3D | null = node;
-  while (p) {
-    if (p === ancestor) return true;
 function isDescendant(obj: THREE.Object3D, root: THREE.Object3D): boolean {
   let p: THREE.Object3D | null = obj;
   while (p) {

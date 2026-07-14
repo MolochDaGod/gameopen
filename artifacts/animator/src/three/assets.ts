@@ -20,11 +20,13 @@ export function asset(path: string): string {
   const isLocal =
     typeof location !== "undefined" &&
     (location.hostname === "localhost" || location.hostname === "127.0.0.1");
-  // Local scene overrides still same-origin when present on disk.
+  // Local scene / brawl enemy packs live on gameopen public, not Animator CDN.
   const preferSameOrigin =
     /^models\/vol\.glb$/i.test(clean) ||
     /^models\/dungeon\.glb$/i.test(clean) ||
-    /^models\/arena-war-zone\.glb$/i.test(clean);
+    /^models\/arena-war-zone\.glb$/i.test(clean) ||
+    /^models\/enemies\//i.test(clean) ||
+    /^voxel-zombie-\d+\.glb$/i.test(clean);
   if (isLocal || preferSameOrigin) {
     return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
   }

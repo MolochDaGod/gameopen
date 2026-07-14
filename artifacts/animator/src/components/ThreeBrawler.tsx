@@ -1,12 +1,4 @@
 /**
- * ThreeBrawler — React wrapper around the 3D BrawlerScene.
- *
- * Replaces the 2D canvas RuinsBrawler.tsx with a full Three.js 3D session.
- * Mounts/disposes BrawlerScene via useEffect; mirrors the same CSS-in-JS
- * palette and HUD structure as the original component.
- */
-import { type CSSProperties, useEffect, useRef, useState } from "react";
-import { BrawlerScene, type BrawlerState } from "../three/brawler/BrawlerScene";
  * ThreeBrawler — React shell for the 3D Ruins Brawler.
  *
  * Full combat HUD:
@@ -57,11 +49,13 @@ const DEFAULT_STATE: BrawlerState = {
   playerCount: 1,
   inSafeZone: false,
   wave: 1,
-};
-
   skills: EMPTY_SKILLS,
   moving: false,
   loadError: null,
+  focusLocked: false,
+  hasTarget: false,
+  targetHp: 0,
+  targetMaxHp: 0,
 };
 
 const WEAPONS = [
@@ -77,15 +71,6 @@ export function ThreeBrawler({ onExit }: Props) {
   const [state, setState] = useState<BrawlerState>(DEFAULT_STATE);
   const [locked, setLocked] = useState(false);
 
-  // Mount / dispose the 3D scene.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const scene = new BrawlerScene(canvas, (s) => setState(s));
-    sceneRef.current = scene;
-
-    const onLockChange = () =>
-      setLocked(document.pointerLockElement === canvas);
   const fleetChar = gameSession.selectedCharacter();
   const displayName =
     fleetChar?.name ||
@@ -122,16 +107,6 @@ export function ThreeBrawler({ onExit }: Props) {
       scene.dispose();
       sceneRef.current = null;
     };
-  }, []);
-
-  const sc = sceneRef.current;
-
-  return (
-    <div style={rootStyle}>
-      {/* 3D canvas */}
-      <canvas ref={canvasRef} style={canvasStyle} />
-
-      {/* Top-right bar */}
     // Mount once per brawler entry — identity is read at open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -166,34 +141,6 @@ export function ThreeBrawler({ onExit }: Props) {
         </button>
       </div>
 
-      {/* Wave counter — top centre */}
-      <div style={waveBadgeStyle}>WAVE {state.wave}</div>
-
-      {/* HUD — bottom left */}
-      {state.phase !== "loading" && (
-        <div style={hudStyle}>
-          <span>
-            HP{" "}
-            <span
-              style={{
-                color:
-                  state.playerHp < state.playerMaxHp * 0.25
-                    ? "#ff5a5a"
-                    : "#7ee0a0",
-              }}
-            >
-              {Math.max(0, state.playerHp)}/{state.playerMaxHp}
-            </span>
-          </span>
-          <span>ARM {state.playerArmor}</span>
-          <span>AMMO {state.ammo}</span>
-          <span>◈ {state.credits}</span>
-          <span>KILLS {state.kills}</span>
-          <span style={{ color: "#4fc3ff" }}>{state.weaponName}</span>
-        </div>
-      )}
-
-      {/* Shop overlay — bottom centre, only in safe zone */}
       {/* Wave */}
       <div style={waveBadgeStyle}>WAVE {state.wave}</div>
 
@@ -311,8 +258,38 @@ export function ThreeBrawler({ onExit }: Props) {
         </div>
       )}
 
-      {/* Crosshair */}
-      {locked && state.phase === "playing" && <div style={crosshairStyle} />}
+      {/* Crosshair — brighter when focus-locked (Danger Room parity) */}
+      {locked && state.phase === "playing" && (
+        <div
+          style={{
+            ...crosshairStyle,
+            borderColor: state.focusLocked
+              ? state.hasTarget
+                ? "rgba(255,106,74,0.95)"
+                : "rgba(255,200,80,0.85)"
+              : "rgba(207,224,250,0.55)",
+            boxShadow: state.focusLocked
+              ? "0 0 12px rgba(255,106,74,0.55)"
+              : "none",
+          }}
+        />
+      )}
+
+      {/* Focus / target readout */}
+      {state.phase === "playing" && state.focusLocked && (
+        <div style={focusBadgeStyle}>
+          {state.hasTarget ? (
+            <>
+              <span style={{ color: "#ff8a6a", fontWeight: 700 }}>FOCUS LOCK</span>
+              <span style={{ opacity: 0.85 }}>
+                HP {state.targetHp}/{state.targetMaxHp}
+              </span>
+            </>
+          ) : (
+            <span style={{ color: "#ffd080" }}>FOCUS · no target in range</span>
+          )}
+        </div>
+      )}
 
       {/* Shop */}
       {state.inSafeZone && state.phase === "playing" && (
@@ -324,8 +301,6 @@ export function ThreeBrawler({ onExit }: Props) {
             type="button"
             style={btnStyle}
             disabled={state.credits < 20}
-            title="Refill 30 ammo"
-            onClick={() => sc?.buyAmmoRefill()}
             onClick={() => sceneRef.current?.buyAmmoRefill()}
           >
             Ammo +30 · 20◈
@@ -334,8 +309,6 @@ export function ThreeBrawler({ onExit }: Props) {
             type="button"
             style={btnStyle}
             disabled={state.credits < 40}
-            title="Boost armor by 20"
-            onClick={() => sc?.buyArmor()}
             onClick={() => sceneRef.current?.buyArmor()}
           >
             Armor +20 · 40◈
@@ -344,8 +317,6 @@ export function ThreeBrawler({ onExit }: Props) {
             type="button"
             style={btnStyle}
             disabled={state.credits < 80}
-            title="Restore 30 HP"
-            onClick={() => sc?.buyMaxHpUp()}
             onClick={() => sceneRef.current?.buyMaxHpUp()}
           >
             Heal +30HP · 80◈
@@ -353,19 +324,11 @@ export function ThreeBrawler({ onExit }: Props) {
         </div>
       )}
 
-      {/* Hint bar — bottom right */}
-      <div style={hintStyle}>
-        {locked
-          ? "WASD move · mouse aim · LMB attack · Shift dash · 1-4 weapons · Space jump"
-          : "Click to lock pointer · WASD move · LMB attack"}
-      </div>
-
-      {/* Loading overlay */}
       {/* Hints */}
       <div style={hintStyle}>
         {locked
-          ? "WASD move · mouse aim · LMB / 1 primary · 2-4 skills · QERF skills · Shift dash · Space jump"
-          : "Click canvas to lock pointer · then fight"}
+          ? "WASD · LMB attack · RMB / Tab focus lock · 1-4 skills · QERF · Shift dash · Space jump"
+          : "Click canvas to lock pointer · then fight (RMB = focus lock)"}
       </div>
 
       {/* Loading */}
@@ -373,7 +336,6 @@ export function ThreeBrawler({ onExit }: Props) {
         <div style={overlayStyle}>
           <div style={overlayBoxStyle}>
             <div style={overlayTitleStyle}>RUINS BRAWLER</div>
-            <div style={{ opacity: 0.7, fontSize: 14 }}>Loading arena…</div>
             <div style={{ opacity: 0.7, fontSize: 14 }}>
               Loading combat avatar + arena…
             </div>
@@ -385,13 +347,6 @@ export function ThreeBrawler({ onExit }: Props) {
         </div>
       )}
 
-      {/* Death screen */}
-      {state.phase === "dead" && (
-        <div style={overlayStyle}>
-          <div style={overlayBoxStyle}>
-            <div style={{ ...overlayTitleStyle, color: "#ff5a5a" }}>
-              ELIMINATED
-            </div>
       {/* Death */}
       {state.phase === "dead" && (
         <div style={overlayStyle}>
@@ -403,15 +358,6 @@ export function ThreeBrawler({ onExit }: Props) {
             <button
               type="button"
               style={respawnBtnStyle}
-              onClick={() => sc?.respawn()}
-            >
-              RESPAWN
-            </button>
-            <button
-              type="button"
-              style={{ ...btnStyle, marginTop: 8 }}
-              onClick={onExit}
-            >
               onClick={() => sceneRef.current?.respawn()}
             >
               RESPAWN
@@ -426,7 +372,6 @@ export function ThreeBrawler({ onExit }: Props) {
   );
 }
 
-// ── Styles (CSS-in-JS, matching RuinsBrawler.tsx palette) ────────────────────
 // ── Styles ────────────────────────────────────────────────────────────────────
 const rootStyle: CSSProperties = {
   position: "fixed",
@@ -451,7 +396,6 @@ const topbarStyle: CSSProperties = {
   gap: 12,
   padding: "6px 10px",
   borderRadius: 10,
-  background: "rgba(7,11,20,0.85)",
   background: "rgba(7,11,20,0.88)",
   border: "1px solid rgba(79,195,255,0.22)",
   color: "#cfe0fa",
@@ -463,9 +407,6 @@ const brandStyle: CSSProperties = {
   fontSize: 15,
   color: "#eaf4ff",
 };
-const brandAccentStyle: CSSProperties = {
-  color: "#4fc3ff",
-};
 const brandAccentStyle: CSSProperties = { color: "#4fc3ff" };
 const waveBadgeStyle: CSSProperties = {
   position: "fixed",
@@ -476,31 +417,12 @@ const waveBadgeStyle: CSSProperties = {
   letterSpacing: 3,
   fontSize: 13,
   color: "#4fc3ff",
-  background: "rgba(7,11,20,0.8)",
   background: "rgba(7,11,20,0.85)",
   border: "1px solid rgba(79,195,255,0.28)",
   borderRadius: 8,
   padding: "4px 14px",
   zIndex: 20,
 };
-const hudStyle: CSSProperties = {
-  position: "fixed",
-  bottom: 12,
-  left: 12,
-  display: "flex",
-  gap: 14,
-  padding: "8px 12px",
-  borderRadius: 10,
-  background: "rgba(7,11,20,0.85)",
-  border: "1px solid rgba(79,195,255,0.22)",
-  color: "#eaf4ff",
-  fontSize: 13,
-  fontFamily: "Inter, system-ui, sans-serif",
-  zIndex: 20,
-};
-const shopStyle: CSSProperties = {
-  position: "fixed",
-  bottom: 60,
 const charPanelStyle: CSSProperties = {
   position: "fixed",
   top: 12,
@@ -669,6 +591,24 @@ const crosshairStyle: CSSProperties = {
   pointerEvents: "none",
   zIndex: 15,
 };
+const focusBadgeStyle: CSSProperties = {
+  position: "fixed",
+  top: 48,
+  left: "50%",
+  transform: "translateX(-50%)",
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: "6px 14px",
+  borderRadius: 8,
+  background: "rgba(20,8,8,0.88)",
+  border: "1px solid rgba(255,106,74,0.45)",
+  color: "#ffe0d0",
+  fontSize: 12,
+  letterSpacing: 0.4,
+  zIndex: 20,
+  pointerEvents: "none",
+};
 const shopStyle: CSSProperties = {
   position: "fixed",
   bottom: 100,
@@ -725,7 +665,6 @@ const overlayBoxStyle: CSSProperties = {
   background: "rgba(7,11,20,0.96)",
   border: "1px solid rgba(79,195,255,0.28)",
   color: "#eaf4ff",
-  fontFamily: "Inter, system-ui, sans-serif",
 };
 const overlayTitleStyle: CSSProperties = {
   fontWeight: 800,

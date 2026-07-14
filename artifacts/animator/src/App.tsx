@@ -947,7 +947,6 @@ export default function App() {
     return shell(
       withScreenTheme(
         <GrudoxZones
-          onEnterNative={(id) => navigate(id === "voxgrudge" ? "voxgrudge-native" : "brawl")}
           onEnterNative={(id) => {
             // Only zones with real native engines in Open.
             // Voxel Velocity (racer) is NOT native — card uses GRUDOX deep-link.

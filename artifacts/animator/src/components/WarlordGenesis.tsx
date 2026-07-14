@@ -58,17 +58,14 @@ export function WarlordGenesis({ onExit }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef  = useRef<WarlordGenesisScene | null>(null);
   const [s, setS] = useState<WarlordGenesisState>(INITIAL_STATE);
-  const [selectedRace, setSelectedRace] = useState<string | null>(null);
 
   // Pre-select the active fleet character's race (if any) so the race card
   // matching the player's Grudge Warlords character is highlighted on entry.
-  const [preselectedRace] = useState<string | null>(() => {
+  const [selectedRace, setSelectedRace] = useState<string | null>(() => {
     const ch = gameSession.selectedCharacter();
     return ch?.raceId ?? null;
   });
   const characterName = gameSession.selectedCharacter()?.name ?? null;
-
-  const [selectedRace, setSelectedRace] = useState<string | null>(preselectedRace);
 
   useEffect(() => {
     const canvas = canvasRef.current;
