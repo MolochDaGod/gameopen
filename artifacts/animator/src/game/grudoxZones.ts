@@ -31,6 +31,8 @@ export interface GrudoxZone {
   native?: boolean;
   /** Native AppMode when `native` (optional hint for Open). */
   nativeMode?: "brawl" | "voxgrudge-native" | "danger";
+  /** Optional production URL when the cabinet is hosted off-GRUDOX SPA (racer). */
+  productionUrl?: string;
 }
 
 export const GRUDOX_ZONES: readonly GrudoxZone[] = [
@@ -45,9 +47,11 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "racer",
     title: "Voxel Velocity",
-    blurb: "Arcade street racing — GRUDOX Voxel Arcade cabinet (real racer).",
+    blurb: "Production strip racer — GRUDOX arcade or drive.grudge-studio.com.",
     tone: "#ffd24d",
     native: false,
+    /** Production host for the real racer (not a staging/dev shell). */
+    productionUrl: "https://drive.grudge-studio.com/",
   },
   {
     id: "zombie",
@@ -89,6 +93,18 @@ export interface GrudoxLinkParams {
  * Always targets grudox.grudge-studio.com unless host override is explicit.
  */
 export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): string {
+  const zone = GRUDOX_ZONES.find((z) => z.id === zoneId);
+  // Production racer ships on drive.grudge-studio.com (Voxel Velocity).
+  // Prefer that URL so Open/GRUDOX launchers never hit a stale staging shell.
+  if (zone?.productionUrl) {
+    const base = zone.productionUrl.replace(/\/+$/, "");
+    const q = new URLSearchParams();
+    if (params.token) q.set("grudge_token", params.token);
+    if (params.characterId) q.set("characterId", params.characterId);
+    q.set("from", "grudox");
+    const qs = q.toString();
+    return qs ? `${base}/?${qs}` : `${base}/`;
+  }
   const host = (params.host || GRUDOX_HOST).replace(/\/+$/, "");
   const q = new URLSearchParams();
   if (params.token) q.set("grudge_token", params.token);
