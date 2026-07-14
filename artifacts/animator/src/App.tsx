@@ -842,6 +842,10 @@ export default function App() {
       }
       return next;
     });
+    // Library recents (Steam-style) — any real surface, not hub.
+    if (next !== "doors" && next !== "play") {
+      void import("./lib/recentLibrary").then(({ recordRecentPlay }) => recordRecentPlay(next));
+    }
   }, []);
 
   // Per-surface config for the ONE global AI dock the shell hosts. Danger/play
