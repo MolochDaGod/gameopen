@@ -29,6 +29,7 @@ import type {
   GizmoMode,
   VoxelMap,
 } from "./three/voxel/types";
+import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { Hud } from "./components/Hud";
 import { MechHud } from "./components/MechHud";
@@ -76,13 +77,19 @@ import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboa
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
 import { resolveHudVars } from "./hud/hudConfig";
+import {
+  type AppMode,
+  resolveModeFromLocation,
+  syncUrlToMode,
+} from "./lib/openRoutes";
 import "./index.css";
 import "./components/dock/dock.css";
 
 type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic" | "genesis" | "voxgrudge-native";
+/** Engine surface modes — URL map lives in `lib/openRoutes.ts`. */
+type Mode = AppMode;
 
-// Optional deep-link: `?door=editor|danger|voxel|lobby|zones|brawl` opens that
-// door on load (handy for sharing a direct link and for testing a single surface).
+/** Resolve initial mode from path slug / arcade deep-link / query. */
 function initialMode(): Mode {
   try {
     const d = new URLSearchParams(window.location.search).get("door");
@@ -103,12 +110,14 @@ function initialMode(): Mode {
     /* no-op */
   }
   return "doors";
+  return resolveModeFromLocation();
 }
 
 const DEFAULT_BRUSH: BrushState = {
   tool: "block",
   shape: "block",
-  color: 0x6ea8ff,
+  blockType: DEFAULT_BLOCK_TYPE,
+  color: colorForBlockType(DEFAULT_BLOCK_TYPE),
   deployKind: "npc",
   weapon: "sword",
   difficulty: "normal",
@@ -126,6 +135,20 @@ type DangerPanelId = "admin" | "editor" | "anim";
 
 export default function App() {
   const [mode, setMode] = useState<Mode>(initialMode);
+  const urlBootRef = useRef(true);
+  // Keep URL path in sync with mode (shareable /danger, /voxel, /brawl, …).
+  useEffect(() => {
+    syncUrlToMode(mode, { replace: urlBootRef.current });
+    urlBootRef.current = false;
+  }, [mode]);
+  // Browser back/forward → restore mode from path.
+  useEffect(() => {
+    const onPop = () => {
+      setMode(resolveModeFromLocation());
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const mountRef = useRef<HTMLDivElement>(null);
   const studioRef = useRef<Studio | null>(null);
   const [hud, setHud] = useState<HudSnapshot | null>(null);
@@ -647,7 +670,11 @@ export default function App() {
   const onBrush = useCallback((patch: Partial<BrushState>) => {
     setBrush((b) => {
       const next = { ...b, ...patch };
-      voxelRef.current?.setBrush(patch);
+      // Keep solid color in sync when picking a canonical block type.
+      if (patch.blockType && patch.color === undefined) {
+        next.color = colorForBlockType(patch.blockType);
+      }
+      voxelRef.current?.setBrush(next);
       return next;
     });
   }, []);
@@ -803,6 +830,7 @@ export default function App() {
 
   // Unified system switch for the persistent shell launcher. Leaving a
   // multiplayer Danger Room drops the relay so we don't linger in the room.
+  // URL path is synced by the mode effect (openRoutes.syncUrlToMode).
   const navigate = useCallback((next: Mode) => {
     setMode((prev) => {
       if (next === prev) return prev;
@@ -919,6 +947,12 @@ export default function App() {
       withScreenTheme(
         <GrudoxZones
           onEnterNative={(id) => navigate(id === "voxgrudge" ? "voxgrudge-native" : "brawl")}
+          onEnterNative={(id) => {
+            // Only zones with real native engines in Open.
+            // Voxel Velocity (racer) is NOT native — card uses GRUDOX deep-link.
+            if (id === "voxgrudge") navigate("voxgrudge-native");
+            else if (id === "brawler") navigate("brawl");
+          }}
           onExit={() => navigate("doors")}
         />,
       ),

@@ -2,6 +2,7 @@ import type { CreatePostPayload } from "@workspace/api-client-react";
 import { WEAPONS } from "../three/assets";
 import type { WeaponId } from "../three/types";
 import {
+  PLACEABLE_TERRAIN,
   PROP_LIST,
   type BrushState,
   type DeployableKind,
@@ -28,16 +29,14 @@ const SHAPES: { id: PieceShape; label: string; glyph: string }[] = [
   { id: "ramp", label: "Ramp", glyph: "◣" },
 ];
 
-export const PALETTE: { hex: number; css: string }[] = [
-  { hex: 0x6ea8ff, css: "#6ea8ff" },
-  { hex: 0x57d977, css: "#57d977" },
-  { hex: 0xffb24d, css: "#ffb24d" },
-  { hex: 0xff5470, css: "#ff5470" },
-  { hex: 0xc79bff, css: "#c79bff" },
-  { hex: 0xf4f1e8, css: "#f4f1e8" },
-  { hex: 0x9aa3b2, css: "#9aa3b2" },
-  { hex: 0x2c3340, css: "#2c3340" },
-];
+/** Canonical Voxel Realms place palette (mine-loader `dV` / `#/defs` terrain). */
+export const PALETTE = PLACEABLE_TERRAIN.map((b) => ({
+  id: b.id,
+  hex: b.color,
+  css: b.css,
+  name: b.name,
+  emoji: b.emoji,
+}));
 
 const DEPLOYABLES: { id: DeployableKind; label: string; glyph: string }[] = [
   { id: "npc", label: "NPC", glyph: "☻" },
@@ -187,15 +186,27 @@ export function VoxelEditorUI({
               </div>
             </div>
             <div className="ve-section">
-              <h4>Colour</h4>
+              <h4>Block type</h4>
+              <p className="ve-hint" style={{ fontSize: 11, opacity: 0.7, margin: "0 0 6px" }}>
+                Voxel Realms canonical ·{" "}
+                <a
+                  href="https://mine-loader.replit.app/#/defs"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "inherit" }}
+                >
+                  Codex
+                </a>
+              </p>
               <div className="ve-swatches">
                 {PALETTE.map((c) => (
                   <button
-                    key={c.hex}
-                    className={`ve-swatch ${brush.color === c.hex ? "active" : ""}`}
+                    key={c.id}
+                    className={`ve-swatch ${brush.blockType === c.id ? "active" : ""}`}
                     style={{ background: c.css }}
-                    onClick={() => onBrush({ color: c.hex })}
-                    aria-label={c.css}
+                    onClick={() => onBrush({ blockType: c.id, color: c.hex })}
+                    aria-label={c.name}
+                    title={`${c.emoji} ${c.name} (${c.id})`}
                   />
                 ))}
               </div>

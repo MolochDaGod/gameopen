@@ -12,6 +12,8 @@ import {
   PROPS,
   VOXEL_MAP_VERSION,
   WEAPON_COLOR,
+  colorForBlockType,
+  DEFAULT_BLOCK_TYPE,
   type BlockData,
   type BrushState,
   type DeployableData,
@@ -24,6 +26,7 @@ import {
   type PropId,
   type VoxelMap,
 } from "./types";
+import { ensureBlockTypes, nearestTerrainType } from "@workspace/voxel-canonical";
 import { loadPropTemplate } from "./props";
 
 /**
@@ -191,7 +194,8 @@ export class VoxelEditor {
   private brush: BrushState = {
     tool: "block",
     shape: "block",
-    color: 0x6ea8ff,
+    blockType: DEFAULT_BLOCK_TYPE,
+    color: colorForBlockType(DEFAULT_BLOCK_TYPE),
     deployKind: "npc",
     weapon: "sword",
     difficulty: "normal",
@@ -378,6 +382,9 @@ export class VoxelEditor {
   setBrush(patch: Partial<BrushState>): void {
     const prevTool = this.brush.tool;
     this.brush = { ...this.brush, ...patch };
+    if (patch.blockType && patch.color === undefined) {
+      this.brush.color = colorForBlockType(patch.blockType);
+    }
     if (this.brush.tool !== prevTool) {
       // The gizmo only exists in Select mode; show it on entry (if something is
       // selected) and hide it whenever another tool takes over.
@@ -428,19 +435,22 @@ export class VoxelEditor {
   }
 
   serialize(): VoxelMap {
-    return {
+    const raw: VoxelMap = {
       version: VOXEL_MAP_VERSION,
       dungeon: this.dungeon,
       blocks: [...this.blocks.values()].map((b) => ({ ...b.data })),
       deployables: [...this.deployables.values()].map((d) => ({ ...d.data })),
     };
+    // Ensure every block carries a canonical Voxel Realms type id.
+    return ensureBlockTypes(raw) as VoxelMap;
   }
 
   load(map: VoxelMap): void {
     this.clearAll();
-    this.dungeon = !!map.dungeon;
-    for (const b of map.blocks ?? []) this.addBlock(b);
-    for (const d of map.deployables ?? []) this.addDeployable(d);
+    const normalized = ensureBlockTypes(map) as VoxelMap;
+    this.dungeon = !!normalized.dungeon;
+    for (const b of normalized.blocks ?? []) this.addBlock(b);
+    for (const d of normalized.deployables ?? []) this.addDeployable(d);
     this.emitStats();
   }
 
@@ -450,15 +460,22 @@ export class VoxelEditor {
     const key = cellKey(data.x, data.y, data.z);
     const existing = this.blocks.get(key);
     if (existing) this.blockGroup.remove(existing.mesh);
-    const doubleSide = data.shape === "ramp";
-    const mesh = new THREE.Mesh(this.shapeGeo(data.shape), this.material(data.color, doubleSide));
-    mesh.position.set(data.x + 0.5, data.y + 0.5, data.z + 0.5);
-    mesh.rotation.y = (data.rotation * Math.PI) / 2;
+    const type = data.type ?? nearestTerrainType(data.color ?? 0x888888);
+    const color = data.color ?? colorForBlockType(type);
+    const normalized: BlockData = { ...data, type, color };
+    const doubleSide = normalized.shape === "ramp";
+    const mesh = new THREE.Mesh(
+      this.shapeGeo(normalized.shape),
+      this.material(normalized.color, doubleSide),
+    );
+    mesh.position.set(normalized.x + 0.5, normalized.y + 0.5, normalized.z + 0.5);
+    mesh.rotation.y = (normalized.rotation * Math.PI) / 2;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    mesh.userData.cell = { x: data.x, y: data.y, z: data.z };
+    mesh.userData.cell = { x: normalized.x, y: normalized.y, z: normalized.z };
+    mesh.userData.blockType = type;
     this.blockGroup.add(mesh);
-    this.blocks.set(key, { data, mesh });
+    this.blocks.set(key, { data: normalized, mesh });
   }
 
   private removeBlockAt(x: number, y: number, z: number): boolean {
@@ -1304,15 +1321,21 @@ export class VoxelEditor {
     const key = `${cell.x},${cell.y},${cell.z}`;
     if (key === this.lastPlaceKey) return;
     this.lastPlaceKey = key;
-    this.addBlock({
+    this.addBlock(this.brushBlockAt(cell));
+    this.emitStats();
+  }
+
+  private brushBlockAt(cell: { x: number; y: number; z: number }): BlockData {
+    const type = this.brush.blockType || DEFAULT_BLOCK_TYPE;
+    return {
       x: cell.x,
       y: cell.y,
       z: cell.z,
       shape: this.brush.shape,
-      color: this.brush.color,
+      type,
+      color: this.brush.color || colorForBlockType(type),
       rotation: this.brush.rotation,
-    });
-    this.emitStats();
+    };
   }
 
   private placeAtPointer(): void {
@@ -1325,14 +1348,7 @@ export class VoxelEditor {
     }
     const cell = this.pickPlaceCell();
     if (!cell) return;
-    this.addBlock({
-      x: cell.x,
-      y: cell.y,
-      z: cell.z,
-      shape: this.brush.shape,
-      color: this.brush.color,
-      rotation: this.brush.rotation,
-    });
+    this.addBlock(this.brushBlockAt(cell));
     this.emitStats();
   }
 

@@ -49,6 +49,10 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/brawl-net/src/index.ts",
       ),
+      "@workspace/voxel-canonical": path.resolve(
+        import.meta.dirname,
+        "../../lib/voxel-canonical/src/index.ts",
+      ),
       "@workspace/animator": path.resolve(
         import.meta.dirname,
         "../../lib/animator/src/index.ts",

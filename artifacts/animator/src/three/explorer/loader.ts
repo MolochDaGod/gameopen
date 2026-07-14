@@ -165,22 +165,39 @@ const GLB_SUBCLIPS: Record<string, SubclipSpec> = {
  */
 const glbParentCache = new Map<string, Promise<THREE.AnimationClip | null>>();
 
+/** When combo GLBs are missing from deploy, fall back to existing FBX combos. */
+const GLB_FBX_FALLBACK: Record<string, string> = {
+  "animations/combo/melee-combo-1": "animations/sword/one-hand-sword-combo",
+  "animations/combo/melee-combo-2": "animations/sword/two-hand-sword-combo",
+};
+
 /** Load + retarget + wind-up-trim a parent GLB clip (cached by id). */
 function loadParentGlbClip(id: string): Promise<THREE.AnimationClip | null> {
   let cached = glbParentCache.get(id);
   if (!cached) {
     cached = (async () => {
-      const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
-      const clip = gltf.animations[0];
-      if (!clip) return null;
-      const retargeted = retargetMixamoClip(clip);
-      const trim = CLIP_TRIM_SECONDS[id];
-      if (trim && retargeted.duration > trim) {
-        const start = Math.round(trim * TRIM_FPS);
-        const end = Math.ceil(retargeted.duration * TRIM_FPS) + 1;
-        return THREE.AnimationUtils.subclip(retargeted, retargeted.name, start, end, TRIM_FPS);
+      try {
+        const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
+        const clip = gltf.animations[0];
+        if (!clip) return null;
+        const retargeted = retargetMixamoClip(clip);
+        const trim = CLIP_TRIM_SECONDS[id];
+        if (trim && retargeted.duration > trim) {
+          const start = Math.round(trim * TRIM_FPS);
+          const end = Math.ceil(retargeted.duration * TRIM_FPS) + 1;
+          return THREE.AnimationUtils.subclip(retargeted, retargeted.name, start, end, TRIM_FPS);
+        }
+        return retargeted;
+      } catch {
+        // Deploy often ships FBX combos but not the Mixamo GLB packs.
+        const fbxId = GLB_FBX_FALLBACK[id];
+        if (!fbxId) return null;
+        const group = await loadFbx(fbxId);
+        const clip = group.animations[0];
+        if (!clip) return null;
+        const native = clip.tracks.some((t) => t.name.startsWith("mixamorig"));
+        return native ? clip : normalizeRetargetedFbxClip(clip);
       }
-      return retargeted;
     })();
     // Evict on failure so a transient fetch/parse error doesn't poison the cache
     // (the next spawn can retry); resolved nulls/clips stay cached intentionally.
@@ -226,8 +243,18 @@ const NATIVE_GLB_CLIP_IDS: ReadonlySet<string> = new Set([
 
 /** Load one native-treatment GLB clip by catalog id; null when it ships none. */
 async function loadNativeGlbClip(id: string): Promise<THREE.AnimationClip | null> {
-  const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
-  return gltf.animations[0] ?? null;
+  try {
+    const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
+    return gltf.animations[0] ?? null;
+  } catch {
+    // swimming.glb often missing — public ships swimming.fbx
+    try {
+      const group = await loadFbx(id);
+      return group.animations[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**

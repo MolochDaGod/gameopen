@@ -17,6 +17,15 @@ export default defineConfig({
       // modules that import asset URLs can be loaded by tests.
       { find: /^@assets\/.*/, replacement: path.resolve(import.meta.dirname, "src/three/__test-stubs__/assetUrl.ts") },
       { find: "@", replacement: path.resolve(import.meta.dirname, "src") },
+      // @workspace/* packages — must match vite.config.ts exactly so tests
+      // can resolve the same TS source the bundler resolves at build time.
+      { find: "@workspace/epicfight",      replacement: path.resolve(import.meta.dirname, "../../lib/epicfight/src/index.ts") },
+      { find: "@workspace/danger-net",     replacement: path.resolve(import.meta.dirname, "../../lib/danger-net/src/index.ts") },
+      { find: "@workspace/brawl-net",      replacement: path.resolve(import.meta.dirname, "../../lib/brawl-net/src/index.ts") },
+      { find: "@workspace/carrier-net",    replacement: path.resolve(import.meta.dirname, "../../lib/carrier-net/src/index.ts") },
+      { find: "@workspace/api-client-react", replacement: path.resolve(import.meta.dirname, "../../lib/api-client-react/src/index.ts") },
+      { find: "@workspace/api-zod",        replacement: path.resolve(import.meta.dirname, "../../lib/api-zod/src/index.ts") },
+      { find: "@workspace/animator",       replacement: path.resolve(import.meta.dirname, "../../lib/animator/src/index.ts") },
     ],
   },
   // Component render tests (react-dom/server) need the automatic JSX runtime;

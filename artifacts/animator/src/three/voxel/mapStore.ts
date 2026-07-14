@@ -1,5 +1,10 @@
 import type { VoxelMap } from "./types";
 import { VOXEL_MAP_VERSION } from "./types";
+import {
+  ensureBlockTypes,
+  exportInterchange,
+  parseAnyVoxelDocument,
+} from "@workspace/voxel-canonical";
 
 /**
  * Multiple-named-map persistence for the Voxel Editor.
@@ -12,7 +17,7 @@ import { VOXEL_MAP_VERSION } from "./types";
  *   - `dangerroom:voxelmap:<id>`     → JSON `VoxelMap` payload per map
  * The legacy single slot is migrated into a named entry on first access.
  *
- * No `@workspace/*` imports — this artifact is meant to be liftable on its own.
+ * Depends on `@workspace/voxel-canonical` for Voxel Realms interchange.
  */
 
 const INDEX_KEY = "dangerroom:voxelmaps";
@@ -92,7 +97,8 @@ export function loadMap(id: string): VoxelMap | null {
     const raw = localStorage.getItem(MAP_PREFIX + id);
     if (!raw) return null;
     const map = JSON.parse(raw) as unknown;
-    return isVoxelMap(map) ? (map as VoxelMap) : null;
+    if (!isVoxelMap(map)) return null;
+    return ensureBlockTypes(map as VoxelMap) as VoxelMap;
   } catch {
     return null;
   }
@@ -119,7 +125,8 @@ export function saveMap(name: string, map: VoxelMap, id?: string): StoredMapMeta
       entry = { id: newId(), name: trimmed, updatedAt: Date.now() };
       index.push(entry);
     }
-    localStorage.setItem(MAP_PREFIX + entry.id, JSON.stringify(map));
+    const normalized = ensureBlockTypes(map) as VoxelMap;
+    localStorage.setItem(MAP_PREFIX + entry.id, JSON.stringify(normalized));
     writeIndex(index);
     return { ...entry };
   } catch {
@@ -137,24 +144,27 @@ export function deleteMap(id: string): void {
   }
 }
 
-/** Serialize a map to a shareable JSON string. */
+/**
+ * Serialize a map for sharing. Dual-format interchange so GRUDOX / Voxel Realms
+ * / Open editor can all consume the same file.
+ */
 export function exportMap(map: VoxelMap): string {
-  return JSON.stringify(map, null, 2);
+  return exportInterchange(ensureBlockTypes(map));
 }
 
-/** Parse a shared JSON string into a VoxelMap. Returns null if invalid. */
+/**
+ * Parse a shared JSON string into a VoxelMap. Accepts:
+ *  - Open editor maps (`{ blocks, deployables }`)
+ *  - Voxel Realms scenes (`{ blockEdits, spawn, … }`)
+ *  - Interchange wrappers (`{ open, scene }`)
+ */
 export function importMap(json: string): VoxelMap | null {
-  try {
-    const parsed = JSON.parse(json) as unknown;
-    if (!isVoxelMap(parsed)) return null;
-    const map = parsed as VoxelMap;
-    return {
-      version: typeof map.version === "number" ? map.version : VOXEL_MAP_VERSION,
-      dungeon: !!map.dungeon,
-      blocks: Array.isArray(map.blocks) ? map.blocks : [],
-      deployables: Array.isArray(map.deployables) ? map.deployables : [],
-    };
-  } catch {
-    return null;
-  }
+  const map = parseAnyVoxelDocument(json);
+  if (!map) return null;
+  return {
+    version: typeof map.version === "number" ? map.version : VOXEL_MAP_VERSION,
+    dungeon: !!map.dungeon,
+    blocks: Array.isArray(map.blocks) ? map.blocks : [],
+    deployables: Array.isArray(map.deployables) ? (map.deployables as VoxelMap["deployables"]) : [],
+  };
 }

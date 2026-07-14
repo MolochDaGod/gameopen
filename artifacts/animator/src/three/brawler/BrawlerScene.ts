@@ -20,6 +20,24 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "../assets";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
+ * BrawlerScene — Ruins Brawler on the standard Character animation pipeline.
+ *
+ * Standard Three.js combat avatar loop (same contract as Danger Room / Studio):
+ *   1. Load rigged GLB → Character (AnimationMixer + loco blend + one-shots)
+ *   2. Each frame: setLocomotion(speed) → character.update(dt)
+ *   3. LMB / skill keys → playRoleOnce("attack") | playClipOnce(skill)
+ *   4. Attach weapon GLB to right-hand bone
+ *   5. Emit rich BrawlerState for React HUD (vitals, skills, equipment)
+ *
+ * Networking is best-effort; offline local AI always runs.
+ */
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { asset, getCharacter } from "../assets";
+import { Character } from "../Character";
+import { getBakedCharacter } from "../grudge/bakedRoster";
+import { Vfx } from "../Vfx";
+import type { CharacterDef, WeaponId } from "../types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYER_MAX_HP = 150;
@@ -34,6 +52,12 @@ const JUMP_HEIGHT = 2;
 const ATTACK_REACH = 2.5;
 const ATTACK_DAMAGE = 30;
 const ATTACK_CD = 0.45;
+const DASH_SPEED = 9;
+const DASH_DURATION = 0.28;
+const DASH_COOLDOWN = 2.0;
+const JUMP_DURATION = 0.4;
+const JUMP_HEIGHT = 2;
+const ATTACK_CD = 0.4;
 const ENEMY_MAX = 12;
 const ENEMY_SPEED = 2.5;
 const ENEMY_ATTACK_REACH = 1.8;
@@ -48,6 +72,34 @@ const NET_TICK_HZ = 20;
 const WEAPON_NAMES = ["Sword", "Axe", "Dagger", "Bow"];
 
 // ── Public types ──────────────────────────────────────────────────────────────
+const HEAL_RATE = 2;
+const NET_TICK_HZ = 20;
+
+const WEAPON_CYCLE: WeaponId[] = ["sword", "axe", "dagger", "bow"];
+const WEAPON_FILE: Partial<Record<WeaponId, string>> = {
+  sword: "models/weapons/sword.glb",
+  axe: "models/weapons/axe.glb",
+  dagger: "models/weapons/dagger.glb",
+  bow: "models/weapons/bow.glb",
+  greatsword: "models/weapons/greatsword.glb",
+  spear: "models/weapons/spear.glb",
+  hammer: "models/weapons/hammer.glb",
+  staff: "models/weapons/staff.glb",
+};
+
+/** Prefer fully-rigged GLBs with embedded clips (real skeletal animation). */
+const AVATAR_CANDIDATES = ["karate-boss", "orc", "sanji", "gunslinger"] as const;
+
+// ── Public types ──────────────────────────────────────────────────────────────
+export interface BrawlerSkillSlot {
+  slot: 1 | 2 | 3 | 4;
+  label: string;
+  key: string;
+  cd: number;
+  cdMax: number;
+  ready: boolean;
+}
+
 export interface BrawlerState {
   phase: "loading" | "playing" | "dead";
   playerHp: number;
@@ -57,6 +109,9 @@ export interface BrawlerState {
   credits: number;
   kills: number;
   weaponName: string;
+  weaponId: string;
+  characterName: string;
+  characterClass: string;
   connected: boolean;
   playerCount: number;
   inSafeZone: boolean;
@@ -64,6 +119,21 @@ export interface BrawlerState {
 }
 
 // ── Internal types ────────────────────────────────────────────────────────────
+  skills: BrawlerSkillSlot[];
+  moving: boolean;
+  loadError: string | null;
+}
+
+export interface BrawlerSceneOptions {
+  displayName?: string;
+  characterClass?: string;
+  /** Prefer a CharacterDef id from assets (karate-boss, orc, sanji…). */
+  preferredAvatarId?: string;
+  /** Baked roster index when falling back to static grudge6 mesh. */
+  rosterIndex?: number;
+}
+
+// ── Internal ──────────────────────────────────────────────────────────────────
 interface EnemyObj {
   mesh: THREE.Group;
   hp: number;
@@ -72,6 +142,18 @@ interface EnemyObj {
   speed: number;
   attackCd: number;
   walkClock: number;
+}
+
+interface SkillDef {
+  slot: 1 | 2 | 3 | 4;
+  label: string;
+  key: string;
+  clip: string;
+  reach: number;
+  damage: number;
+  cdMax: number;
+  cd: number;
+  lunge: number;
 }
 
 type StateCb = (s: BrawlerState) => void;
@@ -91,6 +173,11 @@ export class BrawlerScene {
   // Player
   private player = new THREE.Group();
   private playerModel: THREE.Object3D | null = null;
+  // Player root + standard Character avatar
+  private player = new THREE.Group();
+  private avatar: Character | null = null;
+  private fallbackModel: THREE.Object3D | null = null;
+  private weaponAttach: THREE.Object3D | null = null;
   private playerYaw = 0;
   private playerHp = PLAYER_MAX_HP;
   private playerArmor = PLAYER_BASE_ARMOR;
@@ -112,6 +199,19 @@ export class BrawlerScene {
   private camLook = new THREE.Vector3(0, 1, 0);
 
   // Input
+  private moving = false;
+  private loadError: string | null = null;
+  private characterName = "Brawler";
+  private characterClass = "Fighter";
+  private preferredAvatarId = "karate-boss";
+  private rosterIndex = 0;
+  private skills: SkillDef[] = [];
+  private lungeVel = new THREE.Vector3();
+  private lungeT = 0;
+
+  private camPos = new THREE.Vector3(0, 1.8, 8);
+  private camLook = new THREE.Vector3(0, 1, 0);
+
   private keys = new Set<string>();
   private lmbDown = false;
   private pointerLocked = false;
@@ -127,6 +227,9 @@ export class BrawlerScene {
   private inSafeZone = false;
 
   // Networking
+  private safeZoneRing: THREE.Mesh | null = null;
+  private inSafeZone = false;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any = null;
   private connected = false;
@@ -143,6 +246,18 @@ export class BrawlerScene {
   constructor(canvas: HTMLCanvasElement, onState: StateCb) {
     this.canvas = canvas;
     this.onState = onState;
+  private netFailCount = 0;
+
+  private onState: StateCb;
+  private lastSig = "";
+
+  constructor(canvas: HTMLCanvasElement, onState: StateCb, opts: BrawlerSceneOptions = {}) {
+    this.canvas = canvas;
+    this.onState = onState;
+    if (opts.displayName) this.characterName = opts.displayName;
+    if (opts.characterClass) this.characterClass = opts.characterClass;
+    if (opts.preferredAvatarId) this.preferredAvatarId = opts.preferredAvatarId;
+    if (typeof opts.rosterIndex === "number") this.rosterIndex = opts.rosterIndex;
 
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
@@ -170,6 +285,11 @@ export class BrawlerScene {
     this.vfx = new Vfx(this.scene);
 
     // ── Build scene ────────────────────────────────────────────────────────
+    this.scene.background = new THREE.Color(0x0a0c12);
+    this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.015);
+    this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
+    this.vfx = new Vfx(this.scene);
+
     this.buildLights();
     this.buildSafeZoneRing();
     this.scene.add(this.player);
@@ -182,6 +302,11 @@ export class BrawlerScene {
     void this.initNetwork();
 
     // ── Input ──────────────────────────────────────────────────────────────
+    // Start RAF immediately so loading HUD paints and input works even if assets stall.
+    this.raf = requestAnimationFrame(this.animate);
+
+    void this.bootstrap();
+
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     canvas.addEventListener("mousedown", this.onMouseDown);
@@ -199,6 +324,22 @@ export class BrawlerScene {
   private buildLights() {
     this.scene.add(new THREE.HemisphereLight(0x9fb8ff, 0x20160f, 0.6));
 
+    this.emitState();
+  }
+
+  private async bootstrap() {
+    await Promise.all([
+      this.buildPlayer(),
+      this.loadEnemyTemplates(),
+      this.loadEnvironment(),
+    ]);
+    if (this.disposed) return;
+    this.setPhase("playing");
+    void this.initNetwork();
+  }
+
+  private buildLights() {
+    this.scene.add(new THREE.HemisphereLight(0x9fb8ff, 0x20160f, 0.6));
     const key = new THREE.DirectionalLight(0xfff1d8, 1.6);
     key.position.set(14, 26, 10);
     key.castShadow = true;
@@ -210,6 +351,11 @@ export class BrawlerScene {
     this.scene.add(key);
 
     // Accent point lights for moody arena glow
+    sc.left = -40;
+    sc.right = 40;
+    sc.top = 40;
+    sc.bottom = -40;
+    this.scene.add(key);
     const p1 = new THREE.PointLight(0xff6030, 1.2, 18);
     p1.position.set(-12, 3, -8);
     this.scene.add(p1);
@@ -248,6 +394,134 @@ export class BrawlerScene {
       this.player.add(model);
     } catch (err) {
       console.error("[BrawlerScene] player model load failed", err);
+   * Standard Character pipeline: try rigged GLBs with clips first (skeletal anim),
+   * then static baked grudge6 as last-resort visual.
+   */
+  private async buildPlayer() {
+    const order = [
+      this.preferredAvatarId,
+      ...AVATAR_CANDIDATES.filter((id) => id !== this.preferredAvatarId),
+    ];
+
+    for (const id of order) {
+      try {
+        const def = getCharacter(id);
+        if (!def?.file) continue;
+        const av = new Character(def);
+        await av.load();
+        if (this.disposed) {
+          av.dispose();
+          return;
+        }
+        this.avatar = av;
+        this.player.add(av.root);
+        this.installSkillsFromDef(def);
+        await this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
+        if (def.name) this.characterClass = def.name;
+        console.info("[BrawlerScene] avatar ready:", id, "clips:", av.clipNames().slice(0, 8));
+        this.emitState();
+        return;
+      } catch (err) {
+        console.warn("[BrawlerScene] avatar candidate failed:", id, err);
+      }
+    }
+
+    // Fallback: static baked mesh (pose only — still better than a capsule).
+    try {
+      const model = await getBakedCharacter(this.rosterIndex);
+      if (this.disposed) return;
+      this.fallbackModel = model;
+      this.player.add(model);
+      this.installDefaultSkills();
+      this.loadError = "Using static mesh (no skeletal clips on baked roster)";
+      console.warn("[BrawlerScene]", this.loadError);
+    } catch (err) {
+      this.loadError = "Player model failed to load";
+      console.error("[BrawlerScene] player load failed", err);
+      this.installDefaultSkills();
+    }
+    this.emitState();
+  }
+
+  private installSkillsFromDef(def: CharacterDef) {
+    const sigs = def.signatureSkills ?? [];
+    const attackClip =
+      (def.clips?.attack as string | undefined) ||
+      sigs[0]?.clip ||
+      "attack";
+
+    const defaults: Array<{ label: string; reach: number; damage: number; cd: number; lunge: number }> = [
+      { label: "Primary", reach: 2.4, damage: 28, cd: ATTACK_CD, lunge: 2.5 },
+      { label: "Skill 2", reach: 2.6, damage: 36, cd: 2.0, lunge: 3.5 },
+      { label: "Skill 3", reach: 3.0, damage: 44, cd: 4.5, lunge: 2.0 },
+      { label: "Ultimate", reach: 3.4, damage: 55, cd: 8.0, lunge: 6.0 },
+    ];
+    const keys = ["1", "2", "3", "4"] as const;
+
+    this.skills = [1, 2, 3, 4].map((slot) => {
+      const i = slot - 1;
+      const sig = sigs[i];
+      const d = defaults[i]!;
+      return {
+        slot: slot as 1 | 2 | 3 | 4,
+        label: sig?.label || d.label,
+        key: keys[i]!,
+        clip: (sig?.clip && sig.clip.length > 0 ? sig.clip : i === 0 ? attackClip : attackClip),
+        reach: d.reach,
+        damage: d.damage,
+        cdMax: d.cd,
+        cd: 0,
+        lunge: d.lunge,
+      };
+    });
+  }
+
+  private installDefaultSkills() {
+    this.skills = [
+      { slot: 1, label: "Slash", key: "1", clip: "attack", reach: 2.4, damage: 28, cdMax: ATTACK_CD, cd: 0, lunge: 2.5 },
+      { slot: 2, label: "Twin Strike", key: "2", clip: "attack", reach: 2.6, damage: 36, cdMax: 2.0, cd: 0, lunge: 3.5 },
+      { slot: 3, label: "Spin", key: "3", clip: "attack", reach: 3.0, damage: 44, cdMax: 4.5, cd: 0, lunge: 2.0 },
+      { slot: 4, label: "Advance", key: "4", clip: "attack", reach: 3.4, damage: 55, cdMax: 8.0, cd: 0, lunge: 6.0 },
+    ];
+  }
+
+  private async attachWeapon(weaponId: WeaponId) {
+    // Remove previous attach
+    if (this.weaponAttach) {
+      this.weaponAttach.removeFromParent();
+      this.weaponAttach = null;
+    }
+    const hand = this.avatar?.rightHand;
+    const file = WEAPON_FILE[weaponId];
+    if (!hand || !file) return;
+    try {
+      const gltf = await new GLTFLoader().loadAsync(asset(file));
+      if (this.disposed) return;
+      const w = gltf.scene;
+      // Fit weapon to ~0.9m
+      const box = new THREE.Box3().setFromObject(w);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      w.scale.setScalar(0.9 / maxDim);
+      w.position.set(0, 0, 0);
+      w.rotation.set(0, 0, 0);
+      // Common sword grip offsets
+      if (weaponId === "sword" || weaponId === "dagger") {
+        w.rotation.set(Math.PI / 2, 0, 0);
+      } else if (weaponId === "bow") {
+        w.rotation.set(0, Math.PI / 2, 0);
+      }
+      w.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.castShadow = true;
+          m.frustumCulled = false;
+        }
+      });
+      hand.add(w);
+      this.weaponAttach = w;
+    } catch (err) {
+      console.warn("[BrawlerScene] weapon attach failed", weaponId, err);
     }
   }
 
@@ -270,6 +544,10 @@ export class BrawlerScene {
         root.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; }
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+          }
         });
         this.enemyTemplates[i] = root as THREE.Group;
       } catch (err) {
@@ -314,6 +592,9 @@ export class BrawlerScene {
     }
     this.setPhase("playing");
     this.raf = requestAnimationFrame(this.animate);
+      console.warn("[BrawlerScene] arena-war-zone.glb failed — fallback ground", err);
+      this.buildFallbackGround();
+    }
   }
 
   private buildFallbackGround() {
@@ -335,6 +616,21 @@ export class BrawlerScene {
       this.client = client;
       client.on("open", () => { this.connected = true; this.emitState(); });
       client.on("close", () => { this.connected = false; this.emitState(); });
+  private async initNetwork() {
+    try {
+      const { BrawlClient } = await import("../../net/BrawlClient");
+      if (this.disposed) return;
+      const client = new BrawlClient();
+      this.client = client;
+      client.on("open", () => {
+        this.connected = true;
+        this.netFailCount = 0;
+        this.emitState();
+      });
+      client.on("close", () => {
+        this.connected = false;
+        this.emitState();
+      });
       client.on("welcome", (w: { self: string }) => {
         this.selfId = w.self;
         this.emitState();
@@ -347,6 +643,9 @@ export class BrawlerScene {
       client.connect();
       client.join("BrawlerPlayer");
     } catch (err) {
+      client.join(this.characterName.slice(0, 24) || "Brawler");
+    } catch (err) {
+      this.netFailCount++;
       console.warn("[BrawlerScene] BrawlClient unavailable — offline mode", err);
     }
   }
@@ -354,17 +653,22 @@ export class BrawlerScene {
   private async syncRemotePlayers(
     players: { id: string; px?: number; pz?: number }[],
   ) {
+  private async syncRemotePlayers(players: { id: string; px?: number; pz?: number }[]) {
     for (const p of players) {
       if (p.id === this.selfId) continue;
       if (!this.remoteMeshes.has(p.id)) {
         try {
           const model = await getBakedCharacter(1);
+          const model = await getBakedCharacter((this.rosterIndex + 1) % 30);
           if (this.disposed) return;
           const grp = new THREE.Group();
           grp.add(model);
           this.scene.add(grp);
           this.remoteMeshes.set(p.id, grp);
         } catch { /* remote mesh optional */ }
+        } catch {
+          /* optional */
+        }
       }
       const mesh = this.remoteMeshes.get(p.id);
       if (mesh) mesh.position.set(p.px ?? 0, 0, p.pz ?? 0);
@@ -373,6 +677,12 @@ export class BrawlerScene {
     const ids = new Set(players.map((p) => p.id));
     for (const [id, mesh] of this.remoteMeshes) {
       if (!ids.has(id)) { this.scene.remove(mesh); this.remoteMeshes.delete(id); }
+    const ids = new Set(players.map((p) => p.id));
+    for (const [id, mesh] of this.remoteMeshes) {
+      if (!ids.has(id)) {
+        this.scene.remove(mesh);
+        this.remoteMeshes.delete(id);
+      }
     }
   }
 
@@ -385,6 +695,18 @@ export class BrawlerScene {
       this.selectedWeapon = parseInt(k) - 1;
       this.emitState();
     }
+    // Weapon cycle 1-4 also fire skills; Shift+digit = weapon only is unused
+    if (k === "1" || k === "2" || k === "3" || k === "4") {
+      const slot = parseInt(k, 10) as 1 | 2 | 3 | 4;
+      this.selectedWeapon = slot - 1;
+      void this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
+      this.triggerSkill(slot);
+    }
+    // Q E R F alternate skill binds
+    if (k === "q") this.triggerSkill(1);
+    if (k === "e") this.triggerSkill(2);
+    if (k === "r") this.triggerSkill(3);
+    if (k === "f") this.triggerSkill(4);
   };
   private onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
 
@@ -392,6 +714,7 @@ export class BrawlerScene {
     if (e.button === 0) {
       this.lmbDown = true;
       if (!this.pointerLocked) this.canvas.requestPointerLock();
+      else this.triggerSkill(1);
     }
   };
   private onMouseUp = (e: MouseEvent) => {
@@ -428,6 +751,55 @@ export class BrawlerScene {
       if (d < nearDist) { nearDist = d; nearest = en; }
     }
     if (nearest) this.damageEnemy(nearest, ATTACK_DAMAGE);
+    this.avatar?.playRoleOnce("jump", 0.08);
+  }
+
+  // ── Combat ─────────────────────────────────────────────────────────────────
+  private triggerSkill(slot: 1 | 2 | 3 | 4) {
+    if (this.phase !== "playing") return;
+    const skill = this.skills.find((s) => s.slot === slot);
+    if (!skill || skill.cd > 0) return;
+
+    skill.cd = skill.cdMax;
+    this.atkCd = Math.max(this.atkCd, 0.15);
+
+    // Animation one-shot on the Character mixer
+    if (this.avatar) {
+      let played = 0;
+      if (skill.clip) played = this.avatar.playClipOnce(skill.clip, 0.1);
+      if (played <= 0) played = this.avatar.playRoleOnce("attack", 0.1);
+      if (played <= 0) {
+        // Fuzzy: any attack-like clip
+        const names = this.avatar.clipNames();
+        const hit = names.find((n) => /attack|slash|strike|punch|kick|hit/i.test(n));
+        if (hit) this.avatar.playClipOnce(hit, 0.1);
+      }
+    }
+
+    // MM lunge
+    const dir = new THREE.Vector3(Math.sin(this.playerYaw), 0, Math.cos(this.playerYaw));
+    // Facing convention: camera is behind player along +sin/cos; lunge toward look.
+    // Match movement forward which uses -sin/-cos:
+    const fwd = new THREE.Vector3(-Math.sin(this.playerYaw), 0, -Math.cos(this.playerYaw));
+    this.lungeVel.copy(fwd).multiplyScalar(skill.lunge);
+    this.lungeT = 0.22;
+
+    const hitPos = this.player.position.clone().addScaledVector(fwd, 1.4);
+    hitPos.y += 1;
+    this.vfx.impact(hitPos, 0x9fe8ff, 0.7 + skill.damage / 80);
+
+    // Damage nearest enemy in reach
+    let nearest: EnemyObj | null = null;
+    let nearDist = skill.reach;
+    for (const en of this.enemies) {
+      const d = this.player.position.distanceTo(en.pos);
+      if (d < nearDist) {
+        nearDist = d;
+        nearest = en;
+      }
+    }
+    if (nearest) this.damageEnemy(nearest, skill.damage);
+    this.emitState();
   }
 
   private damageEnemy(en: EnemyObj, amount: number) {
@@ -459,6 +831,18 @@ export class BrawlerScene {
   }
 
   // ── Enemy management ───────────────────────────────────────────────────────
+    this.avatar?.playRoleOnce("hurt", 0.08);
+    const p = this.player.position.clone();
+    p.y += 1;
+    this.vfx.burst(p, 0xff5a5a, 10, 3);
+    if (this.playerHp <= 0) {
+      this.avatar?.playRoleOnce("death", 0.1);
+      this.setPhase("dead");
+    }
+    this.emitState();
+  }
+
+  // ── Enemies ────────────────────────────────────────────────────────────────
   private spawnEnemy() {
     if (this.enemies.length >= ENEMY_MAX || this.phase !== "playing") return;
     const angle = Math.random() * Math.PI * 2;
@@ -513,6 +897,8 @@ export class BrawlerScene {
       en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
 
       // Attack player on contact.
+      en.walkClock += dt * 4;
+      en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
       if (dist <= ENEMY_ATTACK_REACH && en.attackCd <= 0) {
         en.attackCd = ENEMY_ATTACK_CD;
         this.damagePlayer(ENEMY_DAMAGE);
@@ -521,6 +907,7 @@ export class BrawlerScene {
   }
 
   // ── RAF loop ───────────────────────────────────────────────────────────────
+  // ── RAF ────────────────────────────────────────────────────────────────────
   private animate = () => {
     if (this.disposed) return;
     this.raf = requestAnimationFrame(this.animate);
@@ -528,6 +915,11 @@ export class BrawlerScene {
 
     this.atkCd = Math.max(0, this.atkCd - dt);
     this.dashCd = Math.max(0, this.dashCd - dt);
+    for (const s of this.skills) s.cd = Math.max(0, s.cd - dt);
+    if (this.lungeT > 0) {
+      this.lungeT -= dt;
+      this.player.position.addScaledVector(this.lungeVel, dt);
+    }
 
     if (this.phase === "playing") {
       this.updatePlayer(dt);
@@ -540,6 +932,18 @@ export class BrawlerScene {
       this.sendNetInput(dt);
 
       if (this.lmbDown && this.atkCd === 0) this.doAttack();
+      this.spawnTimer += dt;
+      if (this.spawnTimer >= SPAWN_INTERVAL) {
+        this.spawnTimer = 0;
+        this.spawnEnemy();
+      }
+      this.updateSafeZone(dt);
+      this.sendNetInput(dt);
+      if (this.lmbDown && this.skills[0] && this.skills[0].cd <= 0) this.triggerSkill(1);
+    } else {
+      // Still update avatar idle while loading/dead
+      this.avatar?.setLocomotion(0);
+      this.avatar?.update(dt);
     }
 
     this.updateCamera();
@@ -563,6 +967,12 @@ export class BrawlerScene {
     }
 
     // WASD — W always moves forward away from camera (Fortnite-style yaw).
+      if (this.dashT <= 0) {
+        this.isDashing = false;
+        this.dashT = 0;
+      }
+    }
+
     const fwd = new THREE.Vector3(-Math.sin(this.playerYaw), 0, -Math.cos(this.playerYaw));
     const right = new THREE.Vector3(Math.cos(this.playerYaw), 0, -Math.sin(this.playerYaw));
     const move = new THREE.Vector3();
@@ -571,6 +981,10 @@ export class BrawlerScene {
     if (this.keys.has("a")) move.addScaledVector(right, -1);
     if (this.keys.has("d")) move.addScaledVector(right, 1);
     if (move.lengthSq() > 0) {
+
+    const moving = move.lengthSq() > 0;
+    this.moving = moving;
+    if (moving) {
       move.normalize();
       this.player.position.addScaledVector(move, speed * dt);
     }
@@ -582,6 +996,11 @@ export class BrawlerScene {
       if (t <= 1) {
         this.player.position.y = Math.sin(t * Math.PI) * JUMP_HEIGHT;
       } else {
+    if (this.isJumping) {
+      this.jumpT += dt;
+      const t = this.jumpT / JUMP_DURATION;
+      if (t <= 1) this.player.position.y = Math.sin(t * Math.PI) * JUMP_HEIGHT;
+      else {
         this.player.position.y = 0;
         this.isJumping = false;
         this.jumpT = 0;
@@ -596,6 +1015,15 @@ export class BrawlerScene {
     if (this.playerModel) {
       this.playerModel.rotation.x =
         this.atkCd > 0 ? Math.sin((1 - this.atkCd / ATTACK_CD) * Math.PI) * 0.35 : 0;
+    // Standard locomotion → mixer blend (0 idle … 1 sprint)
+    const loco = moving ? (this.isDashing || this.keys.has("shift") ? 1 : 0.55) : 0;
+    if (this.avatar) {
+      this.avatar.setLocomotion(loco);
+      this.avatar.update(dt);
+    } else if (this.fallbackModel) {
+      // Lightweight bob for static mesh fallback
+      const bob = moving ? Math.sin(performance.now() * 0.012) * 0.04 : Math.sin(performance.now() * 0.004) * 0.015;
+      this.fallbackModel.position.y = bob;
     }
   }
 
@@ -636,6 +1064,9 @@ export class BrawlerScene {
         weapon: this.selectedWeapon,
       });
     } catch { /* network optional */ }
+    } catch {
+      /* optional */
+    }
   }
 
   private updateCamera() {
@@ -649,6 +1080,15 @@ export class BrawlerScene {
     const desired = look.clone().add(behind);
     this.camPos.lerp(desired, 0.1);
     this.camLook.lerp(look, 0.1);
+    const look = new THREE.Vector3(pp.x, pp.y + 1.15, pp.z);
+    const behind = new THREE.Vector3(
+      Math.sin(this.playerYaw) * 4.2,
+      1.9,
+      Math.cos(this.playerYaw) * 4.2,
+    );
+    const desired = look.clone().add(behind);
+    this.camPos.lerp(desired, 0.12);
+    this.camLook.lerp(look, 0.12);
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
   }
@@ -668,6 +1108,7 @@ export class BrawlerScene {
   }
 
   private emitState() {
+    const weaponId = WEAPON_CYCLE[this.selectedWeapon] ?? "sword";
     const s: BrawlerState = {
       phase: this.phase,
       playerHp: Math.round(this.playerHp),
@@ -677,18 +1118,49 @@ export class BrawlerScene {
       credits: this.credits,
       kills: this.kills,
       weaponName: WEAPON_NAMES[this.selectedWeapon] ?? "Sword",
+      weaponName: weaponId.charAt(0).toUpperCase() + weaponId.slice(1),
+      weaponId,
+      characterName: this.characterName,
+      characterClass: this.characterClass,
       connected: this.connected,
       playerCount: this.playerCount,
       inSafeZone: this.inSafeZone,
       wave: this.wave,
     };
     const sig = `${s.phase}|${s.playerHp}|${s.kills}|${s.credits}|${s.connected ? 1 : 0}|${s.playerCount}|${s.inSafeZone ? 1 : 0}|${s.wave}|${s.ammo}|${s.weaponName}`;
+      skills: this.skills.map((sk) => ({
+        slot: sk.slot,
+        label: sk.label,
+        key: sk.key,
+        cd: sk.cd,
+        cdMax: sk.cdMax,
+        ready: sk.cd <= 0,
+      })),
+      moving: this.moving,
+      loadError: this.loadError,
+    };
+    const sig = JSON.stringify({
+      p: s.phase,
+      hp: s.playerHp,
+      k: s.kills,
+      c: s.credits,
+      n: s.connected ? 1 : 0,
+      pc: s.playerCount,
+      sz: s.inSafeZone ? 1 : 0,
+      w: s.wave,
+      a: s.ammo,
+      wi: s.weaponId,
+      sk: s.skills.map((x) => Math.round(x.cd * 10)),
+      m: s.moving ? 1 : 0,
+      le: s.loadError || "",
+    });
     if (sig === this.lastSig) return;
     this.lastSig = sig;
     this.onState(s);
   }
 
   // ── Public API (called by ThreeBrawler React component) ────────────────────
+  // ── Public API ─────────────────────────────────────────────────────────────
   respawn() {
     this.playerHp = PLAYER_MAX_HP;
     this.playerArmor = PLAYER_BASE_ARMOR;
@@ -697,6 +1169,8 @@ export class BrawlerScene {
     for (const en of this.enemies) this.scene.remove(en.mesh);
     this.enemies = [];
     this.spawnTimer = 0;
+    for (const sk of this.skills) sk.cd = 0;
+    this.avatar?.playRole("idle", 0);
     this.setPhase("playing");
   }
 
@@ -721,6 +1195,17 @@ export class BrawlerScene {
     this.emitState();
   }
 
+  /** Fire skill from React skill bar click. */
+  castSkill(slot: 1 | 2 | 3 | 4) {
+    this.triggerSkill(slot);
+  }
+
+  setWeapon(index: number) {
+    this.selectedWeapon = Math.max(0, Math.min(WEAPON_CYCLE.length - 1, index));
+    void this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
+    this.emitState();
+  }
+
   dispose() {
     this.disposed = true;
     cancelAnimationFrame(this.raf);
@@ -734,6 +1219,8 @@ export class BrawlerScene {
     if (document.pointerLockElement === this.canvas) document.exitPointerLock();
     this.client?.dispose?.();
     this.vfx.dispose();
+    this.avatar?.dispose();
+    this.avatar = null;
     for (const [, mesh] of this.remoteMeshes) this.scene.remove(mesh);
     this.remoteMeshes.clear();
     this.scene.traverse((o) => {
@@ -741,6 +1228,8 @@ export class BrawlerScene {
       if (!m.isMesh) return;
       // Shared baked character geometry is owned by the roster cache — never dispose it here.
       if (this.playerModel && isDescendant(m, this.playerModel)) return;
+      // Baked roster geometry is shared — skip disposing those children.
+      if (this.fallbackModel && isDescendant(m, this.fallbackModel)) return;
       m.geometry?.dispose();
       const mat = m.material;
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
@@ -754,6 +1243,10 @@ function isDescendant(node: THREE.Object3D, ancestor: THREE.Object3D): boolean {
   let p: THREE.Object3D | null = node;
   while (p) {
     if (p === ancestor) return true;
+function isDescendant(obj: THREE.Object3D, root: THREE.Object3D): boolean {
+  let p: THREE.Object3D | null = obj;
+  while (p) {
+    if (p === root) return true;
     p = p.parent;
   }
   return false;

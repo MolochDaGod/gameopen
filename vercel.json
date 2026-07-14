@@ -34,6 +34,30 @@
       "destination": "https://assets.grudge-studio.com/gameopen/:path*"
     },
     {
+      "source": "/anims/baked/:path*",
+      "destination": "https://grudge-arena.grudge-studio.com/anims/baked/:path*"
+    },
+    {
+      "source": "/cdn/assets/characters/:path*",
+      "destination": "https://grudge-arena.grudge-studio.com/cdn/assets/characters/:path*"
+    },
+    {
+      "source": "/models/grudge/:path*",
+      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/grudge/:path*"
+    },
+    {
+      "source": "/models/weapons/:path*",
+      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/weapons/:path*"
+    },
+    {
+      "source": "/anim/:path*",
+      "destination": "https://threejs-rapier-react-three-controll.vercel.app/anim/:path*"
+    },
+    {
+      "source": "/models/:path*",
+      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/:path*"
+    },
+    {
       "source": "/api/space",
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/space"
     },
@@ -44,6 +68,10 @@
     {
       "source": "/api/carrier",
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/carrier"
+    },
+    {
+      "source": "/api/blocks",
+      "destination": "https://mine-loader.replit.app/api/blocks"
     },
     {
       "source": "/api/:path*",

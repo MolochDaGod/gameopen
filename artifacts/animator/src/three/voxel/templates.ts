@@ -5,8 +5,9 @@ import type {
   PieceShape,
   VoxelMap,
 } from "./types";
-import { VOXEL_MAP_VERSION } from "./types";
+import { VOXEL_MAP_VERSION, colorForBlockType } from "./types";
 import type { WeaponId } from "../types";
+import type { BlockTypeId } from "@workspace/voxel-canonical";
 
 /**
  * Code-defined starting-map templates for the Voxel Editor. Picking one on entry
@@ -14,20 +15,31 @@ import type { WeaponId } from "../types";
  * empty pad. Each template is pure data (BlockData/DeployableData) and ALWAYS
  * includes a player start so "Test" works immediately.
  *
- * No `@workspace/*` imports — this artifact is meant to be liftable on its own.
+ * Uses Voxel Realms canonical block types (`@workspace/voxel-canonical`).
  */
 
-/** Palette (matches the editor swatches) for readable, consistent template art. */
+/** Palette mapped to terrain block types (editor + Realms). */
 const C = {
-  blue: 0x6ea8ff,
-  green: 0x57d977,
-  orange: 0xffb24d,
-  red: 0xff5470,
-  purple: 0xc79bff,
-  canvas: 0xf4f1e8,
-  grey: 0x9aa3b2,
-  dark: 0x2c3340,
+  blue: colorForBlockType("ice"),
+  green: colorForBlockType("grass"),
+  orange: colorForBlockType("sand"),
+  red: colorForBlockType("brickRed"),
+  purple: colorForBlockType("diamond"),
+  canvas: colorForBlockType("blockBlank"),
+  grey: colorForBlockType("stone"),
+  dark: colorForBlockType("brickDark"),
 } as const;
+
+const COLOR_TO_TYPE: Record<number, BlockTypeId> = {
+  [C.blue]: "ice",
+  [C.green]: "grass",
+  [C.orange]: "sand",
+  [C.red]: "brickRed",
+  [C.purple]: "diamond",
+  [C.canvas]: "blockBlank",
+  [C.grey]: "stone",
+  [C.dark]: "brickDark",
+};
 
 /** Small fluent builder so each template reads like a level recipe. */
 class MapBuilder {
@@ -45,7 +57,8 @@ class MapBuilder {
     shape: PieceShape = "block",
     rotation = 0,
   ): this {
-    this.blocks.push({ x, y, z, shape, color, rotation });
+    const type = COLOR_TO_TYPE[color] ?? "stone";
+    this.blocks.push({ x, y, z, shape, color, rotation, type });
     return this;
   }
 

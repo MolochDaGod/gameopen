@@ -1,6 +1,14 @@
 import type { WeaponId } from "../types";
+import type { BlockTypeId } from "@workspace/voxel-canonical";
 
-/** A buildable voxel piece shape. All occupy one 1×1×1 grid cell. */
+export {
+  PLACEABLE_TERRAIN,
+  DEFAULT_BLOCK_TYPE,
+  colorForBlockType,
+  type BlockTypeId,
+} from "@workspace/voxel-canonical";
+
+/** A buildable voxel piece shape. All occupy one 1x1x1 grid cell. */
 export type PieceShape = "block" | "slab" | "wall" | "pillar" | "ramp";
 
 /** A placeable, non-block entity. */
@@ -23,7 +31,7 @@ export interface PropDef {
   /** Models are normalized at load time to fit this world height (metres). */
   targetHeight: number;
   /**
-   * Horizontal half-extent (metres ≈ grid cells) of the prop AFTER it is
+   * Horizontal half-extent (metres Γëê grid cells) of the prop AFTER it is
    * normalized to {@link targetHeight}. Authored from the model's measured,
    * normalized X/Z size (the larger axis, so it's rotation-invariant) and used by
    * the Voxel Editor to compute the prop's placement footprint deterministically
@@ -39,7 +47,7 @@ export const PROPS: Record<PropId, PropDef> = {
   brewingStand: {
     id: "brewingStand",
     label: "Brewing Stand",
-    glyph: "⚗",
+    glyph: "ΓÜù",
     category: "bench",
     file: "models/props/brewing-stand.glb",
     targetHeight: 1.5,
@@ -49,7 +57,7 @@ export const PROPS: Record<PropId, PropDef> = {
   alchemistsChest: {
     id: "alchemistsChest",
     label: "Alchemist's Chest",
-    glyph: "⬚",
+    glyph: "Γ¼Ü",
     category: "bench",
     file: "models/props/alchemists-chest.glb",
     targetHeight: 1.2,
@@ -59,7 +67,7 @@ export const PROPS: Record<PropId, PropDef> = {
   modularFortress: {
     id: "modularFortress",
     label: "Fortress Piece",
-    glyph: "⛫",
+    glyph: "Γ¢½",
     category: "build",
     file: "models/props/modular-fortress.glb",
     targetHeight: 3,
@@ -69,7 +77,7 @@ export const PROPS: Record<PropId, PropDef> = {
   torch: {
     id: "torch",
     label: "Torch",
-    glyph: "🔥",
+    glyph: "≡ƒöÑ",
     category: "build",
     file: "models/props/dying-torch.glb",
     targetHeight: 1.9,
@@ -94,7 +102,16 @@ export type GizmoMode = "translate" | "rotate" | "scale";
 export interface BrushState {
   tool: EditorTool;
   shape: PieceShape;
+  /**
+   * Solid color used for mesh material. When `blockType` is set, this should
+   * match `colorForBlockType(blockType)` so free-color and type stay in sync.
+   */
   color: number;
+  /**
+   * Canonical Voxel Realms block type id (`stone`, `grass`, `cat:alloy-frame`, …).
+   * SSOT: https://mine-loader.replit.app/#/defs · `@workspace/voxel-canonical`
+   */
+  blockType: BlockTypeId;
   deployKind: DeployableKind;
   weapon: WeaponId;
   difficulty: Difficulty;
@@ -112,6 +129,8 @@ export interface BlockData {
   shape: PieceShape;
   color: number;
   rotation: number;
+  /** Canonical block type — written on every new place (map v2+). */
+  type?: BlockTypeId;
 }
 
 /** One placed entity. `x/z` are grid cells; `y` is the cell it stands on. */
@@ -168,7 +187,8 @@ export interface EditorStats {
   dungeon: boolean;
 }
 
-export const VOXEL_MAP_VERSION = 1;
+/** Open editor map version. v2 writes canonical `type` on every block. */
+export const VOXEL_MAP_VERSION = 2;
 
 /** Difficulty -> ring colour (and a relative scale for the NPC body). */
 export const DIFFICULTY_COLOR: Record<Difficulty, number> = {

@@ -67,6 +67,12 @@ export class BrawlClient {
   private outbox: string[] = [];
   /** Pending join name, resent automatically after a reconnect. */
   private joinName: string | null = null;
+  /** Consecutive failed reconnect attempts (reset to 0 on successful open). */
+  private reconnectAttempts = 0;
+  /** Max reconnect attempts before giving up and entering offline mode. */
+  private static readonly MAX_RECONNECT = 8;
+  /** Base delay ms; actual delay = min(30 000, BASE * 2^attempt). */
+  private static readonly RECONNECT_BASE_MS = 1500;
 
   selfId = "";
   seed = 0;
@@ -107,7 +113,8 @@ export class BrawlClient {
     this.ws = ws;
 
     ws.onopen = () => {
-      // Re-announce our join before flushing any queued input.
+      // Successful connection — reset backoff counter.
+      this.reconnectAttempts = 0;
       if (this.joinName !== null) ws.send(encode({ t: "join", name: this.joinName }));
       for (const frame of this.outbox.splice(0)) ws.send(frame);
       this.emit("open");
@@ -128,10 +135,24 @@ export class BrawlClient {
 
   private scheduleReconnect(): void {
     if (this.reconnectTimer || !this.wantOpen) return;
+    if (this.reconnectAttempts >= BrawlClient.MAX_RECONNECT) {
+      // Exceeded retry budget — enter offline mode. The component can observe
+      // this via the final `close` event and `connected === false`.
+      console.warn(
+        `[BrawlClient] gave up after ${BrawlClient.MAX_RECONNECT} attempts — offline mode`,
+      );
+      this.wantOpen = false;
+      return;
+    }
+    this.reconnectAttempts++;
+    const delay = Math.min(
+      30_000,
+      BrawlClient.RECONNECT_BASE_MS * Math.pow(2, this.reconnectAttempts - 1),
+    );
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
-    }, 1500);
+    }, delay);
   }
 
   private handle(raw: string): void {

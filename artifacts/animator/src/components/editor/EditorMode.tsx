@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useOptionalAuth } from "../../auth/clerkOptional";
 import type { CreatePostPayload } from "@workspace/api-client-react";
 import {
   Move,
@@ -109,7 +109,7 @@ export function EditorMode({ onExit, initialScene }: Props) {
   // (the snapshot keeps carrying the last notice; we surface each new id once).
   const [toast, setToast] = useState<EditorSnapshot["notice"]>(null);
 
-  const { getToken } = useAuth();
+  const { getToken } = useOptionalAuth();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
   // Authed image generation: ask the backend for a pattern image (data URL) the

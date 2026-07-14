@@ -1,0 +1,19 @@
+{
+  "name": "@workspace/voxel-canonical",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Voxel Realms / Mine Loader canonical block + scene format for GRUDOX, editors, and voxel games",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "vite": "^6.3.5",
+    "vitest": "^4.1.8"
+  }
+}

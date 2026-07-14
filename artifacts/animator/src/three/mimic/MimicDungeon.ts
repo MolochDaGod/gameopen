@@ -19,7 +19,7 @@
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
+import { asset, assetCandidates } from "../assets";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
 import {
@@ -192,12 +192,60 @@ export class MimicDungeon {
     }
   }
 
+  /** Load GLB from the first working candidate (same-origin vol.glb preferred). */
+  private async loadGltf(path: string) {
+    const loader = new GLTFLoader();
+    const urls = assetCandidates(path);
+    let lastErr: unknown;
+    for (const url of urls) {
+      try {
+        const gltf = await loader.loadAsync(url);
+        console.info("[MimicDungeon] loaded", path, "from", url);
+        return gltf;
+      } catch (err) {
+        lastErr = err;
+        console.warn("[MimicDungeon] load miss", url, err);
+      }
+    }
+    throw lastErr ?? new Error(`Failed to load ${path}`);
+  }
+
+  /**
+   * Find the real Mimic armature inside vol.glb (Sketchfab hierarchy).
+   * Prefer Mimicfbx (full rig) over a single mesh bone name.
+   */
+  private findMimicRoot(root: THREE.Object3D): THREE.Object3D | null {
+    const preferred = ["Mimicfbx", "Mimic", "Barrel_Creature_1_0", "Armatura"];
+    for (const name of preferred) {
+      const hit = root.getObjectByName(name);
+      if (hit) {
+        // Climb to Mimicfbx / top creature group under Sketchfab_model when possible
+        let cur: THREE.Object3D = hit;
+        while (cur.parent && cur.parent !== root) {
+          if (/^Mimicfbx$/i.test(cur.parent.name) || /^Mimic$/i.test(cur.parent.name)) {
+            return cur.parent;
+          }
+          if (/Sketchfab_model|ForgeScene/i.test(cur.parent.name)) break;
+          cur = cur.parent;
+        }
+        return hit;
+      }
+    }
+    // Fuzzy scan
+    let found: THREE.Object3D | null = null;
+    root.traverse((o) => {
+      if (found) return;
+      if (/mimic/i.test(o.name) && !/barrel/i.test(o.name)) found = o;
+    });
+    return found;
+  }
+
   private async load() {
     let gltf;
     try {
-      gltf = await new GLTFLoader().loadAsync(asset("models/vol.glb"));
+      gltf = await this.loadGltf("models/vol.glb");
     } catch (err) {
-      console.error("[MimicDungeon] vol.glb load failed", err);
+      console.error("[MimicDungeon] vol.glb load failed all candidates", err);
       this.buildFallbackGround();
       this.spawnMimicFallback();
       this.finishSetup();
@@ -214,22 +262,8 @@ export class MimicDungeon {
     else if (maxDim > 0.001 && maxDim < 34) root.scale.setScalar(34 / maxDim);
     root.updateMatrixWorld(true);
 
-    // Separate the mimic creature subtree from the static environment.
-    const creature =
-      root.getObjectByName("Barrel_Creature_1_0") ??
-      root.getObjectByName("Mimicfbx") ??
-      root.getObjectByName("Mimic");
-    let creatureRoot: THREE.Object3D | null = creature ?? null;
-    if (creatureRoot) {
-      // Walk up to the top-level creature group (child of a Sketchfab/Forge wrapper).
-      while (
-        creatureRoot.parent &&
-        creatureRoot.parent !== root &&
-        !/ForgeScene/i.test(creatureRoot.parent.name)
-      ) {
-        creatureRoot = creatureRoot.parent;
-      }
-    }
+    // Separate the real Mimic creature (from barrel) from the static Vol environment.
+    let creatureRoot = this.findMimicRoot(root);
 
     // Best-practice pass: shadows + sRGB base maps; collect ground meshes.
     root.traverse((o) => {
@@ -336,26 +370,47 @@ export class MimicDungeon {
     this.mimicRoot.position.set(0, this.groundY(0, 0), 0);
     this.player.position.set(0, this.groundY(0, 7), 7);
     this.playerYaw = Math.PI; // face the mimic (−Z)
-    this.buildDecoyBarrel(new THREE.Vector3(9, 0, -3));
+    void this.buildDecoyBarrel(new THREE.Vector3(9, 0, -3));
     this.setPhase("disguised");
     this.raf = requestAnimationFrame(this.animate);
   }
 
-  /** A clean procedural decoy barrel + a small door frame ("home"). */
-  private buildDecoyBarrel(at: THREE.Vector3) {
-    const wood = new THREE.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.85 });
-    const iron = new THREE.MeshStandardMaterial({ color: 0x30302f, roughness: 0.6, metalness: 0.4 });
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 1.2, 16), wood);
-    body.position.y = 0.6;
-    body.castShadow = true;
-    this.decoy.add(body);
-    for (const y of [0.25, 0.95]) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.05, 8, 20), iron);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = y;
-      this.decoy.add(ring);
+  /** Real destructible barrel GLB when available; procedural fallback otherwise. */
+  private async buildDecoyBarrel(at: THREE.Vector3) {
+    this.decoy.position.set(at.x, this.groundY(at.x, at.z), at.z);
+    try {
+      const gltf = await this.loadGltf("models/destructibles/barrel-01.glb");
+      if (this.disposed) return;
+      const b = gltf.scene;
+      b.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.castShadow = true;
+          m.receiveShadow = true;
+        }
+      });
+      const box = new THREE.Box3().setFromObject(b);
+      const h = box.getSize(new THREE.Vector3()).y || 1;
+      b.scale.setScalar(1.15 / h);
+      b.updateMatrixWorld(true);
+      const b2 = new THREE.Box3().setFromObject(b);
+      b.position.y -= b2.min.y;
+      this.decoy.add(b);
+    } catch {
+      const wood = new THREE.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.85 });
+      const iron = new THREE.MeshStandardMaterial({ color: 0x30302f, roughness: 0.6, metalness: 0.4 });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 1.2, 16), wood);
+      body.position.y = 0.6;
+      body.castShadow = true;
+      this.decoy.add(body);
+      for (const y of [0.25, 0.95]) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.05, 8, 20), iron);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = y;
+        this.decoy.add(ring);
+      }
     }
-    // A simple door frame beside it so it reads as "by the home's door".
+    // Simple door frame beside it so it reads as "by the home's door".
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x59452f, roughness: 0.9 });
     const post = () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.4, 0.2), frameMat);
     const pL = post(); pL.position.set(-1.6, 1.2, 0);
@@ -363,7 +418,6 @@ export class MimicDungeon {
     const top = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 0.2), frameMat);
     top.position.set(-1.1, 2.3, 0);
     this.decoy.add(pL, pR, top);
-    this.decoy.position.set(at.x, this.groundY(at.x, at.z), at.z);
   }
 
   /** Ground height at world (x,z) via a downward ray onto the environment. */
