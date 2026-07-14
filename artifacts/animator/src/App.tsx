@@ -85,11 +85,31 @@ import {
 import "./index.css";
 import "./components/dock/dock.css";
 
+type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic" | "genesis" | "voxgrudge-native";
 /** Engine surface modes — URL map lives in `lib/openRoutes.ts`. */
 type Mode = AppMode;
 
 /** Resolve initial mode from path slug / arcade deep-link / query. */
 function initialMode(): Mode {
+  try {
+    const d = new URLSearchParams(window.location.search).get("door");
+    if (
+      d === "editor" ||
+      d === "danger" ||
+      d === "voxel" ||
+      d === "lobby" ||
+      d === "ledmask" ||
+      d === "zones" ||
+      d === "brawl" ||
+      d === "mimic" ||
+      d === "genesis" ||
+      d === "voxgrudge-native"
+    )
+      return d;
+  } catch {
+    /* no-op */
+  }
+  return "doors";
   return resolveModeFromLocation();
 }
 
@@ -926,6 +946,7 @@ export default function App() {
     return shell(
       withScreenTheme(
         <GrudoxZones
+          onEnterNative={(id) => navigate(id === "voxgrudge" ? "voxgrudge-native" : "brawl")}
           onEnterNative={(id) => {
             // Only zones with real native engines in Open.
             // Voxel Velocity (racer) is NOT native — card uses GRUDOX deep-link.

@@ -66,6 +66,7 @@ export function VoxGrudgeNative({ onExit }: Props) {
   // ── WebSocket presence ───────────────────────────────────────────────────────
 
   useEffect(() => {
+    const wsUrl = window.location.origin.replace(/^http/, "ws") + "/api/space";
     // GRUDOX room server — never same-origin on open.grudge-studio.com
     // (Vercel does not terminate WebSockets on rewrites reliably).
     const wsUrl = zoneWsUrl("/api/space");

@@ -58,6 +58,7 @@ export function WarlordGenesis({ onExit }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef  = useRef<WarlordGenesisScene | null>(null);
   const [s, setS] = useState<WarlordGenesisState>(INITIAL_STATE);
+  const [selectedRace, setSelectedRace] = useState<string | null>(null);
 
   // Pre-select the active fleet character's race (if any) so the race card
   // matching the player's Grudge Warlords character is highlighted on entry.
@@ -171,6 +172,7 @@ export function WarlordGenesis({ onExit }: Props) {
       {showHUD && s.raceId && (
         <div style={hudTL}>
           <div style={{ fontSize: 11, color: "#9fb8da", fontWeight: 700, marginBottom: 4 }}>
+            {RACE_CARDS.find((r) => r.id === s.raceId)?.name ?? "Warlord"} HP
             {characterName
               ? `${characterName} (${RACE_CARDS.find((r) => r.id === s.raceId)?.name ?? ""})`
               : (RACE_CARDS.find((r) => r.id === s.raceId)?.name ?? "Warlord")} HP
@@ -206,6 +208,7 @@ export function WarlordGenesis({ onExit }: Props) {
 
       {/* ── top-right: leave + mode name ── */}
       <div style={hudTR}>
+        <span style={{ fontSize: 11, opacity: 0.55, color: "#eaf4ff" }}>WARLORD GENESIS</span>
         <span style={{ fontSize: 11, opacity: 0.55, color: "#eaf4ff" }}>
           {characterName ?? "WARLORD"} — GENESIS
         </span>

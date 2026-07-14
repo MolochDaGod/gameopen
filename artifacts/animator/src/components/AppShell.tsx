@@ -63,6 +63,17 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
+  { mode: "doors", label: "Home", hint: "Facility entrance", icon: <Home size={20} />, tone: "#7fb0ff" },
+  { mode: "danger", label: "Danger Room", hint: "Combat sandbox", icon: <Swords size={20} />, tone: "#ff7a7a" },
+  { mode: "voxel", label: "Voxel Editor", hint: "Build & test maps", icon: <Boxes size={20} />, tone: "#7ee0a0" },
+  { mode: "editor", label: "Dressing Room", hint: "Dress up a rig", icon: <Shirt size={20} />, tone: "#ffb24d" },
+  { mode: "lobby", label: "Lobby", hint: "Rooms & community", icon: <Users size={20} />, tone: "#9d8bff" },
+  { mode: "zones", label: "GRUDOX Zones", hint: "Shared GRUDOX world", icon: <Globe size={20} />, tone: "#5fe0ff" },
+  { mode: "brawl", label: "Ruins Brawler", hint: "Live co-op survival", icon: <Crosshair size={20} />, tone: "#ff7a7a" },
+  { mode: "mimic", label: "Test Dungeon", hint: "Mimic encounter", icon: <Boxes size={20} />, tone: "#9cff5a" },
+  { mode: "genesis", label: "Warlord Genesis", hint: "Choose race, fight waves", icon: <Swords size={20} />, tone: "#ffd24d" },
+  { mode: "voxgrudge-native", label: "VoxGrudge", hint: "Open voxel world", icon: <Boxes size={20} />, tone: "#5fe0ff" },
+  { mode: "ledmask", label: "LED Mask", hint: "AI face companion", icon: <ScanFace size={20} />, tone: "#5fe0ff" },
   { mode: "doors",           label: "Home",            hint: "Facility entrance",    icon: <Home size={20} />,                                       tone: "#7fb0ff" },
   { mode: "danger",          label: "Danger Room",     hint: "Combat sandbox",       icon: <GameIcon name="combat-pad"      tone="#ff7a7a" />,          tone: "#ff7a7a" },
   { mode: "genesis",         label: "Warlord Genesis", hint: "Choose race, fight",   icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d" },
