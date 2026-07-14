@@ -1,31 +1,19 @@
-import type { CSSProperties } from "react";
-
-const TAG_STYLE: CSSProperties = {
-  fontSize: 11,
-  opacity: 0.8,
-  padding: "2px 7px",
-  borderRadius: 4,
-  border: "1px solid rgba(255,255,255,0.15)",
-  background: "rgba(255,255,255,0.05)",
-};
-
-interface Props {
-  onEnter: (
-    mode: "danger" | "voxel" | "editor" | "lobby" | "ledmask" | "zones" | "brawl" | "mimic" | "genesis" | "voxgrudge-native",
-  ) => void;
-}
-
-/**
- * The facility entrance: gradient door cards into every surface.
+import { useEffect, useMemo, useState } from "react";
+import { Download, Library, Swords, Hammer, Users, Wrench, Search, Play, ExternalLink } from "lucide-react";
 import { assetUrl } from "../lib/fleet";
 import {
   type AppMode,
   type OpenSurface,
+  type SurfaceGroup,
   hubDoorSurfaces,
   HUB_GROUP_ORDER,
   SURFACE_GROUP_LABEL,
   pathForMode,
 } from "../lib/openRoutes";
+import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
+import { loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+import { InstallAppButton } from "./InstallAppButton";
+import "./steamLibrary.css";
 
 /** Resolve a room poster from public/rooms/<name>-scene.png (CDN-aware). */
 const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
@@ -34,207 +22,293 @@ interface Props {
   onEnter: (mode: Exclude<AppMode, "doors" | "play">) => void;
 }
 
-/** One door card — poster image on top, info below. Slug shown for deep-link discoverability. */
-function Door({
-  surface,
-  onEnter,
-}: {
-  surface: OpenSurface;
-  onEnter: Props["onEnter"];
-}) {
-  const mode = surface.mode as Exclude<AppMode, "doors" | "play">;
-  const img = surface.poster ? poster(surface.poster) : poster("lobby");
-  const path = pathForMode(surface.mode);
-  const tags = surface.tags ?? (["Open", "Lab"] as const);
-  const accent = surface.accent ?? "#d4a843";
+const GROUP_ICON: Record<SurfaceGroup, typeof Swords> = {
+  hub: Library,
+  combat: Swords,
+  create: Hammer,
+  multiplayer: Users,
+  tools: Wrench,
+  external: ExternalLink,
+};
 
-  return (
-    <button
-      className="door door-img"
-      style={{ "--door-accent": accent } as React.CSSProperties}
-      onClick={() => onEnter(mode)}
-      title={`${surface.title} · open.grudge-studio.com${path}`}
-      data-mode={surface.mode}
-      data-slug={surface.slug || "hub"}
-    >
-      <div className="door-art-wrap">
-        <img className="door-art" src={img} alt={surface.title} draggable={false} />
-        <div className="door-art-badge">{tags[0]}</div>
-      </div>
-      <div className="door-info">
-        <h3>{surface.title}</h3>
-        <p>{surface.blurb}</p>
-        <div className="door-tags">
-          <span className="door-tag" style={{ color: accent }}>
-            {tags[0]}
-          </span>
-          <span className="door-tag">{tags[1]}</span>
-          <span className="door-tag door-slug">{path}</span>
-        </div>
-      </div>
-    </button>
-  );
-}
+type FilterId = "all" | SurfaceGroup;
 
 /**
- * Facility entrance: poster door cards grouped by system family.
+ * Steam-style library home: top chrome, left nav, featured banner, game grid.
  * Catalog SSOT: `lib/openRoutes.ts` (OPEN_SURFACES).
  */
 export function DoorSelect({ onEnter }: Props) {
   const doors = hubDoorSurfaces();
+  const [filter, setFilter] = useState<FilterId>("all");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<OpenSurface | null>(doors[0] ?? null);
+  const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
+
+  useEffect(() => gameSession.subscribe(() => setSnap(gameSession.snapshot)), []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return doors.filter((d) => {
+      if (filter !== "all" && d.group !== filter) return false;
+      if (!q) return true;
+      return (
+        d.title.toLowerCase().includes(q) ||
+        d.blurb.toLowerCase().includes(q) ||
+        d.slug.includes(q) ||
+        (d.tags?.some((t) => t.toLowerCase().includes(q)) ?? false)
+      );
+    });
+  }, [doors, filter, query]);
+
   const byGroup = HUB_GROUP_ORDER.map((g) => ({
     group: g,
     label: SURFACE_GROUP_LABEL[g],
-    items: doors.filter((d) => d.group === g),
+    items: filtered.filter((d) => d.group === g),
   })).filter((g) => g.items.length > 0);
 
+  // Keep selection valid when filtering
+  useEffect(() => {
+    if (!selected || !filtered.some((d) => d.mode === selected.mode)) {
+      setSelected(filtered[0] ?? null);
+    }
+  }, [filtered, selected]);
+
+  const featured = selected ?? filtered[0] ?? doors[0] ?? null;
+  const account = snap.account;
+  const charCount = snap.characters.length;
+
+  const launch = (surface: OpenSurface) => {
+    const mode = surface.mode as Exclude<AppMode, "doors" | "play">;
+    onEnter(mode);
+  };
+
   return (
-    <div className="doors">
-      <div className="doors-head">
-        <span className="brand">
-          GRUDGE<span className="brand-accent">OPEN</span>
-        </span>
-        <p className="doors-sub">Choose your arena</p>
+    <div className="steam-lib" data-testid="steam-library">
+      {/* ── Top bar (Steam chrome) ── */}
+      <header className="steam-top">
+        <div className="steam-top-left">
+          <img className="steam-logo" src={assetUrl("logo.svg")} alt="" width={28} height={28} draggable={false} />
+          <span className="steam-brand">
+            GRUDGE<span className="steam-brand-accent">OPEN</span>
+          </span>
+          <nav className="steam-top-nav" aria-label="Primary">
+            <button type="button" className="steam-top-link active">
+              Library
+            </button>
+            <a className="steam-top-link" href="https://grudge-studio.com" target="_blank" rel="noreferrer">
+              Store
+            </a>
+            <a className="steam-top-link" href="https://grudox.grudge-studio.com" target="_blank" rel="noreferrer">
+              Community
+            </a>
+          </nav>
+        </div>
+        <div className="steam-top-right">
+          <InstallAppButton variant="steam" />
+          {account ? (
+            <div className="steam-user">
+              <span className="steam-user-name">{account.displayName || account.grudgeId}</span>
+              <span className="steam-user-meta">{charCount} characters</span>
+              <button
+                type="button"
+                className="steam-user-btn"
+                onClick={() => {
+                  logoutGrudge();
+                  void loginWithGrudgeId(true);
+                }}
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="steam-user-btn steam-user-btn--primary" onClick={() => void loginWithGrudgeId(false)}>
+              Grudge ID
+            </button>
+          )}
+        </div>
+      </header>
+
+      <div className="steam-body">
+        {/* ── Left sidebar ── */}
+        <aside className="steam-side">
+          <div className="steam-side-search">
+            <Search size={14} className="steam-side-search-icon" />
+            <input
+              type="search"
+              placeholder="Search library…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search library"
+            />
+          </div>
+
+          <div className="steam-side-section">
+            <div className="steam-side-label">Collections</div>
+            <button
+              type="button"
+              className={`steam-side-item ${filter === "all" ? "active" : ""}`}
+              onClick={() => setFilter("all")}
+            >
+              <Library size={15} />
+              <span>All titles</span>
+              <span className="steam-side-count">{doors.length}</span>
+            </button>
+            {HUB_GROUP_ORDER.filter((g) => g !== "hub").map((g) => {
+              const Icon = GROUP_ICON[g];
+              const n = doors.filter((d) => d.group === g).length;
+              if (!n) return null;
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  className={`steam-side-item ${filter === g ? "active" : ""}`}
+                  onClick={() => setFilter(g)}
+                >
+                  <Icon size={15} />
+                  <span>{SURFACE_GROUP_LABEL[g]}</span>
+                  <span className="steam-side-count">{n}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="steam-side-section steam-side-section--foot">
+            <div className="steam-side-label">Download</div>
+            <div className="steam-side-download">
+              <Download size={16} />
+              <div>
+                <strong>Desktop / mobile app</strong>
+                <p>Install Grudge Open for offline shell + home-screen launch</p>
+              </div>
+            </div>
+            <InstallAppButton variant="sidebar" />
+          </div>
+        </aside>
+
+        {/* ── Main library pane ── */}
+        <main className="steam-main">
+          {featured && (
+            <section className="steam-hero" style={{ "--hero-accent": featured.accent ?? "#66c0f4" } as React.CSSProperties}>
+              <div className="steam-hero-art">
+                <img
+                  src={featured.poster ? poster(featured.poster) : poster("lobby")}
+                  alt=""
+                  draggable={false}
+                />
+                <div className="steam-hero-fade" />
+              </div>
+              <div className="steam-hero-body">
+                <div className="steam-hero-tags">
+                  {(featured.tags ?? ["Open", "Lab"]).map((t) => (
+                    <span key={t} className="steam-pill">
+                      {t}
+                    </span>
+                  ))}
+                  <span className="steam-pill steam-pill--muted">{pathForMode(featured.mode)}</span>
+                </div>
+                <h1>{featured.title}</h1>
+                <p>{featured.blurb}</p>
+                <div className="steam-hero-actions">
+                  <button type="button" className="steam-play" onClick={() => launch(featured)}>
+                    <Play size={16} fill="currentColor" />
+                    Play
+                  </button>
+                  <button
+                    type="button"
+                    className="steam-secondary"
+                    onClick={() => {
+                      const path = pathForMode(featured.mode);
+                      void navigator.clipboard?.writeText(`${window.location.origin}${path}`);
+                    }}
+                    title="Copy deep link"
+                  >
+                    Copy link
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {byGroup.map(({ group, label, items }) => (
+            <section key={group} className="steam-shelf" data-group={group}>
+              <h2 className="steam-shelf-title">{label}</h2>
+              <div className="steam-grid">
+                {items.map((surface) => {
+                  const active = featured?.mode === surface.mode;
+                  const img = surface.poster ? poster(surface.poster) : poster("lobby");
+                  const tags = surface.tags ?? (["Open", "Lab"] as const);
+                  const accent = surface.accent ?? "#66c0f4";
+                  return (
+                    <article
+                      key={surface.mode}
+                      className={`steam-card ${active ? "active" : ""}`}
+                      style={{ "--card-accent": accent } as React.CSSProperties}
+                      onClick={() => setSelected(surface)}
+                      onDoubleClick={() => launch(surface)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelected(surface);
+                        }
+                      }}
+                      title={`${surface.title} · double-click to play`}
+                      data-mode={surface.mode}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={active}
+                    >
+                      <div className="steam-card-art">
+                        <img src={img} alt="" draggable={false} />
+                        <span className="steam-card-badge">{tags[0]}</span>
+                        <span className="steam-card-play" aria-hidden>
+                          <Play size={18} fill="currentColor" />
+                        </span>
+                      </div>
+                      <div className="steam-card-meta">
+                        <h3>{surface.title}</h3>
+                        <p>{surface.blurb}</p>
+                        <div className="steam-card-foot">
+                          <span className="steam-card-ready">Ready</span>
+                          <span className="steam-card-slug">{pathForMode(surface.mode)}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="steam-card-launch"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          launch(surface);
+                        }}
+                      >
+                        Play
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+
+          {filtered.length === 0 && (
+            <div className="steam-empty">
+              <p>No titles match your search.</p>
+              <button type="button" className="steam-secondary" onClick={() => { setQuery(""); setFilter("all"); }}>
+                Clear filters
+              </button>
+            </div>
+          )}
+        </main>
       </div>
 
-      <div className="doors-row">
-        <button className="door door-combat" onClick={() => onEnter("danger")} title="Danger Room">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #1a0808 0%, #2d0f0f 100%)" }}>
-            <div className="door-glyph" style={{ color: "#ff7a7a", fontSize: 48 }}>⚔</div>
-          </div>
-          <h3>Danger Room</h3>
-          <p>Live combat sandbox — fight training targets with every weapon and skill.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#ff7a7a" }}>★ Combat</span>
-            <span style={TAG_STYLE}>PvP</span>
-          </div>
-        </button>
-
-        <button className="door door-genesis" onClick={() => onEnter("genesis")} title="Warlord Genesis">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #1a1400 0%, #2d2200 100%)" }}>
-            <div className="door-glyph" style={{ color: "#ffd24d", fontSize: 40 }}>⚜</div>
-          </div>
-          <h3>Warlord Genesis</h3>
-          <p>Choose your race — Human, Orc, Elf, Dwarf, Barbarian or Undead. Survive 4 waves to claim the title.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#ffd24d" }}>★ New</span>
-            <span style={TAG_STYLE}>Boss Rush</span>
-          </div>
-        </button>
-
-        <button className="door door-brawl" onClick={() => onEnter("brawl")} title="Ruins Brawler">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #0d1018 0%, #182030 100%)" }}>
-            <div className="door-glyph" style={{ color: "#4fc3ff", fontSize: 40 }}>⛨</div>
-          </div>
-          <h3>Ruins Brawler</h3>
-          <p>3D twin-stick co-op survival — live multiplayer in the GRUDOX ruins arena.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#4fc3ff" }}>3D Live</span>
-            <span style={TAG_STYLE}>Co-op</span>
-          </div>
-        </button>
-
-        <button className="door door-mimic" onClick={() => onEnter("mimic")} title="Test Dungeon">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #0a1008 0%, #0f2010 100%)" }}>
-            <div className="door-glyph" style={{ color: "#9cff5a", fontSize: 40 }}>🛢</div>
-          </div>
-          <h3>Test Dungeon</h3>
-          <p>Vol scene — open a barrel and fight the Mimic (fast melee lunge + arcing acid AoE).</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#9cff5a" }}>Encounter</span>
-            <span style={TAG_STYLE}>Boss</span>
-          </div>
-        </button>
-
-        <button className="door door-editor" onClick={() => onEnter("voxel")} title="Voxel Editor">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #081408 0%, #0e2014 100%)" }}>
-            <div className="door-glyph" style={{ color: "#7ee0a0", fontSize: 40 }}>▦</div>
-          </div>
-          <h3>Voxel Editor</h3>
-          <p>Build a custom map — voxel blocks, deployable NPCs &amp; bags, and dungeon authoring.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#7ee0a0" }}>Build</span>
-            <span style={TAG_STYLE}>Create</span>
-          </div>
-        </button>
-
-        <button className="door door-voxgrudge" onClick={() => onEnter("voxgrudge-native")} title="VoxGrudge Open World">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #081418 0%, #0e2028 100%)" }}>
-            <div className="door-glyph" style={{ color: "#5fe0ff", fontSize: 40 }}>◈</div>
-          </div>
-          <h3>VoxGrudge</h3>
-          <p>Open voxel world — explore, build, and party up with the multiplayer open world server.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#5fe0ff" }}>★ New</span>
-            <span style={TAG_STYLE}>Open World</span>
-          </div>
-        </button>
-
-        <button className="door door-scene" onClick={() => onEnter("editor")} title="Dressing Room">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #140c04 0%, #241808 100%)" }}>
-            <div className="door-glyph" style={{ color: "#ffb24d", fontSize: 40 }}>♟</div>
-          </div>
-          <h3>Dressing Room</h3>
-          <p>Dress up a character — swap models &amp; skins, attach weapons &amp; gear, preview animations and effects.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#ffb24d" }}>Customize</span>
-            <span style={TAG_STYLE}>Preview</span>
-          </div>
-        </button>
-
-        <button className="door door-lobby" onClick={() => onEnter("lobby")} title="The Lobby">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #0e0814 0%, #180e26 100%)" }}>
-            <div className="door-glyph" style={{ color: "#9d8bff", fontSize: 40 }}>☰</div>
-          </div>
-          <h3>The Lobby</h3>
-          <p>Join a multiplayer room, or browse community maps &amp; scenes to play instantly.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#9d8bff" }}>Multiplayer</span>
-            <span style={TAG_STYLE}>Community</span>
-          </div>
-        </button>
-
-        <button className="door door-zones" onClick={() => onEnter("zones")} title="GRUDOX Zones">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #081018 0%, #0e1e30 100%)" }}>
-            <div className="door-glyph" style={{ color: "#5fe0ff", fontSize: 40 }}>◆</div>
-          </div>
-          <h3>GRUDOX Zones</h3>
-          <p>Enter the shared GRUDOX world — brawler, racer, sword survival &amp; the open world.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#5fe0ff" }}>External</span>
-            <span style={TAG_STYLE}>GRUDOX</span>
-          </div>
-        </button>
-
-        <button className="door door-ledmask" onClick={() => onEnter("ledmask")} title="Voxel LED Mask">
-          <div className="door-frame" style={{ background: "linear-gradient(135deg, #040c14 0%, #081826 100%)" }}>
-            <div className="door-glyph" style={{ color: "#5fe0ff", fontSize: 40 }}>▥</div>
-          </div>
-          <h3>Voxel LED Mask</h3>
-          <p>Drive a cube voxel head with an LED visor — pick expressions, run a scrolling banner, trigger poses.</p>
-          <div className="door-tags">
-            <span style={{ ...TAG_STYLE, color: "#5fe0ff" }}>AI Face</span>
-            <span style={TAG_STYLE}>LED</span>
-          </div>
-        </button>
-      </div>
-        <p className="doors-sub">Choose your arena · deep-link any door via path slug</p>
-        <p className="doors-slugs-hint">
-          e.g. <code>/danger</code> <code>/voxel</code> <code>/brawl</code>{" "}
-          <code>/world</code> <code>/dressing</code> <code>/lobby</code>
-        </p>
-      </div>
-
-      {byGroup.map(({ group, label, items }) => (
-        <section key={group} className="doors-section" data-group={group}>
-          <h2 className="doors-section-title">{label}</h2>
-          <div className="doors-row">
-            {items.map((surface) => (
-              <Door key={surface.mode} surface={surface} onEnter={onEnter} />
-            ))}
-          </div>
-        </section>
-      ))}
+      {/* ── Bottom status strip ── */}
+      <footer className="steam-status">
+        <span className="steam-status-dot" />
+        <span>Ready</span>
+        <span className="steam-status-sep">·</span>
+        <span>Grudge Open library</span>
+        <span className="steam-status-grow" />
+        <span className="steam-status-hint">Double-click a title to launch · Install for home-screen app</span>
+      </footer>
     </div>
   );
 }

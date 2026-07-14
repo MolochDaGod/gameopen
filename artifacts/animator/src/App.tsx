@@ -878,7 +878,8 @@ export default function App() {
       assistant={shellAssistant}
       hideAssistant={mode === "ledmask"}
     >
-      <FleetBar />
+      {/* Library hub owns its own Steam chrome + account strip */}
+      {mode !== "doors" && <FleetBar />}
       {content}
     </AppShell>
   );

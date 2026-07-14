@@ -1,25 +1,67 @@
 /* =========================================================================
-   Unified app shell: persistent launcher pill + system nav (sheet / popover).
+   Unified app shell: Steam-inspired top bar + system nav (sheet / popover).
    Overlays every mode; sits above the touch-control layer (z 600) so it stays
    reachable on phones, and respects device safe-areas.
    ========================================================================= */
 
-.shell-launcher {
+.shell-steam-bar {
   position: fixed;
-  top: max(10px, env(safe-area-inset-top));
+  top: max(8px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 710;
   display: flex;
   align-items: center;
   gap: 8px;
+  max-width: calc(100vw - 16px);
+  pointer-events: none;
+}
+
+.shell-steam-bar > * {
+  pointer-events: auto;
+}
+
+.shell-steam-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shell-library-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(102, 192, 244, 0.28);
+  background: rgba(23, 26, 33, 0.9);
+  backdrop-filter: blur(12px);
+  color: #c7d5e0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.shell-library-btn:hover {
+  border-color: rgba(102, 192, 244, 0.55);
+  color: #66c0f4;
+  background: rgba(27, 40, 56, 0.95);
+}
+
+.shell-launcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   height: 40px;
   padding: 0 12px 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(150, 190, 255, 0.28);
-  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid rgba(102, 192, 244, 0.28);
+  background: linear-gradient(180deg, rgba(28, 33, 41, 0.94), rgba(23, 26, 33, 0.94));
   backdrop-filter: blur(12px);
-  color: #dce7fb;
+  color: #c7d5e0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -29,12 +71,12 @@
 }
 
 .shell-launcher:hover {
-  border-color: rgba(150, 190, 255, 0.5);
-  background: rgba(20, 26, 40, 0.9);
+  border-color: rgba(102, 192, 244, 0.5);
+  background: linear-gradient(180deg, rgba(36, 45, 58, 0.96), rgba(27, 40, 56, 0.96));
 }
 
 .shell-launcher:active {
-  transform: translateX(-50%) scale(0.97);
+  transform: scale(0.97);
 }
 
 .shell-launcher-icon {
@@ -43,7 +85,7 @@
 }
 
 .shell-launcher-label {
-  max-width: 46vw;
+  max-width: 36vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -61,28 +103,30 @@
   position: fixed;
   inset: 0;
   z-index: 715;
-  background: rgba(4, 7, 13, 0.5);
+  background: rgba(4, 7, 13, 0.55);
   backdrop-filter: blur(2px);
 }
 
 .shell-nav {
   position: fixed;
   z-index: 716;
-  background: rgba(16, 20, 30, 0.96);
-  border: 1px solid rgba(120, 150, 220, 0.22);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-  color: #e7ecf6;
+  background: linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+  border: 1px solid rgba(102, 192, 244, 0.18);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  color: #c7d5e0;
   overflow: hidden;
 }
 
-/* Desktop / tablet: a dropdown anchored under the launcher pill. */
+/* Desktop / tablet: a dropdown under the launcher. */
 .shell-nav.popover {
-  top: calc(max(10px, env(safe-area-inset-top)) + 48px);
+  top: calc(max(8px, env(safe-area-inset-top)) + 52px);
   left: 50%;
   transform: translateX(-50%);
-  width: 320px;
+  width: 360px;
   max-width: calc(100vw - 24px);
-  border-radius: 16px;
+  max-height: min(72vh, 640px);
+  overflow-y: auto;
+  border-radius: 8px;
 }
 
 /* Phone: a thumb-reachable bottom sheet. */
@@ -90,7 +134,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 18px 18px 0 0;
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+  border-radius: 14px 14px 0 0;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
@@ -103,19 +149,54 @@
 }
 
 .shell-nav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding: 12px 16px 8px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7f93b8;
+  color: #8f98a0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.shell-nav-head-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #66c0f4;
+  text-transform: none;
+  font-weight: 600;
 }
 
 .shell-nav-list {
   display: flex;
   flex-direction: column;
-  padding: 4px 8px 10px;
+  padding: 6px 8px 12px;
   gap: 2px;
+}
+
+.shell-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.shell-nav-group:first-child {
+  margin-top: 0;
+}
+
+.shell-nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7580;
+  padding: 8px 12px 4px;
 }
 
 .shell-nav-item {
@@ -123,10 +204,10 @@
   align-items: center;
   gap: 13px;
   width: 100%;
-  min-height: 56px;
+  min-height: 52px;
   padding: 8px 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 6px;
   background: transparent;
   color: inherit;
   text-align: left;
@@ -135,14 +216,15 @@
 }
 
 .shell-nav-item:hover {
-  background: rgba(120, 150, 220, 0.12);
+  background: rgba(42, 71, 94, 0.55);
 }
 .shell-nav-item:active {
-  background: rgba(120, 150, 220, 0.2);
+  background: rgba(42, 71, 94, 0.75);
 }
 
 .shell-nav-item.active {
-  background: rgba(120, 150, 220, 0.16);
+  background: rgba(42, 71, 94, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(102, 192, 244, 0.22);
 }
 
 .shell-nav-item-icon {
@@ -151,9 +233,9 @@
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(150, 180, 230, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(150, 180, 230, 0.14);
 }
 
 .shell-nav-item-text {
@@ -167,11 +249,12 @@
 .shell-nav-item-label {
   font-size: 14px;
   font-weight: 600;
+  color: #e8eef5;
 }
 
 .shell-nav-item-hint {
   font-size: 11.5px;
-  color: #8593ad;
+  color: #8f98a0;
 }
 
 .shell-nav-item-dot {
@@ -180,4 +263,18 @@
   flex: 0 0 auto;
   border-radius: 50%;
   box-shadow: 0 0 8px currentColor;
+}
+
+@media (max-width: 480px) {
+  .shell-steam-actions .go-install--pill span {
+    /* keep icon+short label readable */
+  }
+  .shell-library-btn span {
+    display: none;
+  }
+  .shell-library-btn {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
 }

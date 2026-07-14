@@ -4,36 +4,66 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Grudge Open — Combat Sandbox | Grudge Studio</title>
-    <meta name="description" content="Grudge Open — Danger Room combat sandbox. Train with races, weapons, bosses, allies, and goal-driven AI. Fleet auth via Grudge ID." />
+    <meta name="description" content="Grudge Open — Danger Room combat sandbox. Train with races, weapons, bosses, allies, and goal-driven AI. Installable app · fleet auth via Grudge ID." />
     <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#171a21" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="application-name" content="Grudge Open" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Grudge Open" />
     <meta property="og:title" content="Grudge Open" />
-    <meta property="og:description" content="Danger Room combat sandbox by Grudge Studio — modes, bosses, fleet characters." />
+    <meta property="og:description" content="Danger Room combat sandbox by Grudge Studio — modes, bosses, fleet characters. Install as an app." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/opengraph.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Grudge Open" />
-    <meta name="twitter:description" content="Danger Room combat sandbox by Grudge Studio." />
+    <meta name="twitter:description" content="Danger Room combat sandbox by Grudge Studio — installable web app." />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      html, body { margin: 0; background: #05070d; }
-      #root { min-height: 100vh; }
+      html, body { margin: 0; background: #171a21; }
+      #root { min-height: 100vh; min-height: 100dvh; }
       .boot-splash {
         position: fixed; inset: 0; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 14px;
-        background: radial-gradient(ellipse at 50% 40%, #0b1220 0%, #05070d 70%);
-        color: #8fa8cc; font-family: Inter, system-ui, sans-serif;
+        background:
+          radial-gradient(ellipse at 50% 30%, rgba(102,192,244,0.12) 0%, transparent 55%),
+          linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+        color: #8f98a0; font-family: Inter, system-ui, sans-serif;
       }
-      .boot-splash strong { color: #eaf3ff; font-size: 1.15rem; letter-spacing: 0.04em; }
+      .boot-splash strong {
+        color: #c7d5e0; font-size: 1.15rem; letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .boot-splash strong span { color: #66c0f4; }
+      .boot-splash .boot-bar {
+        width: 160px; height: 3px; border-radius: 2px;
+        background: rgba(255,255,255,0.08); overflow: hidden;
+      }
+      .boot-splash .boot-bar > i {
+        display: block; height: 100%; width: 40%;
+        background: linear-gradient(90deg, #06bfff, #2d73ff);
+        animation: boot-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes boot-slide {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(320%); }
+      }
     </style>
   </head>
   <body>
     <div id="root">
       <div class="boot-splash" aria-busy="true">
-        <strong>Grudge Open</strong>
-        <span>Loading combat sandbox…</span>
+        <strong>Grudge <span>Open</span></strong>
+        <span>Loading library…</span>
+        <div class="boot-bar" aria-hidden="true"><i></i></div>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
