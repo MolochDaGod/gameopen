@@ -24,7 +24,7 @@ Source of truth for the animator artifact lived under Replit as
 |-----------------|----------------------|
 | `@replit/vite-plugin-*` | Removed — plain Vite + React + Tailwind |
 | Required `PORT` / `BASE_PATH` env | Defaults: `PORT=5173`, `BASE_PATH=/` |
-| Clerk required to boot | Guest mode if no `VITE_CLERK_PUBLISHABLE_KEY` |
+| Clerk required to boot | **Grudge ID** (`id.grudge-studio.com`) + guest play; Clerk not fleet SSOT |
 | Replit App Storage / proxy | Vercel rewrites → Railway + id.grudge-studio.com + ObjectStore |
 | Thin public assets | Merged full gameopen pack (races, weapons, VFX, maps, 14 anim packs) |
 | Single Replit process | **Vercel** SPA + **Railway** API/WS + optional **R2** |
@@ -66,6 +66,7 @@ PORT=5173
 ## Still optional (recommended next)
 
 1. Upload heavy models to R2 (`pnpm assets:upload-r2`) and set `VITE_USE_R2=true`.
-2. Wire Grudge ID SSO UI next to guest play (bootstrap from `id.grudge-studio.com`).
-3. Alias `open.grudge-studio.com` / `animator.grudge-studio.com` → Vercel.
-4. Sync latest Replit-only deltas (LobbyScreen, Ship, effects-lib) if they land after this cut.
+2. Prefer Grudge ID only — do not re-enable Clerk as production login.
+3. Keep `open.grudge-studio.com` Worker → Vercel (see `infra/cloudflare/open`).
+4. Shared player data only via Railway `grudge-api-production` (see monorepo `docs/HOSTING_SCHEME.md` when co-located with Fantasy-Scene-Creator).
+5. Sync hub/campfire deltas from Fantasy-Scene-Creator `charactersgrudox` when consolidating shells.

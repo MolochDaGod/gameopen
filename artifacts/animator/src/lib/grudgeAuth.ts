@@ -280,6 +280,8 @@ export async function loginWithGrudgeId(force = false): Promise<void> {
 export function logoutGrudge(): void {
   setStoredToken(null);
   setStoredAccount(null);
+  // Clear cached wallet so next login re-provisions fresh.
+  try { import("./walletService").then(({ clearCachedWallet }) => clearCachedWallet()); } catch { /* */ }
   try {
     localStorage.removeItem("grudge_id");
     localStorage.removeItem("grudge_account_id");
@@ -431,5 +433,16 @@ export async function initFleetAuth(): Promise<{
   // TOKEN-FIRST: cached account returns instantly; API hit is background-only.
   const account = await fetchFleetAccount();
   const characters = account ? await fetchCharacters() : [];
+
+  // AUTO-PROVISION WALLET: every logged-in account gets a Crossmint custodial
+  // Solana wallet scoped to its grudgeId. Runs in background so it never
+  // blocks the UI. Canonical truth = Railway Postgres `wallets` table.
+  if (account) {
+    // Dynamic import keeps walletService out of the critical-path bundle.
+    void import("./walletService").then(({ ensureWallet }) => {
+      void ensureWallet();
+    });
+  }
+
   return { account, characters };
 }
