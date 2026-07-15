@@ -18,12 +18,34 @@ export type GameSessionSnapshot = {
   allyBias: FighterBias;
   bossBias: FighterBias;
   ready: boolean;
+  /** Auto-provisioned Crossmint custodial wallet address for this account. */
+  walletAddress: string | null;
 };
 
 type Listener = () => void;
 
 /** Session-scoped key persisting the active fleet character across surfaces. */
 const SELECTED_CHAR_KEY = "grudge.open.selectedCharacterId";
+/** Guest / draft characters created from charactersgrudox race kit. */
+const LOCAL_CHARS_KEY = "grudge.open.localChars";
+
+function loadLocalCharacters(): GrudgeCharacter[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_CHARS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as GrudgeCharacter[];
+    return Array.isArray(arr) ? arr.filter((c) => c && c.id && c.name) : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
+  const local = loadLocalCharacters();
+  const seen = new Set(fleet.map((c) => c.id));
+  const extras = local.filter((c) => !seen.has(c.id));
+  return [...extras, ...fleet];
+}
 
 function loadSelectedCharacterId(): string | null {
   try {
@@ -61,6 +83,12 @@ class GameSession {
 
   get snapshot(): GameSessionSnapshot {
     const mode = getMode(this.modeId);
+    // Wallet address read from sessionStorage cache (set by walletService.ensureWallet).
+    let walletAddress: string | null = null;
+    try {
+      const raw = sessionStorage.getItem("grudge.open.wallet");
+      if (raw) walletAddress = (JSON.parse(raw) as { address?: string }).address ?? null;
+    } catch { /* */ }
     return {
       mode,
       account: this.account,
@@ -70,6 +98,7 @@ class GameSession {
       allyBias: biasForStrategy(mode.allyStrategy),
       bossBias: biasForStrategy(mode.bossStrategy),
       ready: this.ready,
+      walletAddress,
     };
   }
 
@@ -93,13 +122,13 @@ class GameSession {
   async boot(): Promise<GameSessionSnapshot> {
     const { account, characters } = await initFleetAuth();
     this.account = account;
-    this.characters = characters;
+    this.characters = mergeRoster(characters);
     // Keep a persisted selection only if it still resolves to a loaded character.
-    if (this.selectedCharacterId && !characters.some((c) => c.id === this.selectedCharacterId)) {
+    if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
       this.selectedCharacterId = null;
     }
-    if (!this.selectedCharacterId && characters[0]) {
-      this.selectedCharacterId = characters[0].id;
+    if (!this.selectedCharacterId && this.characters[0]) {
+      this.selectedCharacterId = this.characters[0].id;
     }
     storeSelectedCharacterId(this.selectedCharacterId);
     this.ready = true;
@@ -114,15 +143,32 @@ class GameSession {
    */
   async refreshCharacters(): Promise<GrudgeCharacter[]> {
     const characters = await fetchCharacters();
-    this.characters = characters;
-    if (this.selectedCharacterId && !characters.some((c) => c.id === this.selectedCharacterId)) {
-      this.selectedCharacterId = characters[0]?.id ?? null;
-    } else if (!this.selectedCharacterId && characters[0]) {
-      this.selectedCharacterId = characters[0].id;
+    this.characters = mergeRoster(characters);
+    if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
+      this.selectedCharacterId = this.characters[0]?.id ?? null;
+    } else if (!this.selectedCharacterId && this.characters[0]) {
+      this.selectedCharacterId = this.characters[0].id;
     }
     storeSelectedCharacterId(this.selectedCharacterId);
     this.emit();
-    return characters;
+    return this.characters;
+  }
+
+  /**
+   * Upsert a draft/local character (charactersgrudox create flow) and select it.
+   * Persists under localStorage; merged ahead of fleet roster on boot/refresh.
+   */
+  upsertLocalCharacter(ch: GrudgeCharacter): void {
+    const local = loadLocalCharacters().filter((c) => c.id !== ch.id);
+    local.unshift(ch);
+    try {
+      localStorage.setItem(LOCAL_CHARS_KEY, JSON.stringify(local.slice(0, 24)));
+    } catch {
+      /* */
+    }
+    const without = this.characters.filter((c) => c.id !== ch.id);
+    this.characters = [ch, ...without];
+    this.selectCharacter(ch.id);
   }
 
   /** Enemy AI profile for current mode (host uses for FighterBrain bias). */

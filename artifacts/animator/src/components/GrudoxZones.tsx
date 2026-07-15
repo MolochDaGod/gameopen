@@ -87,7 +87,7 @@ export function GrudoxZones({ onEnterNative, onExit }: Props) {
                 </button>
               )}
               <button type="button" style={btnStyle} onClick={() => launch(zone.id)}>
-                Open in GRUDOX ↗
+                {zone.externalPath ? "Open Island ↗" : "Open in GRUDOX ↗"}
               </button>
             </div>
           </div>

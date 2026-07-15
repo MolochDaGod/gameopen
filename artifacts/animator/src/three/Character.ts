@@ -7,6 +7,7 @@ import { filterBindableTracks } from "./clipTracks";
 import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
+import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
 
 /** Crossfade (seconds) used to ease the additive combat overlay in and out. */
 const OVERLAY_FADE = 0.07;
@@ -81,23 +82,15 @@ export class Character {
       return;
     }
     this.model = gltf.scene;
-    this.model.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (mesh.isMesh) {
-        mesh.castShadow = true;
-        mesh.frustumCulled = false;
-      }
-    });
-
-    // Normalise to the canonical fighter height (~2m), feet on the floor.
-    const box = new THREE.Box3().setFromObject(this.model);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const targetHeight = CHARACTER_HEIGHT_M;
-    const s = size.y > 0.001 ? (targetHeight / size.y) * this.def.scale : this.def.scale;
-    this.model.scale.setScalar(s);
-    const box2 = new THREE.Box3().setFromObject(this.model);
-    this.model.position.y -= box2.min.y;
+    // Restore colour (de-chrome metalness) then fit height safely.
+    // Old path: setFromObject world box → target/size.y could yield ~100× scale.
+    restoreCharacterMaterials(this.model, { neutralizeMetal: true });
+    const fit = fitCharacterHeight(this.model, CHARACTER_HEIGHT_M, this.def.scale ?? 1);
+    if (fit.unitFix !== 1 || fit.scale > 5 || fit.scale < 0.05) {
+      console.info(
+        `[Character] ${this.def.id} fit h=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)}`,
+      );
+    }
     this.model.rotation.y = this.modelYaw;
     this.root.add(this.model);
 

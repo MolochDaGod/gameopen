@@ -651,6 +651,109 @@ export function weaponCombat(id: string): WeaponCombat {
   return resolveCombat(getWeapon(id));
 }
 
+/**
+ * Fantasy Scene Creator / charactersgrudox race GLBs — playable roster source.
+ * Files live under public/models/races/ (synced from
+ * Fantasy-Scene-Creator/artifacts/charactersgrudox/public/models/races).
+ */
+export const RACE_CHARACTERS: CharacterDef[] = [
+  {
+    id: "race-human",
+    name: "Human",
+    file: "models/races/human.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Slash", clip: "attack", kind: "slash" },
+      { label: "Charge", clip: "run", kind: "slam", mode: "dash" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+  {
+    id: "race-orc",
+    name: "Orc",
+    file: "models/races/orc.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Cleave", clip: "attack", kind: "slash" },
+      { label: "War Cry", clip: "attack", kind: "nova" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+  {
+    id: "race-high-elf",
+    name: "High Elf",
+    file: "models/races/high_elf.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Arcane Bolt", clip: "attack", kind: "bolt" },
+      { label: "Blink", clip: "run", kind: "slam", mode: "dash" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+  {
+    id: "race-dwarf",
+    name: "Dwarf",
+    file: "models/races/dwarf.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Hammer", clip: "attack", kind: "slam" },
+      { label: "Fortify", clip: "attack", kind: "nova" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+  {
+    id: "race-barbarian",
+    name: "Barbarian",
+    file: "models/races/barbarian.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Fury", clip: "attack", kind: "slash" },
+      { label: "Leap", clip: "jump", kind: "slam", mode: "dash" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+  {
+    id: "race-undead",
+    name: "Undead",
+    file: "models/races/undead.glb",
+    scale: 1,
+    clips: {},
+    signatureSkills: [
+      { label: "Drain", clip: "attack", kind: "bolt" },
+      { label: "Bone Nova", clip: "attack", kind: "nova" },
+    ],
+    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
+    modelYaw: 0,
+  },
+];
+
+// Append race kit once (avoid double-push on HMR).
+for (const rc of RACE_CHARACTERS) {
+  if (!CHARACTERS.some((c) => c.id === rc.id)) CHARACTERS.push(rc);
+}
+
 export function getCharacter(id: string): CharacterDef {
   return CHARACTERS.find((c) => c.id === id) ?? CHARACTERS[0];
+}
+
+/** Map fleet raceId strings → charactersgrudox race character catalog id. */
+export function raceCharacterIdForFleetRace(raceId?: string): string {
+  const k = (raceId || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if (k.includes("orc")) return "race-orc";
+  if (k.includes("elf")) return "race-high-elf";
+  if (k.includes("dwarf") || k.includes("dwf")) return "race-dwarf";
+  if (k.includes("barb")) return "race-barbarian";
+  if (k.includes("undead") || k === "ud") return "race-undead";
+  if (k.includes("human") || k.includes("kingdom") || k === "wk") return "race-human";
+  return "race-human";
 }

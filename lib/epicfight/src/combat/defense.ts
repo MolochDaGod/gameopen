@@ -41,12 +41,19 @@ import type {
   VulnerableState,
 } from "./types.js";
 
-/** Seconds: wider parry window that negates damage. */
-export const PARRY_DEFLECT_WINDOW = 0.45;
-/** Seconds: tighter perfect-parry window that also launches the attacker. */
-export const PARRY_PERFECT_WINDOW = 0.15;
+/**
+ * Parry / dodge windows aligned to Danger Room T0 reaction timeline ref
+ * (docs/ref-combat/block-parry-2.png):
+ *   Parry NARROW  ≈ 0.30s  |  Block WIDE (hold)  |  Dodge WIDEST i-frames
+ * Age is seconds since the defender pressed the reaction.
+ */
+export const PARRY_DEFLECT_WINDOW = 0.3;
+/** Seconds: tighter perfect-parry window that also opens the attacker. */
+export const PARRY_PERFECT_WINDOW = 0.12;
 /** Seconds: dodge "punish" window — attacker is rerouted into a stumble. */
 export const DODGE_PUNISH_WINDOW = 0.12;
+/** When block force < attack force, chip damage fraction (block still helps). */
+export const BLOCK_CHIP_FRACTION = 0.4;
 
 /** Build a clean hit result with full damage and no special reactions. */
 function hitResult(attack: AttackPayload): DefensiveResult {
@@ -146,8 +153,16 @@ export function resolveDefense(
           critWindow: false,
         };
       }
-      // Attack force exceeds block — breaks through.
-      return hitResult(attack);
+      // Attack force exceeds block — chip through (block is the SAFE option:
+      // reduces damage/stability rather than full avoid). See reaction timeline ref.
+      return {
+        outcome: "hit",
+        damageDealt: Math.round(attack.damage * BLOCK_CHIP_FRACTION),
+        poiseDamageDealt: Math.round(attack.poiseDamage * BLOCK_CHIP_FRACTION),
+        attackerReaction: "none",
+        defenderReaction: "none",
+        critWindow: false,
+      };
     }
 
     // ---------------------------------------------------------------------- dodge

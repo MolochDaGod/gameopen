@@ -14,7 +14,7 @@
  * Never deep-link arcade cabinets back to open.grudge-studio.com in a self-loop.
  * Never remap Voxel Velocity to Danger Room.
  *
- * Mine-Loader Realms / Island use externalPath (off-GRUDOX hosts).
+ * Mine-Loader Realms / Island / Account use externalPath (off-GRUDOX hosts).
  */
 
 /** Canonical GRUDOX host for Voxel Arcade + fleet zone shell. */
@@ -99,7 +99,6 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     blurb: "Production strip racer — GRUDOX arcade or drive.grudge-studio.com.",
     tone: "#ffd24d",
     native: false,
-    /** Production host for the real racer (not a staging/dev shell). */
     productionUrl: "https://drive.grudge-studio.com/",
   },
   {
@@ -139,12 +138,10 @@ export interface GrudoxLinkParams {
 
 /**
  * Build GRUDOX arcade deep-link (or externalPath / productionUrl when set).
- * Always targets grudox.grudge-studio.com unless host override is explicit.
  */
 export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): string {
   const zone = GRUDOX_ZONES.find((z) => z.id === zoneId);
 
-  // Production racer ships on drive.grudge-studio.com (Voxel Velocity).
   if (zone?.productionUrl) {
     const base = zone.productionUrl.replace(/\/+$/, "");
     const q = new URLSearchParams();
@@ -168,7 +165,6 @@ export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): s
   q.set("open", "1");
   q.set("from", "gameopen");
 
-  // External destinations (Lobby Island, Mine-Loader, Account hub)
   if (zone?.externalPath) {
     try {
       const u = new URL(zone.externalPath);

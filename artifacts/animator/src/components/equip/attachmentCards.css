@@ -1,0 +1,197 @@
+/**
+ * Attachment cards — visual language from three-js-basic-character-customisation:
+ * translucent square slot, hover fill, ＋ rotates to ✕, option strip fans beside slot.
+ */
+
+.att-host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  /* Host must not block orbit/drag on canvas — only cards receive events */
+}
+
+.att-cluster {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+/* Fan directions */
+.att-fan-left {
+  flex-direction: row-reverse;
+}
+.att-fan-right {
+  flex-direction: row;
+}
+.att-fan-up {
+  flex-direction: column-reverse;
+}
+.att-fan-down {
+  flex-direction: column;
+}
+
+.att-slot {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgba(140, 160, 190, 0.45);
+  border-radius: 4px;
+  background: rgba(12, 16, 24, 0.55);
+  cursor: pointer;
+  color: #d0d8e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.att-slot:hover,
+.att-slot.is-open {
+  border-color: rgba(100, 180, 255, 0.75);
+  background: rgba(30, 50, 80, 0.65);
+  box-shadow: 0 0 14px rgba(80, 160, 255, 0.25);
+}
+.att-slot.has-equip {
+  border-color: rgba(126, 224, 160, 0.5);
+}
+
+.att-slot-face {
+  width: 80%;
+  height: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.15s ease, margin 0.15s ease;
+  border-radius: 2px;
+}
+.att-slot:hover .att-slot-face {
+  width: 90%;
+  height: 90%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.att-plus {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #c8d0dc;
+  font-weight: 300;
+  transition: transform 0.2s ease;
+  display: block;
+}
+.att-plus.is-open {
+  transform: rotate(45deg);
+  color: #9ec8ff;
+}
+
+.att-slot-glyph {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.att-slot-label {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(200, 210, 230, 0.75);
+  pointer-events: none;
+  text-shadow: 0 1px 3px #000;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Option strip — opacity/visibility like the demo */
+.att-options {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  max-width: min(70vw, 280px);
+  flex-wrap: wrap;
+}
+.att-fan-up .att-options,
+.att-fan-down .att-options {
+  flex-direction: column;
+}
+.att-options.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.att-option {
+  min-width: 3rem;
+  height: 3rem;
+  padding: 4px 6px;
+  border: 1px solid #4e4e4e;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eef8;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.att-option:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--att-tone, rgba(100, 180, 255, 0.7));
+}
+.att-option.is-active {
+  opacity: 1;
+  border-color: var(--att-tone, #7ee0a0);
+  box-shadow: 0 0 8px rgba(126, 224, 160, 0.25);
+}
+.att-option:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.att-option-clear {
+  border-style: dashed;
+}
+
+.att-option-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.att-option-name {
+  font-size: 8px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  max-width: 3.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Kind variants */
+.att-host--unit .att-slot {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.att-host--unit .att-option {
+  min-width: 2.4rem;
+  height: 2.4rem;
+}
+.att-host--character .att-slot {
+  border-color: rgba(232, 168, 110, 0.45);
+}
+.att-host--character .att-slot.is-open {
+  border-color: rgba(232, 168, 110, 0.9);
+}

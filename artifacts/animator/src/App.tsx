@@ -46,6 +46,7 @@ import { IntroCinematic } from "./components/IntroCinematic";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
+import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
 import { GrudoxZones } from "./components/GrudoxZones";
 import { MimicDungeon } from "./components/MimicDungeon";
@@ -876,7 +877,7 @@ export default function App() {
         placeholder: "Fix combat feel, preview anim, dash forward, audit icons…",
       };
     }
-    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones" || mode === "genesis" || mode === "voxgrudge-native") {
+    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones" || mode === "genesis" || mode === "voxgrudge-native" || mode === "account") {
       return {
         surface: "guide",
         title: "Companion",
@@ -920,6 +921,21 @@ export default function App() {
   const onApplyStatus = useCallback((id: StatusId, aoe?: boolean) => {
     studioRef.current?.applyStatus(id, aoe);
   }, []);
+
+  if (mode === "account") {
+    return shell(
+      withScreenTheme(
+        <AccountPanel
+          onPlayRace={(id) => {
+            setCharacterId(id);
+            studioRef.current?.setCharacter(id);
+            navigate("danger");
+          }}
+          onEnterGame={(m) => navigate(m)}
+        />,
+      ),
+    );
+  }
 
   if (mode === "doors") {
     return shell(

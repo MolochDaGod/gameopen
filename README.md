@@ -1,15 +1,21 @@
 # Grudge Open (`gameopen`)
 
-Combat sandbox client for **Grudge Studio** — races, weapons, VFX, full Mixamo-style animation packs, arena maps, and fleet identity.
+**Canonical live origin:** [open.grudge-studio.com](https://open.grudge-studio.com)  
+Steam-style library hub, Account hub, Danger Room (T0 combat), Mine-Loader Realms handoff, fleet SSO, companion AI.
 
 | Surface | Platform | Role |
 |---------|----------|------|
-| Client SPA | **Vercel** | Static `client/public` (Three.js engine + assets) |
-| API | **Railway** | Health, effects catalog, character proxy, co-op WS |
-| Binaries (optional) | **Cloudflare R2** | `assets.grudge-studio.com/gameopen/*` |
-| Catalog | **ObjectStore** | `objectstore.grudge-studio.com/api/v1` |
+| Edge | **Cloudflare Worker** | `open.grudge-studio.com` → Vercel |
+| Client SPA | **Vercel** | Animator build (`artifacts/animator`) |
+| API | **Railway** | Health, effects, co-op helpers |
+| Characters / wallet | **GrudgeBuilder Postgres** | `/api/characters`, `/api/wallet` |
+| Catalog (D1+R2) | **ObjectStore** | Definition JSON (not character state) |
+| Binaries | **R2** | `assets.grudge-studio.com/gameopen/*` |
 | Auth | **Grudge ID** | `id.grudge-studio.com` |
-| Characters SSOT | **GrudgeBuilder Railway** | Proxied `/api/characters` |
+| AI | **ai.grudge-studio.com** | Companion dock |
+| Voxel worlds | **Mine-Loader** | Realms SPA + 1× world API |
+
+**Macro stack / D1 / AI handoff:** [`docs/OPEN_STACK.md`](docs/OPEN_STACK.md)
 
 ## Auth (return-to-origin SSO)
 
@@ -64,18 +70,30 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/lobby` | Multiplayer lobby |
 | `/zones` | GRUDOX zone launcher |
 | `/ledmask` | LED mask tool |
+| `/account` | Account hub (races, wallet, treaty) |
 | `/arcade/play/<id>` | GRUDOX cabinet deep-link |
 
 Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).
 
+### Docs index
+
+| Doc | Topic |
+|-----|--------|
+| [OPEN_STACK.md](docs/OPEN_STACK.md) | Stack, deps, D1 vs Postgres, AI handoff |
+| [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
+| [DANGER_ROOM_T0_COMBAT.md](docs/DANGER_ROOM_T0_COMBAT.md) | T0 skills, MM, parry/block |
+| [ATTACHMENT_EQUIP_CARDS.md](docs/ATTACHMENT_EQUIP_CARDS.md) | Equip container cards |
+| [DEPLOY.md](DEPLOY.md) | Env + smoke |
+| [OPEN_SYSTEMS.md](docs/OPEN_SYSTEMS.md) | Path/routing practices (if present) |
+
 ## Voxel canonical (GRUDOX / editors / games)
 
-Block types, scene interchange, and the 250-block Codex come from **Voxel Realms** (mine-loader):
+Block types, scene interchange, and the 250-block Codex come from **Voxel Realms** (Mine-Loader):
 
 | Piece | URL / path |
 |-------|------------|
-| Codex UI | https://mine-loader.replit.app/#/defs |
-| Catalog API | `GET /api/blocks` (proxied; upstream mine-loader) |
+| Realms SPA | https://mineloader.grudge-studio.com |
+| Catalog API | `GET /api/blocks` (Mine-Loader / proxied) |
 | Package | `@workspace/voxel-canonical` → `lib/voxel-canonical` |
 | Doc | [`docs/VOXEL_CANONICAL.md`](docs/VOXEL_CANONICAL.md) |
 

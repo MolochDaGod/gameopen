@@ -76,8 +76,10 @@ const ARCHETYPE_CONFIG: Record<FighterArchetype, Partial<CombatConfig>> = {
     fallenDuration: 3.0,
     critWindowDuration: 3.5,
     block: { staminaCostOnRaise: 4, staminaDrainPerSec: 6, force: 3 },
-    parry: { deflectWindow: 0.4, perfectWindow: 0.12, force: 3, staminaCost: 12 },
+    // Boss: slightly wider parry than players (fairness), still T0-aligned.
+    parry: { deflectWindow: 0.32, perfectWindow: 0.12, force: 3, staminaCost: 12 },
   },
+  // Player defaults come from epicfight defaultCombatConfig (T0 reaction windows).
 };
 
 /** Resolve a full {@link CombatConfig} for an archetype, with optional overrides. */

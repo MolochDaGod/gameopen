@@ -55,7 +55,7 @@ import type { FireFxParams } from "./fxSettings";
 import { loadSound, saveSound, type SoundSettings } from "./soundSettings";
 import { loadControls, saveControls } from "./controlsSettings";
 import { getCharacter, getWeapon, weaponCombat } from "./assets";
-import { offHandEligible } from "./arsenal";
+import { offHandEligible, getT0Skill, t0SignatureSkills, mmToMeters } from "./arsenal";
 import { ELEMENT_THEME } from "./arsenal/elements";
 import type { StaffElement } from "./types";
 import { defenseClips, defenseOutcomeClip, guardedHitClip, vulnerableReactionClip } from "./arsenal/holdStyle";
@@ -1047,8 +1047,14 @@ export class Studio {
       return { label: w.skillName, clip: def.clips.attack ?? "" };
     }
     const i = Number(slot.slice(3)) - 1;
+    // Prefer T0 weapon kit labels (Danger Room equipment skill sheet) over
+    // per-character signature kits so the bar matches equipped weapon.
+    const t0 = t0SignatureSkills(this.weaponId)[i];
     const sig = def.signatureSkills[i];
-    return { label: sig?.label ?? `Signature ${i + 1}`, clip: sig?.clip ?? "" };
+    return {
+      label: t0?.label ?? sig?.label ?? `Signature ${i + 1}`,
+      clip: sig?.clip ?? t0?.clip ?? "",
+    };
   }
 
   /** Resolved bindings (override or default) for every action slot. */
@@ -2866,15 +2872,26 @@ export class Studio {
     const origin = this.character.root.position.clone();
     const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, this.character.root.rotation.y, 0));
 
-    // Signature slot (1-4): play its clip (override or character default) + VFX.
+    // Signature slot (1-4): T0 weapon kit (MM + kind) drives VFX/motion; character
+    // clip overrides still apply when authored.
     if (isSig) {
+      const t0 = getT0Skill(this.weaponId, signatureIndex!);
       const sig = def.signatureSkills[signatureIndex!];
       const clip = override ?? sig?.clip;
       // Nothing assigned to this slot and no native signature — no-op.
-      if (!clip && !sig) return false;
+      if (!clip && !sig && !t0) return false;
       const dur = clip && this.character.hasClip(clip) ? this.character.playClipOnce(clip, 0.12) : 0;
-      const kind = sig?.kind ?? "slash";
-      if (sig?.mode === "dash") {
+      const kind = t0?.kind ?? sig?.kind ?? "slash";
+      const mode = t0?.mode ?? sig?.mode;
+      // Motion-math: +MM gap-close toward aim, −MM kite/backstep (ref sheet 2).
+      const mm = t0?.mm ?? 0;
+      if (this.controller && Math.abs(mm) >= 20) {
+        const dist = Math.abs(mmToMeters(mm)) * 0.9;
+        const dir = fwd.clone();
+        if (mm < 0) dir.negate();
+        this.controller.dash(dir, dist, 0.22, dist * 0.15, 0.45);
+      }
+      if (mode === "dash") {
         this.doDashSkill(kind, origin, fwd, dur);
       } else {
         // Aimed spells: home onto a locked/front target so the projectile arcs
@@ -2910,7 +2927,7 @@ export class Studio {
           this.vfx.playSkill(kind, origin, fwd, quat, picked?.position, undefined, pose);
         }
       }
-      this.skillCooldownMax = Math.max(dur, 1.4);
+      this.skillCooldownMax = Math.max(dur, t0?.cooldown ?? 1.4);
       this.skillCooldown = this.skillCooldownMax;
       this.stamina = Math.max(0, this.stamina - 20);
       return true;
@@ -6714,7 +6731,16 @@ export class Studio {
     });
   }
 
-  signatureSkills(): { label: string; icon: string }[] {
+  signatureSkills(): { label: string; icon: string; mm?: number }[] {
+    // HUD 1–4 mirrors T0 weapon kits when equipped (equipment skill sheet).
+    const t0 = t0SignatureSkills(this.weaponId);
+    if (t0.length) {
+      return t0.map((s) => ({
+        label: s.label,
+        icon: SKILL_KIND_ICON[s.kind] ?? "attack",
+        mm: s.mm,
+      }));
+    }
     return getCharacter(this.characterId).signatureSkills.map((s) => ({
       label: s.label,
       icon: SKILL_KIND_ICON[s.kind],

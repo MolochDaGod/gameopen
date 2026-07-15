@@ -279,12 +279,14 @@ describe("resolveDefense — block outcomes", () => {
     expect(r.damageDealt).toBe(0);
   });
 
-  it("returns hit when attack force exceeds block force", () => {
+  it("chips damage when attack force exceeds block force (safe block option)", () => {
     const strongAtk: AttackPayload = { force: 10, damage: 30, poiseDamage: 50 };
     const def: DefensePayload = { action: "block", force: 2, age: 0 };
     const r = resolveDefense(strongAtk, def, false);
     expect(r.outcome).toBe("hit");
-    expect(r.damageDealt).toBe(strongAtk.damage);
+    // BLOCK_CHIP_FRACTION = 0.4 — block still reduces damage vs full hit
+    expect(r.damageDealt).toBe(12);
+    expect(r.poiseDamageDealt).toBe(20);
   });
 });
 

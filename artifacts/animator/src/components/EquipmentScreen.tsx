@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { WeaponGroup, WeaponId } from "../three/types";
 import { WEAPONS, OFF_HAND_WEAPONS, offHandEligible } from "../three/arsenal";
 import { WEAPON_ICON } from "../three/icons";
 import { Icon } from "./Icon";
+import { AttachmentSlotCards } from "./equip/AttachmentSlotCards";
+import { PLAYER_SLOT_ANCHORS, type AttachmentSlotDef } from "./equip/attachmentCardModel";
 import "./EquipmentScreen.css";
 
 interface Props {
@@ -73,6 +75,68 @@ export function EquipmentScreen({
   const offEligible = offHandEligible(currentWeapon);
   const totalShown = groups.reduce((n, g) => n + g.items.length, 0);
 
+  /**
+   * Viewport attachment cards — same outline as three-js-basic-character-customisation:
+   * slot hotspot → option strip → apply → live equip (draw/rebuild).
+   */
+  const attachmentSlots: AttachmentSlotDef[] = useMemo(() => {
+    const mains = WEAPONS.filter((w) => (w.group ?? "unarmed") !== "unarmed" || w.id === "none").slice(
+      0,
+      12,
+    );
+    return [
+      {
+        id: "weapon",
+        label: "Main Hand",
+        anchor: PLAYER_SLOT_ANCHORS.weapon,
+        equippedId: currentWeapon,
+        emptyLabel: "Weapon",
+        options: mains.map((w) => ({
+          id: w.id,
+          label: w.label,
+          icon: "⚔",
+          tone: w.id === currentWeapon ? "#7ee0a0" : undefined,
+        })),
+      },
+      {
+        id: "offhand",
+        label: "Off-Hand",
+        anchor: PLAYER_SLOT_ANCHORS.offhand,
+        equippedId: currentOffHand,
+        emptyLabel: "Off",
+        options: [
+          ...OFF_HAND_WEAPONS.map((w) => ({
+            id: w.id,
+            label: w.label,
+            icon: "🛡",
+            disabled: !offEligible,
+            tone: w.id === currentOffHand ? "#7ee0a0" : undefined,
+          })),
+        ],
+      },
+      {
+        id: "legs",
+        label: "Legs",
+        anchor: PLAYER_SLOT_ANCHORS.legs,
+        equippedId: null,
+        emptyLabel: "Legs",
+        options: [
+          { id: "boots", label: "Boots", icon: "👢", disabled: true },
+          { id: "greaves", label: "Greaves", icon: "🦿", disabled: true },
+        ],
+      },
+    ];
+  }, [currentWeapon, currentOffHand, offEligible]);
+
+  const onAttachmentApply = useCallback(
+    (slotId: string, optionId: string | null) => {
+      if (slotId === "weapon" && optionId) onEquip(optionId as WeaponId);
+      if (slotId === "offhand") onEquipOff(optionId as WeaponId | null);
+      // legs/armor teasers — no engine path yet
+    },
+    [onEquip, onEquipOff],
+  );
+
   return (
     <div className="eq-screen" role="dialog" aria-label="Equipment loadout">
       <button className="eq-backdrop" aria-label="Close loadout" onClick={onClose} />
@@ -88,6 +152,18 @@ export function EquipmentScreen({
             ✕
           </button>
         </header>
+
+        {/* Character container — attachment cards over a figure preview (CodePen outline) */}
+        <div className="eq-figure" aria-label="Equipment attachment cards">
+          <div className="eq-figure-silhouette" aria-hidden />
+          <AttachmentSlotCards
+            kind="player"
+            slots={attachmentSlots}
+            onApply={onAttachmentApply}
+            showLabels
+          />
+          <p className="eq-figure-tip">Tap ＋ on the body to swap gear — same pattern as character customisation</p>
+        </div>
 
         {/* Modular slot strip — Main Hand + Off-Hand are live, the rest are upcoming. */}
         <div className="eq-slots">

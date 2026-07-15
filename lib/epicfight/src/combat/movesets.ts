@@ -12,21 +12,24 @@ export function defaultCombatConfig(overrides: Partial<CombatConfig> = {}): Comb
     staminaRegenDelay: 0.6,
     maxPoise: 50,
     poiseRegenPerSec: 12,
+    // Dodge = WIDEST reaction (T0 timeline ref). I-frames ~0.38s within 0.55s dodge.
     dodge: {
       duration: 0.55,
-      iframeStart: 0.06,
-      iframeEnd: 0.34,
+      iframeStart: 0.04,
+      iframeEnd: 0.42,
       staminaCost: 20,
       distance: 3.2,
     },
+    // Block = SAFE / WIDE option (hold). Force gates stop vs chip (see defense.ts).
     block: {
       staminaCostOnRaise: 5,
       staminaDrainPerSec: 8,
       force: 2,
     },
+    // Parry = NARROW perfect timing (0.30s deflect, 0.12s perfect).
     parry: {
-      deflectWindow: 0.45,
-      perfectWindow: 0.15,
+      deflectWindow: 0.3,
+      perfectWindow: 0.12,
       force: 2,
       staminaCost: 15,
     },

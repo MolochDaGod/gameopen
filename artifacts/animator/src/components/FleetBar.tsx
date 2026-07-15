@@ -5,8 +5,9 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
 import { GAME_MODES, type GameModeId } from "../game/modes";
-import { loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+import { loginWithGrudgeId, logoutGrudge, getStoredToken } from "../lib/grudgeAuth";
 import { assetUrl } from "../lib/fleet";
+import { lobbyIslandDeepLink } from "../game/grudoxZones";
 
 /** Icon filename for each combat game mode. */
 const MODE_ICON: Partial<Record<GameModeId, string>> = {
@@ -75,6 +76,42 @@ export function FleetBar() {
           <>
             <span style={{ color: "#8ec3ff" }}>{snap.account.displayName || snap.account.grudgeId}</span>
             <span style={{ opacity: 0.7 }}>{snap.characters.length} chars</span>
+            {snap.walletAddress && (
+              <span
+                title={snap.walletAddress}
+                style={{ fontSize: 10, opacity: 0.65, color: "#9fe8a0", fontFamily: "monospace", cursor: "default" }}
+              >
+                ◈ {snap.walletAddress.slice(0, 4)}…{snap.walletAddress.slice(-4)}
+              </span>
+            )}
+            <a
+              href="/?door=library"
+              style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
+              title="Game library — Steam-style launcher"
+            >
+              Library
+            </a>
+            <a
+              href="/?door=account"
+              style={{ ...btnPrimary, textDecoration: "none", display: "inline-block" }}
+              title="Account hub — characters, wallet, treaty"
+            >
+              Account
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                const url = lobbyIslandDeepLink({
+                  token: getStoredToken(),
+                  characterId: snap.selectedCharacterId,
+                });
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+              style={btnPrimary}
+              title="Open GRUDOX Island with this character"
+            >
+              Island ↗
+            </button>
             <button
               type="button"
               onClick={() => {

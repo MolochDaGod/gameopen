@@ -8,6 +8,16 @@ export type { WeaponDef, WeaponGripDef, WeaponGripTransform, WeaponGroup, Weapon
 export { MELEE_WEAPONS } from "./melee";
 export { RANGED_WEAPONS } from "./ranged";
 export { MAGIC_WEAPONS } from "./magic";
+export {
+  T0_WEAPON_KITS,
+  T0_ATTACK_PHASE,
+  T0_REACTION_WINDOWS,
+  getT0Kit,
+  getT0Skill,
+  t0SignatureSkills,
+  mmToMeters,
+} from "./t0WeaponSkills";
+export type { T0SkillDef, T0SkillRole, T0WeaponKit } from "./t0WeaponSkills";
 
 /** The "no weapon" prefab — a pure unarmed loadout (no model, no grip). */
 export const NONE: WeaponDef = {

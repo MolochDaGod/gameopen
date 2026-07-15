@@ -28,7 +28,8 @@ export type AppMode =
   | "zones"
   | "mimic"
   | "genesis"
-  | "voxgrudge-native";
+  | "voxgrudge-native"
+  | "account";
 
 export type SurfaceGroup =
   | "hub"
@@ -201,6 +202,18 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     poster: "avatar",
     tags: ["AI Face", "LED"],
     accent: "#a78bff",
+  },
+  {
+    mode: "account",
+    slug: "account",
+    aliases: ["characters", "profile", "wallet", "treaty"],
+    cabinets: ["characters", "account"],
+    title: "Account Hub",
+    blurb: "charactersgrudox races, wallet, credits, GRUDOX tier, treaty chat.",
+    group: "hub",
+    poster: "library-account",
+    tags: ["Account", "SSO"],
+    accent: "#4fc3ff",
   },
 ] as const;
 
