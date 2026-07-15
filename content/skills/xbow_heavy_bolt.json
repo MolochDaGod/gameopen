@@ -1,0 +1,49 @@
+{
+  "id": "xbow_heavy_bolt",
+  "family": "crossbow",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Heavy Bolt",
+  "description": "Single shot, builds Mark",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.2222222222222223,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 1,
+  "hitWindows": [
+    {
+      "t": 0.18,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Bolt_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Bolt_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000024--BF88488",
+  "damageType": "physical",
+  "ship": true
+}

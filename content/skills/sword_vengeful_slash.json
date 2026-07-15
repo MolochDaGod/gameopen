@@ -1,0 +1,49 @@
+{
+  "id": "sword_vengeful_slash",
+  "family": "sword",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Vengeful Slash",
+  "description": "Single-target slash, builds 1 Grudge Mark stack, max 3",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 1,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Sword_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Sword_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000001--4DB4FBA",
+  "damageType": "physical",
+  "ship": true
+}

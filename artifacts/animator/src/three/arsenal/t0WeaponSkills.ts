@@ -11,6 +11,11 @@
  * Motion-math (MM): Studio uses `MM_TO_M = 0.01` → 100 MM ≈ 1 m body displacement.
  */
 import type { SkillKind, WeaponId } from "../types";
+import {
+  buildMasterKit,
+  getCachedMasterWeaponSkills,
+  masterKitToSignatureSkills,
+} from "../content/masterWeaponSkills";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -205,6 +210,31 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Point Blank", "muzzle", -70],
     ["power", "Lion Heart", "nova", 100],
   ]),
+  // uMMORPG / master-weaponSkills families
+  crossbow: kit("crossbow", "Crossbow", [
+    ["combo", "Heavy Bolt", "muzzle", -70],
+    ["special", "Piercing Bolt", "muzzle", -85],
+    ["ranged", "Volley", "muzzle", -100],
+    ["power", "Sweeping Bolt", "slam", -95],
+  ]),
+  wand: kit("wand", "Wand", [
+    ["combo", "Magic Missile", "bolt", -70],
+    ["special", "Arcane Pulse", "nova", -85],
+    ["ranged", "Void Bolt", "bolt", -100],
+    ["power", "Meteor Shower", "meteor", -95],
+  ]),
+  tome: kit("tome", "Grudge Tome", [
+    ["combo", "Elemental Bolt", "bolt", -70],
+    ["special", "Elemental Nova", "nova", -85],
+    ["ranged", "Elemental Surge", "bolt", -90],
+    ["power", "Page Surge", "nova", -100],
+  ]),
+  scythe: kit("scythe", "Reaper Scythe", [
+    ["combo", "Reaping Slash", "slash", 70],
+    ["special", "Soul Harvest", "darkBlades", 85],
+    ["ranged", "Spectral Chains", "bolt", 55],
+    ["power", "Grim Reaper", "nova", 100, "dash"],
+  ]),
 };
 
 /** Fallback kit when a weapon id has no dedicated entry. */
@@ -223,7 +253,8 @@ export function getT0Skill(weaponId: WeaponId | string, slotIndex: number): T0Sk
 
 /**
  * Character signatureSkills-compatible rows for HUD / Studio.
- * Prefer weapon T0 kit over per-character hardcoded kits when combat is weapon-driven.
+ * Prefer ObjectStore master-weaponSkills names/icons when catalog is loaded,
+ * else local T0 sheet kits.
  */
 export function t0SignatureSkills(weaponId: WeaponId | string): {
   label: string;
@@ -232,7 +263,16 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
   mode?: "default" | "dash";
   mm: number;
   cooldown: number;
+  iconUrl?: string | null;
+  skillId?: string;
+  damage?: number;
 }[] {
+  // Prefer ObjectStore master-weaponSkills (uMMORPG catalog) when loaded
+  const cat = getCachedMasterWeaponSkills();
+  if (cat) {
+    const mk = buildMasterKit(weaponId as WeaponId, cat);
+    if (mk) return masterKitToSignatureSkills(mk);
+  }
   return getT0Kit(weaponId).skills.map((s) => ({
     label: s.label,
     clip: "attack",

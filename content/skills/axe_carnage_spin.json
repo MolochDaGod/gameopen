@@ -1,0 +1,49 @@
+{
+  "id": "axe_carnage_spin",
+  "family": "axe",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Carnage Spin",
+  "description": "360 AoE refresh bleed",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.5555555555555556,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 12,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Effect.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000014--6DD3D1C",
+  "damageType": "physical",
+  "ship": true
+}

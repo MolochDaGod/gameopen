@@ -17,6 +17,11 @@ void gameSession.boot().catch((err) => {
   console.warn("[gameopen] fleet auth boot failed (guest mode)", err);
 });
 
+// ObjectStore master-weaponSkills (uMMORPG catalog) for Danger Room hotbar.
+void import("./three/content/masterWeaponSkills")
+  .then(({ loadMasterWeaponSkills }) => loadMasterWeaponSkills())
+  .catch((err) => console.warn("[gameopen] master-weaponSkills load failed", err));
+
 // PWA: capture install prompt + register offline shell worker (prod).
 bindInstallPrompt();
 void registerServiceWorker();

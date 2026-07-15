@@ -1,0 +1,49 @@
+{
+  "id": "wand_missile",
+  "family": "wand",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Magic Missile",
+  "description": "3 homing arcane bolts",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 0.8888888888888888,
+  "cost": {
+    "stamina": 0,
+    "mana": 5
+  },
+  "cooldown": 1,
+  "hitWindows": [
+    {
+      "t": 0.18,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/staff_34.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/staff_34.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-0000AB-7ACC17A5",
+  "damageType": "arcane",
+  "ship": true
+}

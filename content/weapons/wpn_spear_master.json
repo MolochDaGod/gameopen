@@ -1,0 +1,41 @@
+{
+  "id": "wpn_spear_master",
+  "itemId": "itm_spear_master",
+  "family": "spear",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "spear_thrust",
+    "spear_javelin",
+    "spear_impale",
+    "spear_storm"
+  ],
+  "mesh": {
+    "path": "models/weapons/spear.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "spear"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Spear_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

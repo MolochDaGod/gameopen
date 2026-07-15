@@ -37,6 +37,25 @@ export const RANGED_WEAPONS: WeaponDef[] = [
     },
   },
   {
+    // master-weaponSkills CROSSBOW — uses bow anim set + rifle mesh stand-in
+    id: "crossbow",
+    label: "Heavy Crossbow",
+    hand: "right",
+    kind: "muzzle",
+    skillName: "Heavy Bolt",
+    skillDuration: 0.75,
+    cooldown: 1.4,
+    combat: { intensity: 30, direction: 100, range: [0.7, 1.5] },
+    animSet: "bow",
+    group: "ranged",
+    duelEligible: false,
+    grip: { main: { rot: [0, PI2, 0], pos: [0, 0.05, 0] } },
+    model: {
+      main: { file: "models/weapons/rifle.glb", length: 1.1, forward: "z+", align: "y", anchor: "base" },
+      twoHanded: true,
+    },
+  },
+  {
     id: "pistol",
     label: "Pistol",
     hand: "right",

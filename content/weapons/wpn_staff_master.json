@@ -1,0 +1,41 @@
+{
+  "id": "wpn_staff_master",
+  "itemId": "itm_staff_master",
+  "family": "staff",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "magic",
+  "skills": [
+    "staff_fire_bolt",
+    "staff_flame_wave",
+    "staff_inferno_shield",
+    "staff_hellstorm"
+  ],
+  "mesh": {
+    "path": "models/weapons/staff.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "staff"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/staff_1.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/staff_1.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

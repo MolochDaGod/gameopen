@@ -1,0 +1,49 @@
+{
+  "id": "dagger_shadow_stab",
+  "family": "dagger",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Shadow Stab",
+  "description": "Single stab, builds Mark",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 0.8888888888888888,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 1,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Dagger_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Dagger_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-00003C-1E299088",
+  "damageType": "physical",
+  "ship": true
+}

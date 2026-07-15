@@ -1,0 +1,49 @@
+{
+  "id": "ga_primal_rage",
+  "family": "greataxe",
+  "slotKind": "secondary",
+  "hotbarSlot": 2,
+  "name": "Primal Rage",
+  "description": "Enter rage, +40% damage, take 15% more",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 0.8888888888888888,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 20,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Burns.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Burns.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-00007D--15D4978",
+  "damageType": "physical",
+  "ship": true
+}

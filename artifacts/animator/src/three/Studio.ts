@@ -1078,6 +1078,7 @@ export class Studio {
   /** Resolved bindings (override or default) for every action slot. */
   getSlotBindings(): SlotBinding[] {
     const weapon = this.weaponId;
+    const t0 = t0SignatureSkills(weapon);
     return SLOT_META.map(({ slot, key }) => {
       const d = this.slotDefault(slot);
       const override = this.overrides[slot];
@@ -1085,6 +1086,10 @@ export class Studio {
         slot === "primary" || slot === "fskill"
           ? slot
           : (slot as "sig1" | "sig2" | "sig3" | "sig4");
+      // Prefer master-weaponSkills pack icons on signature slots 1–4
+      const sigIdx =
+        slot === "sig1" ? 0 : slot === "sig2" ? 1 : slot === "sig3" ? 2 : slot === "sig4" ? 3 : -1;
+      const masterIcon = sigIdx >= 0 ? t0[sigIdx]?.iconUrl : null;
       return {
         slot,
         key,
@@ -1092,7 +1097,9 @@ export class Studio {
         clip: override ?? d.clip,
         custom: !!override,
         icon: resolveSlotLocalName(role, weapon),
-        iconUrl: resolveSlotIconUrl(role, weapon),
+        iconUrl: masterIcon || resolveSlotIconUrl(role, weapon, {
+          cdnUrl: masterIcon,
+        }),
       };
     });
   }
@@ -6749,14 +6756,15 @@ export class Studio {
     });
   }
 
-  signatureSkills(): { label: string; icon: string; mm?: number }[] {
-    // HUD 1–4 mirrors T0 weapon kits when equipped (equipment skill sheet).
+  signatureSkills(): { label: string; icon: string; mm?: number; iconUrl?: string | null }[] {
+    // HUD 1–4: master-weaponSkills (uMMORPG) via t0SignatureSkills, else T0 sheet.
     const t0 = t0SignatureSkills(this.weaponId);
     if (t0.length) {
       return t0.map((s) => ({
         label: s.label,
         icon: SKILL_KIND_ICON[s.kind] ?? "attack",
         mm: s.mm,
+        iconUrl: s.iconUrl,
       }));
     }
     return getCharacter(this.characterId).signatureSkills.map((s) => ({

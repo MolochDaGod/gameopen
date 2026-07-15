@@ -290,6 +290,43 @@ export const MELEE_WEAPONS: WeaponDef[] = [
     model: { main: { file: "models/weapons/shield.glb", length: 0.9, forward: "y+", align: "y", anchor: "center" } },
   },
   {
+    // uMMORPG / master-weaponSkills TOME — off-hand relic that couples spells
+    // into mainhand slots when toggled (Studio + masterWeaponSkills).
+    id: "tome",
+    label: "Grudge Tome",
+    hand: "left",
+    kind: "bolt",
+    skillName: "Page Surge",
+    skillDuration: 0.9,
+    cooldown: 2.0,
+    combat: { intensity: 35, direction: 70, range: [0.8, 1.6] },
+    animSet: "magic",
+    group: "off-hand",
+    duelEligible: false,
+    grip: { main: { rot: [0, 0, 0], pos: [0.02, 0.08, 0.04] } },
+    // No dedicated book GLB yet — mount uses procedural book fallback in Weapons.ts
+    model: { main: { file: "models/weapons/shield.glb", length: 0.45, forward: "y+", align: "y", anchor: "center" } },
+  },
+  {
+    id: "scythe",
+    label: "Reaper Scythe",
+    hand: "right",
+    kind: "slash",
+    skillName: "Reaping Slash",
+    skillDuration: 0.95,
+    cooldown: 1.5,
+    combat: { intensity: 55, direction: 95, range: [1.4, 2.8] },
+    animSet: "sword",
+    group: "melee-2h",
+    duelEligible: true,
+    grip: { main: { rot: [PI2, 0, 0], pos: [0, 0.05, 0] } },
+    // Converted: use war-spear as stand-in scythe polearm until dedicated GLB
+    model: {
+      main: { file: "models/weapons/war-spear.glb", length: 1.9, forward: "y+", align: "y", anchor: "base" },
+      twoHanded: true,
+    },
+  },
+  {
     // Gunblade (gunsword) + roman scutum — the Tank/Centurion's one-handed
     // loadout. Reuses the "sword" animSet (already a sword-and-shield stance:
     // loco / block / combo), so no new clip class is needed. The main piece is

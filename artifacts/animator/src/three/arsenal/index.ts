@@ -75,8 +75,12 @@ export const OFF_HAND_WEAPONS: WeaponDef[] = WEAPONS.filter((w) => w.group === "
 export function offHandEligible(mainId: WeaponId): boolean {
   const d = WEAPONS.find((w) => w.id === mainId);
   if (!d) return false;
+  // Wand + 1H melee can hold TOME (uMMORPG off-hand relic coupling)
+  if (mainId === "wand") return true;
   const group = d.group ?? "unarmed";
-  if (group !== "melee-1h" && group !== "unarmed") return false;
+  if (group !== "melee-1h" && group !== "unarmed" && group !== "magic") return false;
+  // 2H staffs already fill both hands — only wand (short magic) pairs with tome
+  if (group === "magic" && mainId !== "wand") return false;
   if (d.model?.off) return false;
   if (d.model?.twoHanded) return false;
   return true;

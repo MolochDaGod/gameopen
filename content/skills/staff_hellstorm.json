@@ -1,0 +1,49 @@
+{
+  "id": "staff_hellstorm",
+  "family": "staff",
+  "slotKind": "ultimate",
+  "hotbarSlot": 4,
+  "name": "Hellstorm",
+  "description": "Large AoE DoT",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 4,
+  "cost": {
+    "stamina": 0,
+    "mana": 5
+  },
+  "cooldown": 50,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Lava.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Lava.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000054--56F60DB",
+  "damageType": "physical",
+  "ship": true
+}

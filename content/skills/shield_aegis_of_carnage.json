@@ -1,0 +1,49 @@
+{
+  "id": "shield_aegis_of_carnage",
+  "family": "shield",
+  "slotKind": "ultimate",
+  "hotbarSlot": 1,
+  "name": "Aegis of Carnage",
+  "description": "shield erupts in crimson energy, AoE damage + self-heal",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.7777777777777777,
+  "cost": {
+    "stamina": 5,
+    "mana": 0
+  },
+  "cooldown": 45,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/shield_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/shield_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-SIG-AE4974-1C833F",
+  "damageType": "physical",
+  "ship": true
+}

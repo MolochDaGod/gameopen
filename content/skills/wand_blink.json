@@ -1,0 +1,49 @@
+{
+  "id": "wand_blink",
+  "family": "wand",
+  "slotKind": "secondary",
+  "hotbarSlot": 2,
+  "name": "Blink",
+  "description": "Instant teleport to target location",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 0.8888888888888888,
+  "cost": {
+    "stamina": 0,
+    "mana": 5
+  },
+  "cooldown": 12,
+  "hitWindows": [
+    {
+      "t": 0.18,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-0000AE-5F9B08F7",
+  "damageType": "arcane",
+  "ship": true
+}

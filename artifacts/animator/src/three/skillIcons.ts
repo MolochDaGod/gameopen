@@ -24,6 +24,7 @@ const WEAPON_CDN: Partial<Record<WeaponId, string>> = {
   hammer2h: `${CDN}/icons/pack/weapons/Hammer_01.png`,
   mace: `${CDN}/icons/pack/weapons/Hammer_01.png`,
   bow: `${CDN}/icons/pack/weapons/Bow_01.png`,
+  crossbow: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   "hunter-rifle": `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   pistol: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   rifle: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
@@ -33,6 +34,9 @@ const WEAPON_CDN: Partial<Record<WeaponId, string>> = {
   staffStorm: `${CDN}/icons/pack/misc/Electro.png`,
   staffNature: `${CDN}/icons/pack/misc/Slash_07.png`,
   staffHoly: `${CDN}/icons/pack/misc/Flow.png`,
+  wand: `${CDN}/icons/pack/weapons/staff_34.png`,
+  tome: `${CDN}/icons/pack/weapons/Book_1.png`,
+  scythe: `${CDN}/icons/pack/weapons/Scythe_01.png`,
   shield: `${CDN}/icons/pack/weapons/Sword_01.png`,
   none: `${CDN}/icons/pack/misc/Flow.png`,
 };

@@ -1,0 +1,41 @@
+{
+  "id": "wpn_scythe_master",
+  "itemId": "itm_scythe_master",
+  "family": "scythe",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "scythe_reap",
+    "scythe_shadow_step",
+    "scythe_spiral",
+    "scythe_grim_reaper"
+  ],
+  "mesh": {
+    "path": "models/weapons/war-spear.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "scythe"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Scythe_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Scythe_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

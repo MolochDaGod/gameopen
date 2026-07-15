@@ -1,0 +1,49 @@
+{
+  "id": "spear_javelin",
+  "family": "spear",
+  "slotKind": "secondary",
+  "hotbarSlot": 2,
+  "name": "Javelin Throw",
+  "description": "Hurl spear as ranged projectile",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.4444444444444444,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 8,
+  "hitWindows": [
+    {
+      "t": 0.18,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Spear_15.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_15.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000089--4D41E0A",
+  "damageType": "physical",
+  "ship": true
+}

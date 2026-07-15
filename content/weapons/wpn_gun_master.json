@@ -1,0 +1,41 @@
+{
+  "id": "wpn_gun_master",
+  "itemId": "itm_gun_master",
+  "family": "gun",
+  "slot": "mainHand",
+  "twoHanded": false,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "gun_grudge_shot",
+    "gun_explosive_round",
+    "gun_hellfire_barrage",
+    "gun_demon_blast"
+  ],
+  "mesh": {
+    "path": "models/weapons/pistol.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "gun"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/weapons/blackpowder.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/weapons/blackpowder.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

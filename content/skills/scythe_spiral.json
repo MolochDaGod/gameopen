@@ -1,0 +1,49 @@
+{
+  "id": "scythe_spiral",
+  "family": "scythe",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Death Spiral",
+  "description": "Spinning scythe AoE channel",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 2.2222222222222223,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 14,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Scythe_06.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Scythe_06.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-0000CA-20046134",
+  "damageType": "shadow",
+  "ship": true
+}

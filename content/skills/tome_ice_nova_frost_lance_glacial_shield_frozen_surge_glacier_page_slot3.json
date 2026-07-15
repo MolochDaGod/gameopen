@@ -1,0 +1,49 @@
+{
+  "id": "tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page_slot3",
+  "family": "tome",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Ice Nova",
+  "description": "dash chill",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 2.6666666666666665,
+  "cost": {
+    "stamina": 0,
+    "mana": 15
+  },
+  "cooldown": 45,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Book_1.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Book_1.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-SIG-6FABB6-89B748",
+  "damageType": "arcane",
+  "ship": true
+}

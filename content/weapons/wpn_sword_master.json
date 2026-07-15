@@ -1,0 +1,41 @@
+{
+  "id": "wpn_sword_master",
+  "itemId": "itm_sword_master",
+  "family": "sword",
+  "slot": "mainHand",
+  "twoHanded": false,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "sword_vengeful_slash",
+    "sword_blood_rush",
+    "sword_heroic_cleave",
+    "sword_crimson_reprisal"
+  ],
+  "mesh": {
+    "path": "models/weapons/sword.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "sword"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Sword_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Sword_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

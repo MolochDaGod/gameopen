@@ -1,0 +1,41 @@
+{
+  "id": "wpn_dagger_master",
+  "itemId": "itm_dagger_master",
+  "family": "dagger",
+  "slot": "mainHand",
+  "twoHanded": false,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "dagger_shadow_stab",
+    "dagger_phantom_dash",
+    "dagger_vengeful_ambush",
+    "dagger_deathgiver"
+  ],
+  "mesh": {
+    "path": "models/weapons/dagger.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "dagger"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Dagger_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Dagger_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

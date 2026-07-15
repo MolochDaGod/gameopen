@@ -1,0 +1,49 @@
+{
+  "id": "scythe_reap",
+  "family": "scythe",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Reaping Slash",
+  "description": "Wide sweeping arc, builds Soul stacks",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.1111111111111112,
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
+  "cooldown": 1,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Scythe_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Scythe_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-0000C4--4D34EBA",
+  "damageType": "shadow",
+  "ship": true
+}

@@ -1,0 +1,49 @@
+{
+  "id": "tome_flame_wave_fireball_inferno_shield_crimson_surge_inferno_page_slot1",
+  "family": "tome",
+  "slotKind": "primary",
+  "hotbarSlot": 1,
+  "name": "Flame Wave",
+  "description": "dash burn",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 2.6666666666666665,
+  "cost": {
+    "stamina": 0,
+    "mana": 15
+  },
+  "cooldown": 45,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Book_1.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Book_1.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-SIG-033717-9FE0FB",
+  "damageType": "arcane",
+  "ship": true
+}

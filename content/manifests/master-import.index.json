@@ -1,0 +1,459 @@
+{
+  "version": "3.1.0",
+  "generated": "2026-07-15T18:40:48.673Z",
+  "source": "https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json",
+  "weapons": [
+    {
+      "id": "wpn_sword_master",
+      "family": "sword",
+      "file": "weapons/wpn_sword_master.json"
+    },
+    {
+      "id": "wpn_axe_master",
+      "family": "axe",
+      "file": "weapons/wpn_axe_master.json"
+    },
+    {
+      "id": "wpn_bow_master",
+      "family": "bow",
+      "file": "weapons/wpn_bow_master.json"
+    },
+    {
+      "id": "wpn_crossbow_master",
+      "family": "crossbow",
+      "file": "weapons/wpn_crossbow_master.json"
+    },
+    {
+      "id": "wpn_gun_master",
+      "family": "gun",
+      "file": "weapons/wpn_gun_master.json"
+    },
+    {
+      "id": "wpn_dagger_master",
+      "family": "dagger",
+      "file": "weapons/wpn_dagger_master.json"
+    },
+    {
+      "id": "wpn_staff_master",
+      "family": "staff",
+      "file": "weapons/wpn_staff_master.json"
+    },
+    {
+      "id": "wpn_hammer_master",
+      "family": "hammer",
+      "file": "weapons/wpn_hammer_master.json"
+    },
+    {
+      "id": "wpn_shield_master",
+      "family": "shield",
+      "file": "weapons/wpn_shield_master.json"
+    },
+    {
+      "id": "wpn_greatsword_master",
+      "family": "greatsword",
+      "file": "weapons/wpn_greatsword_master.json"
+    },
+    {
+      "id": "wpn_greataxe_master",
+      "family": "greataxe",
+      "file": "weapons/wpn_greataxe_master.json"
+    },
+    {
+      "id": "wpn_spear_master",
+      "family": "spear",
+      "file": "weapons/wpn_spear_master.json"
+    },
+    {
+      "id": "wpn_tome_master",
+      "family": "tome",
+      "file": "weapons/wpn_tome_master.json"
+    },
+    {
+      "id": "wpn_mace_master",
+      "family": "mace",
+      "file": "weapons/wpn_mace_master.json"
+    },
+    {
+      "id": "wpn_wand_master",
+      "family": "wand",
+      "file": "weapons/wpn_wand_master.json"
+    },
+    {
+      "id": "wpn_scythe_master",
+      "family": "scythe",
+      "file": "weapons/wpn_scythe_master.json"
+    }
+  ],
+  "skills": [
+    {
+      "id": "sword_vengeful_slash",
+      "family": "sword",
+      "slot": "primary",
+      "file": "skills/sword_vengeful_slash.json"
+    },
+    {
+      "id": "sword_blood_rush",
+      "family": "sword",
+      "slot": "secondary",
+      "file": "skills/sword_blood_rush.json"
+    },
+    {
+      "id": "sword_heroic_cleave",
+      "family": "sword",
+      "slot": "ability",
+      "file": "skills/sword_heroic_cleave.json"
+    },
+    {
+      "id": "sword_crimson_reprisal",
+      "family": "sword",
+      "slot": "ultimate",
+      "file": "skills/sword_crimson_reprisal.json"
+    },
+    {
+      "id": "axe_rending_chop",
+      "family": "axe",
+      "slot": "primary",
+      "file": "skills/axe_rending_chop.json"
+    },
+    {
+      "id": "axe_adrenaline_surge",
+      "family": "axe",
+      "slot": "secondary",
+      "file": "skills/axe_adrenaline_surge.json"
+    },
+    {
+      "id": "axe_carnage_spin",
+      "family": "axe",
+      "slot": "ability",
+      "file": "skills/axe_carnage_spin.json"
+    },
+    {
+      "id": "axe_apocalypse_cleave",
+      "family": "axe",
+      "slot": "ultimate",
+      "file": "skills/axe_apocalypse_cleave.json"
+    },
+    {
+      "id": "bow_quick_shot",
+      "family": "bow",
+      "slot": "primary",
+      "file": "skills/bow_quick_shot.json"
+    },
+    {
+      "id": "bow_multishot",
+      "family": "bow",
+      "slot": "secondary",
+      "file": "skills/bow_multishot.json"
+    },
+    {
+      "id": "bow_bear_trap",
+      "family": "bow",
+      "slot": "ability",
+      "file": "skills/bow_bear_trap.json"
+    },
+    {
+      "id": "bow_arrow_rain",
+      "family": "bow",
+      "slot": "ultimate",
+      "file": "skills/bow_arrow_rain.json"
+    },
+    {
+      "id": "xbow_heavy_bolt",
+      "family": "crossbow",
+      "slot": "primary",
+      "file": "skills/xbow_heavy_bolt.json"
+    },
+    {
+      "id": "xbow_knockback_bolt",
+      "family": "crossbow",
+      "slot": "secondary",
+      "file": "skills/xbow_knockback_bolt.json"
+    },
+    {
+      "id": "xbow_barrage",
+      "family": "crossbow",
+      "slot": "ability",
+      "file": "skills/xbow_barrage.json"
+    },
+    {
+      "id": "xbow_sweeping_bolt",
+      "family": "crossbow",
+      "slot": "ultimate",
+      "file": "skills/xbow_sweeping_bolt.json"
+    },
+    {
+      "id": "gun_grudge_shot",
+      "family": "gun",
+      "slot": "primary",
+      "file": "skills/gun_grudge_shot.json"
+    },
+    {
+      "id": "gun_explosive_round",
+      "family": "gun",
+      "slot": "secondary",
+      "file": "skills/gun_explosive_round.json"
+    },
+    {
+      "id": "gun_hellfire_barrage",
+      "family": "gun",
+      "slot": "ability",
+      "file": "skills/gun_hellfire_barrage.json"
+    },
+    {
+      "id": "gun_demon_blast",
+      "family": "gun",
+      "slot": "ultimate",
+      "file": "skills/gun_demon_blast.json"
+    },
+    {
+      "id": "dagger_shadow_stab",
+      "family": "dagger",
+      "slot": "primary",
+      "file": "skills/dagger_shadow_stab.json"
+    },
+    {
+      "id": "dagger_phantom_dash",
+      "family": "dagger",
+      "slot": "secondary",
+      "file": "skills/dagger_phantom_dash.json"
+    },
+    {
+      "id": "dagger_vengeful_ambush",
+      "family": "dagger",
+      "slot": "ability",
+      "file": "skills/dagger_vengeful_ambush.json"
+    },
+    {
+      "id": "dagger_deathgiver",
+      "family": "dagger",
+      "slot": "ultimate",
+      "file": "skills/dagger_deathgiver.json"
+    },
+    {
+      "id": "staff_fire_bolt",
+      "family": "staff",
+      "slot": "primary",
+      "file": "skills/staff_fire_bolt.json"
+    },
+    {
+      "id": "staff_flame_wave",
+      "family": "staff",
+      "slot": "secondary",
+      "file": "skills/staff_flame_wave.json"
+    },
+    {
+      "id": "staff_inferno_shield",
+      "family": "staff",
+      "slot": "ability",
+      "file": "skills/staff_inferno_shield.json"
+    },
+    {
+      "id": "staff_hellstorm",
+      "family": "staff",
+      "slot": "ultimate",
+      "file": "skills/staff_hellstorm.json"
+    },
+    {
+      "id": "hammer_earthshatter",
+      "family": "hammer",
+      "slot": "primary",
+      "file": "skills/hammer_earthshatter.json"
+    },
+    {
+      "id": "hammer_thunderous_charge",
+      "family": "hammer",
+      "slot": "secondary",
+      "file": "skills/hammer_thunderous_charge.json"
+    },
+    {
+      "id": "hammer_cataclysm_blow",
+      "family": "hammer",
+      "slot": "ability",
+      "file": "skills/hammer_cataclysm_blow.json"
+    },
+    {
+      "id": "hammer_seismic_slam",
+      "family": "hammer",
+      "slot": "ultimate",
+      "file": "skills/hammer_seismic_slam.json"
+    },
+    {
+      "id": "shield_aegis_of_carnage",
+      "family": "shield",
+      "slot": "ultimate",
+      "file": "skills/shield_aegis_of_carnage.json"
+    },
+    {
+      "id": "gs_cleave",
+      "family": "greatsword",
+      "slot": "primary",
+      "file": "skills/gs_cleave.json"
+    },
+    {
+      "id": "gs_whirlwind",
+      "family": "greatsword",
+      "slot": "secondary",
+      "file": "skills/gs_whirlwind.json"
+    },
+    {
+      "id": "gs_bladestorm",
+      "family": "greatsword",
+      "slot": "ability",
+      "file": "skills/gs_bladestorm.json"
+    },
+    {
+      "id": "gs_apocalypse",
+      "family": "greatsword",
+      "slot": "ultimate",
+      "file": "skills/gs_apocalypse.json"
+    },
+    {
+      "id": "ga_brutal",
+      "family": "greataxe",
+      "slot": "primary",
+      "file": "skills/ga_brutal.json"
+    },
+    {
+      "id": "ga_primal_rage",
+      "family": "greataxe",
+      "slot": "secondary",
+      "file": "skills/ga_primal_rage.json"
+    },
+    {
+      "id": "ga_devastate",
+      "family": "greataxe",
+      "slot": "ability",
+      "file": "skills/ga_devastate.json"
+    },
+    {
+      "id": "ga_ragnarok",
+      "family": "greataxe",
+      "slot": "ultimate",
+      "file": "skills/ga_ragnarok.json"
+    },
+    {
+      "id": "spear_thrust",
+      "family": "spear",
+      "slot": "primary",
+      "file": "skills/spear_thrust.json"
+    },
+    {
+      "id": "spear_javelin",
+      "family": "spear",
+      "slot": "secondary",
+      "file": "skills/spear_javelin.json"
+    },
+    {
+      "id": "spear_impale",
+      "family": "spear",
+      "slot": "ability",
+      "file": "skills/spear_impale.json"
+    },
+    {
+      "id": "spear_storm",
+      "family": "spear",
+      "slot": "ultimate",
+      "file": "skills/spear_storm.json"
+    },
+    {
+      "id": "tome_flame_wave_fireball_inferno_shield_crimson_surge_inferno_page_slot1",
+      "family": "tome",
+      "slot": "primary",
+      "file": "skills/tome_flame_wave_fireball_inferno_shield_crimson_surge_inferno_page_slot1.json"
+    },
+    {
+      "id": "tome_flame_wave_fireball_inferno_shield_blaze_fury_wrath_page_slot2",
+      "family": "tome",
+      "slot": "secondary",
+      "file": "skills/tome_flame_wave_fireball_inferno_shield_blaze_fury_wrath_page_slot2.json"
+    },
+    {
+      "id": "tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page_slot3",
+      "family": "tome",
+      "slot": "ability",
+      "file": "skills/tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page_slot3.json"
+    },
+    {
+      "id": "tome_divine_wave_sacred_shield_smite_grace_fury_wrath_page",
+      "family": "tome",
+      "slot": "ultimate",
+      "file": "skills/tome_divine_wave_sacred_shield_smite_grace_fury_wrath_page.json"
+    },
+    {
+      "id": "mace_holy_strike",
+      "family": "mace",
+      "slot": "primary",
+      "file": "skills/mace_holy_strike.json"
+    },
+    {
+      "id": "mace_sanctify",
+      "family": "mace",
+      "slot": "secondary",
+      "file": "skills/mace_sanctify.json"
+    },
+    {
+      "id": "mace_smite",
+      "family": "mace",
+      "slot": "ability",
+      "file": "skills/mace_smite.json"
+    },
+    {
+      "id": "mace_divine_wrath",
+      "family": "mace",
+      "slot": "ultimate",
+      "file": "skills/mace_divine_wrath.json"
+    },
+    {
+      "id": "wand_missile",
+      "family": "wand",
+      "slot": "primary",
+      "file": "skills/wand_missile.json"
+    },
+    {
+      "id": "wand_blink",
+      "family": "wand",
+      "slot": "secondary",
+      "file": "skills/wand_blink.json"
+    },
+    {
+      "id": "wand_chain",
+      "family": "wand",
+      "slot": "ability",
+      "file": "skills/wand_chain.json"
+    },
+    {
+      "id": "wand_meteor_shower",
+      "family": "wand",
+      "slot": "ultimate",
+      "file": "skills/wand_meteor_shower.json"
+    },
+    {
+      "id": "scythe_reap",
+      "family": "scythe",
+      "slot": "primary",
+      "file": "skills/scythe_reap.json"
+    },
+    {
+      "id": "scythe_shadow_step",
+      "family": "scythe",
+      "slot": "secondary",
+      "file": "skills/scythe_shadow_step.json"
+    },
+    {
+      "id": "scythe_spiral",
+      "family": "scythe",
+      "slot": "ability",
+      "file": "skills/scythe_spiral.json"
+    },
+    {
+      "id": "scythe_grim_reaper",
+      "family": "scythe",
+      "slot": "ultimate",
+      "file": "skills/scythe_grim_reaper.json"
+    }
+  ],
+  "counts": {
+    "weapons": 16,
+    "skills": 61
+  }
+}

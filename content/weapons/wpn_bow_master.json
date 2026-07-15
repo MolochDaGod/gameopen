@@ -1,0 +1,41 @@
+{
+  "id": "wpn_bow_master",
+  "itemId": "itm_bow_master",
+  "family": "bow",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "longbow",
+  "skills": [
+    "bow_quick_shot",
+    "bow_multishot",
+    "bow_bear_trap",
+    "bow_arrow_rain"
+  ],
+  "mesh": {
+    "path": "models/weapons/bow.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "bow"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Bow_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Bow_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "id": "wand_chain",
+  "family": "wand",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Chain Lightning",
+  "description": "Lightning bouncing between enemies",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 1.5555555555555556,
+  "cost": {
+    "stamina": 0,
+    "mana": 5
+  },
+  "cooldown": 10,
+  "hitWindows": [
+    {
+      "t": 0.18,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Lighting.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Lighting.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-0000B1--79CCD3D",
+  "damageType": "lightning",
+  "ship": true
+}

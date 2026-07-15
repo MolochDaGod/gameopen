@@ -85,6 +85,25 @@ export const MAGIC_WEAPONS: WeaponDef[] = [
     grip: { main: { rot: [PI2, 0, 0], pos: [0, 0.05, 0] } },
     model: { main: { file: "models/weapons/staff.glb", length: 1.4, forward: "y+", align: "y", anchor: "base" } },
   },
+  {
+    // uMMORPG / master-weaponSkills WAND — 1H caster that pairs with TOME
+    id: "wand",
+    label: "Grudge Wand",
+    hand: "right",
+    kind: "bolt",
+    skillName: "Magic Missile",
+    skillDuration: 0.7,
+    cooldown: 1.1,
+    combat: { intensity: 32, direction: 80, range: [0.7, 1.5] },
+    animSet: "magic",
+    group: "magic",
+    duelEligible: false,
+    grip: { main: { rot: [PI2, 0, 0], pos: [0, 0.04, 0] } },
+    // Converted: short staff stand-in (scaled at mount via length)
+    model: {
+      main: { file: "models/weapons/staff.glb", length: 0.75, forward: "y+", align: "y", anchor: "base" },
+    },
+  },
   elementalStaff("staffFire", "fire", "Fire Staff", "Flame Cast", "fireDragon", 1),
   elementalStaff("staffIce", "ice", "Ice Staff", "Frost Cast", "bolt", 7),
   elementalStaff("staffStorm", "storm", "Storm Staff", "Shock Cast", "laser", 13),

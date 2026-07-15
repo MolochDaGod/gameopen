@@ -1,0 +1,41 @@
+{
+  "id": "wpn_greataxe_master",
+  "itemId": "itm_greataxe_master",
+  "family": "greataxe",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "sword_shield",
+  "skills": [
+    "ga_brutal",
+    "ga_primal_rage",
+    "ga_devastate",
+    "ga_ragnarok"
+  ],
+  "mesh": {
+    "path": "models/weapons/axe.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "greataxe"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Axe_30.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Axe_30.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

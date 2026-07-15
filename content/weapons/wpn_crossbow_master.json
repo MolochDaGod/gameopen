@@ -1,0 +1,41 @@
+{
+  "id": "wpn_crossbow_master",
+  "itemId": "itm_crossbow_master",
+  "family": "crossbow",
+  "slot": "mainHand",
+  "twoHanded": true,
+  "baseDamage": 22,
+  "attackSpeed": 1,
+  "animPack": "longbow",
+  "skills": [
+    "xbow_heavy_bolt",
+    "xbow_knockback_bolt",
+    "xbow_barrage",
+    "xbow_sweeping_bolt"
+  ],
+  "mesh": {
+    "path": "models/weapons/rifle.glb",
+    "format": "glb",
+    "status": "ready",
+    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+  },
+  "tags": [
+    "master-weaponSkills",
+    "ummorpg-port",
+    "crossbow"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Crossbow_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Crossbow_01.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  }
+}

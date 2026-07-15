@@ -1,0 +1,49 @@
+{
+  "id": "staff_inferno_shield",
+  "family": "staff",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Inferno Shield",
+  "description": "Reflect damage",
+  "animKey": "attack",
+  "anim": {
+    "path": "/anim/base/attack",
+    "status": "placeholder",
+    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+  },
+  "power": 0.8888888888888888,
+  "cost": {
+    "stamina": 0,
+    "mana": 5
+  },
+  "cooldown": 15,
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.4,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#d8c38a",
+    "impact": "#e8d9a0",
+    "mode": "none"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Firestar.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Firestar.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "placeholder",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-00004F-17111AC4",
+  "damageType": "physical",
+  "ship": true
+}
