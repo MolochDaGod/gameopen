@@ -329,6 +329,22 @@ export class Character {
 
   update(dt: number) {
     if (!this.mixer) return;
+    // Fixed substeps keep crossfades / one-shots stable on lag spikes.
+    // Cap total advance so a long hitch doesn't skip an entire attack clip.
+    const FIXED = 1 / 60;
+    const maxAdvance = 0.1;
+    let remain = Math.min(Math.max(0, dt), maxAdvance);
+
+    while (remain > 0) {
+      const step = remain > FIXED * 1.5 ? FIXED : remain;
+      remain -= step;
+      this.tickAnim(step);
+    }
+  }
+
+  /** One animation tick (locomotion blend + overlay lifecycle + mixer). */
+  private tickAnim(dt: number) {
+    if (!this.mixer) return;
     this.elapsed += dt;
 
     // Weight-blended locomotion (step 1). The blend drives the legs unless a

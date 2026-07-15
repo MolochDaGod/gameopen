@@ -22,7 +22,7 @@ export const STUDIO_FOG = {
 } as const;
 
 /** ACES exposure shared by the live renderer and the thumbnail renderer. */
-export const STUDIO_TONE_MAPPING_EXPOSURE = 1.1;
+export const STUDIO_TONE_MAPPING_EXPOSURE = 1.15;
 
 interface AmbientSpec {
   type: "ambient";
@@ -88,10 +88,13 @@ export function addStudioLights(scene: THREE.Scene, opts: { shadows?: boolean } 
         if (spec.shadow && opts.shadows) {
           light.castShadow = true;
           light.shadow.mapSize.set(2048, 2048);
-          light.shadow.camera.near = 1;
-          light.shadow.camera.far = 70;
-          light.shadow.bias = -0.0004;
-          const d = 22;
+          light.shadow.camera.near = 0.5;
+          light.shadow.camera.far = 80;
+          // Soft shadows + normalBias reduce acne on skinned heroes / floor.
+          light.shadow.bias = -0.00025;
+          light.shadow.normalBias = 0.035;
+          light.shadow.radius = 2.5;
+          const d = 24;
           light.shadow.camera.left = -d;
           light.shadow.camera.right = d;
           light.shadow.camera.top = d;

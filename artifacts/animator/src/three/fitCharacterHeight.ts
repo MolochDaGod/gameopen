@@ -14,6 +14,7 @@
  */
 import * as THREE from "three";
 import { CHARACTER_HEIGHT_M } from "./types";
+import { prepObjectMaterials } from "./texturePrep";
 
 const MIN_NATIVE_M = 0.05;
 const MAX_NATIVE_M = 50;
@@ -101,43 +102,16 @@ export function fitCharacterHeight(
 
 /**
  * Materials: race/hero kits often bake high metalness so meshes read as grey
- * chrome without an env map — looks "no color". Neutralise metal, keep maps.
+ * chrome without an env map — looks "no color". Neutralise metal, keep maps,
+ * and run {@link prepObjectMaterials} for colour-space + mipmap correctness.
  */
 export function restoreCharacterMaterials(
   root: THREE.Object3D,
   opts?: { neutralizeMetal?: boolean },
 ) {
-  const neutralize = opts?.neutralizeMetal !== false;
-  root.traverse((o) => {
-    const mesh = o as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    mesh.castShadow = true;
-    mesh.frustumCulled = false;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    for (const m of mats) {
-      if (!m) continue;
-      if (m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshPhysicalMaterial) {
-        if (neutralize && m.metalness > 0.05) {
-          m.metalness = 0;
-          if (m.roughness < 0.45) m.roughness = 0.7;
-        }
-        if (!m.map && m.color && m.color.getHex() === 0x000000) {
-          m.color.setHex(0x888888);
-        }
-        if (m.map && m.color.getHex() === 0x000000) {
-          m.color.setHex(0xffffff);
-        }
-        m.needsUpdate = true;
-      } else if (
-        m instanceof THREE.MeshBasicMaterial ||
-        m instanceof THREE.MeshLambertMaterial ||
-        m instanceof THREE.MeshPhongMaterial
-      ) {
-        if (m.map && m.color.getHex() === 0x000000) {
-          m.color.setHex(0xffffff);
-          m.needsUpdate = true;
-        }
-      }
-    }
+  // Shared production path: sRGB albedo, linear data maps, soft shadows, mips.
+  prepObjectMaterials(root, {
+    neutralizeMetal: opts?.neutralizeMetal !== false,
+    receiveShadow: true,
   });
 }

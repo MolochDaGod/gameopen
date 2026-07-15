@@ -616,19 +616,29 @@ export class Studio {
     this.characterId = characterId;
     this.onHud = onHud;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+      alpha: false,
+    });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = STUDIO_TONE_MAPPING_EXPOSURE;
+    // Correct output colour space for sRGB albedo maps (prevents washed / muddy kits).
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(this.renderer.domElement);
-    // Enable KTX2/Basis texture decode on the shared GLTF loader (production GLBs).
-    void import("./loaders/gltf").then(({ bindKtx2 }) => {
+    // KTX2 + texture anisotropy: bind ASAP so first character/VFX loads decode well.
+    void Promise.all([
+      import("./loaders/gltf"),
+      import("./texturePrep"),
+    ]).then(([{ bindKtx2 }, { bindTextureAnisotropy }]) => {
       try {
         bindKtx2(this.renderer);
+        bindTextureAnisotropy(this.renderer);
       } catch (err) {
-        console.warn("[Studio] KTX2 bind failed", err);
+        console.warn("[Studio] KTX2 / texture prep bind failed", err);
       }
     });
 

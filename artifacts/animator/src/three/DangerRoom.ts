@@ -108,15 +108,38 @@ export class DangerRoom {
 
   private buildFloor() {
     const p = this.preset;
-    const geo = this.track(new THREE.PlaneGeometry(this.half * 2, this.half * 2));
-    const mat = this.trackMat(
-      new THREE.MeshStandardMaterial({
-        color: p.floorColor,
-        metalness: p.floorMetalness,
-        roughness: p.floorRoughness,
-      }),
+    const geo = this.track(new THREE.PlaneGeometry(this.half * 2, this.half * 2, 64, 64));
+    // Subtle procedural micro-noise so the floor doesn't read as flat plastic
+    // under ACES + soft shadows (still pure-colour tinted by the preset).
+    const noise = this.trackMat(
+      (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 256;
+        const ctx = c.getContext("2d")!;
+        const img = ctx.createImageData(256, 256);
+        for (let i = 0; i < img.data.length; i += 4) {
+          const n = 200 + ((Math.random() * 55) | 0);
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = n;
+          img.data[i + 3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(12, 12);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = 8;
+        tex.generateMipmaps = true;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        return new THREE.MeshStandardMaterial({
+          color: p.floorColor,
+          map: tex,
+          metalness: p.floorMetalness,
+          roughness: p.floorRoughness,
+          envMapIntensity: 0.35,
+        });
+      })(),
     );
-    const floor = new THREE.Mesh(geo, mat);
+    const floor = new THREE.Mesh(geo, noise);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     this.group.add(floor);

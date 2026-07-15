@@ -22,7 +22,12 @@ function make(key: string, size: number, draw: (ctx: CanvasRenderingContext2D, s
   draw(ctx, size);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
+  // Soft ground FX need filtering; anisotropy reduces shimmer under camera tilt.
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 8;
+  tex.needsUpdate = true;
   cache.set(key, tex);
   return tex;
 }

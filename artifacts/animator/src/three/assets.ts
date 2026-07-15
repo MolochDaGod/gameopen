@@ -61,6 +61,7 @@ export async function loadGltfFirst(
       animations?: import("three").AnimationClip[];
     }>;
   },
+  opts?: { prepMaterials?: boolean },
 ): Promise<{
   scene: import("three").Object3D;
   animations: import("three").AnimationClip[];
@@ -73,6 +74,11 @@ export async function loadGltfFirst(
     for (const url of assetCandidates(p)) {
       try {
         const gltf = await loader.loadAsync(url);
+        // Default: fix colour-space + mips on every production load path.
+        if (opts?.prepMaterials !== false) {
+          const { prepObjectMaterials } = await import("./texturePrep");
+          prepObjectMaterials(gltf.scene, { neutralizeMetal: true });
+        }
         return {
           scene: gltf.scene,
           animations: gltf.animations ?? [],
@@ -90,6 +96,7 @@ export async function loadGltfFirst(
 export async function loadTextureFirst(
   paths: string | string[],
   loader: { loadAsync: (url: string) => Promise<import("three").Texture> },
+  opts?: { sRGB?: boolean; mipmaps?: boolean },
 ): Promise<{ texture: import("three").Texture; url: string }> {
   const pathList = Array.isArray(paths) ? paths : [paths];
   let lastErr: unknown;
@@ -98,6 +105,11 @@ export async function loadTextureFirst(
     for (const url of assetCandidates(p)) {
       try {
         const texture = await loader.loadAsync(url);
+        const { prepTexture } = await import("./texturePrep");
+        prepTexture(texture, {
+          sRGB: opts?.sRGB !== false,
+          mipmaps: opts?.mipmaps !== false,
+        });
         return { texture, url };
       } catch (err) {
         lastErr = err;

@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
+import { prepTexture } from "../texturePrep";
 
 const textureLoader = new THREE.TextureLoader();
 
 // Load a body-atlas texture across fleet hosts (R2 textures/grudge6 + assets/*).
-// The atlas is a lossless `.webp`; we set sRGB colour space and keep `flipY = true`
-// (the FBX UVs were authored for TGALoader's flipped orientation).
+// The atlas is a lossless `.webp`; sRGB + mipmaps + anisotropy for distance quality.
+// flipY = true (FBX UVs were authored for TGALoader's flipped orientation).
 // Pass extra logical paths via `extraPaths` (e.g. race textureFallbacks).
 export async function loadBodyTexture(
   textureUrl: string,
@@ -22,12 +23,8 @@ export async function loadBodyTexture(
   for (const url of urls) {
     try {
       const tex = await textureLoader.loadAsync(url);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.flipY = true;
-      tex.magFilter = THREE.LinearFilter;
-      tex.minFilter = THREE.LinearFilter;
-      tex.generateMipmaps = false;
-      tex.needsUpdate = true;
+      // FBX race kits need flipped Y; mipmaps stop shimmer at mid-distance.
+      prepTexture(tex, { sRGB: true, mipmaps: true, flipY: true });
       return tex;
     } catch (err) {
       lastErr = err;

@@ -312,6 +312,12 @@ export class Vfx {
         geo.applyMatrix4(m.matrixWorld);
         geo.center();
         const src = (Array.isArray(m.material) ? m.material[0] : m.material) as THREE.MeshStandardMaterial;
+        if (src?.map) {
+          // Ensure slash atlas is sRGB + filtered for clean glow edges.
+          void import("./texturePrep").then(({ prepTexture }) => {
+            prepTexture(src.map!, { sRGB: true, mipmaps: true });
+          });
+        }
         const mat = new THREE.MeshBasicMaterial({
           map: src?.map ?? null,
           color: 0xffffff,
@@ -3491,6 +3497,17 @@ export class Vfx {
   }
 
   update(dt: number) {
+    // Cap + substep so lag spikes don't skip VFX lifetimes or GLB mixer frames.
+    const FIXED = 1 / 60;
+    let remain = Math.min(Math.max(0, dt), 0.1);
+    while (remain > 0) {
+      const step = remain > FIXED * 1.5 ? FIXED : remain;
+      remain -= step;
+      this.tickVfx(step);
+    }
+  }
+
+  private tickVfx(dt: number) {
     this.updateFireTrail(dt);
     this.updateBladeTrail(dt);
     this.smoke.update(dt);
