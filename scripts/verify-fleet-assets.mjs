@@ -34,7 +34,7 @@ const CRITICAL = [
   "models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.glb",
   "models/voxels/tvs/unit-roster.json",
   // icons
-  "icons/pack/weapons/Sword_1.png",
+  "icons/pack/weapons/Sword_01.png",
   // arena skinned + anims (combat)
 ];
 
