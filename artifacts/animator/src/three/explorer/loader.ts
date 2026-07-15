@@ -9,6 +9,10 @@ import {
   allReferencedClipIds,
   clipIdsForClass,
   reactionClipIds,
+  BASE_PACK_URL,
+  BASE_PACK_GLB_NAMES,
+  basePackId,
+  type BasePackRole,
 } from "./clipCatalog";
 import type { CharacterLook, WeaponClass } from "./types";
 
@@ -262,13 +266,108 @@ async function loadNativeGlbClip(id: string): Promise<THREE.AnimationClip | null
 }
 
 /**
+ * DEF-* (Rigify) leaf → mixamorig bone. Static offline map for base pack.
+ * Matches TI `boneRemapBase.DEF_TO_MIXAMO` / `bone-maps.json`.
+ */
+const DEF_TO_MIXAMO: Record<string, string> = {
+  root: "mixamorigHips",
+  "DEF-hips": "mixamorigHips",
+  "DEF-spine.001": "mixamorigSpine",
+  "DEF-spine.002": "mixamorigSpine1",
+  "DEF-spine.003": "mixamorigSpine2",
+  "DEF-neck": "mixamorigNeck",
+  "DEF-head": "mixamorigHead",
+  "DEF-shoulder.L": "mixamorigLeftShoulder",
+  "DEF-upper_arm.L": "mixamorigLeftArm",
+  "DEF-forearm.L": "mixamorigLeftForeArm",
+  "DEF-hand.L": "mixamorigLeftHand",
+  "DEF-shoulder.R": "mixamorigRightShoulder",
+  "DEF-upper_arm.R": "mixamorigRightArm",
+  "DEF-forearm.R": "mixamorigRightForeArm",
+  "DEF-hand.R": "mixamorigRightHand",
+  "DEF-thigh.L": "mixamorigLeftUpLeg",
+  "DEF-shin.L": "mixamorigLeftLeg",
+  "DEF-foot.L": "mixamorigLeftFoot",
+  "DEF-toe.L": "mixamorigLeftToeBase",
+  "DEF-thigh.R": "mixamorigRightUpLeg",
+  "DEF-shin.R": "mixamorigRightLeg",
+  "DEF-foot.R": "mixamorigRightFoot",
+  "DEF-toe.R": "mixamorigRightToeBase",
+};
+
+/**
+ * Retarget a DEF-* / Rigify clip onto the box Mixamo rig (rotation tracks only
+ * — engine owns root XYZ). Strip root position for treadmill play.
+ */
+export function retargetBaseDefClip(clip: THREE.AnimationClip): THREE.AnimationClip {
+  const tracks: THREE.KeyframeTrack[] = [];
+  for (const track of clip.tracks) {
+    const dot = track.name.lastIndexOf(".");
+    if (dot < 0) continue;
+    const bonePath = track.name.slice(0, dot);
+    const prop = track.name.slice(dot + 1);
+    // Rotation-only for foreign proportions; drop hip translation (rootLock).
+    if (prop !== "quaternion") continue;
+    const sep = Math.max(bonePath.lastIndexOf("/"), bonePath.lastIndexOf("|"));
+    const leaf = sep >= 0 ? bonePath.slice(sep + 1) : bonePath;
+    const target = DEF_TO_MIXAMO[leaf];
+    if (!target) continue;
+    const renamed = track.clone();
+    renamed.name = `${target}.quaternion`;
+    tracks.push(renamed);
+  }
+  return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+}
+
+/** In-flight cache for the multi-clip base pack GLB. */
+let basePackPromise: Promise<Map<string, THREE.AnimationClip>> | null = null;
+
+/**
+ * Load Animated Base Character once; register each semantic role as `base/<role>`
+ * with DEF→mixamorig retarget + strip-style root lock (rotation-only tracks).
+ */
+export async function loadBasePackClips(): Promise<Map<string, THREE.AnimationClip>> {
+  if (basePackPromise) return basePackPromise;
+  basePackPromise = (async () => {
+    const out = new Map<string, THREE.AnimationClip>();
+    try {
+      const gltf = await gltfLoader.loadAsync(`${BASE}anim/${BASE_PACK_URL}.glb`);
+      const anims = gltf.animations ?? [];
+      for (const [role, glbName] of Object.entries(BASE_PACK_GLB_NAMES) as [
+        BasePackRole,
+        string,
+      ][]) {
+        const raw =
+          anims.find((c) => c.name === glbName) ??
+          anims.find((c) => c.name.endsWith(glbName.split("|").pop()!));
+        if (!raw) continue;
+        const retargeted = retargetBaseDefClip(raw);
+        retargeted.name = basePackId(role);
+        out.set(basePackId(role), retargeted);
+      }
+      console.info(`[loader] base pack: ${out.size} roles from ${BASE_PACK_URL}.glb`);
+    } catch (e) {
+      console.warn("[loader] base pack load failed", e);
+      basePackPromise = null;
+    }
+    return out;
+  })();
+  return basePackPromise;
+}
+
+/**
  * Load a set of motion clips by asset id into a name->clip map. Missing/empty
  * FBX are skipped silently (the Animator falls back along its clip chains).
+ * Always merges Layer A base pack (`base/*`) when any `base/` id is requested
+ * or after style loads so gap-fill is available.
  */
 export async function loadClips(ids: string[]): Promise<Map<string, THREE.AnimationClip>> {
   const map = new Map<string, THREE.AnimationClip>();
+  const needsBase = ids.some((id) => id.startsWith("base/"));
+  const styleIds = ids.filter((id) => !id.startsWith("base/"));
+
   await Promise.all(
-    ids.map(async (id) => {
+    styleIds.map(async (id) => {
       try {
         if (GLB_CLIP_IDS.has(id)) {
           const clip = await loadGlbClip(id);
@@ -296,6 +395,13 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
       }
     }),
   );
+
+  // Always load base pack (cheap after first call) so Animator gap-fill works.
+  void needsBase;
+  const base = await loadBasePackClips();
+  for (const [id, clip] of base) {
+    if (!map.has(id)) map.set(id, clip);
+  }
   return map;
 }
 

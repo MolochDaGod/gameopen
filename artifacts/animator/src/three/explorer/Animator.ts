@@ -1,6 +1,13 @@
 import * as THREE from "three";
 import type { ActionKey, MoveInput, TraversalMode, WeaponClass } from "./types";
-import { WEAPON_SETS, TRAVERSAL_SETS, GLB_CLIP_IDS, resolveGlobalAction, resolveReaction } from "./clipCatalog";
+import {
+  WEAPON_SETS,
+  TRAVERSAL_SETS,
+  GLB_CLIP_IDS,
+  BASE_PACK_FALLBACKS,
+  resolveGlobalAction,
+  resolveReaction,
+} from "./clipCatalog";
 import { LocomotionBlend } from "./LocomotionBlend";
 import type { VoxelCharacter } from "./rig";
 import { mountWeapons, unmountWeapons, type MountedWeapons } from "./weapons";
@@ -585,21 +592,34 @@ export class Animator {
 
   // ------------------------------------------------------------------ internals
 
+  /**
+   * Prefer a catalog id only if the clip actually loaded on this Animator.
+   * Falls through to Layer A base pack (`base/*`) as last resort.
+   */
+  private preferLoaded(id: string | undefined, fallbackKey?: string): string | undefined {
+    if (id && this.clips.has(id)) return id;
+    if (fallbackKey) {
+      const baseId = BASE_PACK_FALLBACKS[fallbackKey];
+      if (baseId && this.clips.has(baseId)) return baseId;
+    }
+    return id && this.clips.has(id) ? id : undefined;
+  }
+
   /** Resolve a logical loco/action key to a clip id for the current class. */
   private resolve(key: ActionKey): string | undefined {
-    return WEAPON_SETS[this.weapon].actions[key];
+    const style = WEAPON_SETS[this.weapon].actions[key];
+    return this.preferLoaded(style, key);
   }
 
   /**
    * Resolve a UNIVERSAL movement action (jump/land/dodge/dash). These ship in the
    * longbow/unarmed packs but not every weapon set (the sword & rifle packs are
    * motion-light), so when the equipped class lacks the clip we fall back to the
-   * shared `unarmed` set rather than dropping the action. Every weapon can roll,
-   * dash and jump with real animation, matching the design where longbow loco/
-   * roll/jump doubles as default unarmed loco.
+   * shared `unarmed` set, then Layer A base pack, rather than dropping the action.
    */
   private resolveMovement(key: ActionKey): string | undefined {
-    return this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key];
+    const style = this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key];
+    return this.preferLoaded(style, key);
   }
 
   /**
@@ -624,7 +644,7 @@ export class Animator {
    */
   private locoTierIds(): { idle?: string; walk?: string; run?: string } {
     const loco = WEAPON_SETS[this.weapon].loco;
-    const idle = loco.idle;
+    let idle = this.preferLoaded(loco.idle, "idle");
     let walk: string | undefined;
     let run: string | undefined;
     if (this.strafe) {
@@ -632,25 +652,26 @@ export class Animator {
       const az = Math.abs(this.move.z);
       if (az >= ax) {
         if (this.move.z >= 0) {
-          walk = loco.walkF;
-          run = loco.runF;
+          walk = this.preferLoaded(loco.walkF, "walkF");
+          run = this.preferLoaded(loco.runF, "runF");
         } else {
-          walk = loco.walkB;
-          run = loco.runB;
+          walk = this.preferLoaded(loco.walkB, "walkB");
+          run = this.preferLoaded(loco.runB, "runB");
         }
       } else if (this.move.x >= 0) {
-        walk = loco.walkR;
-        run = loco.runR;
+        walk = this.preferLoaded(loco.walkR, "walkR");
+        run = this.preferLoaded(loco.runR, "runR");
       } else {
-        walk = loco.walkL;
-        run = loco.runL;
+        walk = this.preferLoaded(loco.walkL, "walkL");
+        run = this.preferLoaded(loco.runL, "runL");
       }
     } else {
-      walk = loco.walkF;
-      run = loco.runF;
+      walk = this.preferLoaded(loco.walkF, "walkF");
+      run = this.preferLoaded(loco.runF, "runF");
     }
-    walk = walk ?? run ?? loco.walkF ?? loco.runF ?? idle;
-    run = run ?? walk ?? loco.runF ?? idle;
+    walk = walk ?? run ?? this.preferLoaded(loco.walkF, "walkF") ?? idle;
+    run = run ?? walk ?? this.preferLoaded(loco.runF, "runF") ?? idle;
+    idle = idle ?? walk ?? run;
     return { idle, walk, run };
   }
 

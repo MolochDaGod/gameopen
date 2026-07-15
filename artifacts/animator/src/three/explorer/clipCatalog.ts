@@ -28,6 +28,75 @@ export const UNIVERSAL_LOCO = {
   runR:  "animations/bow/standing-run-right",
 } as const;
 
+/**
+ * Layer A — Animated Base Character pack (semantic roles).
+ * Hosted as multi-clip GLB under `public/anim/base/animated-base-character.glb`.
+ * Used as gap-fill when a weapon class lacks a clip: style → universal → base.
+ *
+ * Catalog ids: `base/<role>`  (e.g. `base/idle`, `base/roll`, `base/attack_melee`).
+ * Clip names inside the GLB are `Rig|<Name>` (see BASE_PACK_GLB_NAMES).
+ */
+export const BASE_PACK_URL = "base/animated-base-character";
+
+/** Semantic role → exact GLB clip.name (Rigify DEF-* skeleton). */
+export const BASE_PACK_GLB_NAMES = {
+  idle: "Rig|Idle_Loop",
+  walk: "Rig|Walk_Loop",
+  jog: "Rig|Jog_Fwd_Loop",
+  sprint: "Rig|Sprint_Loop",
+  roll: "Rig|Roll",
+  roll_rm: "Rig|Roll_RM",
+  jump_start: "Rig|Jump_Start",
+  jump_loop: "Rig|Jump_Loop",
+  jump_land: "Rig|Jump_Land",
+  attack_melee: "Rig|Sword_Attack",
+  attack_punch: "Rig|Punch_Jab",
+  cast_enter: "Rig|Spell_Simple_Enter",
+  cast_loop: "Rig|Spell_Simple_Idle_Loop",
+  cast_shoot: "Rig|Spell_Simple_Shoot",
+  cast_exit: "Rig|Spell_Simple_Exit",
+  hit: "Rig|Hit_Chest",
+  death: "Rig|Death01",
+  pistol_shoot: "Rig|Pistol_Shoot",
+} as const;
+
+export type BasePackRole = keyof typeof BASE_PACK_GLB_NAMES;
+
+/** Catalog id for a base role (`base/idle`). */
+export function basePackId(role: BasePackRole): string {
+  return `base/${role}`;
+}
+
+/**
+ * Fallback map: play-shell action/loco keys → base pack catalog ids.
+ * Wired as last-resort in the loader when Mixamo style packs are missing.
+ */
+export const BASE_PACK_FALLBACKS: Record<string, string> = {
+  idle: basePackId("idle"),
+  walkF: basePackId("walk"),
+  walkB: basePackId("walk"),
+  walkL: basePackId("walk"),
+  walkR: basePackId("walk"),
+  runF: basePackId("jog"),
+  runB: basePackId("jog"),
+  runL: basePackId("sprint"),
+  runR: basePackId("sprint"),
+  dodgeF: basePackId("roll"),
+  dodgeB: basePackId("roll"),
+  dodgeL: basePackId("roll"),
+  dodgeR: basePackId("roll"),
+  dash: basePackId("roll"),
+  jumpAir: basePackId("jump_loop"),
+  land: basePackId("jump_land"),
+  attack1: basePackId("attack_melee"),
+  attack2: basePackId("attack_punch"),
+  skill: basePackId("attack_melee"),
+  hit: basePackId("hit"),
+  death: basePackId("death"),
+  castSpell: basePackId("cast_shoot"),
+  magicAttack: basePackId("cast_shoot"),
+};
+
 export const UNIVERSAL_MOVEMENT = {
   dodgeF:    "animations/bow/standing-dodge-forward",
   dodgeB:    "animations/bow/standing-dodge-backward",
@@ -888,6 +957,11 @@ export function resolveReaction(key: ActionKey): string | undefined {
   return GLOBAL_REACTIONS[key] ?? GLOBAL_REACTIONS.stumble;
 }
 
+/** Catalog ids for every base-pack semantic role. */
+export function basePackClipIds(): string[] {
+  return (Object.keys(BASE_PACK_GLB_NAMES) as BasePackRole[]).map(basePackId);
+}
+
 /** Every distinct clip id referenced by weapon classes, traversal, and globals. */
 export function allReferencedClipIds(): string[] {
   const ids = new Set<string>([SKELETON_SOURCE_ID]);
@@ -900,6 +974,8 @@ export function allReferencedClipIds(): string[] {
   }
   for (const id of Object.values(GLOBAL_ACTIONS)) if (id) ids.add(id);
   for (const id of Object.values(GLOBAL_REACTIONS)) if (id) ids.add(id);
+  // Layer A base pack — always preloaded as gap-fill.
+  for (const id of basePackClipIds()) ids.add(id);
   return [...ids];
 }
 
