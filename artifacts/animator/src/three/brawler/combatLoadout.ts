@@ -96,7 +96,9 @@ export function resolveBrawlerLoadout(
   const offHand =
     open.offHand !== undefined ? open.offHand : fleet.offHand;
 
-  // Prefer grudge: avatar (GrudgeAvatar combat rig) over static catalog GLB
+  // Prefer grudge: avatar (GrudgeAvatar combat rig) + account mesh_ids when present
+  // (see characterEquipmentMesh + Studio.setEquipmentMeshIds)
+
   const avatarId = open.avatarId || race.avatarId;
 
   return {

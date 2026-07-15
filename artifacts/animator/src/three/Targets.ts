@@ -11,11 +11,17 @@ import { defenseClips, fightBand, guardedHitClip } from "./arsenal/holdStyle";
 import { ExplorerCharacter } from "./ExplorerCharacter";
 import { Character } from "./Character";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
-import { presetForWeaponKind } from "./grudge/warlordsRoles";
+import {
+  pickHostileRoleForWeapon,
+  strategyBiasForPreset,
+  type WarlordsRole,
+} from "./grudge/warlordsRoles";
+import type { PresetId, RaceId } from "./grudge";
 import { DummyModels, type DummyInstance, type DummyKind } from "./DummyModels";
 import type { Avatar } from "./types";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "./Weapons";
 import { aoeFalloff, aoeVictims, classifyEngagement, meleeStrike, preferSelectedHostile, strikeForceLevel, weaponOWR } from "./combat";
+import { getT0Skill } from "./arsenal/t0WeaponSkills";
 import {
   activeWeakPoint,
   advanceWeakPoint,
@@ -304,7 +310,7 @@ export interface CombatTargets {
   setDifficulty(d: Difficulty): void;
   getDifficulty(): Difficulty;
   setCount(count: number): void;
-  spawn(weaponId: WeaponId, faction: Faction): void;
+  spawn(weaponId: WeaponId, faction: Faction, roleId?: string): void;
   /** Spawn a fighter at an exact position (Danger Room only; dungeon enemies
    *  place via their own level data and don't implement this). */
   spawnAt?(
@@ -320,6 +326,8 @@ export interface CombatTargets {
       reactionDelay?: number;
       /** Mount a passive training-dummy GLB visual instead of the primitive body. */
       dummyModel?: DummyKind;
+      /** Explicit Warlords / grudge6 role id (multi-race training). */
+      roleId?: string;
     },
   ): void;
   clear(): void;
@@ -522,6 +530,17 @@ interface Dummy {
   bearAttackIndex?: number;
   /** The bear attack pre-picked at wind-up, applied when the strike resolves. */
   pendingBearAttack?: BearAttack;
+  // ---- Grudge6 / Warlords role (multi-race training NPCs) ----
+  /** Catalog role id (e.g. hostile-elf-ranger). */
+  warlordsRoleId?: string;
+  /** Display name from Warlords role (HUD / selection). */
+  roleLabel?: string;
+  /** grudge6 race kit. */
+  raceId?: RaceId;
+  /** Gear preset (knight / ranger / mage / warrior / unarmed). */
+  presetId?: PresetId;
+  /** T0 skill slot 0..3 staged for the next skill swing. */
+  pendingSkillSlot?: number;
   /** Full wind-up duration (s) captured at begin, so a telegraph can blink over it. */
   windupTotal?: number;
 }
@@ -803,34 +822,43 @@ export class Targets implements CombatTargets {
   }
 
   /**
-   * Standard Danger Room opponent: **Toon RTS / grudge6 ORC kit** (Warlords Unity
-   * package) with gear preset from weapon role. Capsules stay only until load.
-   * Falls back to catalog orc GLB → explorer if grudge6 fails.
+   * Standard Danger Room opponent: **full grudge6 multi-race kit** (WK / BRB /
+   * ELF / DWF / ORC / UD) with weapon-coherent gear + FighterBrain. Capsules
+   * stay only until load. Falls back to catalog GLB → explorer.
    */
-  private attachAvatar(d: Dummy, weaponId: WeaponId): void {
-    void this.loadGrudgeOpponent(d, weaponId);
+  private attachAvatar(d: Dummy, weaponId: WeaponId, roleId?: string): void {
+    void this.loadGrudgeOpponent(d, weaponId, roleId);
   }
 
-  /** Prefer grudge6 orc (Unity Warlords Toon RTS / uMMORPG Monster prefab). */
-  private async loadGrudgeOpponent(d: Dummy, weaponId: WeaponId): Promise<void> {
+  /**
+   * Load a Warlords / grudge6 skinned opponent using the full race asset roster.
+   * Role is weapon-coherent (bow→rangers of every race, staff→mages, …) and
+   * cycles races by spawn id so training covers all grudge6 characters.
+   * Optional uMMORPG prefab mesh_ids / combat numbers when available.
+   */
+  private async loadGrudgeOpponent(
+    d: Dummy,
+    weaponId: WeaponId,
+    roleId?: string,
+  ): Promise<void> {
     const kind = getWeapon(weaponId)?.kind;
-    const preset = presetForWeaponKind(kind);
+    const role: WarlordsRole = pickHostileRoleForWeapon(
+      weaponId,
+      kind,
+      d.id,
+      d.faction === "ally" ? "ally" : "enemy",
+      roleId ?? d.warlordsRoleId,
+    );
+    d.warlordsRoleId = role.id;
+    d.roleLabel = role.label;
+    d.raceId = role.raceId;
+    d.presetId = role.presetId;
     try {
       // Prefab profile drives mesh_ids + combat numbers (uMMORPG Entity data)
       let meshIds: string[] | undefined;
       try {
         const { prefabFromRoleId } = await import("./ummorpg/prefabProfile");
-        const roleId =
-          preset === "knight"
-            ? "hostile-orc-warchief"
-            : preset === "ranger"
-              ? "hostile-orc-hunter"
-              : preset === "mage"
-                ? "hostile-orc-shaman"
-                : preset === "unarmed"
-                  ? "hostile-orc-brawler"
-                  : "hostile-orc-warrior";
-        const prefab = prefabFromRoleId(roleId);
+        const prefab = prefabFromRoleId(role.id);
         if (prefab?.meshIds?.length) meshIds = prefab.meshIds;
         if (prefab) {
           d.group.userData.entityPrefab = prefab.id;
@@ -840,7 +868,7 @@ export class Targets implements CombatTargets {
       } catch {
         /* optional */
       }
-      const avatar = new GrudgeAvatar("orcs", preset, { meshIds });
+      const avatar = new GrudgeAvatar(role.raceId, role.presetId, { meshIds });
       d.avatar = avatar;
       await avatar.load();
       if (d.avatar !== avatar) {
@@ -849,7 +877,7 @@ export class Targets implements CombatTargets {
       }
       // Kit already carries weapon meshes via gear preset; only mount arsenal
       // when hands exist and the kit has no weapon mesh (unarmed etc.).
-      if (avatar.rightHand && avatar.leftHand && preset === "unarmed") {
+      if (avatar.rightHand && avatar.leftHand && role.presetId === "unarmed") {
         try {
           const mounted = await mountWeaponModel(
             getWeapon(weaponId),
@@ -867,10 +895,15 @@ export class Targets implements CombatTargets {
       d.accent.visible = false;
       d.group.add(avatar.root);
       d.avatarReady = true;
-      console.info("[Targets] grudge6 orc opponent ready:", preset, "weapon:", weaponId);
+      console.info(
+        `[Targets] grudge6 opponent ready race=${role.raceId} preset=${role.presetId} role=${role.id} weapon=${weaponId}`,
+      );
       return;
     } catch (err) {
-      console.warn("[Targets] grudge6 orc failed — catalog fallback", err);
+      console.warn(
+        `[Targets] grudge6 ${role.raceId}/${role.presetId} failed — catalog fallback`,
+        err,
+      );
       if (d.avatar) {
         try {
           d.avatar.dispose();
@@ -880,9 +913,20 @@ export class Targets implements CombatTargets {
         d.avatar = null;
       }
     }
-    // Legacy catalog path (orc.glb / race-orc / karate-boss / explorer)
-    const tryIds = ["orc", "race-orc", "karate-boss"] as const;
-    void this.loadOpponentAvatar(d, weaponId, tryIds, 0);
+    // Legacy catalog path (race-matched when possible → orc → explorer)
+    const raceFallback =
+      role.raceId === "orcs"
+        ? (["orc", "race-orc", "karate-boss"] as const)
+        : role.raceId === "high-elves"
+          ? (["race-elf", "elf", "orc"] as const)
+          : role.raceId === "dwarves"
+            ? (["race-dwarf", "dwarf", "orc"] as const)
+            : role.raceId === "undead"
+              ? (["race-undead", "skeleton", "orc"] as const)
+              : role.raceId === "barbarians"
+                ? (["race-barbarian", "barbarian", "orc"] as const)
+                : (["race-human", "human", "orc"] as const);
+    void this.loadOpponentAvatar(d, weaponId, raceFallback, 0);
   }
 
   private async loadOpponentAvatar(
@@ -1083,7 +1127,11 @@ export class Targets implements CombatTargets {
       head: new THREE.Vector3(d.group.position.x, d.group.position.y + 2.25, d.group.position.z),
       health: d.cc.getHealth(),
       maxHealth: d.maxHealth,
-      name: d.boss ? this.bossLabel(d) : getWeapon(d.weaponId).label,
+      name: d.boss
+        ? this.bossLabel(d)
+        : d.roleLabel
+          ? `${d.roleLabel} · ${getWeapon(d.weaponId).label}`
+          : getWeapon(d.weaponId).label,
       isBoss: d.arch === "boss",
       bossHint: d.boss ? weakPointHint(bossPhaseFromState(d.cc.getState())) : undefined,
     };
@@ -1370,7 +1418,7 @@ export class Targets implements CombatTargets {
    * Spawn one additional NPC of `faction` wielding `weaponId`, without disturbing
    * the existing population (additive). Capped at MAX_DUMMIES total.
    */
-  spawn(weaponId: WeaponId, faction: Faction): void {
+  spawn(weaponId: WeaponId, faction: Faction, roleId?: string): void {
     if (this.dummies.length >= MAX_DUMMIES) return;
     const i = this.dummies.filter((d) => d.faction === faction).length;
     const side = faction === "ally" ? -1 : 1;
@@ -1378,8 +1426,8 @@ export class Targets implements CombatTargets {
     const z = -2 - Math.floor(i / 2) * 1.8 + (Math.random() - 0.5);
     const home = new THREE.Vector3(THREE.MathUtils.clamp(x, -12, 12), 0, THREE.MathUtils.clamp(z, -12, 12));
     const d = this.makeDummy(home, weaponId, faction);
-    // Admin-spawned NPCs render as standard orc Character GLBs with weapon mounts.
-    this.attachAvatar(d, weaponId);
+    // Admin-spawned NPCs: full grudge6 multi-race kits (weapon + optional role).
+    this.attachAvatar(d, weaponId, roleId);
     this.dummies.push(d);
     this.group.add(d.group);
     this.setDifficulty(this.difficulty);
@@ -1411,6 +1459,8 @@ export class Targets implements CombatTargets {
       reactionDelay?: number;
       /** Mount a passive training-dummy GLB visual instead of the primitive body. */
       dummyModel?: DummyKind;
+      /** Explicit Warlords / grudge6 role id (multi-race training). */
+      roleId?: string;
     },
   ): void {
     if (this.dummies.length >= MAX_DUMMIES) return;
@@ -1420,9 +1470,9 @@ export class Targets implements CombatTargets {
     if (opts?.scale && opts.scale > 0) d.group.scale.setScalar(opts.scale);
     d.damageMul = opts?.damageMul ?? 1;
     d.reactionDelay = opts?.reactionDelay ?? 0;
-    // Default: orc character avatars (opt-out only via dummyModel)
+    // Default: full grudge6 multi-race avatars (opt-out only via dummyModel)
     if (opts?.dummyModel) this.attachDummyModel(d, opts.dummyModel);
-    else this.attachAvatar(d, weaponId);
+    else this.attachAvatar(d, weaponId, opts?.roleId);
     // Weak-point boss: build the tab-targeting state + a floating marker sphere
     // (hidden until this boss is the locked target). It rides over the active
     // weak point's local height, recoloured per phase in the update loop.
@@ -2326,7 +2376,7 @@ export class Targets implements CombatTargets {
     };
     const agent: FighterAgent = {
       get bias() {
-        return self.biasFor(d.faction);
+        return self.biasFor(d.faction, d.presetId);
       },
       get reactionDelay() {
         return d.reactionDelay;
@@ -2340,8 +2390,11 @@ export class Targets implements CombatTargets {
     d.brain = createFighterBrain(agent);
   }
 
-  /** Difficulty tier × fleet game-mode strategy bias (zeroed when passive). */
-  private biasFor(faction: Faction = "enemy"): FighterBias {
+  /**
+   * Difficulty tier × fleet game-mode strategy × grudge6 class bias.
+   * Mages cast more, rangers kite, knights block, warriors press (zeroed when passive).
+   */
+  private biasFor(faction: Faction = "enemy", presetId?: PresetId): FighterBias {
     const p = this.difficulty === "passive" ? null : DIFFICULTY_PROFILES[this.difficulty];
     if (!p) return { aggression: 0, caution: 0, skillFrequency: 0 };
     let strategy: FighterBias = { aggression: 1, caution: 1, skillFrequency: 1 };
@@ -2360,10 +2413,14 @@ export class Targets implements CombatTargets {
     } catch {
       /* guest / no session */
     }
+    const classBias = strategyBiasForPreset(presetId);
     return {
-      aggression: p.aggression * strategy.aggression,
-      caution: p.caution * strategy.caution,
-      skillFrequency: Math.min(1, p.skillChance * (0.5 + strategy.skillFrequency)),
+      aggression: p.aggression * strategy.aggression * classBias.aggression,
+      caution: p.caution * strategy.caution * classBias.caution,
+      skillFrequency: Math.min(
+        1,
+        p.skillChance * (0.5 + strategy.skillFrequency) * classBias.skillFrequency,
+      ),
     };
   }
 
@@ -2469,7 +2526,24 @@ export class Targets implements CombatTargets {
     if (!p) return;
     d.state = "windup";
     d.stateT = p.windup;
-    d.pendingSkill = Math.random() < p.skillChance;
+    // Class + difficulty skill chance (mages/rangers skill more via bias)
+    const skillP = Math.min(0.85, p.skillChance * (0.7 + (d.agent?.bias.skillFrequency ?? 0.5)));
+    d.pendingSkill = Math.random() < skillP;
+    d.pendingSkillSlot = undefined;
+    if (d.pendingSkill) {
+      // Player-parity T0 kit: pick skill slot 0..3 (combo / special / ranged / power)
+      d.pendingSkillSlot = (Math.random() * 4) | 0;
+      const t0 = getT0Skill(d.weaponId, d.pendingSkillSlot);
+      // Telegraph VFX uses the skill's kind (slash/nova/bolt…) when available
+      if (t0?.kind) d.kind = t0.kind;
+      // Stretch wind-up for power moves; snappier for combo
+      const role = t0?.role;
+      if (role === "power") d.stateT = p.windup * 1.35;
+      else if (role === "special") d.stateT = p.windup * 1.15;
+      else if (role === "ranged") d.stateT = p.windup * 0.95;
+      // Early skill clip tell (player F/1–4 style)
+      d.avatar?.playClipOnce(`skill${(d.pendingSkillSlot ?? 0) + 1}`);
+    }
     // Bear: pre-pick the next of its 3 rotating attacks so the telegraph length
     // matches the chosen attack's tell; its kit drives damage/AoE explicitly, so
     // clear the generic skill flag and stretch the wind-up by the attack's scale.
@@ -2478,6 +2552,7 @@ export class Targets implements CombatTargets {
       d.bearAttackIndex = pick.index;
       d.pendingBearAttack = pick.attack;
       d.pendingSkill = false;
+      d.pendingSkillSlot = undefined;
       d.stateT = p.windup * pick.attack.windupScale;
     }
     d.windupTotal = d.stateT;
@@ -2517,9 +2592,17 @@ export class Targets implements CombatTargets {
     if (d.modelKind === "bear") {
       // The bear is a guard-heavy bruiser: it mostly blocks, occasionally dodges.
       d.pendingDefense = r < 0.7 ? "block" : "dodge";
+    } else if (d.presetId === "knight") {
+      // Knights: shield-forward (block/parry heavy) — Warlords plate kits.
+      d.pendingDefense = r < 0.35 ? "parry" : r < 0.55 ? "dodge" : "block";
+    } else if (d.presetId === "ranger" || d.presetId === "mage") {
+      // Casters / archers: peel with dodge, rarely stand and block.
+      d.pendingDefense = r < 0.12 ? "parry" : r < 0.82 ? "dodge" : "block";
+    } else if (d.presetId === "unarmed") {
+      // Brawlers: parry/dodge footwork.
+      d.pendingDefense = r < 0.3 ? "parry" : r < 0.75 ? "dodge" : "block";
     } else {
-      // Favour the lateral dodge: it both evades AND creates spacing, so exchanges
-      // read as footwork/skill rather than two fighters standing in a block trade.
+      // Warriors: favour lateral dodge so exchanges read as footwork/skill.
       d.pendingDefense = r < 0.22 ? "parry" : r < 0.68 ? "dodge" : "block";
     }
     d.pendingDodgeDir = { x: -dir.z, z: dir.x };
@@ -2963,8 +3046,17 @@ export class Targets implements CombatTargets {
     // don't get their animation cut off by a fixed recover/cooldown beat. The
     // heavy bear is a model dummy (no avatar): play its distinct per-attack
     // procedural body motion instead and time the recover off that.
+    // Skill swings use T0 slot clip aliases (skill1–4 → attack on grudge6 packs).
+    const skillClip =
+      d.pendingSkill && d.pendingSkillSlot != null
+        ? `skill${d.pendingSkillSlot + 1}`
+        : d.pendingSkill
+          ? "skill1"
+          : "attack";
     const swingDur =
-      d.avatar?.playClipOnce("attack") ?? (bear ? (d.model?.attack?.(bear.name) ?? 0) : 0);
+      d.avatar?.playClipOnce(skillClip) ||
+      d.avatar?.playClipOnce("attack") ||
+      (bear ? (d.model?.attack?.(bear.name) ?? 0) : 0);
     // Bear: fire the wind-up whoosh as the swing body motion kicks off (the land
     // impact cue is fired below at hit time, deferred for the slam's telegraph).
     if (bear) ctx.onBearAttack?.(this.chest(d), bear, "swing");
@@ -3060,6 +3152,7 @@ export class Targets implements CombatTargets {
     d.recoverT = d.stateT;
     d.attackCd = Math.max(profile.attackInterval * (0.8 + Math.random() * 0.4), swingDur * 0.9);
     d.pendingSkill = false;
+    d.pendingSkillSlot = undefined;
     d.pendingBearAttack = undefined;
   }
 

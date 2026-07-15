@@ -19,6 +19,12 @@ import { InputState } from "../input";
 import { PhysicsSystem } from "../PhysicsSystem";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
+import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
+import {
+  DEFAULT_HOSTILE_ROLES,
+  getWarlordsRole,
+} from "../grudge/warlordsRoles";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { Vfx } from "../Vfx";
 import { loadControls } from "../controlsSettings";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
@@ -225,7 +231,8 @@ export class BrawlerScene {
   private canvas: HTMLCanvasElement;
 
   private enemies: EnemyObj[] = [];
-  private enemyTemplates: (THREE.Group | null)[] = [null, null, null];
+  /** Multi-race grudge6 hostile templates (filled by loadEnemyTemplates). */
+  private enemyTemplates: (THREE.Group | null)[] = [];
   private spawnTimer = 0;
   private focusRing: THREE.Mesh | null = null;
   private safeZoneRing: THREE.Mesh | null = null;
@@ -670,44 +677,82 @@ export class BrawlerScene {
     this.emitState();
   }
 
+  /**
+   * Hostiles from Unity Grudge Warlords Toon RTS — full grudge6 multi-race
+   * kits (WK / BRB / ELF / DWF / ORC / UD), not orcs-only or voxel boxes.
+   */
   private async loadEnemyTemplates() {
-    for (let i = 0; i < 3; i++) {
-      const n = i + 1;
-      const paths = [
-        `models/enemies/voxel-zombies/voxel-zombie-${n}.glb`,
-        `voxel-zombie-${n}.glb`,
-      ];
-      let loaded = false;
-      for (const path of paths) {
-        try {
-          const gltf = await this.loadGltf(path);
-          if (this.disposed) return;
-          const root = gltf.scene;
-          const box = new THREE.Box3().setFromObject(root);
-          const size = box.getSize(new THREE.Vector3());
-          // Hostiles ~90% of player height (1.8 m → ~1.6 m)
-          root.scale.setScalar((PLAYER_HEIGHT_M * 0.9) / (size.y || 1));
-          root.updateMatrixWorld(true);
-          const b2 = new THREE.Box3().setFromObject(root);
-          root.position.y -= b2.min.y;
-          root.traverse((o) => {
-            const m = o as THREE.Mesh;
-            if (m.isMesh) {
-              m.castShadow = true;
-              m.receiveShadow = true;
-              m.userData.selectable = "hostile";
-            }
-          });
-          root.userData.selectable = "hostile";
-          this.enemyTemplates[i] = root as THREE.Group;
-          loaded = true;
-          break;
-        } catch {
-          /* try next */
+    const roleIds = DEFAULT_HOSTILE_ROLES;
+    // Cap concurrent templates so first-load stays snappy; still multi-race.
+    const loadIds = roleIds.slice(0, Math.max(6, Math.min(roleIds.length, 12)));
+    for (let i = 0; i < loadIds.length; i++) {
+      const role = getWarlordsRole(loadIds[i]!);
+      if (!role) continue;
+      try {
+        const rig = await loadGrudge6CombatRig(role.raceId, role.presetId);
+        if (this.disposed) {
+          rig.mixer.stopAllAction();
+          return;
         }
+        // Template is the visual group only (spawn clones skinned mesh tree)
+        const root = rig.root;
+        root.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+            m.userData.selectable = "hostile";
+          }
+        });
+        root.userData.selectable = "hostile";
+        root.userData.warlordsRole = role.id;
+        root.userData.raceId = role.raceId;
+        root.userData.presetId = role.presetId;
+        // Stop mixer on template — spawns are static clones (AI walk bob handles motion)
+        rig.mixer.stopAllAction();
+        this.enemyTemplates[i] = root as THREE.Group;
+        console.info(
+          `[BrawlerScene] hostile template ${role.id} race=${role.raceId} preset=${role.presetId}`,
+        );
+      } catch (err) {
+        console.warn(`[BrawlerScene] grudge6 hostile ${loadIds[i]} failed`, err);
       }
-      if (!loaded) {
-        console.warn(`[BrawlerScene] voxel-zombie-${n}.glb failed on all candidates`);
+    }
+    // Soft fallback: voxel zombies only if all grudge6 kits failed
+    if (!this.enemyTemplates.some(Boolean)) {
+      console.warn("[BrawlerScene] no grudge6 hostiles — trying voxel fallback");
+      for (let i = 0; i < 3; i++) {
+        const n = i + 1;
+        const paths = [
+          `models/enemies/voxel-zombies/voxel-zombie-${n}.glb`,
+          `voxel-zombie-${n}.glb`,
+        ];
+        for (const path of paths) {
+          try {
+            const gltf = await this.loadGltf(path);
+            if (this.disposed) return;
+            const root = gltf.scene;
+            const box = new THREE.Box3().setFromObject(root);
+            const size = box.getSize(new THREE.Vector3());
+            root.scale.setScalar((PLAYER_HEIGHT_M * 0.9) / (size.y || 1));
+            root.updateMatrixWorld(true);
+            const b2 = new THREE.Box3().setFromObject(root);
+            root.position.y -= b2.min.y;
+            root.traverse((o) => {
+              const m = o as THREE.Mesh;
+              if (m.isMesh) {
+                m.castShadow = true;
+                m.receiveShadow = true;
+                m.userData.selectable = "hostile";
+              }
+            });
+            root.userData.selectable = "hostile";
+            this.enemyTemplates[i] = root as THREE.Group;
+            break;
+          } catch {
+            /* try next */
+          }
+        }
       }
     }
   }
@@ -1233,12 +1278,22 @@ export class BrawlerScene {
       0,
       Math.cos(angle) * r,
     );
-    const tplIdx = Math.floor(Math.random() * 3);
-    const tpl = this.enemyTemplates[tplIdx];
+    const loaded = this.enemyTemplates.filter(Boolean) as THREE.Group[];
+    const tpl =
+      loaded.length > 0
+        ? loaded[Math.floor(Math.random() * loaded.length)]!
+        : null;
     const mesh = new THREE.Group();
     if (tpl) {
-      mesh.add(tpl.clone(true));
+      // Skinned Toon RTS kits need SkeletonUtils.clone (not Object3D.clone)
+      try {
+        mesh.add(cloneSkinned(tpl));
+      } catch {
+        mesh.add(tpl.clone(true));
+      }
     } else {
+      // Last resort only — prefer never shipping green box as final art
+      console.warn("[BrawlerScene] spawn without grudge6 template — box placeholder");
       const fb = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 1.6, 0.5),
         new THREE.MeshStandardMaterial({ color: 0x4a7a30, roughness: 0.9 }),

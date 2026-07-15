@@ -46,8 +46,12 @@ export {
   getWarlordsRole,
   warlordsRolesOfKind,
   presetForWeaponKind,
+  strategyBiasForPreset,
+  pickHostileRole,
+  pickHostileRoleForWeapon,
+  allHostileRoleIds,
 } from "./warlordsRoles";
-export type { WarlordsRole, WarlordsRoleKind } from "./warlordsRoles";
+export type { WarlordsRole, WarlordsRoleKind, RoleStrategyBias, PickHostileRoleOpts } from "./warlordsRoles";
 
 export {
   applyGearVisibility,

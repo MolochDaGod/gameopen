@@ -276,6 +276,7 @@ export async function loadGrudge6CombatRig(
     }
   };
 
+  // Core locomotion + weapon pack attack (player-parity combat base)
   await Promise.all([
     loadRole("idle", pack.idle),
     loadRole("walk", pack.walk),
@@ -283,6 +284,25 @@ export async function loadGrudge6CombatRig(
     loadRole("attack", pack.attack),
     loadRole("sprint", SPRINT_CLIP).catch(() => loadRole("sprint", pack.run)),
   ]);
+
+  // Optional skill / cast / defense aliases — best-effort, never block load.
+  // Magic kits load a dedicated cast clip; other packs alias cast → attack.
+  if (animPack === "magic") {
+    await loadRole("cast", pack.attack);
+    await loadRole("magicAttack", pack.attack);
+  } else if (animPack === "longbow") {
+    // Ranged poke uses aim/recoil as both attack and "cast" (bolt)
+    await loadRole("cast", pack.attack);
+    await loadRole("magicAttack", pack.attack);
+  } else {
+    // Melee / unarmed: cast & skill slots fall back to attack swing
+    if (clips.has("attack")) {
+      clips.set("cast", clips.get("attack")!);
+      roles.set("cast", "cast");
+      clips.set("magicAttack", clips.get("attack")!);
+      roles.set("magicAttack", "magicAttack");
+    }
+  }
 
   // Guarantee idle exists so we never sit in bind pose (T-pose)
   if (!clips.has("idle") && clips.size) {
@@ -301,6 +321,41 @@ export async function loadGrudge6CombatRig(
   if (!clips.has("sprint") && clips.has("run")) {
     clips.set("sprint", clips.get("run")!);
     roles.set("sprint", "sprint");
+  }
+
+  // Player-style skill slot aliases (F/1–4 + AI skill swings) → attack when
+  // dedicated skill clips are not baked yet. Keeps weapon skills animating.
+  if (clips.has("attack")) {
+    const atk = clips.get("attack")!;
+    const skillAliases = [
+      "skill1",
+      "skill2",
+      "skill3",
+      "skill4",
+      "sig1",
+      "sig2",
+      "sig3",
+      "sig4",
+      "combo",
+      "special",
+      "power",
+      "sword_dash_attack",
+      "overhead",
+      "thrust",
+      "slash",
+      "dodge",
+      "parry",
+      "block",
+      "hurt",
+      "death",
+      "jump",
+    ];
+    for (const name of skillAliases) {
+      if (!clips.has(name)) {
+        clips.set(name, atk);
+        roles.set(name, name);
+      }
+    }
   }
 
   if (!clips.has("idle")) {
