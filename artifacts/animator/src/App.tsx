@@ -813,6 +813,18 @@ export default function App() {
     studioRef.current?.stopDuel();
   }, []);
 
+  const onStartArenaMatch = useCallback(() => {
+    studioRef.current?.startArenaMatch();
+  }, []);
+
+  const onArenaRetry = useCallback(() => {
+    studioRef.current?.arenaRetry();
+  }, []);
+
+  const onArenaReturn = useCallback(() => {
+    studioRef.current?.arenaReturn();
+  }, []);
+
   const onDuelCamera = useCallback((mode: AleCameraMode) => {
     studioRef.current?.setDuelCamera(mode);
   }, []);
@@ -1349,6 +1361,7 @@ export default function App() {
             duel={hud?.duel ?? null}
             onStartDuel={onStartDuel}
             onStopDuel={onStopDuel}
+            onStartArenaMatch={onStartArenaMatch}
             roomPreset={roomPreset}
             ale={hud?.ale ?? null}
             onDuelCamera={onDuelCamera}
@@ -1553,7 +1566,12 @@ export default function App() {
             rangeState={hud?.owrRange ?? "none"}
             editBind={hudEdit.bind("reticle")}
           />
-          <Hud hud={hud} edit={hudEdit} />
+          <Hud
+            hud={hud}
+            edit={hudEdit}
+            onArenaRetry={onArenaRetry}
+            onArenaReturn={onArenaReturn}
+          />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
 
@@ -1611,7 +1629,12 @@ export default function App() {
             rangeState={hud?.owrRange ?? "none"}
             editBind={hudEdit.bind("reticle")}
           />
-          <Hud hud={hud} edit={hudEdit} />
+          <Hud
+            hud={hud}
+            edit={hudEdit}
+            onArenaRetry={onArenaRetry}
+            onArenaReturn={onArenaReturn}
+          />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
 

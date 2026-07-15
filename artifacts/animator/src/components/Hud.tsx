@@ -10,6 +10,10 @@ interface Props {
   hud: HudSnapshot | null;
   /** Optional HUD-editor api: applies persisted layout and (when editing) drag/select. */
   edit?: HudEditApi;
+  /** Arena match: retry same opponents. */
+  onArenaRetry?: () => void;
+  /** Arena match: clear opponents and return to free Danger Room. */
+  onArenaReturn?: () => void;
 }
 
 /** Merge a panel's edit binding onto its base className + inline style. */
@@ -460,6 +464,126 @@ function BossBar({ boss }: { boss: NonNullable<HudSnapshot["boss"]> }) {
   );
 }
 
+/** Prefight countdown + WIN/LOSE banner + Retry / Return choices. */
+function ArenaMatchOverlay({
+  arena,
+  onRetry,
+  onReturn,
+}: {
+  arena: NonNullable<HudSnapshot["arena"]>;
+  onRetry?: () => void;
+  onReturn?: () => void;
+}) {
+  const showBanner =
+    arena.phase === "countdown" ||
+    arena.phase === "result" ||
+    arena.phase === "choice" ||
+    (arena.phase === "fighting" && !!arena.label);
+  const isWin = arena.outcome === "win";
+  const isLose = arena.outcome === "lose";
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: arena.canChoose ? "auto" : "none",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 40,
+        background:
+          arena.phase === "choice"
+            ? "rgba(4,6,12,0.55)"
+            : arena.phase === "result"
+              ? "rgba(4,6,12,0.28)"
+              : "transparent",
+      }}
+    >
+      {showBanner && arena.label && (
+        <div
+          style={{
+            fontSize: arena.phase === "countdown" ? 96 : 64,
+            fontWeight: 900,
+            letterSpacing: "0.12em",
+            color: isWin ? "#7dffb0" : isLose ? "#ff6b6b" : "#e8f4ff",
+            textShadow:
+              isWin
+                ? "0 0 40px rgba(80,255,160,0.65), 0 4px 12px rgba(0,0,0,0.85)"
+                : isLose
+                  ? "0 0 40px rgba(255,80,80,0.55), 0 4px 12px rgba(0,0,0,0.85)"
+                  : "0 0 36px rgba(120,200,255,0.55), 0 4px 12px rgba(0,0,0,0.85)",
+            animation: "combat-flash-in 0.2s ease-out",
+            userSelect: "none",
+          }}
+        >
+          {arena.label}
+        </div>
+      )}
+      {arena.phase === "countdown" && (
+        <div style={{ marginTop: 12, fontSize: 14, opacity: 0.75, letterSpacing: "0.18em" }}>
+          ROUND {arena.round} · {arena.opponentLabel}
+        </div>
+      )}
+      {arena.canChoose && (
+        <div
+          style={{
+            marginTop: 28,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <div style={{ fontSize: 13, opacity: 0.7, letterSpacing: "0.08em" }}>
+            {isWin ? "You defeated the opponents." : "You were defeated."}
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button
+              type="button"
+              onClick={onRetry}
+              style={{
+                padding: "12px 22px",
+                borderRadius: 8,
+                border: "1px solid rgba(140,200,255,0.45)",
+                background: "linear-gradient(180deg, rgba(40,70,120,0.95), rgba(20,35,70,0.95))",
+                color: "#e8f4ff",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                cursor: "pointer",
+                fontSize: 14,
+              }}
+            >
+              RETRY
+            </button>
+            <button
+              type="button"
+              onClick={onReturn}
+              style={{
+                padding: "12px 22px",
+                borderRadius: 8,
+                border: "1px solid rgba(255,180,120,0.4)",
+                background: "linear-gradient(180deg, rgba(90,50,30,0.95), rgba(40,22,12,0.95))",
+                color: "#ffe8d4",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                cursor: "pointer",
+                fontSize: 14,
+              }}
+            >
+              RETURN TO DANGER ROOM
+            </button>
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.5, maxWidth: 320, textAlign: "center" }}>
+            Retry rematches the same opponents. Return clears them so you will not fight this loadout again.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Center-screen event flash (PERFECT PARRY!, SHIELD BREAK!, etc.). */
 function CombatFlash({ text }: { text: string }) {
   if (!text) return null;
@@ -498,7 +622,7 @@ function CombatFlash({ text }: { text: string }) {
   );
 }
 
-export function Hud({ hud, edit }: Props) {
+export function Hud({ hud, edit, onArenaRetry, onArenaReturn }: Props) {
   if (!hud) return null;
 
   const slotByName = (slot: string): SlotBinding | undefined => hud.slots.find((s) => s.slot === slot);
@@ -533,12 +657,21 @@ export function Hud({ hud, edit }: Props) {
       {/* Contextual interaction prompt (e.g. the dungeon door portal) */}
       {hud.prompt && <div className="interact-prompt">{hud.prompt}</div>}
 
-      {/* Defeated overlay */}
-      {hud.defeated && (
+      {/* Defeated overlay (free roam only — arena match owns its result UI) */}
+      {hud.defeated && !hud.arena?.active && (
         <div className="defeat-overlay">
           <span className="defeat-title">DEFEATED</span>
           <span className="defeat-sub">Respawning…</span>
         </div>
+      )}
+
+      {/* Player-vs-NPC arena: countdown / result / choice */}
+      {hud.arena?.active && (
+        <ArenaMatchOverlay
+          arena={hud.arena}
+          onRetry={onArenaRetry}
+          onReturn={onArenaReturn}
+        />
       )}
 
       {/* Center-screen event flash */}

@@ -10,6 +10,8 @@ import { getCharacter, getWeapon, weaponCombat } from "./assets";
 import { defenseClips, fightBand, guardedHitClip } from "./arsenal/holdStyle";
 import { ExplorerCharacter } from "./ExplorerCharacter";
 import { Character } from "./Character";
+import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
+import { presetForWeaponKind } from "./grudge/warlordsRoles";
 import { DummyModels, type DummyInstance, type DummyKind } from "./DummyModels";
 import type { Avatar } from "./types";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "./Weapons";
@@ -322,6 +324,8 @@ export interface CombatTargets {
   ): void;
   clear(): void;
   factionCounts(): { enemy: number; ally: number };
+  /** Living enemies as arena retry specs (optional on non-Targets hosts). */
+  enemyLoadout?(): { weaponId: WeaponId; boss: boolean; scale: number }[];
   nearest(from: THREE.Vector3, count: number): TargetHandle[];
   raycast(ray: THREE.Ray, maxDist: number, softCos: number): TargetHandle | null;
   stagger(handle: TargetHandle, seconds?: number): void;
@@ -799,12 +803,60 @@ export class Targets implements CombatTargets {
   }
 
   /**
-   * Standard Danger Room opponent visual: **orc** Character GLB (idle/walk/attack)
-   * with optional arsenal weapon mount. Falls back to Explorer procedural if the
-   * orc pack fails. Duel can still force explorer via opts if needed later.
+   * Standard Danger Room opponent: **Toon RTS / grudge6 ORC kit** (Warlords Unity
+   * package) with gear preset from weapon role. Capsules stay only until load.
+   * Falls back to catalog orc GLB → explorer if grudge6 fails.
    */
   private attachAvatar(d: Dummy, weaponId: WeaponId): void {
-    // Prefer catalog "orc" (models/orc.glb — idle/walk/attack clips) then race-orc.
+    void this.loadGrudgeOpponent(d, weaponId);
+  }
+
+  /** Prefer grudge6 orc (Unity Warlords Toon RTS) over simple orc.glb / capsules. */
+  private async loadGrudgeOpponent(d: Dummy, weaponId: WeaponId): Promise<void> {
+    const kind = getWeapon(weaponId)?.kind;
+    const preset = presetForWeaponKind(kind);
+    try {
+      const avatar = new GrudgeAvatar("orcs", preset);
+      d.avatar = avatar;
+      await avatar.load();
+      if (d.avatar !== avatar) {
+        avatar.dispose();
+        return;
+      }
+      // Kit already carries weapon meshes via gear preset; only mount arsenal
+      // when hands exist and the kit has no weapon mesh (unarmed etc.).
+      if (avatar.rightHand && avatar.leftHand && preset === "unarmed") {
+        try {
+          const mounted = await mountWeaponModel(
+            getWeapon(weaponId),
+            avatar.rightHand,
+            avatar.leftHand,
+          );
+          if (d.avatar === avatar) d.mountedWeapon = mounted;
+          else unmountWeapon(mounted);
+        } catch {
+          /* visual-only */
+        }
+      }
+      d.body.visible = false;
+      d.head.visible = false;
+      d.accent.visible = false;
+      d.group.add(avatar.root);
+      d.avatarReady = true;
+      console.info("[Targets] grudge6 orc opponent ready:", preset, "weapon:", weaponId);
+      return;
+    } catch (err) {
+      console.warn("[Targets] grudge6 orc failed — catalog fallback", err);
+      if (d.avatar) {
+        try {
+          d.avatar.dispose();
+        } catch {
+          /* */
+        }
+        d.avatar = null;
+      }
+    }
+    // Legacy catalog path (orc.glb / race-orc / karate-boss / explorer)
     const tryIds = ["orc", "race-orc", "karate-boss"] as const;
     void this.loadOpponentAvatar(d, weaponId, tryIds, 0);
   }
@@ -1392,6 +1444,21 @@ export class Targets implements CombatTargets {
     const out = { enemy: 0, ally: 0 };
     for (const d of this.dummies) if (!d.dead) out[d.faction]++;
     return out;
+  }
+
+  /**
+   * Snapshot living enemies for arena match retry (weapon + boss flag + scale).
+   * Dead fighters are omitted so a mid-match snapshot only carries remaining foes;
+   * pass the start-of-match list into ArenaMatch for full retries.
+   */
+  enemyLoadout(): { weaponId: WeaponId; boss: boolean; scale: number }[] {
+    return this.dummies
+      .filter((d) => d.faction === "enemy" && !d.dead)
+      .map((d) => ({
+        weaponId: d.weaponId,
+        boss: !!d.boss || d.arch === "boss",
+        scale: d.group.scale.x || 1,
+      }));
   }
 
   /**

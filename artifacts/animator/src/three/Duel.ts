@@ -18,7 +18,8 @@ const DUEL_REACTION = 0.35;
 const SPAWN_X = 5;
 
 const COUNTDOWN_TIME = 3;
-const RESULT_TIME = 3.5;
+/** Brief WIN/LOSE hold before auto-rematch (player arena uses 2s + choice UI). */
+const RESULT_TIME = 2;
 
 /**
  * Orchestrates an AI-vs-AI Explorer duel inside the Danger Room: it drives the

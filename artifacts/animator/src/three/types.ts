@@ -133,6 +133,24 @@ export interface DuelState {
   lastWinner: "A" | "B" | null;
 }
 
+/** Player-vs-NPC arena match phases (Danger Room). */
+export type ArenaMatchPhase = "idle" | "countdown" | "fighting" | "result" | "choice";
+
+/** Live arena match snapshot for HUD overlays + choice buttons. */
+export interface ArenaMatchHudState {
+  active: boolean;
+  phase: ArenaMatchPhase;
+  /** Whole seconds left in countdown / result. */
+  timer: number;
+  /** Center banner: "3" | "2" | "1" | "FIGHT!" | "VICTORY" | "DEFEAT". */
+  label: string;
+  outcome: "win" | "lose" | null;
+  /** Show Retry / Return buttons. */
+  canChoose: boolean;
+  opponentLabel: string;
+  round: number;
+}
+
 // ── A.L.E. Bot (director cameras, highlights & diagnostics) ──────────────────
 
 /** World-space tracking points the diagnostics lens pins markers to. */
@@ -1012,6 +1030,8 @@ export interface HudSnapshot {
   } | null;
   /** Active AI-vs-AI duel snapshot (round/score/weapon/winner), or null. */
   duel?: DuelState | null;
+  /** Player-vs-NPC arena match (countdown / fight / result / choices), or null. */
+  arena?: ArenaMatchHudState | null;
   /** A.L.E. Bot state (cameras / highlights / diagnostics / report), or null. */
   ale?: AleSnapshot | null;
 }

@@ -28,6 +28,7 @@ import {
 } from "./Targets";
 import type { BearAttack } from "./bear/bearAttacks";
 import { Duel } from "./Duel";
+import { ArenaMatch, type ArenaOpponentSpec } from "./ArenaMatch";
 import { AleBot } from "./ale/AleBot";
 import type { AleCameraMode, ReplayFrequency } from "./types";
 import { Dungeon } from "./dungeon/Dungeon";
@@ -330,6 +331,10 @@ export class Studio {
   private duel: Duel | null = null;
   /** Difficulty to restore when a duel stops (duels force their own tier). */
   private duelSavedDifficulty: Difficulty | null = null;
+  /** Player-vs-NPC arena match (countdown → fight → result → choice). */
+  private arenaMatch: ArenaMatch | null = null;
+  /** Difficulty restored when an arena match ends. */
+  private arenaSavedDifficulty: Difficulty | null = null;
   /** A.L.E. Bot: director cameras + highlights + diagnostics over the duel. */
   private ale = new AleBot();
   private status: StatusController;
@@ -597,6 +602,8 @@ export class Studio {
   private onMouseDown = (e: MouseEvent) => {
     this.sfx?.resume();
     if (!this.input.locked) return;
+    // Prefight / result / choice: no offense until fighting or free roam.
+    if (this.arenaMatch?.isActive && !this.arenaMatch.isFighting) return;
     if (e.button === 0) this.attack();
     else if (e.button === 1) {
       // Middle mouse (M3): the relocated motion-attack (formerly KeyT). Sits in
@@ -1965,6 +1972,105 @@ export class Studio {
   }
 
   /**
+   * Start a player-vs-NPC arena match against living enemies currently in the room.
+   * Prefight countdown → fight to last stand → 2s result banner → Retry / Return.
+   */
+  startArenaMatch(): boolean {
+    if (this.inDungeon || this.spectating) return false;
+    if (!(this.targets instanceof Targets)) return false;
+    if (this.arenaMatch?.isActive) return false;
+    const loadout = this.targets.enemyLoadout();
+    if (!loadout.length) {
+      // No enemies: spawn a default sword foe so "Start Arena" always works.
+      this.spawnNpc("sword", "enemy");
+    }
+    const specs: ArenaOpponentSpec[] = (
+      loadout.length ? loadout : this.targets.enemyLoadout()
+    ).map((e) => ({
+      weaponId: e.weaponId,
+      boss: e.boss,
+      scale: e.scale,
+    }));
+    if (!specs.length) return false;
+
+    if (!this.arenaMatch) this.arenaMatch = new ArenaMatch();
+    this.arenaSavedDifficulty = this.difficulty;
+    this.targets.setAutoRespawn(false);
+    // Freeze AI during countdown
+    this.targets.setDifficulty("passive");
+    this.arenaMatch.start(specs);
+    this.setCombatFlash("ARENA", 0.6);
+    return true;
+  }
+
+  /** Retry the same opponent loadout after a match result. */
+  arenaRetry(): void {
+    if (!this.arenaMatch?.isChoice) return;
+    if (!(this.targets instanceof Targets)) return;
+    const specs = this.arenaMatch.retry();
+    if (!specs.length) return;
+    this.restorePlayerForArena();
+    this.targets.clear();
+    this.targets.setAutoRespawn(false);
+    this.targets.setDifficulty("passive");
+    this.respawnArenaOpponents(specs);
+    this.setCombatFlash("RETRY", 0.5);
+  }
+
+  /**
+   * Leave the arena match: clear opponents (no more fights vs that loadout) and
+   * return to free-roam Danger Room with normal respawn rules.
+   */
+  arenaReturn(): void {
+    if (!this.arenaMatch?.isActive) return;
+    this.arenaMatch.returnToRoom();
+    if (this.targets instanceof Targets) {
+      this.targets.clear();
+      this.targets.setAutoRespawn(true);
+    }
+    this.restorePlayerForArena();
+    if (this.arenaSavedDifficulty) {
+      this.setDifficulty(this.arenaSavedDifficulty);
+      this.arenaSavedDifficulty = null;
+    } else {
+      this.setDifficulty(this.difficulty === "passive" ? "normal" : this.difficulty);
+    }
+    this.setCombatFlash("DANGER ROOM", 0.7);
+  }
+
+  private respawnArenaOpponents(specs: ArenaOpponentSpec[]): void {
+    if (!(this.targets instanceof Targets)) return;
+    const base = this.character?.root.position ?? new THREE.Vector3();
+    specs.forEach((s, i) => {
+      const ang = (i / Math.max(1, specs.length)) * Math.PI * 2 + 0.4;
+      const r = 6 + (i % 3) * 1.2;
+      const pos = new THREE.Vector3(
+        base.x + Math.cos(ang) * r,
+        0,
+        base.z + Math.sin(ang) * r,
+      );
+      this.targets.spawnAt?.(pos, s.weaponId, "enemy", {
+        scale: s.scale,
+        arch: s.boss ? "boss" : "grunt",
+      });
+    });
+  }
+
+  private restorePlayerForArena(): void {
+    this.defeated = false;
+    this.hurt = 0;
+    this.invuln = 1.2;
+    this.blocking = false;
+    this.sparring?.resetPlayer();
+    this.health = this.maxHealth;
+    this.stamina = this.maxStamina;
+  }
+
+  arenaState() {
+    return this.arenaMatch?.isActive ? this.arenaMatch.state() : null;
+  }
+
+  /**
    * Start an AI-vs-AI Explorer duel in the Danger Room: hide the player, hand the
    * arena over to the {@link Duel} orchestrator, and switch to a spectator view.
    * No-op inside the dungeon or non-Targets populations.
@@ -2271,6 +2377,11 @@ export class Studio {
     p.y += 1.0;
     this.vfx.nova(p, 0xff5a6a);
     this.vfx.shockwave(new THREE.Vector3(p.x, 0.05, p.z), 0xff5a6a, 3.2, 0.7);
+    // Arena match owns death → result UI (no free-roam auto-respawn).
+    if (this.arenaMatch?.isFighting) {
+      this.playPlayerReaction("knockedOut");
+      return;
+    }
     // In pvp the server owns the respawn timer (we restore on its respawn event /
     // authoritative alive flag), so skip the local auto-respawn schedule.
     if (!auto) return;
@@ -2281,6 +2392,7 @@ export class Studio {
     this.playPlayerReaction("knockedOut");
     // Respawn after a beat: heal, brief i-frames.
     this.schedule(1.4, () => {
+      if (this.arenaMatch?.isActive) return; // arena owns restore on retry/return
       this.health = this.maxHealth;
       this.stamina = this.maxStamina;
       this.invuln = 1.6;
@@ -5142,6 +5254,21 @@ export class Studio {
       this.sparCtx.playerAlive = false;
       this.duel.update(dt);
     }
+    // Player-vs-NPC arena match (countdown / fight / result / choice).
+    if (this.arenaMatch?.isActive && this.targets instanceof Targets) {
+      const living = this.targets.factionCounts().enemy;
+      const ev = this.arenaMatch.update(dt, living, this.defeated);
+      if (ev.releasedFight) {
+        const d = this.arenaSavedDifficulty ?? this.difficulty;
+        this.targets.setDifficulty(d === "passive" ? "normal" : d);
+        this.setCombatFlash("FIGHT!", 0.7);
+      }
+      if (ev.enteredResult) {
+        this.targets.setDifficulty("passive");
+        this.setCombatFlash(ev.enteredResult === "win" ? "VICTORY" : "DEFEAT", 1.8);
+      }
+      // During countdown freeze AI (already passive); still tick targets for anims.
+    }
     this.targets.update(dt, this.sparCtx);
     // A.L.E. Bot polls fighter state AFTER the AI tick so it reads this frame's
     // outcomes (cameras, highlights, diagnostics, telemetry).
@@ -5385,7 +5512,8 @@ export class Studio {
       difficulty: this.difficulty,
       blocking: this.blocking,
       hurt: this.hurt,
-      defeated: this.defeated,
+      // Suppress free-roam "Respawning…" overlay during arena (result UI owns it).
+      defeated: this.defeated && !this.arenaMatch?.isActive,
       selectedTarget,
       selectedAllyTarget,
       zone,
@@ -5399,6 +5527,7 @@ export class Studio {
           ? "Hit E to Leave"
           : null,
       inDungeon: this.inDungeon,
+      arena: this.arenaMatch?.isActive ? this.arenaMatch.state() : null,
       mech: this.mech.isPiloted
         ? {
             abilities: MECH_ABILITIES.map((a, i) => ({

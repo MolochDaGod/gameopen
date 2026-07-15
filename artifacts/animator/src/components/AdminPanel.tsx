@@ -90,6 +90,8 @@ interface Props {
   duel: DuelState | null;
   onStartDuel: (teamSize: number) => void;
   onStopDuel: () => void;
+  /** Player-vs-NPC arena match (countdown → fight → result → retry/return). */
+  onStartArenaMatch: () => void;
   /** The training environment the duel/session will take place in. */
   roomPreset: RoomPresetId;
   /** A.L.E. Bot state (cameras / highlights / diagnostics / report), or null. */
@@ -129,6 +131,7 @@ export function AdminPanel({
   duel,
   onStartDuel,
   onStopDuel,
+  onStartArenaMatch,
   roomPreset,
   ale,
   onDuelCamera,
@@ -280,6 +283,20 @@ export function AdminPanel({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="panel-section">
+        <h3>
+          <Icon name="anim-test" size={16} /> Arena Match
+        </h3>
+        <p className="spar-count-label">
+          Prefight countdown, fight until winner, then result + Retry or Return
+          to Danger Room (clears that opponent loadout). Spawn enemies first, or
+          a default sword foe is added.
+        </p>
+        <button className="opt" onClick={onStartArenaMatch} disabled={!!duel}>
+          Start Arena Match
+        </button>
       </div>
 
       <div className="panel-section">
