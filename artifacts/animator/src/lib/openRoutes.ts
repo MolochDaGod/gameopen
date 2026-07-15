@@ -17,6 +17,7 @@
  */
 
 export type AppMode =
+  | "landing"
   | "doors"
   | "danger"
   | "voxel"
@@ -24,6 +25,9 @@ export type AppMode =
   | "editor"
   | "lobby"
   | "ledmask"
+  | "avatar"
+  | "characters"
+  | "minegrudge"
   | "brawl"
   | "zones"
   | "mimic"
@@ -60,12 +64,23 @@ export interface OpenSurface {
 /** Ordered hub catalog — doors UI + docs + fleet deep-links. */
 export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
+    mode: "landing",
+    slug: "login",
+    aliases: ["sign-in", "signin", "welcome", "landing"],
+    cabinets: [],
+    title: "Sign in",
+    blurb: "Grudge ID login — fleet session for all Open surfaces.",
+    group: "hub",
+    tags: ["Auth", "SSO"],
+    accent: "#4fc3ff",
+  },
+  {
     mode: "doors",
     slug: "",
-    aliases: ["hub", "doors", "home", "select"],
+    aliases: ["hub", "doors", "home", "select", "library"],
     cabinets: [],
     title: "Hub",
-    blurb: "Choose an arena, editor, or multiplayer room.",
+    blurb: "Animator suite — combat, create, LED, Realms (replaces threejs-rapier hub).",
     group: "hub",
     tags: ["Home", "Menu"],
     accent: "#d4a843",
@@ -158,14 +173,50 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "editor",
     slug: "dressing",
-    aliases: ["editor", "dressing-room", "avatar", "customize"],
-    cabinets: ["dressing-room", "dressing"],
-    title: "Dressing Room",
-    blurb: "Swap models, gear, animations, and VFX on your avatar.",
+    aliases: ["editor", "dressing-room", "animator", "customize"],
+    cabinets: ["dressing-room", "dressing", "animator"],
+    title: "Dressing Room / Animator",
+    blurb: "Full character animator — gear, clips, VFX (threejs-rapier suite).",
     group: "create",
     poster: "dressing",
     tags: ["Customize", "Preview"],
     accent: "#ffb24d",
+  },
+  {
+    mode: "avatar",
+    slug: "avatar",
+    aliases: ["avatar-edit", "head", "cube-head", "modular-head"],
+    cabinets: ["avatar"],
+    title: "Avatar Editor",
+    blurb: "Cube modular head builder — races, hair, eyes, gear colors.",
+    group: "create",
+    poster: "avatar",
+    tags: ["Avatar", "Create"],
+    accent: "#c9a0ff",
+  },
+  {
+    mode: "characters",
+    slug: "characters",
+    aliases: ["charactersgrudox", "campfire", "roster-hub"],
+    cabinets: ["characters", "charactersgrudox"],
+    title: "Characters GRUDOX",
+    blurb: "Campfire roster hub — launch play surfaces with hero handoff.",
+    group: "hub",
+    poster: "avatar",
+    tags: ["Roster", "Hub"],
+    accent: "#5fe0ff",
+  },
+  {
+    mode: "minegrudge",
+    slug: "realms",
+    aliases: ["minegrudge", "mineloader", "mine-loader", "grudox-realms"],
+    cabinets: ["minegrudge", "realms"],
+    title: "GRUDOX Realms",
+    blurb: "Mine-Loader worlds — lobby, build, co-op (fleet iframe / live).",
+    group: "multiplayer",
+    poster: "library-mine",
+    tags: ["Realms", "Voxel"],
+    accent: "#7ee0a0",
   },
   {
     mode: "lobby",
@@ -194,10 +245,10 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "ledmask",
     slug: "ledmask",
-    aliases: ["led-mask", "led", "face"],
+    aliases: ["led-mask", "led", "face", "visor"],
     cabinets: ["ledmask", "led-mask"],
     title: "LED Mask",
-    blurb: "Voxel head + LED visor expressions and poses.",
+    blurb: "Voxel LED visor — chat, faces, banner; right rail scrolls in place.",
     group: "tools",
     poster: "avatar",
     tags: ["AI Face", "LED"],
@@ -271,9 +322,15 @@ export function resolveModeFromLocation(
   try {
     const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
 
-    // 1. Explicit ?door=<mode>
+    // 1. Explicit ?door=<mode|alias> (legacy threejs-rapier deep-links)
     const door = q.get("door");
-    if (door && MODE_SET.has(door)) return door as AppMode;
+    if (door) {
+      if (MODE_SET.has(door)) return door as AppMode;
+      if (door === "charactersgrudox") return "characters";
+      if (door === "grudoxEditor") return "minegrudge";
+      const viaAlias = modeFromSlug(door);
+      if (viaAlias) return viaAlias;
+    }
 
     // 2. Clean path slugs: /danger, /voxel, /brawl, …
     const segs = pathname.split("/").filter(Boolean).map((x) => x.toLowerCase());
@@ -360,10 +417,17 @@ export function syncUrlToMode(mode: AppMode, opts?: { replace?: boolean }): void
   }
 }
 
-/** Surfaces shown on the hub door grid (exclude pure hub + play-only). */
+/**
+ * Surfaces shown on the Steam-style library grid.
+ * Exclude pure home (doors), ephemeral play, and login landing.
+ * Keep account / characters hub tiles so fleet roster is one click away.
+ */
 export function hubDoorSurfaces(): OpenSurface[] {
   return OPEN_SURFACES.filter(
-    (s) => s.mode !== "doors" && s.mode !== "play" && s.group !== "hub",
+    (s) =>
+      s.mode !== "doors" &&
+      s.mode !== "play" &&
+      s.mode !== "landing",
   );
 }
 
@@ -378,6 +442,7 @@ export const SURFACE_GROUP_LABEL: Record<SurfaceGroup, string> = {
 
 /** Group order for hub sections. */
 export const HUB_GROUP_ORDER: SurfaceGroup[] = [
+  "hub",
   "combat",
   "create",
   "multiplayer",

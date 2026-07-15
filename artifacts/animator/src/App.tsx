@@ -55,6 +55,10 @@ import { VoxGrudgeNative } from "./components/VoxGrudgeNative";
 import { gameSession } from "./game/GameSession";
 import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
+import { LandingPage } from "./components/LandingPage";
+import { AvatarEditMode } from "./components/AvatarEditMode";
+import { CharactersGrudoxMode } from "./components/CharactersGrudoxMode";
+import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { VoxelEditorUI } from "./components/VoxelEditorUI";
 import { VoxelMapsPanel } from "./components/VoxelMapsPanel";
 import { VoxelTemplatePicker } from "./components/VoxelTemplatePicker";
@@ -86,31 +90,11 @@ import {
 import "./index.css";
 import "./components/dock/dock.css";
 
-type Mode = "doors" | "danger" | "voxel" | "play" | "editor" | "lobby" | "ledmask" | "brawl" | "zones" | "mimic" | "genesis" | "voxgrudge-native";
 /** Engine surface modes — URL map lives in `lib/openRoutes.ts`. */
 type Mode = AppMode;
 
 /** Resolve initial mode from path slug / arcade deep-link / query. */
 function initialMode(): Mode {
-  try {
-    const d = new URLSearchParams(window.location.search).get("door");
-    if (
-      d === "editor" ||
-      d === "danger" ||
-      d === "voxel" ||
-      d === "lobby" ||
-      d === "ledmask" ||
-      d === "zones" ||
-      d === "brawl" ||
-      d === "mimic" ||
-      d === "genesis" ||
-      d === "voxgrudge-native"
-    )
-      return d;
-  } catch {
-    /* no-op */
-  }
-  return "doors";
   return resolveModeFromLocation();
 }
 
@@ -161,20 +145,29 @@ export default function App() {
     setEquipOpen(false);
   }, [mode]);
   const [characterId, setCharacterId] = useState("explorer");
-  // Drive the in-game avatar from the active fleet character: resolve its race
-  // to a grudge6 FBX (`grudge:<race>:<preset>`) and push it to the engine. Studio
-  // falls back to the Explorer rig if the race asset can't load, so this is safe
-  // even when no character is selected (default stays "explorer").
+  // Drive avatar + equipment from the signed-in fleet character (race + saveData.open loadout).
+  // Studio falls back to Explorer if the race asset fails; equipment comes from characterLoadout.
   useEffect(() => {
-    const applyAvatar = () => {
+    const applyAvatarAndLoadout = () => {
       const ch = gameSession.selectedCharacter();
       if (!ch) return;
-      const { avatarId } = resolveRaceModel(ch);
-      setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
-      studioRef.current?.setCharacter(avatarId);
+      const { avatarId: raceAvatar } = resolveRaceModel(ch);
+      void import("./lib/characterLoadout").then(({ loadoutFromCharacter }) => {
+        const loadout = loadoutFromCharacter(ch);
+        const avatarId = loadout.avatarId || raceAvatar;
+        setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
+        studioRef.current?.setCharacter(avatarId);
+        // Apply saved weapons so logged-in play uses the character's gear
+        if (loadout.weaponId) {
+          setWeaponId(loadout.weaponId);
+          studioRef.current?.setWeapon(loadout.weaponId);
+        }
+        setOffHandState(loadout.offHand);
+        studioRef.current?.setOffHand(loadout.offHand);
+      });
     };
-    applyAvatar();
-    return gameSession.subscribe(applyAvatar);
+    applyAvatarAndLoadout();
+    return gameSession.subscribe(applyAvatarAndLoadout);
   }, []);
   const [weaponId, setWeaponId] = useState<WeaponId>("sword");
   const [offHand, setOffHandState] = useState<WeaponId | null>(null);
@@ -526,11 +519,30 @@ export default function App() {
   const onWeapon = useCallback((id: WeaponId) => {
     setWeaponId(id);
     studioRef.current?.setWeapon(id);
+    // Persist equip to fleet character (logged-in only; debounced)
+    const ch = gameSession.selectedCharacter();
+    const charId = gameSession.snapshot.selectedCharacterId;
+    if (ch && charId) {
+      void import("./lib/characterLoadout").then(({ scheduleCharacterLoadoutSave }) => {
+        scheduleCharacterLoadoutSave(charId, ch, { weaponId: id }, (saveData) => {
+          gameSession.patchCharacter(charId, { saveData });
+        });
+      });
+    }
   }, []);
 
   const onOffHand = useCallback((id: WeaponId | null) => {
     setOffHandState(id);
     studioRef.current?.setOffHand(id);
+    const ch = gameSession.selectedCharacter();
+    const charId = gameSession.snapshot.selectedCharacterId;
+    if (ch && charId) {
+      void import("./lib/characterLoadout").then(({ scheduleCharacterLoadoutSave }) => {
+        scheduleCharacterLoadoutSave(charId, ch, { offHand: id }, (saveData) => {
+          gameSession.patchCharacter(charId, { saveData });
+        });
+      });
+    }
   }, []);
 
   // Open the in-play loadout overlay (release pointer-lock so the cursor is free).
@@ -861,6 +873,18 @@ export default function App() {
     if (next !== "doors" && next !== "play") {
       void import("./lib/recentLibrary").then(({ recordRecentPlay }) => recordRecentPlay(next));
     }
+    // Remember last mode on the fleet character (logged-in saves).
+    if (next !== "doors") {
+      const ch = gameSession.selectedCharacter();
+      const charId = gameSession.snapshot.selectedCharacterId;
+      if (ch && charId) {
+        void import("./lib/characterLoadout").then(({ scheduleCharacterLoadoutSave }) => {
+          scheduleCharacterLoadoutSave(charId, ch, { lastMode: next }, (saveData) => {
+            gameSession.patchCharacter(charId, { saveData });
+          });
+        });
+      }
+    }
   }, []);
 
   // Per-surface config for the ONE global AI dock the shell hosts. Danger/play
@@ -922,6 +946,11 @@ export default function App() {
     studioRef.current?.applyStatus(id, aoe);
   }, []);
 
+  if (mode === "landing") {
+    // Front door: Grudge ID (no shell chrome). Enter → library hub.
+    return <LandingPage onEnter={() => navigate("doors")} />;
+  }
+
   if (mode === "account") {
     return shell(
       withScreenTheme(
@@ -960,6 +989,36 @@ export default function App() {
 
   if (mode === "ledmask") {
     return shell(<LedMaskMode onExit={() => setMode("doors")} onNavigate={navigate} />);
+  }
+
+  if (mode === "avatar") {
+    return shell(
+      withScreenTheme(<AvatarEditMode onExit={() => setMode("doors")} />),
+    );
+  }
+
+  if (mode === "characters") {
+    return shell(
+      withScreenTheme(
+        <CharactersGrudoxMode
+          onExit={() => setMode("doors")}
+          onNavigate={(m) => {
+            // Map hub local modes onto Open AppMode (lobbyWorld → Realms live)
+            if (m === "lobbyWorld") navigate("minegrudge");
+            else if (m === "voxgrudge-native") navigate("voxgrudge-native");
+            else navigate(m as Mode);
+          }}
+        />,
+      ),
+    );
+  }
+
+  if (mode === "minegrudge") {
+    return shell(
+      withScreenTheme(
+        <MineGrudgeEditorMode onExit={() => setMode("doors")} surface="lobby" preferLive />,
+      ),
+    );
   }
 
   if (mode === "lobby") {

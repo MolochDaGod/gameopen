@@ -40,7 +40,7 @@ import "./steamLibrary.css";
 const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
 
 interface Props {
-  onEnter: (mode: Exclude<AppMode, "doors" | "play">) => void;
+  onEnter: (mode: Exclude<AppMode, "doors" | "play" | "landing">) => void;
 }
 
 const GROUP_ICON: Record<SurfaceGroup, typeof Swords> = {

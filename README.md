@@ -25,8 +25,10 @@ Canonical login always returns to **this** origin with tokens the app can store.
 |-------|--------|
 | Login URL builder | `artifacts/animator/src/lib/fleet.ts` → `buildGrudgeLoginUrl()` |
 | Token pickup / bridge | `artifacts/animator/src/lib/grudgeAuth.ts` |
+| Equip / game saves | `artifacts/animator/src/lib/characterLoadout.ts` (`saveData.open`) |
 | Sign-in UI entry | Fleet bar → `loginWithGrudgeId()` |
-| Id hub | `https://id.grudge-studio.com/login?redirect_uri=https://gameopen.vercel.app/` |
+| Full auth checklist | [`docs/AUTH_OPEN.md`](docs/AUTH_OPEN.md) |
+| Id hub | `https://id.grudge-studio.com/login?redirect_uri=https://open.grudge-studio.com/` |
 
 **Contract (must match GrudgeBuilder `docs/GRUDGE_AUTH_CONNECT.md`):**
 
@@ -64,13 +66,19 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/genesis` | Warlord Genesis waves |
 | `/brawl` | Ruins Brawler |
 | `/mimic` | Mimic dungeon encounter |
+| `/login` | Grudge ID landing (fleet SSO) |
 | `/voxel` | Voxel map editor (canonical block types) |
 | `/world` | VoxGrudge open world |
-| `/dressing` | Dressing room |
+| `/dressing` | Dressing Room / Animator (threejs-rapier suite) |
+| `/avatar` | Cube modular Avatar Editor |
+| `/characters` | Characters GRUDOX campfire hub |
+| `/realms` | Mine-Loader / GRUDOX Realms |
 | `/lobby` | Multiplayer lobby |
 | `/zones` | GRUDOX zone launcher |
-| `/ledmask` | LED mask tool |
+| `/ledmask` | LED Mask (right rail scroll-contained) |
 | `/account` | Account hub (races, wallet, treaty) |
+
+**Consolidation:** Open **replaces** [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) as the product entry. See [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
 | `/arcade/play/<id>` | GRUDOX cabinet deep-link |
 
 Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).

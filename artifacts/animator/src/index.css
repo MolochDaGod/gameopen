@@ -2727,8 +2727,12 @@ html, body, #root {
   background: #0a0a0f;
   color: #e0e0ff;
   padding: clamp(16px, 3vw, 40px);
-  overflow: auto;
+  /* Vertical page scroll only — never scroll the whole stage off horizontally */
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--g-font, system-ui, sans-serif);
+  box-sizing: border-box;
+  max-width: 100vw;
 }
 .ledmask-head {
   display: flex;
@@ -2782,10 +2786,13 @@ html, body, #root {
 
 .ledmask-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
   gap: 24px;
-  max-width: 1200px;
+  max-width: min(1200px, 100%);
+  width: 100%;
   margin: 0 auto;
+  /* Keep columns inside viewport; right rail scrolls independently */
+  min-width: 0;
 }
 @media (max-width: 900px) { .ledmask-grid { grid-template-columns: 1fr; } }
 
@@ -2834,7 +2841,39 @@ html, body, #root {
   font-size: 0.9rem;
 }
 
-.ledmask-controls { display: flex; flex-direction: column; gap: 20px; }
+/* Right rail: scroll vertically inside the panel, never push the page sideways */
+.ledmask-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(calc(100vh - 120px), 900px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+.ledmask-controls .ledmask-panel {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.ledmask-faces,
+.ledmask-states {
+  max-width: 100%;
+}
+.ledmask-banner-row {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.ledmask-input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 .ledmask-panel {
   background: #12131c;
   border: 1px solid #242842;
