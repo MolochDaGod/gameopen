@@ -18,18 +18,14 @@ import type { CharacterLook, WeaponClass } from "./types";
  * curated clips are hosted under `public/anim/` instead and resolved relative to
  * the artifact's base path. Clip ids are catalog ids (`animations/<class>/<clip>`).
  */
-const BASE = import.meta.env.BASE_URL; // includes a trailing slash
-
-function urlForId(id: string): string {
-  return `${BASE}anim/${id}.fbx`;
-}
-
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
 
-/** Load one FBX by catalog id; resolves to the loaded group (carries `.animations`). */
+/** Load one FBX by catalog id via fleet multi-host resolve. */
 async function loadFbx(id: string): Promise<THREE.Group> {
-  return await fbxLoader.loadAsync(urlForId(id));
+  const { loadFbxFirst } = await import("../assets");
+  const { group } = await loadFbxFirst([`anim/${id}.fbx`, `${id}.fbx`], fbxLoader);
+  return group;
 }
 
 /**
@@ -177,8 +173,12 @@ function loadParentGlbClip(id: string): Promise<THREE.AnimationClip | null> {
   if (!cached) {
     cached = (async () => {
       try {
-        const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
-        const clip = gltf.animations[0];
+        const { loadGltfFirst } = await import("../assets");
+        const { animations } = await loadGltfFirst(
+          [`anim/${id}.glb`, `${id}.glb`],
+          gltfLoader,
+        );
+        const clip = animations[0];
         if (!clip) return null;
         const retargeted = retargetMixamoClip(clip);
         const trim = CLIP_TRIM_SECONDS[id];
@@ -244,8 +244,12 @@ const NATIVE_GLB_CLIP_IDS: ReadonlySet<string> = new Set([
 /** Load one native-treatment GLB clip by catalog id; null when it ships none. */
 async function loadNativeGlbClip(id: string): Promise<THREE.AnimationClip | null> {
   try {
-    const gltf = await gltfLoader.loadAsync(`${BASE}anim/${id}.glb`);
-    return gltf.animations[0] ?? null;
+    const { loadGltfFirst } = await import("../assets");
+    const { animations } = await loadGltfFirst(
+      [`anim/${id}.glb`, `${id}.glb`],
+      gltfLoader,
+    );
+    return animations[0] ?? null;
   } catch {
     // swimming.glb often missing — public ships swimming.fbx
     try {

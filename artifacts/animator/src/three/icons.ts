@@ -1,9 +1,11 @@
-import { asset } from "./assets";
+import { asset, resolveIconUrl } from "./assets";
 import type { SkillKind, WeaponId } from "./types";
 
 /**
  * Registry for the framed RPG icon set sliced from the two source spritesheets
  * into public/icons/<name>.png. Names mirror the original sheet labels.
+ * Missing icons fall through fleet R2 (`assets.grudge-studio.com/icons/`) and
+ * ObjectStore registry via {@link resolveIconUrl}.
  */
 export const UI_ICONS = [
   "animator", "skill-vfx-lab", "parkour", "physics", "foot-planting",
@@ -23,9 +25,14 @@ export const ACTION_ICONS = [
 
 export type IconName = (typeof UI_ICONS)[number] | (typeof ACTION_ICONS)[number];
 
-/** Resolve a sliced icon to its public URL under the artifact base path. */
+/** Sync same-origin icon URL (fast path for <img>). */
 export function iconUrl(name: IconName | string): string {
   return asset(`icons/${name}.png`);
+}
+
+/** Async multi-host icon resolve (R2 + ObjectStore registry). */
+export async function iconUrlLive(name: IconName | string): Promise<string> {
+  return resolveIconUrl(String(name));
 }
 
 /** Each weapon gets a thematically matched action icon. */

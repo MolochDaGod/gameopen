@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import type { SkillKind } from "./types";
 import { asset } from "./assets";
@@ -289,7 +288,8 @@ export class Vfx {
    * slow/failed load never blocks combat.
    */
   private async loadGlbAssets() {
-    const loader = new GLTFLoader();
+    const { sharedGltfLoader } = await import("./loaders/gltf");
+    const loader = sharedGltfLoader();
     const norm = (obj: THREE.Object3D, target: number) => {
       const box = new THREE.Box3().setFromObject(obj);
       const size = new THREE.Vector3();
@@ -300,7 +300,8 @@ export class Vfx {
     // Slash arcs: 6 textured crescents. Pull each mesh out, bake its world
     // transform into geometry, and additively blend it so it reads as a glow.
     try {
-      const g = await loader.loadAsync(asset("models/vfx/attack-slashes.glb"));
+      const { loadGltfFirst } = await import("./assets");
+      const g = await loadGltfFirst("models/vfx/attack-slashes.glb", loader);
       if (this.disposed) return;
       g.scene.updateMatrixWorld(true);
       const collected: { name: string; order: number; mesh: THREE.Mesh }[] = [];
@@ -332,10 +333,11 @@ export class Vfx {
     }
     // Lightning: a single skinned bolt with a crackle clip.
     try {
-      const g = await loader.loadAsync(asset("models/vfx/lightning.glb"));
+      const { loadGltfFirst } = await import("./assets");
+      const g = await loadGltfFirst("models/vfx/lightning.glb", loader);
       if (this.disposed) return;
       norm(g.scene, 3.2);
-      this.lightningTpl = { scene: g.scene, clip: g.animations[0] ?? null };
+      this.lightningTpl = { scene: g.scene as THREE.Object3D, clip: g.animations[0] ?? null };
     } catch {
       /* lightning is optional flair */
     }
@@ -348,7 +350,8 @@ export class Vfx {
     ];
     for (const [path, size] of props) {
       try {
-        const g = await loader.loadAsync(asset(path));
+        const { loadGltfFirst } = await import("./assets");
+        const g = await loadGltfFirst(path, loader);
         if (this.disposed) return;
         norm(g.scene, size);
         this.propTpls.set(path, g.scene);
@@ -376,8 +379,10 @@ export class Vfx {
     if (got) return got;
     if (!this.modelLoading.has(path)) {
       this.modelLoading.add(path);
-      new GLTFLoader()
-        .loadAsync(asset(path))
+      void Promise.all([import("./assets"), import("./loaders/gltf")])
+        .then(([{ loadGltfFirst }, { sharedGltfLoader }]) =>
+          loadGltfFirst(path, sharedGltfLoader()),
+        )
         .then((g) => {
           if (this.disposed) return;
           const box = new THREE.Box3().setFromObject(g.scene);

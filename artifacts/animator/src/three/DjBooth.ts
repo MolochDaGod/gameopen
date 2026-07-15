@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { asset } from "./assets";
+import { loadFbxFirst, loadGltfFirst } from "./assets";
+import { sharedGltfLoader } from "./loaders/gltf";
 import { CHARACTER_HEIGHT_M } from "./types";
 import { loadSkeletonSource } from "./explorer/loader";
 import {
@@ -57,13 +57,13 @@ export class DjBooth {
 
   /** Load the booth + DJ and wire up animation. Safe to await; no-op if disposed. */
   async load(): Promise<void> {
-    const gltfLoader = new GLTFLoader();
+    const gltfLoader = sharedGltfLoader();
     const fbxLoader = new FBXLoader();
 
     const [djGltf, boothGltf, danceFbx, skelSource] = await Promise.all([
-      gltfLoader.loadAsync(asset("models/racalvin.glb")),
-      gltfLoader.loadAsync(asset("models/dj-booth.glb")),
-      fbxLoader.loadAsync(asset("anim/animations/extra/hip-hop-dancing.fbx")),
+      loadGltfFirst("models/racalvin.glb", gltfLoader),
+      loadGltfFirst("models/dj-booth.glb", gltfLoader),
+      loadFbxFirst("anim/animations/extra/hip-hop-dancing.fbx", fbxLoader).then((r) => r.group),
       loadSkeletonSource(),
     ]);
     if (this.disposed) {

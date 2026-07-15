@@ -50,15 +50,16 @@ let rosterPromise: Promise<THREE.Object3D[]> | null = null;
 /** Load the baked GLB once and return the 30 character sub-groups (cached). */
 function loadRoster(): Promise<THREE.Object3D[]> {
   if (!rosterPromise) {
-    rosterPromise = sharedGltfLoader()
-      .loadAsync(asset(GLB_URL))
-      .then((gltf) => {
+    rosterPromise = import("../assets")
+      .then(({ loadGltfFirst }) => loadGltfFirst(GLB_URL, sharedGltfLoader()))
+      .then(({ scene, url }) => {
         // The 30 characters are the children of the group with the most
         // children ("ForgeScene"); robust to any wrapper nodes GLTFLoader adds.
-        let host: THREE.Object3D = gltf.scene;
-        gltf.scene.traverse((o) => {
+        let host: THREE.Object3D = scene;
+        scene.traverse((o) => {
           if (o.children.length > host.children.length) host = o;
         });
+        if (import.meta.env.DEV) console.info("[grudge/bakedRoster] loaded", url, host.children.length);
         return [...host.children];
       })
       .catch((err) => {

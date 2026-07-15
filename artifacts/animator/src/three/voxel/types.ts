@@ -109,7 +109,7 @@ export interface BrushState {
   color: number;
   /**
    * Canonical Voxel Realms block type id (`stone`, `grass`, `cat:alloy-frame`, …).
-   * SSOT: https://mine-loader.replit.app/#/defs · `@workspace/voxel-canonical`
+   * SSOT: https://mine-loader.vercel.app/#/defs · `@workspace/voxel-canonical`
    */
   blockType: BlockTypeId;
   deployKind: DeployableKind;

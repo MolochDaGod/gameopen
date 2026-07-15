@@ -327,8 +327,8 @@ export function ThreeBrawler({ onExit }: Props) {
       {/* Hints */}
       <div style={hintStyle}>
         {locked
-          ? "WASD · LMB attack · RMB / Tab focus lock · 1-4 skills · QERF · Shift dash · Space jump"
-          : "Click canvas to lock pointer · then fight (RMB = focus lock)"}
+          ? "Danger Room controller · WASD · LMB attack · RMB/Tab focus · 1-4 skills · Shift dash · Space jump"
+          : "Click canvas to lock pointer · same controller as Danger Room"}
       </div>
 
       {/* Loading */}

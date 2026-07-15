@@ -8,11 +8,21 @@
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { assetUrl } from "../three/assetHost";
+import { loadGltfFirst } from "../three/assets";
+import { sharedGltfLoader } from "../three/loaders/gltf";
 
-const HERO_URL = assetUrl("models/landing/astrocreeper.glb");
-const HELPERS_URL = assetUrl("models/landing/helpers.glb");
+/** Prefer landing pack; fall back to live root models when landing/* 404s. */
+const HERO_PATH = [
+  "models/landing/astrocreeper.glb",
+  "models/astrocreeper.glb",
+  "models/racalvin.glb",
+  "models/karate-boss.glb",
+];
+const HELPERS_PATH = [
+  "models/landing/helpers.glb",
+  "models/landing-helpers.glb",
+  "models/dj-booth.glb",
+];
 
 /** Height-normalize a model and plant feet on y=0; returns world height. */
 function plantOnGround(obj: THREE.Object3D, targetHeight: number): number {
@@ -136,22 +146,13 @@ export function LandingHeroStage() {
     let mixer: THREE.AnimationMixer | null = null;
     const propRoots: THREE.Object3D[] = [];
 
-    const loader = new GLTFLoader();
-    const loadGltf = (url: string) =>
-      new Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }>((resolve, reject) => {
-        loader.load(
-          url,
-          (gltf) => resolve({ scene: gltf.scene, animations: gltf.animations ?? [] }),
-          undefined,
-          (err) => reject(err),
-        );
-      });
+    const loader = sharedGltfLoader();
 
     void (async () => {
       try {
         const [heroGltf, helpersGltf] = await Promise.all([
-          loadGltf(HERO_URL),
-          loadGltf(HELPERS_URL),
+          loadGltfFirst(HERO_PATH, loader),
+          loadGltfFirst(HELPERS_PATH, loader),
         ]);
         if (disposed) return;
 

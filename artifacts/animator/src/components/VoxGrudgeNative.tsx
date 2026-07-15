@@ -9,6 +9,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { VoxelEditor } from "../three/voxel/VoxelEditor";
 import { zoneWsUrl } from "../lib/zone";
+import { voxgrudgeWorldUrl } from "../lib/productionRuntime";
+import { getStoredToken } from "../lib/grudgeAuth";
+import { gameSession } from "../game/GameSession";
 
 interface Props {
   onExit: () => void;
@@ -160,13 +163,28 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
         <div style={statusBlock}>
           {wsStatus === "live" ? (
-            <span style={statusLive}>● live · {inWorldCount} in world</span>
+            <span style={statusLive}>● lab live · {inWorldCount} peers</span>
           ) : wsStatus === "connecting" ? (
-            <span style={statusConnecting}>○ connecting…</span>
+            <span style={statusConnecting}>○ connecting lab…</span>
           ) : (
-            <span style={statusOffline}>○ offline — local editor mode</span>
+            <span style={statusOffline}>○ lab offline — local editor</span>
           )}
         </div>
+
+        <button
+          type="button"
+          style={fullWorldBtn}
+          onClick={() => {
+            const url = voxgrudgeWorldUrl({
+              token: getStoredToken(),
+              characterId: gameSession.snapshot.selectedCharacterId,
+              from: "gameopen",
+            });
+            window.open(url, "_blank", "noopener,noreferrer");
+          }}
+        >
+          Full World ↗
+        </button>
 
         <button type="button" style={leaveBtn} onClick={onExit}>
           ⬑ Doors
@@ -175,7 +193,8 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
       {/* ── bottom hint bar ── */}
       <div style={hintBar}>
-        RMB orbit · scroll zoom · LMB build · Shift+drag pan · R to connect to open world server
+        This is the Open <b>lab</b> (local editor). Full VoxGrudge world:{" "}
+        <b>voxgrudge.vercel.app</b> · RMB orbit · LMB build · Full World opens the real open world
       </div>
     </div>
   );
@@ -265,6 +284,17 @@ const statusConnecting: CSSProperties = {
 const statusOffline: CSSProperties = {
   color: "#9fb8da",
   opacity: 0.55,
+};
+
+const fullWorldBtn: CSSProperties = {
+  border: "1px solid rgba(255,210,77,0.55)",
+  background: "rgba(255,210,77,0.12)",
+  color: "#ffd24d",
+  borderRadius: 8,
+  padding: "5px 12px",
+  cursor: "pointer",
+  fontSize: 13,
+  fontWeight: 700,
 };
 
 const leaveBtn: CSSProperties = {

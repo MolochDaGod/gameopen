@@ -213,23 +213,25 @@ const templateCache = new Map<string, Promise<THREE.Object3D>>();
 function loadTemplate(file: string): Promise<THREE.Object3D> {
   let p = templateCache.get(file);
   if (!p) {
-    p = sharedGltfLoader().loadAsync(asset(file)).then((gltf) => {
-      gltf.scene.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        for (const mat of mats) {
-          const map = (mat as THREE.MeshStandardMaterial)?.map;
-          if (map) {
-            map.magFilter = THREE.NearestFilter;
-            map.minFilter = THREE.NearestFilter;
-            map.generateMipmaps = false;
-            map.needsUpdate = true;
+    p = import("./assets").then(({ loadGltfFirst }) =>
+      loadGltfFirst(file, sharedGltfLoader()).then(({ scene }) => {
+        scene.traverse((o) => {
+          const mesh = o as THREE.Mesh;
+          if (!mesh.isMesh) return;
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const mat of mats) {
+            const map = (mat as THREE.MeshStandardMaterial)?.map;
+            if (map) {
+              map.magFilter = THREE.NearestFilter;
+              map.minFilter = THREE.NearestFilter;
+              map.generateMipmaps = false;
+              map.needsUpdate = true;
+            }
           }
-        }
-      });
-      return gltf.scene;
-    });
+        });
+        return scene;
+      }),
+    );
     templateCache.set(file, p);
   }
   return p;

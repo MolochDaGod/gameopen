@@ -623,6 +623,14 @@ export class Studio {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = STUDIO_TONE_MAPPING_EXPOSURE;
     container.appendChild(this.renderer.domElement);
+    // Enable KTX2/Basis texture decode on the shared GLTF loader (production GLBs).
+    void import("./loaders/gltf").then(({ bindKtx2 }) => {
+      try {
+        bindKtx2(this.renderer);
+      } catch (err) {
+        console.warn("[Studio] KTX2 bind failed", err);
+      }
+    });
 
     this.scene.background = new THREE.Color(Studio.FOG_BASE_COLOR);
     this.scene.fog = new THREE.Fog(Studio.FOG_BASE_COLOR, Studio.FOG_BASE_NEAR, Studio.FOG_BASE_FAR);

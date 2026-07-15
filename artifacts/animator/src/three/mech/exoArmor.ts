@@ -1,7 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { asset } from "../assets";
 
 /**
  * Self-hosted, normalized loader + per-instance wrapper for the Exo-Armour mech
@@ -28,7 +26,6 @@ interface ExoArmorTemplate {
   clip: THREE.AnimationClip | null;
 }
 
-const loader = new GLTFLoader();
 let templatePromise: Promise<ExoArmorTemplate | null> | null = null;
 
 /** Load + normalize the mech template once; cached for the app's lifetime. */
@@ -44,7 +41,9 @@ export function loadExoArmorTemplate(): Promise<ExoArmorTemplate | null> {
 }
 
 async function buildTemplate(): Promise<ExoArmorTemplate> {
-  const gltf = await loader.loadAsync(asset(MECH_FILE));
+  const { loadGltfFirst } = await import("../assets");
+  const { sharedGltfLoader } = await import("../loaders/gltf");
+  const gltf = await loadGltfFirst(MECH_FILE, sharedGltfLoader());
   const model = gltf.scene;
 
   // Fit to the target world height.

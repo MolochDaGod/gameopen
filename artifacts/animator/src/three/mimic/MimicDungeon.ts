@@ -18,8 +18,6 @@
  * combat pipeline (a follow-up can promote it into the Danger Room flow).
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset, assetCandidates } from "../assets";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
 import {
@@ -192,22 +190,13 @@ export class MimicDungeon {
     }
   }
 
-  /** Load GLB from the first working candidate (same-origin vol.glb preferred). */
+  /** Load GLB from the first working fleet candidate (same-origin → Open → R2). */
   private async loadGltf(path: string) {
-    const loader = new GLTFLoader();
-    const urls = assetCandidates(path);
-    let lastErr: unknown;
-    for (const url of urls) {
-      try {
-        const gltf = await loader.loadAsync(url);
-        console.info("[MimicDungeon] loaded", path, "from", url);
-        return gltf;
-      } catch (err) {
-        lastErr = err;
-        console.warn("[MimicDungeon] load miss", url, err);
-      }
-    }
-    throw lastErr ?? new Error(`Failed to load ${path}`);
+    const { loadGltfFirst } = await import("../assets");
+    const { sharedGltfLoader } = await import("../loaders/gltf");
+    const gltf = await loadGltfFirst(path, sharedGltfLoader());
+    console.info("[MimicDungeon] loaded", path, "from", gltf.url);
+    return gltf;
   }
 
   /**

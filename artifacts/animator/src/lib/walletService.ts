@@ -66,12 +66,18 @@ function authHeader(): Record<string, string> {
 
 async function fetchWallet(): Promise<GrudgeWallet | null> {
   try {
-    const r = await fetch(apiUrl("/api/wallet"), {
-      headers: authHeader(),
-      credentials: "include",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!r.ok) return null;
+    // Prefer nested account wallet if top-level /api/wallet is not mounted (404).
+    const paths = ["/api/wallet", "/api/account/wallet", "/api/wallets"];
+    let r: Response | null = null;
+    for (const p of paths) {
+      r = await fetch(apiUrl(p), {
+        headers: authHeader(),
+        credentials: "include",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (r.status !== 404) break;
+    }
+    if (!r || !r.ok) return null;
     const data = await r.json() as Record<string, unknown>;
     // Normalise Railway response shape: may be top-level or nested under `wallet`
     const w = (data.wallet as Record<string, unknown>) ?? data;
@@ -92,15 +98,20 @@ async function fetchWallet(): Promise<GrudgeWallet | null> {
 
 async function createWallet(): Promise<GrudgeWallet | null> {
   try {
-    const r = await fetch(apiUrl("/api/wallet"), {
-      method: "POST",
-      headers: authHeader(),
-      credentials: "include",
-      body: JSON.stringify({ chain: "Solana", type: "custodial" }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!r.ok) {
-      console.warn("[wallet] create failed", r.status, await r.text().catch(() => ""));
+    const paths = ["/api/wallet", "/api/account/wallet", "/api/wallets"];
+    let r: Response | null = null;
+    for (const p of paths) {
+      r = await fetch(apiUrl(p), {
+        method: "POST",
+        headers: authHeader(),
+        credentials: "include",
+        body: JSON.stringify({ chain: "Solana", type: "custodial" }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (r.status !== 404) break;
+    }
+    if (!r || !r.ok) {
+      // Wallet optional — Railway may not expose /api/wallet yet
       return null;
     }
     const data = await r.json() as Record<string, unknown>;

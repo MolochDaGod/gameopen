@@ -2,7 +2,6 @@ import * as THREE from "three";
 import { sharedGltfLoader } from "./loaders/gltf";
 import type { AnimRole, CharacterDef } from "./types";
 import { CHARACTER_HEIGHT_M } from "./types";
-import { asset } from "./assets";
 import { filterBindableTracks } from "./clipTracks";
 import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
@@ -75,20 +74,21 @@ export class Character {
 
   async load(): Promise<void> {
     const loader = sharedGltfLoader();
-    const url = asset(this.def.file);
-    const gltf = await loader.loadAsync(url);
+    // Same-origin first (never absolute R2 / CORS-blocked Animator CDN).
+    const { loadGltfFirst } = await import("./assets");
+    const { scene, animations, url } = await loadGltfFirst(this.def.file, loader);
     if (this.disposed) {
-      this.disposeGltfScene(gltf.scene);
+      this.disposeGltfScene(scene);
       return;
     }
-    this.model = gltf.scene;
+    this.model = scene as THREE.Object3D;
     // Restore colour (de-chrome metalness) then fit height safely.
     // Old path: setFromObject world box → target/size.y could yield ~100× scale.
     restoreCharacterMaterials(this.model, { neutralizeMetal: true });
     const fit = fitCharacterHeight(this.model, CHARACTER_HEIGHT_M, this.def.scale ?? 1);
     if (fit.unitFix !== 1 || fit.scale > 5 || fit.scale < 0.05) {
       console.info(
-        `[Character] ${this.def.id} fit h=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)}`,
+        `[Character] ${this.def.id} fit h=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} url=${url}`,
       );
     }
     this.model.rotation.y = this.modelYaw;
@@ -96,7 +96,7 @@ export class Character {
 
     this.mixer = new THREE.AnimationMixer(this.model);
     this.locoBlend = new LocomotionBlend((id) => this.actions.get(id) ?? null);
-    for (const clip of gltf.animations) {
+    for (const clip of animations) {
       const action = this.mixer.clipAction(filterBindableTracks(this.model, clip));
       this.actions.set(clip.name, action);
     }

@@ -32,20 +32,20 @@ export function publicUrl(rel: string): string {
 }
 
 /**
- * Prefer R2 CDN for heavy assets when VITE_USE_R2=true and not on localhost.
- * Falls back to same-origin public/ (Vercel static).
+ * Same-origin public/ first (Vercel static). Absolute R2 only with
+ * VITE_ASSET_FORCE_R2=true — VITE_USE_R2 alone caused mass 404s when the
+ * gameopen R2 prefix was incomplete.
+ *
+ * For GLB/FBX/texture **loads**, use `three/assets` `loadGltfFirst` /
+ * `assetCandidates` (fleet multi-host). This helper is for <img src> / posters.
  */
 export function assetUrl(rel: string): string {
   const path = rel.replace(/^\//, "");
-  const useR2 = import.meta.env.VITE_USE_R2 === "true";
-  const isLocal =
-    typeof location !== "undefined" &&
-    (location.hostname === "localhost" || location.hostname === "127.0.0.1");
-
-  if (useR2 && !isLocal) {
+  if (import.meta.env.VITE_ASSET_FORCE_R2 === "true") {
+    // Prefer R2 **root** (weapons, icons, textures) — not incomplete /gameopen
     const cdn =
       import.meta.env.VITE_ASSET_BASE_URL ||
-      `${FLEET.assets}/${FLEET.gameopenPrefix}`;
+      FLEET.assets;
     return `${cdn.replace(/\/$/, "")}/${path}`;
   }
   return publicUrl(path);
@@ -63,17 +63,24 @@ export function apiUrl(path: string): string {
  * Dual-writes every return alias the gateway / auth-page accept so handoff
  * always returns to THIS origin (e.g. https://gameopen.vercel.app/).
  */
+/**
+ * Canonical Grudge ID login URL for Open.
+ * Always lands on /login (id.grudge-studio.com/auth/sso-check is 404 in production).
+ * Dual-writes every return alias so the gateway never drops the Open origin.
+ * Default return: current location, or https://open.grudge-studio.com/
+ */
 export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean; app?: string }): string {
+  const defaultOrigin = "https://open.grudge-studio.com";
   const redirect =
     returnTo ||
     (typeof window !== "undefined"
       ? `${window.location.origin}${window.location.pathname}${window.location.search || ""}`.replace(
-          /[?&](grudge_token|sso_token|token|launch_token)=[^&]*/g,
+          /[?&](grudge_token|sso_token|token|launch_token|characterId|character_id)=[^&]*/g,
           "",
         )
-      : "https://gameopen.vercel.app/");
+      : `${defaultOrigin}/`);
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://gameopen.vercel.app";
+    typeof window !== "undefined" ? window.location.origin : defaultOrigin;
   const q = new URLSearchParams({
     redirect_uri: redirect,
     redirect,
@@ -82,12 +89,8 @@ export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean;
     origin,
     app: opts?.app || "gameopen",
   });
-  const base = FLEET.auth.replace(/\/$/, "");
-  if (opts?.force) {
-    return `${base}/login?${q.toString()}`;
-  }
-  // sso-check: silent re-entry when studio cookie exists, else → /login with dual return
-  return `${base}/auth/sso-check?${q.toString()}`;
+  // Always /login — silent sso-check is not available on id-gateway (404).
+  return `${FLEET.auth.replace(/\/$/, "")}/login?${q.toString()}`;
 }
 
 /**

@@ -48,6 +48,7 @@ export type HubDestinationId =
   | "carrier"
   | "waters"
   | "warlords"
+  | "warlord-genesis"
   | "character-studio";
 
 export interface HubLaunchContext {
@@ -175,10 +176,24 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "voxgrudge",
-    label: "VoxGrudge World",
-    blurb: "Open voxel world",
+    label: "VoxGrudge Full World",
+    blurb: "Full open-world voxel survival",
     group: "arcade",
-    external: (ctx) => withHandoff(`${GRUDOX_HOST}/voxgrudge/`, ctx),
+    external: (ctx) => withHandoff("https://voxgrudge.vercel.app/", ctx),
+  },
+  {
+    id: "dcq",
+    label: "Dungeon Crawler Quest",
+    blurb: "Voxel dungeon RPG",
+    group: "play",
+    external: (ctx) => withHandoff("https://dcq.grudge-studio.com/", ctx),
+  },
+  {
+    id: "mine-loader",
+    label: "Mine-Loader Realms",
+    blurb: "Authoritative multiplayer voxel worlds",
+    group: "play",
+    external: (ctx) => withHandoff("https://mine-loader.vercel.app/", ctx),
   },
   {
     id: "arena-arcade",
@@ -207,6 +222,33 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     blurb: "Full Warlords client",
     group: "fleet",
     external: (ctx) => withHandoff(FLEET.warlords, ctx),
+  },
+  {
+    id: "warlord-genesis",
+    label: "Warlord Genesis",
+    blurb: "3-lane MOBA / RTS with fleet character",
+    group: "fleet",
+    // Prefer same-origin Genesis picker (4 GRUDOX slots) then handoff to product
+    localMode: "genesis",
+    external: (ctx) => {
+      try {
+        // Same-origin Open /genesis — shows 4-slot charactersgrudox picker first
+        const u = new URL(`${PLAY_SHELL}/genesis`);
+        u.searchParams.set("open", "1");
+        u.searchParams.set("from", "charactersgrudox");
+        if (ctx.characterId) u.searchParams.set("characterId", ctx.characterId);
+        if (ctx.baseId) u.searchParams.set("baseId", ctx.baseId);
+        if (ctx.name) u.searchParams.set("characterName", ctx.name);
+        const token = ctx.token || readFleetToken();
+        if (token) {
+          u.searchParams.set("sso_token", token);
+          u.searchParams.set("grudge_token", token);
+        }
+        return u.toString();
+      } catch {
+        return `${PLAY_SHELL}/genesis?open=1&from=charactersgrudox`;
+      }
+    },
   },
   {
     id: "character-studio",

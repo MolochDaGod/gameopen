@@ -8,8 +8,6 @@
  *         wave (1-3 normal) → bosswave (wave 4, karate-boss) → victory | defeat
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
 import { getBakedCharacter } from "../grudge/bakedRoster";
 import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { Vfx } from "../Vfx";
@@ -258,7 +256,9 @@ export class WarlordGenesisScene {
 
   private async loadGlb(path: string): Promise<THREE.Object3D | null> {
     try {
-      const gltf = await new GLTFLoader().loadAsync(asset(path));
+      const { loadGltfFirst } = await import("../assets");
+      const { sharedGltfLoader } = await import("../loaders/gltf");
+      const gltf = await loadGltfFirst(path, sharedGltfLoader());
       return gltf.scene;
     } catch {
       return null;

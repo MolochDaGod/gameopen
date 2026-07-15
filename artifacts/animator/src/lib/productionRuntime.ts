@@ -3,7 +3,9 @@
  * playtest, brawler, future modes).
  *
  * Source of practice:
- *  - PhysicsSystem / Controller (Danger Room + dungeon KCC)
+ *  - PhysicsSystem / Controller (Danger Room + dungeon KCC) — **canonical**
+ *  - Ruins Brawler (`three/brawler/BrawlerScene`) MUST use the same Controller
+ *    + InputState + PhysicsSystem stack (not a custom WASD/camera fork)
  *  - epicfight CombatController (T0 reaction windows)
  *  - Mine-Loader world authority (1 replica, server tick) — see docs/MINE_LOADER_SSOT.md
  *
@@ -89,11 +91,19 @@ export const ATTACK_PHASE_RATIO = {
  */
 export const MINE_LOADER_FLEET = {
   github: "https://github.com/MolochDaGod/mine-loader",
+  /**
+   * Live SPA (probed 200). Custom DNS mineloader.grudge-studio.com was NXDOMAIN —
+   * use Vercel host until CF edge is attached.
+   */
   client:
     (typeof import.meta !== "undefined" &&
       (import.meta.env?.VITE_MINE_LOADER_URL as string | undefined)) ||
-    "https://mineloader.grudge-studio.com/",
-  edge: "https://mine.grudge-studio.com/",
+    "https://mine-loader.vercel.app/",
+  /** Optional edge alias when CF live; same as client until then. */
+  edge:
+    (typeof import.meta !== "undefined" &&
+      (import.meta.env?.VITE_MINE_LOADER_EDGE as string | undefined)) ||
+    "https://mine-loader.vercel.app/",
   /** Blocks catalog path (same-origin rewrite preferred when wired). */
   blocksApi: "/api/blocks",
   healthz: "/api/healthz",
@@ -123,6 +133,40 @@ export function mineLoaderLobbyUrl(opts: {
   const u = new URL(`${base}/`);
   // Hash-routed SPA often uses #/play or #/lobby
   u.hash = opts.room ? `#/play?room=${encodeURIComponent(opts.room)}` : "#/lobby";
+  if (opts.token) {
+    u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
+    u.searchParams.set(HANDOFF_QUERY.launch, opts.token);
+  }
+  if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
+  u.searchParams.set(HANDOFF_QUERY.open, "1");
+  u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  return u.toString();
+}
+
+/** Full VoxGrudge open-world (not the in-Open thin voxel editor). */
+export function voxgrudgeWorldUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  from?: string;
+} = {}): string {
+  const u = new URL("https://voxgrudge.vercel.app/");
+  if (opts.token) {
+    u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
+    u.searchParams.set(HANDOFF_QUERY.launch, opts.token);
+  }
+  if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
+  u.searchParams.set(HANDOFF_QUERY.open, "1");
+  u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  return u.toString();
+}
+
+/** Dungeon Crawler Quest with fleet handoff. */
+export function dcqWorldUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  from?: string;
+} = {}): string {
+  const u = new URL("https://dcq.grudge-studio.com/");
   if (opts.token) {
     u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
     u.searchParams.set(HANDOFF_QUERY.launch, opts.token);

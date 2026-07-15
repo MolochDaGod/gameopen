@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
+import { loadGltfFirst } from "../assets";
+import { sharedGltfLoader } from "../loaders/gltf";
 import { PhysicsSystem } from "../PhysicsSystem";
 import type { CollisionProvider } from "../Controller";
 import { makeGrid, nearestWalkable, worldToCell, type NavGrid } from "./navmesh";
@@ -74,10 +74,8 @@ export class Dungeon {
 
   /** Load the GLB, build colliders + navmesh + the player KCC. */
   async load(): Promise<void> {
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync(asset(this.file));
+    const { scene: root } = await loadGltfFirst(this.file, sharedGltfLoader());
     if (this.disposed) return;
-    const root = gltf.scene;
 
     // Auto-scale: huge cm models shrink; tiny diorama kits grow to a playable
     // footprint; forge-sized maps pass through.

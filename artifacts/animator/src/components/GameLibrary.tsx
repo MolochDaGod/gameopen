@@ -87,13 +87,25 @@ export function GameLibrary({ onNavigate, onOpenAccount }: Props) {
     const snap = gameSession.snapshot;
     const token = getStoredToken();
     const characterId = snap.selectedCharacterId;
+    const ch = gameSession.selectedCharacter();
+    const baseId =
+      (typeof ch?.config?.baseId === "string" && ch.config.baseId) ||
+      (ch?.raceId ? `race-${ch.raceId}` : null);
+    const raceId = ch?.raceId ?? null;
+    const characterName = ch?.name ?? null;
 
     if (game.launch === "native" || game.launch === "editor") {
       if (game.nativeMode) onNavigate(game.nativeMode);
       return;
     }
 
-    const url = gameLaunchUrl(game, { token, characterId });
+    const url = gameLaunchUrl(game, {
+      token,
+      characterId,
+      baseId,
+      raceId,
+      characterName,
+    });
     if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 

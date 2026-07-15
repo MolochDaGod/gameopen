@@ -64,10 +64,10 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     id: "minegrudge",
     title: "GRUDOX Realms",
     blurb:
-      "Networked Minecraft-like survival — build, combat, adventure, friends & parties. Live: mineloader.grudge-studio.com",
+      "Networked Minecraft-like survival — build, combat, adventure, friends & parties. Live: mine-loader.vercel.app",
     tone: "#7ee0a0",
-    // Production Mine-Loader SPA (Cloudflare → Vercel/Railway; never Replit).
-    externalPath: "https://mineloader.grudge-studio.com/",
+    // Production Mine-Loader SPA (custom DNS pending — use Vercel host)
+    externalPath: "https://mine-loader.vercel.app/",
   },
   {
     id: "mine-loader-live",
@@ -75,7 +75,14 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     blurb:
       "Authoritative voxel Realms — 1× Railway API + Vercel client. Prefer Library → Mine-Loader Realms.",
     tone: "#5fd48a",
-    externalPath: "https://mineloader.grudge-studio.com/",
+    externalPath: "https://mine-loader.vercel.app/",
+  },
+  {
+    id: "dcq",
+    title: "Dungeon Crawler Quest",
+    blurb: "Full DCQ voxel dungeon RPG — dcq.grudge-studio.com",
+    tone: "#c9a0ff",
+    externalPath: "https://dcq.grudge-studio.com/",
   },
   {
     id: "lobby-island",
@@ -117,11 +124,20 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "voxgrudge",
-    title: "VoxGrudge: Open World",
-    blurb: "Open voxel world — native Open surface or GRUDOX.",
+    title: "VoxGrudge Full World",
+    blurb: "Full open-world voxel survival — voxgrudge.vercel.app (lab optional in Open).",
     tone: "#5fe0ff",
     native: true,
     nativeMode: "voxgrudge-native",
+    productionUrl: "https://voxgrudge.vercel.app/",
+    externalPath: "https://voxgrudge.vercel.app/",
+  },
+  {
+    id: "water-island",
+    title: "Warlords Home Island",
+    blurb: "water.grudge-studio.com/island — harvest, grudge6, nature packs.",
+    tone: "#4fc3c8",
+    externalPath: "https://water.grudge-studio.com/island",
   },
 ] as const;
 

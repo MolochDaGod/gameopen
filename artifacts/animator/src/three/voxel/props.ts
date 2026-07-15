@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
+import { loadGltfFirst } from "../assets";
+import { sharedGltfLoader } from "../loaders/gltf";
 import { attachTorchFlame } from "../fx/torchFlame";
 import { PROPS, type PropId } from "./types";
 
@@ -16,7 +16,6 @@ import { PROPS, type PropId } from "./types";
  * disposed per instance — only the cached template owns those GPU resources for
  * the lifetime of the app.
  */
-const loader = new GLTFLoader();
 const cache = new Map<PropId, Promise<THREE.Group | null>>();
 
 export function loadPropTemplate(id: PropId): Promise<THREE.Group | null> {
@@ -34,8 +33,18 @@ export function loadPropTemplate(id: PropId): Promise<THREE.Group | null> {
 
 async function buildTemplate(id: PropId): Promise<THREE.Group> {
   const def = PROPS[id];
-  const gltf = await loader.loadAsync(asset(def.file));
-  const model = gltf.scene;
+  // Same-origin → open hosts → R2 (props often missing from R2 gameopen prefix)
+  const paths =
+    id === "torch"
+      ? [
+          def.file,
+          "models/props/torch.glb",
+          "models/props/torch-burning.glb",
+          "models/props/dying-torch.glb",
+        ]
+      : [def.file];
+  const { scene: model, url } = await loadGltfFirst(paths, sharedGltfLoader());
+  if (import.meta.env.DEV) console.info(`[props] ${id} from`, url);
 
   // Fit to the target world height.
   model.updateWorldMatrix(true, true);

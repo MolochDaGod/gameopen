@@ -1,6 +1,4 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
 import { telegraphTexture, unitGroundPlane } from "./fxTextures";
 
 /**
@@ -81,8 +79,9 @@ export class TargetIndicators {
 
   private async load() {
     try {
-      const loader = new GLTFLoader();
-      const g = await loader.loadAsync(asset("models/vfx/target-ring.glb"));
+      const { loadGltfFirst } = await import("../assets");
+      const { sharedGltfLoader } = await import("../loaders/gltf");
+      const g = await loadGltfFirst("models/vfx/target-ring.glb", sharedGltfLoader());
       let mesh: THREE.Mesh | null = null;
       g.scene.traverse((o) => {
         const m = o as THREE.Mesh;

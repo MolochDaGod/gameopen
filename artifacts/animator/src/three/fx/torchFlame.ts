@@ -10,8 +10,8 @@
  * instances that share a material — without the host loop needing to update it.
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { asset } from "../assets";
+import { assetCandidates, loadGltfFirst } from "../assets";
+import { sharedGltfLoader } from "../loaders/gltf";
 
 const flameMaterials = new Set<THREE.ShaderMaterial>();
 let rafId = 0;
@@ -150,19 +150,45 @@ export interface TorchHandle {
   dispose(): void;
 }
 
-const gltfLoader = new GLTFLoader();
+const gltfLoader = sharedGltfLoader();
 let modelCache: Promise<THREE.Group> | null = null;
 
-function loadTorchModel(url: string): Promise<THREE.Group> {
+/**
+ * Prefer dying-torch, then lighter torch aliases. Each path tries same-origin
+ * + open hosts before R2 (R2 gameopen bucket often 404s for props).
+ */
+const TORCH_MODEL_PATHS = [
+  "models/props/dying-torch.glb",
+  "models/props/torch.glb",
+  "models/props/torch-burning.glb",
+] as const;
+
+function loadTorchModel(explicitUrl?: string): Promise<THREE.Group> {
   if (!modelCache) {
-    modelCache = gltfLoader
-      .loadAsync(url)
-      .then((g) => g.scene)
-      .catch((err) => {
-        console.error("[torch] model load failed", err);
+    modelCache = (async () => {
+      try {
+        if (explicitUrl) {
+          // Still try candidates if explicit is a relative path
+          if (!/^https?:\/\//i.test(explicitUrl)) {
+            const { scene } = await loadGltfFirst(explicitUrl, gltfLoader);
+            return scene as THREE.Group;
+          }
+          const g = await gltfLoader.loadAsync(explicitUrl);
+          return g.scene;
+        }
+        const { scene, url } = await loadGltfFirst([...TORCH_MODEL_PATHS], gltfLoader);
+        console.info("[torch] model loaded from", url);
+        return scene as THREE.Group;
+      } catch (err) {
+        console.error(
+          "[torch] model load failed for all candidates",
+          TORCH_MODEL_PATHS.flatMap((p) => assetCandidates(p)).slice(0, 6),
+          err,
+        );
         modelCache = null;
         throw err;
-      });
+      }
+    })();
   }
   return modelCache.then((s) => s.clone(true));
 }
@@ -212,7 +238,8 @@ export async function createTorch(opts: TorchOptions = {}): Promise<TorchHandle>
   let tipY = targetH;
 
   try {
-    const model = await loadTorchModel(opts.modelUrl ?? asset("models/props/dying-torch.glb"));
+    // Never hard-point R2-only URLs — use candidate chain (same-origin first).
+    const model = await loadTorchModel(opts.modelUrl);
     tipY = normalizeModel(model, targetH);
     model.traverse((o) => {
       const m = o as THREE.Mesh;
@@ -220,7 +247,11 @@ export async function createTorch(opts: TorchOptions = {}): Promise<TorchHandle>
     });
     group.add(model);
   } catch {
-    // Fallback: a simple haft so the flame still reads if the GLB 404s.
+    // Fallback: a simple haft so the flame still reads if every GLB 404s.
+    console.warn(
+      "[torch] using procedural haft — place dying-torch.glb under public/models/props/",
+      asset("models/props/dying-torch.glb"),
+    );
     const haft = new THREE.Mesh(
       new THREE.CylinderGeometry(0.04, 0.06, targetH, 8),
       new THREE.MeshStandardMaterial({ color: 0x3a2416, roughness: 0.9 }),

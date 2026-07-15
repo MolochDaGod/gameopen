@@ -20,6 +20,8 @@ import { FLEET, FLEET_TOKEN_KEYS, apiUrl, buildGrudgeLoginUrl } from "./fleet";
 
 const TOKEN_KEY = "grudge.open.token";
 const ACCOUNT_KEY = "grudge.open.account";
+/** Persist account across browser restarts (stay logged in). */
+const ACCOUNT_KEY_PERSIST = "grudge.open.account.persist";
 
 export type GrudgeAccount = {
   grudgeId: string;
@@ -69,6 +71,12 @@ function cleanHandoffParamsFromUrl(): void {
       "grudge_username",
       "provider",
       "error",
+      "characterId",
+      "character_id",
+      // keep `open` / `from` out of scrub until handoff flags captured (sync capture above)
+      "open",
+      "from",
+      "source",
     ];
     for (const k of keys) url.searchParams.delete(k);
     if (url.hash && url.hash.length > 1) {
@@ -126,7 +134,8 @@ export function setStoredToken(token: string | null, persist = true): void {
 
 export function getStoredAccount(): GrudgeAccount | null {
   try {
-    const raw = sessionStorage.getItem(ACCOUNT_KEY);
+    const raw =
+      sessionStorage.getItem(ACCOUNT_KEY) || localStorage.getItem(ACCOUNT_KEY_PERSIST);
     return raw ? (JSON.parse(raw) as GrudgeAccount) : null;
   } catch {
     return null;
@@ -135,10 +144,32 @@ export function getStoredAccount(): GrudgeAccount | null {
 
 export function setStoredAccount(account: GrudgeAccount | null): void {
   try {
-    if (!account) sessionStorage.removeItem(ACCOUNT_KEY);
-    else sessionStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+    if (!account) {
+      sessionStorage.removeItem(ACCOUNT_KEY);
+      localStorage.removeItem(ACCOUNT_KEY_PERSIST);
+      return;
+    }
+    const json = JSON.stringify(account);
+    sessionStorage.setItem(ACCOUNT_KEY, json);
+    // Persist so refresh / new tab stays logged in with token in localStorage
+    localStorage.setItem(ACCOUNT_KEY_PERSIST, json);
   } catch {
     /* */
+  }
+}
+
+/** True if JWT is missing or past exp (with 60s skew). Non-JWTs treated as valid. */
+export function isTokenExpired(token: string | null, skewSec = 60): boolean {
+  if (!token) return true;
+  try {
+    const part = token.split(".")[1];
+    if (!part) return false;
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(json) as { exp?: number };
+    if (!payload.exp) return false;
+    return Date.now() / 1000 >= payload.exp - skewSec;
+  } catch {
+    return false;
   }
 }
 
@@ -148,6 +179,21 @@ export function setStoredAccount(account: GrudgeAccount | null): void {
  */
 export function captureAuthCallbackFromUrl(): string | null {
   if (typeof window === "undefined") return null;
+
+  // Persist open/from flags for Account hub (charactersgrudox return) before scrub
+  try {
+    const qs = new URLSearchParams(window.location.search);
+    if (window.location.hash?.length > 1) {
+      const hp = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      for (const [k, v] of hp.entries()) if (!qs.has(k)) qs.set(k, v);
+    }
+    const from = qs.get("from") || qs.get("source") || "";
+    const open = qs.get("open") || "";
+    if (from) sessionStorage.setItem("grudge.open.handoffFrom", from);
+    if (open === "1" || open === "true") sessionStorage.setItem("grudge.open.handoffOpen", "1");
+  } catch {
+    /* */
+  }
 
   const sso =
     paramFromSearchOrHash("sso_token") ||
@@ -159,6 +205,38 @@ export function captureAuthCallbackFromUrl(): string | null {
     paramFromSearchOrHash("grudge_id") || paramFromSearchOrHash("grudgeId") || "";
   const username =
     paramFromSearchOrHash("username") || paramFromSearchOrHash("grudge_username") || "";
+  // Active character handoff from id hub, charactersgrudox, or other fleet apps
+  const characterId =
+    paramFromSearchOrHash("characterId") || paramFromSearchOrHash("character_id") || "";
+  const baseId = paramFromSearchOrHash("baseId") || "";
+  const characterName = paramFromSearchOrHash("characterName") || "";
+
+  // Capture characterId even when tokens already stored (return from GCS)
+  if (characterId) {
+    try {
+      sessionStorage.setItem("grudge.open.selectedCharacterId", characterId);
+      localStorage.setItem("grudge.open.selectedCharacterId", characterId);
+      localStorage.setItem("grudge_active_character", characterId);
+      localStorage.setItem("grudge.activeCharId", characterId);
+    } catch {
+      /* */
+    }
+  }
+  if (baseId) {
+    try {
+      sessionStorage.setItem("grudge.open.baseId", baseId);
+      localStorage.setItem("animator.activeCharacterId", baseId);
+    } catch {
+      /* */
+    }
+  }
+  if (characterName) {
+    try {
+      sessionStorage.setItem("grudge.open.characterName", characterName);
+    } catch {
+      /* */
+    }
+  }
 
   if (!sso && !launch) return getStoredToken();
 
@@ -169,6 +247,7 @@ export function captureAuthCallbackFromUrl(): string | null {
       try {
         localStorage.setItem("grudge_id", grudgeId);
         localStorage.setItem("grudge_account_id", grudgeId);
+        if (username) localStorage.setItem("grudge_username", username);
       } catch {
         /* */
       }
@@ -178,6 +257,14 @@ export function captureAuthCallbackFromUrl(): string | null {
         source: "grudge-id",
       });
     }
+    if (characterId) {
+      try {
+        sessionStorage.setItem("grudge.open.selectedCharacterId", characterId);
+        localStorage.setItem("grudge.open.selectedCharacterId", characterId);
+      } catch {
+        /* */
+      }
+    }
     cleanHandoffParamsFromUrl();
     // Bridge launch in background if present (optional)
     if (launch) void bridgeLaunchToken(launch).catch(() => undefined);
@@ -185,6 +272,14 @@ export function captureAuthCallbackFromUrl(): string | null {
   }
 
   if (launch) {
+    if (characterId) {
+      try {
+        sessionStorage.setItem("grudge.open.selectedCharacterId", characterId);
+        localStorage.setItem("grudge.open.selectedCharacterId", characterId);
+      } catch {
+        /* */
+      }
+    }
     cleanHandoffParamsFromUrl();
     // Synchronous path: store launch briefly; initFleetAuth will await bridge
     setStoredToken(launch, true);
@@ -196,58 +291,71 @@ export function captureAuthCallbackFromUrl(): string | null {
 
 /** Exchange short launch JWT for full session JWT. */
 export async function bridgeLaunchToken(launchToken: string): Promise<string | null> {
-  const body = JSON.stringify({
-    token: launchToken,
-    audience: typeof window !== "undefined" ? window.location.origin : "https://gameopen.vercel.app",
-  });
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://open.grudge-studio.com";
+  // Railway exchange expects token + audience (400 without body fields).
+  const bodies = [
+    JSON.stringify({ token: launchToken, audience: origin }),
+    JSON.stringify({ launchToken, audience: origin }),
+    JSON.stringify({ grudge_token: launchToken, audience: origin }),
+  ];
   const urls = [
+    // Builder Railway (works in production — 400 without body, not 404)
+    `${FLEET.gameData}/api/auth/session/exchange`,
+    `${FLEET.gameData}/api/auth/grudge-bridge`,
+    // Same-origin rewrites (Open → id or Railway)
     apiUrl("/api/auth/session/exchange"),
     apiUrl("/api/auth/grudge-bridge"),
     `${FLEET.auth}/api/auth/session/exchange`,
     `${FLEET.auth}/api/auth/grudge-bridge`,
-    `${FLEET.gameData}/api/auth/session/exchange`,
   ];
   for (const url of urls) {
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body,
-        credentials: url.startsWith("http") && !url.includes("id.grudge-studio") ? "omit" : "include",
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!r.ok) continue;
-      const data = (await r.json()) as Record<string, unknown>;
-      const t = String(data.sessionToken || data.token || "");
-      if (!t) continue;
-      setStoredToken(t, true);
-      const gid = String(
-        data.grudgeId ||
-          (data.user as { grudgeId?: string } | undefined)?.grudgeId ||
-          "",
-      );
-      const uname = String(
-        data.username ||
-          (data.user as { username?: string; displayName?: string } | undefined)?.displayName ||
-          (data.user as { username?: string } | undefined)?.username ||
-          "",
-      );
-      if (gid) {
-        try {
-          localStorage.setItem("grudge_id", gid);
-          localStorage.setItem("grudge_account_id", gid);
-        } catch {
-          /* */
-        }
-        setStoredAccount({
-          grudgeId: gid,
-          displayName: uname || undefined,
-          source: "grudge-id",
+    for (const body of bodies) {
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body,
+          credentials: "include",
+          signal: AbortSignal.timeout(10000),
         });
+        if (!r.ok) continue;
+        const data = (await r.json()) as Record<string, unknown>;
+        const t = String(
+          data.sessionToken || data.token || data.access_token || data.sso_token || "",
+        );
+        if (!t) continue;
+        setStoredToken(t, true);
+        const gid = String(
+          data.grudgeId ||
+            data.grudge_id ||
+            (data.user as { grudgeId?: string } | undefined)?.grudgeId ||
+            "",
+        );
+        const uname = String(
+          data.username ||
+            (data.user as { username?: string; displayName?: string } | undefined)?.displayName ||
+            (data.user as { username?: string } | undefined)?.username ||
+            "",
+        );
+        if (gid) {
+          try {
+            localStorage.setItem("grudge_id", gid);
+            localStorage.setItem("grudge_account_id", gid);
+            if (uname) localStorage.setItem("grudge_username", uname);
+          } catch {
+            /* */
+          }
+          setStoredAccount({
+            grudgeId: gid,
+            displayName: uname || undefined,
+            source: "grudge-id",
+          });
+        }
+        return t;
+      } catch {
+        /* try next body/url */
       }
-      return t;
-    } catch {
-      /* try next */
     }
   }
   return null;
@@ -281,24 +389,56 @@ export function logoutGrudge(): void {
   setStoredToken(null);
   setStoredAccount(null);
   // Clear cached wallet so next login re-provisions fresh.
-  try { import("./walletService").then(({ clearCachedWallet }) => clearCachedWallet()); } catch { /* */ }
+  try {
+    void import("./walletService").then(({ clearCachedWallet }) => clearCachedWallet());
+  } catch {
+    /* */
+  }
   try {
     localStorage.removeItem("grudge_id");
     localStorage.removeItem("grudge_account_id");
     localStorage.removeItem("grudge_username");
+    // Selected character is account-scoped — clear so next login doesn't flash stale hero
+    sessionStorage.removeItem("grudge.open.selectedCharacterId");
+    localStorage.removeItem("grudge.open.selectedCharacterId");
+    sessionStorage.removeItem("grudge.open.wallet");
+    localStorage.removeItem("grudge.open.wallet");
+  } catch {
+    /* */
+  }
+  // Drop in-memory fleet roster without full page reload
+  try {
+    void import("../game/GameSession").then(({ gameSession }) => {
+      gameSession.clearAuthSession();
+    });
   } catch {
     /* */
   }
 }
 
-async function authHeaders(): Promise<HeadersInit> {
+async function authHeaders(extra?: HeadersInit): Promise<HeadersInit> {
   const token = getStoredToken();
   const h: Record<string, string> = { Accept: "application/json" };
   if (token) h.Authorization = `Bearer ${token}`;
   // Do NOT add custom headers like x-grudge-id — they trigger a CORS preflight
   // and Railway grudge-api-production does not allow them in Access-Control-Allow-Headers.
   // The Bearer token already carries identity.
+  if (extra) {
+    const e = extra as Record<string, string>;
+    for (const [k, v] of Object.entries(e)) if (v != null) h[k] = v;
+  }
   return h;
+}
+
+/** Authenticated fetch helper for character saves and fleet APIs. */
+export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = await authHeaders(init.headers as HeadersInit);
+  return fetch(apiUrl(path), {
+    ...init,
+    headers,
+    credentials: "include",
+    signal: init.signal ?? AbortSignal.timeout(15000),
+  });
 }
 
 /**
@@ -372,38 +512,64 @@ async function _revalidateAccountBackground(
 
 /** List characters for the signed-in Grudge account (Warlords / fleet SSOT). */
 export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
-  try {
-    const r = await fetch(apiUrl("/api/characters"), {
-      headers: await authHeaders(),
-      credentials: "include",
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!r.ok) return [];
-    const data = await r.json();
-    const list = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.characters)
-        ? data.characters
-        : Array.isArray(data?.results)
-          ? data.results
-          : [];
-    return list
-      .map((c: Record<string, unknown>) => ({
-        id: String(c.id || c.uuid || c.characterId || ""),
-        name: String(c.name || c.displayName || "Hero"),
-        raceId: c.raceId ? String(c.raceId) : c.race ? String(c.race) : undefined,
-        classId: c.classId ? String(c.classId) : c.class ? String(c.class) : undefined,
-        level: typeof c.level === "number" ? c.level : undefined,
-        config: (c.config as Record<string, unknown>) || undefined,
-        saveData:
-          (c.saveData as Record<string, unknown>) ||
-          (c.save_data as Record<string, unknown>) ||
-          undefined,
-      }))
-      .filter((c: GrudgeCharacter) => c.id);
-  } catch {
-    return [];
+  const paths = [
+    // Warlords era is the fleet character roster used across Open / Realms / Island
+    "/api/characters?era=warlords",
+    "/api/characters",
+  ];
+  for (const path of paths) {
+    try {
+      const r = await apiFetch(path, { method: "GET" });
+      if (r.status === 401) {
+        const token = getStoredToken();
+        if (token && !isTokenExpired(token)) {
+          // Try bridge once in case this is still a launch JWT
+          const bridged = await bridgeLaunchToken(token);
+          if (bridged) continue;
+        }
+        return [];
+      }
+      if (!r.ok) continue;
+      const data = await r.json();
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.characters)
+          ? data.characters
+          : Array.isArray(data?.results)
+            ? data.results
+            : [];
+      const mapped = list
+        .map((c: Record<string, unknown>) => ({
+          id: String(c.id || c.uuid || c.characterId || ""),
+          name: String(c.name || c.displayName || "Hero"),
+          raceId: c.raceId
+            ? String(c.raceId)
+            : c.race
+              ? String(c.race)
+              : c.race_id
+                ? String(c.race_id)
+                : undefined,
+          classId: c.classId
+            ? String(c.classId)
+            : c.class
+              ? String(c.class)
+              : c.class_id
+                ? String(c.class_id)
+                : undefined,
+          level: typeof c.level === "number" ? c.level : undefined,
+          config: (c.config as Record<string, unknown>) || undefined,
+          saveData:
+            (c.saveData as Record<string, unknown>) ||
+            (c.save_data as Record<string, unknown>) ||
+            undefined,
+        }))
+        .filter((c: GrudgeCharacter) => c.id);
+      if (mapped.length || path.endsWith("/characters")) return mapped;
+    } catch {
+      /* try next path */
+    }
   }
+  return [];
 }
 
 /** Boot hook — call once from App root. */
@@ -428,11 +594,21 @@ export async function initFleetAuth(): Promise<{
   // Bridge launch JWT → session JWT before account fetch (avoids second redirect).
   if (launchOnly && launch) {
     await bridgeLaunchToken(launch);
+  } else {
+    // Stored token may still be a short launch JWT from a prior visit — refresh.
+    const t = getStoredToken();
+    if (t && (isTokenExpired(t) || t.length < 80)) {
+      await bridgeLaunchToken(t);
+    }
   }
 
   // TOKEN-FIRST: cached account returns instantly; API hit is background-only.
-  const account = await fetchFleetAccount();
-  const characters = account ? await fetchCharacters() : [];
+  let account = await fetchFleetAccount();
+  // If we have a token but no account cache, force revalidate once.
+  if (!account && getStoredToken()) {
+    account = await fetchFleetAccount(true);
+  }
+  const characters = account || getStoredToken() ? await fetchCharacters() : [];
 
   // AUTO-PROVISION WALLET: every logged-in account gets a Crossmint custodial
   // Solana wallet scoped to its grudgeId. Runs in background so it never

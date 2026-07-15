@@ -16,8 +16,6 @@
  * unit cube) + per-hat `y` offset so brims/horns roots sit on the skull crown.
  */
 import * as THREE from "three";
-import { assetUrl } from "../assetHost";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { AvatarConfig, HatId, PartAdjust } from "./catalog";
 import { isHidden } from "./catalog";
 
@@ -61,26 +59,26 @@ const HAT_DEFS: Record<Exclude<HatId, "none">, HatDef> = {
   },
 };
 
-function hatUrl(file: string): string {
-  return assetUrl(`avatar/hats/${file}`);
+function hatPath(file: string): string {
+  return `avatar/hats/${file}`;
 }
 
-const loader = new GLTFLoader();
 let packScene: Promise<THREE.Group> | null = null;
 let voxelScene: Promise<THREE.Group> | null = null;
 const fileScenes = new Map<string, Promise<THREE.Group>>();
 
-function loadScene(url: string): Promise<THREE.Group> {
-  return loader.loadAsync(url).then((gltf) => {
-    gltf.scene.updateWorldMatrix(true, true);
-    return gltf.scene;
-  });
+async function loadScene(path: string): Promise<THREE.Group> {
+  const { loadGltfFirst } = await import("../assets");
+  const { sharedGltfLoader } = await import("../loaders/gltf");
+  const gltf = await loadGltfFirst(path, sharedGltfLoader());
+  gltf.scene.updateWorldMatrix(true, true);
+  return gltf.scene as THREE.Group;
 }
 
 function loadFileScene(file: string): Promise<THREE.Group> {
   let p = fileScenes.get(file);
   if (!p) {
-    p = loadScene(hatUrl(file));
+    p = loadScene(hatPath(file));
     fileScenes.set(file, p);
   }
   return p;
@@ -136,7 +134,7 @@ function normalize(raw: THREE.Object3D, def: HatDef): THREE.Group {
 function loadTemplate(id: Exclude<HatId, "none">): Promise<THREE.Group | null> {
   const def = HAT_DEFS[id];
   if (def.src === "voxel") {
-    voxelScene ??= loadScene(hatUrl("pirate-voxel.glb")).then((scene) => {
+    voxelScene ??= loadScene(hatPath("pirate-voxel.glb")).then((scene) => {
       // The voxel GLB's "Sketchfab_model" root carries a sloppy ~-82° tilted
       // quaternion (display pose) instead of the exact -90° X that would
       // cancel the inner Z-up→Y-up +90° X — snap it so the hat sits upright.
@@ -182,7 +180,7 @@ function loadTemplate(id: Exclude<HatId, "none">): Promise<THREE.Group | null> {
       });
   }
 
-  packScene ??= loadScene(hatUrl("hat-pack.glb"));
+  packScene ??= loadScene(hatPath("hat-pack.glb"));
   return packScene
     .then((scene) => {
       const node = def.node ? scene.getObjectByName(def.node) : null;

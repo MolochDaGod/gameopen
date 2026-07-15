@@ -49,7 +49,8 @@ export class Controller {
   /** Transient move-speed multiplier (e.g. the Kiter's Smoke Phantom sprint). */
   private speedMult = 1;
   private bound = 15;
-  private readonly roomBound = 15;
+  /** Half-extent of the flat-floor play box when no KCC is active. */
+  private roomBound = 15;
   /** Pluggable world collision (dungeon KCC). Null = flat Danger Room floor. */
   private collision: CollisionProvider | null = null;
   /** Live interior obstacle circles (XZ) for Danger Room push-out collision —
@@ -332,6 +333,16 @@ export class Controller {
    */
   setObstacles(fn: (() => { x: number; z: number; r: number }[]) | null) {
     this.obstacles = fn;
+  }
+
+  /**
+   * Expand/shrink the flat Danger Room bounds (half-extent metres). Used by
+   * Ruins Brawler and other large arenas that share this controller without a KCC.
+   * No-op while a collision provider owns world bounds.
+   */
+  setRoomBound(halfExtent: number) {
+    this.roomBound = Math.max(4, halfExtent);
+    if (!this.collision) this.bound = this.roomBound;
   }
 
   /** True while a dungeon collision backend is active. */

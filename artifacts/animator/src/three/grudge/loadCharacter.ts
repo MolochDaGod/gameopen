@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { assetLoadError, resolveAssetUrl } from "./assetBase";
+import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
 import { powerOfTenScale, unifySkeletons } from "./skeleton";
 
 export interface LoadedCharacter {
@@ -11,37 +11,36 @@ export interface LoadedCharacter {
   meshNames: string[];
 }
 
-// Load + normalize a customizable race FBX:
+const fbxLoader = new FBXLoader();
+
+// Load + normalize a customizable race FBX across fleet hosts:
 //   FBXLoader -> unifySkeletons -> face +Z -> per-mesh power-of-ten unit
 //   normalization (over NON-skinned meshes) -> auto-fit bbox computed over
 //   SkinnedMesh body parts ONLY -> scale to ~2 units -> sit feet on y=0.
-export function loadCharacterModel(modelUrl: string): Promise<LoadedCharacter> {
-  const url = resolveAssetUrl(modelUrl);
-  return new Promise((resolve, reject) => {
-    new FBXLoader().load(
-      url,
-      (fbx) => {
-        try {
-          const meshNames: string[] = [];
-          fbx.traverse((child) => {
-            if (child instanceof THREE.SkinnedMesh || child instanceof THREE.Mesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              if (child.name) meshNames.push(child.name);
-            }
-          });
-
-          const skeleton = normalizeCharacterGroup(fbx);
-          const mixer = new THREE.AnimationMixer(fbx);
-          resolve({ group: fbx, skeleton, mixer, meshNames });
-        } catch (err) {
-          reject(err);
+export async function loadCharacterModel(modelUrl: string): Promise<LoadedCharacter> {
+  const candidates = /^([a-z]+:)?\/\//i.test(modelUrl)
+    ? [modelUrl]
+    : resolveGrudgeAssetCandidates(modelUrl);
+  let lastErr: unknown;
+  for (const url of candidates) {
+    try {
+      const fbx = await fbxLoader.loadAsync(url);
+      const meshNames: string[] = [];
+      fbx.traverse((child) => {
+        if (child instanceof THREE.SkinnedMesh || child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.name) meshNames.push(child.name);
         }
-      },
-      undefined,
-      (err) => reject(assetLoadError(url, err)),
-    );
-  });
+      });
+      const skeleton = normalizeCharacterGroup(fbx);
+      const mixer = new THREE.AnimationMixer(fbx);
+      return { group: fbx, skeleton, mixer, meshNames };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw assetLoadError(modelUrl, lastErr);
 }
 
 // Normalize a freshly-parsed customizable race FBX in place. Steps:

@@ -12,7 +12,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
  *  - **Draco** — quantized/compressed geometry,
  *  - **Meshopt** — compressed geometry + animation buffers,
  *  - **KTX2 / Basis Universal** — GPU-compressed (transcoded) textures, wired
- *    only when a live renderer is supplied (it needs GPU support detection).
+ *    when a live renderer is supplied via {@link bindKtx2} / {@link makeGltfLoader}.
  *
  * A plain, uncompressed glTF/GLB still loads exactly as before — a decoder only
  * activates for an asset that declares its extension — so swapping
@@ -43,6 +43,39 @@ function draco(): DRACOLoader {
   return sharedDraco;
 }
 
+/** Process-wide KTX2 loader once a WebGLRenderer has been bound. */
+let sharedKtx2: KTX2Loader | null = null;
+let ktx2Bound = false;
+
+/**
+ * Bind KTX2 / Basis Universal to the shared GLTF loader using a live renderer
+ * (required for GPU support detection). Call once from Studio / scene bootstrap
+ * after creating the WebGLRenderer. Safe to call multiple times.
+ */
+export function bindKtx2(renderer: THREE.WebGLRenderer): void {
+  if (ktx2Bound && sharedKtx2) {
+    // Re-detect if a new renderer is provided (e.g. after dispose/recreate).
+    try {
+      sharedKtx2.detectSupport(renderer);
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+  sharedKtx2 = new KTX2Loader(gltfManager)
+    .setTranscoderPath(KTX2_TRANSCODER_PATH)
+    .detectSupport(renderer);
+  ktx2Bound = true;
+  // Attach to the shared singleton if it already exists.
+  if (shared) {
+    shared.setKTX2Loader(sharedKtx2);
+  }
+}
+
+export function isKtx2Bound(): boolean {
+  return ktx2Bound;
+}
+
 export interface GltfLoaderOptions {
   /** Override the shared LoadingManager for a scoped load surface. */
   manager?: THREE.LoadingManager;
@@ -57,18 +90,18 @@ export function makeGltfLoader(opts: GltfLoaderOptions = {}): GLTFLoader {
   loader.setDRACOLoader(draco());
   loader.setMeshoptDecoder(MeshoptDecoder);
   if (opts.renderer) {
-    const ktx2 = new KTX2Loader(manager)
-      .setTranscoderPath(KTX2_TRANSCODER_PATH)
-      .detectSupport(opts.renderer);
-    loader.setKTX2Loader(ktx2);
+    bindKtx2(opts.renderer);
+  }
+  if (sharedKtx2) {
+    loader.setKTX2Loader(sharedKtx2);
   }
   return loader;
 }
 
 /**
- * A shared decoder-optimized loader (Draco + Meshopt). No KTX2 — there is no
- * renderer at module scope; a scene that needs transcoded textures builds its
- * own via {@link makeGltfLoader} with `{ renderer }`.
+ * A shared decoder-optimized loader (Draco + Meshopt + KTX2 when bound).
+ * Call {@link bindKtx2} from Studio after creating the renderer so KTX2 textures
+ * on production GLBs decode without missing images.
  */
 let shared: GLTFLoader | null = null;
 export function sharedGltfLoader(): GLTFLoader {

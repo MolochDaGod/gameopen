@@ -168,7 +168,8 @@ export const GAME_MODES: readonly GameModeDef[] = [
   {
     id: "warlord-genesis",
     title: "Warlord Genesis",
-    blurb: "Choose your race. Enter the arena. Survive 4 waves to claim the Warlord title.",
+    blurb:
+      "Fleet handoff to warlord-genesis.vercel.app — 3 lanes, production buildings, grudge6 units (not an in-Open wave arena).",
     icon: "/icons/combat-pad.png",
     spawn: { maxEnemies: 10, maxAllies: 0, bosses: 1, waves: 4, introGraceSec: 3 },
     enemyStrategy: "swarm-horde",

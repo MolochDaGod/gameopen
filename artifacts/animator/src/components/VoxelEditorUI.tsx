@@ -190,7 +190,7 @@ export function VoxelEditorUI({
               <p className="ve-hint" style={{ fontSize: 11, opacity: 0.7, margin: "0 0 6px" }}>
                 Voxel Realms canonical ·{" "}
                 <a
-                  href="https://mine-loader.replit.app/#/defs"
+                  href="https://mine-loader.vercel.app/#/defs"
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "inherit" }}

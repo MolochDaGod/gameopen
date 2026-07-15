@@ -69,7 +69,7 @@ const NAV: NavItem[] = [
   { mode: "doors",            label: "Library",         hint: "All titles",           icon: <Home size={20} />,                                       tone: "#66c0f4", group: "Home" },
   { mode: "account",          label: "Account",         hint: "Chars, wallet, treaty",icon: <GameIcon name="inventory"       tone="#4fc3ff" />,          tone: "#4fc3ff", group: "Home" },
   { mode: "danger",           label: "Danger Room",     hint: "Combat sandbox",       icon: <GameIcon name="combat-pad"      tone="#ff7a7a" />,          tone: "#ff7a7a", group: "Play" },
-  { mode: "genesis",          label: "Warlord Genesis", hint: "Choose race, fight",   icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d", group: "Play" },
+  { mode: "genesis",          label: "Warlord Genesis", hint: "3-lane MOBA · fleet",  icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d", group: "Play" },
   { mode: "brawl",            label: "Ruins Brawler",   hint: "Live co-op survival",  icon: <GameIcon name="attack"          tone="#ff7a7a" />,          tone: "#ff9a7a", group: "Play" },
   { mode: "mimic",            label: "Test Dungeon",    hint: "Mimic encounter",      icon: <GameIcon name="ambush"          tone="#9cff5a" />,          tone: "#9cff5a", group: "Play" },
   { mode: "voxel",            label: "Voxel Editor",    hint: "Build & test maps",    icon: <GameIcon name="world-editor"    tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
