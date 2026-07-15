@@ -21,6 +21,12 @@ Careful, purposeful — **concepts and pipelines**, not Mirror/Unity ports.
 | **TOME off-hand relic** | Arsenal `tome` + coupling modes (elemental/heal/buff) |
 | **WAND / SCYTHE / CROSSBOW** | Arsenal entries mapped to converted GLB stand-ins |
 | Prefab import | `node scripts/import-master-weapon-skills.mjs` → `content/skills|weapons` |
+| **Bip001 sockets / hand containers** | `three/ummorpg/skeletonSockets.ts` |
+| **Animator loco + skill override** | `three/ummorpg/animationDirector.ts` (used by `GrudgeAvatar`) |
+| **Entity prefabs (NPC/player)** | `three/ummorpg/prefabProfile.ts` + `warlordsRoles` |
+| **ScriptableWeapon/Skill runtime** | `three/ummorpg/scriptableSkills.ts` ← master catalog |
+| **Account equipment → mesh_ids** | `lib/characterEquipmentMesh.ts` + Studio spawn |
+| Engine practices doc | `docs/UMMORPG_ENGINE_PRACTICES.md` |
 
 ## Asset conversion (meshes)
 
