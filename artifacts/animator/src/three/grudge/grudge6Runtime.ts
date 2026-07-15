@@ -7,7 +7,6 @@
  * Used by GrudgeAvatar so fleet characters are NOT static T-pose meshes.
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
   ANIM_PACK_CLIPS,
@@ -19,6 +18,8 @@ import {
 import type { RaceId } from "./raceAssets";
 import type { PresetId } from "./gearPresets";
 import { getPreset } from "./index";
+import { sharedGltfLoader } from "../loaders/gltf";
+import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 
 /** Arena race folder names under /cdn/assets/characters/{race}/ */
 export const ARENA_RACE_DIR: Record<RaceId, string> = {
@@ -41,7 +42,7 @@ export const ARENA_RACE_GLB: Record<RaceId, string> = {
 };
 
 /** Prefer same-origin proxy (vercel rewrites → arena); fall back to absolute arena. */
-export const ARENA_ORIGIN = "https://grudge-arena.grudge-studio.com";
+export const ARENA_ORIGIN = FLEET_ASSET_HOSTS.arena;
 
 export function arenaCharacterGlbUrl(raceId: RaceId): string {
   const dir = ARENA_RACE_DIR[raceId];
@@ -57,18 +58,26 @@ export function arenaCharacterGlbUrlAbsolute(raceId: RaceId): string {
 }
 
 const TARGET_HEIGHT = 1.85;
-const gltfLoader = new GLTFLoader();
 const meshCache = new Map<RaceId, Promise<THREE.Object3D>>();
 
 async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
   let p = meshCache.get(raceId);
   if (p) return p;
   p = (async () => {
-    const urls = [arenaCharacterGlbUrl(raceId), arenaCharacterGlbUrlAbsolute(raceId)];
+    const dir = ARENA_RACE_DIR[raceId];
+    const file = ARENA_RACE_GLB[raceId];
+    const rel = `cdn/assets/characters/${dir}/${file}`;
+    // Fleet candidates + absolute arena (same-origin may 404 without vercel rewrite)
+    const urls = [
+      ...resolveAssetCandidates(rel),
+      arenaCharacterGlbUrlAbsolute(raceId),
+      // R2 race FBX is NOT skinned GLB — only use GLB paths here
+    ];
+    const loader = sharedGltfLoader();
     let lastErr: unknown;
-    for (const url of urls) {
+    for (const url of [...new Set(urls)]) {
       try {
-        const gltf = await gltfLoader.loadAsync(url);
+        const gltf = await loader.loadAsync(url);
         return gltf.scene;
       } catch (e) {
         lastErr = e;

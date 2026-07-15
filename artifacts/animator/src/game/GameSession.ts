@@ -8,6 +8,7 @@ import { biasForStrategy, profileForStrategy } from "./strategyProfiles";
 import type { FighterBias } from "../three/ai/FighterBrain";
 import type { GrudgeAccount, GrudgeCharacter } from "../lib/grudgeAuth";
 import { fetchCharacters, initFleetAuth } from "../lib/grudgeAuth";
+import { loadGrudoxCharacters } from "../lib/grudoxRoster";
 
 export type GameSessionSnapshot = {
   mode: GameModeDef;
@@ -41,15 +42,25 @@ function loadLocalCharacters(): GrudgeCharacter[] {
 }
 
 function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
+  // charactersgrudox 4-slot campfire roster first (source of truth for hub heroes)
+  const grudox = loadGrudoxCharacters();
   const local = loadLocalCharacters();
-  const seen = new Set(fleet.map((c) => c.id));
-  const extras = local.filter((c) => !seen.has(c.id));
-  return [...extras, ...fleet];
+  const seen = new Set<string>();
+  const out: GrudgeCharacter[] = [];
+  for (const c of [...grudox, ...local, ...fleet]) {
+    if (!c?.id || seen.has(c.id)) continue;
+    seen.add(c.id);
+    out.push(c);
+  }
+  return out;
 }
 
 function loadSelectedCharacterId(): string | null {
   try {
-    return sessionStorage.getItem(SELECTED_CHAR_KEY);
+    return (
+      sessionStorage.getItem(SELECTED_CHAR_KEY) ||
+      localStorage.getItem(SELECTED_CHAR_KEY)
+    );
   } catch {
     return null;
   }
@@ -57,8 +68,13 @@ function loadSelectedCharacterId(): string | null {
 
 function storeSelectedCharacterId(id: string | null): void {
   try {
-    if (id) sessionStorage.setItem(SELECTED_CHAR_KEY, id);
-    else sessionStorage.removeItem(SELECTED_CHAR_KEY);
+    if (id) {
+      sessionStorage.setItem(SELECTED_CHAR_KEY, id);
+      localStorage.setItem(SELECTED_CHAR_KEY, id);
+    } else {
+      sessionStorage.removeItem(SELECTED_CHAR_KEY);
+      localStorage.removeItem(SELECTED_CHAR_KEY);
+    }
   } catch {
     /* private mode */
   }
@@ -113,18 +129,63 @@ class GameSession {
     this.emit();
   }
 
+  /**
+   * Patch a roster character in-memory (e.g. after equipment/save write).
+   * Keeps loadout apply + UI in sync without a full roster refetch.
+   */
+  patchCharacter(id: string, patch: Partial<GrudgeCharacter>): void {
+    if (!id) return;
+    const idx = this.characters.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    const prev = this.characters[idx];
+    this.characters[idx] = {
+      ...prev,
+      ...patch,
+      config: patch.config ? { ...(prev.config || {}), ...patch.config } : prev.config,
+      saveData: patch.saveData
+        ? { ...(prev.saveData || {}), ...patch.saveData }
+        : prev.saveData,
+    };
+    // Persist local drafts if this is a guest/local character
+    if (id.startsWith("local-") || id.startsWith("draft-")) {
+      try {
+        const local = loadLocalCharacters().map((c) =>
+          c.id === id ? this.characters[idx] : c,
+        );
+        if (!local.some((c) => c.id === id)) local.unshift(this.characters[idx]);
+        localStorage.setItem(LOCAL_CHARS_KEY, JSON.stringify(local.slice(0, 24)));
+      } catch {
+        /* */
+      }
+    }
+    this.emit();
+  }
+
   /** The active fleet character record, or null when none is selected/loaded. */
   selectedCharacter(): GrudgeCharacter | null {
     if (!this.selectedCharacterId) return null;
     return this.characters.find((c) => c.id === this.selectedCharacterId) ?? null;
   }
 
+  /** Clear account/character selection (logout). Keeps local guest drafts. */
+  clearAuthSession(): void {
+    this.account = null;
+    // Drop fleet-only rows; keep local drafts for guest play
+    this.characters = loadLocalCharacters();
+    this.selectedCharacterId = this.characters[0]?.id ?? null;
+    storeSelectedCharacterId(this.selectedCharacterId);
+    this.emit();
+  }
+
   async boot(): Promise<GameSessionSnapshot> {
     const { account, characters } = await initFleetAuth();
     this.account = account;
     this.characters = mergeRoster(characters);
-    // Keep a persisted selection only if it still resolves to a loaded character.
-    if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
+    // Prefer handoff characterId (charactersgrudox / GCS) already written to storage
+    const preferred = loadSelectedCharacterId();
+    if (preferred && this.characters.some((c) => c.id === preferred)) {
+      this.selectedCharacterId = preferred;
+    } else if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
       this.selectedCharacterId = null;
     }
     if (!this.selectedCharacterId && this.characters[0]) {

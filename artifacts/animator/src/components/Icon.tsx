@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { iconUrl, type IconName } from "../three/icons";
+import { iconUrl, iconUrlLive, type IconName } from "../three/icons";
+import { FLEET_ASSET_HOSTS } from "../three/fleetAssetResolver";
 
 interface Props {
   /** Local icon registry name under public/icons/. */
@@ -15,15 +16,17 @@ interface Props {
 
 /**
  * Render a framed RPG icon by name and/or absolute URL.
- * CDN skill art first; on error falls back to local public/icons/.
+ * Tries same-origin, then fleet R2 / ObjectStore live resolve on error.
  */
 export function Icon({ name, src, fallbackName, size = 22, className, title }: Props) {
   const local = name || fallbackName || "skill-slot";
   const primary = src && (src.startsWith("http") || src.startsWith("/")) ? src : src || iconUrl(local);
   const [url, setUrl] = useState(primary);
+  const [triedLive, setTriedLive] = useState(false);
 
   useEffect(() => {
     setUrl(primary);
+    setTriedLive(false);
   }, [primary]);
 
   return (
@@ -38,6 +41,15 @@ export function Icon({ name, src, fallbackName, size = 22, className, title }: P
       loading="lazy"
       decoding="async"
       onError={() => {
+        if (!triedLive && name) {
+          setTriedLive(true);
+          void iconUrlLive(name).then((live) => {
+            setUrl((cur) => (live && live !== cur ? live : cur));
+          });
+          // Immediate R2 root candidate while async resolves
+          setUrl(`${FLEET_ASSET_HOSTS.r2}/icons/${String(local).replace(/\.png$/i, "")}.png`);
+          return;
+        }
         const fb = iconUrl(fallbackName || local || "skill-slot");
         setUrl((cur) => (cur !== fb ? fb : cur));
       }}

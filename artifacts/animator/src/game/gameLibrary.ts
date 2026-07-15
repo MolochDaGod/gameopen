@@ -10,7 +10,13 @@
 
 import { assetUrl } from "../lib/fleet";
 import { PLAY_SHELL_HOST } from "./grudoxZones";
-import { MINE_LOADER_FLEET, mineLoaderLobbyUrl } from "../lib/productionRuntime";
+import {
+  MINE_LOADER_FLEET,
+  mineLoaderLobbyUrl,
+  voxgrudgeWorldUrl,
+  dcqWorldUrl,
+} from "../lib/productionRuntime";
+import { FLEET_WORLD_HOSTS, fleetWorldLaunchUrl } from "../lib/fleetWorlds";
 
 /** How a title launches from the Open launcher. */
 export type LaunchKind =
@@ -92,6 +98,7 @@ export const MINE_LOADER = {
   localPath: "D:\\GitHub\\minegrudge\\Mine-Loader",
   mirrorPath: "F:\\GitHub\\voxgrudge\\Mine-Loader",
   github: MINE_LOADER_FLEET.github,
+  /** Live host (mine-loader.vercel.app — custom DNS may be pending) */
   clientUrl: MINE_LOADER_FLEET.client,
   edgeUrl: MINE_LOADER_FLEET.edge,
   /** Placeholder until Railway hostname is finalized */
@@ -106,7 +113,24 @@ export const MINE_LOADER = {
     "Exactly one API replica (in-memory world authority → Postgres flush)",
     "Open /voxel exports interchange → Realms scene; combat labs stay on Open /danger",
     "Accounts: same Grudge ID + characterId on Open and Realms handoff",
+    "Primary SPA: https://mine-loader.vercel.app/ (mineloader.grudge-studio.com NXDOMAIN until CF)",
   ],
+} as const;
+
+/** Full open world (not Open's thin /world voxel editor). */
+export const VOXGRUDGE_WORLD = {
+  clientUrl: FLEET_WORLD_HOSTS.voxgrudge,
+  grudoxPath: FLEET_WORLD_HOSTS.grudoxVoxgrudge,
+  launchUrl: voxgrudgeWorldUrl,
+  sources: ["D:\\GitHub\\voxgrudge", "F:\\GitHub\\voxgrudge"],
+} as const;
+
+/** Dungeon Crawler Quest. */
+export const DCQ_WORLD = {
+  clientUrl: FLEET_WORLD_HOSTS.dcq,
+  vercelUrl: FLEET_WORLD_HOSTS.dcqVercel,
+  launchUrl: dcqWorldUrl,
+  sources: ["D:\\GitHub\\Dungeon-Crawler-Quest", "F:\\GitHub\\Dungeon-Crawler-Quest"],
 } as const;
 
 /**
@@ -194,38 +218,57 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "voxgrudge",
-    title: "VoxGrudge Open World",
-    short: "Voxel survival open world",
+    title: "VoxGrudge Full World",
+    short: "Full voxel open world",
     blurb:
-      "Nexus Era open voxel world — classes, craft, build, GRUDOX co-op. Prefer Mine-Loader worlds for persistent multiplayer Realms.",
+      "Production open world at voxgrudge.vercel.app — classes, craft, build, GRUDOX room API. (Open /world is a thin local editor only.)",
     category: "open-world",
-    tags: ["Voxel", "Survival"],
+    tags: ["Voxel", "Survival", "Full World"],
     tone: "#5fe0ff",
     posterKey: "library-voxworld",
     icon: "explore",
     engines: ["three", "html-static"],
+    launch: "external",
+    url: VOXGRUDGE_WORLD.clientUrl,
+    deploy: { client: "vercel", server: "railway" },
+    sources: [...VOXGRUDGE_WORLD.sources, "D:\\Games\\grudge-voxel"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "voxgrudge-lab",
+    title: "VoxGrudge Lab (Open)",
+    short: "In-Open voxel editor + presence",
+    blurb:
+      "Lightweight Open surface for map tinkering + WS presence. For the full world, launch VoxGrudge Full World.",
+    category: "editor",
+    tags: ["Lab", "Voxel"],
+    tone: "#3a8a9a",
+    posterKey: "library-voxworld",
+    icon: "world-editor",
+    engines: ["three"],
     launch: "native",
     nativeMode: "voxgrudge-native",
     deploy: { client: "vercel" },
-    sources: ["D:\\GitHub\\voxgrudge", "D:\\Games\\grudge-voxel"],
-    featured: true,
+    sources: ["D:\\GitHub\\gameopen\\artifacts\\animator\\src\\components\\VoxGrudgeNative.tsx"],
     status: "live",
   },
   {
     id: "warlord-genesis",
     title: "Warlord Genesis",
-    short: "Race survival boss rush",
-    blurb: "Pick Human / Orc / Elf / Dwarf / Barbarian / Undead — survive waves to claim the title.",
-    category: "combat",
-    tags: ["Boss", "Races"],
+    short: "3-lane MOBA / RTS warcamp",
+    blurb:
+      "Fleet Warlords character → three lanes, production buildings, turrets & grudge6 units. Live product at warlord-genesis.vercel.app (not the old Open wave mini-mode).",
+    category: "rts",
+    tags: ["MOBA", "RTS", "Fleet"],
     tone: "#ffd24d",
     posterKey: "library-genesis",
     icon: "skill-vfx-lab",
-    engines: ["three"],
-    launch: "native",
-    nativeMode: "genesis",
-    deploy: { client: "vercel" },
-    sources: ["D:\\GitHub\\warlord-genesis", "D:\\GitHub\\gameopen"],
+    engines: ["three", "r3f"],
+    launch: "external",
+    url: "https://warlord-genesis.vercel.app/lobby",
+    deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
+    sources: ["F:\\GitHub\\warlord-genesis", "D:\\GitHub\\gameopen"],
     featured: true,
     status: "live",
   },
@@ -326,17 +369,90 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     id: "dungeon-crawler",
     title: "Dungeon Crawler Quest",
     short: "Voxel dungeon RPG",
-    blurb: "Three.js + voxel + Rapier dungeon crawler. DCQ live domain.",
+    blurb:
+      "Full DCQ — Three.js + voxel + Rapier dungeon RPG. Live at dcq.grudge-studio.com (fallback dungeon-crawler-quest.vercel.app).",
     category: "survival",
-    tags: ["Dungeon", "RPG"],
+    tags: ["Dungeon", "RPG", "Voxel"],
     tone: "#c9a0ff",
     posterKey: "mimic",
     icon: "ambush",
     engines: ["three", "rapier"],
     launch: "external",
-    url: "https://dcq.grudge-studio.com/",
+    url: DCQ_WORLD.clientUrl,
+    deploy: { client: "vercel", server: "railway" },
+    sources: [...DCQ_WORLD.sources, "D:\\Games\\Dungeon-Crawler-Quest"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "water-island",
+    title: "Warlords Home Island",
+    short: "Production island",
+    blurb: "water.grudge-studio.com/island — grudge6 captain, harvest, stylized nature.",
+    category: "open-world",
+    tags: ["Island", "Warlords"],
+    tone: "#4fc3c8",
+    posterKey: "lobby",
+    icon: "loot",
+    engines: ["three", "r3f"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.waterIsland,
     deploy: { client: "vercel" },
-    sources: ["D:\\GitHub\\Dungeon-Crawler-Quest", "D:\\Games\\Dungeon-Crawler-Quest"],
+    sources: ["F:\\GitHub\\Tactical-Infinity"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "tactical-infinity",
+    title: "Tactical Infinity",
+    short: "Islands + equipment",
+    blurb: "Full TI client — islands, equipment, Warlords-era systems.",
+    category: "open-world",
+    tags: ["Island", "Equipment"],
+    tone: "#5a9fd4",
+    posterKey: "library-mine",
+    icon: "explore",
+    engines: ["three", "r3f"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.tacticalInfinity,
+    deploy: { client: "vercel" },
+    sources: ["F:\\GitHub\\Tactical-Infinity", "D:\\GitHub\\Tactical-Infinity"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "angel-island",
+    title: "Angel Island",
+    short: "Voxel island demo",
+    blurb: "Angel Island voxel sandbox (D:\\Games\\angel_island pack).",
+    category: "open-world",
+    tags: ["Island", "Voxel"],
+    tone: "#e8c06a",
+    posterKey: "lobby",
+    icon: "explore",
+    engines: ["three"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.angelIsland,
+    deploy: { client: "vercel" },
+    sources: ["D:\\Games\\angel_island"],
+    status: "live",
+  },
+  {
+    id: "grudox-games",
+    title: "GRUDOX Games Hub",
+    short: "Arcade + cabinets",
+    blurb: "Racer, zombie, z-brawl, waters, voxgrudge path — grudox.grudge-studio.com/games",
+    category: "arcade",
+    tags: ["Arcade", "Hub"],
+    tone: "#7a9cff",
+    posterKey: "zones",
+    icon: "rally",
+    engines: ["three", "html-static"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.grudoxGames,
+    deploy: { client: "vercel" },
+    sources: ["D:\\GitHub\\grudox"],
+    featured: true,
     status: "live",
   },
   {
@@ -368,10 +484,10 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     icon: "charge",
     engines: ["three"],
     launch: "external",
-    url: "https://open.grudge-studio.com/arcade/play/z-brawl",
+    url: "https://grudox.grudge-studio.com/arcade/play/z-brawl",
     deploy: { client: "vercel" },
-    sources: ["GRUDOX arcade"],
-    status: "beta",
+    sources: ["D:\\GitHub\\grudox"],
+    status: "live",
   },
   {
     id: "mimic-dungeon",
@@ -487,26 +603,61 @@ export function getGame(id: string): GameEntry | undefined {
   return GAME_LIBRARY.find((g) => g.id === id);
 }
 
-/** Build launch URL with fleet SSO handoff. */
+/** Build launch URL with fleet SSO handoff (all external / mine-loader titles). */
 export function gameLaunchUrl(
   game: GameEntry,
-  params: { token?: string | null; characterId?: string | null } = {},
+  params: {
+    token?: string | null;
+    characterId?: string | null;
+    baseId?: string | null;
+    characterName?: string | null;
+    raceId?: string | null;
+  } = {},
 ): string | null {
   if (game.launch === "native" || game.launch === "editor") return null;
-  const base = game.url || MINE_LOADER.clientUrl;
-  try {
-    const u = new URL(base);
-    if (params.token) {
-      u.searchParams.set("grudge_token", params.token);
-      u.searchParams.set("sso_token", params.token);
-    }
-    if (params.characterId) u.searchParams.set("characterId", params.characterId);
-    u.searchParams.set("open", "1");
-    u.searchParams.set("from", "gameopen");
-    return u.toString();
-  } catch {
-    return base;
+
+  // Specialized builders (hash routes / dual hosts)
+  if (game.id === "mine-loader-realms" || game.launch === "mine-loader") {
+    return mineLoaderLobbyUrl({
+      token: params.token,
+      characterId: params.characterId,
+      from: "gameopen",
+    });
   }
+  if (game.id === "voxgrudge") {
+    return voxgrudgeWorldUrl({
+      token: params.token,
+      characterId: params.characterId,
+      from: "gameopen",
+    });
+  }
+  if (game.id === "dungeon-crawler") {
+    return dcqWorldUrl({
+      token: params.token,
+      characterId: params.characterId,
+      from: "gameopen",
+    });
+  }
+  if (game.id === "warlord-genesis") {
+    return fleetWorldLaunchUrl("warlord-genesis", {
+      token: params.token,
+      characterId: params.characterId,
+      baseId: params.baseId,
+      characterName: params.characterName,
+      raceId: params.raceId,
+      from: "open",
+    });
+  }
+
+  const base = game.url || MINE_LOADER.clientUrl;
+  return fleetWorldLaunchUrl(base, {
+    token: params.token,
+    characterId: params.characterId,
+    baseId: params.baseId,
+    characterName: params.characterName,
+    raceId: params.raceId,
+    from: "gameopen",
+  });
 }
 
 export type LibraryFilter = "all" | "featured" | GameCategory;

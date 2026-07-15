@@ -113,13 +113,13 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "genesis",
     slug: "genesis",
-    aliases: ["warlord-genesis", "warlords-genesis", "waves"],
+    aliases: ["warlord-genesis", "warlords-genesis", "waves", "moba"],
     cabinets: ["genesis", "warlord-genesis"],
     title: "Warlord Genesis",
-    blurb: "Pick a race and survive waves to claim the title.",
+    blurb: "Launch the real 3-lane MOBA/RTS with your fleet Warlords character.",
     group: "combat",
     poster: "genesis",
-    tags: ["Boss Rush", "Race"],
+    tags: ["MOBA", "RTS", "Fleet"],
     accent: "#ffd24d",
   },
   {
@@ -161,13 +161,13 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "voxgrudge-native",
     slug: "world",
-    aliases: ["voxgrudge", "vox-grudge", "open-world", "openworld"],
-    cabinets: ["voxgrudge", "vox-grudge"],
-    title: "VoxGrudge World",
-    blurb: "Open voxel world — explore, build, multiplayer.",
-    group: "multiplayer",
+    aliases: ["voxgrudge-lab", "open-world-lab", "world-lab"],
+    cabinets: ["voxgrudge-lab"],
+    title: "VoxGrudge Lab",
+    blurb: "In-Open voxel lab editor. Full world → library · voxgrudge.vercel.app",
+    group: "create",
     poster: "voxgrudge",
-    tags: ["Open World", "MP"],
+    tags: ["Lab", "Editor"],
     accent: "#5fe0ff",
   },
   {
@@ -257,13 +257,14 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "account",
     slug: "account",
-    aliases: ["characters", "profile", "wallet", "treaty"],
+    aliases: ["characters", "profile", "wallet", "treaty", "charactersgrudox"],
     cabinets: ["characters", "account"],
     title: "Account Hub",
-    blurb: "charactersgrudox races, wallet, credits, GRUDOX tier, treaty chat.",
+    blurb:
+      "Fleet characters (Railway) · shared account bag · charactersgrudox races · GRUDOX handoff.",
     group: "hub",
     poster: "library-account",
-    tags: ["Account", "SSO"],
+    tags: ["Account", "SSO", "Postgres"],
     accent: "#4fc3ff",
   },
 ] as const;
@@ -322,11 +323,23 @@ export function resolveModeFromLocation(
   try {
     const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
 
+    // 0. Fleet handoff from Character Studio / charactersgrudox → Account hub
+    //    e.g. /account?open=1&from=charactersgrudox&characterId=…
+    const from = (q.get("from") || q.get("source") || "").toLowerCase();
+    if (
+      from === "charactersgrudox" ||
+      from === "character-studio" ||
+      from === "gcs" ||
+      from === "character"
+    ) {
+      return "account";
+    }
+
     // 1. Explicit ?door=<mode|alias> (legacy threejs-rapier deep-links)
     const door = q.get("door");
     if (door) {
       if (MODE_SET.has(door)) return door as AppMode;
-      if (door === "charactersgrudox") return "characters";
+      if (door === "charactersgrudox" || door === "characters") return "account";
       if (door === "grudoxEditor") return "minegrudge";
       const viaAlias = modeFromSlug(door);
       if (viaAlias) return viaAlias;
@@ -396,9 +409,16 @@ export function syncUrlToMode(mode: AppMode, opts?: { replace?: boolean }): void
   if (typeof window === "undefined") return;
   const path = pathForMode(mode);
   const url = new URL(window.location.href);
+  // Preserve fleet handoff flags for account deep-links
+  const keepFrom = url.searchParams.get("from");
+  const keepOpen = url.searchParams.get("open");
   // Drop obsolete door/mode query so path is SSOT
   url.searchParams.delete("door");
   url.searchParams.delete("mode");
+  if (mode === "account") {
+    if (keepFrom) url.searchParams.set("from", keepFrom);
+    if (keepOpen) url.searchParams.set("open", keepOpen);
+  }
   const next = `${path}${url.search}${url.hash}`;
   const cur = `${window.location.pathname}${window.location.search}${window.location.hash}`;
   if (next === cur) return;

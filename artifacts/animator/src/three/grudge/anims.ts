@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { assetLoadError, resolveAssetUrl } from "./assetBase";
+import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
+import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 
 // Animation packs match the gear-preset `animPack` field. Each pack maps to a
 // set of pre-baked Bip001 clips (idle / walk / run / attack). The clips were
@@ -53,13 +54,26 @@ export function asAnimPack(value: string): AnimPack {
 // it works on every race at any scale.
 export const SPRINT_CLIP = "uploads_2026_06/locomotion/running";
 
-// Build the URL for a baked clip, resolved against the configured asset base.
+// Build the primary URL for a baked clip (R2 default; loaders try all hosts).
 export function bakedClipUrl(rel: string, baseOverride?: string): string {
-  const path = `/anims/baked/${rel}.json`;
+  const path = `anims/baked/${rel}.json`;
   if (baseOverride !== undefined) {
-    return `${baseOverride.replace(/\/+$/, "")}${path}`;
+    return `${baseOverride.replace(/\/+$/, "")}/${path}`;
   }
-  return resolveAssetUrl(path);
+  return `${FLEET_ASSET_HOSTS.r2}/${path}`;
+}
+
+/** Ordered hosts for baked Bip001 JSON clips. */
+export function bakedClipCandidates(rel: string, baseOverride?: string): string[] {
+  const path = `anims/baked/${rel}.json`;
+  const urls: string[] = [];
+  if (baseOverride) {
+    urls.push(`${baseOverride.replace(/\/+$/, "")}/${path}`);
+  }
+  urls.push(...resolveGrudgeAssetCandidates(path));
+  // Arena often mirrors baked packs for combat
+  urls.push(`${FLEET_ASSET_HOSTS.arena}/${path}`);
+  return [...new Set(urls)];
 }
 
 // Rotation-only conformation — bone lengths come from the MODEL skeleton, motion
@@ -70,16 +84,26 @@ export function toRotationOnlyClip(clip: THREE.AnimationClip): THREE.AnimationCl
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
 
-// Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip.
+// Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip (multi-host).
 export async function loadBakedClip(rel: string, baseOverride?: string): Promise<THREE.AnimationClip> {
-  const url = bakedClipUrl(rel, baseOverride);
-  let res: Response;
-  try {
-    res = await fetch(url);
-  } catch (err) {
-    throw assetLoadError(url, err);
+  let lastErr: unknown;
+  for (const url of bakedClipCandidates(rel, baseOverride)) {
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      if (!res.ok) {
+        lastErr = assetLoadError(`${url} (HTTP ${res.status})`);
+        continue;
+      }
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("text/html")) {
+        lastErr = assetLoadError(`HTML fake-200 ${url}`);
+        continue;
+      }
+      const json = (await res.json()) as THREE.AnimationClipJSON;
+      return toRotationOnlyClip(THREE.AnimationClip.parse(json));
+    } catch (err) {
+      lastErr = err;
+    }
   }
-  if (!res.ok) throw assetLoadError(`${url} (HTTP ${res.status})`);
-  const json = (await res.json()) as THREE.AnimationClipJSON;
-  return toRotationOnlyClip(THREE.AnimationClip.parse(json));
+  throw assetLoadError(`anims/baked/${rel}.json`, lastErr);
 }

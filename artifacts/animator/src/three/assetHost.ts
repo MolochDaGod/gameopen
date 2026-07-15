@@ -1,26 +1,34 @@
 /**
- * Central asset-host resolution for every public media file (models, anim FBX,
- * audio, rooms, frames, backdrops, avatar packs).
+ * Central asset-host resolution for public media (models, anim, icons, rooms).
  *
- * By default assets resolve against Vite's `BASE_URL` (same-origin — how the
- * Replit deployment serves them). Setting `VITE_ASSET_BASE_URL` at build time
- * points all media at an external asset host instead (e.g. a Cloudflare R2
- * public bucket / custom CDN domain), which keeps the static bundle small and
- * sidesteps per-file size limits on static hosts like Cloudflare Pages.
+ * **Default same-origin** for open.grudge-studio.com — the SPA ships files under
+ * Vite `public/`. Do NOT point simple `assetUrl` at incomplete R2
+ * (`assets.grudge-studio.com/gameopen`) or absolute lab CDN URLs (CORS).
  *
- * Keep this module dependency-free: it is imported from both `src/three/` and
- * `src/components/`, and must never create an import cycle.
+ * For **runtime loads** (GLB/FBX/textures), use `three/assets` `loadGltfFirst` /
+ * `assetCandidates` which walk R2 root + Open + aliases.
+ *
+ * Opt-in absolute CDN only: `VITE_ASSET_FORCE_R2=true` + `VITE_ASSET_BASE_URL`
+ * (prefer R2 root, not `/gameopen`).
  */
 
-const configured = import.meta.env.VITE_ASSET_BASE_URL?.trim();
+import { FLEET_ASSET_HOSTS, resolveAssetUrl as fleetResolve } from "./fleetAssetResolver";
 
-/** Effective asset host (no trailing slash). Empty string means same-origin root. */
-export const ASSET_BASE: string = (configured && configured.length > 0
-  ? configured
-  : import.meta.env.BASE_URL
+const forceR2 = import.meta.env.VITE_ASSET_FORCE_R2 === "true";
+const configured = forceR2
+  ? (import.meta.env.VITE_ASSET_BASE_URL?.trim() || FLEET_ASSET_HOSTS.r2)
+  : "";
+
+/** Effective asset host (no trailing slash). Empty → Vite BASE_URL (same-origin). */
+export const ASSET_BASE: string = (
+  configured && configured.length > 0 ? configured : import.meta.env.BASE_URL || "/"
 ).replace(/\/+$/, "");
 
-/** Resolve a public asset path (e.g. `"anim/x.fbx"`, `"/models/y.glb"`) to a full URL. */
+/** Resolve a public asset path (e.g. `"models/y.glb"`) to a full URL. */
 export function assetUrl(path: string): string {
-  return `${ASSET_BASE}/${path.replace(/^\/+/, "")}`;
+  const rel = path.replace(/^\/+/, "");
+  if (forceR2 && configured) {
+    return `${configured.replace(/\/+$/, "")}/${rel}`;
+  }
+  return fleetResolve(rel);
 }

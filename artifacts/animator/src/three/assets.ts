@@ -4,72 +4,131 @@ import { resolveCombat } from "./arsenal/holdStyle";
 
 export { WEAPONS };
 
-const _viteBase = import.meta.env.BASE_URL; // e.g. "/" or "/animator/"
+import {
+  FLEET_ASSET_HOSTS,
+  resolveAssetCandidates,
+  resolveAssetUrl as fleetResolveAssetUrl,
+  resolveIconUrl,
+  resolveLiveAssetUrl,
+  fetchAssetFirst,
+  GRUDGE6_RACE_FBX,
+  GRUDGE6_TEX_PATHS,
+} from "./fleetAssetResolver";
 
 /**
- * Character + combat media SSOT — full Heroes of Grudge pack, combo GLBs, weapons.
- * Live lab: https://threejs-rapier-react-three-controll.vercel.app/
- * (Open/gameopen often deploys a thinner public/ tree; never 404 when this has the mesh.)
+ * Lab host — only via Vercel same-origin rewrites for /models/grudge|/weapons|/anim
+ * when missing from public/. Prefer {@link assetCandidates} multi-host resolution.
+ * Never load absolute Animator lab CDN from Open (CORS).
  */
 export const ANIMATOR_ASSET_CDN =
   "https://threejs-rapier-react-three-controll.vercel.app";
 
-/** Resolve a public asset path. Prefer Animator CDN for models/anim in production. */
+export {
+  FLEET_ASSET_HOSTS,
+  resolveIconUrl,
+  resolveLiveAssetUrl,
+  fetchAssetFirst,
+  GRUDGE6_RACE_FBX,
+  GRUDGE6_TEX_PATHS,
+};
+
+/**
+ * Browser asset URL for simple cases (img src, etc.).
+ * Prefer same-origin; full multi-CDN resolution uses {@link assetCandidates}.
+ */
 export function asset(path: string): string {
-  const clean = path.replace(/^\//, "");
-  const isLocal =
-    typeof location !== "undefined" &&
-    (location.hostname === "localhost" || location.hostname === "127.0.0.1");
-  // Local scene / brawl enemy packs live on gameopen public, not Animator CDN.
-  const preferSameOrigin =
-    /^models\/vol\.glb$/i.test(clean) ||
-    /^models\/dungeon\.glb$/i.test(clean) ||
-    /^models\/arena-war-zone\.glb$/i.test(clean) ||
-    /^models\/enemies\//i.test(clean) ||
-    /^voxel-zombie-\d+\.glb$/i.test(clean);
-  if (isLocal || preferSameOrigin) {
-    return `${(_viteBase || "").replace(/\/$/, "")}/${clean}`;
-  }
-  const cdn =
-    (import.meta.env.VITE_ASSET_BASE_URL as string) || ANIMATOR_ASSET_CDN;
-  // Heroes of Grudge + combat media always from Animator CDN (complete pack).
-  if (
-    /^models\/grudge\//i.test(clean) ||
-    /^models\/weapons\//i.test(clean) ||
-    /^anim\//i.test(clean) ||
-    /^models\/(karate-boss|orc|sanji|racalvin|numbuh|spider|iron-spider)/i.test(clean)
-  ) {
-    return `${cdn.replace(/\/$/, "")}/${clean}`;
-  }
-  // Optional R2 gameopen bucket when explicitly enabled
-  if (import.meta.env.VITE_USE_R2 === "true") {
-    const r2 =
-      (import.meta.env.VITE_ASSET_BASE_URL as string) ||
-      "https://assets.grudge-studio.com/gameopen";
-    return `${r2.replace(/\/$/, "")}/${clean}`;
-  }
-  // Default production: Animator CDN for full character lab parity
-  return `${cdn.replace(/\/$/, "")}/${clean}`;
+  if (/^([a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) return path;
+  return fleetResolveAssetUrl(path);
 }
 
-/** Candidate URLs for a public asset (Animator CDN first for character media). */
+/**
+ * Resilient URL list for GLB/FBX/texture loads across all Open games/scenes.
+ * Same-origin → Open hosts → assets.grudge-studio.com (R2) → aliases → gameopen R2.
+ */
 export function assetCandidates(path: string): string[] {
-  const clean = path.replace(/^\//, "");
-  const base = (_viteBase || "").replace(/\/$/, "");
-  const same = `${base}/${clean}`;
-  const animator = `${ANIMATOR_ASSET_CDN}/${clean}`;
-  const r2Base =
-    ((import.meta.env.VITE_ASSET_BASE_URL as string) ||
-      "https://assets.grudge-studio.com/gameopen").replace(/\/$/, "");
-  const r2 = `${r2Base}/${clean}`;
-  const hosts = [
-    animator,
-    same,
-    r2,
-    `https://open.grudge-studio.com/${clean}`,
-    `https://gameopen.vercel.app/${clean}`,
-  ];
-  return [...new Set(hosts.filter(Boolean))];
+  return resolveAssetCandidates(path);
+}
+
+/**
+ * Try each relative path × fleet hosts until one GLB/GLTF loads.
+ * Use with {@link sharedGltfLoader} (Draco + Meshopt; KTX2 when bound).
+ */
+export async function loadGltfFirst(
+  paths: string | string[],
+  loader: {
+    loadAsync: (url: string) => Promise<{
+      scene: import("three").Object3D;
+      animations?: import("three").AnimationClip[];
+    }>;
+  },
+): Promise<{
+  scene: import("three").Object3D;
+  animations: import("three").AnimationClip[];
+  url: string;
+}> {
+  const pathList = Array.isArray(paths) ? paths : [paths];
+  let lastErr: unknown;
+  for (const p of pathList) {
+    if (!p) continue;
+    for (const url of assetCandidates(p)) {
+      try {
+        const gltf = await loader.loadAsync(url);
+        return {
+          scene: gltf.scene,
+          animations: gltf.animations ?? [],
+          url,
+        };
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+  }
+  throw lastErr ?? new Error(`Failed to load: ${pathList.join(", ")}`);
+}
+
+/** Image/texture resilient load (TextureLoader). */
+export async function loadTextureFirst(
+  paths: string | string[],
+  loader: { loadAsync: (url: string) => Promise<import("three").Texture> },
+): Promise<{ texture: import("three").Texture; url: string }> {
+  const pathList = Array.isArray(paths) ? paths : [paths];
+  let lastErr: unknown;
+  for (const p of pathList) {
+    if (!p) continue;
+    for (const url of assetCandidates(p)) {
+      try {
+        const texture = await loader.loadAsync(url);
+        return { texture, url };
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+  }
+  throw lastErr ?? new Error(`Failed to load texture: ${pathList.join(", ")}`);
+}
+
+/**
+ * FBX resilient load (grudge6 race kits, Mixamo clips).
+ * Tries every fleet host + path alias until one parses.
+ */
+export async function loadFbxFirst(
+  paths: string | string[],
+  loader: { loadAsync: (url: string) => Promise<import("three").Group> },
+): Promise<{ group: import("three").Group; url: string }> {
+  const pathList = Array.isArray(paths) ? paths : [paths];
+  let lastErr: unknown;
+  for (const p of pathList) {
+    if (!p) continue;
+    for (const url of assetCandidates(p)) {
+      try {
+        const group = await loader.loadAsync(url);
+        return { group, url };
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+  }
+  throw lastErr ?? new Error(`Failed to load FBX: ${pathList.join(", ")}`);
 }
 
 export const CHARACTERS: CharacterDef[] = [

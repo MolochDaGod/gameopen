@@ -33,7 +33,7 @@ import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonica
 import { Crosshair } from "./components/Crosshair";
 import { Hud } from "./components/Hud";
 import { MechHud } from "./components/MechHud";
-import { EquipmentScreen } from "./components/EquipmentScreen";
+import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
 import { EditorPanel } from "./components/EditorPanel";
@@ -50,9 +50,17 @@ import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
 import { GrudoxZones } from "./components/GrudoxZones";
 import { MimicDungeon } from "./components/MimicDungeon";
-import { WarlordGenesis } from "./components/WarlordGenesis";
 import { VoxGrudgeNative } from "./components/VoxGrudgeNative";
+import {
+  buildWarlordGenesisUrl,
+  launchWarlordGenesis,
+  WARLORD_GENESIS_ENTRY,
+} from "./lib/warlordGenesisLaunch";
 import { gameSession } from "./game/GameSession";
+import {
+  buildGenesisHeroOptions,
+  type GenesisHeroOption,
+} from "./lib/grudoxRoster";
 import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
@@ -96,6 +104,235 @@ type Mode = AppMode;
 /** Resolve initial mode from path slug / arcade deep-link / query. */
 function initialMode(): Mode {
   return resolveModeFromLocation();
+}
+
+/**
+ * Warlord Genesis entry from Open / charactersgrudox.
+ * Shows the GRUDOX 4-slot heroes (campfire roster), then hands off SSO +
+ * characterId/baseId/raceId to warlord-genesis.vercel.app.
+ */
+function GenesisExternalLaunch({ onStay }: { onStay: () => void }) {
+  const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
+    buildGenesisHeroOptions(gameSession.snapshot.characters, gameSession.snapshot.selectedCharacterId),
+  );
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const preferred = gameSession.snapshot.selectedCharacterId;
+    const opts = buildGenesisHeroOptions(
+      gameSession.snapshot.characters,
+      preferred,
+    );
+    if (preferred && opts.some((h) => h.id === preferred)) return preferred;
+    return opts[0]?.id ?? null;
+  });
+  const [ready, setReady] = useState(gameSession.snapshot.ready);
+
+  useEffect(() => {
+    const unsub = gameSession.subscribe(() => {
+      const snap = gameSession.snapshot;
+      setReady(snap.ready);
+      const opts = buildGenesisHeroOptions(snap.characters, snap.selectedCharacterId);
+      setHeroes(opts);
+      setSelectedId((prev) => {
+        if (prev && opts.some((h) => h.id === prev)) return prev;
+        if (snap.selectedCharacterId && opts.some((h) => h.id === snap.selectedCharacterId)) {
+          return snap.selectedCharacterId;
+        }
+        return opts[0]?.id ?? null;
+      });
+    });
+    // Ensure roster is loaded (fleet + grudox 4-slots)
+    if (!gameSession.snapshot.ready) {
+      void gameSession.boot().catch(() => undefined);
+    } else {
+      void gameSession.refreshCharacters().catch(() => undefined);
+    }
+    return unsub;
+  }, []);
+
+  const selected = heroes.find((h) => h.id === selectedId) ?? heroes[0] ?? null;
+
+  const launchOpts = () => {
+    if (selected) {
+      gameSession.selectCharacter(selected.id);
+      // Ensure session has a GrudgeCharacter row for this slot
+      if (!gameSession.snapshot.characters.some((c) => c.id === selected.id)) {
+        gameSession.upsertLocalCharacter({
+          id: selected.id,
+          name: selected.name,
+          raceId: selected.raceKey === "high_elf" ? "elf" : selected.raceKey,
+          classId: "warrior",
+          level: 1,
+          config: { baseId: selected.baseId, source: "charactersgrudox", slot: selected.slot },
+        });
+      }
+    }
+    let from: string | null = null;
+    try {
+      from = sessionStorage.getItem("grudge.open.handoffFrom");
+    } catch {
+      /* */
+    }
+    return {
+      characterId: selected?.id ?? null,
+      baseId: selected?.baseId ?? null,
+      characterName: selected?.name ?? null,
+      raceId:
+        selected?.raceKey === "high_elf" ? "elf" : selected?.raceKey ?? null,
+      from: from || "charactersgrudox",
+    };
+  };
+
+  const launchUrl = selected
+    ? buildWarlordGenesisUrl(launchOpts())
+    : WARLORD_GENESIS_ENTRY;
+
+  const raceColors: Record<string, string> = {
+    human: "#4f9bff",
+    orc: "#7cff3a",
+    undead: "#c45cff",
+    barbarian: "#ff7a3a",
+    dwarf: "#ffd24d",
+    elf: "#5fe0ff",
+    high_elf: "#5fe0ff",
+  };
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        placeItems: "center",
+        minHeight: "70vh",
+        padding: 32,
+        color: "#e8eef8",
+        textAlign: "center",
+        gap: 18,
+      }}
+    >
+      <div style={{ fontSize: 28, fontWeight: 800, color: "#ffd24d" }}>Warlord Genesis</div>
+      <p style={{ maxWidth: 480, opacity: 0.85, lineHeight: 1.5, margin: 0 }}>
+        Choose one of your <b>Characters GRUDOX</b> heroes (up to 4 campfire slots), then launch
+        the 3-lane MOBA / RTS with that character.
+      </p>
+      {!ready && (
+        <div style={{ fontSize: 13, opacity: 0.7 }}>Loading roster…</div>
+      )}
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          justifyContent: "center",
+          maxWidth: 720,
+        }}
+      >
+        {heroes.map((h) => {
+          const accent = raceColors[h.raceKey] || "#ffd24d";
+          const active = h.id === selectedId;
+          return (
+            <button
+              key={h.id}
+              type="button"
+              onClick={() => {
+                setSelectedId(h.id);
+                gameSession.selectCharacter(h.id);
+              }}
+              style={{
+                width: 150,
+                padding: "14px 12px",
+                borderRadius: 12,
+                border: `2px solid ${active ? accent : "rgba(255,210,77,0.22)"}`,
+                background: active ? `${accent}22` : "rgba(6,9,16,0.78)",
+                boxShadow: active ? `0 0 16px ${accent}55` : "none",
+                color: "#e8eef8",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ fontSize: 10, opacity: 0.65, letterSpacing: 1 }}>
+                SLOT {h.slot + 1} · {h.source === "grudox" ? "GRUDOX" : "FLEET"}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: accent, marginTop: 4 }}>
+                {h.name}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>{h.raceLabel}</div>
+              <div style={{ fontSize: 10, opacity: 0.5, marginTop: 6, wordBreak: "break-all" }}>
+                {h.baseId}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <div style={{ fontSize: 13, color: "#8ec3ff" }}>
+          Selected: <b>{selected.name}</b> · {selected.raceLabel}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          type="button"
+          className="gl-btn primary large"
+          style={{
+            padding: "12px 20px",
+            borderRadius: 8,
+            border: "1px solid #ffd24d88",
+            background: "#ffd24d22",
+            color: "#ffd24d",
+            fontWeight: 700,
+            cursor: selected ? "pointer" : "default",
+            opacity: selected ? 1 : 0.45,
+          }}
+          disabled={!selected}
+          onClick={() => launchWarlordGenesis({ ...launchOpts(), target: "_blank" })}
+        >
+          Launch Genesis ↗
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: "12px 20px",
+            borderRadius: 8,
+            border: "1px solid #ffffff33",
+            background: "transparent",
+            color: "#c8d0dc",
+            cursor: selected ? "pointer" : "default",
+            opacity: selected ? 1 : 0.45,
+          }}
+          disabled={!selected}
+          onClick={() => {
+            window.location.assign(
+              buildWarlordGenesisUrl({ ...launchOpts() }) || WARLORD_GENESIS_ENTRY,
+            );
+          }}
+        >
+          Open in this tab
+        </button>
+        <button
+          type="button"
+          style={{
+            padding: "12px 20px",
+            borderRadius: 8,
+            border: "1px solid #ffffff22",
+            background: "transparent",
+            color: "#8a93a3",
+            cursor: "pointer",
+          }}
+          onClick={onStay}
+        >
+          Back to library
+        </button>
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.45, maxWidth: 420 }}>
+        Handoff includes characterId, baseId, raceId + Grudge SSO. Empty slots fill from fleet
+        roster when you have fewer than 4 GRUDOX heroes.
+      </div>
+      {/* Keep URL for debugging handoff shape */}
+      {import.meta.env.DEV && selected && (
+        <code style={{ fontSize: 10, opacity: 0.4, wordBreak: "break-all", maxWidth: 520 }}>
+          {launchUrl}
+        </code>
+      )}
+    </div>
+  );
 }
 
 const DEFAULT_BRUSH: BrushState = {
@@ -1042,8 +1279,8 @@ export default function App() {
         <GrudoxZones
           onEnterNative={(id) => {
             // Only zones with real native engines in Open.
-            // Voxel Velocity (racer) is NOT native — card uses GRUDOX deep-link.
-            if (id === "voxgrudge") navigate("voxgrudge-native");
+            // Full VoxGrudge is external (voxgrudge.vercel.app); lab is optional.
+            if (id === "voxgrudge" || id === "voxgrudge-lab") navigate("voxgrudge-native");
             else if (id === "brawler") navigate("brawl");
           }}
           onExit={() => navigate("doors")}
@@ -1061,7 +1298,12 @@ export default function App() {
   }
 
   if (mode === "genesis") {
-    return shell(<WarlordGenesis onExit={() => navigate("doors")} />);
+    // Product SSOT is F:/GitHub/warlord-genesis (warlord-genesis.vercel.app), not the old Open wave mini-scene.
+    return shell(
+      <GenesisExternalLaunch
+        onStay={() => navigate("doors")}
+      />,
+    );
   }
 
   if (mode === "voxgrudge-native") {
@@ -1332,6 +1574,7 @@ export default function App() {
           {equipOpen && (
             <EquipmentScreen
               characterName={hud?.character ?? characterId}
+              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
               currentWeapon={hud?.weapon ?? weaponId}
               currentOffHand={offHand}
               onEquip={onWeapon}
@@ -1415,6 +1658,7 @@ export default function App() {
           {equipOpen && (
             <EquipmentScreen
               characterName={hud?.character ?? characterId}
+              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
               currentWeapon={hud?.weapon ?? weaponId}
               currentOffHand={offHand}
               onEquip={onWeapon}
