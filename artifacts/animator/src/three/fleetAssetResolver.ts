@@ -174,9 +174,28 @@ export function pathAliases(path: string): string[] {
 }
 
 /**
+ * Paths that only exist on R2 (or arena) — never trust same-origin first.
+ * (Probed: open.grudge-studio.com/textures/grudge6/* and models/grudge6/* 404 without rewrite.)
+ */
+function isFleetCdnFirst(clean: string): boolean {
+  return (
+    clean.startsWith("textures/grudge6/") ||
+    clean.startsWith("models/grudge6/") ||
+    clean.startsWith("models/voxels/") ||
+    clean.startsWith("assets/western-kingdoms/") ||
+    clean.startsWith("assets/barbarians/") ||
+    clean.startsWith("assets/dwarves/") ||
+    clean.startsWith("assets/elves/") ||
+    clean.startsWith("assets/orcs/") ||
+    clean.startsWith("assets/undead/") ||
+    clean.startsWith("icons/pack/") ||
+    clean.startsWith("icons/wcs/")
+  );
+}
+
+/**
  * Ordered absolute URLs to try for a logical asset path.
- * Prefer same-origin (Open pack complete), then fleet R2 root, never prefer
- * broken /gameopen R2 prefix.
+ * Fleet CDN-first for grudge6 textures/models; same-origin first for Open lab pack.
  */
 export function resolveAssetCandidates(path: string): string[] {
   // Absolute URL → single candidate
@@ -188,14 +207,23 @@ export function resolveAssetCandidates(path: string): string[] {
   const urls: string[] = [];
 
   for (const a of aliases) {
-    // 1) Same-origin SPA (fast, no CORS, full Open pack on Vercel)
-    urls.push(sameOriginUrl(a));
-    // 2) Production Open hosts (if running from another origin / preview)
-    urls.push(abs(FLEET_ASSET_HOSTS.open, a));
-    urls.push(abs(FLEET_ASSET_HOSTS.gameopenVercel, a));
-    // 3) Canonical R2 CDN (weapons, grudge6 FBX, textures, anims JSON)
-    urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
-    // 4) Arena for skinned characters / baked anims
+    const cdnFirst = isFleetCdnFirst(a);
+
+    if (cdnFirst) {
+      // Production race kits / atlases / TVS — R2 then same-origin (after vercel rewrite)
+      urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
+      urls.push(sameOriginUrl(a));
+      urls.push(abs(FLEET_ASSET_HOSTS.open, a));
+      urls.push(abs(FLEET_ASSET_HOSTS.gameopenVercel, a));
+    } else {
+      // Open lab pack (karate, weapons stand-ins, local props)
+      urls.push(sameOriginUrl(a));
+      urls.push(abs(FLEET_ASSET_HOSTS.open, a));
+      urls.push(abs(FLEET_ASSET_HOSTS.gameopenVercel, a));
+      urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
+    }
+
+    // Arena for skinned characters / baked anims
     if (
       a.startsWith("cdn/") ||
       a.startsWith("anims/") ||
@@ -204,7 +232,7 @@ export function resolveAssetCandidates(path: string): string[] {
     ) {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }
-    // 5) ObjectStore pages for icon registry paths
+    // ObjectStore pages for icon registry paths
     if (a.startsWith("icons/")) {
       urls.push(abs(FLEET_ASSET_HOSTS.objectStorePages, a));
     }

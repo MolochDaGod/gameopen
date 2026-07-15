@@ -83,7 +83,7 @@
     },
     {
       "source": "/api/assets/:path*",
-      "destination": "https://assets.grudge-studio.com/gameopen/:path*"
+      "destination": "https://assets.grudge-studio.com/:path*"
     },
     {
       "source": "/anims/baked/:path*",
@@ -92,6 +92,46 @@
     {
       "source": "/cdn/assets/characters/:path*",
       "destination": "https://grudge-arena.grudge-studio.com/cdn/assets/characters/:path*"
+    },
+    {
+      "source": "/textures/grudge6/:path*",
+      "destination": "https://assets.grudge-studio.com/textures/grudge6/:path*"
+    },
+    {
+      "source": "/models/grudge6/:path*",
+      "destination": "https://assets.grudge-studio.com/models/grudge6/:path*"
+    },
+    {
+      "source": "/models/voxels/:path*",
+      "destination": "https://assets.grudge-studio.com/models/voxels/:path*"
+    },
+    {
+      "source": "/assets/western-kingdoms/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/western-kingdoms/:path*"
+    },
+    {
+      "source": "/assets/barbarians/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/barbarians/:path*"
+    },
+    {
+      "source": "/assets/dwarves/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/dwarves/:path*"
+    },
+    {
+      "source": "/assets/elves/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/elves/:path*"
+    },
+    {
+      "source": "/assets/orcs/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/orcs/:path*"
+    },
+    {
+      "source": "/assets/undead/:path*",
+      "destination": "https://assets.grudge-studio.com/assets/undead/:path*"
+    },
+    {
+      "source": "/icons/:path*",
+      "destination": "https://assets.grudge-studio.com/icons/:path*"
     },
     {
       "source": "/models/grudge/:path*",
@@ -126,7 +166,7 @@
       "destination": "https://gameopen-production.up.railway.app/api/:path*"
     },
     {
-      "source": "/((?!assets/|models/|anim/|icons/|ui/|rooms/|frames/|favicon|logo|opengraph|robots|asset-manifest|manifest|sw\\.js|pwa-|apple-touch|.*\\..*).*)",
+      "source": "/((?!assets/|models/|textures/|anim/|anims/|cdn/|icons/|ui/|rooms/|frames/|favicon|logo|opengraph|robots|asset-manifest|manifest|sw\\.js|pwa-|apple-touch|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -162,6 +202,26 @@
     },
     {
       "source": "/models/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/textures/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/icons/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
