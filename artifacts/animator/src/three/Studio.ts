@@ -620,8 +620,10 @@ export class Studio {
       antialias: true,
       powerPreference: "high-performance",
       alpha: false,
+      stencil: false,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Cap DPR for stable 60 Hz ticks on high-DPI panels; keep ≥1.5 for readability.
+    this.renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 1), 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -960,6 +962,10 @@ export class Studio {
     this.character = next;
     this.character.setBlendTime(this.params.blendTime);
     this.character.setShowSkeleton(this.params.showSkeleton);
+    // Terrain foot IK on GLB Character (flat y=0 Danger Room floor).
+    if (next instanceof Character && "setFootIk" in next) {
+      (next as Character).setFootIk(true);
+    }
     // Honour the spectator invariant: a character swapped in mid-duel must stay
     // hidden (the player is a spectator until the duel stops).
     this.character.root.visible = !this.spectating;

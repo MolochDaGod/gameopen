@@ -9,7 +9,10 @@ import type {
 import { getCharacter, getWeapon, weaponCombat } from "./assets";
 import { defenseClips, fightBand, guardedHitClip } from "./arsenal/holdStyle";
 import { ExplorerCharacter } from "./ExplorerCharacter";
+import { Character } from "./Character";
 import { DummyModels, type DummyInstance, type DummyKind } from "./DummyModels";
+import type { Avatar } from "./types";
+import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "./Weapons";
 import { aoeFalloff, aoeVictims, classifyEngagement, meleeStrike, preferSelectedHostile, strikeForceLevel, weaponOWR } from "./combat";
 import {
   activeWeakPoint,
@@ -470,10 +473,12 @@ interface Dummy {
   /** Identity of the tracked target (dummy id, or -1 = player); resets the
    *  velocity estimate on a target swap so it can't spike from a teleport jump. */
   aimTargetId?: number;
-  /** A real procedural Explorer rig replacing the primitive body (duel mode). */
-  avatar?: ExplorerCharacter | null;
+  /** Real character avatar (standard = orc GLB; duel may use explorer). */
+  avatar?: Avatar | null;
   /** True once the avatar's async clips have loaded and it's mounted + visible. */
   avatarReady?: boolean;
+  /** Mounted arsenal weapon mesh (orc/Character fighters). */
+  mountedWeapon?: MountedWeapon | null;
   // ---- Passive training-dummy GLB visual (replaces the primitive capsule) ----
   /** A static/idling dummy model standing in for the primitive body (passive). */
   model?: DummyInstance | null;
@@ -668,6 +673,8 @@ export class Targets implements CombatTargets {
       const ang = (i / Math.max(1, n)) * Math.PI * 2;
       const home = new THREE.Vector3(Math.cos(ang) * this.radius, 0, Math.sin(ang) * this.radius);
       const d = this.makeDummy(home, OPPONENT_WEAPONS[i % OPPONENT_WEAPONS.length], "enemy");
+      // Standard Danger Room: real orc characters (not capsules)
+      this.attachAvatar(d, d.weaponId);
       this.dummies.push(d);
       this.group.add(d.group);
     }
@@ -783,6 +790,7 @@ export class Targets implements CombatTargets {
       damageMul: 1,
       avatar: null,
       avatarReady: false,
+      mountedWeapon: null,
       deathPlayed: false,
       reactionDelay: 0,
     };
@@ -791,33 +799,104 @@ export class Targets implements CombatTargets {
   }
 
   /**
-   * Replace a dummy's primitive placeholder body with a real procedural Explorer
-   * rig (used by the duel mode so the AI fighters render as full characters). The
-   * rig loads asynchronously; the primitive meshes stay visible until it mounts,
-   * and the load is guarded so a clear/dispose mid-load can't leak a stray rig.
+   * Standard Danger Room opponent visual: **orc** Character GLB (idle/walk/attack)
+   * with optional arsenal weapon mount. Falls back to Explorer procedural if the
+   * orc pack fails. Duel can still force explorer via opts if needed later.
    */
   private attachAvatar(d: Dummy, weaponId: WeaponId): void {
-    const avatar = new ExplorerCharacter(getCharacter("explorer"));
-    d.avatar = avatar;
-    avatar.setWeaponId(weaponId);
-    void avatar.load().then(() => {
-      // The dummy was cleared/disposed (or re-attached) while the rig loaded.
+    // Prefer catalog "orc" (models/orc.glb — idle/walk/attack clips) then race-orc.
+    const tryIds = ["orc", "race-orc", "karate-boss"] as const;
+    void this.loadOpponentAvatar(d, weaponId, tryIds, 0);
+  }
+
+  private async loadOpponentAvatar(
+    d: Dummy,
+    weaponId: WeaponId,
+    tryIds: readonly string[],
+    index: number,
+  ): Promise<void> {
+    if (index >= tryIds.length) {
+      // Last resort: procedural explorer
+      const avatar = new ExplorerCharacter(getCharacter("explorer"));
+      d.avatar = avatar;
+      avatar.setWeaponId?.(weaponId);
+      try {
+        await avatar.load();
+        if (d.avatar !== avatar) {
+          avatar.dispose();
+          return;
+        }
+        if (avatar instanceof ExplorerCharacter) avatar.equipProceduralWeapon(weaponId);
+        d.body.visible = false;
+        d.head.visible = false;
+        d.accent.visible = false;
+        d.group.add(avatar.root);
+        d.avatarReady = true;
+      } catch (err) {
+        console.warn("[Targets] explorer opponent fallback failed", err);
+        avatar.dispose();
+        d.avatar = null;
+      }
+      return;
+    }
+
+    const id = tryIds[index]!;
+    try {
+      const def = getCharacter(id);
+      if (!def?.file && !def?.procedural) {
+        return this.loadOpponentAvatar(d, weaponId, tryIds, index + 1);
+      }
+      const avatar: Avatar = def.procedural
+        ? new ExplorerCharacter(def)
+        : new Character(def);
+      d.avatar = avatar;
+      avatar.setWeaponId?.(weaponId);
+      await avatar.load();
       if (d.avatar !== avatar) {
         avatar.dispose();
         return;
       }
-      avatar.equipProceduralWeapon(weaponId);
-      // The rig is the visible body now — hide the primitive placeholder meshes.
+      // Mount arsenal weapon when hands exist (Character / Grudge)
+      if (avatar.rightHand && avatar.leftHand && !def.weaponless) {
+        try {
+          const mounted = await mountWeaponModel(getWeapon(weaponId), avatar.rightHand, avatar.leftHand);
+          if (d.avatar === avatar) d.mountedWeapon = mounted;
+          else unmountWeapon(mounted);
+        } catch {
+          /* visual-only failure */
+        }
+      } else if (avatar instanceof ExplorerCharacter) {
+        avatar.equipProceduralWeapon(weaponId);
+      }
       d.body.visible = false;
       d.head.visible = false;
       d.accent.visible = false;
       d.group.add(avatar.root);
       d.avatarReady = true;
-    });
+      if (avatar instanceof Character) {
+        avatar.setFootIk(true);
+      }
+      console.info("[Targets] opponent avatar ready:", id, "weapon:", weaponId);
+    } catch (err) {
+      console.warn("[Targets] opponent candidate failed:", id, err);
+      if (d.avatar) {
+        try {
+          d.avatar.dispose();
+        } catch {
+          /* */
+        }
+        d.avatar = null;
+      }
+      return this.loadOpponentAvatar(d, weaponId, tryIds, index + 1);
+    }
   }
 
-  /** Dispose + detach a dummy's Explorer rig (if any). Safe to call repeatedly. */
+  /** Dispose + detach a dummy's character rig (if any). Safe to call repeatedly. */
   private disposeAvatar(d: Dummy): void {
+    if (d.mountedWeapon) {
+      unmountWeapon(d.mountedWeapon);
+      d.mountedWeapon = null;
+    }
     if (!d.avatar) return;
     const a = d.avatar;
     d.avatar = null;
@@ -1223,9 +1302,7 @@ export class Targets implements CombatTargets {
     const z = -2 - Math.floor(i / 2) * 1.8 + (Math.random() - 0.5);
     const home = new THREE.Vector3(THREE.MathUtils.clamp(x, -12, 12), 0, THREE.MathUtils.clamp(z, -12, 12));
     const d = this.makeDummy(home, weaponId, faction);
-    // Admin-spawned NPCs (both passive training dummies and active enemies) render
-    // as real procedural Explorer rigs, not primitive capsules — so they show full
-    // locomotion/attack/dodge/death animations like the duel fighters.
+    // Admin-spawned NPCs render as standard orc Character GLBs with weapon mounts.
     this.attachAvatar(d, weaponId);
     this.dummies.push(d);
     this.group.add(d.group);
@@ -1267,8 +1344,9 @@ export class Targets implements CombatTargets {
     if (opts?.scale && opts.scale > 0) d.group.scale.setScalar(opts.scale);
     d.damageMul = opts?.damageMul ?? 1;
     d.reactionDelay = opts?.reactionDelay ?? 0;
-    if (opts?.avatar) this.attachAvatar(d, weaponId);
-    else if (opts?.dummyModel) this.attachDummyModel(d, opts.dummyModel);
+    // Default: orc character avatars (opt-out only via dummyModel)
+    if (opts?.dummyModel) this.attachDummyModel(d, opts.dummyModel);
+    else this.attachAvatar(d, weaponId);
     // Weak-point boss: build the tab-targeting state + a floating marker sphere
     // (hidden until this boss is the locked target). It rides over the active
     // weak point's local height, recoloured per phase in the update loop.

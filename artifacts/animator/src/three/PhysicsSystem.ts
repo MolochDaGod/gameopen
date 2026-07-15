@@ -1,4 +1,5 @@
 import RAPIER from "@dimforge/rapier3d-compat";
+import { GRAVITY_Y, PHYSICS_DT, PHYSICS_MAX_SUBSTEPS } from "../lib/productionRuntime";
 
 /**
  * Renderer-agnostic Rapier physics core for the Danger Room.
@@ -12,16 +13,20 @@ import RAPIER from "@dimforge/rapier3d-compat";
  * awaits that, so callers create a `PhysicsSystem` synchronously and `await`
  * its `init()` before reading `world`. The fixed-step accumulator decouples the
  * simulation from the variable render dt for stable, deterministic stepping.
+ *
+ * Fixed timestep is shared with Character animation ticks ({@link PHYSICS_DT}).
  */
+
 export class PhysicsSystem {
   world: RAPIER.World | null = null;
   ready = false;
 
   private accum = 0;
-  private readonly fixed = 1 / 60;
+  /** Fixed timestep — shared with Character animation ticks (60 Hz). */
+  private readonly fixed = PHYSICS_DT;
 
   /** Initialise the wasm runtime + world. Safe to call once per instance. */
-  async init(gravityY = -12): Promise<void> {
+  async init(gravityY = GRAVITY_Y): Promise<void> {
     await ensureRapier();
     this.world = new RAPIER.World({ x: 0, y: gravityY, z: 0 });
     this.world.timestep = this.fixed;
@@ -34,7 +39,7 @@ export class PhysicsSystem {
     if (!world) return;
     this.accum += Math.min(dt, 0.1);
     let steps = 0;
-    while (this.accum >= this.fixed && steps < 5) {
+    while (this.accum >= this.fixed && steps < PHYSICS_MAX_SUBSTEPS) {
       world.step();
       this.accum -= this.fixed;
       steps++;

@@ -7,6 +7,8 @@ import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
+import { FootGrounder, type GroundSampler } from "./anim/legIk";
+import { PHYSICS_DT } from "../lib/productionRuntime";
 
 /** Crossfade (seconds) used to ease the additive combat overlay in and out. */
 const OVERLAY_FADE = 0.07;
@@ -45,6 +47,9 @@ export class Character {
 
   /** Monotonic clock (seconds) driving the additive overlay lifecycle. */
   private elapsed = 0;
+
+  /** Foot-to-ground IK (post-mixer). Enabled by default on flat y=0. */
+  private footGrounder = new FootGrounder();
 
   // --- Weight-blended locomotion (step 1) ---
   /** Idle/walk/run weight-blend layer; drives locomotion via {@link setLocomotion}. */
@@ -107,7 +112,20 @@ export class Character {
 
     this.model.updateMatrixWorld(true);
     this.findHands();
+    this.footGrounder.bind(this.model);
+    // Flat Danger Room floor at y=0; hosts may swap terrain sampler later.
+    this.footGrounder.setEnabled(true);
     this.playRole("idle", 0);
+  }
+
+  /** Enable/disable foot-to-ground IK (terrain plant). */
+  setFootIk(enabled: boolean): void {
+    this.footGrounder.setEnabled(enabled);
+  }
+
+  /** Custom ground height sampler (default flat y=0). */
+  setGroundSampler(fn: GroundSampler | null): void {
+    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
   }
 
   /**
@@ -329,9 +347,9 @@ export class Character {
 
   update(dt: number) {
     if (!this.mixer) return;
-    // Fixed substeps keep crossfades / one-shots stable on lag spikes.
+    // Fixed substeps match physics (PHYSICS_DT = 1/60) for stable timing.
     // Cap total advance so a long hitch doesn't skip an entire attack clip.
-    const FIXED = 1 / 60;
+    const FIXED = PHYSICS_DT;
     const maxAdvance = 0.1;
     let remain = Math.min(Math.max(0, dt), maxAdvance);
 
@@ -342,7 +360,7 @@ export class Character {
     }
   }
 
-  /** One animation tick (locomotion blend + overlay lifecycle + mixer). */
+  /** One animation tick (locomotion blend + overlay lifecycle + mixer + foot IK). */
   private tickAnim(dt: number) {
     if (!this.mixer) return;
     this.elapsed += dt;
@@ -381,7 +399,13 @@ export class Character {
       }
     }
 
+    // POST-MIXER order (same as threejs-rapier Danger Room):
+    //   0. footGrounder.beginFrame — undo pelvis drop so mixer sees clean base
+    //   1. mixer.update — bake locomotion + overlay pose
+    //   2. footGrounder.apply — terrain foot plant + pelvis drop
+    this.footGrounder.beginFrame();
     this.mixer.update(dt);
+    this.footGrounder.apply(dt);
 
     if (this.oneShot) {
       this.oneShotEnd -= dt;
