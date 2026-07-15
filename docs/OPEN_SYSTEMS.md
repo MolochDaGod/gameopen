@@ -12,7 +12,7 @@
 |-------|----------------|
 | **Hub (`/`)** | Door select — pick a surface |
 | **Combat labs** | Danger Room, genesis waves, mimic, map playtest |
-| **Create** | Voxel map editor, dressing room |
+| **Create** | Voxel map editor (`/voxel` premade Danger Rooms), dressing room — **promote worlds to Mine-Loader** |
 | **Multiplayer** | Lobby rooms, Ruins Brawler, VoxGrudge world |
 | **Tools** | LED mask, GRUDOX zone launcher |
 | **Fleet** | Grudge ID JWT · Railway characters (`era=warlords`) · ObjectStore defs · R2 assets |

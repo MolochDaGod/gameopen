@@ -10,12 +10,19 @@ import type { WeaponId } from "../types";
 import type { BlockTypeId } from "@workspace/voxel-canonical";
 
 /**
- * Code-defined starting-map templates for the Voxel Editor. Picking one on entry
- * (or via "New Map") loads a ready-made layout so the user never starts on an
- * empty pad. Each template is pure data (BlockData/DeployableData) and ALWAYS
- * includes a player start so "Test" works immediately.
+ * Code-defined starting-map templates for the Voxel Editor (`/voxel`).
+ * Includes premade Danger Room–style layouts for combat playtest.
  *
- * Uses Voxel Realms canonical block types (`@workspace/voxel-canonical`).
+ * Promote path (production worlds / lobby):
+ *   export interchange → Mine-Loader scene API
+ *   SSOT: https://github.com/MolochDaGod/mine-loader
+ *   Contract: docs/MINE_LOADER_SSOT.md · docs/VOXEL_CANONICAL.md
+ *
+ * Physics playtest on Open uses Rapier (PhysicsSystem + VoxelArena) with
+ * productionRuntime constants (capsule, gravity, fixed 60 Hz).
+ *
+ * Each template ALWAYS includes a player start so "Test" works immediately.
+ * Block types: `@workspace/voxel-canonical` (not free hex alone).
  */
 
 /** Palette mapped to terrain block types (editor + Realms). */

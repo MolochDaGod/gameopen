@@ -106,7 +106,7 @@ Built by `gameLaunchUrl()` / `grudoxDeepLink()`.
 
 ### Mine-Loader Realms
 Library entry `mine-loader-realms` → `https://mineloader.grudge-studio.com/` (+ SSO params).  
-World engine path: local `D:\GitHub\minegrudge\Mine-Loader` · fleet doc `docs/GAME_LIBRARY_AND_DEPLOY.md`.
+World engine path: local `D:\GitHub\minegrudge\Mine-Loader` · GitHub SSOT `MolochDaGod/mine-loader` · `docs/MINE_LOADER_SSOT.md`.
 
 ---
 
@@ -211,6 +211,8 @@ curl -sI https://objectstore.grudge-studio.com/api/v1/weaponSkills.json | head -
 | Doc | Topic |
 |-----|--------|
 | **This file** | Macro stack / D1 / AI / handoff |
+| `MINE_LOADER_SSOT.md` | **Editor/world SSOT**, physics, colliders, controller/camera, lobby |
+| `VOXEL_CANONICAL.md` | Block types + interchange Open ↔ Realms |
 | `DEPLOY.md` | Env + smoke |
 | `README.md` | Overview + auth |
 | `GAME_LIBRARY_AND_DEPLOY.md` | Library + Mine-Loader |
@@ -218,6 +220,7 @@ curl -sI https://objectstore.grudge-studio.com/api/v1/weaponSkills.json | head -
 | `ATTACHMENT_EQUIP_CARDS.md` | Body-anchored equip UI |
 | `GRUDOX_UNIFIED_SCHEME.md` | Cross-app scheme pointer |
 | Mine-Loader `docs/FLEET_DEPLOY.md` | Realms Vercel/Railway/CF |
+| Mine-Loader `docs/WORLD_PRODUCTION.md` | Promote maps from Open `/voxel` |
 
 ---
 

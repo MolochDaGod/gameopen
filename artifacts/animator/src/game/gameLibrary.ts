@@ -10,6 +10,7 @@
 
 import { assetUrl } from "../lib/fleet";
 import { PLAY_SHELL_HOST } from "./grudoxZones";
+import { MINE_LOADER_FLEET, mineLoaderLobbyUrl } from "../lib/productionRuntime";
 
 /** How a title launches from the Open launcher. */
 export type LaunchKind =
@@ -86,21 +87,25 @@ export type GameEntry = {
   status: "live" | "beta" | "local" | "migrating";
 };
 
-/** Mine-Loader production Realms — fleet SSOT for voxel worlds. */
+/** Mine-Loader production Realms — fleet SSOT for voxel worlds (GitHub promote path). */
 export const MINE_LOADER = {
   localPath: "D:\\GitHub\\minegrudge\\Mine-Loader",
   mirrorPath: "F:\\GitHub\\voxgrudge\\Mine-Loader",
-  github: "https://github.com/MolochDaGod/mine-loader",
-  clientUrl: "https://mineloader.grudge-studio.com/",
-  edgeUrl: "https://mine.grudge-studio.com/",
+  github: MINE_LOADER_FLEET.github,
+  clientUrl: MINE_LOADER_FLEET.client,
+  edgeUrl: MINE_LOADER_FLEET.edge,
   /** Placeholder until Railway hostname is finalized */
   apiHost: "https://mine-loader-api-production.up.railway.app",
   docs: "docs/FLEET_DEPLOY.md",
+  openContract: "docs/MINE_LOADER_SSOT.md",
+  /** SSO lobby deep-link builder */
+  lobbyUrl: mineLoaderLobbyUrl,
   rules: [
-    "Never deploy production from Replit — local zip / GitHub → Vercel + Railway + CF",
+    "SSOT: github.com/MolochDaGod/mine-loader — promote editor/world/API there",
+    "Never deploy production from Replit — GitHub → Vercel + Railway + CF",
     "Exactly one API replica (in-memory world authority → Postgres flush)",
-    "Client is static SPA; /api/* rewrites to Railway",
-    "World tools & voxel editor should target Mine-Loader block/world APIs",
+    "Open /voxel exports interchange → Realms scene; combat labs stay on Open /danger",
+    "Accounts: same Grudge ID + characterId on Open and Realms handoff",
   ],
 } as const;
 

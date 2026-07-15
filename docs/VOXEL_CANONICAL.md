@@ -1,10 +1,14 @@
 # Voxel canonical format (fleet SSOT)
 
-**Codex UI:** https://mine-loader.replit.app/#/defs  
-**Catalog API:** https://mine-loader.replit.app/api/blocks  
-**Shared package:** `@workspace/voxel-canonical` (`lib/voxel-canonical`)
+**SSOT repo:** https://github.com/MolochDaGod/mine-loader  
+**Live Realms:** https://mineloader.grudge-studio.com (`#/defs` catalog UI)  
+**Catalog API:** `GET https://mineloader.grudge-studio.com/api/blocks` (or same-origin `/api/blocks` when proxied)  
+**Shared package:** `@workspace/voxel-canonical` (`lib/voxel-canonical`)  
+**World promote / physics / deploy:** [`MINE_LOADER_SSOT.md`](MINE_LOADER_SSOT.md)
 
 This is the contract for **GRUDOX**, **gameopen Voxel Editor** (`/voxel`), **VoxGrudge** (`/world`), and any other voxel game on the fleet.
+
+**Do not use Replit** as the production defs host.
 
 ---
 
