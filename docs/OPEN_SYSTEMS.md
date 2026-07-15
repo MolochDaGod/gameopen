@@ -30,6 +30,7 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | `/play` | play | Authored map → combat |
 | `/genesis` | genesis | Warlord Genesis MOBA/RTS handoff (fleet SSO + characterId) |
 | `/brawl` `/ruins` | brawl | Ruins Brawler |
+| `/survival` `/agama` | survival | **Agama Survival** — wave survival on `models/agama-map.glb` (from `D:\Games\Models\agamemap.glb`) |
 | `/mimic` `/dungeon` | mimic | Mimic encounter |
 | `/voxel` `/build` | voxel | Voxel map editor |
 | `/world` `/voxgrudge` | voxgrudge-native | Open voxel world |
@@ -38,6 +39,16 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | `/zones` `/grudox` | zones | GRUDOX zone list |
 | `/ledmask` | ledmask | LED face tool |
 | `/arcade/play/<id>` | **GRUDOX Voxel Arcade** | Owned by `grudox.grudge-studio.com` (not gameopen). `racer` = **Voxel Velocity** (real street racer). Edge: open Worker proxies `/arcade/*` → GRUDOX. SPA also hard-redirects arcade-only cabinets. Native Open only: `brawler`, `voxgrudge`, `explorer`→danger. |
+
+### Agama Survival (map source)
+
+| Item | Value |
+|------|--------|
+| Live path | https://open.grudge-studio.com/survival |
+| Host game | Ruins Brawler engine (`BrawlerScene` + `ThreeBrawler variant="survival"`) |
+| Author source | `D:\Games\Models\agamemap.glb` (~221 MB raw) |
+| Production GLB | `public/models/agama-map.glb` (~15 MB meshopt) |
+| Bake | `gltf-transform optimize --texture-size 1024` |
 
 Query overrides (legacy): `?door=<mode>` · `?mode=<cabinetId>`.
 

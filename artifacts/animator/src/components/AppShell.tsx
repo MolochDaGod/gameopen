@@ -51,6 +51,7 @@ export type ShellMode =
   | "ledmask"
   | "zones"
   | "brawl"
+  | "survival"
   | "mimic"
   | "genesis"
   | "voxgrudge-native"
@@ -71,6 +72,7 @@ const NAV: NavItem[] = [
   { mode: "danger",           label: "Danger Room",     hint: "Combat sandbox",       icon: <GameIcon name="combat-pad"      tone="#ff7a7a" />,          tone: "#ff7a7a", group: "Play" },
   { mode: "genesis",          label: "Warlord Genesis", hint: "3-lane MOBA · fleet",  icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d", group: "Play" },
   { mode: "brawl",            label: "Ruins Brawler",   hint: "Live co-op survival",  icon: <GameIcon name="attack"          tone="#ff7a7a" />,          tone: "#ff9a7a", group: "Play" },
+  { mode: "survival",         label: "Agama Survival",  hint: "Waves on Agama map",   icon: <GameIcon name="ambush"          tone="#e8a040" />,          tone: "#e8a040", group: "Play" },
   { mode: "mimic",            label: "Test Dungeon",    hint: "Mimic encounter",      icon: <GameIcon name="ambush"          tone="#9cff5a" />,          tone: "#9cff5a", group: "Play" },
   { mode: "voxel",            label: "Voxel Editor",    hint: "Build & test maps",    icon: <GameIcon name="world-editor"    tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
   { mode: "voxgrudge-native", label: "VoxGrudge",       hint: "Open voxel world",     icon: <GameIcon name="explore"         tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Play" },

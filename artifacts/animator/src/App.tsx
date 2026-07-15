@@ -1138,7 +1138,17 @@ export default function App() {
         placeholder: "Fix combat feel, preview anim, dash forward, audit icons…",
       };
     }
-    if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones" || mode === "genesis" || mode === "voxgrudge-native" || mode === "account") {
+    if (
+      mode === "doors" ||
+      mode === "voxel" ||
+      mode === "lobby" ||
+      mode === "zones" ||
+      mode === "genesis" ||
+      mode === "voxgrudge-native" ||
+      mode === "account" ||
+      mode === "brawl" ||
+      mode === "survival"
+    ) {
       return {
         surface: "guide",
         title: "Companion",
@@ -1290,7 +1300,13 @@ export default function App() {
   }
 
   if (mode === "brawl") {
-    return shell(<ThreeBrawler onExit={() => navigate("doors")} />);
+    return shell(<ThreeBrawler variant="brawl" onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "survival") {
+    return shell(
+      <ThreeBrawler variant="survival" onExit={() => navigate("doors")} />,
+    );
   }
 
   if (mode === "mimic") {

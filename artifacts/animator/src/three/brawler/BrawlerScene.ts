@@ -100,6 +100,21 @@ export interface BrawlerSceneOptions {
   characterClass?: string;
   preferredAvatarId?: string;
   rosterIndex?: number;
+  /**
+   * Arena / map GLB path under public (e.g. models/agama-map.glb).
+   * Default: classic Ruins arena (models/arena-war-zone.glb).
+   */
+  mapPath?: string;
+  /** Enemy ring spawn radius (meters). Larger maps need more. */
+  spawnRadius?: number;
+  /** Soft safe-zone radius at origin (heal + shop). */
+  safeZoneRadius?: number;
+  /** Max concurrent hostiles (default 12). */
+  maxEnemies?: number;
+  /** Seconds between spawns (default 4). */
+  spawnInterval?: number;
+  /** Opening wave count before interval spawn takes over. */
+  initialSpawnCount?: number;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -191,6 +206,14 @@ export class BrawlerScene {
   private onState: StateCb;
   private lastSig = "";
 
+  /** Environment map path (same-origin / CDN candidates). */
+  private mapPath = "models/arena-war-zone.glb";
+  private spawnRadius = SPAWN_RADIUS;
+  private safeZoneRadius = SAFE_ZONE_RADIUS;
+  private maxEnemies = ENEMY_MAX;
+  private spawnInterval = SPAWN_INTERVAL;
+  private initialSpawnCount = 4;
+
   constructor(canvas: HTMLCanvasElement, onState: StateCb, opts: BrawlerSceneOptions = {}) {
     this.canvas = canvas;
     this.onState = onState;
@@ -198,6 +221,22 @@ export class BrawlerScene {
     if (opts.characterClass) this.characterClass = opts.characterClass;
     if (opts.preferredAvatarId) this.preferredAvatarId = opts.preferredAvatarId;
     if (typeof opts.rosterIndex === "number") this.rosterIndex = opts.rosterIndex;
+    if (opts.mapPath) this.mapPath = opts.mapPath.replace(/^\//, "");
+    if (typeof opts.spawnRadius === "number" && opts.spawnRadius > 4) {
+      this.spawnRadius = opts.spawnRadius;
+    }
+    if (typeof opts.safeZoneRadius === "number" && opts.safeZoneRadius > 1) {
+      this.safeZoneRadius = opts.safeZoneRadius;
+    }
+    if (typeof opts.maxEnemies === "number" && opts.maxEnemies > 0) {
+      this.maxEnemies = opts.maxEnemies;
+    }
+    if (typeof opts.spawnInterval === "number" && opts.spawnInterval > 0.5) {
+      this.spawnInterval = opts.spawnInterval;
+    }
+    if (typeof opts.initialSpawnCount === "number" && opts.initialSpawnCount >= 0) {
+      this.initialSpawnCount = opts.initialSpawnCount;
+    }
 
     // Danger Room controls (persisted) — same loadControls() as Studio
     this.params = {
@@ -258,7 +297,8 @@ export class BrawlerScene {
     ]);
     if (this.disposed) return;
     this.setPhase("playing");
-    for (let i = 0; i < 4; i++) this.spawnEnemy();
+    // Immediate wave presence — don't wait for first spawn-interval tick.
+    for (let i = 0; i < this.initialSpawnCount; i++) this.spawnEnemy();
     void this.initNetwork();
   }
 
@@ -279,6 +319,7 @@ export class BrawlerScene {
     this.physics = physics;
   }
 
+  /** Fleet multi-CDN GLB load (Draco + Meshopt via sharedGltfLoader). */
   private async loadGltf(path: string) {
     const { loadGltfFirst } = await import("../assets");
     const { sharedGltfLoader } = await import("../loaders/gltf");
@@ -310,7 +351,8 @@ export class BrawlerScene {
   }
 
   private buildSafeZoneRing() {
-    const geo = new THREE.RingGeometry(SAFE_ZONE_RADIUS - 0.25, SAFE_ZONE_RADIUS, 64);
+    const r = this.safeZoneRadius;
+    const geo = new THREE.RingGeometry(Math.max(0.5, r - 0.25), r, 64);
     const mat = new THREE.MeshBasicMaterial({
       color: 0x7ee0a0,
       side: THREE.DoubleSide,
@@ -581,45 +623,70 @@ export class BrawlerScene {
   }
 
   private async loadEnvironment() {
-    try {
-      const gltf = await this.loadGltf("models/arena-war-zone.glb");
-      if (this.disposed) return;
-      const root = gltf.scene;
-      const box = new THREE.Box3().setFromObject(root);
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.z) || 1;
-      if (maxDim > 300) root.scale.setScalar(0.01);
-      else if (maxDim < 40) root.scale.setScalar(40 / maxDim);
-      root.updateMatrixWorld(true);
-      const b2 = new THREE.Box3().setFromObject(root);
-      const c2 = b2.getCenter(new THREE.Vector3());
-      root.position.x -= c2.x;
-      root.position.z -= c2.z;
-      root.position.y -= b2.min.y;
-      const occluders: THREE.Object3D[] = [];
-      root.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (!m.isMesh) return;
-        m.castShadow = true;
-        m.receiveShadow = true;
-        // Tag static collision layer for camera occluders + future KCC trimesh
-        m.userData.physicsLayer = "terrain";
-        occluders.push(m);
-        const mats = Array.isArray(m.material) ? m.material : [m.material];
-        for (const mm of mats) {
-          const std = mm as THREE.MeshStandardMaterial;
-          if (std.map) std.map.colorSpace = THREE.SRGBColorSpace;
-        }
-      });
-      this.scene.add(root);
-      this.arenaColliders = occluders;
-      this.controller?.setCameraOccluders(occluders);
-      // Bake arena triangle colliders into Rapier when physics is up
-      void this.bakeArenaTrimesh(root);
-    } catch (err) {
-      console.warn("[BrawlerScene] arena-war-zone.glb failed — fallback ground", err);
-      this.buildFallbackGround();
+    const paths = [this.mapPath];
+    // Fallback chain: requested map → classic ruins → none
+    if (this.mapPath !== "models/arena-war-zone.glb") {
+      paths.push("models/arena-war-zone.glb");
     }
+    for (const path of paths) {
+      try {
+        const gltf = await this.loadGltf(path);
+        if (this.disposed) return;
+        const root = gltf.scene;
+        const box = new THREE.Box3().setFromObject(root);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.z) || 1;
+        // Large author units (cm / huge scenes) → scale down; tiny pads → scale up
+        if (maxDim > 300) root.scale.setScalar(80 / maxDim);
+        else if (maxDim < 40) root.scale.setScalar(40 / maxDim);
+        root.updateMatrixWorld(true);
+        const b2 = new THREE.Box3().setFromObject(root);
+        const c2 = b2.getCenter(new THREE.Vector3());
+        root.position.x -= c2.x;
+        root.position.z -= c2.z;
+        root.position.y -= b2.min.y;
+        // Auto-fit spawn ring to ~45% of map half-extent (clamped)
+        const half = Math.max(b2.max.x - b2.min.x, b2.max.z - b2.min.z) * 0.5;
+        if (half > 8) {
+          const autoSpawn = Math.min(90, Math.max(18, half * 0.42));
+          if (this.spawnRadius <= SPAWN_RADIUS + 0.01) {
+            this.spawnRadius = autoSpawn;
+          }
+        }
+        const occluders: THREE.Object3D[] = [];
+        root.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh) return;
+          m.castShadow = true;
+          m.receiveShadow = true;
+          m.frustumCulled = true;
+          m.userData.physicsLayer = "terrain";
+          occluders.push(m);
+          const mats = Array.isArray(m.material) ? m.material : [m.material];
+          for (const mm of mats) {
+            const std = mm as THREE.MeshStandardMaterial;
+            if (std?.map) std.map.colorSpace = THREE.SRGBColorSpace;
+          }
+        });
+        this.scene.add(root);
+        this.arenaColliders = occluders;
+        this.controller?.setCameraOccluders(occluders);
+        void this.bakeArenaTrimesh(root);
+        console.info(
+          "[BrawlerScene] map loaded:",
+          path,
+          "spawnR=",
+          this.spawnRadius.toFixed(1),
+          "extent=",
+          half.toFixed(1),
+        );
+        return;
+      } catch (err) {
+        console.warn(`[BrawlerScene] map failed: ${path}`, err);
+      }
+    }
+    console.warn("[BrawlerScene] all maps failed — fallback ground");
+    this.buildFallbackGround();
   }
 
   /** Optional static layer: extract first large mesh into Rapier trimesh. */
@@ -982,12 +1049,13 @@ export class BrawlerScene {
 
   // ── Enemies ────────────────────────────────────────────────────────────────
   private spawnEnemy() {
-    if (this.enemies.length >= ENEMY_MAX || this.phase !== "playing") return;
+    if (this.enemies.length >= this.maxEnemies || this.phase !== "playing") return;
     const angle = Math.random() * Math.PI * 2;
+    const r = this.spawnRadius;
     const pos = new THREE.Vector3(
-      Math.sin(angle) * SPAWN_RADIUS,
+      Math.sin(angle) * r,
       0,
-      Math.cos(angle) * SPAWN_RADIUS,
+      Math.cos(angle) * r,
     );
     const tplIdx = Math.floor(Math.random() * 3);
     const tpl = this.enemyTemplates[tplIdx];
@@ -1068,7 +1136,7 @@ export class BrawlerScene {
       this.updateEnemies(dt);
       this.updateFocus(dt);
       this.spawnTimer += dt;
-      if (this.spawnTimer >= SPAWN_INTERVAL) {
+      if (this.spawnTimer >= this.spawnInterval) {
         this.spawnTimer = 0;
         this.spawnEnemy();
       }
@@ -1113,7 +1181,7 @@ export class BrawlerScene {
     const pp = this.playerPos();
     const xz = new THREE.Vector2(pp.x, pp.z);
     const wasIn = this.inSafeZone;
-    this.inSafeZone = xz.length() < SAFE_ZONE_RADIUS;
+    this.inSafeZone = xz.length() < this.safeZoneRadius;
     if (this.inSafeZone) {
       this.playerHp = Math.min(PLAYER_MAX_HP, this.playerHp + HEAL_RATE * dt);
     }

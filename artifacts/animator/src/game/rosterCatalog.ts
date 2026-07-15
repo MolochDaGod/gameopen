@@ -51,6 +51,7 @@ export const BOSSES: readonly CatalogEntity[] = [
 export const MAPS = {
   "danger-room": { label: "Danger Room", glb: null as string | null },
   "arena-war-zone": { label: "Arena War Zone", glb: "models/arena-war-zone.glb" },
+  "agama-map": { label: "Agama Survival Map", glb: "models/agama-map.glb" },
   dungeon: { label: "Dungeon", glb: "models/dungeon.glb" },
   "pirate-black-tide": { label: "Black Tide", glb: "models/pirate/black-tide.glb" },
   "haunting-door": { label: "Haunting Door", glb: "models/haunting-door.glb" },

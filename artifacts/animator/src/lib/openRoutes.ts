@@ -29,6 +29,7 @@ export type AppMode =
   | "characters"
   | "minegrudge"
   | "brawl"
+  | "survival"
   | "zones"
   | "mimic"
   | "genesis"
@@ -133,6 +134,18 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     poster: "brawl",
     tags: ["3D Live", "Co-op"],
     accent: "#4fc3ff",
+  },
+  {
+    mode: "survival",
+    slug: "survival",
+    aliases: ["agama", "agama-survival", "survive", "agama-map"],
+    cabinets: ["survival", "agama", "agama-survival"],
+    title: "Agama Survival",
+    blurb: "Wave survival on the Agama map — hold the safe zone, clear hostiles.",
+    group: "combat",
+    poster: "brawl",
+    tags: ["Survival", "Waves"],
+    accent: "#e8a040",
   },
   {
     mode: "mimic",

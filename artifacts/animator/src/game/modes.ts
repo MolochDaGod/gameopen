@@ -13,7 +13,8 @@ export type GameModeId =
   | "arena-war"
   | "dungeon-crawl"
   | "pirate-siege"
-  | "warlord-genesis";
+  | "warlord-genesis"
+  | "agama-survival";
 
 export type FactionRole = "player" | "ally" | "enemy" | "boss" | "neutral";
 
@@ -176,6 +177,18 @@ export const GAME_MODES: readonly GameModeDef[] = [
     allyStrategy: "tank-guard",
     bossStrategy: "boss-phased",
     mapKey: "arena-war-zone",
+    multiplayer: false,
+  },
+  {
+    id: "agama-survival",
+    title: "Agama Survival",
+    blurb: "Hold the safe zone on the Agama map — escalating zombie waves.",
+    icon: "/icons/ambush.png",
+    spawn: { maxEnemies: 16, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 3 },
+    enemyStrategy: "swarm-horde",
+    allyStrategy: "tank-guard",
+    bossStrategy: "boss-phased",
+    mapKey: "agama-map",
     multiplayer: false,
   },
 ] as const;

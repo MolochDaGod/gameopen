@@ -1,5 +1,5 @@
 /**
- * ThreeBrawler — React shell for the 3D Ruins Brawler.
+ * ThreeBrawler — React shell for the 3D Ruins Brawler / Agama Survival.
  *
  * Full combat HUD:
  *  • Top bar: brand, live status, exit
@@ -9,10 +9,15 @@
  *  • Equipment strip (weapon cycle)
  *  • Safe-zone shop
  *  • Pointer-lock hints
+ *
+ * Variants:
+ *  - `brawl` (default) — classic Ruins arena (arena-war-zone.glb)
+ *  - `survival` — Agama map survival waves (agama-map.glb from D:\Games\Models\agamemap.glb)
  */
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import {
   BrawlerScene,
+  type BrawlerSceneOptions,
   type BrawlerState,
   type BrawlerSkillSlot,
 } from "../three/brawler/BrawlerScene";
@@ -20,9 +25,44 @@ import { gameSession } from "../game/GameSession";
 import { bakedIndexFor } from "../three/grudge/bakedRoster";
 import { resolveRaceModel } from "../lib/raceModel";
 
+export type BrawlerVariant = "brawl" | "survival";
+
 interface Props {
   onExit: () => void;
+  /** Which open surface is hosting this shell. */
+  variant?: BrawlerVariant;
 }
+
+/** Map + spawn presets per hub surface. */
+const VARIANT_PRESETS: Record<
+  BrawlerVariant,
+  {
+    brand: string;
+    brandAccent: string;
+    mapPath: string;
+    sceneOpts: Partial<BrawlerSceneOptions>;
+  }
+> = {
+  brawl: {
+    brand: "RUINS",
+    brandAccent: "BRAWLER",
+    mapPath: "models/arena-war-zone.glb",
+    sceneOpts: {},
+  },
+  survival: {
+    brand: "AGAMA",
+    brandAccent: "SURVIVAL",
+    mapPath: "models/agama-map.glb",
+    sceneOpts: {
+      // Larger open map — more concurrent foes, slightly slower cadence
+      maxEnemies: 16,
+      spawnInterval: 3.2,
+      initialSpawnCount: 6,
+      safeZoneRadius: 8,
+      spawnRadius: 36,
+    },
+  },
+};
 
 const EMPTY_SKILLS: BrawlerSkillSlot[] = [1, 2, 3, 4].map((slot) => ({
   slot: slot as 1 | 2 | 3 | 4,
@@ -65,11 +105,12 @@ const WEAPONS = [
   { id: "bow", label: "Bow", icon: "🏹" },
 ] as const;
 
-export function ThreeBrawler({ onExit }: Props) {
+export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<BrawlerScene | null>(null);
   const [state, setState] = useState<BrawlerState>(DEFAULT_STATE);
   const [locked, setLocked] = useState(false);
+  const preset = VARIANT_PRESETS[variant] ?? VARIANT_PRESETS.brawl;
 
   const fleetChar = gameSession.selectedCharacter();
   const displayName =
@@ -96,6 +137,8 @@ export function ThreeBrawler({ onExit }: Props) {
       characterClass: String(characterClass),
       preferredAvatarId,
       rosterIndex,
+      mapPath: preset.mapPath,
+      ...preset.sceneOpts,
     });
     sceneRef.current = scene;
 
@@ -107,9 +150,9 @@ export function ThreeBrawler({ onExit }: Props) {
       scene.dispose();
       sceneRef.current = null;
     };
-    // Mount once per brawler entry — identity is read at open.
+    // Mount once per surface entry — identity + map are read at open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [variant]);
 
   const cast = useCallback((slot: 1 | 2 | 3 | 4) => {
     sceneRef.current?.castSkill(slot);
@@ -129,7 +172,8 @@ export function ThreeBrawler({ onExit }: Props) {
       {/* Top bar */}
       <div style={topbarStyle}>
         <span style={brandStyle}>
-          RUINS<span style={brandAccentStyle}>BRAWLER</span>
+          {preset.brand}
+          <span style={brandAccentStyle}>{preset.brandAccent}</span>
         </span>
         <span style={{ fontSize: 12, opacity: 0.85, color: "#cfe0fa" }}>
           {state.connected
