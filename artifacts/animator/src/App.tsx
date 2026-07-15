@@ -382,18 +382,37 @@ export default function App() {
     setEquipOpen(false);
   }, [mode]);
   const [characterId, setCharacterId] = useState("explorer");
-  // Drive avatar + equipment from the signed-in fleet character (race + saveData.open loadout).
-  // Studio falls back to Explorer if the race asset fails; equipment comes from characterLoadout.
+  // Drive avatar + equipment from signed-in fleet character (GrudaChain / Railway).
+  // Production path: race kit + atlas texture + mesh_ids from account equipment /
+  // ObjectStore gear_presets (main panel SSOT) — not untextured catalog GLBs.
   useEffect(() => {
     const applyAvatarAndLoadout = () => {
       const ch = gameSession.selectedCharacter();
       if (!ch) return;
       const { avatarId: raceAvatar } = resolveRaceModel(ch);
-      void import("./lib/characterLoadout").then(({ loadoutFromCharacter }) => {
+      void Promise.all([
+        import("./lib/characterLoadout"),
+        import("./lib/characterEquipmentMesh"),
+      ]).then(([{ loadoutFromCharacter }, { resolveCharacterEquipmentVisual }]) => {
         const loadout = loadoutFromCharacter(ch);
         const avatarId = loadout.avatarId || raceAvatar;
         setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
-        studioRef.current?.setCharacter(avatarId);
+        // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
+        void resolveCharacterEquipmentVisual(ch).then((vis) => {
+          const studio = studioRef.current;
+          if (!studio) return;
+          studio.setEquipmentMeshIds(vis.meshIds);
+          studio.setCharacter(avatarId);
+          console.info(
+            "[Open] account character visual",
+            ch.name,
+            vis.source,
+            vis.raceId,
+            vis.presetId,
+            `meshes=${vis.meshIds.length}`,
+            vis.gearPresetId || "",
+          );
+        });
         // Apply saved weapons so logged-in play uses the character's gear
         if (loadout.weaponId) {
           setWeaponId(loadout.weaponId);

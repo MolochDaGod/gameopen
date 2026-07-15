@@ -919,14 +919,28 @@ export class Studio {
     addStudioLights(this.scene, { shadows: true });
   }
 
+  /** Account / main-panel mesh_ids applied on next grudge6 spawn. */
+  private pendingMeshIds: string[] | null = null;
+  private lastSpawnMeshKey = "";
+
+  /**
+   * Set equipment mesh_ids from fleet character (main panel SSOT).
+   * Call before {@link setCharacter}; spawn re-binds atlas + child visibility.
+   */
+  setEquipmentMeshIds(ids: string[] | null | undefined): void {
+    this.pendingMeshIds = ids?.length ? ids.slice() : null;
+  }
+
   private async spawnCharacter(id: string) {
     const token = ++this.loadToken;
-    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race FBX
+    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race kit
     // (the active fleet character's race); anything else is a catalog rig.
     const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
     let next: Avatar = grudge
-      ? new GrudgeAvatar(grudge.raceId, grudge.presetId)
+      ? new GrudgeAvatar(grudge.raceId, grudge.presetId, {
+          meshIds: this.pendingMeshIds || undefined,
+        })
       : def.procedural
         ? new ExplorerCharacter(def)
         : new Character(def);
@@ -1220,7 +1234,10 @@ export class Studio {
   // ---- public API (safe from React) ----
 
   setCharacter(id: string) {
-    if (id === this.characterId && this.character) return;
+    const meshKey = (this.pendingMeshIds || []).join("|");
+    // Re-spawn when mesh_ids change even if avatar id is the same (account equip)
+    if (id === this.characterId && this.character && meshKey === this.lastSpawnMeshKey) return;
+    this.lastSpawnMeshKey = meshKey;
     void this.spawnCharacter(id);
   }
 

@@ -74,9 +74,13 @@ export class GrudgeAvatar implements Avatar {
   private readonly cWorldQuat = new THREE.Quaternion();
   private readonly cRootQuat = new THREE.Quaternion();
 
-  constructor(raceId: RaceId, presetId: PresetId) {
+  /** Account / main-panel mesh_ids (child visibility). Empty → class gear preset. */
+  private meshIds: string[] | null = null;
+
+  constructor(raceId: RaceId, presetId: PresetId, opts?: { meshIds?: string[] }) {
     this.raceId = raceId;
     this.presetId = presetId;
+    if (opts?.meshIds?.length) this.meshIds = opts.meshIds.slice();
     const race = RACE_ASSETS[raceId];
     const preset = getPreset(raceId, presetId);
     this.root.add(this.holder);
@@ -92,12 +96,24 @@ export class GrudgeAvatar implements Avatar {
     };
   }
 
+  /** Update equipment mesh set (main panel / account bag). Call before load or re-apply after. */
+  setMeshIds(ids: string[] | null | undefined): void {
+    this.meshIds = ids?.length ? ids.slice() : null;
+  }
+
+  getMeshIds(): string[] | null {
+    return this.meshIds;
+  }
+
   async load(): Promise<void> {
     // PRODUCTION PATH — same stack as grudge-arena Danger Room:
-    // skinned race GLB (Bip001) + baked Bip001 JSON packs → AnimationMixer.
+    // skinned race mesh (Bip001) + atlas rebind + mesh_ids equip + baked anim packs.
     // Static 30characters roster is LAST RESORT only (T-pose / no combat anims).
     try {
-      const rig = await loadGrudge6CombatRig(this.raceId, this.presetId);
+      const rig = await loadGrudge6CombatRig(this.raceId, this.presetId, {
+        meshIds: this.meshIds || undefined,
+        rebindAtlas: true,
+      });
       if (this.disposed) {
         rig.mixer.stopAllAction();
         return;
@@ -131,7 +147,7 @@ export class GrudgeAvatar implements Avatar {
       this.holder.rotation.y = this.modelYaw;
       this.playRole("idle", 0);
       console.info(
-        `[GrudgeAvatar] grudge6 runtime ready race=${this.raceId} pack=${rig.animPack} clips=${[...rig.clips.keys()].join(",")}`,
+        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} clips=${[...rig.clips.keys()].join(",")}`,
       );
       return;
     } catch (err) {

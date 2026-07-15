@@ -122,12 +122,21 @@ export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]):
   });
 }
 
-// Apply the shared body-atlas texture to every mesh as a flat-toon
-// MeshLambertMaterial. One material instance is shared across all meshes —
-// weapons use the same body atlas as the armour. Returns it so the owner can
-// dispose it (the shared texture is owned separately).
+/**
+ * Bind the shared Toon RTS race atlas to every mesh as MeshStandardMaterial.
+ * Contract (grudge6-modular-characters):
+ *   map + white color, metalness 0, roughness ~0.75, DoubleSide.
+ * One material is shared across all meshes (weapons use the same body atlas).
+ * Returns the material so the owner can dispose it (texture is owned separately).
+ */
 export function applyBodyTexture(group: THREE.Object3D, texture: THREE.Texture): THREE.Material {
-  const material = new THREE.MeshLambertMaterial({ map: texture, color: 0xffffff });
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 0.75,
+    side: THREE.DoubleSide,
+  });
   group.traverse((node) => {
     if (node instanceof THREE.Mesh || node instanceof THREE.SkinnedMesh) {
       node.material = material;

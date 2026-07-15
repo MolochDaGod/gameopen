@@ -39,3 +39,20 @@ export {
 } from "./loadCharacter";
 
 export { loadBodyTexture } from "./texture";
+
+export {
+  WARLORDS_ROLES,
+  DEFAULT_HOSTILE_ROLES,
+  getWarlordsRole,
+  warlordsRolesOfKind,
+  presetForWeaponKind,
+} from "./warlordsRoles";
+export type { WarlordsRole, WarlordsRoleKind } from "./warlordsRoles";
+
+export {
+  applyGearVisibility,
+  rebindRaceAtlas,
+  loadGrudge6CombatRig,
+  arenaCharacterGlbUrl,
+} from "./grudge6Runtime";
+export type { LoadGrudge6Opts, Grudge6LoadedRig } from "./grudge6Runtime";

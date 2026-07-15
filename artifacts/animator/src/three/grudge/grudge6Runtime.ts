@@ -15,9 +15,10 @@ import {
   loadBakedClip,
   type AnimPack,
 } from "./anims";
-import type { RaceId } from "./raceAssets";
-import type { PresetId } from "./gearPresets";
-import { getPreset } from "./index";
+import { RACE_ASSETS, type RaceId } from "./raceAssets";
+import { getPreset, type PresetId } from "./gearPresets";
+import { applyBodyTexture } from "./loadCharacter";
+import { loadBodyTexture } from "./texture";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { fitCharacterHeight } from "../fitCharacterHeight";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
@@ -67,20 +68,34 @@ async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
   let p = meshCache.get(raceId);
   if (p) return p;
   p = (async () => {
+    let lastErr: unknown;
+
+    // 1) Prefer race FBX SSOT (correct UVs for Toon RTS atlas rebind)
+    try {
+      const { loadCharacterModel } = await import("./loadCharacter");
+      const race = RACE_ASSETS[raceId];
+      const loaded = await loadCharacterModel(race.modelUrl);
+      console.info(`[grudge6Runtime] race kit FBX ready ${raceId}`);
+      return loaded.group;
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[grudge6Runtime] FBX kit failed ${raceId}, trying arena GLB`, e);
+    }
+
+    // 2) Arena / CDN skinned GLB (still rebind atlas after load)
     const dir = ARENA_RACE_DIR[raceId];
     const file = ARENA_RACE_GLB[raceId];
     const rel = `cdn/assets/characters/${dir}/${file}`;
-    // Fleet candidates + absolute arena (same-origin may 404 without vercel rewrite)
     const urls = [
       ...resolveAssetCandidates(rel),
       arenaCharacterGlbUrlAbsolute(raceId),
-      // R2 race FBX is NOT skinned GLB — only use GLB paths here
+      `https://assets.grudge-studio.com/models/grudge6/races/${file}`,
     ];
     const loader = sharedGltfLoader();
-    let lastErr: unknown;
     for (const url of [...new Set(urls)]) {
       try {
         const gltf = await loader.loadAsync(url);
+        console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
         return gltf.scene;
       } catch (e) {
         lastErr = e;
@@ -125,29 +140,71 @@ function normalizeSkinned(root: THREE.Object3D): void {
   });
 }
 
-/** Apply gear preset mesh visibility (hide non-listed equipment children). */
+/** Fuzzy mesh key — matches D1 mesh_ids to in-file Toon RTS names. */
+function meshKey(name: string): string {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/^wk_|^brb_|^orc_|^elf_|^ud_|^dwf_/, "")
+    .replace(/units_/g, "")
+    .replace(/xtra_/g, "")
+    .replace(/weapon_/g, "weapon")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Equipment = child-mesh visibility (grudge6-modular-characters).
+ * Hide all equippable race parts, then show only the preset mesh_ids.
+ */
 export function applyGearVisibility(root: THREE.Object3D, visibleMeshes: string[]): void {
   if (!visibleMeshes.length) return;
-  const want = new Set(visibleMeshes.map((n) => n.toLowerCase()));
+  const wantKeys = visibleMeshes.map(meshKey);
   root.traverse((o) => {
     if (!(o as THREE.Mesh).isMesh && !(o as THREE.SkinnedMesh).isSkinnedMesh) return;
     const n = o.name;
     if (!n) return;
-    // Always keep body/head-ish meshes if listed; hide explicit gear not in preset
-    const ln = n.toLowerCase();
-    const isGear =
-      /weapon|shield|shoulder|xtra|quiver|staff|sword|bow|axe|helm|armor/i.test(n);
-    if (!isGear) return;
-    // Show if name matches any listed mesh (substring or exact)
+    // Only toggle Toon RTS / race kit pieces (not ground props accidentally parented)
+    const equippable =
+      /^(WK_|BRB_|ORC_|ELF_|UD_|DWF_)/i.test(n) ||
+      /body|arms|legs|head|shoulder|weapon|shield|xtra|quiver|staff|sword|bow|axe|hammer|mace|spear|dagger|pick/i.test(
+        n,
+      );
+    if (!equippable) return;
+    const key = meshKey(n);
     let show = false;
-    for (const w of want) {
-      if (ln === w || ln.includes(w) || w.includes(ln)) {
+    for (const w of wantKeys) {
+      if (key === w || key.endsWith(w) || w.endsWith(key)) {
         show = true;
         break;
       }
     }
     o.visible = show;
   });
+}
+
+/** Per-race shared atlas (one Texture + one Material style bind). */
+const atlasCache = new Map<RaceId, Promise<THREE.Texture>>();
+
+async function loadRaceAtlas(raceId: RaceId): Promise<THREE.Texture> {
+  let p = atlasCache.get(raceId);
+  if (p) return p;
+  const race = RACE_ASSETS[raceId];
+  p = loadBodyTexture(race.textureUrl, race.textureFallbacks);
+  atlasCache.set(raceId, p);
+  return p;
+}
+
+/**
+ * Rebind Toon RTS Standard Units atlas onto a loaded race kit.
+ * flipY=false + MeshStandard is applied inside loadBodyTexture / applyBodyTexture.
+ */
+export async function rebindRaceAtlas(root: THREE.Object3D, raceId: RaceId): Promise<THREE.Material | null> {
+  try {
+    const tex = await loadRaceAtlas(raceId);
+    return applyBodyTexture(root, tex);
+  } catch (err) {
+    console.warn(`[grudge6Runtime] atlas rebind failed for ${raceId}`, err);
+    return null;
+  }
 }
 
 export interface Grudge6LoadedRig {
@@ -159,21 +216,38 @@ export interface Grudge6LoadedRig {
   animPack: AnimPack;
 }
 
+export interface LoadGrudge6Opts {
+  /** Override gear preset meshes with account / main-panel mesh_ids */
+  meshIds?: string[];
+  /** Prefer race FBX atlas rebind (always on). */
+  rebindAtlas?: boolean;
+}
+
 /**
- * Load a playable grudge6 unit: skinned GLB + baked idle/walk/run/attack(+sprint).
+ * Load a playable grudge6 unit: skinned mesh + baked idle/walk/run/attack(+sprint).
+ * Equipment = child-mesh visibility from meshIds (account) or class gear preset.
  */
 export async function loadGrudge6CombatRig(
   raceId: RaceId,
   presetId: PresetId,
+  opts?: LoadGrudge6Opts,
 ): Promise<Grudge6LoadedRig> {
   const preset = getPreset(raceId, presetId);
   const animPack = asAnimPack(preset.animPack);
   const pack = ANIM_PACK_CLIPS[animPack];
+  const meshIds =
+    opts?.meshIds && opts.meshIds.length >= 2 ? opts.meshIds : preset.visibleMeshes;
 
   const template = await loadRaceTemplate(raceId);
   const model = cloneSkinned(template);
   normalizeSkinned(model);
-  applyGearVisibility(model, preset.visibleMeshes);
+  // Toon RTS atlas on every mesh (sRGB, flipY false, MeshStandard) before equip hide
+  if (opts?.rebindAtlas !== false) {
+    await rebindRaceAtlas(model, raceId);
+  }
+  applyGearVisibility(model, meshIds);
+  model.userData.equipMeshIds = meshIds.slice();
+  model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
 
   const root = new THREE.Group();
   root.add(model);

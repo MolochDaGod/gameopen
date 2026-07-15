@@ -3,18 +3,38 @@ import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
 import { prepTexture } from "../texturePrep";
 
 const textureLoader = new THREE.TextureLoader();
+// Required for R2 / CDN atlases when page origin is open.grudge-studio.com / vercel
+if (typeof textureLoader.setCrossOrigin === "function") {
+  textureLoader.setCrossOrigin("anonymous");
+}
 
-// Load a body-atlas texture across fleet hosts (R2 textures/grudge6 + assets/*).
-// The atlas is a lossless `.webp`; sRGB + mipmaps + anisotropy for distance quality.
-// flipY = true (FBX UVs were authored for TGALoader's flipped orientation).
-// Pass extra logical paths via `extraPaths` (e.g. race textureFallbacks).
+/**
+ * Load a Toon RTS / grudge6 body-atlas texture across fleet hosts
+ * (R2 textures/grudge6 + assets/* + absolute CDN).
+ *
+ * Contract (grudge6-modular-characters SSOT):
+ *   - sRGB colour space
+ *   - flipY = **false** (FBX/browse atlas path — not TGALoader default)
+ *   - ClampToEdgeWrapping
+ *   - mipmaps + anisotropy for mid-distance quality
+ *
+ * Pass extra logical paths via `extraPaths` (e.g. race textureFallbacks).
+ */
 export async function loadBodyTexture(
   textureUrl: string,
   extraPaths?: string[],
 ): Promise<THREE.Texture> {
   const logical = [textureUrl, ...(extraPaths ?? [])];
+  // Always try absolute CDN race atlas keys as last-ditch
+  const cdnFallbacks = [
+    textureUrl.replace(/^\//, "https://assets.grudge-studio.com/"),
+    ...(extraPaths || []).map((p) =>
+      p.startsWith("http") ? p : `https://assets.grudge-studio.com/${p.replace(/^\//, "")}`,
+    ),
+  ];
   const candidates: string[] = [];
-  for (const p of logical) {
+  for (const p of [...logical, ...cdnFallbacks]) {
+    if (!p) continue;
     if (/^([a-z]+:)?\/\//i.test(p)) candidates.push(p);
     else candidates.push(...resolveGrudgeAssetCandidates(p));
   }
@@ -23,8 +43,10 @@ export async function loadBodyTexture(
   for (const url of urls) {
     try {
       const tex = await textureLoader.loadAsync(url);
-      // FBX race kits need flipped Y; mipmaps stop shimmer at mid-distance.
-      prepTexture(tex, { sRGB: true, mipmaps: true, flipY: true });
+      prepTexture(tex, { sRGB: true, mipmaps: true, flipY: false });
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.needsUpdate = true;
       return tex;
     } catch (err) {
       lastErr = err;

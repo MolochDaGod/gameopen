@@ -19,6 +19,12 @@ export type OpenCharacterLoadout = {
   offHand: WeaponId | null;
   /** Avatar catalog id if not using grudge: race path (e.g. race-human) */
   avatarId?: string;
+  /** grudge6 child mesh_ids from main panel / account equipment */
+  meshIds?: string[];
+  /** ObjectStore gear preset id when known */
+  gearPresetId?: string;
+  /** Slot → CDN icon URL (main panel / HUD) */
+  slotIcons?: Record<string, string>;
   /** Last mode played */
   lastMode?: string;
   /** Opaque per-mode bags (danger progress, etc.) */
@@ -62,10 +68,22 @@ export function loadoutFromCharacter(ch: GrudgeCharacter | null | undefined): Op
   if (b.offHand === null || b.offHand === "none" || b.offHand === "") offHand = null;
   else offHand = asWeaponId(b.offHand) || asWeaponId(b.offhand) || null;
 
+  const meshIds = Array.isArray(b.meshIds)
+    ? (b.meshIds as unknown[]).filter((x): x is string => typeof x === "string")
+    : Array.isArray(b.mesh_ids)
+      ? (b.mesh_ids as unknown[]).filter((x): x is string => typeof x === "string")
+      : undefined;
+
   return {
     weaponId,
     offHand,
     avatarId: typeof b.avatarId === "string" ? b.avatarId : undefined,
+    meshIds,
+    gearPresetId: typeof b.gearPresetId === "string" ? b.gearPresetId : undefined,
+    slotIcons:
+      b.slotIcons && typeof b.slotIcons === "object"
+        ? (b.slotIcons as Record<string, string>)
+        : undefined,
     lastMode: typeof b.lastMode === "string" ? b.lastMode : undefined,
     bags: (b.bags as Record<string, unknown>) || undefined,
     updatedAt: typeof b.updatedAt === "number" ? b.updatedAt : undefined,
