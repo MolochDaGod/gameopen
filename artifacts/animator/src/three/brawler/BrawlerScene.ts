@@ -22,9 +22,10 @@ import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { Vfx } from "../Vfx";
 import { loadControls } from "../controlsSettings";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
-import { GRAVITY_Y, LOCOMOTION } from "../../lib/productionRuntime";
+import { GRAVITY_Y, LOCOMOTION, PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 import type { Avatar, EditorParams, WeaponId } from "../types";
 import { DEFAULT_EDITOR } from "../types";
+import { fitCharacterHeight, bodyBox } from "../fitCharacterHeight";
 import { parseGrudgeAvatarId } from "../../lib/raceModel";
 import {
   applyContentSkillLabels,
@@ -461,6 +462,7 @@ export class BrawlerScene {
         }
         this.avatar = av;
         this.characterId = id;
+        this.ensureAvatarHumanScale(av);
         av.root.position.set(0, 0, 8);
         this.scene.add(av.root);
         this.bindController(av);
@@ -523,6 +525,58 @@ export class BrawlerScene {
     const av = new Character(def);
     await av.load();
     return av;
+  }
+
+  /**
+   * Final guard: if the loaded avatar is wildly off 1.8 m (e.g. residual 100×
+   * unit bug), re-fit the visual model under the avatar root.
+   */
+  private ensureAvatarHumanScale(av: Avatar): void {
+    const target = PLAYER_HEIGHT_M;
+    av.root.updateMatrixWorld(true);
+    // Prefer first mesh child / model under root; avoid scaling controller extras
+    let model: THREE.Object3D | null = null;
+    if (av.root.children.length === 1) {
+      model = av.root.children[0]!;
+    } else {
+      // GrudgeAvatar: holder → model; Character: model under root
+      av.root.traverse((o) => {
+        if (model) return;
+        if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
+          // climb to a group just under root
+          let p: THREE.Object3D | null = o;
+          while (p && p.parent && p.parent !== av.root) p = p.parent;
+          model = p;
+        }
+      });
+    }
+    if (!model || model === av.root) model = av.root;
+
+    const h = bodyBox(model).getSize(new THREE.Vector3()).y;
+    if (!(h > 0.01)) return;
+    // Allow small variance; fix only gross errors (>3× or <0.4× target)
+    if (h > target * 3 || h < target * 0.4) {
+      console.warn(
+        `[BrawlerScene] avatar height ${h.toFixed(2)}m off target ${target}m — refitting`,
+      );
+      // Reset local scale before fit so we don't compound
+      if (model !== av.root) {
+        fitCharacterHeight(model, target, 1);
+      } else {
+        // Scale root uniformly as last resort
+        const s = target / h;
+        av.root.scale.multiplyScalar(s);
+        av.root.updateMatrixWorld(true);
+        const b = bodyBox(av.root);
+        av.root.position.y -= b.min.y;
+      }
+    }
+    // Ground feet at y=0 in root local space
+    av.root.updateMatrixWorld(true);
+    const box = bodyBox(av.root);
+    if (Math.abs(box.min.y) > 0.02) {
+      av.root.position.y -= box.min.y;
+    }
   }
 
   /** Wire Danger Room Controller to the loaded Avatar. */
@@ -631,7 +685,8 @@ export class BrawlerScene {
           const root = gltf.scene;
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
-          root.scale.setScalar(1.6 / (size.y || 1));
+          // Hostiles ~90% of player height (1.8 m → ~1.6 m)
+          root.scale.setScalar((PLAYER_HEIGHT_M * 0.9) / (size.y || 1));
           root.updateMatrixWorld(true);
           const b2 = new THREE.Box3().setFromObject(root);
           root.position.y -= b2.min.y;
@@ -657,6 +712,97 @@ export class BrawlerScene {
     }
   }
 
+  /**
+   * Scale arena GLB into metres relative to a 1.8 m player.
+   * Handles cm-authored maps (100×) and oversized pads without shrinking
+   * doors/props smaller than a human.
+   */
+  private scaleMapToPlayer(root: THREE.Object3D): { half: number; unitScale: number } {
+    const playerH = PLAYER_HEIGHT_M; // 1.8 m
+    root.scale.set(1, 1, 1);
+    root.position.set(0, 0, 0);
+    root.updateMatrixWorld(true);
+
+    let box = new THREE.Box3().setFromObject(root);
+    let size = box.getSize(new THREE.Vector3());
+    let maxXZ = Math.max(size.x, size.z) || 1;
+    let height = size.y || 1;
+
+    // Decade unit fix: cm scenes often report XZ thousands / height hundreds
+    let unitScale = 1;
+    if (maxXZ > 500 || height > 100) {
+      // e.g. 180 cm character authoring → treat scene as cm
+      unitScale = 0.01;
+    } else if (maxXZ > 80 && height > 40 && height / playerH > 25) {
+      // Borderline: very tall "buildings" relative to human → likely cm
+      unitScale = 0.01;
+    } else if (maxXZ < 0.5 && height < 0.5) {
+      unitScale = 100;
+    }
+    if (unitScale !== 1) {
+      root.scale.setScalar(unitScale);
+      root.updateMatrixWorld(true);
+      box = new THREE.Box3().setFromObject(root);
+      size = box.getSize(new THREE.Vector3());
+      maxXZ = Math.max(size.x, size.z) || 1;
+      height = size.y || 1;
+    }
+
+    // Playable footprint vs 1.8 m human:
+    //  - too huge (> ~120 m span) → shrink so half-extent ≈ 40–50 m
+    //  - too tiny (< ~20 m span) → enlarge so half-extent ≈ 25 m
+    const span = maxXZ;
+    const TARGET_SPAN = 90; // full width metres — roomy for survival waves
+    const MIN_SPAN = 24;
+    let playScale = 1;
+    if (span > TARGET_SPAN * 1.35) {
+      playScale = TARGET_SPAN / span;
+    } else if (span < MIN_SPAN) {
+      playScale = MIN_SPAN / span;
+    }
+    // Don't squash vertical props: if height after unit fix is already human
+    // scale (doors ~2–3 m), avoid further shrink below ~0.4
+    if (playScale < 1 && height * playScale < playerH * 1.2 && height < playerH * 8) {
+      playScale = Math.max(playScale, (playerH * 2.2) / Math.max(height, playerH));
+    }
+    if (Math.abs(playScale - 1) > 0.02) {
+      root.scale.multiplyScalar(playScale);
+      unitScale *= playScale;
+      root.updateMatrixWorld(true);
+      box = new THREE.Box3().setFromObject(root);
+      size = box.getSize(new THREE.Vector3());
+      maxXZ = Math.max(size.x, size.z) || 1;
+    }
+
+    // Center XZ, feet of terrain at y=0
+    const b2 = new THREE.Box3().setFromObject(root);
+    const c2 = b2.getCenter(new THREE.Vector3());
+    root.position.x -= c2.x;
+    root.position.z -= c2.z;
+    root.position.y -= b2.min.y;
+    root.updateMatrixWorld(true);
+
+    const finalBox = new THREE.Box3().setFromObject(root);
+    const finalSize = finalBox.getSize(new THREE.Vector3());
+    const finalHalf = Math.max(finalSize.x, finalSize.z) * 0.5;
+
+    console.info(
+      "[BrawlerScene] map scale unit=",
+      unitScale.toFixed(4),
+      "playerH=",
+      playerH,
+      "span=",
+      finalSize.x.toFixed(1),
+      "×",
+      finalSize.z.toFixed(1),
+      "h=",
+      finalSize.y.toFixed(1),
+      "m",
+    );
+
+    return { half: finalHalf, unitScale };
+  }
+
   private async loadEnvironment() {
     const paths = [this.mapPath];
     // Fallback chain: requested map → classic ruins → none
@@ -668,26 +814,18 @@ export class BrawlerScene {
         const gltf = await this.loadGltf(path);
         if (this.disposed) return;
         const root = gltf.scene;
-        const box = new THREE.Box3().setFromObject(root);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.z) || 1;
-        // Large author units (cm / huge scenes) → scale down; tiny pads → scale up
-        if (maxDim > 300) root.scale.setScalar(80 / maxDim);
-        else if (maxDim < 40) root.scale.setScalar(40 / maxDim);
-        root.updateMatrixWorld(true);
-        const b2 = new THREE.Box3().setFromObject(root);
-        const c2 = b2.getCenter(new THREE.Vector3());
-        root.position.x -= c2.x;
-        root.position.z -= c2.z;
-        root.position.y -= b2.min.y;
-        // Auto-fit spawn ring to ~45% of map half-extent (clamped)
-        const half = Math.max(b2.max.x - b2.min.x, b2.max.z - b2.min.z) * 0.5;
+        const { half } = this.scaleMapToPlayer(root);
+        // Auto-fit spawn ring to ~42% of map half-extent (clamped for 1.8 m play)
         if (half > 8) {
-          const autoSpawn = Math.min(90, Math.max(18, half * 0.42));
+          const autoSpawn = Math.min(70, Math.max(14, half * 0.42));
           if (this.spawnRadius <= SPAWN_RADIUS + 0.01) {
             this.spawnRadius = autoSpawn;
           }
         }
+        // Room bound tracks playable footprint
+        const bound = Math.max(18, Math.min(80, half * 0.95));
+        this.controller?.setRoomBound(bound);
+
         const occluders: THREE.Object3D[] = [];
         root.traverse((o) => {
           const m = o as THREE.Mesh;
@@ -712,8 +850,10 @@ export class BrawlerScene {
           path,
           "spawnR=",
           this.spawnRadius.toFixed(1),
-          "extent=",
+          "half=",
           half.toFixed(1),
+          "player=",
+          `${PLAYER_HEIGHT_M}m`,
         );
         return;
       } catch (err) {

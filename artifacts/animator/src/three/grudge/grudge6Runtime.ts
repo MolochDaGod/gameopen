@@ -19,7 +19,9 @@ import type { RaceId } from "./raceAssets";
 import type { PresetId } from "./gearPresets";
 import { getPreset } from "./index";
 import { sharedGltfLoader } from "../loaders/gltf";
+import { fitCharacterHeight } from "../fitCharacterHeight";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
+import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 
 /** Arena race folder names under /cdn/assets/characters/{race}/ */
 export const ARENA_RACE_DIR: Record<RaceId, string> = {
@@ -57,7 +59,8 @@ export function arenaCharacterGlbUrlAbsolute(raceId: RaceId): string {
   return `${ARENA_ORIGIN}/cdn/assets/characters/${dir}/${file}`;
 }
 
-const TARGET_HEIGHT = 1.85;
+/** Canonical player height (metres) — must match Controller / map scale. */
+const TARGET_HEIGHT = PLAYER_HEIGHT_M || 1.8;
 const meshCache = new Map<RaceId, Promise<THREE.Object3D>>();
 
 async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
@@ -89,28 +92,29 @@ async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
   return p;
 }
 
+/**
+ * Normalize race GLB to ~1.8 m human height.
+ * Uses fitCharacterHeight (skinned body measure + decade unit fix + clamps)
+ * so a bad bind-pose bbox cannot explode scale by ~100×.
+ */
 function normalizeSkinned(root: THREE.Object3D): void {
+  // Force bind matrices current before measuring skinned AABB
   root.updateWorldMatrix(true, true);
-  // Body-only height (ignore weapon props when possible)
-  const box = new THREE.Box3();
-  let hasSkinned = false;
   root.traverse((o) => {
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
-      box.expandByObject(o);
-      hasSkinned = true;
+    const sk = o as THREE.SkinnedMesh;
+    if (sk.isSkinnedMesh && sk.skeleton) {
+      sk.skeleton.update();
     }
   });
-  if (!hasSkinned) box.setFromObject(root);
-  const size = box.getSize(new THREE.Vector3());
-  const h = size.y || 1;
-  const s = TARGET_HEIGHT / h;
-  root.scale.multiplyScalar(s);
   root.updateWorldMatrix(true, true);
-  const box2 = new THREE.Box3().setFromObject(root);
-  root.position.y -= box2.min.y;
-  const c = box2.getCenter(new THREE.Vector3());
-  root.position.x -= c.x;
-  root.position.z -= c.z;
+
+  const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
+  if (fit.unitFix !== 1 || fit.scale > 3 || fit.scale < 0.05) {
+    console.info(
+      `[grudge6Runtime] height fit native=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} target=${TARGET_HEIGHT}`,
+    );
+  }
+
   root.traverse((o) => {
     const m = o as THREE.Mesh;
     if (m.isMesh) {

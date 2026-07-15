@@ -1052,7 +1052,8 @@ export interface EditorParams {
  * "discovers" from real body size instead of frozen magic numbers. Bump this and
  * the character + the whole engagement envelope grow together.
  */
-export const CHARACTER_HEIGHT_M = 2.0;
+/** Human-scale height (metres). Keep in sync with productionRuntime.PLAYER_HEIGHT_M. */
+export const CHARACTER_HEIGHT_M = 1.8;
 
 export const DEFAULT_EDITOR: EditorParams = {
   moveSpeed: 4.2,

@@ -29,8 +29,12 @@ export const PLAYER_CAPSULE = {
   controllerOffset: 0.08,
 } as const;
 
-/** Canonical fitted character height (see fitCharacterHeight / CHARACTER_HEIGHT_M). */
-export const PLAYER_HEIGHT_M = 2.0;
+/**
+ * Canonical fitted character height in metres (human-scale SSOT).
+ * Maps, cameras, capsules, and grudge6 normalize to this.
+ * 1.8 m ≈ adult human — matches arena / survival world scale.
+ */
+export const PLAYER_HEIGHT_M = 1.8;
 
 /** Third-person camera defaults (Controller). */
 export const CAMERA = {

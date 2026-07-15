@@ -25,7 +25,8 @@ import { RACE_IDS, type RaceId } from "./raceAssets";
 
 /** Served path (same-origin under the artifact base) — no remote asset host. */
 const GLB_URL = "models/grudge6/30characters.glb";
-const TARGET_HEIGHT = 1.9;
+/** Match productionRuntime.PLAYER_HEIGHT_M / CHARACTER_HEIGHT_M. */
+const TARGET_HEIGHT = 1.8;
 
 /**
  * Race-major layout of the 30 baked characters (6 races × 5 presets). The Forge
