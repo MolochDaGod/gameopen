@@ -249,10 +249,10 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["grudox", "grudox-zones", "external"],
     cabinets: ["zones"],
     title: "GRUDOX Zones",
-    blurb: "Launch into shared GRUDOX zones (brawler, racer, open world).",
+    blurb: "Fleet games in-app — native Open engines or embedded canvas (no new tab).",
     group: "external",
     poster: "zones",
-    tags: ["External", "GRUDOX"],
+    tags: ["In-app", "GRUDOX"],
     accent: "#5fe0ff",
   },
   {

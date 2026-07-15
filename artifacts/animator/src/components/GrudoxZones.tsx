@@ -1,37 +1,57 @@
 /**
- * GRUDOX Zones launcher.
+ * GRUDOX Zones launcher — open.grudge-studio.com/zones
  *
- * Lists the selected GRUDOX modes as cards. Each card deep-links into the GRUDOX
- * arcade cabinet carrying the fleet SSO token + the active fleet character
- * (`grudge_token` + `characterId` + `open=1`), so identity and the chosen
- * character persist across the handoff. The `brawler` zone additionally offers a
- * native in-gameopen surface (Ruins Brawler) wired to the GRUDOX `/api/brawl`
- * room.
+ * Primary path: stay **in-app** (native Open engine or embedded canvas).
+ * Pop-out to a new browser tab is secondary only.
+ *
+ * Cards use fleet poster art (rooms/* via assetUrl) — no Meshy placeholders.
  */
 import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
-import { GRUDOX_ZONES, grudoxDeepLink } from "../game/grudoxZones";
+import { GRUDOX_ZONES } from "../game/grudoxZones";
 import { getStoredToken } from "../lib/grudgeAuth";
+import {
+  embedSessionForZone,
+  nativeModeForZone,
+  zonePosterUrl,
+  type InAppEmbedSession,
+} from "../lib/inAppLaunch";
 
 interface Props {
-  /** Launch the native in-gameopen surface for a zone. */
+  /** Launch a native Open surface (brawl, minegrudge, account, …). */
   onEnterNative: (zoneId: string) => void;
+  /** Open external fleet game inside the in-app canvas (not a new page). */
+  onOpenInApp: (session: InAppEmbedSession) => void;
   /** Return to the door select. */
   onExit: () => void;
 }
 
-export function GrudoxZones({ onEnterNative, onExit }: Props) {
+export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
   useEffect(() => gameSession.subscribe(() => setSnap(gameSession.snapshot)), []);
 
   const character = snap.characters.find((c) => c.id === snap.selectedCharacterId) ?? null;
 
-  const launch = (zoneId: string) => {
-    const url = grudoxDeepLink(zoneId, {
-      token: getStoredToken(),
-      characterId: snap.selectedCharacterId,
-    });
-    window.open(url, "_blank", "noopener,noreferrer");
+  const launchCtx = () => ({
+    token: getStoredToken(),
+    characterId: snap.selectedCharacterId,
+  });
+
+  /** Preferred: native engine or in-app embed. */
+  const playInApp = (zoneId: string) => {
+    const native = nativeModeForZone(zoneId);
+    if (native) {
+      onEnterNative(zoneId);
+      return;
+    }
+    const session = embedSessionForZone(zoneId, launchCtx(), "zones");
+    if (session) onOpenInApp(session);
+  };
+
+  /** Secondary: real browser tab (only when user asks). */
+  const popOut = (zoneId: string) => {
+    const session = embedSessionForZone(zoneId, launchCtx(), "zones");
+    if (session) window.open(session.url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -41,7 +61,8 @@ export function GrudoxZones({ onEnterNative, onExit }: Props) {
           GRUDOX<span className="brand-accent">ZONES</span>
         </span>
         <p className="doors-sub">
-          Jump into the shared GRUDOX game world — your Grudge character comes with you.
+          Play fleet games <b>inside Open</b> — native engines or in-app canvas. Your Grudge
+          character rides along via SSO handoff.
         </p>
         <p style={identStyle}>
           {snap.account ? (
@@ -57,7 +78,7 @@ export function GrudoxZones({ onEnterNative, onExit }: Props) {
                   {character.raceId ? ` (${character.raceId})` : ""}
                 </>
               ) : (
-                " · no character selected (pick one in the Lobby)"
+                " · no character selected (pick one in Account)"
               )}
             </>
           ) : (
@@ -67,36 +88,47 @@ export function GrudoxZones({ onEnterNative, onExit }: Props) {
       </div>
 
       <div className="doors-row" style={{ flexWrap: "wrap" }}>
-        {GRUDOX_ZONES.map((zone) => (
-          <div
-            key={zone.id}
-            className="door"
-            style={{ borderColor: zone.tone, cursor: "default" }}
-          >
-            <div className="door-frame">
-              <div className="door-glyph" style={{ color: zone.tone }}>
-                ◆
+        {GRUDOX_ZONES.map((zone) => {
+          const native = nativeModeForZone(zone.id);
+          const poster = zonePosterUrl(zone.id);
+          return (
+            <div
+              key={zone.id}
+              className="door"
+              style={{
+                borderColor: zone.tone,
+                cursor: "default",
+                backgroundImage: `linear-gradient(165deg, rgba(6,10,18,0.92) 20%, rgba(6,10,18,0.55)), url(${poster})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              <div className="door-frame">
+                <div className="door-glyph" style={{ color: zone.tone }}>
+                  ◆
+                </div>
+              </div>
+              <h3>{zone.title}</h3>
+              <p>{zone.blurb}</p>
+              <div style={{ fontSize: 11, opacity: 0.65, marginTop: 4 }}>
+                {native ? "Native Open surface" : "In-app canvas · fleet deploy"}
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <button type="button" style={btnPrimary(zone.tone)} onClick={() => playInApp(zone.id)}>
+                  {native ? "Play here" : "Play in app"}
+                </button>
+                <button type="button" style={btnStyle} onClick={() => popOut(zone.id)}>
+                  Pop out ↗
+                </button>
               </div>
             </div>
-            <h3>{zone.title}</h3>
-            <p>{zone.blurb}</p>
-            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-              {zone.native && (
-              <button type="button" style={btnPrimary} onClick={() => onEnterNative(zone.id)}>
-                  Play here
-                </button>
-              )}
-              <button type="button" style={btnStyle} onClick={() => launch(zone.id)}>
-                {zone.externalPath ? "Open Island ↗" : "Open in GRUDOX ↗"}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{ marginTop: 16 }}>
         <button type="button" style={btnStyle} onClick={onExit}>
-          ⮐ Back
+          ⏎ Back
         </button>
       </div>
     </div>
@@ -120,9 +152,10 @@ const btnStyle: CSSProperties = {
   fontSize: 13,
 };
 
-const btnPrimary: CSSProperties = {
+const btnPrimary = (tone: string): CSSProperties => ({
   ...btnStyle,
-  background: "#4f7bff",
-  color: "#fff",
+  background: tone,
+  color: "#0a101c",
   border: "none",
-};
+  fontWeight: 700,
+});

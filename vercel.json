@@ -190,7 +190,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://id.grudge-studio.com https://open.grudge-studio.com https://*.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site"
+          "value": "frame-ancestors 'self' https://id.grudge-studio.com https://open.grudge-studio.com https://*.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site; frame-src 'self' https://*.grudge-studio.com https://*.vercel.app https://grudgewarlords.com https://*.grudgewarlords.com https://id.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site blob: data:; img-src 'self' data: blob: https://assets.grudge-studio.com https://*.grudge-studio.com https://*.vercel.app; media-src 'self' blob: data: https://assets.grudge-studio.com https://*.grudge-studio.com"
         },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }

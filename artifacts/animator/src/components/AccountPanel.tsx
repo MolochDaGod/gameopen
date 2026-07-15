@@ -27,7 +27,8 @@ import {
   type ResourceMap,
 } from "../lib/accountShared";
 import { raceCharacterIdForFleetRace } from "../three/assets";
-import { GRUDOX_ZONES, grudoxDeepLink, lobbyIslandDeepLink } from "../game/grudoxZones";
+import { GRUDOX_ZONES } from "../game/grudoxZones";
+import { embedSessionForZone } from "../lib/inAppLaunch";
 import { assetUrl } from "../lib/fleet";
 import { CharacterPicker } from "./CharacterPicker";
 import {
@@ -55,10 +56,13 @@ const TABS: { id: TabId; label: string; tone: string }[] = [
 export function AccountPanel({
   onPlayRace,
   onEnterGame,
+  onOpenInApp,
 }: {
   /** Spawn / equip a charactersgrudox race in Danger Room. */
   onPlayRace?: (characterCatalogId: string) => void;
   onEnterGame?: (mode: "danger" | "brawl" | "genesis" | "zones" | "voxgrudge-native") => void;
+  /** External fleet titles open inside Open canvas (no new page). */
+  onOpenInApp?: (session: import("../lib/inAppLaunch").InAppEmbedSession) => void;
 }) {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
   const [tab, setTab] = useState<TabId>("characters");
@@ -195,11 +199,16 @@ export function AccountPanel({
   };
 
   const openExternal = (zoneId: string) => {
-    const url = grudoxDeepLink(zoneId, {
-      token: getStoredToken(),
-      characterId: snap.selectedCharacterId,
-    });
-    window.open(url, "_blank", "noopener,noreferrer");
+    const session = embedSessionForZone(
+      zoneId,
+      { token: getStoredToken(), characterId: snap.selectedCharacterId },
+      "account",
+    );
+    if (session && onOpenInApp) {
+      onOpenInApp(session);
+      return;
+    }
+    if (session) window.open(session.url, "_blank", "noopener,noreferrer");
   };
 
   const bagEntries = useMemo(
@@ -577,18 +586,12 @@ export function AccountPanel({
                     cursor: "pointer",
                   }}
                   onClick={() => {
-                    if (mode === "genesis") {
-                      void import("../lib/warlordGenesisLaunch").then(({ launchWarlordGenesis }) => {
-                        launchWarlordGenesis({ target: "_blank" });
-                      });
-                      return;
-                    }
                     onEnterGame?.(mode);
                   }}
                 >
                   <div style={{ fontWeight: 700, color: tone }}>{label}</div>
                   <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                    {mode === "genesis" ? "fleet handoff ↗" : "as active character"}
+                    {mode === "genesis" ? "in-app canvas" : "as active character"}
                   </div>
                 </button>
               ))}
@@ -608,15 +611,9 @@ export function AccountPanel({
             <button
               type="button"
               style={btnPrimary}
-              onClick={() => {
-                const url = lobbyIslandDeepLink({
-                  token: getStoredToken(),
-                  characterId: snap.selectedCharacterId,
-                });
-                window.open(url, "_blank", "noopener,noreferrer");
-              }}
+              onClick={() => openExternal("lobby-island")}
             >
-              Open GRUDOX Island ↗
+              Play GRUDOX Island in app
             </button>
             <ul style={list}>
               {GRUDOX_ZONES.map((z) => (
@@ -626,7 +623,7 @@ export function AccountPanel({
                     <div style={{ fontSize: 12, opacity: 0.75 }}>{z.blurb}</div>
                   </div>
                   <button type="button" style={btnGhost} onClick={() => openExternal(z.id)}>
-                    Launch
+                    Play in app
                   </button>
                 </li>
               ))}

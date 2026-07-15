@@ -1,0 +1,213 @@
+/* In-app game canvas — full-bleed embed inside Open shell */
+
+.iagc-root {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: #040810;
+  color: #eaf4ff;
+  font-family: inherit;
+}
+
+.iagc-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(8, 14, 28, 0.98), rgba(6, 10, 20, 0.92));
+  border-bottom: 1px solid color-mix(in srgb, var(--iagc-tone, #5fe0ff) 35%, transparent);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.iagc-bar-left,
+.iagc-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.iagc-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.iagc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--iagc-tone, #5fe0ff);
+}
+
+.iagc-sub {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iagc-btn {
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.iagc-btn:active {
+  transform: scale(0.98);
+}
+
+.iagc-btn.ghost {
+  border: 1px solid rgba(79, 195, 255, 0.28);
+  background: rgba(7, 11, 20, 0.55);
+  color: #eaf4ff;
+}
+
+.iagc-btn.ghost:hover {
+  border-color: color-mix(in srgb, var(--iagc-tone, #5fe0ff) 55%, transparent);
+  background: rgba(12, 20, 36, 0.85);
+}
+
+.iagc-btn.primary {
+  border: 1px solid color-mix(in srgb, var(--iagc-tone, #5fe0ff) 55%, transparent);
+  background: color-mix(in srgb, var(--iagc-tone, #5fe0ff) 22%, rgba(8, 14, 28, 0.9));
+  color: #fff;
+}
+
+.iagc-btn.primary:hover {
+  background: color-mix(in srgb, var(--iagc-tone, #5fe0ff) 38%, rgba(8, 14, 28, 0.9));
+}
+
+.iagc-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #02050c;
+}
+
+.iagc-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+.iagc-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background-color: #060a12;
+  background-size: cover;
+  background-position: center;
+  pointer-events: auto;
+}
+
+.iagc-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.iagc-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--iagc-tone, #5fe0ff);
+  opacity: 0.35;
+  left: calc(8% + (var(--i) * 5.1%));
+  top: 110%;
+  box-shadow: 0 0 12px var(--iagc-tone, #5fe0ff);
+  animation: iagc-rise 3.2s linear infinite;
+  animation-delay: calc(var(--i) * -0.18s);
+}
+
+@keyframes iagc-rise {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-120vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.iagc-curtain-card {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  padding: 28px 24px;
+  text-align: center;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--iagc-tone, #5fe0ff) 40%, transparent);
+  background: rgba(6, 10, 18, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.iagc-curtain-card h2 {
+  margin: 12px 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.iagc-curtain-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.iagc-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #5fe0ff;
+  animation: iagc-spin 0.85s linear infinite;
+}
+
+@keyframes iagc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.iagc-curtain-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .iagc-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .iagc-bar-right {
+    justify-content: flex-end;
+  }
+}

@@ -41,7 +41,7 @@ export interface GrudoxZone {
    */
   native?: boolean;
   /** Native AppMode when `native` (optional hint for Open). */
-  nativeMode?: "brawl" | "voxgrudge-native" | "danger";
+  nativeMode?: "brawl" | "voxgrudge-native" | "danger" | "minegrudge" | "account";
   /** Optional production URL when the cabinet is hosted off-GRUDOX SPA (racer). */
   productionUrl?: string;
   /**
@@ -56,24 +56,25 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     id: "characters",
     title: "Characters",
     blurb:
-      "Account hub: charactersgrudox race kit, create/equip heroes, credits, wallet, treaty — on open.grudge-studio.com.",
+      "Account hub: charactersgrudox race kit, create/equip heroes, credits, wallet, treaty — native Open surface.",
     tone: "#4fc3ff",
+    native: true,
+    // Fallback embed if host navigates via deep-link only
     externalPath: "https://open.grudge-studio.com/?door=account",
   },
   {
     id: "minegrudge",
     title: "GRUDOX Realms",
     blurb:
-      "Networked Minecraft-like survival — build, combat, adventure, friends & parties. Live: mine-loader.vercel.app",
+      "Networked Minecraft-like survival — build, combat, adventure, friends & parties. Opens in-app canvas (mine-loader.vercel.app).",
     tone: "#7ee0a0",
-    // Production Mine-Loader SPA (custom DNS pending — use Vercel host)
     externalPath: "https://mine-loader.vercel.app/",
   },
   {
     id: "mine-loader-live",
     title: "Mine-Loader Live",
     blurb:
-      "Authoritative voxel Realms — 1× Railway API + Vercel client. Prefer Library → Mine-Loader Realms.",
+      "Authoritative voxel Realms — 1× Railway API + Vercel client. Opens in-app canvas with SSO handoff.",
     tone: "#5fd48a",
     externalPath: "https://mine-loader.vercel.app/",
   },
@@ -125,10 +126,8 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "voxgrudge",
     title: "VoxGrudge Full World",
-    blurb: "Full open-world voxel survival — voxgrudge.vercel.app (lab optional in Open).",
+    blurb: "Full open-world voxel survival — voxgrudge.vercel.app in-app canvas (lab stays under Library → World).",
     tone: "#5fe0ff",
-    native: true,
-    nativeMode: "voxgrudge-native",
     productionUrl: "https://voxgrudge.vercel.app/",
     externalPath: "https://voxgrudge.vercel.app/",
   },

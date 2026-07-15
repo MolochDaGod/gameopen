@@ -49,13 +49,16 @@ import { FleetBar } from "./components/FleetBar";
 import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
 import { GrudoxZones } from "./components/GrudoxZones";
+import { InAppGameCanvas } from "./components/InAppGameCanvas";
 import { MimicDungeon } from "./components/MimicDungeon";
 import { VoxGrudgeNative } from "./components/VoxGrudgeNative";
 import {
   buildWarlordGenesisUrl,
-  launchWarlordGenesis,
   WARLORD_GENESIS_ENTRY,
 } from "./lib/warlordGenesisLaunch";
+import type { InAppEmbedSession } from "./lib/inAppLaunch";
+import { nativeModeForZone } from "./lib/inAppLaunch";
+import { assetUrl } from "./lib/fleet";
 import { gameSession } from "./game/GameSession";
 import {
   buildGenesisHeroOptions,
@@ -111,7 +114,13 @@ function initialMode(): Mode {
  * Shows the GRUDOX 4-slot heroes (campfire roster), then hands off SSO +
  * characterId/baseId/raceId to warlord-genesis.vercel.app.
  */
-function GenesisExternalLaunch({ onStay }: { onStay: () => void }) {
+function GenesisExternalLaunch({
+  onStay,
+  onOpenInApp,
+}: {
+  onStay: () => void;
+  onOpenInApp: (session: InAppEmbedSession) => void;
+}) {
   const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
     buildGenesisHeroOptions(gameSession.snapshot.characters, gameSession.snapshot.selectedCharacterId),
   );
@@ -282,9 +291,19 @@ function GenesisExternalLaunch({ onStay }: { onStay: () => void }) {
             opacity: selected ? 1 : 0.45,
           }}
           disabled={!selected}
-          onClick={() => launchWarlordGenesis({ ...launchOpts(), target: "_blank" })}
+          onClick={() => {
+            const url = buildWarlordGenesisUrl(launchOpts()) || WARLORD_GENESIS_ENTRY;
+            onOpenInApp({
+              url,
+              title: "Warlord Genesis",
+              tone: "#ffd24d",
+              poster: assetUrl("rooms/genesis-scene.png"),
+              id: "warlord-genesis",
+              returnMode: "doors",
+            });
+          }}
         >
-          Launch Genesis ↗
+          Play in app
         </button>
         <button
           type="button"
@@ -299,12 +318,11 @@ function GenesisExternalLaunch({ onStay }: { onStay: () => void }) {
           }}
           disabled={!selected}
           onClick={() => {
-            window.location.assign(
-              buildWarlordGenesisUrl({ ...launchOpts() }) || WARLORD_GENESIS_ENTRY,
-            );
+            const url = buildWarlordGenesisUrl({ ...launchOpts() }) || WARLORD_GENESIS_ENTRY;
+            window.open(url, "_blank", "noopener,noreferrer");
           }}
         >
-          Open in this tab
+          Pop out ↗
         </button>
         <button
           type="button"
@@ -357,15 +375,20 @@ type DangerPanelId = "admin" | "editor" | "anim";
 
 export default function App() {
   const [mode, setMode] = useState<Mode>(initialMode);
+  /** Fleet game running inside Open (iframe canvas) — not a new browser page. */
+  const [inAppEmbed, setInAppEmbed] = useState<InAppEmbedSession | null>(null);
   const urlBootRef = useRef(true);
   // Keep URL path in sync with mode (shareable /danger, /voxel, /brawl, …).
+  // In-app embeds keep the host mode (e.g. /zones) so back returns to the catalog.
   useEffect(() => {
+    if (inAppEmbed) return;
     syncUrlToMode(mode, { replace: urlBootRef.current });
     urlBootRef.current = false;
-  }, [mode]);
-  // Browser back/forward → restore mode from path.
+  }, [mode, inAppEmbed]);
+  // Browser back/forward → restore mode from path (also closes embed).
   useEffect(() => {
     const onPop = () => {
+      setInAppEmbed(null);
       setMode(resolveModeFromLocation());
     };
     window.addEventListener("popstate", onPop);
@@ -1126,7 +1149,23 @@ export default function App() {
   // Unified system switch for the persistent shell launcher. Leaving a
   // multiplayer Danger Room drops the relay so we don't linger in the room.
   // URL path is synced by the mode effect (openRoutes.syncUrlToMode).
+  const openInApp = useCallback((session: InAppEmbedSession) => {
+    setInAppEmbed({
+      ...session,
+      returnMode: session.returnMode ?? mode,
+    });
+  }, [mode]);
+
+  const closeInApp = useCallback(() => {
+    setInAppEmbed((prev) => {
+      const ret = prev?.returnMode;
+      if (ret) setMode(ret);
+      return null;
+    });
+  }, []);
+
   const navigate = useCallback((next: Mode) => {
+    setInAppEmbed(null);
     setMode((prev) => {
       if (next === prev) return prev;
       if (prev === "danger" && inRoomRef.current && next !== "danger") {
@@ -1224,6 +1263,17 @@ export default function App() {
     studioRef.current?.applyStatus(id, aoe);
   }, []);
 
+  // Fleet game canvas — stays inside Open (no new browser page).
+  if (inAppEmbed) {
+    return shell(
+      <InAppGameCanvas
+        {...inAppEmbed}
+        onClose={closeInApp}
+        onPopOut={(url) => window.open(url, "_blank", "noopener,noreferrer")}
+      />,
+    );
+  }
+
   if (mode === "landing") {
     // Front door: Grudge ID (no shell chrome). Enter → library hub.
     return <LandingPage onEnter={() => navigate("doors")} />;
@@ -1239,6 +1289,7 @@ export default function App() {
             navigate("danger");
           }}
           onEnterGame={(m) => navigate(m)}
+          onOpenInApp={openInApp}
         />,
       ),
     );
@@ -1319,11 +1370,10 @@ export default function App() {
       withScreenTheme(
         <GrudoxZones
           onEnterNative={(id) => {
-            // Only zones with real native engines in Open.
-            // Full VoxGrudge is external (voxgrudge.vercel.app); lab is optional.
-            if (id === "voxgrudge" || id === "voxgrudge-lab") navigate("voxgrudge-native");
-            else if (id === "brawler") navigate("brawl");
+            const native = nativeModeForZone(id);
+            if (native) navigate(native);
           }}
+          onOpenInApp={openInApp}
           onExit={() => navigate("doors")}
         />,
       ),
@@ -1345,10 +1395,11 @@ export default function App() {
   }
 
   if (mode === "genesis") {
-    // Product SSOT is F:/GitHub/warlord-genesis (warlord-genesis.vercel.app), not the old Open wave mini-scene.
+    // Product SSOT is warlord-genesis.vercel.app — open inside InAppGameCanvas.
     return shell(
       <GenesisExternalLaunch
         onStay={() => navigate("doors")}
+        onOpenInApp={openInApp}
       />,
     );
   }

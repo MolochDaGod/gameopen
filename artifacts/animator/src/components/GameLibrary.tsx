@@ -20,6 +20,11 @@ import {
 } from "../game/gameLibrary";
 import { getStoredToken } from "../lib/grudgeAuth";
 import { gameSession } from "../game/GameSession";
+import {
+  embedSessionForGame,
+  nativeModeForGame,
+  type InAppEmbedSession,
+} from "../lib/inAppLaunch";
 import "./gameLibrary.css";
 
 export type LibraryNavigateMode =
@@ -34,7 +39,9 @@ export type LibraryNavigateMode =
   | "zones"
   | "ledmask"
   | "account"
-  | "doors";
+  | "doors"
+  | "minegrudge"
+  | "survival";
 
 type FilterId = "all" | "featured" | GameCategory;
 
@@ -54,9 +61,11 @@ const FILTERS: { id: FilterId; label: string }[] = [
 interface Props {
   onNavigate: (mode: LibraryNavigateMode) => void;
   onOpenAccount?: () => void;
+  /** Open external fleet titles inside Open (no new browser page). */
+  onOpenInApp?: (session: InAppEmbedSession) => void;
 }
 
-export function GameLibrary({ onNavigate, onOpenAccount }: Props) {
+export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
   const [filter, setFilter] = useState<FilterId>("featured");
   const [selectedId, setSelectedId] = useState<string>(() => featuredGames()[0]?.id ?? GAME_LIBRARY[0].id);
   const [q, setQ] = useState("");
@@ -83,29 +92,38 @@ export function GameLibrary({ onNavigate, onOpenAccount }: Props) {
 
   const selected: GameEntry = getGame(selectedId) ?? list[0] ?? GAME_LIBRARY[0];
 
-  const launch = (game: GameEntry) => {
+  const launchCtx = () => {
     const snap = gameSession.snapshot;
-    const token = getStoredToken();
-    const characterId = snap.selectedCharacterId;
     const ch = gameSession.selectedCharacter();
-    const baseId =
-      (typeof ch?.config?.baseId === "string" && ch.config.baseId) ||
-      (ch?.raceId ? `race-${ch.raceId}` : null);
-    const raceId = ch?.raceId ?? null;
-    const characterName = ch?.name ?? null;
+    return {
+      token: getStoredToken(),
+      characterId: snap.selectedCharacterId,
+      baseId:
+        (typeof ch?.config?.baseId === "string" && ch.config.baseId) ||
+        (ch?.raceId ? `race-${ch.raceId}` : null),
+      raceId: ch?.raceId ?? null,
+      characterName: ch?.name ?? null,
+    };
+  };
 
-    if (game.launch === "native" || game.launch === "editor") {
-      if (game.nativeMode) onNavigate(game.nativeMode);
+  /** Prefer native mode, else in-app canvas — never force a new page. */
+  const launch = (game: GameEntry) => {
+    const native = nativeModeForGame(game);
+    if (native) {
+      onNavigate(native as LibraryNavigateMode);
       return;
     }
+    const session = embedSessionForGame(game, launchCtx(), "doors");
+    if (session && onOpenInApp) {
+      onOpenInApp(session);
+      return;
+    }
+    // Fallback if host did not wire canvas (should be rare)
+    if (session) window.open(session.url, "_blank", "noopener,noreferrer");
+  };
 
-    const url = gameLaunchUrl(game, {
-      token,
-      characterId,
-      baseId,
-      raceId,
-      characterName,
-    });
+  const popOut = (game: GameEntry) => {
+    const url = gameLaunchUrl(game, launchCtx());
     if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -217,13 +235,18 @@ export function GameLibrary({ onNavigate, onOpenAccount }: Props) {
               <div className="gl-cta-row">
                 <button type="button" className="gl-btn primary large" onClick={() => launch(selected)}>
                   {selected.launch === "mine-loader"
-                    ? "Play Realms"
+                    ? "Play Realms in app"
                     : selected.launch === "external"
-                      ? "Launch ↗"
+                      ? "Play in app"
                       : selected.launch === "editor"
                         ? "Open Editor"
                         : "Play"}
                 </button>
+                {(selected.launch === "external" || selected.launch === "mine-loader") && (
+                  <button type="button" className="gl-btn ghost large" onClick={() => popOut(selected)}>
+                    Pop out ↗
+                  </button>
+                )}
                 {selected.engines.includes("mine-loader") && selected.id !== "mine-loader-realms" && (
                   <button
                     type="button"
