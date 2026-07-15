@@ -985,7 +985,19 @@ export function clipIdsForClass(weapon: WeaponClass): string[] {
   const ids = new Set<string>([SKELETON_SOURCE_ID]);
   for (const id of Object.values(set.loco)) if (id) ids.add(id);
   for (const id of Object.values(set.actions)) if (id) ids.add(id);
+  // Longbow directional dodges are the fleet-wide dodge pack for every weapon.
+  for (const id of Object.values(UNIVERSAL_MOVEMENT)) if (id) ids.add(id);
   return [...ids];
+}
+
+/** Longbow standing-dodge clip ids (F/B/L/R) — SSOT for all weapon dodges. */
+export function universalDodgeClipIds(): Record<"F" | "B" | "L" | "R", string> {
+  return {
+    F: UNIVERSAL_MOVEMENT.dodgeF,
+    B: UNIVERSAL_MOVEMENT.dodgeB,
+    L: UNIVERSAL_MOVEMENT.dodgeL,
+    R: UNIVERSAL_MOVEMENT.dodgeR,
+  };
 }
 
 /**

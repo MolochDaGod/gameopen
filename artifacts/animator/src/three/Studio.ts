@@ -1504,6 +1504,11 @@ export class Studio {
       this.doPistolPrimary(def.kiter);
       return;
     }
+    // Bows / guns: LMB always looses a weapon projectile (arrow or bullet).
+    if (this.isProjectileRangedWeapon(this.weaponId)) {
+      this.doRangedPrimaryShot();
+      return;
+    }
     // Weapon characters run a 3-hit combo. A brief lock stops spam from skipping
     // stages; the chain window (comboTimer) resets the combo to hit 0 when idle.
     if (this.comboLock > 0) return;
@@ -2906,6 +2911,11 @@ export class Studio {
     // Signature slot (1-4): T0 weapon kit (MM + kind) drives VFX/motion; character
     // clip overrides still apply when authored.
     if (isSig) {
+      // Slot 1 (index 0) on bows/guns = primary projectile fire (arrow / bullet).
+      if (signatureIndex === 0 && this.isProjectileRangedWeapon(this.weaponId)) {
+        this.doRangedPrimaryShot();
+        return true;
+      }
       const t0 = getT0Skill(this.weaponId, signatureIndex!);
       const sig = def.signatureSkills[signatureIndex!];
       const clip = override ?? sig?.clip;
@@ -3241,6 +3251,95 @@ export class Studio {
       pos.addScaledVector(dir, 0.4);
     }
     return pos;
+  }
+
+  /**
+   * True for weapons whose LMB / slot-1 should fire a real projectile:
+   * bows → arrow, guns → bullet. Staffs keep their own bolt path.
+   */
+  private isProjectileRangedWeapon(id: WeaponId): boolean {
+    const w = getWeapon(id);
+    if (w.group !== "ranged") return false;
+    return (
+      id === "bow" ||
+      id === "crossbow" ||
+      id === "pistol" ||
+      id === "rifle" ||
+      id === "hunter-rifle"
+    );
+  }
+
+  /** Bow / crossbow = arrow; pistols / rifles = bullet. */
+  private rangedProjectileKind(id: WeaponId): "arrow" | "bullet" {
+    if (id === "bow" || id === "crossbow") return "arrow";
+    return "bullet";
+  }
+
+  /**
+   * Primary ranged fire for bows and guns (LMB + skill slot 1).
+   * Fires a weapon-typed projectile (arrow / bullet) along the aim line and
+   * applies hit damage on impact. Independent of the melee 3-hit combo path.
+   */
+  private doRangedPrimaryShot() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.recoverLock > 0) return;
+    // Gate spam with comboLock so fire rate is readable.
+    if (this.comboLock > 0) return;
+
+    const wid = this.weaponId;
+    const kind = this.rangedProjectileKind(wid);
+    const combat = weaponCombat(wid);
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 24;
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      dir = planar.dir.clone();
+      dist = planar.dist;
+    } else {
+      // Use camera aim when no soft-lock target.
+      const ray = this.crosshairRay();
+      dir.copy(ray.direction);
+      dir.y = 0;
+      if (dir.lengthSq() < 1e-6) dir.copy(this.controller.forward());
+      dir.normalize();
+    }
+    this.controller.faceToward(dir, 0.28);
+
+    // Fire pose: prefer attack role / bow aim clip
+    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.08);
+    else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.08);
+    else if (this.character.hasClip("attack1")) this.character.playClipOnce("attack1", 0.08);
+
+    const origin = this.muzzleOrigin(dir);
+    const isArrow = kind === "arrow";
+    const color = isArrow ? 0xffe2a0 : 0xfff2a8;
+    const speed = isArrow ? 38 : 52;
+    const range = target ? THREE.MathUtils.clamp(dist + 1.5, 4, 32) : 28;
+    const damage = isArrow ? 14 : 12;
+
+    this.recoil.kick(isArrow ? 0.018 : 0.028, isArrow ? 0.012 : 0.022);
+    this.vfx.muzzle(origin, dir, color);
+    if (isArrow) {
+      // Longer thin projectile for arrows
+      this.vfx.bolt(origin, dir, color, speed, range, (p) => {
+        this.vfx.impact(p, color, 1.1);
+        this.targets.blast(p, 0.85, damage, this.params.skillForce * 0.45);
+        if (target) this.triggerHitstop(0.04, 0.1);
+      }, 0.85);
+    } else {
+      this.vfx.bolt(origin, dir, color, speed, range, (p) => {
+        this.vfx.impact(p, color, 1.25);
+        this.targets.blast(p, 0.75, damage, this.params.skillForce * 0.5);
+        if (target) this.triggerHitstop(0.05, 0.12);
+      }, 1.05);
+    }
+    this.sfx?.play(isArrow ? "whooshLight" : "whooshHeavy", origin, { volume: 0.55 });
+
+    // Fire rate lock (~4–5 shots/s bows slightly slower)
+    this.comboLock = isArrow ? 0.28 : 0.18;
+    this.comboTimer = this.comboLock + 0.05;
+    this.bumpMusicHeat(0.08);
   }
 
   /**
@@ -6054,54 +6153,75 @@ export class Studio {
     if (grounded) this.controller.hop(1.15);
     else this.controller.hop(0.55);
 
-    // Prefer real directional roll clips; fall back to generic roll / hurt
+    // Longbow standing-dodge (F/B/L/R) is the SSOT dodge for every weapon skill.
+    // Explorer/procedural rigs resolve via rollDir → UNIVERSAL_MOVEMENT; GLB
+    // rigs try the same clip names if registered.
     let animDur = 0;
     if (ch.rollDir) {
-      animDur = ch.rollDir(cardinal, grounded ? 0.14 : 0.2);
-    }
-    if (animDur <= 0 && ch.hasClip("roll")) {
-      animDur = ch.playClipOnce("roll", 0.16);
+      animDur = ch.rollDir(cardinal, grounded ? 0.12 : 0.18);
     }
     if (animDur <= 0) {
-      // Last resort: hurt flinch (should be rare if packs load)
+      // Clip-name fallbacks matching animations/bow/standing-dodge-*
+      const dodgeNames =
+        cardinal === "F"
+          ? ["standing-dodge-forward", "dodgeF", "dodge_forward", "roll"]
+          : cardinal === "B"
+            ? ["standing-dodge-backward", "dodgeB", "dodge_backward", "roll"]
+            : cardinal === "L"
+              ? ["standing-dodge-left", "dodgeL", "dodge_left", "roll"]
+              : ["standing-dodge-right", "dodgeR", "dodge_right", "roll"];
+      for (const n of dodgeNames) {
+        if (ch.hasClip(n)) {
+          animDur = ch.playClipOnce(n, grounded ? 0.12 : 0.18);
+          if (animDur > 0) break;
+        }
+      }
+    }
+    if (animDur <= 0) {
       if (ch.hasRole("hurt")) ch.playRoleOnce("hurt", 0.1);
       animDur = 0.55;
     }
 
-    // Body travel: slightly longer than default dash for exaggerated ER feel
-    const rollDist = 4.35;
-    const dashDur = THREE.MathUtils.clamp(animDur * 0.78, 0.38, 0.62);
-    // Side rolls keep facing camera-forward so L/R clips read correctly
+    // Body travel — longbow standing dodge is more of a phase-slide than a tumble
+    const rollDist = 3.85;
+    const dashDur = THREE.MathUtils.clamp(animDur * 0.72, 0.34, 0.55);
     if (cardinal === "L" || cardinal === "R") {
-      this.controller.dash(worldDir, rollDist, dashDur, 0, 0.42);
+      this.controller.dash(worldDir, rollDist, dashDur, 0, 0.38);
       this.controller.faceToward(fwd, 0);
     } else {
-      // Forward/back: face travel direction + rollOut pitch tumble for exaggeration
-      this.controller.dash(worldDir, rollDist, dashDur, 0.08, 0.45);
-      this.controller.faceToward(worldDir, 0.08);
-      // Extra pitch tumble layered under the clip for a snappier "tuck" read
-      this.controller.rollOut(worldDir, Math.min(animDur * 0.85, 0.55));
+      this.controller.dash(worldDir, rollDist, dashDur, 0.05, 0.4);
+      this.controller.faceToward(cardinal === "F" ? worldDir : fwd, 0.06);
     }
 
-    // VFX: motion-blur afterimage + landing dust so i-frame window is readable
-    this.vfx.afterimage(ch.root, origin, worldDir, rollDist * 0.85, 0xb8f0ff, 6, 0.38);
-    const dustAt = origin.clone().addScaledVector(worldDir, 0.4);
+    // Phasing VFX: ghost afterimages + soft dissolve burst (all weapons)
+    this.vfx.afterimage(ch.root, origin, worldDir, rollDist * 0.9, 0x9ef0ff, 8, 0.48);
+    this.vfx.burst(origin.clone().setY(origin.y + 1.0), 0xaee6ff, 14, 2.6);
+    const dustAt = origin.clone().addScaledVector(worldDir, 0.35);
     dustAt.y = 0.05;
-    this.vfx.puff(dustAt, 0xdfe8f4, 14, 1.35);
-    // Exit puff mid-roll
-    this.schedule(0.22, () => {
+    this.vfx.puff(dustAt, 0xdfe8f4, 12, 1.2);
+    this.schedule(0.2, () => {
       if (this.defeated || !this.character) return;
       const p = this.character.root.position.clone();
       p.y = 0.06;
-      this.vfx.puff(p, 0xc8d4e4, 10, 1.1);
-      this.vfx.burst(p.clone().setY(0.9), 0xaee6ff, 8, 2.2);
+      this.vfx.puff(p, 0xc8d4e4, 9, 1.0);
+      this.vfx.burst(p.clone().setY(0.95), 0xb8f4ff, 10, 2.0);
+      // Exit phase trail
+      this.vfx.afterimage(
+        this.character.root,
+        p,
+        worldDir,
+        1.2,
+        0x88e0ff,
+        4,
+        0.28,
+      );
     });
-    this.sfx?.play("somersault", origin.clone().setY(origin.y + 0.8), { volume: 0.78 });
+    this.sfx?.play("somersault", origin.clone().setY(origin.y + 0.8), { volume: 0.72 });
 
     // Studio-side invuln matches combat iframe window (~0.5s of true immunity)
     this.invuln = Math.max(this.invuln, 0.52);
     this.dodgeCd = 0.72;
-    this.setCombatFlash("ROLL", 0.35);
+    this.setCombatFlash("PHASE", 0.32);
     this.bumpMusicHeat(0.15);
   }
 

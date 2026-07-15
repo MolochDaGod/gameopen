@@ -5,6 +5,7 @@ import {
   TRAVERSAL_SETS,
   GLB_CLIP_IDS,
   BASE_PACK_FALLBACKS,
+  UNIVERSAL_MOVEMENT,
   resolveGlobalAction,
   resolveReaction,
 } from "./clipCatalog";
@@ -612,12 +613,17 @@ export class Animator {
   }
 
   /**
-   * Resolve a UNIVERSAL movement action (jump/land/dodge/dash). These ship in the
-   * longbow/unarmed packs but not every weapon set (the sword & rifle packs are
-   * motion-light), so when the equipped class lacks the clip we fall back to the
-   * shared `unarmed` set, then Layer A base pack, rather than dropping the action.
+   * Resolve a UNIVERSAL movement action (jump/land/dodge/dash).
+   *
+   * Directional dodges (F/B/L/R) ALWAYS prefer the longbow standing-dodge pack —
+   * that is the fleet SSOT for every weapon skill's dodge + phase i-frames.
+   * Other movement falls back: equipped class → unarmed → Layer A base pack.
    */
   private resolveMovement(key: ActionKey): string | undefined {
+    if (key === "dodgeF" || key === "dodgeB" || key === "dodgeL" || key === "dodgeR") {
+      const uni = (UNIVERSAL_MOVEMENT as Record<string, string>)[key];
+      if (uni && this.clips.has(uni)) return uni;
+    }
     const style = this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key];
     return this.preferLoaded(style, key);
   }
