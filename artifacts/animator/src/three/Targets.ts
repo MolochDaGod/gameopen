@@ -811,12 +811,36 @@ export class Targets implements CombatTargets {
     void this.loadGrudgeOpponent(d, weaponId);
   }
 
-  /** Prefer grudge6 orc (Unity Warlords Toon RTS) over simple orc.glb / capsules. */
+  /** Prefer grudge6 orc (Unity Warlords Toon RTS / uMMORPG Monster prefab). */
   private async loadGrudgeOpponent(d: Dummy, weaponId: WeaponId): Promise<void> {
     const kind = getWeapon(weaponId)?.kind;
     const preset = presetForWeaponKind(kind);
     try {
-      const avatar = new GrudgeAvatar("orcs", preset);
+      // Prefab profile drives mesh_ids + combat numbers (uMMORPG Entity data)
+      let meshIds: string[] | undefined;
+      try {
+        const { prefabFromRoleId } = await import("./ummorpg/prefabProfile");
+        const roleId =
+          preset === "knight"
+            ? "hostile-orc-warchief"
+            : preset === "ranger"
+              ? "hostile-orc-hunter"
+              : preset === "mage"
+                ? "hostile-orc-shaman"
+                : preset === "unarmed"
+                  ? "hostile-orc-brawler"
+                  : "hostile-orc-warrior";
+        const prefab = prefabFromRoleId(roleId);
+        if (prefab?.meshIds?.length) meshIds = prefab.meshIds;
+        if (prefab) {
+          d.group.userData.entityPrefab = prefab.id;
+          d.group.userData.combatRange = prefab.combat.range;
+          d.group.userData.combatDamage = prefab.combat.damage;
+        }
+      } catch {
+        /* optional */
+      }
+      const avatar = new GrudgeAvatar("orcs", preset, { meshIds });
       d.avatar = avatar;
       await avatar.load();
       if (d.avatar !== avatar) {

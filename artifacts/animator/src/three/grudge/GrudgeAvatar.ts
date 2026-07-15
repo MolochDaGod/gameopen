@@ -9,6 +9,15 @@ import {
 } from "./index";
 import { loadBakedGrudgeCharacter } from "./bakedRoster";
 import { loadGrudge6CombatRig } from "./grudge6Runtime";
+import {
+  resolveSkeletonSockets,
+  validatePrefabSockets,
+  type SkeletonSockets,
+} from "../ummorpg/skeletonSockets";
+import {
+  AnimationDirector,
+  clipsFromRoleMap,
+} from "../ummorpg/animationDirector";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -47,6 +56,11 @@ export class GrudgeAvatar implements Avatar {
 
   private bodyTexture: THREE.Texture | null = null;
   private bodyMaterial: THREE.Material | null = null;
+
+  /** uMMORPG-style Bip001 sockets (hands, containers, hips). */
+  sockets: SkeletonSockets | null = null;
+  /** Optional director for gait + skill one-shots (when clips available). */
+  private director: AnimationDirector | null = null;
 
   // ── Skill Lab authoring knobs ──────────────────────────────────────────────
   /** Global playback multiplier applied to locomotion + authored one-shots. */
@@ -141,13 +155,30 @@ export class GrudgeAvatar implements Avatar {
       }
 
       this.model.updateMatrixWorld(true);
-      this.rightHand = findHandBone(this.model, "R");
-      this.leftHand = findHandBone(this.model, "L");
+      // uMMORPG sockets: prefer R_hand_container / L_hand_container over raw hands
+      this.sockets = resolveSkeletonSockets(this.model);
+      const sockOk = validatePrefabSockets(this.sockets);
+      if (!sockOk.ok) {
+        console.warn("[GrudgeAvatar] prefab sockets incomplete", sockOk.missing, sockOk.warnings);
+      }
+      this.rightHand = this.sockets.containerR || this.sockets.handR || findHandBone(this.model, "R");
+      this.leftHand = this.sockets.containerL || this.sockets.handL || findHandBone(this.model, "L");
       this.findArmBones(this.model);
       this.holder.rotation.y = this.modelYaw;
-      this.playRole("idle", 0);
+
+      // AnimationDirector (uMMORPG Animator layers: loco + skill override)
+      try {
+        this.director = new AnimationDirector(
+          this.mixer,
+          clipsFromRoleMap(rig.clips),
+          { fade: this.blendTime },
+        );
+      } catch (e) {
+        this.director = null;
+        this.playRole("idle", 0);
+      }
       console.info(
-        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} clips=${[...rig.clips.keys()].join(",")}`,
+        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} clips=${[...rig.clips.keys()].join(",")}`,
       );
       return;
     } catch (err) {
@@ -230,8 +261,14 @@ export class GrudgeAvatar implements Avatar {
    * Maps 0..1 speed → idle / walk / run roles with crossfade.
    */
   setLocomotion(speed: number): void {
-    if (!this.mixer || this.oneShot) return;
+    if (!this.mixer) return;
     const s = Math.max(0, Math.min(1, speed));
+    // Prefer uMMORPG-style director when present
+    if (this.director) {
+      this.director.setGaitTarget(s > 0.08, s > 0.85, s);
+      return;
+    }
+    if (this.oneShot) return;
     if (s > 0.72 && this.hasRole("run")) this.playRole("run");
     else if (s > 0.08 && this.hasRole("walk")) this.playRole("walk");
     else this.playRole("idle");
@@ -450,7 +487,31 @@ export class GrudgeAvatar implements Avatar {
   }
 
   playClipOnce(name: string, fade = 0.12): number {
-    const action = this.actions.get(name);
+    // Resolve skill / defense / cast names onto loaded roles (attack fallback).
+    // Mirrors player T0 kit + AI brain clip requests when baked skill packs
+    // only ship idle/walk/run/attack.
+    const resolved =
+      this.actions.get(name) ||
+      this.actions.get(name.toLowerCase()) ||
+      (name.includes("cast") || name.includes("magic") || name.includes("spell")
+        ? this.actions.get("cast") || this.actions.get("magicAttack") || this.actions.get("attack")
+        : null) ||
+      (name.includes("dodge") || name.includes("parry") || name.includes("block")
+        ? this.actions.get("dodge") || this.actions.get("attack")
+        : null) ||
+      (name.includes("skill") ||
+      name.includes("sig") ||
+      name.includes("combo") ||
+      name.includes("special") ||
+      name.includes("power") ||
+      name.includes("dash") ||
+      name.includes("slash") ||
+      name.includes("thrust") ||
+      name.includes("overhead")
+        ? this.actions.get("attack")
+        : null) ||
+      this.actions.get("attack");
+    const action = resolved;
     if (!action) return 0;
     action.reset();
     action.setLoop(THREE.LoopOnce, 1);
@@ -471,16 +532,28 @@ export class GrudgeAvatar implements Avatar {
   playRoleOnce(role: AnimRole, fade = 0.12): number {
     const key = this.roleClip.get(role);
     if (!key) return 0;
+    // Director one-shot for attack/skill (ScriptableSkill cast)
+    if (this.director && (role === "attack" || key === "attack")) {
+      const d = this.director.requestOneShot("attack", { fade, timeScale: this.overdrive });
+      if (d > 0) {
+        this.oneShotEnd = d;
+        return d;
+      }
+    }
     return this.playClipOnce(key, fade);
   }
 
   get isOneShotActive(): boolean {
-    return this.oneShot !== null;
+    return this.oneShot !== null || !!(this.director && this.director.busyOverlay);
   }
 
   update(dt: number): void {
     if (!this.mixer) return;
-    this.mixer.update(dt);
+    if (this.director) {
+      this.director.update(dt);
+    } else {
+      this.mixer.update(dt);
+    }
     this.applyArmWidth();
     this.updateColliderTransform();
     if (this.oneShot) {
