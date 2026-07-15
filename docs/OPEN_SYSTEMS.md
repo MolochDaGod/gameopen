@@ -11,7 +11,7 @@
 | Layer | Responsibility |
 |-------|----------------|
 | **Hub (`/`)** | Door select — pick a surface |
-| **Combat labs** | Danger Room, genesis waves, mimic, map playtest |
+| **Combat labs** | Danger Room, mimic, map playtest; **Warlord Genesis** → external warlord-genesis.vercel.app |
 | **Create** | Voxel map editor (`/voxel` premade Danger Rooms), dressing room — **promote worlds to Mine-Loader** |
 | **Multiplayer** | Lobby rooms, Ruins Brawler, VoxGrudge world |
 | **Tools** | LED mask, GRUDOX zone launcher |
@@ -28,7 +28,7 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | `/` `/hub` `/doors` | doors | Hub |
 | `/danger` `/combat` `/sandbox` | danger | Danger Room |
 | `/play` | play | Authored map → combat |
-| `/genesis` | genesis | Warlord Genesis waves |
+| `/genesis` | genesis | Warlord Genesis MOBA/RTS handoff (fleet SSO + characterId) |
 | `/brawl` `/ruins` | brawl | Ruins Brawler |
 | `/mimic` `/dungeon` | mimic | Mimic encounter |
 | `/voxel` `/build` | voxel | Voxel map editor |
@@ -75,7 +75,7 @@ Guest play is allowed offline; **roster features** require Grudge ID.
 | Skill **HUD icons** | R2 `assets.grudge-studio.com/icons/pack/*` via `skillIcons.ts` · local `/icons/*` fallback |
 | Heavy GLB / anim packs | R2 or `/models` `/anim` (pruned on deploy) |
 | Room posters | `/rooms/*-scene.png` |
-| **Voxel blocks / scenes** | `@workspace/voxel-canonical` · [VOXEL_CANONICAL.md](./VOXEL_CANONICAL.md) · Codex https://mine-loader.replit.app/#/defs · `GET /api/blocks` |
+| **Voxel blocks / scenes** | `@workspace/voxel-canonical` · [VOXEL_CANONICAL.md](./VOXEL_CANONICAL.md) · Codex https://mine-loader.vercel.app/#/defs · `GET /api/blocks` |
 | **Danger Room deep dive** | [DANGER_ROOM.md](./DANGER_ROOM.md) — combat MM/block/parry, AI tools, deploy smoke |
 
 ### 3.4 Multiplayer

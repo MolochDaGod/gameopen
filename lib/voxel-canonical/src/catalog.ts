@@ -2,7 +2,7 @@ import type { CatalogBlock, CatalogResponse } from "./types";
 import { catalogTypeId, parseCssColor } from "./terrain";
 
 /** Primary live Codex host (Voxel Realms / mine-loader). */
-export const MINE_LOADER_ORIGIN = "https://mine-loader.replit.app";
+export const MINE_LOADER_ORIGIN = "https://mine-loader.vercel.app";
 
 /** Preferred same-origin path (Vercel rewrite / Railway proxy). */
 export const BLOCKS_API_PATH = "/api/blocks";

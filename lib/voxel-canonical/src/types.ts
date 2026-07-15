@@ -1,8 +1,8 @@
 /**
  * Voxel Realms / Mine Loader — canonical voxel schema.
  *
- * SSOT live catalog: https://mine-loader.replit.app/api/blocks
- * Codex UI:          https://mine-loader.replit.app/#/defs
+ * SSOT live catalog: https://mine-loader.vercel.app/api/blocks
+ * Codex UI:          https://mine-loader.vercel.app/#/defs
  *
  * All GRUDOX cabinets, voxel editors (gameopen `/voxel`, `/world`), and voxel
  * games should speak this format so maps, block edits, and the RPG catalog

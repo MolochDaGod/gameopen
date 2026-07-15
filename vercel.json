@@ -14,16 +14,52 @@
     { "source": "/auth/:path*", "destination": "https://id.grudge-studio.com/auth/:path*" },
     { "source": "/login", "destination": "https://id.grudge-studio.com/login" },
     {
-      "source": "/api/characters/:path*",
-      "destination": "https://grudge-api-production-0d46.up.railway.app/api/characters/:path*"
+      "source": "/api/health",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/health"
+    },
+    {
+      "source": "/api/health/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/health/:path*"
     },
     {
       "source": "/api/characters",
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/characters"
     },
     {
+      "source": "/api/characters/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/characters/:path*"
+    },
+    {
+      "source": "/api/account",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/account"
+    },
+    {
       "source": "/api/account/:path*",
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/account/:path*"
+    },
+    {
+      "source": "/api/inventory",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/inventory"
+    },
+    {
+      "source": "/api/inventory/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/inventory/:path*"
+    },
+    {
+      "source": "/api/professions",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/professions"
+    },
+    {
+      "source": "/api/professions/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/professions/:path*"
+    },
+    {
+      "source": "/api/island",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/island"
+    },
+    {
+      "source": "/api/island/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/island/:path*"
     },
     {
       "source": "/api/wallet",
@@ -70,10 +106,6 @@
       "destination": "https://threejs-rapier-react-three-controll.vercel.app/anim/:path*"
     },
     {
-      "source": "/models/:path*",
-      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/:path*"
-    },
-    {
       "source": "/api/space",
       "destination": "https://voxgrudge-grudox-room-production.up.railway.app/api/space"
     },
@@ -87,7 +119,7 @@
     },
     {
       "source": "/api/blocks",
-      "destination": "https://mine-loader.replit.app/api/blocks"
+      "destination": "https://mine-loader.vercel.app/api/blocks"
     },
     {
       "source": "/api/:path*",

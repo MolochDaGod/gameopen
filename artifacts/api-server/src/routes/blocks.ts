@@ -3,15 +3,15 @@ import { Router, type IRouter, type Request, type Response } from "express";
 /**
  * Proxy / seed for the Voxel Realms block catalog (Codex).
  *
- * Live SSOT: https://mine-loader.replit.app/api/blocks
- * UI:        https://mine-loader.replit.app/#/defs
+ * Live SSOT: https://mine-loader.vercel.app/api/blocks
+ * UI:        https://mine-loader.vercel.app/#/defs
  *
  * Clients should call same-origin `/api/blocks` so CORS never blocks the catalog
  * for open.grudge-studio.com, GRUDOX, and local dev.
  */
 
 const UPSTREAM =
-  process.env.VOXEL_BLOCKS_URL || "https://mine-loader.replit.app/api/blocks";
+  process.env.VOXEL_BLOCKS_URL || "https://mine-loader.vercel.app/api/blocks";
 
 const CACHE_MS = 5 * 60 * 1000;
 let cached: { at: number; body: string } | null = null;
