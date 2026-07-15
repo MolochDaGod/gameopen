@@ -343,11 +343,14 @@ export class ExplorerCharacter implements Avatar {
     return this.animator.enterStance(guard.pose, guard.draw);
   }
 
-  /** Play a directional evade roll (dodge), returning its duration in seconds. */
-  rollDir(dir: "F" | "B" | "L" | "R"): number {
+  /**
+   * Play a directional evade roll (dodge), returning its duration in seconds.
+   * `fade` controls blend-in from the prior pose (jump/locomotion → roll).
+   */
+  rollDir(dir: "F" | "B" | "L" | "R", fade = 0.16): number {
     if (!this.animator) return 0;
     this.lastClip = "roll";
-    return this.animator.roll(dir);
+    return this.animator.roll(dir, fade);
   }
 
   /**

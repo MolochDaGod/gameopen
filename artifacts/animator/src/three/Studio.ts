@@ -5639,11 +5639,8 @@ export class Studio {
     else if (code === "KeyF") this.useSkill();
     else if (code === "KeyQ") this.sparring.parry();
     else if (code === "KeyX") {
-      // Dodge-roll: direction from camera forward (or back-step if no dir key held).
-      const dir = this.controller ? this.controller.forward().clone() : new THREE.Vector3(0, 0, 1);
-      this.sparring.dodge({ x: dir.x, z: dir.z });
-      // "dodge" is not an AnimRole — fall back to hurt (a quick flinch-step).
-      if (this.character?.hasRole("hurt")) this.character.playRoleOnce("hurt", 0.08);
+      // Elden Ring–style timed dodge roll (directional roll + ~0.5s i-frames).
+      this.performTimedDodgeRoll();
     }
     else if (code === "KeyG") this.evade();
     // KeyM = suit up into / exit the Exo-Armour Mech.
@@ -5934,33 +5931,130 @@ export class Studio {
   }
 
   /**
-   * Directional dodge-roll (double-tap A = left, D = right). Plays the real
-   * sideways dodge clip on procedural rigs, slides the body along the strafe
-   * axis while keeping the body facing forward, spawns a full-mesh "blink"
-   * afterimage and grants a brief damage-immunity (i-frame) window. No-ops on
-   * GLB rigs (they ship no directional roll clip).
+   * Directional dodge-roll (double-tap A = left, D = right) — shares the X-key
+   * timed roll path so i-frames, blend, and VFX stay consistent.
    */
   private dodgeRoll(side: "L" | "R") {
+    this.performTimedDodgeRoll(side === "L" ? "left" : "right");
+  }
+
+  /**
+   * Elden Ring–style timed dodge roll (Key X / double-tap strafe):
+   * - Directional roll clips (F/B/L/R) with long blend-in from jump/loco
+   * - Small hop into the roll (jump→roll blend feel)
+   * - Slightly exaggerated travel distance
+   * - ~0.5s invulnerability (CombatController dodge iframeEnd + Studio invuln)
+   * - Afterimage + ground dust for readable i-frame window
+   */
+  private performTimedDodgeRoll(forceSide?: "forward" | "back" | "left" | "right") {
     const ch = this.character;
     if (!this.controller || !ch || this.defeated) return;
-    if (this.dodgeCd > 0 || this.controller.isBusy) return;
-    if (!ch.hasClip("roll") || !ch.rollDir) return;
-    const fwd = this.controller.forward();
-    // Screen-right on the floor (matches WASD strafe: D = +right, A = -right).
-    const right = new THREE.Vector3(-fwd.z, 0, fwd.x).normalize();
-    const dir = side === "R" ? right : right.negate();
+    if (this.dodgeCd > 0) return;
+    // Allow cancel during attack recovery (CC enforces windup/active lock)
+    if (this.controller.isBusy && this.sparring.getPlayerState() !== "attack") return;
+
+    const fwd = this.controller.forward().clone();
+    fwd.y = 0;
+    if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+
+    // Resolve travel from held move keys / analog stick (default: back-roll if
+    // no direction — classic defensive roll; ER often rolls in input dir).
+    let mx = 0;
+    let mz = 0; // camera-relative: +z forward, +x right
+    if (forceSide === "forward") mz = 1;
+    else if (forceSide === "back") mz = -1;
+    else if (forceSide === "left") mx = -1;
+    else if (forceSide === "right") mx = 1;
+    else {
+      if (this.input.down("KeyW") || this.input.down("ArrowUp")) mz += 1;
+      if (this.input.down("KeyS") || this.input.down("ArrowDown")) mz -= 1;
+      if (this.input.down("KeyD") || this.input.down("ArrowRight")) mx += 1;
+      if (this.input.down("KeyA") || this.input.down("ArrowLeft")) mx -= 1;
+      // Touch stick
+      if (Math.abs(this.input.moveX) > 0.2 || Math.abs(this.input.moveY) > 0.2) {
+        mx = this.input.moveX;
+        mz = this.input.moveY;
+      }
+      // No input → defensive backward roll (reads better than standing hurt flinch)
+      if (Math.abs(mx) < 0.15 && Math.abs(mz) < 0.15) {
+        mz = -1;
+      }
+    }
+
+    const worldDir = new THREE.Vector3()
+      .addScaledVector(right, mx)
+      .addScaledVector(fwd, mz);
+    if (worldDir.lengthSq() < 1e-6) worldDir.copy(fwd).negate();
+    worldDir.normalize();
+
+    // Map world dir to F/B/L/R relative to character facing (camera forward)
+    const fDot = worldDir.dot(fwd);
+    const rDot = worldDir.dot(right);
+    let cardinal: "F" | "B" | "L" | "R" = "B";
+    if (Math.abs(fDot) >= Math.abs(rDot)) cardinal = fDot >= 0 ? "F" : "B";
+    else cardinal = rDot >= 0 ? "R" : "L";
+
+    // CombatController: stamina + dodge state + timed i-frames (~0.5s window)
+    this.sparring.dodge({ x: worldDir.x, z: worldDir.z });
+
     const origin = ch.root.position.clone();
-    const dur = ch.rollDir(side);
-    const dashDur = dur > 0 ? THREE.MathUtils.clamp(dur * 0.7, 0.22, 0.5) : 0.34;
-    this.controller.dash(dir, 3.0, dashDur, 0, 0.45);
-    // Roll sideways while keeping the body facing forward (strafe-roll), so the
-    // L/R dodge clip reads correctly instead of diving in the travel direction.
-    this.controller.faceToward(fwd, 0);
-    // "Blink": a full-mesh afterimage phase plus the i-frame window.
-    this.vfx.afterimage(ch.root, origin, dir, 3.0, 0xaee6ff, 5, 0.3);
-    this.sfx?.play("somersault", origin.clone().setY(origin.y + 0.8), { volume: 0.7 });
-    this.invuln = Math.max(this.invuln, 0.4);
-    this.dodgeCd = 0.6;
+    const grounded = this.controller.state.grounded;
+
+    // Jump-into-roll: tiny hop so airborne→roll and standing→roll both blend
+    if (grounded) this.controller.hop(1.15);
+    else this.controller.hop(0.55);
+
+    // Prefer real directional roll clips; fall back to generic roll / hurt
+    let animDur = 0;
+    if (ch.rollDir) {
+      animDur = ch.rollDir(cardinal, grounded ? 0.14 : 0.2);
+    }
+    if (animDur <= 0 && ch.hasClip("roll")) {
+      animDur = ch.playClipOnce("roll", 0.16);
+    }
+    if (animDur <= 0) {
+      // Last resort: hurt flinch (should be rare if packs load)
+      if (ch.hasRole("hurt")) ch.playRoleOnce("hurt", 0.1);
+      animDur = 0.55;
+    }
+
+    // Body travel: slightly longer than default dash for exaggerated ER feel
+    const rollDist = 4.35;
+    const dashDur = THREE.MathUtils.clamp(animDur * 0.78, 0.38, 0.62);
+    // Side rolls keep facing camera-forward so L/R clips read correctly
+    if (cardinal === "L" || cardinal === "R") {
+      this.controller.dash(worldDir, rollDist, dashDur, 0, 0.42);
+      this.controller.faceToward(fwd, 0);
+    } else {
+      // Forward/back: face travel direction + rollOut pitch tumble for exaggeration
+      this.controller.dash(worldDir, rollDist, dashDur, 0.08, 0.45);
+      this.controller.faceToward(worldDir, 0.08);
+      // Extra pitch tumble layered under the clip for a snappier "tuck" read
+      this.controller.rollOut(worldDir, Math.min(animDur * 0.85, 0.55));
+    }
+
+    // VFX: motion-blur afterimage + landing dust so i-frame window is readable
+    this.vfx.afterimage(ch.root, origin, worldDir, rollDist * 0.85, 0xb8f0ff, 6, 0.38);
+    const dustAt = origin.clone().addScaledVector(worldDir, 0.4);
+    dustAt.y = 0.05;
+    this.vfx.puff(dustAt, 0xdfe8f4, 14, 1.35);
+    // Exit puff mid-roll
+    this.schedule(0.22, () => {
+      if (this.defeated || !this.character) return;
+      const p = this.character.root.position.clone();
+      p.y = 0.06;
+      this.vfx.puff(p, 0xc8d4e4, 10, 1.1);
+      this.vfx.burst(p.clone().setY(0.9), 0xaee6ff, 8, 2.2);
+    });
+    this.sfx?.play("somersault", origin.clone().setY(origin.y + 0.8), { volume: 0.78 });
+
+    // Studio-side invuln matches combat iframe window (~0.5s of true immunity)
+    this.invuln = Math.max(this.invuln, 0.52);
+    this.dodgeCd = 0.72;
+    this.setCombatFlash("ROLL", 0.35);
+    this.bumpMusicHeat(0.15);
   }
 
   /**

@@ -559,7 +559,7 @@ export function Hud({ hud, edit }: Props) {
         <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
         {/* Combat input hints */}
         <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-          {(["Q: Parry", "RMB: Block", "X: Dodge", "R: Heavy", "H: Bomb", "J: Heal"] as const).map((hint) => (
+          {(["Q: Parry", "RMB: Block", "X: Roll", "R: Heavy", "H: Bomb", "J: Heal"] as const).map((hint) => (
             <span
               key={hint}
               style={{

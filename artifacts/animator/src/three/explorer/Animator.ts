@@ -295,10 +295,25 @@ export class Animator {
     }
   }
 
-  /** Dodge roll in a local direction; returns the clip duration for the engine. */
-  roll(dir: "F" | "B" | "L" | "R"): number {
-    const id = this.resolveMovement(`dodge${dir}` as ActionKey) ?? this.resolveMovement("dodgeF");
-    return id ? this.playOnce(id) : 0;
+  /**
+   * Dodge roll in a local direction; returns the clip duration for the engine.
+   * Longer crossfade into the roll so locomotion→roll blends cleanly; slightly
+   * accelerated playback for a more exaggerated Elden Ring–style tumble.
+   */
+  roll(dir: "F" | "B" | "L" | "R", fade = 0.16): number {
+    const id =
+      this.resolveMovement(`dodge${dir}` as ActionKey) ??
+      this.resolveMovement("dodgeF");
+    if (!id) return 0;
+    this.clearOverlay();
+    // Blend into roll from current pose (jump/walk) rather than hard cut
+    const a = this.setActive(id, { loop: false, clamp: true, fade });
+    if (!a) return 0;
+    const rate = 1.14; // snappier / slightly exaggerated roll
+    a.setEffectiveTimeScale(rate);
+    const dur = a.getClip().duration / rate;
+    this.once = { endTime: this.time + dur * 0.96, hold: false };
+    return dur;
   }
 
   /** Quick dash/lunge; returns clip duration so the engine can time displacement. */

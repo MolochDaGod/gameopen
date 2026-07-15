@@ -865,8 +865,8 @@ export interface Avatar {
   registerSnippet?(spec: SnippetSpec): boolean;
   /** Procedural rig only: swap the equipped weapon class (clip set + mesh). */
   setWeaponId?(weaponId: WeaponId): void;
-  /** Procedural rig only: play a directional dodge-roll clip (F/B/L/R). */
-  rollDir?(dir: "F" | "B" | "L" | "R"): number;
+  /** Procedural rig only: play a directional dodge-roll clip (F/B/L/R). Optional fade for jump→roll blend. */
+  rollDir?(dir: "F" | "B" | "L" | "R", fade?: number): number;
   /**
    * Procedural rig only: play a defensive reaction clip by key (stumble /
    * stunned / fallDown / fallen / getUp / kipUp / wallCrash) with blend control.

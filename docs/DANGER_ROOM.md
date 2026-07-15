@@ -78,7 +78,7 @@ Slots: LMB primary · F skill · 1–4 signatures · R heavy/skyfall.
 |--------|-------|----------------|
 | **Block** | **RMB hold** | `Studio.startBlock` / sparring CC; guard bounce + low-friction pushback on big hits |
 | **Parry** | **Q** | Perfect window → flash + **hitstop** + parryClash VFX |
-| **Dodge** | **X** | i-frames + directional roll; punish window on mistimed |
+| **Dodge / timed roll** | **X** (or double-tap A/D) | Elden Ring–style directional **roll** (F/B/L/R clips), jump→roll hop + blend, afterimage/dust, **~0.5s i-frames** (`iframe` 0.06–0.56s). No move input → **back-roll**. |
 | **MM lunge** | Skills / AI `unique_movement` | `Controller.dash` + pack `lungeSpeed`/`lungeDuration`; `dashDistance` param |
 | **Pushback** | Hits / block | `applyImpulse` + `skillForce` / `outcomeForceScale` |
 | **Hitstop** | Confirmed hits / perfect parry | `Studio.triggerHitstop` (time-scale pulse) |

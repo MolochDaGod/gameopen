@@ -29,6 +29,14 @@ const ARCHETYPE_CONFIG: Record<FighterArchetype, Partial<CombatConfig>> = {
     stunnedDuration: 1.8,
     fallenDuration: 1.4,
     critWindowDuration: 2.0,
+    // Elden Ring–style timed roll: ~0.5s of true i-frames mid-roll
+    dodge: {
+      duration: 0.72,
+      iframeStart: 0.06,
+      iframeEnd: 0.56, // ~0.5s invulnerability window
+      staminaCost: 18,
+      distance: 4.4, // slightly exaggerated travel
+    },
   },
   grunt: {
     maxHealth: 100,
