@@ -613,17 +613,31 @@ export default function App() {
     });
   }, []);
 
-  // Whitelisted AI tool surface for the Danger Room — bound to the same App
-  // callbacks the Admin/Settings panels drive (handlers are stable useCallbacks).
-  const dangerAiTools = useMemo(
-    () => buildDangerTools({ onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam }),
-    [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam],
-  );
-
   const onTimeScale = useCallback((scale: number) => {
     setTimeScale(scale);
     studioRef.current?.setTimeScale(scale);
   }, []);
+
+  // Whitelisted AI tool surface for the Danger Room — combat + anim + movement.
+  const dangerAiTools = useMemo(
+    () =>
+      buildDangerTools({
+        onCharacter,
+        onWeapon,
+        onDifficulty,
+        onSpawn,
+        onSpawnBoss,
+        onClearNpcs,
+        onParam,
+        onHitstop: (s) => studioRef.current?.triggerHitstop(s ?? 0.08, 0.12),
+        onDash: (x, z, d) => studioRef.current?.requestDash(x, z, d) ?? false,
+        onAnimPreview: (clip, fx) => studioRef.current?.requestAnimPreview(clip, fx) ?? false,
+        onListClips: () => studioRef.current?.listAnimClips() ?? [],
+        onTimeScale,
+        getWeaponId: () => weaponId,
+      }),
+    [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId],
+  );
 
   const onRoomPreset = useCallback((id: RoomPresetId) => {
     setRoomPreset(id);
@@ -859,7 +873,7 @@ export default function App() {
         title: "Danger Room Master",
         tools: dangerAiTools,
         getSystemPrompt: () => dangerSystemPrompt({ characterId, weaponId, difficulty, params }),
-        placeholder: "Spawn 3 sword enemies, set difficulty hard…",
+        placeholder: "Fix combat feel, preview anim, dash forward, audit icons…",
       };
     }
     if (mode === "doors" || mode === "voxel" || mode === "lobby" || mode === "zones" || mode === "genesis" || mode === "voxgrudge-native") {

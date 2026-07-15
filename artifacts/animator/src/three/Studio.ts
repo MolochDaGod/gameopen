@@ -97,6 +97,7 @@ import {
   type WeaponCombat,
   type WeaponId,
 } from "./types";
+import { resolveSlotIconUrl, resolveSlotLocalName } from "./skillIcons";
 
 /** localStorage key for per-character action-slot clip overrides. */
 const SLOTS_KEY = "dangerroom:slots";
@@ -763,6 +764,7 @@ export class Studio {
             break;
           case "perfectParry":
             this.setCombatFlash("PERFECT PARRY!", 1.5);
+            this.triggerHitstop(0.09, 0.1);
             // Anime clash spark where the incoming blow is turned aside. The
             // parried enemy's own stun reaction + flash fire from onEnemyState
             // when its CC enters the vulnerable state (parry attackerReaction).
@@ -1051,10 +1053,23 @@ export class Studio {
 
   /** Resolved bindings (override or default) for every action slot. */
   getSlotBindings(): SlotBinding[] {
+    const weapon = this.weaponId;
     return SLOT_META.map(({ slot, key }) => {
       const d = this.slotDefault(slot);
       const override = this.overrides[slot];
-      return { slot, key, label: d.label, clip: override ?? d.clip, custom: !!override };
+      const role =
+        slot === "primary" || slot === "fskill"
+          ? slot
+          : (slot as "sig1" | "sig2" | "sig3" | "sig4");
+      return {
+        slot,
+        key,
+        label: d.label,
+        clip: override ?? d.clip,
+        custom: !!override,
+        icon: resolveSlotLocalName(role, weapon),
+        iconUrl: resolveSlotIconUrl(role, weapon),
+      };
     });
   }
 
@@ -1299,6 +1314,55 @@ export class Studio {
   /** Current global simulation time-scale (1 = real time). */
   getTimeScale(): number {
     return this.timeScale;
+  }
+
+  /**
+   * AAA hitstop — brief bullet-time on confirmed impact / perfect parry.
+   * Layers on the existing slowmo token so it won't stick if a later event wins.
+   */
+  triggerHitstop(seconds = 0.07, scale = 0.12) {
+    if (this.slowmoToken === 0) this.slowmoBase = this.getTimeScale();
+    const tok = ++this.slowmoToken;
+    this.setTimeScale(scale);
+    this.schedule(seconds, () => {
+      if (tok !== this.slowmoToken) return;
+      this.setTimeScale(this.slowmoBase);
+      this.slowmoToken = 0;
+    });
+  }
+
+  /** AI / tools: face a direction and dash (unique movement request). */
+  requestDash(dirX: number, dirZ: number, distance?: number) {
+    if (!this.controller) return false;
+    const d = new THREE.Vector3(dirX, 0, dirZ);
+    if (d.lengthSq() < 1e-6) d.copy(this.controller.forward());
+    d.normalize();
+    const dist = distance ?? this.params.dashDistance;
+    this.controller.dash(d, dist, 0.28, 0.15, 0.55);
+    return true;
+  }
+
+  /** AI / tools: preview an animation clip with optional VFX flash. */
+  requestAnimPreview(clip: string, withEffect = true) {
+    if (!this.character) return false;
+    if (!this.character.hasClip(clip)) {
+      const names = this.clipNames();
+      const hit = names.find((n) => n.toLowerCase().includes(clip.toLowerCase()));
+      if (!hit) return false;
+      clip = hit;
+    }
+    this.character.playClipOnce(clip, Math.max(0.05, this.params.blendTime));
+    if (withEffect && this.character.root) {
+      const p = this.character.root.position.clone();
+      p.y += 1.1;
+      this.vfx.impact(p, 0xffd080, 1.1);
+    }
+    return true;
+  }
+
+  /** List available animation clips for AI tools. */
+  listAnimClips(): string[] {
+    return this.clipNames();
   }
 
   /** Whether all sound (combat one-shots, ambient bed, klaxon) is muted. */
@@ -3189,7 +3253,10 @@ export class Studio {
     const color = explosive ? 0xff8a3c : 0xfff2a8;
     // Recoil kick (decays over the next frames) + hit-marker on a confirmed target.
     this.recoil.kick(explosive ? 0.05 : 0.025, explosive ? 0.05 : 0.025);
-    if (target) this.hitMarkerCount += 1;
+    if (target) {
+      this.hitMarkerCount += 1;
+      this.triggerHitstop(0.055, 0.14);
+    }
 
     // The explosive round uses the charged pose; ordinary rounds the gunplay attack.
     if (explosive) this.character.playClipOnce("chargedShot", 0.1);

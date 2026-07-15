@@ -361,6 +361,13 @@ export interface SlotBinding {
   clip: string;
   /** True when the slot is bound to a user override rather than the default. */
   custom: boolean;
+  /**
+   * Absolute skill/weapon icon URL (R2 CDN pack art preferred).
+   * When set, HUD renders this image instead of a local icon name alone.
+   */
+  iconUrl?: string;
+  /** Local public/icons name fallback (mine-loader set). */
+  icon?: string;
 }
 
 /**

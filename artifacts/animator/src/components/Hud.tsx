@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { HudSnapshot, SlotBinding } from "../three/types";
 import { WEAPON_ICON } from "../three/icons";
+import { resolveSlotIconUrl, resolveSlotLocalName } from "../three/skillIcons";
 import { Icon } from "./Icon";
 import type { HudEditApi, HudPanelBinding } from "../hud/useHudEditor";
 import type { HudPanelId } from "../hud/hudConfig";
@@ -55,6 +56,7 @@ function SkillSlot({
   keyLabel,
   name,
   icon,
+  iconUrl,
   cd,
   cdMax,
   accent,
@@ -62,6 +64,8 @@ function SkillSlot({
   keyLabel: string;
   name: string;
   icon: string;
+  /** R2 / pack absolute URL (preferred). */
+  iconUrl?: string;
   cd: number;
   cdMax: number;
   accent?: boolean;
@@ -71,7 +75,7 @@ function SkillSlot({
   return (
     <div className={`act-slot ${accent ? "act-accent" : ""} ${onCd ? "on-cd" : "ready"}`} title={name}>
       <div className="act-icon">
-        <Icon name={icon} size={30} />
+        <Icon name={icon} src={iconUrl} fallbackName={icon} size={30} title={name} />
         {onCd && (
           <div
             className="act-sweep"
@@ -555,7 +559,7 @@ export function Hud({ hud, edit }: Props) {
         <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
         {/* Combat input hints */}
         <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-          {(["Q: Parry", "E: Block", "X: Dodge", "R: Heavy", "H: Bomb", "J: Heal"] as const).map((hint) => (
+          {(["Q: Parry", "RMB: Block", "X: Dodge", "R: Heavy", "H: Bomb", "J: Heal"] as const).map((hint) => (
             <span
               key={hint}
               style={{
@@ -600,7 +604,8 @@ export function Hud({ hud, edit }: Props) {
               <SkillSlot
                 keyLabel={primary.key}
                 name={primary.label}
-                icon={WEAPON_ICON[hud.weapon]}
+                icon={primary.icon || resolveSlotLocalName("primary", hud.weapon)}
+                iconUrl={primary.iconUrl || resolveSlotIconUrl("primary", hud.weapon)}
                 cd={0}
                 cdMax={0}
               />
@@ -609,7 +614,8 @@ export function Hud({ hud, edit }: Props) {
               <SkillSlot
                 keyLabel={fskill.key}
                 name={hud.skillName}
-                icon={WEAPON_ICON[hud.weapon]}
+                icon={fskill.icon || resolveSlotLocalName("fskill", hud.weapon)}
+                iconUrl={fskill.iconUrl || resolveSlotIconUrl("fskill", hud.weapon)}
                 cd={hud.skillCooldown}
                 cdMax={hud.skillCooldownMax}
               />
@@ -624,7 +630,8 @@ export function Hud({ hud, edit }: Props) {
                   key={s.slot}
                   keyLabel={s.key}
                   name={s.label}
-                  icon={(["scout", "ambush", "siege", "skill-vfx-lab"] as const)[i] ?? "skill-vfx-lab"}
+                  icon={s.icon || resolveSlotLocalName((`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4"), hud.weapon)}
+                  iconUrl={s.iconUrl || resolveSlotIconUrl((`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4"), hud.weapon)}
                   cd={cd}
                   cdMax={cdMax}
                 />
@@ -633,7 +640,8 @@ export function Hud({ hud, edit }: Props) {
             <SkillSlot
               keyLabel="R"
               name="Heavy / Skyfall"
-              icon="charge"
+              icon={resolveSlotLocalName("heavy", hud.weapon)}
+              iconUrl={resolveSlotIconUrl("heavy", hud.weapon)}
               cd={hud.skyfallCooldown}
               cdMax={hud.skyfallCooldownMax}
               accent
