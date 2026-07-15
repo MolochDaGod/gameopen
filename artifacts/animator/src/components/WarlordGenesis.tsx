@@ -59,11 +59,22 @@ export function WarlordGenesis({ onExit }: Props) {
   const sceneRef  = useRef<WarlordGenesisScene | null>(null);
   const [s, setS] = useState<WarlordGenesisState>(INITIAL_STATE);
 
-  // Pre-select the active fleet character's race (if any) so the race card
-  // matching the player's Grudge Warlords character is highlighted on entry.
+  // Pre-select fleet character race; normalize common race id aliases from Builder.
   const [selectedRace, setSelectedRace] = useState<string | null>(() => {
     const ch = gameSession.selectedCharacter();
-    return ch?.raceId ?? null;
+    const raw = (ch?.raceId || ch?.classId || "").toLowerCase().replace(/\s+/g, "_");
+    const alias: Record<string, string> = {
+      human: "human",
+      western: "human",
+      orc: "orc",
+      undead: "undead",
+      barbarian: "barbarian",
+      dwarf: "dwarf",
+      high_elf: "high_elf",
+      highelf: "high_elf",
+      elf: "high_elf",
+    };
+    return alias[raw] ?? (RACE_CARDS.some((r) => r.id === raw) ? raw : null);
   });
   const characterName = gameSession.selectedCharacter()?.name ?? null;
 
@@ -125,6 +136,12 @@ export function WarlordGenesis({ onExit }: Props) {
       {isSelect && (
         <div style={selectOverlay}>
           <div style={selectHeader}>CHOOSE YOUR WARLORD</div>
+          {characterName && (
+            <div style={{ color: "#8ec3ff", fontSize: 13, marginBottom: 10 }}>
+              Fleet hero: <b>{characterName}</b>
+              {selectedRace ? ` · race preselected` : " · pick a race kit"}
+            </div>
+          )}
           <div style={cardsRow}>
             {RACE_CARDS.map((r) => (
               <button
@@ -154,6 +171,10 @@ export function WarlordGenesis({ onExit }: Props) {
           >
             ⚔ START CAMPAIGN
           </button>
+          <div style={{ marginTop: 14, color: "#8aa0bc", fontSize: 12, textAlign: "center", maxWidth: 420 }}>
+            WASD move · LMB melee · <b style={{ color: "#ffd24d" }}>E fire cannon</b> · third-person camera.
+            Skeleton warriors use unit-fixed scale (no 100×).
+          </div>
         </div>
       )}
 

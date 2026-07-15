@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "../assets";
 import { getBakedCharacter } from "../grudge/bakedRoster";
+import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { Vfx } from "../Vfx";
 
 // ── public types ──────────────────────────────────────────────────────────────
@@ -54,10 +55,14 @@ const RACE_BAKED_INDEX: Record<RaceKey, number> = {
 };
 
 const PLAYER_MAX_HP = 100;
-const PLAYER_SPEED = 5.5;
-const PLAYER_ATK_REACH = 2.2;
-const PLAYER_ATK_CD = 0.55;
-const PLAYER_ATK_DAMAGE = 18;
+const PLAYER_SPEED = 6.2;
+const PLAYER_ATK_REACH = 2.4;
+const PLAYER_ATK_CD = 0.48;
+const PLAYER_ATK_DAMAGE = 20;
+const PLAYER_CANNON_CD = 2.4;
+const PLAYER_CANNON_DMG = 55;
+const CAM_DIST = 7.2;
+const CAM_HEIGHT = 3.4;
 
 const CAROUSEL_RADIUS = 5;
 const CAROUSEL_SPEED = 0.4; // rad/s
@@ -98,12 +103,12 @@ const WAVE_DEFS: WaveDef[][] = [
     { modelKey: "zombie-3", hp: 65, speed: 2.6, atkDamage: 14, atkReach: 1.5, count: 2 },
     { modelKey: "orc-foe", hp: 70, speed: 2.6, atkDamage: 15, atkReach: 1.8, count: 1 },
   ],
-  // Wave 3 — 10 mixed + skeleton
+  // Wave 3 — mixed + fixed-scale skeleton warrior
   [
-    { modelKey: "zombie-1", hp: 60, speed: 2.8, atkDamage: 14, atkReach: 1.5, count: 4 },
+    { modelKey: "zombie-1", hp: 60, speed: 2.8, atkDamage: 14, atkReach: 1.5, count: 3 },
     { modelKey: "zombie-2", hp: 70, speed: 2.8, atkDamage: 14, atkReach: 1.5, count: 3 },
     { modelKey: "zombie-3", hp: 80, speed: 2.8, atkDamage: 16, atkReach: 1.5, count: 2 },
-    { modelKey: "skeleton", hp: 90, speed: 2.8, atkDamage: 18, atkReach: 2.0, count: 1 },
+    { modelKey: "skeleton", hp: 95, speed: 3.0, atkDamage: 18, atkReach: 2.0, count: 2 },
   ],
 ];
 
@@ -112,7 +117,16 @@ const ENEMY_MODEL_PATHS: Record<string, string> = {
   "zombie-2": "models/enemies/voxel-zombies/voxel-zombie-2.glb",
   "zombie-3": "models/enemies/voxel-zombies/voxel-zombie-3.glb",
   "orc-foe": "models/orc.glb",
-  skeleton: "models/skeleton-warrior.glb",
+  // Prefer creatures pack (unit-normalized); fallback path kept in load()
+  skeleton: "models/creatures/skeleton-warrior.glb",
+};
+
+const ENEMY_HEIGHT: Record<string, number> = {
+  "zombie-1": 1.7,
+  "zombie-2": 1.7,
+  "zombie-3": 1.75,
+  "orc-foe": 2.0,
+  skeleton: 2.0,
 };
 
 type StateCb = (s: WarlordGenesisState) => void;
@@ -151,7 +165,15 @@ export class WarlordGenesisScene {
   private playerYaw = 0;
   private playerHp = PLAYER_MAX_HP;
   private playerAtkCd = 0;
+  private cannonCd = 0;
   private attackQueued = false;
+  private cannonQueued = false;
+  private projectiles: {
+    mesh: THREE.Mesh;
+    vel: THREE.Vector3;
+    life: number;
+    dmg: number;
+  }[] = [];
 
   // Enemies (active wave)
   private enemies: EnemyAgent[] = [];
@@ -247,7 +269,13 @@ export class WarlordGenesisScene {
    * Apply best-practice shadow + sRGB pass to a character or enemy model, then
    * fit it to `targetHeight` metres (measured by bounding box height).
    */
+  /**
+   * Safe character fit: skinned-body measure + decade unit fix + hip XZ + feet.
+   * Replaces naive Box3 scale that made skeleton-warrior ~100× tall.
+   */
   private normalizeChar(root: THREE.Object3D, targetHeight = 1.8) {
+    restoreCharacterMaterials(root, { neutralizeMetal: true });
+    fitCharacterHeight(root, targetHeight, 1);
     root.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
@@ -256,17 +284,9 @@ export class WarlordGenesisScene {
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) {
         const std = mat as THREE.MeshStandardMaterial;
-        if (std.map) std.map.colorSpace = THREE.SRGBColorSpace;
+        if (std?.map) std.map.colorSpace = THREE.SRGBColorSpace;
       }
     });
-    root.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(root);
-    const size = box.getSize(new THREE.Vector3());
-    const h = size.y || 1;
-    root.scale.multiplyScalar(targetHeight / h);
-    root.updateMatrixWorld(true);
-    const b2 = new THREE.Box3().setFromObject(root);
-    root.position.y -= b2.min.y;
   }
 
   /**
@@ -382,13 +402,16 @@ export class WarlordGenesisScene {
       this.ownedObjects.push(bossGlb);
     }
 
-    // 4. Enemy templates
+    // 4. Enemy templates (per-key target height; skeleton fixed to 2.0 m)
     for (const [key, path] of Object.entries(ENEMY_MODEL_PATHS)) {
       if (this.disposed) return;
-      const tpl = await this.loadGlb(path);
+      let tpl = await this.loadGlb(path);
+      if (!tpl && key === "skeleton") {
+        tpl = await this.loadGlb("models/skeleton-warrior.glb");
+      }
       if (this.disposed) return;
       if (tpl) {
-        this.normalizeChar(tpl, 1.4);
+        this.normalizeChar(tpl, ENEMY_HEIGHT[key] ?? 1.8);
         this.enemyTemplates.set(key, tpl);
         this.ownedObjects.push(tpl);
       }
@@ -411,7 +434,13 @@ export class WarlordGenesisScene {
   // ── input ──────────────────────────────────────────────────────────────────
 
   private onKeyDown = (e: KeyboardEvent) => {
-    this.keys.add(e.key.toLowerCase());
+    const k = e.key.toLowerCase();
+    this.keys.add(k);
+    // E = fire deck-style cannon shot (same as Realms naval cannon feel)
+    if (k === "e" || e.code === "KeyE") {
+      e.preventDefault();
+      this.cannonQueued = true;
+    }
   };
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.key.toLowerCase());
@@ -468,12 +497,22 @@ export class WarlordGenesisScene {
   private async loadPlayerModel(raceId: string) {
     const idx = RACE_BAKED_INDEX[raceId as RaceKey] ?? 0;
     try {
+      // Clear previous race mesh
+      if (this.playerModel) {
+        this.player.remove(this.playerModel);
+        this.playerModel = null;
+      }
       const model = await getBakedCharacter(idx);
       if (this.disposed) return;
+      // bakedRoster already fitCharacterHeight + hip ground
       this.playerModel = model;
       this.player.add(model);
+      this.playerHp = PLAYER_MAX_HP;
     } catch (err) {
       console.error("[WarlordGenesis] player model load failed", err);
+      const fb = this.buildFallbackChar(0x4f9bff);
+      this.playerModel = fb;
+      this.player.add(fb);
     }
   }
 
@@ -578,6 +617,59 @@ export class WarlordGenesisScene {
     this.emit();
   }
 
+  /** E — heavy cannon shot (same feel as Realms naval cannon / craftable gun). */
+  private doPlayerCannon() {
+    if (this.cannonCd > 0) return;
+    if (this.phase !== "wave" && this.phase !== "bosswave") return;
+    this.cannonCd = PLAYER_CANNON_CD;
+    const fwd = new THREE.Vector3(Math.sin(this.playerYaw), 0.08, Math.cos(this.playerYaw)).normalize();
+    const origin = this.player.position.clone().add(new THREE.Vector3(0, 1.2, 0)).addScaledVector(fwd, 0.9);
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0x2a2a30, metalness: 0.7, roughness: 0.45 }),
+    );
+    mesh.position.copy(origin);
+    this.scene.add(mesh);
+    this.ownedObjects.push(mesh);
+    this.projectiles.push({
+      mesh,
+      vel: fwd.multiplyScalar(28),
+      life: 2.8,
+      dmg: PLAYER_CANNON_DMG,
+    });
+    this.vfx.impact(origin, 0xff8844, 1.1);
+    this.emit();
+  }
+
+  private updateProjectiles(dt: number) {
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      p.life -= dt;
+      p.mesh.position.addScaledVector(p.vel, dt);
+      p.vel.y -= 9 * dt;
+      let hit = false;
+      if (this.phase === "wave") {
+        for (const e of this.enemies) {
+          if (e.dead) continue;
+          if (e.model.position.distanceTo(p.mesh.position) < 1.4) {
+            this.damageEnemy(e, p.dmg);
+            hit = true;
+            break;
+          }
+        }
+      } else if (this.phase === "bosswave" && this.bossAgent && !this.bossAgent.dead) {
+        if (this.bossAgent.model.position.distanceTo(p.mesh.position) < 1.8) {
+          this.damageBoss(p.dmg);
+          hit = true;
+        }
+      }
+      if (hit || p.life <= 0 || p.mesh.position.y < -2) {
+        this.scene.remove(p.mesh);
+        this.projectiles.splice(i, 1);
+      }
+    }
+  }
+
   private damageEnemy(e: EnemyAgent, dmg: number) {
     e.hp = Math.max(0, e.hp - dmg);
     const head = e.model.position.clone();
@@ -639,6 +731,7 @@ export class WarlordGenesisScene {
     const dt = Math.min(this.clock.getDelta(), 0.05);
 
     this.playerAtkCd = Math.max(0, this.playerAtkCd - dt);
+    this.cannonCd = Math.max(0, this.cannonCd - dt);
 
     switch (this.phase) {
       case "select":
@@ -681,6 +774,11 @@ export class WarlordGenesisScene {
       this.attackQueued = false;
       this.doPlayerAttack();
     }
+    if (this.cannonQueued) {
+      this.cannonQueued = false;
+      this.doPlayerCannon();
+    }
+    this.updateProjectiles(dt);
 
     this.updateCamera();
     this.vfx.update(dt);
@@ -689,12 +787,24 @@ export class WarlordGenesisScene {
 
   private updatePlayer(dt: number) {
     if (this.phase === "victory" || this.phase === "defeat") return;
-    // Camera-relative WASD: same as MimicDungeon.
-    const move = new THREE.Vector3(
-      (this.keys.has("d") ? 1 : 0) - (this.keys.has("a") ? 1 : 0),
+    // Camera-relative WASD for third-person arena fighting / RTS-style kiting
+    const camFwd = new THREE.Vector3(
+      -Math.sin(this.playerYaw),
       0,
-      (this.keys.has("s") ? 1 : 0) - (this.keys.has("w") ? 1 : 0),
+      -Math.cos(this.playerYaw),
     );
+    // Prefer camera look on XZ for movement basis
+    const look = new THREE.Vector3();
+    this.camera.getWorldDirection(look);
+    look.y = 0;
+    if (look.lengthSq() < 1e-4) look.copy(camFwd);
+    look.normalize();
+    const right = new THREE.Vector3().crossVectors(look, new THREE.Vector3(0, 1, 0)).normalize();
+    const move = new THREE.Vector3();
+    if (this.keys.has("w")) move.add(look);
+    if (this.keys.has("s")) move.sub(look);
+    if (this.keys.has("d")) move.add(right);
+    if (this.keys.has("a")) move.sub(right);
     if (move.lengthSq() > 0) {
       move.normalize();
       this.player.position.addScaledVector(move, PLAYER_SPEED * dt);
@@ -702,6 +812,35 @@ export class WarlordGenesisScene {
     }
     this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
     this.player.rotation.y = this.playerYaw;
+    // Face nearest foe when idle-attacking (third-person combat feel)
+    if (this.attackQueued || this.cannonQueued) {
+      const foe = this.nearestLivingFoe();
+      if (foe) {
+        const d = foe.position.clone().sub(this.player.position);
+        d.y = 0;
+        if (d.lengthSq() > 1e-4) this.playerYaw = Math.atan2(d.x, d.z);
+        this.player.rotation.y = this.playerYaw;
+      }
+    }
+  }
+
+  private nearestLivingFoe(): THREE.Object3D | null {
+    let best: THREE.Object3D | null = null;
+    let bestD = Infinity;
+    const pp = this.player.position;
+    for (const e of this.enemies) {
+      if (e.dead) continue;
+      const d = pp.distanceToSquared(e.model.position);
+      if (d < bestD) {
+        bestD = d;
+        best = e.model;
+      }
+    }
+    if (this.bossAgent && !this.bossAgent.dead) {
+      const d = pp.distanceToSquared(this.bossAgent.model.position);
+      if (d < bestD) best = this.bossAgent.model;
+    }
+    return best;
   }
 
   private updateEnemies(dt: number) {
@@ -767,10 +906,21 @@ export class WarlordGenesisScene {
   // ── camera ─────────────────────────────────────────────────────────────────
 
   private updateCamera() {
+    // Third-person orbit-behind (fighting / RTS kiting feel)
     const target = this.player.position.clone();
-    target.y += 1.1;
-    const desired = new THREE.Vector3(target.x, target.y + 7, target.z + 10);
-    this.camera.position.lerp(desired, 0.1);
+    target.y += 1.25;
+    const back = new THREE.Vector3(
+      -Math.sin(this.playerYaw) * CAM_DIST,
+      CAM_HEIGHT,
+      -Math.cos(this.playerYaw) * CAM_DIST,
+    );
+    // Pull camera slightly off-axis so the player isn't dead-center (third-person combat)
+    const right = new THREE.Vector3().crossVectors(
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(-Math.sin(this.playerYaw), 0, -Math.cos(this.playerYaw)),
+    ).normalize();
+    const desired = target.clone().add(back).addScaledVector(right, 0.9);
+    this.camera.position.lerp(desired, 0.12);
     this.camera.lookAt(target);
   }
 
@@ -785,12 +935,12 @@ export class WarlordGenesisScene {
           : this.phase === "countdown"
             ? "Prepare for battle!"
             : this.phase === "wave"
-              ? `WASD move · LMB attack — Wave ${this.currentWave} of 3`
+              ? `WASD move · LMB melee · E cannon — Wave ${this.currentWave}/3`
               : this.phase === "bosswave"
-                ? "WASD move · LMB attack — DEFEAT THE WARLORD BOSS!"
+                ? "WASD · LMB · E cannon — DEFEAT THE WARLORD BOSS!"
                 : this.phase === "victory"
                   ? "Victory! You claimed the Warlord title."
-                  : "Defeated. Try again or enter GRUDOX.";
+                  : "Defeated. Try again — race select returns.";
 
     const s: WarlordGenesisState = {
       phase: this.phase,

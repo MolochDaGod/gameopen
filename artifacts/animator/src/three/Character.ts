@@ -162,23 +162,35 @@ export class Character {
 
   private findHands() {
     if (!this.model) return;
-    const re = new RegExp(this.def.handBone, "i");
-    const rightRe = /right|_r_|\.r$|r_hand|\bR\b/i;
+    // Prefer Bip001 / mixamo / standard third-person + RTS hand sockets
+    const re = new RegExp(
+      this.def.handBone ||
+        "Bip001.*(R|L).*Hand|mixamorig.*(Right|Left)Hand|hand|wrist|R_hand|L_hand|weapon",
+      "i",
+    );
+    const rightRe = /right|_r_|\.r$|r_hand|hand_r|R Hand|RHand|bip001 r/i;
+    const leftRe = /left|_l_|\.l$|l_hand|hand_l|L Hand|LHand|bip001 l/i;
     let right: THREE.Object3D | null = null;
     let left: THREE.Object3D | null = null;
     this.model.traverse((o) => {
       if (!o.name) return;
-      if (re.test(o.name)) {
-        if (/left|_l_|l_hand/i.test(o.name)) left = left ?? o;
-        else if (rightRe.test(o.name) || /right/i.test(o.name)) right = right ?? o;
+      if (re.test(o.name) || /hand|wrist|weapon/i.test(o.name)) {
+        if (leftRe.test(o.name)) left = left ?? o;
+        else if (rightRe.test(o.name)) right = right ?? o;
         else if (!right) right = o;
       }
     });
-    // Generic fallback: any bone with hand/wrist.
+    // Generic fallback: any bone with hand/wrist (prefer right for primary weapon).
     if (!right) {
       this.model.traverse((o) => {
         if (right) return;
-        if (/hand|wrist|palm/i.test(o.name) && !/left/i.test(o.name)) right = o;
+        if (/hand|wrist|palm/i.test(o.name) && !leftRe.test(o.name)) right = o;
+      });
+    }
+    if (!left) {
+      this.model.traverse((o) => {
+        if (left) return;
+        if (/hand|wrist|palm/i.test(o.name) && leftRe.test(o.name)) left = o;
       });
     }
     this.rightHand = this.makeMount(right);

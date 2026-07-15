@@ -19,6 +19,7 @@
 import * as THREE from "three";
 import { asset } from "../assets";
 import { sharedGltfLoader } from "../loaders/gltf";
+import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { PRESET_IDS, type PresetId } from "./gearPresets";
 import { RACE_IDS, type RaceId } from "./raceAssets";
 
@@ -69,19 +70,13 @@ function loadRoster(): Promise<THREE.Object3D[]> {
   return rosterPromise;
 }
 
-/** Fit a cloned character to TARGET_HEIGHT, centre on X/Z, feet at y=0. */
+/** Fit a cloned character to TARGET_HEIGHT with hip grounding (no 100× scale bug). */
 function normalize(character: THREE.Object3D): THREE.Group {
   const wrap = new THREE.Group();
   wrap.add(character);
-  character.updateWorldMatrix(true, true);
-  const size = new THREE.Box3().setFromObject(character).getSize(new THREE.Vector3());
-  character.scale.multiplyScalar(TARGET_HEIGHT / (size.y || 1));
-  character.updateWorldMatrix(true, true);
-  const box = new THREE.Box3().setFromObject(character);
-  const center = box.getCenter(new THREE.Vector3());
-  character.position.x -= center.x;
-  character.position.z -= center.z;
-  character.position.y -= box.min.y;
+  restoreCharacterMaterials(character, { neutralizeMetal: true });
+  // fitCharacterHeight: skinned body measure + decade unit fix + hips XZ + feet y=0
+  fitCharacterHeight(character, TARGET_HEIGHT, 1);
   wrap.traverse((o) => {
     const m = o as THREE.Mesh;
     if (m.isMesh) {
