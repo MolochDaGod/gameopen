@@ -24,10 +24,12 @@ This doc is the fleet contract for **world authoring → lobby hosting → PvP d
 | Danger Room combat (T0, parry/block, MM) | **gameopen** `epicfight` + Studio | `/danger`, map playtest |
 | Controllers / cameras (adopt pattern) | **gameopen** Controller + PhysicsSystem | All 3D Open modes |
 | Icons / UI kits | Mine-Loader public + Open `public/icons` | HUDs |
-| Fleet identity / characters | GrudgeBuilder Postgres | Both via `/api/characters` |
+| Fleet identity / characters | GrudgeBuilder Postgres | Both via `/api/characters` (Vercel satellite rewrites) |
 | Definition JSON (weapons master) | ObjectStore D1 | Both via `/api/objectstore` |
+| Realms world authority | Mine-Loader Railway Postgres | 1 replica; `players` = Grudge user membership cache only |
 
-**Rule:** Promote world/editor/deploy features **into mine-loader first**, then consume from Open. Do not fork a second world server in gameopen.
+**Rule:** Promote world/editor/deploy features **into mine-loader first**, then consume from Open. Do not fork a second world server in gameopen.  
+**Rule:** Do not invent a second character DB on Realms — heroes stay Builder Postgres; Open `saveData.open` and Realms `saveData.realms` are namespaced. Auth: [mine-loader `docs/AUTH_GRUDGE.md`](https://github.com/MolochDaGod/mine-loader/blob/main/docs/AUTH_GRUDGE.md).
 
 ---
 
