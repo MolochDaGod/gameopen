@@ -50,6 +50,17 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | Production GLB | `public/models/agama-map.glb` (~15 MB meshopt) |
 | Bake | `gltf-transform optimize --texture-size 1024` |
 
+**Combat stack (Danger Room parity)** — both `/brawl` and `/survival`:
+
+| Layer | Source |
+|-------|--------|
+| Character | Fleet Railway character → `grudge:race:preset` (`GrudgeAvatar` + baked Bip001 anims) |
+| Loadout | `saveData.open` + equipment bag (`characterLoadout` / `fleetCharacter`) |
+| Weapons | Arsenal `WEAPONS` + `mountWeaponModel` (same as Studio) |
+| Skills | T0 weapon kits (`t0WeaponSkills`) · HUD icons via `skillIcons` |
+| Content | Soft-load `/api/content/{weapons,skills,items}` + ObjectStore `master-weaponSkills.json` |
+| Controls | Danger Room `InputState` + `Controller` · 1–4 skills · `[` `]` weapon cycle · RMB focus |
+
 Query overrides (legacy): `?door=<mode>` · `?mode=<cabinetId>`.
 
 **Practice:** mode changes **pushState** to the path; browser back/forward restores mode.

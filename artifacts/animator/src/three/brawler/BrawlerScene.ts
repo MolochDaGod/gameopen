@@ -12,17 +12,27 @@
  * Networking is best-effort; offline local AI always runs.
  */
 import * as THREE from "three";
-import { getCharacter } from "../assets";
+import { getCharacter, getWeapon } from "../assets";
 import { Character } from "../Character";
 import { Controller } from "../Controller";
 import { InputState } from "../input";
 import { PhysicsSystem } from "../PhysicsSystem";
 import { getBakedCharacter } from "../grudge/bakedRoster";
+import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { Vfx } from "../Vfx";
 import { loadControls } from "../controlsSettings";
+import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
 import { GRAVITY_Y, LOCOMOTION } from "../../lib/productionRuntime";
-import type { CharacterDef, EditorParams, WeaponId } from "../types";
+import type { Avatar, EditorParams, WeaponId } from "../types";
 import { DEFAULT_EDITOR } from "../types";
+import { parseGrudgeAvatarId } from "../../lib/raceModel";
+import {
+  applyContentSkillLabels,
+  buildT0SkillHud,
+  mainWeaponCycle,
+  softLoadContentCatalog,
+  type ContentCatalogOverlay,
+} from "./combatLoadout";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYER_MAX_HP = 150;
@@ -46,19 +56,17 @@ const FOCUS_ACQUIRE_RANGE = 18;
 const FOCUS_BREAK_RANGE = 28;
 const DASH_COOLDOWN = 2.0;
 
-const WEAPON_CYCLE: WeaponId[] = ["sword", "axe", "dagger", "bow"];
-const WEAPON_FILE: Partial<Record<WeaponId, string>> = {
-  sword: "models/weapons/sword.glb",
-  axe: "models/weapons/axe.glb",
-  dagger: "models/weapons/dagger.glb",
-  bow: "models/weapons/bow.glb",
-  greatsword: "models/weapons/greatsword.glb",
-  spear: "models/weapons/spear.glb",
-  hammer: "models/weapons/hammer.glb",
-  staff: "models/weapons/staff.glb",
-};
+/** Full arsenal cycle (Danger Room weapon table). */
+const WEAPON_CYCLE: WeaponId[] = mainWeaponCycle();
 
-const AVATAR_CANDIDATES = ["karate-boss", "orc", "sanji", "gunslinger"] as const;
+/** Lab GLB fallbacks when grudge6 rig fails. */
+const AVATAR_CANDIDATES = [
+  "karate-boss",
+  "orc",
+  "sanji",
+  "gunslinger",
+  "explorer",
+] as const;
 
 // ── Public types ──────────────────────────────────────────────────────────────
 export interface BrawlerSkillSlot {
@@ -68,6 +76,8 @@ export interface BrawlerSkillSlot {
   cd: number;
   cdMax: number;
   ready: boolean;
+  /** Danger Room skill pack icon (CDN or local). */
+  iconUrl?: string;
 }
 
 export interface BrawlerState {
@@ -93,6 +103,10 @@ export interface BrawlerState {
   hasTarget: boolean;
   targetHp: number;
   targetMaxHp: number;
+  /** Studio avatar id actually loaded (`grudge:…` or catalog). */
+  avatarId: string;
+  /** Weapon cycle list for HUD strip (arsenal ids). */
+  weaponCycle: string[];
 }
 
 export interface BrawlerSceneOptions {
@@ -115,6 +129,19 @@ export interface BrawlerSceneOptions {
   spawnInterval?: number;
   /** Opening wave count before interval spawn takes over. */
   initialSpawnCount?: number;
+  /**
+   * Studio avatar id — prefer `grudge:race:preset` (GrudgeAvatar + baked anims)
+   * or catalog id (`karate-boss`, `grudge-western-kingdoms-knight`, …).
+   */
+  characterId?: string;
+  /** Main-hand arsenal weapon (Danger Room WeaponId). */
+  weaponId?: WeaponId;
+  /** Off-hand (shield etc.) when main is 1H-eligible. */
+  offHand?: WeaponId | null;
+  /** Fleet combat power → skill damage scale. */
+  atk?: number;
+  /** Fleet / class max HP. */
+  maxHp?: number;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -138,6 +165,8 @@ interface SkillDef {
   cdMax: number;
   cd: number;
   lunge: number;
+  iconUrl?: string;
+  kind?: string;
 }
 
 type StateCb = (s: BrawlerState) => void;
@@ -160,10 +189,13 @@ export class BrawlerScene {
   private physics: PhysicsSystem | null = null;
   private arenaColliders: THREE.Object3D[] = [];
 
-  private avatar: Character | null = null;
+  private avatar: Avatar | null = null;
   private fallbackModel: THREE.Object3D | null = null;
-  private weaponAttach: THREE.Object3D | null = null;
+  private mounted: MountedWeapon | null = null;
+  private mountedOff: MountedWeapon | null = null;
+  private weaponToken = 0;
   private playerHp = PLAYER_MAX_HP;
+  private playerMaxHp = PLAYER_MAX_HP;
   private playerArmor = PLAYER_BASE_ARMOR;
   private ammo = PLAYER_BASE_AMMO;
   private credits = 0;
@@ -171,15 +203,19 @@ export class BrawlerScene {
   private wave = 1;
   private atkCd = 0;
   private dashCd = 0;
-  private selectedWeapon = 0;
+  private weaponId: WeaponId = "sword";
+  private offHandId: WeaponId | null = null;
+  private atkPower = 16;
   private phase: BrawlerState["phase"] = "loading";
   private moving = false;
   private loadError: string | null = null;
   private characterName = "Brawler";
   private characterClass = "Fighter";
   private preferredAvatarId = "karate-boss";
+  private characterId = "karate-boss";
   private rosterIndex = 0;
   private skills: SkillDef[] = [];
+  private contentCatalog: ContentCatalogOverlay | null = null;
 
   private lmbDown = false;
   private rmbDown = false;
@@ -220,6 +256,17 @@ export class BrawlerScene {
     if (opts.displayName) this.characterName = opts.displayName;
     if (opts.characterClass) this.characterClass = opts.characterClass;
     if (opts.preferredAvatarId) this.preferredAvatarId = opts.preferredAvatarId;
+    if (opts.characterId) {
+      this.characterId = opts.characterId;
+      this.preferredAvatarId = opts.characterId;
+    }
+    if (opts.weaponId) this.weaponId = opts.weaponId;
+    if (opts.offHand !== undefined) this.offHandId = opts.offHand;
+    if (typeof opts.atk === "number" && opts.atk > 0) this.atkPower = opts.atk;
+    if (typeof opts.maxHp === "number" && opts.maxHp > 20) {
+      this.playerMaxHp = opts.maxHp;
+      this.playerHp = opts.maxHp;
+    }
     if (typeof opts.rosterIndex === "number") this.rosterIndex = opts.rosterIndex;
     if (opts.mapPath) this.mapPath = opts.mapPath.replace(/^\//, "");
     if (typeof opts.spawnRadius === "number" && opts.spawnRadius > 4) {
@@ -384,37 +431,49 @@ export class BrawlerScene {
   }
 
   /**
-   * Load Character → bind canonical Controller (Danger Room stack).
-   * Avatar root is the movable body; Controller owns camera + locomotion.
+   * Load Avatar (Grudge6 / catalog) → Controller + arsenal weapons + T0 skills.
+   * Same ownership as Danger Room Studio.spawnCharacter / applyWeapon.
    */
   private async buildPlayer() {
+    // Soft-fetch content / ObjectStore catalogs (non-blocking for first paint)
+    void softLoadContentCatalog().then((cat) => {
+      if (this.disposed) return;
+      this.contentCatalog = cat;
+      this.installSkillsForWeapon(this.weaponId);
+      this.emitState();
+    });
+
     const order = [
+      this.characterId,
       this.preferredAvatarId,
-      ...AVATAR_CANDIDATES.filter((id) => id !== this.preferredAvatarId),
-    ];
+      ...AVATAR_CANDIDATES.filter(
+        (id) => id !== this.preferredAvatarId && id !== this.characterId,
+      ),
+    ].filter(Boolean) as string[];
 
     for (const id of order) {
       try {
-        const def = getCharacter(id);
-        if (!def?.file) continue;
-        const av = new Character(def);
-        await av.load();
+        const av = await this.spawnAvatar(id);
+        if (!av) continue;
         if (this.disposed) {
           av.dispose();
           return;
         }
         this.avatar = av;
+        this.characterId = id;
         av.root.position.set(0, 0, 8);
         this.scene.add(av.root);
         this.bindController(av);
-        this.installSkillsFromDef(def);
-        await this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
-        if (def.name) this.characterClass = def.name;
+        this.installSkillsForWeapon(this.weaponId);
+        await this.applyWeaponAsync(this.weaponId);
+        if (av.def?.name) this.characterClass = av.def.name;
         console.info(
-          "[BrawlerScene] avatar + Controller ready:",
+          "[BrawlerScene] avatar ready:",
           id,
+          "weapon:",
+          this.weaponId,
           "clips:",
-          av.clipNames().slice(0, 8),
+          av.clipNames().slice(0, 10),
         );
         this.emitState();
         return;
@@ -423,162 +482,138 @@ export class BrawlerScene {
       }
     }
 
-    // Fallback: static mesh without Controller (no Avatar contract)
+    // Fallback: static baked mesh (pose only)
     try {
       const model = await getBakedCharacter(this.rosterIndex);
       if (this.disposed) return;
       this.fallbackModel = model;
       model.position.set(0, 0, 8);
       this.scene.add(model);
-      this.installDefaultSkills();
+      this.installSkillsForWeapon(this.weaponId);
       this.loadError =
-        "Static mesh only — Controller needs a rigged Character (try karate-boss)";
+        "Static mesh only — grudge6 / lab rig failed; skills still use T0 kit";
       console.warn("[BrawlerScene]", this.loadError);
     } catch (err) {
       this.loadError = "Player model failed to load";
       console.error("[BrawlerScene] player load failed", err);
-      this.installDefaultSkills();
+      this.installSkillsForWeapon(this.weaponId);
     }
     this.emitState();
   }
 
-  /** Wire Danger Room Controller to the loaded Character. */
-  private bindController(av: Character) {
+  /** Studio-parity spawn: grudge: → GrudgeAvatar, else Character catalog. */
+  private async spawnAvatar(id: string): Promise<Avatar | null> {
+    const grudge = parseGrudgeAvatarId(id);
+    if (grudge) {
+      const av = new GrudgeAvatar(grudge.raceId, grudge.presetId);
+      await av.load();
+      return av;
+    }
+    const def = getCharacter(id);
+    if (!def) return null;
+    // Procedural explorer still works as Character file empty path → skip empty
+    if (!def.file && !def.procedural) return null;
+    if (def.procedural) {
+      // Lazy import avoids circular weight when only GLB path is used
+      const { ExplorerCharacter } = await import("../ExplorerCharacter");
+      const av = new ExplorerCharacter(def);
+      await av.load();
+      return av;
+    }
+    const av = new Character(def);
+    await av.load();
+    return av;
+  }
+
+  /** Wire Danger Room Controller to the loaded Avatar. */
+  private bindController(av: Avatar) {
     this.controller = new Controller(av, this.camera, this.input, this.params);
     this.controller.setRoomBound(ARENA_HALF);
-    // Enemy footprints as push-out obstacles (same pattern as Danger Room dummies)
     this.controller.setObstacles(() =>
       this.enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, r: 0.55 })),
     );
-    // Arena meshes for camera occlusion pull-in
     if (this.arenaColliders.length) {
       this.controller.setCameraOccluders(this.arenaColliders);
     }
   }
 
-  private installSkillsFromDef(def: CharacterDef) {
-    const sigs = def.signatureSkills ?? [];
-    const attackClip =
-      (def.clips?.attack as string | undefined) || sigs[0]?.clip || "attack";
-
-    const defaults: Array<{
-      label: string;
-      reach: number;
-      damage: number;
-      cd: number;
-      lunge: number;
-    }> = [
-      { label: "Primary", reach: 2.4, damage: 28, cd: ATTACK_CD, lunge: 2.5 },
-      { label: "Skill 2", reach: 2.6, damage: 36, cd: 2.0, lunge: 3.5 },
-      { label: "Skill 3", reach: 3.0, damage: 44, cd: 4.5, lunge: 2.0 },
-      { label: "Ultimate", reach: 3.4, damage: 55, cd: 8.0, lunge: 6.0 },
-    ];
-    const keys = ["1", "2", "3", "4"] as const;
-
-    this.skills = [1, 2, 3, 4].map((slot) => {
-      const i = slot - 1;
+  /** T0 weapon skills (+ optional content API labels) — Danger Room kit. */
+  private installSkillsForWeapon(weaponId: WeaponId) {
+    let hud = buildT0SkillHud(weaponId, this.atkPower);
+    hud = applyContentSkillLabels(hud, weaponId, this.contentCatalog);
+    // Prefer character signature clips when present on the loaded def
+    const sigs = this.avatar?.def?.signatureSkills ?? [];
+    this.skills = hud.map((h, i) => {
       const sig = sigs[i];
-      const d = defaults[i]!;
       return {
-        slot: slot as 1 | 2 | 3 | 4,
-        label: sig?.label || d.label,
-        key: keys[i]!,
-        clip: sig?.clip && sig.clip.length > 0 ? sig.clip : attackClip,
-        reach: d.reach,
-        damage: d.damage,
-        cdMax: d.cd,
+        slot: h.slot,
+        label: h.label,
+        key: h.key,
+        clip: (sig?.clip && sig.clip.length > 0 ? sig.clip : h.clip) || "attack",
+        reach: h.reach,
+        damage: h.damage,
+        cdMax: h.cdMax,
         cd: 0,
-        lunge: d.lunge,
+        lunge: h.lunge,
+        iconUrl: h.iconUrl,
+        kind: h.kind,
       };
     });
   }
 
-  private installDefaultSkills() {
-    this.skills = [
-      {
-        slot: 1,
-        label: "Slash",
-        key: "1",
-        clip: "attack",
-        reach: 2.4,
-        damage: 28,
-        cdMax: ATTACK_CD,
-        cd: 0,
-        lunge: 2.5,
-      },
-      {
-        slot: 2,
-        label: "Twin Strike",
-        key: "2",
-        clip: "attack",
-        reach: 2.6,
-        damage: 36,
-        cdMax: 2.0,
-        cd: 0,
-        lunge: 3.5,
-      },
-      {
-        slot: 3,
-        label: "Spin",
-        key: "3",
-        clip: "attack",
-        reach: 3.0,
-        damage: 44,
-        cdMax: 4.5,
-        cd: 0,
-        lunge: 2.0,
-      },
-      {
-        slot: 4,
-        label: "Advance",
-        key: "4",
-        clip: "attack",
-        reach: 3.4,
-        damage: 55,
-        cdMax: 8.0,
-        cd: 0,
-        lunge: 6.0,
-      },
-    ];
-  }
+  /** Mount main + off-hand via arsenal mountWeaponModel (same as Studio). */
+  private async applyWeaponAsync(weaponId: WeaponId) {
+    const token = ++this.weaponToken;
+    this.weaponId = weaponId;
+    this.avatar?.setWeaponId?.(weaponId);
+    this.avatar?.readyPose?.(weaponId);
 
-  private async attachWeapon(weaponId: WeaponId) {
-    if (this.weaponAttach) {
-      this.weaponAttach.removeFromParent();
-      this.weaponAttach = null;
+    if (this.mounted) {
+      unmountWeapon(this.mounted);
+      this.mounted = null;
     }
-    const hand = this.avatar?.rightHand;
-    const file = WEAPON_FILE[weaponId];
-    if (!hand || !file) return;
-    try {
-      const { loadGltfFirst } = await import("../assets");
-      const { sharedGltfLoader } = await import("../loaders/gltf");
-      const gltf = await loadGltfFirst(file, sharedGltfLoader());
-      if (this.disposed) return;
-      const w = gltf.scene;
-      const box = new THREE.Box3().setFromObject(w);
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      w.scale.setScalar(0.9 / maxDim);
-      w.position.set(0, 0, 0);
-      w.rotation.set(0, 0, 0);
-      if (weaponId === "sword" || weaponId === "dagger") {
-        w.rotation.set(Math.PI / 2, 0, 0);
-      } else if (weaponId === "bow") {
-        w.rotation.set(0, Math.PI / 2, 0);
-      }
-      w.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (m.isMesh) {
-          m.castShadow = true;
-          m.frustumCulled = false;
+    if (this.mountedOff) {
+      unmountWeapon(this.mountedOff);
+      this.mountedOff = null;
+    }
+
+    const character = this.avatar;
+    const rightHand = character?.rightHand;
+    const leftHand = character?.leftHand;
+    if (!character || !rightHand || !leftHand) {
+      this.installSkillsForWeapon(weaponId);
+      this.emitState();
+      return;
+    }
+    if (character.def?.weaponless) {
+      this.installSkillsForWeapon("none");
+      this.emitState();
+      return;
+    }
+
+    const def = getWeapon(weaponId);
+    const mounted = await mountWeaponModel(def, rightHand, leftHand);
+    if (this.disposed || token !== this.weaponToken || this.avatar !== character) {
+      unmountWeapon(mounted);
+      return;
+    }
+    this.mounted = mounted;
+
+    // Off-hand (shield) when eligible
+    if (this.offHandId) {
+      const { offHandEligible } = await import("../arsenal");
+      if (offHandEligible(weaponId)) {
+        const off = await mountWeaponModel(getWeapon(this.offHandId), rightHand, leftHand);
+        if (this.disposed || token !== this.weaponToken || this.avatar !== character) {
+          unmountWeapon(off);
+        } else {
+          this.mountedOff = off;
         }
-      });
-      hand.add(w);
-      this.weaponAttach = w;
-    } catch (err) {
-      console.warn("[BrawlerScene] weapon attach failed", weaponId, err);
+      }
     }
+
+    this.installSkillsForWeapon(weaponId);
+    this.emitState();
   }
 
   private async loadEnemyTemplates() {
@@ -824,15 +859,16 @@ export class BrawlerScene {
       e.preventDefault();
       this.toggleFocus();
     }
-    // Digits 1-4: weapon + skill
+    // Digits 1-4: skill slots only (Danger Room parity — weapon is loadout/strip)
     if (e.code.startsWith("Digit")) {
       const n = Number(e.code.slice(5));
       if (n >= 1 && n <= 4) {
-        this.selectedWeapon = n - 1;
-        void this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
         this.triggerSkill(n as 1 | 2 | 3 | 4);
       }
     }
+    // [ / ] cycle arsenal weapons
+    if (e.code === "BracketLeft") this.cycleWeapon(-1);
+    if (e.code === "BracketRight") this.cycleWeapon(1);
     if (e.code === "KeyQ") this.triggerSkill(1);
     if (e.code === "KeyE") this.triggerSkill(2);
     if (e.code === "KeyR") this.triggerSkill(3);
@@ -1146,7 +1182,7 @@ export class BrawlerScene {
         this.triggerSkill(1);
       }
     } else {
-      this.avatar?.setLocomotion(0);
+      this.avatar?.setLocomotion?.(0);
       this.avatar?.update(dt);
       if (this.focusRing) this.focusRing.visible = false;
     }
@@ -1183,7 +1219,7 @@ export class BrawlerScene {
     const wasIn = this.inSafeZone;
     this.inSafeZone = xz.length() < this.safeZoneRadius;
     if (this.inSafeZone) {
-      this.playerHp = Math.min(PLAYER_MAX_HP, this.playerHp + HEAL_RATE * dt);
+      this.playerHp = Math.min(this.playerMaxHp, this.playerHp + HEAL_RATE * dt);
     }
     if (this.safeZoneRing) {
       const mat = this.safeZoneRing.material as THREE.MeshBasicMaterial;
@@ -1211,7 +1247,7 @@ export class BrawlerScene {
         aimZ: fwd.z,
         fire: this.lmbDown,
         dash: this.controller?.isDashing ?? false,
-        weapon: this.selectedWeapon,
+        weapon: WEAPON_CYCLE.indexOf(this.weaponId),
       });
     } catch {
       /* optional */
@@ -1232,17 +1268,18 @@ export class BrawlerScene {
   }
 
   private emitState() {
-    const weaponId = WEAPON_CYCLE[this.selectedWeapon] ?? "sword";
+    const weaponId = this.weaponId;
+    const wdef = getWeapon(weaponId);
     const ft = this.focusTarget;
     const s: BrawlerState = {
       phase: this.phase,
       playerHp: Math.round(this.playerHp),
-      playerMaxHp: PLAYER_MAX_HP,
+      playerMaxHp: Math.round(this.playerMaxHp),
       playerArmor: Math.round(this.playerArmor),
       ammo: this.ammo,
       credits: this.credits,
       kills: this.kills,
-      weaponName: weaponId.charAt(0).toUpperCase() + weaponId.slice(1),
+      weaponName: wdef.label || weaponId,
       weaponId,
       characterName: this.characterName,
       characterClass: this.characterClass,
@@ -1257,6 +1294,7 @@ export class BrawlerScene {
         cd: sk.cd,
         cdMax: sk.cdMax,
         ready: sk.cd <= 0,
+        iconUrl: sk.iconUrl,
       })),
       moving: this.moving,
       loadError: this.loadError,
@@ -1264,10 +1302,13 @@ export class BrawlerScene {
       hasTarget: !!ft,
       targetHp: ft ? Math.round(ft.hp) : 0,
       targetMaxHp: ft ? Math.round(ft.maxHp) : 0,
+      avatarId: this.characterId,
+      weaponCycle: [...WEAPON_CYCLE],
     };
     const sig = JSON.stringify({
       p: s.phase,
       hp: s.playerHp,
+      mh: s.playerMaxHp,
       k: s.kills,
       c: s.credits,
       n: s.connected ? 1 : 0,
@@ -1276,7 +1317,8 @@ export class BrawlerScene {
       w: s.wave,
       a: s.ammo,
       wi: s.weaponId,
-      sk: s.skills.map((x) => Math.round(x.cd * 10)),
+      av: s.avatarId,
+      sk: s.skills.map((x) => `${x.label}:${Math.round(x.cd * 10)}`),
       m: s.moving ? 1 : 0,
       le: s.loadError || "",
       fl: s.focusLocked ? 1 : 0,
@@ -1290,7 +1332,7 @@ export class BrawlerScene {
 
   // ── Public API ─────────────────────────────────────────────────────────────
   respawn() {
-    this.playerHp = PLAYER_MAX_HP;
+    this.playerHp = this.playerMaxHp;
     this.playerArmor = PLAYER_BASE_ARMOR;
     this.ammo = PLAYER_BASE_AMMO;
     if (this.avatar) this.avatar.root.position.set(0, 0, 8);
@@ -1321,7 +1363,8 @@ export class BrawlerScene {
   buyMaxHpUp() {
     if (this.credits < 80) return;
     this.credits -= 80;
-    this.playerHp = Math.min(PLAYER_MAX_HP, this.playerHp + 30);
+    this.playerMaxHp += 25;
+    this.playerHp = Math.min(this.playerMaxHp, this.playerHp + 30);
     this.emitState();
   }
 
@@ -1329,10 +1372,22 @@ export class BrawlerScene {
     this.triggerSkill(slot);
   }
 
+  /** Equip arsenal weapon by index in the HUD cycle strip. */
   setWeapon(index: number) {
-    this.selectedWeapon = Math.max(0, Math.min(WEAPON_CYCLE.length - 1, index));
-    void this.attachWeapon(WEAPON_CYCLE[this.selectedWeapon] ?? "sword");
-    this.emitState();
+    const i = Math.max(0, Math.min(WEAPON_CYCLE.length - 1, index));
+    const id = WEAPON_CYCLE[i] ?? "sword";
+    void this.applyWeaponAsync(id);
+  }
+
+  /** Equip arsenal weapon by WeaponId (Danger Room loadout). */
+  setWeaponId(id: WeaponId) {
+    void this.applyWeaponAsync(id);
+  }
+
+  cycleWeapon(dir: -1 | 1) {
+    const idx = Math.max(0, WEAPON_CYCLE.indexOf(this.weaponId));
+    const next = (idx + dir + WEAPON_CYCLE.length) % WEAPON_CYCLE.length;
+    void this.applyWeaponAsync(WEAPON_CYCLE[next] ?? "sword");
   }
 
   dispose() {
@@ -1351,6 +1406,14 @@ export class BrawlerScene {
     this.physics = null;
     this.client?.dispose?.();
     this.vfx.dispose();
+    if (this.mounted) {
+      unmountWeapon(this.mounted);
+      this.mounted = null;
+    }
+    if (this.mountedOff) {
+      unmountWeapon(this.mountedOff);
+      this.mountedOff = null;
+    }
     this.avatar?.dispose();
     this.avatar = null;
     this.focusTarget = null;
