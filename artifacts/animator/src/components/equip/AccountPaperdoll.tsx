@@ -5,7 +5,7 @@
  * Reference: Tactical Infinity EquipmentPanel (self-hosted TI /equipment)
  *            F:\GitHub\Tactical-Infinity\client\src\components\EquipmentPanel.tsx
  */
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   HardHat,
   Shirt,
@@ -21,7 +21,7 @@ import {
   Plus,
   type LucideIcon,
 } from "lucide-react";
-import { asset } from "../../three/assets";
+import { assetCandidates } from "../../three/assets";
 import { Icon as RpgIcon } from "../Icon";
 import "./AccountPaperdoll.css";
 
@@ -71,15 +71,62 @@ const RIGHT: SlotDef[] = [
   { id: "cloak", label: "Cloak", Icon: Sparkles, col: 3, row: 5 },
 ];
 
-/** Public race portrait URLs (copied from TI assets/races). */
-export const RACE_PORTRAIT: Record<PaperRaceKey, string> = {
-  human: asset("races/human.png"),
-  orc: asset("races/orc.png"),
-  elf: asset("races/elf.png"),
-  dwarf: asset("races/dwarf.png"),
-  barbarian: asset("races/barbarian.png"),
-  undead: asset("races/undead.png"),
+/** Logical race portrait paths under public/races/ (TI equipment pack). */
+export const RACE_PORTRAIT_PATH: Record<PaperRaceKey, string> = {
+  human: "races/human.png",
+  orc: "races/orc.png",
+  elf: "races/elf.png",
+  dwarf: "races/dwarf.png",
+  barbarian: "races/barbarian.png",
+  undead: "races/undead.png",
 };
+
+/** Primary URL for a race portrait (same-origin first). */
+export function racePortraitUrl(race: PaperRaceKey): string {
+  const cands = assetCandidates(RACE_PORTRAIT_PATH[race]);
+  return cands[0] ?? `/${RACE_PORTRAIT_PATH[race]}`;
+}
+
+/** @deprecated use racePortraitUrl — kept for callers expecting a static map */
+export const RACE_PORTRAIT: Record<PaperRaceKey, string> = {
+  human: racePortraitUrl("human"),
+  orc: racePortraitUrl("orc"),
+  elf: racePortraitUrl("elf"),
+  dwarf: racePortraitUrl("dwarf"),
+  barbarian: racePortraitUrl("barbarian"),
+  undead: racePortraitUrl("undead"),
+};
+
+/** <img> with fleet multi-host fallback so missing same-origin still resolves. */
+function ResilientImg({
+  path,
+  alt,
+  className,
+  style,
+}: {
+  path: string;
+  alt: string;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const cands = assetCandidates(path);
+  const [idx, setIdx] = useState(0);
+  const src = cands[Math.min(idx, cands.length - 1)] ?? path;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      style={style}
+      draggable={false}
+      loading="lazy"
+      decoding="async"
+      onError={() => {
+        setIdx((i) => (i + 1 < cands.length ? i + 1 : i));
+      }}
+    />
+  );
+}
 
 export const RACE_DISPLAY: Record<
   PaperRaceKey,
@@ -188,7 +235,7 @@ export function AccountPaperdoll({
   const GAP = Math.round(SLOT * 0.18);
   const PAD = Math.round(SLOT * 0.22);
   const meta = RACE_DISPLAY[race];
-  const portrait = RACE_PORTRAIT[race];
+  const portraitPath = RACE_PORTRAIT_PATH[race];
 
   return (
     <div className="ap-doll" style={{ width }}>
@@ -216,11 +263,10 @@ export function AccountPaperdoll({
         ))}
 
         <div className="ap-portrait" style={{ gridColumn: 2, gridRow: "1 / 6" }}>
-          <img
-            src={portrait}
+          <ResilientImg
+            path={portraitPath}
             alt={meta.name}
             className="ap-portrait-img"
-            draggable={false}
           />
           <div className="ap-portrait-vignette" />
           <div className="ap-portrait-caption">{meta.name}</div>
@@ -283,11 +329,10 @@ export function RacePortraitGrid({
             onClick={() => onSelect(key)}
           >
             <div className="ap-race-thumb-wrap">
-              <img
-                src={RACE_PORTRAIT[key]}
+              <ResilientImg
+                path={RACE_PORTRAIT_PATH[key]}
                 alt={meta.name}
                 className="ap-race-thumb"
-                draggable={false}
               />
             </div>
             <div className="ap-race-meta">

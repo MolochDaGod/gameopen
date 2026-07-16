@@ -146,6 +146,44 @@ export function pathAliases(path: string): string[] {
     out.push(`icons/${name}`);
     out.push(`icons/pack/${name}`);
     out.push(`icons/496_rpg_icons/${name.replace(/\.png$/i, "")}.png`);
+    // WCS equipment icons often live under icons/wcs/equipment or icons only
+    if (name.startsWith("wcs/equipment/")) {
+      const bare = name.replace(/^wcs\/equipment\//, "").replace(/\.png$/i, "");
+      out.push(`icons/${bare}.png`);
+      out.push(`icons/equip.png`);
+    }
+  }
+
+  // Account paperdoll race portraits (TI assets copied to public/races/)
+  const racePng = clean.match(/^races\/([a-z0-9_-]+)\.png$/i);
+  if (racePng) {
+    const n = racePng[1]!.toLowerCase().replace(/_/g, "-");
+    const map: Record<string, string> = {
+      human: "human",
+      orc: "orc",
+      elf: "elf",
+      "high-elf": "elf",
+      highelf: "elf",
+      dwarf: "dwarf",
+      barbarian: "barbarian",
+      barb: "barbarian",
+      undead: "undead",
+    };
+    const key = map[n] ?? n;
+    out.push(`races/${key}.png`);
+    out.push(`ui/races/${key}.png`);
+    out.push(`icons/races/${key}.png`);
+  }
+
+  // Account equipment banner (alias library account scene)
+  if (
+    clean === "rooms/equipment-banner.png" ||
+    clean === "equipment-banner.png"
+  ) {
+    out.push("rooms/equipment-banner.png");
+    out.push("rooms/library-account-scene.png");
+    out.push("rooms/library-account-scene.jpg");
+    out.push("rooms/lobby-scene.png");
   }
 
   // VFX — Open has models/vfx/*; R2 often missing

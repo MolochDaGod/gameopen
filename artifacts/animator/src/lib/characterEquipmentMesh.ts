@@ -111,12 +111,26 @@ function equipmentBag(ch: GrudgeCharacter | null | undefined): Record<string, un
   return Object.assign({}, ...bags);
 }
 
+/**
+ * Resolve item icon URL.
+ * Prefer same-origin Open icons (always deployed), then R2 CDN paths.
+ * Never invent bare `icons/wcs/equipment/<slug>.png` as the only option —
+ * that path 404s for most fleet item ids.
+ */
 function iconUrlFromItem(raw: unknown): string | null {
   if (!raw) return null;
+  const sameOrigin = (rel: string) =>
+    `/${rel.replace(/^\//, "")}`;
+  const r2 = (rel: string) =>
+    `${CDN}/${rel.replace(/^\//, "")}`;
+
   if (typeof raw === "string") {
-    if (raw.startsWith("http") || raw.startsWith("/")) return raw.startsWith("http") ? raw : `${CDN}${raw}`;
-    // slug → try icons path
-    return `${CDN}/icons/wcs/equipment/${raw}.png`;
+    if (raw.startsWith("http")) return raw;
+    if (raw.startsWith("/")) return raw; // same-origin absolute path
+    if (raw.startsWith("icons/")) return sameOrigin(raw);
+    // slug → Open pack icon first (equip/attack/etc exist locally)
+    const bare = raw.replace(/\.png$/i, "").split("/").pop() || raw;
+    return sameOrigin(`icons/${bare}.png`);
   }
   if (typeof raw === "object") {
     const o = raw as Record<string, unknown>;
@@ -129,12 +143,18 @@ function iconUrlFromItem(raw: unknown): string | null {
       o.thumbnail;
     if (typeof cand === "string" && cand) {
       if (cand.startsWith("http")) return cand;
-      if (cand.startsWith("/")) return `${CDN}${cand}`;
-      if (cand.startsWith("icons/")) return `${CDN}/${cand}`;
-      return `${CDN}/icons/${cand.replace(/^\//, "")}`;
+      if (cand.startsWith("/")) return cand;
+      if (cand.startsWith("icons/")) return sameOrigin(cand);
+      // Relative CDN key
+      if (cand.includes("/")) return r2(cand);
+      return sameOrigin(`icons/${cand.replace(/\.png$/i, "")}.png`);
     }
     const id = o.itemId || o.id || o.slug || o.name;
-    if (typeof id === "string" && id) return `${CDN}/icons/wcs/equipment/${id}.png`;
+    if (typeof id === "string" && id) {
+      const bare = id.replace(/\.png$/i, "").split("/").pop() || id;
+      // Prefer known local RPG icons over missing WCS equipment keys
+      return sameOrigin(`icons/${bare}.png`);
+    }
   }
   return null;
 }

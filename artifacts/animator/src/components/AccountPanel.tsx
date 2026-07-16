@@ -29,7 +29,8 @@ import {
 import { raceCharacterIdForFleetRace } from "../three/assets";
 import { GRUDOX_ZONES } from "../game/grudoxZones";
 import { embedSessionForZone } from "../lib/inAppLaunch";
-import { assetUrl } from "../lib/fleet";
+import { assetUrl, publicUrl } from "../lib/fleet";
+import { assetCandidates } from "../three/assets";
 import { CharacterPicker } from "./CharacterPicker";
 import {
   AccountPaperdoll,
@@ -300,7 +301,7 @@ export function AccountPanel({
             <div
               className="ap-banner"
               style={{
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.88)), url(${assetUrl("rooms/equipment-banner.png")})`,
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.88)), url(${publicUrl("rooms/equipment-banner.png")})`,
               }}
             >
               <div>
@@ -445,7 +446,7 @@ export function AccountPanel({
                     >
                       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                         <img
-                          src={assetUrl(`races/${paperRace === "elf" ? "elf" : paperRace}.png`)}
+                          src={publicUrl(`races/${paperRace === "elf" ? "elf" : paperRace}.png`)}
                           alt=""
                           width={48}
                           height={48}
@@ -455,6 +456,14 @@ export function AccountPanel({
                             border: "1px solid rgba(146,64,14,0.45)",
                           }}
                           draggable={false}
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            const cands = assetCandidates(
+                              `races/${paperRace === "elf" ? "elf" : paperRace}.png`,
+                            );
+                            const next = cands.find((u) => u !== img.src);
+                            if (next) img.src = next;
+                          }}
                         />
                         <div>
                           <strong style={{ color: "#fef3c7" }}>{c.name}</strong>
@@ -665,7 +674,7 @@ export function AccountPanel({
       </div>
 
       <footer style={{ ...muted, fontSize: 11, padding: "8px 4px" }}>
-        <img src={assetUrl("icons/inventory.png")} alt="" width={14} height={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+        <img src={publicUrl("icons/inventory.png")} alt="" width={14} height={14} style={{ verticalAlign: "middle", marginRight: 6 }} onError={(e) => { e.currentTarget.src = publicUrl("icons/equip.png"); }} />
         gameopen.vercel.app/account · Railway grudge-api-production · charactersgrudox · same Grudge ID
       </footer>
     </div>
