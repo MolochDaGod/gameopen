@@ -70,9 +70,9 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
   if (baseOverride) {
     urls.push(`${baseOverride.replace(/\/+$/, "")}/${path}`);
   }
-  urls.push(...resolveGrudgeAssetCandidates(path));
-  // Arena often mirrors baked packs for combat
+  // Arena is the live SSOT for baked Bip001 packs (R2 root often 404s).
   urls.push(`${FLEET_ASSET_HOSTS.arena}/${path}`);
+  urls.push(...resolveGrudgeAssetCandidates(path));
   return [...new Set(urls)];
 }
 

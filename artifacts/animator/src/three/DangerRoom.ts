@@ -142,6 +142,8 @@ export class DangerRoom {
     const floor = new THREE.Mesh(geo, noise);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
+    floor.userData.physicsLayer = "terrain";
+    floor.name = "danger_floor";
     this.group.add(floor);
 
     // Emissive hologrid tiles slightly above the floor (preset-gated).

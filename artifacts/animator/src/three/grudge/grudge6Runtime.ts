@@ -19,6 +19,7 @@ import { RACE_ASSETS, type RaceId } from "./raceAssets";
 import { getPreset, type PresetId } from "./gearPresets";
 import { applyBodyTexture, applyGearPreset, meshKey } from "./loadCharacter";
 import { loadBodyTexture } from "./texture";
+import { unifySkeletons, rematchClipToSkeleton } from "./skeleton";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
@@ -256,6 +257,9 @@ export async function loadGrudge6CombatRig(
   const model = cloneSkinned(template.object);
   model.userData.importPipeline = template.pipeline;
   model.userData.importUrl = template.url;
+
+  // Arena modular kits ship multiple disconnected skeletons — unify so clips deform all meshes.
+  unifySkeletons(model);
   normalizeSkinned(model, template.pipeline);
 
   // Materials:
@@ -266,11 +270,30 @@ export async function loadGrudge6CombatRig(
     await rebindRaceAtlas(model, raceId);
   } else {
     restoreCharacterMaterials(model, { neutralizeMetal: true });
+    // Unlit MeshBasic mats must not be ACES-crushed (yellow/grey wash).
+    model.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        if (m instanceof THREE.MeshBasicMaterial) {
+          m.toneMapped = false;
+          if (m.map) m.color.setHex(0xffffff);
+          m.needsUpdate = true;
+        } else if (m instanceof THREE.MeshStandardMaterial && m.map) {
+          m.color.setHex(0xffffff);
+          m.metalness = Math.min(m.metalness, 0.12);
+          m.roughness = Math.max(m.roughness, 0.55);
+          m.needsUpdate = true;
+        }
+      }
+    });
   }
 
   applyGearVisibility(model, meshIds);
   model.userData.equipMeshIds = meshIds.slice();
   model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
+  model.userData.physicsLayer = "character";
 
   const root = new THREE.Group();
   root.add(model);
@@ -281,14 +304,15 @@ export async function loadGrudge6CombatRig(
 
   const loadRole = async (role: string, rel: string) => {
     try {
-      // Prefer same-origin /anims/baked (vercel → arena); loadBakedClip handles base
-      const clip = await loadBakedClip(rel);
+      let clip = await loadBakedClip(rel);
+      clip = rematchClipToSkeleton(model, clip);
       clips.set(role, clip);
       roles.set(role, role);
       return clip;
     } catch (e1) {
       try {
-        const clip = await loadBakedClip(rel, ARENA_ORIGIN);
+        let clip = await loadBakedClip(rel, ARENA_ORIGIN);
+        clip = rematchClipToSkeleton(model, clip);
         clips.set(role, clip);
         roles.set(role, role);
         return clip;

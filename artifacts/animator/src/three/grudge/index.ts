@@ -28,7 +28,14 @@ export {
   loadBakedClip,
 } from "./anims";
 
-export { powerOfTenScale, unifySkeletons, findHandBone } from "./skeleton";
+export {
+  powerOfTenScale,
+  unifySkeletons,
+  findHandBone,
+  normalizeBoneKey,
+  buildBoneNameLookup,
+  rematchClipToSkeleton,
+} from "./skeleton";
 
 export type { LoadedCharacter } from "./loadCharacter";
 export {

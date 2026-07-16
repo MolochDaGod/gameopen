@@ -921,6 +921,15 @@ export interface HudSnapshot {
   weapon: WeaponId;
   weaponLabel: string;
   skillName: string;
+  /**
+   * 2D portrait for the unit frame (threejs-rapier / UnitFrame ring).
+   * Prefer account avatarUrl; fall back to race PNG via characterPortrait cascade.
+   */
+  portraitUrl?: string;
+  /** Fallback portrait URLs for <img onError> chain. */
+  portraitCandidates?: string[];
+  /** Display level (account / default 1). */
+  level?: number;
   health: number;
   maxHealth: number;
   stamina: number;

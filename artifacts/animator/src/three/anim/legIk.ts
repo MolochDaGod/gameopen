@@ -147,7 +147,9 @@ export function solveLegToTarget(
  * missing so the grounder can no-op on rigs without locatable legs.
  */
 export function findLegChain(root: THREE.Object3D, side: "L" | "R"): LegChain | null {
-  const sideRe = side === "L" ? /_l_|left/i : /_r_|right/i;
+  // Underscore (Bip001_L_Thigh) AND spaced 3ds Max (Bip001 L Thigh) AND Mixamo Left*
+  const sideRe =
+    side === "L" ? /(?:^|[_\s.])l(?:[_\s.]|$)|left/i : /(?:^|[_\s.])r(?:[_\s.]|$)|right/i;
   const upperRe = /thigh|upleg|upperleg/i;
   const lowerRe = /calf|shin|knee|lowerleg/i;
   const legRe = /leg/i;

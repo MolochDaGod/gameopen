@@ -18,6 +18,7 @@ import {
   AnimationDirector,
   clipsFromRoleMap,
 } from "../ummorpg/animationDirector";
+import { FootGrounder, type GroundSampler } from "../anim/legIk";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -31,6 +32,8 @@ import {
  * The normalized FBX group already faces +Z and sits with feet on y=0; an inner
  * `holder` carries the optional `modelYaw` so the art-forward can be re-aimed
  * without disturbing the group's self-contained centering transform.
+ *
+ * Foot IK plants Bip001 soles on terrain after the mixer (same order as Character).
  */
 export class GrudgeAvatar implements Avatar {
   root = new THREE.Group();
@@ -44,6 +47,7 @@ export class GrudgeAvatar implements Avatar {
   private holder = new THREE.Group();
   private model: THREE.Object3D | null = null;
   private mixer: THREE.AnimationMixer | null = null;
+  private footGrounder = new FootGrounder();
   private actions = new Map<string, THREE.AnimationAction>();
   private roleClip = new Map<AnimRole, string>();
   private current: THREE.AnimationAction | null = null;
@@ -166,6 +170,12 @@ export class GrudgeAvatar implements Avatar {
       this.findArmBones(this.model);
       this.holder.rotation.y = this.modelYaw;
 
+      this.root.userData.physicsLayer = "character";
+      this.model.userData.physicsLayer = "character";
+      this.footGrounder.bind(this.model);
+      this.footGrounder.setEnabled(true);
+      this.footGrounder.setGroundSampler(() => ({ y: 0, normal: null }));
+
       // AnimationDirector (uMMORPG Animator layers: loco + skill override)
       try {
         this.director = new AnimationDirector(
@@ -178,7 +188,7 @@ export class GrudgeAvatar implements Avatar {
         this.playRole("idle", 0);
       }
       console.info(
-        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} pipeline=${String(this.model.userData?.importPipeline ?? "?")} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} clips=${[...rig.clips.keys()].join(",")}`,
+        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} pipeline=${String(this.model.userData?.importPipeline ?? "?")} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} footIk=${this.footGrounder.isBound} clips=${[...rig.clips.keys()].join(",")}`,
       );
       return;
     } catch (err) {
@@ -547,8 +557,18 @@ export class GrudgeAvatar implements Avatar {
     return this.oneShot !== null || !!(this.director && this.director.busyOverlay);
   }
 
+  setFootIk(enabled: boolean): void {
+    this.footGrounder.setEnabled(enabled);
+  }
+
+  setGroundSampler(fn: GroundSampler | null): void {
+    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
+  }
+
   update(dt: number): void {
     if (!this.mixer) return;
+    // beginFrame → mixer → apply (foot plant; matches Character)
+    this.footGrounder.beginFrame();
     if (this.director) {
       this.director.update(dt);
     } else {
@@ -556,6 +576,7 @@ export class GrudgeAvatar implements Avatar {
     }
     this.applyArmWidth();
     this.updateColliderTransform();
+    this.footGrounder.apply(dt);
     if (this.oneShot) {
       this.oneShotEnd -= dt;
       if (this.oneShotEnd <= 0) {

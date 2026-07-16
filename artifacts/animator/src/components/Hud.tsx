@@ -7,6 +7,8 @@ import type { HudEditApi, HudPanelBinding } from "../hud/useHudEditor";
 import type { HudPanelId } from "../hud/hudConfig";
 import { RadialMenu } from "./RadialMenu";
 import { MODE_COLOR, MODE_LABEL } from "../three/playerMode";
+import { UnitFrame } from "./hud/UnitFrame";
+import { portraitOnError } from "../lib/characterPortrait";
 
 interface Props {
   hud: HudSnapshot | null;
@@ -71,6 +73,7 @@ function SkillSlot({
   cd,
   cdMax,
   accent,
+  compact,
 }: {
   keyLabel: string;
   name: string;
@@ -80,13 +83,18 @@ function SkillSlot({
   cd: number;
   cdMax: number;
   accent?: boolean;
+  /** Compact wing slot (no name label) for dual 6-banks. */
+  compact?: boolean;
 }) {
   const onCd = cd > 0 && cdMax > 0;
   const frac = onCd ? Math.max(0, Math.min(1, cd / cdMax)) : 0;
   return (
-    <div className={`act-slot ${accent ? "act-accent" : ""} ${onCd ? "on-cd" : "ready"}`} title={name}>
+    <div
+      className={`act-slot ${accent ? "act-accent" : ""} ${onCd ? "on-cd" : "ready"} ${compact ? "act-compact" : ""}`}
+      title={name}
+    >
       <div className="act-icon">
-        <Icon name={icon} src={iconUrl} fallbackName={icon} size={30} title={name} />
+        <Icon name={icon} src={iconUrl} fallbackName={icon} size={compact ? 26 : 30} title={name} />
         {onCd && (
           <div
             className="act-sweep"
@@ -96,10 +104,25 @@ function SkillSlot({
         {onCd && <span className="act-cd">{cd.toFixed(1)}</span>}
       </div>
       <span className="act-key">{keyLabel}</span>
-      <span className="act-name">{name}</span>
+      {!compact && <span className="act-name">{name}</span>}
     </div>
   );
 }
+
+/** Utility / defense options flanking the avatar (right wing of 6). */
+const UTILITY_SLOTS: {
+  key: string;
+  name: string;
+  icon: string;
+  cdKey?: "skyfall";
+}[] = [
+  { key: "X", name: "Dodge", icon: "dodge" },
+  { key: "C", name: "Parry", icon: "parry" },
+  { key: "R", name: "Heavy", icon: "heavy", cdKey: "skyfall" },
+  { key: "V", name: "Kick", icon: "kick" },
+  { key: "J", name: "Potion", icon: "potion" },
+  { key: "H", name: "Bomb", icon: "bomb" },
+];
 
 /** Per-relationship accent palette for the floating lock-on frames. */
 const FRAME_ACCENTS = {
@@ -781,45 +804,173 @@ export function Hud({
       {/* Center-screen event flash */}
       <CombatFlash text={hud.combatFlash} />
 
-      {/* Character / vitals panel */}
-      <div {...applyBind(bindOf(edit, "vitals"), "rpg-vitals")}>
-        <div className="vitals-head">
-          <Icon name={WEAPON_ICON[hud.weapon]} size={26} className="vitals-portrait" />
-          <div className="vitals-id">
-            <span className="vitals-name">{hud.character}</span>
-            <span className="vitals-weapon">{hud.weaponLabel}</span>
+      {/*
+        threejs-rapier combat HUD cluster:
+          [6 skill wing]  [UnitFrame portrait + HP/SP]  [6 utility wing]
+        Portrait uses account/race art; slots mirror keyboard combat kit.
+      */}
+      <div {...applyBind(bindOf(edit, "vitals"), "rpg-combat-cluster uf-panel uf-panel-player")}>
+        {/* LEFT: 6 combat skills (2×3) */}
+        <div className="rpg-slot-wing rpg-slot-wing-left" aria-label="Combat skills">
+          {hud.mech ? (
+            <>
+              <SkillSlot compact keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
+              {hud.mech.abilities.map((a) => (
+                <SkillSlot
+                  compact
+                  key={a.key}
+                  keyLabel={a.key}
+                  name={a.name}
+                  icon={a.icon}
+                  cd={a.cd}
+                  cdMax={a.cdMax}
+                  accent
+                />
+              ))}
+              {/* pad to 6 if mech has fewer abilities */}
+              {Array.from({ length: Math.max(0, 5 - hud.mech.abilities.length) }).map((_, i) => (
+                <div key={`pad-m-${i}`} className="act-slot act-compact act-empty" />
+              ))}
+            </>
+          ) : (
+            <>
+              {primary && (
+                <SkillSlot
+                  compact
+                  keyLabel={primary.key}
+                  name={primary.label}
+                  icon={primary.icon || resolveSlotLocalName("primary", hud.weapon)}
+                  iconUrl={primary.iconUrl || resolveSlotIconUrl("primary", hud.weapon)}
+                  cd={0}
+                  cdMax={0}
+                />
+              )}
+              {fskill && (
+                <SkillSlot
+                  compact
+                  keyLabel={fskill.key}
+                  name={hud.skillName}
+                  icon={fskill.icon || resolveSlotLocalName("fskill", hud.weapon)}
+                  iconUrl={fskill.iconUrl || resolveSlotIconUrl("fskill", hud.weapon)}
+                  cd={hud.skillCooldown}
+                  cdMax={hud.skillCooldownMax}
+                />
+              )}
+              {sigs.map((s, i) => {
+                const sigCd = hud.sigCooldowns[i] ?? 0;
+                const sigCdMax = hud.sigCooldownMaxes[i] ?? 0;
+                const cd = sigCdMax > 0 ? sigCd : hud.skillCooldown;
+                const cdMax = sigCdMax > 0 ? sigCdMax : hud.skillCooldownMax;
+                return (
+                  <SkillSlot
+                    compact
+                    key={s.slot}
+                    keyLabel={s.key}
+                    name={s.label}
+                    icon={
+                      s.icon ||
+                      resolveSlotLocalName(
+                        `sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4",
+                        hud.weapon,
+                      )
+                    }
+                    iconUrl={
+                      s.iconUrl ||
+                      resolveSlotIconUrl(
+                        `sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4",
+                        hud.weapon,
+                      )
+                    }
+                    cd={cd}
+                    cdMax={cdMax}
+                  />
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        {/* CENTER: ornate UnitFrame with avatar portrait */}
+        <div className="rpg-unitframe-wrap">
+          <UnitFrame
+            side="left"
+            variant="player"
+            name={hud.character}
+            sub={hud.weaponLabel}
+            hp={{ value: hud.health, max: hud.maxHealth }}
+            energy={{ value: hud.stamina, max: hud.maxStamina }}
+            badge={
+              <span title={`Lv ${hud.level ?? 1}`}>{hud.level ?? 1}</span>
+            }
+            portrait={
+              hud.portraitUrl ? (
+                <img
+                  className="uf-portrait-img"
+                  src={hud.portraitUrl}
+                  alt={hud.character}
+                  draggable={false}
+                  onError={(e) =>
+                    portraitOnError(e.currentTarget, hud.portraitCandidates ?? [])
+                  }
+                />
+              ) : (
+                <span className="uf-portrait-letter">
+                  {(hud.character || "?").slice(0, 1).toUpperCase()}
+                </span>
+              )
+            }
+          />
+          <div className="rpg-poise-under">
+            <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
+            <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
           </div>
         </div>
-        <VitalBar label="HP" value={hud.health} max={hud.maxHealth} className="vital-hp" />
-        <VitalBar label="SP" value={hud.stamina} max={hud.maxStamina} className="vital-sp" />
-        <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
-        <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
-        {/* Combat input hints */}
-        <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-          {(["Q: Parry", "RMB: Block", "X: Roll", "R: Heavy", "H: Bomb", "J: Heal"] as const).map((hint) => (
-            <span
-              key={hint}
-              style={{
-                fontSize: 9,
-                opacity: 0.55,
-                background: "rgba(255,255,255,0.06)",
-                borderRadius: 3,
-                padding: "1px 5px",
-                fontFamily: "monospace",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {hint}
-            </span>
+
+        {/* RIGHT: 6 utility / defense options */}
+        <div className="rpg-slot-wing rpg-slot-wing-right" aria-label="Utility options">
+          {UTILITY_SLOTS.map((u) => (
+            <SkillSlot
+              compact
+              key={u.key}
+              keyLabel={u.key}
+              name={u.name}
+              icon={u.icon}
+              iconUrl={
+                u.cdKey === "skyfall"
+                  ? resolveSlotIconUrl("heavy", hud.weapon)
+                  : undefined
+              }
+              cd={u.cdKey === "skyfall" ? hud.skyfallCooldown : 0}
+              cdMax={u.cdKey === "skyfall" ? hud.skyfallCooldownMax : 0}
+              accent={u.key === "X" || u.key === "C"}
+            />
           ))}
         </div>
       </div>
 
-      {/* Enemy panel (top-right) */}
-      <EnemyPanel hud={hud} edit={edit} />
+      {/* Enemy panel (top-right) — UnitFrame-style target when locked */}
+      {hud.selectedTarget ? (
+        <div {...applyBind(bindOf(edit, "enemy"), "uf-panel uf-panel-target")}>
+          <UnitFrame
+            side="right"
+            variant="target"
+            name={hud.selectedTarget.name}
+            sub="HOSTILE"
+            hp={{ value: hud.selectedTarget.health, max: hud.selectedTarget.maxHealth }}
+            energy={{ value: hud.enemyStamina, max: Math.max(1, hud.enemyMaxStamina) }}
+            portrait={
+              <span className="uf-portrait-letter">
+                {(hud.selectedTarget.name || "E").slice(0, 1).toUpperCase()}
+              </span>
+            }
+          />
+        </div>
+      ) : (
+        <EnemyPanel hud={hud} edit={edit} />
+      )}
 
-      {/* Action bar — the mech's bespoke kit replaces the on-foot skills while piloting */}
-      <div {...applyBind(bindOf(edit, "actionbar"), "rpg-actionbar")}>
+      {/* Bottom center action bar kept for mech / wide skill read — secondary */}
+      <div {...applyBind(bindOf(edit, "actionbar"), "rpg-actionbar rpg-actionbar-secondary")}>
         {hud.mech ? (
           <>
             <SkillSlot keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
@@ -837,52 +988,10 @@ export function Hud({
           </>
         ) : (
           <>
-            {primary && (
-              <SkillSlot
-                keyLabel={primary.key}
-                name={primary.label}
-                icon={primary.icon || resolveSlotLocalName("primary", hud.weapon)}
-                iconUrl={primary.iconUrl || resolveSlotIconUrl("primary", hud.weapon)}
-                cd={0}
-                cdMax={0}
-              />
-            )}
-            {fskill && (
-              <SkillSlot
-                keyLabel={fskill.key}
-                name={hud.skillName}
-                icon={fskill.icon || resolveSlotLocalName("fskill", hud.weapon)}
-                iconUrl={fskill.iconUrl || resolveSlotIconUrl("fskill", hud.weapon)}
-                cd={hud.skillCooldown}
-                cdMax={hud.skillCooldownMax}
-              />
-            )}
-            {sigs.map((s, i) => {
-              const sigCd = hud.sigCooldowns[i] ?? 0;
-              const sigCdMax = hud.sigCooldownMaxes[i] ?? 0;
-              const cd = sigCdMax > 0 ? sigCd : hud.skillCooldown;
-              const cdMax = sigCdMax > 0 ? sigCdMax : hud.skillCooldownMax;
-              return (
-                <SkillSlot
-                  key={s.slot}
-                  keyLabel={s.key}
-                  name={s.label}
-                  icon={s.icon || resolveSlotLocalName((`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4"), hud.weapon)}
-                  iconUrl={s.iconUrl || resolveSlotIconUrl((`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4"), hud.weapon)}
-                  cd={cd}
-                  cdMax={cdMax}
-                />
-              );
-            })}
-            <SkillSlot
-              keyLabel="R"
-              name="Heavy / Skyfall"
-              icon={resolveSlotLocalName("heavy", hud.weapon)}
-              iconUrl={resolveSlotIconUrl("heavy", hud.weapon)}
-              cd={hud.skyfallCooldown}
-              cdMax={hud.skyfallCooldownMax}
-              accent
-            />
+            <Icon name={WEAPON_ICON[hud.weapon]} size={22} />
+            <span className="rpg-actionbar-hint">
+              Skills · wings beside avatar · Q mode · hold Tab radial
+            </span>
           </>
         )}
       </div>

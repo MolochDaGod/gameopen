@@ -8,6 +8,7 @@ import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
+import { resolveHudPortrait } from "../lib/hudPortrait";
 import { Controller } from "./Controller";
 import { Recoil, fovKick, screenCenterRay } from "./aim/AimSystem";
 import { Vfx, type TurretHandle, type TurretVariant } from "./Vfx";
@@ -1141,9 +1142,9 @@ export class Studio {
     this.character = next;
     this.character.setBlendTime(this.params.blendTime);
     this.character.setShowSkeleton(this.params.showSkeleton);
-    // Terrain foot IK on GLB Character (flat y=0 Danger Room floor).
-    if (next instanceof Character && "setFootIk" in next) {
-      (next as Character).setFootIk(true);
+    // Terrain foot IK — Character + GrudgeAvatar (flat y=0 Danger Room floor).
+    if (typeof (next as { setFootIk?: (on: boolean) => void }).setFootIk === "function") {
+      (next as { setFootIk: (on: boolean) => void }).setFootIk(true);
     }
     // Honour the spectator invariant: a character swapped in mid-duel must stay
     // hidden (the player is a spectator until the duel stops).
@@ -7696,11 +7697,20 @@ export class Studio {
     // OWR reticle ring + edge SFX: classify the nearest enemy vs the current
     // weapon's optimal band right before the snapshot so the cue stays in sync.
     this.updateOwrRange();
+    // Portrait for threejs-rapier UnitFrame (race PNG / account avatar).
+    const port = resolveHudPortrait(this.characterId, {
+      raceId: (def as { raceId?: string }).raceId ?? parseGrudgeAvatarId(this.characterId)?.raceId,
+      classId: (def as { classId?: string }).classId ?? parseGrudgeAvatarId(this.characterId)?.presetId,
+    });
+
     this.onHud({
       character: def.name,
       weapon: weaponless ? "none" : this.weaponId,
       weaponLabel: weaponless ? "Black Leg" : w.label,
       skillName: weaponless ? "Diable Jambe" : w.skillName,
+      portraitUrl: port.url,
+      portraitCandidates: port.candidates,
+      level: 1,
       health: this.health,
       maxHealth: this.maxHealth,
       stamina: Math.round(this.stamina),
