@@ -173,7 +173,7 @@ const FALLBACK_OPS: HarvestOp[] = [
     name: "Place",
     glyph: "▣",
     mode: "build",
-    blurb: "Place selected kit.",
+    blurb: "Place hotbar block (Mine-Loader LMB place).",
     tool: "build",
   },
   {
@@ -181,7 +181,15 @@ const FALLBACK_OPS: HarvestOp[] = [
     name: "Demolish",
     glyph: "🗑",
     mode: "build",
-    blurb: "Remove placed blocks.",
+    blurb: "Mine / break with pick, shovel, or axe.",
+    tool: "build",
+  },
+  {
+    id: "craft-bench",
+    name: "Craft",
+    glyph: "⚒",
+    mode: "build",
+    blurb: "Forge bench (E at blacksmith forge in Realms).",
     tool: "build",
   },
 ];
