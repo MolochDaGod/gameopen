@@ -68,7 +68,6 @@ import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { AvatarEditMode } from "./components/AvatarEditMode";
-import { CharactersGrudoxMode } from "./components/CharactersGrudoxMode";
 import { CampfireLobby } from "./components/CampfireLobby";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
