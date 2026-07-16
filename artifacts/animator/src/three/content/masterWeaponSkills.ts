@@ -1,7 +1,9 @@
 /**
- * ObjectStore master-weaponSkills integration for Danger Room.
+ * Master weapon-skills catalog for Danger Room.
  *
- * Catalog SSOT: https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json
+ * Definitions SSOT: info.grudge-studio.com/api/v1/master-weaponSkills.json
+ * (multi-host via contentCandidates — objectstore host 404s as of 2026-07)
+ *
  * Concepts (uMMORPG): Scriptable weapon types → hotbar slots (primary / secondary /
  * ability / ultimate) + off-hand TOME coupling for spell schools.
  *
@@ -9,7 +11,7 @@
  * Prefab JSON under content/skills remains the sandbox anim/VFX layer.
  */
 import type { SkillKind, WeaponId } from "../types";
-import { contentUrl } from "../../lib/fleet";
+import { contentCandidates } from "../../lib/fleetSsot";
 import { cdnIconUrl } from "../skillIcons";
 
 export const MASTER_WEAPON_SKILLS_VERSION = "3.1.0";
@@ -177,11 +179,7 @@ export async function loadMasterWeaponSkills(
   if (_promise && !force) return _promise;
 
   _promise = (async () => {
-    const urls = [
-      contentUrl("master-weaponSkills.json"),
-      "https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json",
-      "/api/objectstore/v1/master-weaponSkills.json",
-    ];
+    const urls = contentCandidates("master-weaponSkills.json");
     for (const url of urls) {
       try {
         const r = await fetch(url, { credentials: "omit" });

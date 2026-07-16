@@ -333,6 +333,7 @@ export async function loadHarvestRecipes(): Promise<{
   }>([
     "/api/content/harvest/recipes.json",
     "/content/harvest/recipes.json",
+    "https://info.grudge-studio.com/api/v1/content/harvest/recipes.json",
     "https://objectstore.grudge-studio.com/api/v1/content/harvest/recipes.json",
   ]);
   return {

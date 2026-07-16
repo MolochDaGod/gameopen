@@ -79,7 +79,7 @@
     },
     {
       "source": "/api/objectstore/:path*",
-      "destination": "https://objectstore.grudge-studio.com/api/:path*"
+      "destination": "https://info.grudge-studio.com/api/:path*"
     },
     {
       "source": "/api/assets/:path*",

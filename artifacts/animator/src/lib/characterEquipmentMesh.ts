@@ -17,9 +17,10 @@ import {
 } from "../three/grudge/index";
 import { resolvePresetId, resolveRaceId } from "./raceModel";
 
-const GEAR_PRESETS_URL =
-  "https://objectstore.grudge-studio.com/api/v1/grudge6-gear-presets.json";
-const CDN = "https://assets.grudge-studio.com";
+import { FLEET } from "./fleet";
+import { contentCandidates, fetchCatalogJson } from "./fleetSsot";
+
+const CDN = FLEET.assets;
 
 export type ResolvedEquipmentVisual = {
   raceId: RaceId;
@@ -55,11 +56,19 @@ export async function loadRemoteGearPresets(force = false): Promise<GearPresetRe
   if (remotePresetsPromise && !force) return remotePresetsPromise;
   remotePresetsPromise = (async () => {
     try {
-      const r = await fetch(GEAR_PRESETS_URL, { mode: "cors" });
-      if (!r.ok) throw new Error(`gear presets ${r.status}`);
-      const j = (await r.json()) as { presets?: GearPresetRemote[] } | GearPresetRemote[];
+      // Multi-host: info SSOT → same-origin proxy → legacy objectstore
+      const j = await fetchCatalogJson<{ presets?: GearPresetRemote[] } | GearPresetRemote[]>(
+        "grudge6GearPresets",
+      );
+      if (!j) throw new Error("gear presets miss all hosts");
       const list = Array.isArray(j) ? j : j.presets || [];
       remotePresetsCache = list;
+      if (!list.length) {
+        console.warn(
+          "[characterEquipmentMesh] empty gear presets; tried",
+          contentCandidates("grudge6-gear-presets.json").slice(0, 3),
+        );
+      }
       return list;
     } catch (e) {
       console.warn("[characterEquipmentMesh] gear presets fetch failed", e);

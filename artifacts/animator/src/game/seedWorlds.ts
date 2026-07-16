@@ -93,6 +93,7 @@ export async function loadSeedCatalog(): Promise<SeedCatalog> {
     "/content/worlds/seed-deployments.json",
     "/api/content/worlds/seed-deployments.json",
     ...mineLoaderApiCandidates("/api/content/worlds/seed-deployments.json"),
+    "https://info.grudge-studio.com/api/v1/content/worlds/seed-deployments.json",
     "https://objectstore.grudge-studio.com/api/v1/content/worlds/seed-deployments.json",
   ]);
   if (data?.deployments?.length) {

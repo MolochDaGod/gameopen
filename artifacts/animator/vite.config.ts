@@ -107,7 +107,7 @@ export default defineConfig({
     __GRUDGE_FLEET__: JSON.stringify({
       assets: "https://assets.grudge-studio.com",
       id: "https://id.grudge-studio.com",
-      objectStore: "https://objectstore.grudge-studio.com/api/v1",
+      objectStore: "https://info.grudge-studio.com/api/v1",
       gameData: "https://grudge-api-production-0d46.up.railway.app",
     }),
   },

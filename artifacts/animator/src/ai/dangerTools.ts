@@ -366,7 +366,7 @@ export function dangerSystemPrompt(state: DangerState): string {
     "",
     "Asset/API SSOT:",
     "- Icons CDN: https://assets.grudge-studio.com/icons/pack/",
-    "- Master skills: https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json",
+    "- Master skills: https://info.grudge-studio.com/api/v1/master-weaponSkills.json",
     "- Content API: /api/content/skills · /api/content/weapons",
     "- Docs: docs/DANGER_ROOM.md",
     "",

@@ -25,9 +25,12 @@ export const FLEET_ASSET_HOSTS = {
   gameopenVercel: "https://gameopen.vercel.app",
   /** Skinned grudge6 race GLBs + anim JSON (combat runtime). */
   arena: "https://grudge-arena.grudge-studio.com",
-  /** ObjectStore GitHub pages / info registry (icons, defs). */
+  /** Static ObjectStore mirror (GitHub pages). */
   objectStorePages: "https://molochdagod.github.io/ObjectStore",
+  /** Definitions SSOT — catalogs JSON (not binaries). */
   infoApi: "https://info.grudge-studio.com/api/v1",
+  /** @deprecated Prefer infoApi — public objectstore catalogs often 404. */
+  objectStoreApi: "https://objectstore.grudge-studio.com/api/v1",
 } as const;
 
 /**

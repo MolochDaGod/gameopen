@@ -27,7 +27,7 @@ Deploy Worker: `cd infra/cloudflare/open && npx wrangler deploy`
 | `VITE_GAME_SERVER_URL` | `wss://gameopen-production.up.railway.app` | Danger Room WS |
 | `VITE_ZONE_SERVER_URL` | `wss://voxgrudge-grudox-room-production.up.railway.app` | GRUDOX zone WS |
 | `VITE_GRUDGE_API_BASE` | `https://grudge-api-production-0d46.up.railway.app` | Builder API |
-| `VITE_OBJECTSTORE_URL` | `https://objectstore.grudge-studio.com/api/v1` | D1-backed catalogs |
+| `VITE_OBJECTSTORE_URL` | `https://info.grudge-studio.com/api/v1` | Definitions catalogs (info SSOT; objectstore host often 404) |
 | `VITE_PLAY_SHELL_URL` | play-shell host | GRUDOX Island deep-links (optional) |
 
 ### Auth flow
