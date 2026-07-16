@@ -178,7 +178,7 @@ export class GrudgeAvatar implements Avatar {
         this.playRole("idle", 0);
       }
       console.info(
-        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} clips=${[...rig.clips.keys()].join(",")}`,
+        `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} pipeline=${String(this.model.userData?.importPipeline ?? "?")} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} clips=${[...rig.clips.keys()].join(",")}`,
       );
       return;
     } catch (err) {

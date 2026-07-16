@@ -20,7 +20,7 @@ import { getPreset, type PresetId } from "./gearPresets";
 import { applyBodyTexture, applyGearPreset, meshKey } from "./loadCharacter";
 import { loadBodyTexture } from "./texture";
 import { sharedGltfLoader } from "../loaders/gltf";
-import { fitCharacterHeight } from "../fitCharacterHeight";
+import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 
@@ -62,45 +62,84 @@ export function arenaCharacterGlbUrlAbsolute(raceId: RaceId): string {
 
 /** Canonical player height (metres) — must match Controller / map scale. */
 const TARGET_HEIGHT = PLAYER_HEIGHT_M || 1.8;
-const meshCache = new Map<RaceId, Promise<THREE.Object3D>>();
 
-async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
+/**
+ * How the race mesh was imported — drives material pipeline.
+ *  - `glb-baked`: Arena / R2 production GLB with correct UVs + materials. Do NOT
+ *    rebind the Toon RTS FBX atlas or skins look scrambled.
+ *  - `fbx-atlas`: modular race FBX kit; requires Toon RTS atlas rebind.
+ */
+export type RaceImportPipeline = "glb-baked" | "fbx-atlas";
+
+export interface RaceTemplate {
+  object: THREE.Object3D;
+  pipeline: RaceImportPipeline;
+  url: string;
+}
+
+const meshCache = new Map<RaceId, Promise<RaceTemplate>>();
+
+async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
   let p = meshCache.get(raceId);
   if (p) return p;
-  p = (async () => {
+  p = (async (): Promise<RaceTemplate> => {
     let lastErr: unknown;
+    const file = ARENA_RACE_GLB[raceId];
+    const dir = ARENA_RACE_DIR[raceId];
 
-    // 1) Prefer race FBX SSOT (correct UVs for Toon RTS atlas rebind)
+    // 1) Arena combat GLB first — production-proven skinned kits (Danger Room SSOT).
+    //    Keep baked materials; atlas rebind from FBX UV layout ruins these.
+    {
+      const rel = `cdn/assets/characters/${dir}/${file}`;
+      const urls = [
+        ...resolveAssetCandidates(rel),
+        arenaCharacterGlbUrlAbsolute(raceId),
+      ];
+      const loader = sharedGltfLoader();
+      for (const url of [...new Set(urls)]) {
+        try {
+          const gltf = await loader.loadAsync(url);
+          console.info(`[grudge6Runtime] race kit Arena GLB ready ${raceId} ${url}`);
+          return { object: gltf.scene, pipeline: "glb-baked", url };
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+    }
+
+    // 2) R2 production GLB (smaller meshopt bake) — still glb-baked materials.
+    {
+      const r2Glb = `https://assets.grudge-studio.com/models/grudge6/races/${file}`;
+      const rel = `models/grudge6/races/${file}`;
+      const urls = [...resolveAssetCandidates(rel), r2Glb];
+      const loader = sharedGltfLoader();
+      for (const url of [...new Set(urls)]) {
+        try {
+          const gltf = await loader.loadAsync(url);
+          console.info(`[grudge6Runtime] race kit R2 GLB ready ${raceId} ${url}`);
+          return { object: gltf.scene, pipeline: "glb-baked", url };
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+    }
+
+    // 3) FBX modular kit — only path that should rebind Toon RTS atlas.
     try {
       const { loadCharacterModel } = await import("./loadCharacter");
       const race = RACE_ASSETS[raceId];
       const loaded = await loadCharacterModel(race.modelUrl);
-      console.info(`[grudge6Runtime] race kit FBX ready ${raceId}`);
-      return loaded.group;
+      console.info(`[grudge6Runtime] race kit FBX ready ${raceId} ${race.modelUrl}`);
+      return {
+        object: loaded.group,
+        pipeline: "fbx-atlas",
+        url: race.modelUrl,
+      };
     } catch (e) {
       lastErr = e;
-      console.warn(`[grudge6Runtime] FBX kit failed ${raceId}, trying arena GLB`, e);
+      console.warn(`[grudge6Runtime] FBX kit failed ${raceId}`, e);
     }
 
-    // 2) Arena / CDN skinned GLB (still rebind atlas after load)
-    const dir = ARENA_RACE_DIR[raceId];
-    const file = ARENA_RACE_GLB[raceId];
-    const rel = `cdn/assets/characters/${dir}/${file}`;
-    const urls = [
-      ...resolveAssetCandidates(rel),
-      arenaCharacterGlbUrlAbsolute(raceId),
-      `https://assets.grudge-studio.com/models/grudge6/races/${file}`,
-    ];
-    const loader = sharedGltfLoader();
-    for (const url of [...new Set(urls)]) {
-      try {
-        const gltf = await loader.loadAsync(url);
-        console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
-        return gltf.scene;
-      } catch (e) {
-        lastErr = e;
-      }
-    }
     throw lastErr ?? new Error(`Failed to load grudge6 race mesh for ${raceId}`);
   })();
   meshCache.set(raceId, p);
@@ -112,7 +151,7 @@ async function loadRaceTemplate(raceId: RaceId): Promise<THREE.Object3D> {
  * Uses fitCharacterHeight (skinned body measure + decade unit fix + clamps)
  * so a bad bind-pose bbox cannot explode scale by ~100×.
  */
-function normalizeSkinned(root: THREE.Object3D): void {
+function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): void {
   // Force bind matrices current before measuring skinned AABB
   root.updateWorldMatrix(true, true);
   root.traverse((o) => {
@@ -123,11 +162,17 @@ function normalizeSkinned(root: THREE.Object3D): void {
   });
   root.updateWorldMatrix(true, true);
 
-  const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
-  if (fit.unitFix !== 1 || fit.scale > 3 || fit.scale < 0.05) {
-    console.info(
-      `[grudge6Runtime] height fit native=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} target=${TARGET_HEIGHT}`,
-    );
+  // FBX path already height-fits in loadCharacter.normalizeCharacterGroup —
+  // only re-fit if still absurd. GLB always fit once via fitCharacterHeight.
+  const already = root.userData?.grudgeHeightFit === true;
+  if (!already || pipeline === "glb-baked") {
+    const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
+    root.userData.grudgeHeightFit = true;
+    if (fit.unitFix !== 1 || fit.scale > 3 || fit.scale < 0.05) {
+      console.info(
+        `[grudge6Runtime] height fit pipeline=${pipeline} native=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} target=${TARGET_HEIGHT}`,
+      );
+    }
   }
 
   root.traverse((o) => {
@@ -140,46 +185,15 @@ function normalizeSkinned(root: THREE.Object3D): void {
   });
 }
 
-/** Fuzzy mesh key — matches D1 mesh_ids to in-file Toon RTS names. */
-function meshKey(name: string): string {
-  return String(name || "")
-    .toLowerCase()
-    .replace(/^wk_|^brb_|^orc_|^elf_|^ud_|^dwf_/, "")
-    .replace(/units_/g, "")
-    .replace(/xtra_/g, "")
-    .replace(/weapon_/g, "weapon")
-    .replace(/[^a-z0-9]/g, "");
-}
-
 /**
  * Equipment = child-mesh visibility (grudge6-modular-characters).
- * Hide all equippable race parts, then show only the preset mesh_ids.
+ * Delegates to {@link applyGearPreset} (fuzzy meshKey matching).
  */
 export function applyGearVisibility(root: THREE.Object3D, visibleMeshes: string[]): void {
-  if (!visibleMeshes.length) return;
-  const wantKeys = visibleMeshes.map(meshKey);
-  root.traverse((o) => {
-    if (!(o as THREE.Mesh).isMesh && !(o as THREE.SkinnedMesh).isSkinnedMesh) return;
-    const n = o.name;
-    if (!n) return;
-    // Only toggle Toon RTS / race kit pieces (not ground props accidentally parented)
-    const equippable =
-      /^(WK_|BRB_|ORC_|ELF_|UD_|DWF_)/i.test(n) ||
-      /body|arms|legs|head|shoulder|weapon|shield|xtra|quiver|staff|sword|bow|axe|hammer|mace|spear|dagger|pick/i.test(
-        n,
-      );
-    if (!equippable) return;
-    const key = meshKey(n);
-    let show = false;
-    for (const w of wantKeys) {
-      if (key === w || key.endsWith(w) || w.endsWith(key)) {
-        show = true;
-        break;
-      }
-    }
-    o.visible = show;
-  });
+  applyGearPreset(root, visibleMeshes);
 }
+
+export { meshKey };
 
 /** Per-race shared atlas (one Texture + one Material style bind). */
 const atlasCache = new Map<RaceId, Promise<THREE.Texture>>();
@@ -239,12 +253,21 @@ export async function loadGrudge6CombatRig(
     opts?.meshIds && opts.meshIds.length >= 2 ? opts.meshIds : preset.visibleMeshes;
 
   const template = await loadRaceTemplate(raceId);
-  const model = cloneSkinned(template);
-  normalizeSkinned(model);
-  // Toon RTS atlas on every mesh (sRGB, flipY false, MeshStandard) before equip hide
-  if (opts?.rebindAtlas !== false) {
+  const model = cloneSkinned(template.object);
+  model.userData.importPipeline = template.pipeline;
+  model.userData.importUrl = template.url;
+  normalizeSkinned(model, template.pipeline);
+
+  // Materials:
+  //  - FBX modular kits need Toon RTS atlas rebind (UV contract matches FBX).
+  //  - Arena/R2 GLBs already have correct baked materials — rebinding the FBX
+  //    atlas onto them scrambles UVs and is the main "messed up models" bug.
+  if (template.pipeline === "fbx-atlas" && opts?.rebindAtlas !== false) {
     await rebindRaceAtlas(model, raceId);
+  } else {
+    restoreCharacterMaterials(model, { neutralizeMetal: true });
   }
+
   applyGearVisibility(model, meshIds);
   model.userData.equipMeshIds = meshIds.slice();
   model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
