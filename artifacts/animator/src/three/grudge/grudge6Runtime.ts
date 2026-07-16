@@ -17,7 +17,7 @@ import {
 } from "./anims";
 import { RACE_ASSETS, type RaceId } from "./raceAssets";
 import { getPreset, type PresetId } from "./gearPresets";
-import { applyBodyTexture } from "./loadCharacter";
+import { applyBodyTexture, applyGearPreset, meshKey } from "./loadCharacter";
 import { loadBodyTexture } from "./texture";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { fitCharacterHeight } from "../fitCharacterHeight";

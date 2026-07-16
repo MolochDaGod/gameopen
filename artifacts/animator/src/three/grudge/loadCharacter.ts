@@ -24,15 +24,34 @@ export async function loadCharacterModel(modelUrl: string): Promise<LoadedCharac
   let lastErr: unknown;
   for (const url of candidates) {
     try {
+      // Magic-byte / content-type gate — never parse HTML error pages as FBX
+      if (typeof fetch !== "undefined") {
+        const probe = await fetch(url, { method: "HEAD", mode: "cors", cache: "no-store" }).catch(
+          () => null,
+        );
+        if (probe) {
+          const ct = (probe.headers.get("content-type") || "").toLowerCase();
+          if (ct.includes("text/html") || !probe.ok) {
+            lastErr = new Error(`not FBX (ct=${ct} status=${probe.status}) ${url}`);
+            continue;
+          }
+        }
+      }
       const fbx = await fbxLoader.loadAsync(url);
       const meshNames: string[] = [];
+      let skinned = 0;
       fbx.traverse((child) => {
         if (child instanceof THREE.SkinnedMesh || child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.name) meshNames.push(child.name);
+          if (child instanceof THREE.SkinnedMesh) skinned++;
         }
       });
+      if (skinned === 0 && meshNames.length === 0) {
+        lastErr = new Error(`empty mesh kit ${url}`);
+        continue;
+      }
       const skeleton = normalizeCharacterGroup(fbx);
       const mixer = new THREE.AnimationMixer(fbx);
       return { group: fbx, skeleton, mixer, meshNames };
@@ -111,36 +130,51 @@ export function normalizeCharacterGroup(fbx: THREE.Object3D): THREE.Skeleton | n
   return skeleton;
 }
 
-// Show only the preset's meshes (armour + weapon). Every other mesh in the parts
-// catalog is hidden.
+/**
+ * Fuzzy mesh key — matches gear preset / D1 mesh_ids to in-file Toon RTS names
+ * (grudge6-modular-characters SSOT). Exact name match fails across Units_/case.
+ */
+export function meshKey(name: string): string {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/^wk_|^brb_|^orc_|^elf_|^ud_|^dwf_/, "")
+    .replace(/units_/g, "")
+    .replace(/xtra_/g, "")
+    .replace(/weapon_/g, "weapon")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function isEquippableMeshName(n: string): boolean {
+  return (
+    /^(WK_|BRB_|ORC_|ELF_|UD_|DWF_)/i.test(n) ||
+    /body|arms|legs|head|shoulder|weapon|shield|xtra|quiver|staff|sword|bow|axe|hammer|mace|spear|dagger|pick/i.test(
+      n,
+    )
+  );
+}
+
+/**
+ * Show only the preset's armour + weapon meshes (child visibility).
+ * Uses fuzzy meshKey matching — never exact string equality alone.
+ */
 export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]): void {
-  const want = new Set(visibleMeshes);
+  if (!visibleMeshes.length) return;
+  const wantKeys = visibleMeshes.map(meshKey);
   group.traverse((node) => {
-    if (node instanceof THREE.Mesh || node instanceof THREE.SkinnedMesh) {
-      node.visible = want.has(node.name);
+    if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
+    const n = node.name;
+    if (!n || !isEquippableMeshName(n)) return;
+    const key = meshKey(n);
+    let show = false;
+    for (const w of wantKeys) {
+      if (key === w || key.endsWith(w) || w.endsWith(key)) {
+        show = true;
+        break;
+      }
     }
+    node.visible = show;
   });
 }
 
 /**
- * Bind the shared Toon RTS race atlas to every mesh as MeshStandardMaterial.
- * Contract (grudge6-modular-characters):
- *   map + white color, metalness 0, roughness ~0.75, DoubleSide.
- * One material is shared across all meshes (weapons use the same body atlas).
- * Returns the material so the owner can dispose it (texture is owned separately).
- */
-export function applyBodyTexture(group: THREE.Object3D, texture: THREE.Texture): THREE.Material {
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    color: 0xffffff,
-    metalness: 0,
-    roughness: 0.75,
-    side: THREE.DoubleSide,
-  });
-  group.traverse((node) => {
-    if (node instanceof THREE.Mesh || node instanceof THREE.SkinnedMesh) {
-      node.material = material;
-    }
-  });
-  return material;
-}
+ * Bind the shared Toon

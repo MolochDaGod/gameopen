@@ -3,7 +3,7 @@
 **Product:** Open library / account / campfire / combat need **accurate** 2D faces for each fleet character.  
 **DB:** GrudgeBuilder Railway Postgres (`characters`, `accounts`, `races`) — not D1, not local-only.
 
-Related: production-wiring skill · [OPEN_PRODUCT.md](./OPEN_PRODUCT.md) · `lib/characterPortrait.ts`
+Related: production-wiring skill · [OPEN_PRODUCT.md](./OPEN_PRODUCT.md) · [CHARACTER_MESH_DELIVERY.md](./CHARACTER_MESH_DELIVERY.md) · `lib/characterPortrait.ts`
 
 ---
 

@@ -1,6 +1,13 @@
 // Race asset catalog — grudge6 / Toon RTS modular kits.
 // Production SSOT binaries on R2 CDN (assets.grudge-studio.com).
 // Textures: race atlases (webp). flipY=false + MeshStandard in loadBodyTexture.
+//
+// Delivery contract (see docs/CHARACTER_MESH_DELIVERY.md):
+//   mesh  → models/grudge6/races/*_Characters.fbx (FBX SSOT) + GLB fallback
+//   atlas → textures/grudge6/{race}/*.webp  (also /assets/{race}/textures/)
+//   anims → /anims/baked/* (Open rewrite → arena) then R2
+//   equip → child mesh visibility via gear presets / mesh_ids (fuzzy keys)
+// 2D UI portraits are separate: public/races/*.png + character.avatarUrl
 
 export type RaceId =
   | "barbarians"

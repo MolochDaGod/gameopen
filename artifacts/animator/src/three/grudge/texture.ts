@@ -42,7 +42,25 @@ export async function loadBodyTexture(
   let lastErr: unknown;
   for (const url of urls) {
     try {
+      // Reject HTML fake-200 from misconfigured CDN keys before decoding as image
+      const head = await fetch(url, { method: "HEAD", mode: "cors", cache: "no-store" }).catch(
+        () => null,
+      );
+      if (head) {
+        const ct = (head.headers.get("content-type") || "").toLowerCase();
+        if (ct.includes("text/html") || !head.ok) {
+          lastErr = new Error(`bad content-type ${ct || head.status} ${url}`);
+          continue;
+        }
+      }
       const tex = await textureLoader.loadAsync(url);
+      // Three may still decode a tiny error image — require real dimensions
+      const img = tex.image as { width?: number; height?: number } | undefined;
+      if (img && (img.width ?? 0) < 8) {
+        lastErr = new Error(`texture too small ${url}`);
+        tex.dispose();
+        continue;
+      }
       prepTexture(tex, { sRGB: true, mipmaps: true, flipY: false });
       tex.wrapS = THREE.ClampToEdgeWrapping;
       tex.wrapT = THREE.ClampToEdgeWrapping;
