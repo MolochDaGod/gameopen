@@ -151,8 +151,24 @@ export interface GrudoxLinkParams {
   host?: string;
 }
 
+/** Hosts that proxy `/arcade/*` → GRUDOX (same-origin embed safe). */
+function isOpenArcadeProxyHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "open.grudge-studio.com" ||
+    h === "gameopen.vercel.app" ||
+    h.endsWith(".gameopen.vercel.app") ||
+    (typeof window !== "undefined" && window.location.hostname === h)
+  );
+}
+
 /**
  * Build GRUDOX arcade deep-link (or externalPath / productionUrl when set).
+ *
+ * Arcade cabinets (racer / zombie / z-brawl) use **same-origin**
+ * `/arcade/play/:id` on Open so the CF edge can proxy GRUDOX without
+ * X-Frame-Options SAMEORIGIN blocking the in-app canvas.
+ * Absolute `grudox.grudge-studio.com` is only used when not on Open (or forced).
  */
 export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): string {
   const zone = GRUDOX_ZONES.find((z) => z.id === zoneId);
@@ -183,6 +199,16 @@ export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): s
   if (zone?.externalPath) {
     try {
       const u = new URL(zone.externalPath);
+      // Rewrite absolute open.grudge-studio.com account links to same-origin door
+      if (
+        typeof window !== "undefined" &&
+        (u.hostname === "open.grudge-studio.com" || u.hostname === "gameopen.vercel.app")
+      ) {
+        const path = u.pathname + u.search;
+        const here = new URL(path, window.location.origin);
+        for (const [k, v] of q.entries()) here.searchParams.set(k, v);
+        return here.toString();
+      }
       for (const [k, v] of q.entries()) u.searchParams.set(k, v);
       return u.toString();
     } catch {
@@ -190,8 +216,16 @@ export function grudoxDeepLink(zoneId: string, params: GrudoxLinkParams = {}): s
     }
   }
 
-  const host = (params.host || GRUDOX_HOST).replace(/\/+$/, "");
-  return `${host}/arcade/play/${encodeURIComponent(zoneId)}?${q.toString()}`;
+  // Arcade path: prefer same-origin /arcade so Open can iframe without frame-blockers
+  const arcadePath = `/arcade/play/${encodeURIComponent(zoneId)}?${q.toString()}`;
+  if (params.host) {
+    return `${params.host.replace(/\/+$/, "")}${arcadePath}`;
+  }
+  if (typeof window !== "undefined" && isOpenArcadeProxyHost(window.location.hostname)) {
+    return `${window.location.origin}${arcadePath}`;
+  }
+  // Off Open shell (docs, external launchers): absolute GRUDOX host
+  return `${GRUDOX_HOST.replace(/\/+$/, "")}${arcadePath}`;
 }
 
 /** Convenience: open GRUDOX Island with current fleet session. */

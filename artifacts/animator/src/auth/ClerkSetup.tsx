@@ -33,8 +33,20 @@ function stripBase(path: string): string {
     : path;
 }
 
-/** True publishable key only — never throw if missing (Grudge ID still works). */
+/**
+ * Clerk is OPTIONAL. Fleet production auth is Grudge ID (id.grudge-studio.com).
+ *
+ * Production Open was broken by Clerk trying to load
+ * `https://clerk.gameopen.vercel.app/npm/@clerk/clerk-js@…` (ERR_CONNECTION_CLOSED).
+ * That host is a dead custom Clerk FAPI domain — disable Clerk unless explicitly
+ * opted in with a working key AND VITE_CLERK_ENABLED=true.
+ */
 function resolveClerkPubKey(): string | null {
+  // Hard opt-in: consolidated Open must not boot broken Clerk by default.
+  const forceOn = String(import.meta.env.VITE_CLERK_ENABLED || "").toLowerCase() === "true";
+  if (!forceOn) {
+    return null;
+  }
   try {
     const fromHost = publishableKeyFromHost(
       typeof window !== "undefined" ? window.location.hostname : "",
@@ -69,7 +81,7 @@ function resolveClerkProxyUrl(): string | undefined {
       console.warn(
         "[Clerk] Ignoring broken proxyUrl",
         raw,
-        "— using Clerk FAPI directly. Prefer Grudge ID for fleet auth.",
+        "— Clerk disabled path. Prefer Grudge ID for fleet auth.",
       );
       return undefined;
     }
@@ -82,6 +94,12 @@ function resolveClerkProxyUrl(): string | undefined {
 const clerkPubKey = resolveClerkPubKey();
 const clerkProxyUrl = resolveClerkProxyUrl();
 const clerkEnabled = Boolean(clerkPubKey);
+if (typeof console !== "undefined" && !clerkEnabled) {
+  // One-time clarity for console noise (not an error).
+  console.info(
+    "[Open] Clerk disabled — fleet auth is Grudge ID (id.grudge-studio.com). Set VITE_CLERK_ENABLED=true only with a working Clerk FAPI domain.",
+  );
+}
 
 const clerkAppearance = {
   baseTheme: dark,

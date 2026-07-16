@@ -64,20 +64,23 @@ function authHeader(): Record<string, string> {
   return h;
 }
 
+/** Once we know Railway has no wallet route, skip further probes this session. */
+let walletRouteMissing = false;
+
 async function fetchWallet(): Promise<GrudgeWallet | null> {
+  if (walletRouteMissing) return null;
   try {
-    // Prefer nested account wallet if top-level /api/wallet is not mounted (404).
-    const paths = ["/api/wallet", "/api/account/wallet", "/api/wallets"];
-    let r: Response | null = null;
-    for (const p of paths) {
-      r = await fetch(apiUrl(p), {
-        headers: authHeader(),
-        credentials: "include",
-        signal: AbortSignal.timeout(8000),
-      });
-      if (r.status !== 404) break;
+    // Single canonical path — do not spam /account/wallet + /wallets (triple 404 noise).
+    const r = await fetch(apiUrl("/api/wallet"), {
+      headers: authHeader(),
+      credentials: "include",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.status === 404) {
+      walletRouteMissing = true;
+      return null;
     }
-    if (!r || !r.ok) return null;
+    if (!r.ok) return null;
     const data = await r.json() as Record<string, unknown>;
     // Normalise Railway response shape: may be top-level or nested under `wallet`
     const w = (data.wallet as Record<string, unknown>) ?? data;
@@ -97,21 +100,21 @@ async function fetchWallet(): Promise<GrudgeWallet | null> {
 }
 
 async function createWallet(): Promise<GrudgeWallet | null> {
+  if (walletRouteMissing) return null;
   try {
-    const paths = ["/api/wallet", "/api/account/wallet", "/api/wallets"];
-    let r: Response | null = null;
-    for (const p of paths) {
-      r = await fetch(apiUrl(p), {
-        method: "POST",
-        headers: authHeader(),
-        credentials: "include",
-        body: JSON.stringify({ chain: "Solana", type: "custodial" }),
-        signal: AbortSignal.timeout(15000),
-      });
-      if (r.status !== 404) break;
-    }
-    if (!r || !r.ok) {
+    const r = await fetch(apiUrl("/api/wallet"), {
+      method: "POST",
+      headers: authHeader(),
+      credentials: "include",
+      body: JSON.stringify({ chain: "Solana", type: "custodial" }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (r.status === 404) {
+      walletRouteMissing = true;
       // Wallet optional — Railway may not expose /api/wallet yet
+      return null;
+    }
+    if (!r.ok) {
       return null;
     }
     const data = await r.json() as Record<string, unknown>;
@@ -176,4 +179,5 @@ export function getWalletDisplay(): string | null {
 /** Clear the cached wallet (called on logout). */
 export function clearCachedWallet(): void {
   setCachedWallet(null);
+  walletRouteMissing = false;
 }

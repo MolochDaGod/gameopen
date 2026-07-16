@@ -147,10 +147,10 @@ export function embedSessionForGame(
 
 /**
  * Fleet hosts we expect to allow embedding (or at least try).
- * If a host frames-blocks, InAppGameCanvas offers pop-out.
+ * NOTE: `grudox.grudge-studio.com` sets X-Frame-Options: SAMEORIGIN — do NOT
+ * list it. Arcade must be loaded via same-origin `/arcade/*` on Open instead.
  */
 export const EMBED_FRIENDLY_HOSTS = [
-  "grudox.grudge-studio.com",
   "open.grudge-studio.com",
   "gameopen.vercel.app",
   "mine-loader.vercel.app",
@@ -166,9 +166,42 @@ export const EMBED_FRIENDLY_HOSTS = [
   "grudgewarlords.com",
 ] as const;
 
+/** Hosts that refuse iframes (pop-out or rewrite required). */
+export const FRAME_BLOCKED_HOSTS = [
+  "grudox.grudge-studio.com",
+] as const;
+
+/**
+ * Rewrite absolute GRUDOX arcade URLs to same-origin /arcade on Open so the
+ * CF edge proxy can serve them without X-Frame-Options blocking the canvas.
+ */
+export function rewriteEmbedUrlForOpen(url: string): string {
+  try {
+    const u = new URL(url, typeof window !== "undefined" ? window.location.origin : "https://open.grudge-studio.com");
+    const host = u.hostname.toLowerCase();
+    if (host === "grudox.grudge-studio.com" || host === "www.grudox.grudge-studio.com") {
+      if (typeof window !== "undefined") {
+        return `${window.location.origin}${u.pathname}${u.search}${u.hash}`;
+      }
+      return `https://open.grudge-studio.com${u.pathname}${u.search}${u.hash}`;
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 export function isLikelyEmbeddable(url: string): boolean {
   try {
-    const host = new URL(url).hostname.toLowerCase();
+    const rewritten = rewriteEmbedUrlForOpen(url);
+    const host = new URL(rewritten, typeof window !== "undefined" ? window.location.origin : undefined).hostname.toLowerCase();
+    if (FRAME_BLOCKED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) {
+      return false;
+    }
+    // Same-origin always ok
+    if (typeof window !== "undefined" && host === window.location.hostname.toLowerCase()) {
+      return true;
+    }
     return EMBED_FRIENDLY_HOSTS.some(
       (h) => host === h || host.endsWith(`.${h.replace(/^\*\./, "")}`),
     );

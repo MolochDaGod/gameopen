@@ -8,7 +8,11 @@
  */
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { InAppEmbedSession } from "../lib/inAppLaunch";
-import { isLikelyEmbeddable, loadingParticleColor } from "../lib/inAppLaunch";
+import {
+  isLikelyEmbeddable,
+  loadingParticleColor,
+  rewriteEmbedUrlForOpen,
+} from "../lib/inAppLaunch";
 import "./inAppGameCanvas.css";
 
 export interface InAppGameCanvasProps extends InAppEmbedSession {
@@ -18,7 +22,7 @@ export interface InAppGameCanvasProps extends InAppEmbedSession {
 }
 
 export function InAppGameCanvas({
-  url,
+  url: rawUrl,
   title,
   tone,
   poster,
@@ -26,30 +30,39 @@ export function InAppGameCanvas({
   onClose,
   onPopOut,
 }: InAppGameCanvasProps) {
+  // Same-origin arcade rewrite (open.grudge-studio.com/arcade → CF → GRUDOX)
+  const url = rewriteEmbedUrlForOpen(rawUrl);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const accent = loadingParticleColor(tone);
+  const embedOk = isLikelyEmbeddable(url);
 
   useEffect(() => {
     setLoading(true);
     setFailed(false);
     setElapsed(0);
+    // Host known to refuse frames → fail fast with pop-out (do not wait 8s)
+    if (!embedOk) {
+      setFailed(true);
+      setLoading(false);
+      return;
+    }
     const t0 = performance.now();
     const tick = window.setInterval(() => {
       setElapsed((performance.now() - t0) / 1000);
     }, 250);
-    // If load never fires (X-Frame-Options), surface fallback after 8s
+    // If load never fires (X-Frame-Options), surface fallback after 6s
     const failTimer = window.setTimeout(() => {
       setFailed(true);
       setLoading(false);
-    }, 8000);
+    }, 6000);
     return () => {
       window.clearInterval(tick);
       window.clearTimeout(failTimer);
     };
-  }, [url]);
+  }, [url, embedOk]);
 
   const handleLoad = useCallback(() => {
     setLoading(false);
@@ -77,8 +90,6 @@ export function InAppGameCanvas({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  const embedOk = isLikelyEmbeddable(url);
 
   return (
     <div className="iagc-root" style={{ "--iagc-tone": accent } as CSSProperties} data-zone={id}>
