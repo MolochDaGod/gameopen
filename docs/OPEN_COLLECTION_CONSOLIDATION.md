@@ -10,14 +10,16 @@ Related: [OPEN_STACK.md](./OPEN_STACK.md) · [OPEN_SYSTEMS.md](./OPEN_SYSTEMS.md
 
 ## 0. Product thesis
 
-**Open is the collection shell** (Steam / Roblox Home):
+**Open is the Steam-like collection shell** for Grudge Studio (see [OPEN_PRODUCT.md](./OPEN_PRODUCT.md)):
+
+Library · in-app canvas · games · accounts · character saves · editors · Mine-Loader Realms · Warlord Genesis · GRUDOX arcade — **one origin** (`open.grudge-studio.com`).
 
 | Open owns | Open does **not** own |
 |-----------|------------------------|
-| Library UI, Account, SSO handoff | Mine-Loader world authority |
-| Danger Room / Dressing / native Brawl | Full Voxel Velocity implementation (lives in GRUDOX build) |
-| URL catalog + launch policy | GrudgeBuilder character Postgres schema |
-| Same-origin edge mounts (`/arcade/*`, future `/realms/*`) | Multi-replica world sim |
+| Library UI, Account, SSO handoff, saveData.open | Mine-Loader world authority (seed + blocks) |
+| Danger Room / Dressing / native Brawl / in-app canvas policy | Full Voxel Velocity implementation (lives in GRUDOX build) |
+| URL catalog + launch policy (T0 / T1 / T2) | GrudgeBuilder character Postgres schema |
+| Same-origin edge mounts (`/arcade/*`, `/realms` collection surface) | Multi-replica world sim |
 
 **GRUDOX is first-party** (`F:\GitHub\grudox` / `grudox.grudge-studio.com`):
 

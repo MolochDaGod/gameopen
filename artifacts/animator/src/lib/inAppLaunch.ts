@@ -128,6 +128,10 @@ export function nativeModeForGame(game: GameEntry): AppMode | null {
   if (game.launch === "mine-loader" || game.id === "mine-loader-realms") {
     return "realms";
   }
+  // Warlord Genesis product plays in Open’s in-app canvas via mode "genesis"
+  if (game.id === "warlord-genesis") {
+    return "genesis";
+  }
   return null;
 }
 

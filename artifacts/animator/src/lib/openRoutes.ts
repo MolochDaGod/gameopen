@@ -82,10 +82,11 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     slug: "",
     aliases: ["hub", "doors", "home", "select", "library"],
     cabinets: [],
-    title: "Hub",
-    blurb: "Animator suite — combat, create, LED, Realms (replaces threejs-rapier hub).",
+    title: "Library",
+    blurb:
+      "Steam-like collection shell — games, in-app canvas, accounts, saves, characters, editors, Realms, Genesis.",
     group: "hub",
-    tags: ["Home", "Menu"],
+    tags: ["Home", "Library"],
     accent: "#d4a843",
   },
   {
@@ -119,10 +120,11 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["warlord-genesis", "warlords-genesis", "waves", "moba"],
     cabinets: ["genesis", "warlord-genesis"],
     title: "Warlord Genesis",
-    blurb: "Launch the real 3-lane MOBA/RTS with your fleet Warlords character.",
+    blurb:
+      "3-lane MOBA/RTS warcamp — fleet character handoff inside Open’s in-app canvas (warlord-genesis.vercel.app).",
     group: "combat",
     poster: "genesis",
-    tags: ["MOBA", "RTS", "Fleet"],
+    tags: ["MOBA", "RTS", "In-app"],
     accent: "#ffd24d",
   },
   {
