@@ -162,6 +162,22 @@
       "destination": "https://mine-loader.vercel.app/api/blocks"
     },
     {
+      "source": "/api/blocks/:path*",
+      "destination": "https://mine-loader.vercel.app/api/blocks/:path*"
+    },
+    {
+      "source": "/api/healthz",
+      "destination": "https://mine-loader.vercel.app/api/healthz"
+    },
+    {
+      "source": "/api/worlds",
+      "destination": "https://mine-loader.vercel.app/api/worlds"
+    },
+    {
+      "source": "/api/worlds/:path*",
+      "destination": "https://mine-loader.vercel.app/api/worlds/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://gameopen-production.up.railway.app/api/:path*"
     },

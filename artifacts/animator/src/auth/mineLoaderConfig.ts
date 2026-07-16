@@ -93,9 +93,13 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   const base = MINE_LOADER_LIVE.replace(/\/+$/, "");
   const url = new URL(`${base}/`);
 
-  url.searchParams.set("from", "grudox");
+  url.searchParams.set("from", "gameopen");
   url.searchParams.set("open", "1");
   url.searchParams.set("surface", surface);
+  // Collection shell origin (open.grudge-studio.com) for return links inside Realms
+  if (typeof window !== "undefined") {
+    url.searchParams.set("collection", window.location.origin);
+  }
 
   if (opts.token) {
     url.searchParams.set("grudge_token", opts.token);
@@ -106,7 +110,7 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   if (opts.baseId) url.searchParams.set("baseId", opts.baseId);
   if (opts.joinCode) url.searchParams.set("join", opts.joinCode);
 
-  // Explicitly set API to fleet host so the SPA never falls back to replit defaults
+  // Point SPA API at same live host (Vercel rewrites /api → Railway on Mine-Loader)
   url.searchParams.set("api", base);
 
   let hash = MINE_LOADER_HASH[surface] || "#/";

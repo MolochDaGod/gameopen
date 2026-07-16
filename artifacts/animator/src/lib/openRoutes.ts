@@ -28,6 +28,8 @@ export type AppMode =
   | "avatar"
   | "characters"
   | "minegrudge"
+  /** Mine-Loader Realms in-app collection surface (SSO canvas). */
+  | "realms"
   | "brawl"
   | "survival"
   | "zones"
@@ -220,16 +222,28 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     accent: "#5fe0ff",
   },
   {
-    mode: "minegrudge",
+    mode: "realms",
     slug: "realms",
-    aliases: ["minegrudge", "mineloader", "mine-loader", "grudox-realms"],
-    cabinets: ["minegrudge", "realms"],
+    aliases: ["minegrudge", "mineloader", "mine-loader", "grudox-realms", "worlds"],
+    cabinets: ["minegrudge", "realms", "mine-loader"],
     title: "GRUDOX Realms",
-    blurb: "Mine-Loader worlds — lobby, build, co-op (fleet iframe / live).",
+    blurb: "Mine-Loader worlds in Open — lobby, build, co-op (SSO canvas, 1-replica authority).",
     group: "multiplayer",
     poster: "library-mine",
-    tags: ["Realms", "Voxel"],
+    tags: ["Realms", "Voxel", "In-app"],
     accent: "#7ee0a0",
+  },
+  {
+    mode: "minegrudge",
+    slug: "realms-hub",
+    aliases: ["realms-menu", "mine-loader-menu"],
+    cabinets: [],
+    title: "Realms menu",
+    blurb: "Pick Realms surface (lobby / play / build / codex) then enter in-app.",
+    group: "multiplayer",
+    poster: "library-mine",
+    tags: ["Realms", "Menu"],
+    accent: "#5fd48a",
   },
   {
     mode: "lobby",

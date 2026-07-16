@@ -82,7 +82,10 @@ export type GameEntry = {
     | "lobby"
     | "zones"
     | "ledmask"
-    | "account";
+    | "account"
+    | "realms"
+    | "minegrudge"
+    | "survival";
   /** Absolute URL for external / mine-loader */
   url?: string;
   deploy: DeployStack;
@@ -168,7 +171,9 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "library-mine",
     icon: "world-editor",
     engines: ["mine-loader", "three"],
-    launch: "mine-loader",
+    // Collection surface: open.grudge-studio.com/realms (in-app canvas + SSO)
+    launch: "native",
+    nativeMode: "realms",
     url: MINE_LOADER.clientUrl,
     deploy: {
       client: "vercel",

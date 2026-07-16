@@ -189,15 +189,19 @@ When we **own** upstream: prefer setting frame policy at **edge** (strip blocker
 - [x] Edge `/arcade/*` → GRUDOX  
 - [x] Same-origin arcade deep links from Open  
 - [x] Clerk not required  
-- [ ] Path matrix table kept current in OPEN_SYSTEMS  
-- [ ] Library + Zones both use only `inAppLaunch` / `grudoxDeepLink`
+- [x] Path matrix table in OPEN_SYSTEMS + this file  
+- [x] Library + Zones use `inAppLaunch` / `grudoxDeepLink` / native `realms`
 
 ### Phase B — Owned mounts under Open
 
-- [ ] Document `/realms/*` → Mine-Loader Vercel (mirror arcade pattern)  
-- [ ] Optional `/carrier/*` → GRUDOX carrier-site if still separate  
-- [ ] Shared design tokens / FleetBar on T1 mounts where possible  
-- [ ] Health board: open, grudox arcade, mine-loader, railway rooms
+- [x] `/realms` collection surface → Mine-Loader SPA in-app (SSO canvas)  
+- [x] Zones minegrudge / mine-loader-live → navigate(`realms`)  
+- [x] Library Mine-Loader → native `realms`  
+- [x] CollectionHealth strip (blocks, arcade edge, characters, open API)  
+- [x] Vercel rewrites `/api/blocks`, `/api/healthz`, `/api/worlds` → Mine-Loader  
+- [ ] Optional CF path `/realms/*` asset mount (needs Mine-Loader `base: /realms/`)  
+- [ ] Optional `/carrier/*` → GRUDOX carrier-site  
+- [ ] Shared design tokens on T1 mounts
 
 ### Phase C — Deeper merge (optional, high cost)
 

@@ -1,10 +1,8 @@
 /**
- * GRUDOX Realms launcher — always opens fleet Mine-Loader on Vercel.
- *
- * Does NOT iframe /minegrudge/ (404 on production) or any Replit host.
- * UI is a native launch panel; play happens on mine-loader.vercel.app.
+ * GRUDOX Realms menu — pick surface then enter in-app canvas (collection shell).
+ * Does NOT force a new browser tab; optional pop-out remains available.
  */
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { readFleetToken } from "../auth/fleetCore";
 import { readActiveHeroContext } from "../auth/characterHubLaunch";
 import {
@@ -13,13 +11,17 @@ import {
   buildMineLoaderUrl,
   type MineLoaderSurface,
 } from "../auth/mineLoaderConfig";
+import type { InAppEmbedSession } from "../lib/inAppLaunch";
+import { posterUrl } from "../game/gameLibrary";
 import "./mineGrudgeEditor.css";
 
 interface Props {
   onExit: () => void;
   surface?: MineLoaderSurface;
-  /** @deprecated Ignored — always fleet live. */
-  preferLive?: boolean;
+  /** Preferred: play inside Open collection canvas. */
+  onOpenInApp?: (session: InAppEmbedSession) => void;
+  /** Jump straight to /realms full surface. */
+  onEnterRealms?: () => void;
 }
 
 const SURFACES: { id: MineLoaderSurface; label: string; blurb: string }[] = [
@@ -35,10 +37,11 @@ const SURFACES: { id: MineLoaderSurface; label: string; blurb: string }[] = [
 export function MineGrudgeEditorMode({
   onExit,
   surface: initialSurface = "lobby",
+  onOpenInApp,
+  onEnterRealms,
 }: Props) {
   const [surface, setSurface] = useState<MineLoaderSurface>(initialSurface);
   const [joinCode, setJoinCode] = useState("");
-  const [autoOpened, setAutoOpened] = useState(false);
   const hero = useMemo(() => readActiveHeroContext(), []);
 
   const src = useMemo(() => {
@@ -53,24 +56,24 @@ export function MineGrudgeEditorMode({
     });
   }, [hero.baseId, hero.characterId, hero.name, joinCode, surface]);
 
-  const openRealms = useCallback(
-    (target: "_blank" | "_self" = "_blank") => {
-      if (target === "_self") {
-        window.location.assign(src);
-      } else {
-        window.open(src, "_blank", "noopener,noreferrer");
-      }
-    },
-    [src],
-  );
-
-  // Auto-open live Realms once so users are not stuck on an empty shell
-  useEffect(() => {
-    if (autoOpened) return;
-    setAutoOpened(true);
-    const t = window.setTimeout(() => openRealms("_blank"), 400);
-    return () => window.clearTimeout(t);
-  }, [autoOpened, openRealms]);
+  const playInApp = useCallback(() => {
+    if (onEnterRealms && surface === "lobby" && !joinCode.trim()) {
+      onEnterRealms();
+      return;
+    }
+    if (onOpenInApp) {
+      onOpenInApp({
+        id: "realms",
+        url: src,
+        title: `Realms · ${surface}`,
+        tone: "#7ee0a0",
+        poster: posterUrl("library-mine"),
+        returnMode: "doors",
+      });
+      return;
+    }
+    window.open(src, "_blank", "noopener,noreferrer");
+  }, [joinCode, onEnterRealms, onOpenInApp, src, surface]);
 
   return (
     <div className="mg-root mg-root-native">
@@ -79,15 +82,19 @@ export function MineGrudgeEditorMode({
       <div className="mg-float">
         <div className="mg-brand">
           GRUDOX <span>REALMS</span>
-          <em>Live · mine-loader.vercel.app</em>
+          <em>In Open · fleet Mine-Loader</em>
           {hero.name && <b>{hero.name}</b>}
         </div>
         <div className="mg-actions">
-          <button type="button" className="mg-btn primary" onClick={() => openRealms("_blank")}>
-            Open Realms ↗
+          <button type="button" className="mg-btn primary" onClick={playInApp}>
+            Play in app
           </button>
-          <button type="button" className="mg-btn" onClick={() => openRealms("_self")}>
-            Play here
+          <button
+            type="button"
+            className="mg-btn"
+            onClick={() => window.open(src, "_blank", "noopener,noreferrer")}
+          >
+            Pop out ↗
           </button>
           <button type="button" className="mg-btn" onClick={onExit}>
             ↩ Back
@@ -99,14 +106,12 @@ export function MineGrudgeEditorMode({
         <header className="mg-panel-head">
           <h2>Minecraft-like GRUDOX</h2>
           <p>
-            Survival · combat · adventure · build · friends. Hosted on our fleet at{" "}
+            Survival · combat · adventure · build · friends. Collection path{" "}
+            <code>/realms</code> on open.grudge-studio.com · authority{" "}
             <a href={MINE_LOADER_LIVE} target="_blank" rel="noreferrer">
               mine-loader.vercel.app
             </a>
-            . No Replit · no broken /minegrudge embed.
-          </p>
-          <p className="mg-note">
-            A new tab should open automatically. If it was blocked, use <strong>Open Realms</strong>.
+            .
           </p>
         </header>
 
@@ -147,33 +152,12 @@ export function MineGrudgeEditorMode({
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder="Invite / room code"
               maxLength={12}
-              aria-label="Join code"
             />
-            <button
-              type="button"
-              className="mg-btn primary"
-              disabled={!joinCode.trim()}
-              onClick={() => {
-                setSurface("join");
-                window.setTimeout(() => openRealms("_blank"), 0);
-              }}
-            >
-              Join ↗
+            <button type="button" className="mg-btn primary" onClick={playInApp}>
+              Join in app
             </button>
           </div>
         </section>
-
-        <div className="mg-launch-row">
-          <button type="button" className="mg-btn primary large" onClick={() => openRealms("_blank")}>
-            Launch {SURFACES.find((s) => s.id === surface)?.label ?? "Realms"} ↗
-          </button>
-        </div>
-
-        <footer className="mg-panel-foot">
-          <p>
-            URL: <code className="mg-url">{src}</code>
-          </p>
-        </footer>
       </aside>
     </div>
   );

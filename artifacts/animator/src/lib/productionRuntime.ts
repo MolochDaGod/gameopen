@@ -144,7 +144,21 @@ export function mineLoaderLobbyUrl(opts: {
   if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
   u.searchParams.set(HANDOFF_QUERY.open, "1");
   u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  if (typeof window !== "undefined") {
+    u.searchParams.set("collection", window.location.origin);
+  }
   return u.toString();
+}
+
+/**
+ * Open collection path for Realms (preferred entry from Library / Zones).
+ * Resolves to open.grudge-studio.com/realms when on the Open host.
+ */
+export function openRealmsCollectionPath(): string {
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/realms`;
+  }
+  return "https://open.grudge-studio.com/realms";
 }
 
 /** Full VoxGrudge open-world (not the in-Open thin voxel editor). */

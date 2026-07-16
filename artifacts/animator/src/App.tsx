@@ -70,6 +70,8 @@ import { LandingPage } from "./components/LandingPage";
 import { AvatarEditMode } from "./components/AvatarEditMode";
 import { CharactersGrudoxMode } from "./components/CharactersGrudoxMode";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
+import { RealmsSurface } from "./components/RealmsSurface";
+import { CollectionHealth } from "./components/CollectionHealth";
 import { VoxelEditorUI } from "./components/VoxelEditorUI";
 import { VoxelMapsPanel } from "./components/VoxelMapsPanel";
 import { VoxelTemplatePicker } from "./components/VoxelTemplatePicker";
@@ -1333,7 +1335,7 @@ export default function App() {
           onExit={() => setMode("doors")}
           onNavigate={(m) => {
             // Map hub local modes onto Open AppMode (lobbyWorld → Realms live)
-            if (m === "lobbyWorld") navigate("minegrudge");
+            if (m === "lobbyWorld") navigate("realms");
             else if (m === "voxgrudge-native") navigate("voxgrudge-native");
             else navigate(m as Mode);
           }}
@@ -1342,10 +1344,22 @@ export default function App() {
     );
   }
 
+  if (mode === "realms") {
+    // Collection path /realms — Mine-Loader in-app (SSO canvas)
+    return shell(
+      <RealmsSurface onExit={() => navigate("doors")} surface="lobby" />,
+    );
+  }
+
   if (mode === "minegrudge") {
     return shell(
       withScreenTheme(
-        <MineGrudgeEditorMode onExit={() => setMode("doors")} surface="lobby" preferLive />,
+        <MineGrudgeEditorMode
+          onExit={() => setMode("doors")}
+          surface="lobby"
+          onOpenInApp={openInApp}
+          onEnterRealms={() => navigate("realms")}
+        />,
       ),
     );
   }
@@ -1368,14 +1382,19 @@ export default function App() {
   if (mode === "zones") {
     return shell(
       withScreenTheme(
-        <GrudoxZones
-          onEnterNative={(id) => {
-            const native = nativeModeForZone(id);
-            if (native) navigate(native);
-          }}
-          onOpenInApp={openInApp}
-          onExit={() => navigate("doors")}
-        />,
+        <>
+          <div style={{ padding: "0 16px" }}>
+            <CollectionHealth />
+          </div>
+          <GrudoxZones
+            onEnterNative={(id) => {
+              const native = nativeModeForZone(id);
+              if (native) navigate(native);
+            }}
+            onOpenInApp={openInApp}
+            onExit={() => navigate("doors")}
+          />
+        </>,
       ),
     );
   }

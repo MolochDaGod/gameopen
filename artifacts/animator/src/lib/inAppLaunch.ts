@@ -54,9 +54,11 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
       return "voxgrudge-native";
     case "characters":
       return "account";
-    case "voxgrudge":
     case "minegrudge":
     case "mine-loader-live":
+      // Collection surface: open.grudge-studio.com/realms
+      return "realms";
+    case "voxgrudge":
     case "lobby-island":
     case "water-island":
     case "dcq":
@@ -121,6 +123,10 @@ export function zonePosterUrl(zoneId: string): string {
 export function nativeModeForGame(game: GameEntry): AppMode | null {
   if ((game.launch === "native" || game.launch === "editor") && game.nativeMode) {
     return game.nativeMode;
+  }
+  // Mine-Loader titles always prefer the Open /realms collection surface
+  if (game.launch === "mine-loader" || game.id === "mine-loader-realms") {
+    return "realms";
   }
   return null;
 }

@@ -36,7 +36,9 @@ This is **not** Character Studio (GCS) and **not** Warlords `/home` lobby. It is
 | `/world` `/voxgrudge` | voxgrudge-native | Open voxel world |
 | `/dressing` `/editor` | editor | Dressing room |
 | `/lobby` `/rooms` | lobby | Multiplayer lobby |
-| `/zones` `/grudox` | zones | GRUDOX zone list |
+| `/zones` `/grudox` | zones | GRUDOX zone list + fleet health strip |
+| `/realms` | realms | **Mine-Loader Realms in-app** (SSO canvas) — collection path for worlds |
+| `/realms-hub` | minegrudge | Realms surface picker (lobby/play/build/codex) then in-app |
 | `/ledmask` | ledmask | LED face tool |
 | `/arcade/play/<id>` | **GRUDOX Voxel Arcade** | Owned by `grudox.grudge-studio.com` (not gameopen). `racer` = **Voxel Velocity** (real street racer). Edge: open Worker proxies `/arcade/*` → GRUDOX. SPA also hard-redirects arcade-only cabinets. Native Open only: `brawler`, `voxgrudge`, `explorer`→danger. |
 
