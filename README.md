@@ -126,6 +126,7 @@ See **[docs/ASSET_PRODUCTION_PIPELINE.md](docs/ASSET_PRODUCTION_PIPELINE.md)**.
 |-----|--------|
 | [OPEN_STACK.md](docs/OPEN_STACK.md) | Stack, deps, D1 vs Postgres, AI handoff |
 | [SEED_WORLD_DEPLOY.md](docs/SEED_WORLD_DEPLOY.md) | Seed worlds, portals, chunkIdx, APIs |
+| [CHARACTER_AVATARS.md](docs/CHARACTER_AVATARS.md) | Portraits, voxel heads, Railway avatarUrl |
 | [MINE_LOADER_SSOT.md](docs/MINE_LOADER_SSOT.md) | World editor SSOT, physics, lobby promote |
 | [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
 | [OPEN_CONSOLIDATION.md](docs/OPEN_CONSOLIDATION.md) | threejs-rapier → Open |

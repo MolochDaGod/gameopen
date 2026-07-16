@@ -30,6 +30,7 @@ import { raceCharacterIdForFleetRace } from "../three/assets";
 import { GRUDOX_ZONES } from "../game/grudoxZones";
 import { embedSessionForZone } from "../lib/inAppLaunch";
 import { publicUrl } from "../lib/fleet";
+import { CharacterAvatar } from "./CharacterAvatar";
 import { assetCandidates } from "../three/assets";
 import { CharacterPicker } from "./CharacterPicker";
 import {
@@ -445,30 +446,20 @@ export function AccountPanel({
                       }}
                     >
                       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        <img
-                          src={publicUrl(`races/${paperRace === "elf" ? "elf" : paperRace}.png`)}
-                          alt=""
-                          width={48}
-                          height={48}
-                          style={{
-                            borderRadius: 8,
-                            objectFit: "cover",
-                            border: "1px solid rgba(146,64,14,0.45)",
-                          }}
-                          draggable={false}
-                          onError={(e) => {
-                            const img = e.currentTarget;
-                            const cands = assetCandidates(
-                              `races/${paperRace === "elf" ? "elf" : paperRace}.png`,
-                            );
-                            const next = cands.find((u) => u !== img.src);
-                            if (next) img.src = next;
-                          }}
-                        />
+                        {/*
+                          Portrait cascade: Railway avatarUrl → race×class PNG →
+                          race PNG; voxel characters use voxel-head art.
+                          See lib/characterPortrait.ts + docs/CHARACTER_AVATARS.md
+                        */}
+                        <CharacterAvatar character={c} size={48} />
                         <div>
                           <strong style={{ color: "#fef3c7" }}>{c.name}</strong>
                           <span style={muted}> · {c.raceId || "—"} · L{c.level ?? 1}</span>
-                          <div style={{ fontSize: 11, opacity: 0.65 }}>model {glb}</div>
+                          <div style={{ fontSize: 11, opacity: 0.65 }}>
+                            model {glb}
+                            {c.avatarUrl ? " · custom avatar" : ""}
+                            {paperRace ? ` · ${paperRace}` : ""}
+                          </div>
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: 6 }}>

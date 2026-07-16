@@ -12,6 +12,8 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
 import { loginWithGrudgeId } from "../lib/grudgeAuth";
 import { resolveRaceModel } from "../lib/raceModel";
+import { resolveCharacterPortrait } from "../lib/characterPortrait";
+import { CharacterAvatar } from "./CharacterAvatar";
 import { RACE_ASSETS } from "../three/grudge";
 
 export function CharacterPicker() {
@@ -21,6 +23,7 @@ export function CharacterPicker() {
 
   const character = snap.characters.find((c) => c.id === snap.selectedCharacterId) ?? null;
   const resolved = resolveRaceModel(character);
+  const portrait = resolveCharacterPortrait(character);
   const raceName = RACE_ASSETS[resolved.raceId].name;
 
   const reload = async () => {
@@ -67,6 +70,7 @@ export function CharacterPicker() {
         </div>
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <CharacterAvatar character={character} size={52} showMeta />
           <select
             value={snap.selectedCharacterId || ""}
             onChange={(e) => gameSession.selectCharacter(e.target.value || null)}
@@ -81,7 +85,10 @@ export function CharacterPicker() {
             ))}
           </select>
           <span style={{ fontSize: 12, opacity: 0.85, color: "#aef5c4" }}>
-            Avatar: {raceName} ({resolved.presetId})
+            {portrait.isVoxel
+              ? "Voxel head portrait"
+              : `Model: ${raceName} · ${resolved.presetId}`}
+            {portrait.kind === "db-avatar" ? " · custom avatar" : ""}
           </span>
           <button type="button" style={btnStyle} onClick={reload} disabled={reloading}>
             {reloading ? "Reloading…" : "Reload"}

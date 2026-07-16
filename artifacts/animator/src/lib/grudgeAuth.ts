@@ -35,8 +35,18 @@ export type GrudgeCharacter = {
   raceId?: string;
   classId?: string;
   level?: number;
+  /**
+   * Railway `characters.avatar_url` — preferred 2D portrait when set
+   * (studio / AI / custom). See `characterPortrait.ts`.
+   */
+  avatarUrl?: string | null;
+  /**
+   * Railway `characters.model_3d` — modular 3D / pipeline (grudge6, vrm, voxel…).
+   */
+  model3d?: Record<string, unknown> | null;
   config?: Record<string, unknown>;
   saveData?: Record<string, unknown>;
+  equipment?: Record<string, unknown> | null;
 };
 
 function paramFromSearchOrHash(name: string): string | null {
@@ -539,30 +549,45 @@ export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
             ? data.results
             : [];
       const mapped = list
-        .map((c: Record<string, unknown>) => ({
-          id: String(c.id || c.uuid || c.characterId || ""),
-          name: String(c.name || c.displayName || "Hero"),
-          raceId: c.raceId
-            ? String(c.raceId)
-            : c.race
-              ? String(c.race)
-              : c.race_id
-                ? String(c.race_id)
-                : undefined,
-          classId: c.classId
-            ? String(c.classId)
-            : c.class
-              ? String(c.class)
-              : c.class_id
-                ? String(c.class_id)
-                : undefined,
-          level: typeof c.level === "number" ? c.level : undefined,
-          config: (c.config as Record<string, unknown>) || undefined,
-          saveData:
-            (c.saveData as Record<string, unknown>) ||
-            (c.save_data as Record<string, unknown>) ||
-            undefined,
-        }))
+        .map((c: Record<string, unknown>) => {
+          const avatarUrl =
+            (typeof c.avatarUrl === "string" && c.avatarUrl) ||
+            (typeof c.avatar_url === "string" && c.avatar_url) ||
+            null;
+          const model3d =
+            (c.model3d as Record<string, unknown>) ||
+            (c.model_3d as Record<string, unknown>) ||
+            null;
+          return {
+            id: String(c.id || c.uuid || c.characterId || ""),
+            name: String(c.name || c.displayName || "Hero"),
+            raceId: c.raceId
+              ? String(c.raceId)
+              : c.race
+                ? String(c.race)
+                : c.race_id
+                  ? String(c.race_id)
+                  : undefined,
+            classId: c.classId
+              ? String(c.classId)
+              : c.class
+                ? String(c.class)
+                : c.class_id
+                  ? String(c.class_id)
+                  : undefined,
+            level: typeof c.level === "number" ? c.level : undefined,
+            avatarUrl,
+            model3d,
+            config: (c.config as Record<string, unknown>) || undefined,
+            saveData:
+              (c.saveData as Record<string, unknown>) ||
+              (c.save_data as Record<string, unknown>) ||
+              undefined,
+            equipment:
+              (c.equipment as Record<string, unknown>) ||
+              null,
+          };
+        })
         .filter((c: GrudgeCharacter) => c.id);
       if (mapped.length || path.endsWith("/characters")) return mapped;
     } catch {
