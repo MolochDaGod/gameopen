@@ -103,6 +103,7 @@ export const WEAPON_TO_MASTER: Partial<Record<WeaponId, MasterWeaponTypeId>> = {
   pistol: "GUN",
   rifle: "GUN",
   "hunter-rifle": "GUN",
+  shotgun: "GUN",
   gunblade: "SWORD",
   // Extended ids (added with arsenal port)
   tome: "TOME",

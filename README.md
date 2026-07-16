@@ -3,6 +3,8 @@
 **Canonical live origin:** [open.grudge-studio.com](https://open.grudge-studio.com)  
 Steam-style library hub, Account hub, Danger Room (T0 combat), Mine-Loader Realms handoff, fleet SSO, companion AI.
 
+**Replaces** the legacy Animator lab at [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) — do not ship new features there. Ingest assets/code: `npm run ingest:rapier` · details: [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
+
 | Surface | Platform | Role |
 |---------|----------|------|
 | Edge | **Cloudflare Worker** | `open.grudge-studio.com` → Vercel |
@@ -50,9 +52,25 @@ curl -sI "https://id.grudge-studio.com/auth/sso-check?return=https://gameopen.ve
 |-----|------|
 | https://open.grudge-studio.com | **Canonical** production client |
 | https://gameopen.vercel.app | Alias / Vercel project |
-| https://gameopen-production.up.railway.app/api/healthz | Railway API |
+| https://gameopen-production.up.railway.app/api/healthz | Open Railway API |
+| https://mine-loader-api-production.up.railway.app/api/healthz | Realms world API (proxied at `/api/blocks`, `/api/worlds`) |
 | https://id.grudge-studio.com/login?redirect_uri=https%3A%2F%2Fopen.grudge-studio.com%2F | Fleet login → return here |
 | https://github.com/MolochDaGod/gameopen | Source |
+
+### Fleet API connections
+
+| Same-origin path | Upstream |
+|------------------|----------|
+| `/api/characters*`, `/api/account*`, `/api/wallet*` | Builder Railway (`grudge-api-production-…`) |
+| `/api/auth/*`, `/login` | Grudge ID (`id.grudge-studio.com`) |
+| `/api/blocks*`, `/api/definitions*`, `/api/worlds*`, `/api/healthz` | **Mine-Loader Railway** (not Replit) |
+| `/api/brawl`, `/api/carrier`, `/api/space` | GRUDOX room Railway |
+| `/api/*` (remainder) | Open Railway |
+
+Launch helper: `artifacts/animator/src/auth/mineLoaderConfig.ts`  
+Seed catalog: `content/worlds/seed-deployments.json` → `public/content/worlds/`  
+Seed math: `@workspace/voxel-canonical` `clampChunkIdx` · **chunkIdx 0..7 only**  
+Doc: [`docs/SEED_WORLD_DEPLOY.md`](docs/SEED_WORLD_DEPLOY.md)
 
 ### Path slugs (surfaces)
 
@@ -75,25 +93,43 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/realms` | Mine-Loader / GRUDOX Realms |
 | `/lobby` | Multiplayer lobby |
 | `/zones` | GRUDOX zone launcher |
-| `/ledmask` | LED Mask (right rail scroll-contained) |
+| `/ledmask` | LED Mask + voxel avatar design |
 | `/account` | Account hub (races, wallet, treaty) |
-
-**Consolidation:** Open **replaces** [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) as the product entry. See [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
 | `/arcade/play/<id>` | GRUDOX cabinet deep-link |
 
-Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).
+Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).  
+**Consolidation:** Open replaces the legacy Animator lab — [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).  
+Ingest: `npm run ingest:rapier`.
+
+## Asset production pipeline
+
+Scale → purpose classify → convert (grudge-convert) → **Draco last** → AI/game-flow verify.
+
+```bash
+npm run assets:classify        # purpose map (characters, weapons, maps, …)
+npm run assets:verify-scale    # green/yellow/red scale + AI clip checks
+npm run assets:pipeline        # full report + convert recipes
+npm run assets:convert:doctor  # grudge-convert backends
+npm run assets:convert -- raw/hero.fbx -o dist/production-assets/character/hero.glb --purpose character
+npm run ingest:rapier          # pull missing threejs-rapier lab assets/modules
+npm run deploy:prod            # vercel-build + vercel --prod
+```
+
+See **[docs/ASSET_PRODUCTION_PIPELINE.md](docs/ASSET_PRODUCTION_PIPELINE.md)**.
 
 ### Docs index
 
 | Doc | Topic |
 |-----|--------|
 | [OPEN_STACK.md](docs/OPEN_STACK.md) | Stack, deps, D1 vs Postgres, AI handoff |
+| [SEED_WORLD_DEPLOY.md](docs/SEED_WORLD_DEPLOY.md) | Seed worlds, portals, chunkIdx, APIs |
 | [MINE_LOADER_SSOT.md](docs/MINE_LOADER_SSOT.md) | World editor SSOT, physics, lobby promote |
 | [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
+| [OPEN_CONSOLIDATION.md](docs/OPEN_CONSOLIDATION.md) | threejs-rapier → Open |
 | [DANGER_ROOM_T0_COMBAT.md](docs/DANGER_ROOM_T0_COMBAT.md) | T0 skills, MM, parry/block |
 | [ATTACHMENT_EQUIP_CARDS.md](docs/ATTACHMENT_EQUIP_CARDS.md) | Equip container cards |
 | [DEPLOY.md](DEPLOY.md) | Env + smoke |
-| [OPEN_SYSTEMS.md](docs/OPEN_SYSTEMS.md) | Path/routing practices (if present) |
+| [OPEN_SYSTEMS.md](docs/OPEN_SYSTEMS.md) | Path/routing practices |
 
 ## Voxel canonical (GRUDOX / editors / games)
 
@@ -101,8 +137,9 @@ Block types, scene interchange, and the 250-block Codex come from **Voxel Realms
 
 | Piece | URL / path |
 |-------|------------|
-| Realms SPA | https://mineloader.grudge-studio.com |
-| Catalog API | `GET /api/blocks` (Mine-Loader / proxied) |
+| Realms SPA | https://mine.grudge-studio.com |
+| Catalog API | `GET /api/blocks` → Railway (Open proxy or Mine-Loader) |
+| Seed worlds | `content/worlds/seed-deployments.json` · `chunkIdx` 0..7 |
 | Package | `@workspace/voxel-canonical` → `lib/voxel-canonical` |
 | Doc | [`docs/VOXEL_CANONICAL.md`](docs/VOXEL_CANONICAL.md) |
 

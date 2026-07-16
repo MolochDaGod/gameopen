@@ -1,3 +1,6 @@
+/**
+ * Generate public/asset-manifest.json with kind + purpose classification.
+ */
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -24,6 +27,7 @@ const EXT_KIND = {
   png: "texture",
   jpg: "texture",
   jpeg: "texture",
+  webp: "texture",
   svg: "icon",
   bin: "bin",
   css: "code",
@@ -33,44 +37,64 @@ const EXT_KIND = {
   txt: "text",
 };
 
-const files = walk(publicDir).filter(
-  (f) => !f.endsWith(".br") && !f.endsWith(".gz") && f !== "asset-manifest.json",
-);
+async function main() {
+  let classifyAsset = (rel) => ({ purpose: "unknown" });
+  try {
+    ({ classifyAsset } = await import("./asset-pipeline/lib/purpose.mjs"));
+  } catch {
+    /* optional */
+  }
 
-const assets = files.map((rel) => {
-  const ext = path.extname(rel).slice(1).toLowerCase();
-  const full = path.join(publicDir, rel);
-  const st = fs.statSync(full);
-  const hash = crypto.createHash("sha1").update(rel).digest("hex").slice(0, 12);
-  return {
-    id: `GO-${hash}`,
-    path: `/${rel}`,
-    rel,
-    kind: EXT_KIND[ext] || "other",
-    ext,
-    bytes: st.size,
-    category: rel.split("/").slice(0, -1).join("/") || "root",
+  const files = walk(publicDir).filter(
+    (f) => !f.endsWith(".br") && !f.endsWith(".gz") && f !== "asset-manifest.json",
+  );
+
+  const assets = files.map((rel) => {
+    const ext = path.extname(rel).slice(1).toLowerCase();
+    const full = path.join(publicDir, rel);
+    const st = fs.statSync(full);
+    const hash = crypto.createHash("sha1").update(rel).digest("hex").slice(0, 12);
+    const purpose = classifyAsset(rel).purpose;
+    return {
+      id: `GO-${hash}`,
+      path: `/${rel}`,
+      rel,
+      kind: EXT_KIND[ext] || "other",
+      purpose,
+      ext,
+      bytes: st.size,
+      category: rel.split("/").slice(0, -1).join("/") || "root",
+    };
+  });
+
+  const byKind = {};
+  const byPurpose = {};
+  for (const a of assets) {
+    byKind[a.kind] = (byKind[a.kind] || 0) + 1;
+    byPurpose[a.purpose] = (byPurpose[a.purpose] || 0) + 1;
+  }
+
+  const manifest = {
+    version: 2,
+    generatedAt: new Date().toISOString(),
+    game: "gameopen",
+    count: assets.length,
+    byKind,
+    byPurpose,
+    totalBytes: assets.reduce((s, a) => s + a.bytes, 0),
+    assets,
   };
-});
 
-const byKind = {};
-for (const a of assets) {
-  byKind[a.kind] = (byKind[a.kind] || 0) + 1;
+  const out = path.join(publicDir, "asset-manifest.json");
+  fs.writeFileSync(out, JSON.stringify(manifest, null, 2));
+  console.log(
+    `[generate-asset-manifest] ${manifest.count} assets, ${(manifest.totalBytes / 1e6).toFixed(1)} MB → ${out}`,
+  );
+  console.log("byKind", byKind);
+  console.log("byPurpose", byPurpose);
 }
 
-const manifest = {
-  version: 1,
-  generatedAt: new Date().toISOString(),
-  game: "gameopen",
-  count: assets.length,
-  byKind,
-  totalBytes: assets.reduce((s, a) => s + a.bytes, 0),
-  assets,
-};
-
-const out = path.join(publicDir, "asset-manifest.json");
-fs.writeFileSync(out, JSON.stringify(manifest, null, 2));
-console.log(
-  `[generate-asset-manifest] ${manifest.count} assets, ${(manifest.totalBytes / 1e6).toFixed(1)} MB → ${out}`,
-);
-console.log(byKind);
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -19,6 +19,7 @@ import {
   type MasterSlotType,
 } from "../content/masterWeaponSkills";
 import { WEAPON_COMBAT } from "./prefabProfile";
+import { generateGunSkills, gunFamilyForWeapon } from "../arsenal/gunClass";
 
 /** uMMORPG-like skill definition (runtime). */
 export interface ScriptableSkill {
@@ -111,6 +112,36 @@ export function scriptableWeaponFromCache(
   const kit = buildMasterKit(weaponId, catalog, opts);
   const combat = WEAPON_COMBAT[weaponId] || WEAPON_COMBAT.sword!;
   if (!kit) {
+    // Class GUN: offline scriptable kit from arsenal/gunClass (6-tier pattern).
+    const gunFam = gunFamilyForWeapon(weaponId);
+    if (gunFam) {
+      const gen = generateGunSkills(gunFam, 0);
+      return {
+        weaponId,
+        masterType: "GUN",
+        name: gunFam.label,
+        iconUrl: null,
+        combat,
+        skills: gen.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          iconUrl: null,
+          cooldown: s.cooldown,
+          castTime: s.castTime,
+          damage: s.damage,
+          range: s.range,
+          mana: 0,
+          stamina: 8 + (s.slot === "ultimate" ? 12 : 4),
+          animation: s.animation,
+          kind: s.kind,
+          damageType: "physical",
+          slot: s.slot,
+          hitWindow: s.hitWindow,
+          requiresWeaponType: "GUN",
+        })),
+      };
+    }
     // Minimal scriptable fallback (still usable offline)
     return {
       weaponId,

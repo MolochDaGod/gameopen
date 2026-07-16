@@ -28,6 +28,11 @@ export type LocalHubMode =
   | "ledmask"
   | "genesis"
   | "brawl"
+  | "survival"
+  | "mimic"
+  | "zones"
+  | "realms"
+  | "characters"
   | "voxgrudge-native";
 
 export type HubDestinationId =
@@ -49,7 +54,9 @@ export type HubDestinationId =
   | "waters"
   | "warlords"
   | "warlord-genesis"
-  | "character-studio";
+  | "character-studio"
+  | "dcq"
+  | "mine-loader";
 
 export interface HubLaunchContext {
   characterId?: string | null;

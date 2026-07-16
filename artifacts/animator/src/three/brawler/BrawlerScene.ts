@@ -21,9 +21,9 @@ import { getBakedCharacter } from "../grudge/bakedRoster";
 import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
 import {
-  DEFAULT_HOSTILE_ROLES,
-  getWarlordsRole,
-} from "../grudge/warlordsRoles";
+  listHostilePrefabs,
+  type EntityPrefab,
+} from "../ummorpg/prefabProfile";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { Vfx } from "../Vfx";
 import { loadControls } from "../controlsSettings";
@@ -159,6 +159,12 @@ interface EnemyObj {
   pos: THREE.Vector3;
   speed: number;
   attackCd: number;
+  /** Prefab combat range (m) — uMMORPG EntityPrefab.combat.range */
+  attackReach: number;
+  /** Prefab combat damage */
+  attackDamage: number;
+  /** Prefab attack cooldown (s) */
+  attackCdMax: number;
   walkClock: number;
 }
 
@@ -678,18 +684,20 @@ export class BrawlerScene {
   }
 
   /**
-   * Hostiles from Unity Grudge Warlords Toon RTS — full grudge6 multi-race
-   * kits (WK / BRB / ELF / DWF / ORC / UD), not orcs-only or voxel boxes.
+   * Hostiles from uMMORPG EntityPrefab catalog (`listHostilePrefabs`) —
+   * full grudge6 multi-race kits with mesh_ids + combat numbers (same SSOT
+   * as Danger Room Targets.loadGrudgeOpponent). Not orcs-only or voxel boxes.
    */
   private async loadEnemyTemplates() {
-    const roleIds = DEFAULT_HOSTILE_ROLES;
-    // Cap concurrent templates so first-load stays snappy; still multi-race.
-    const loadIds = roleIds.slice(0, Math.max(6, Math.min(roleIds.length, 12)));
-    for (let i = 0; i < loadIds.length; i++) {
-      const role = getWarlordsRole(loadIds[i]!);
-      if (!role) continue;
+    const all = listHostilePrefabs();
+    // Cap templates for first-load snappiness; diversify by race (WK/BRB/ELF/DWF/ORC/UD).
+    const loadList = pickHostileLoadList(all, Math.max(6, Math.min(all.length, 12)));
+    for (let i = 0; i < loadList.length; i++) {
+      const prefab = loadList[i]!;
       try {
-        const rig = await loadGrudge6CombatRig(role.raceId, role.presetId);
+        const rig = await loadGrudge6CombatRig(prefab.raceId, prefab.presetId, {
+          meshIds: prefab.meshIds,
+        });
         if (this.disposed) {
           rig.mixer.stopAllAction();
           return;
@@ -705,17 +713,15 @@ export class BrawlerScene {
           }
         });
         root.userData.selectable = "hostile";
-        root.userData.warlordsRole = role.id;
-        root.userData.raceId = role.raceId;
-        root.userData.presetId = role.presetId;
+        stampPrefabCombat(root, prefab);
         // Stop mixer on template — spawns are static clones (AI walk bob handles motion)
         rig.mixer.stopAllAction();
         this.enemyTemplates[i] = root as THREE.Group;
         console.info(
-          `[BrawlerScene] hostile template ${role.id} race=${role.raceId} preset=${role.presetId}`,
+          `[BrawlerScene] hostile prefab ${prefab.id} race=${prefab.raceId} preset=${prefab.presetId} meshes=${prefab.meshIds.length} range=${prefab.combat.range}`,
         );
       } catch (err) {
-        console.warn(`[BrawlerScene] grudge6 hostile ${loadIds[i]} failed`, err);
+        console.warn(`[BrawlerScene] grudge6 hostile ${prefab.id} failed`, err);
       }
     }
     // Soft fallback: voxel zombies only if all grudge6 kits failed
@@ -1145,6 +1151,10 @@ export class BrawlerScene {
   }
 
   // ── Combat ─────────────────────────────────────────────────────────────────
+  private isIceStaff(): boolean {
+    return this.weaponId === "staffIce" || getWeapon(this.weaponId).element === "ice";
+  }
+
   private triggerSkill(slot: 1 | 2 | 3 | 4) {
     if (this.phase !== "playing") return;
     const skill = this.skills.find((s) => s.slot === slot);
@@ -1154,6 +1164,13 @@ export class BrawlerScene {
     this.atkCd = Math.max(this.atkCd, 0.15);
 
     this.acquireFocusTarget();
+    // Ice Staff tank-mage kit (Danger Room parity) — VFX + zone damage.
+    if (this.isIceStaff()) {
+      this.triggerIceStaffSkill(slot, skill.damage);
+      this.emitState();
+      return;
+    }
+
     let target = this.focusTarget;
     const pp = this.playerPos();
 
@@ -1216,8 +1233,111 @@ export class BrawlerScene {
     this.emitState();
   }
 
+  /**
+   * Ice Staff 1–4 (Brawler): spline / wall / frost-shell dodge / blizzard.
+   * Mirrors Studio ice kit with sphere damage against wave hostiles.
+   */
+  private triggerIceStaffSkill(slot: 1 | 2 | 3 | 4, damage: number) {
+    const color = 0x9fdcff;
+    const pp = this.playerPos();
+    const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, -1);
+    const target = this.focusTarget;
+    const aim = target
+      ? target.pos.clone()
+      : pp.clone().addScaledVector(fwd, 12);
+
+    this.avatar?.playRoleOnce?.("attack", 0.1);
+
+    if (slot === 1) {
+      // Ice Spline
+      const from = pp.clone().setY(pp.y + 1.3);
+      const to = aim.clone().setY(Math.max(0.5, aim.y + 0.8));
+      this.vfx.splineStrike(from, to, color, (p) => {
+        this.vfx.frostGround(p, 1.8, color, 0.7);
+        this.damageEnemiesInRadius(p, 1.8, damage);
+      });
+      return;
+    }
+
+    if (slot === 2) {
+      // Ice Wall between caster and enemy (+ push if close)
+      const origin = pp.clone().setY(0);
+      const enemy = aim.clone().setY(0);
+      const toE = new THREE.Vector3(enemy.x - origin.x, 0, enemy.z - origin.z);
+      const dist = toE.length();
+      const dir = dist > 1e-3 ? toE.normalize() : fwd.clone();
+      const side = new THREE.Vector3(-dir.z, 0, dir.x);
+      if (target && dist < 3.2) {
+        this.damageEnemy(target, Math.round(damage * 0.6));
+        // shove enemy away
+        target.pos.addScaledVector(dir, 2.2);
+        target.mesh.position.copy(target.pos);
+        const wallAt = origin.clone().addScaledVector(dir, 1.2);
+        this.vfx.iceWall(
+          wallAt.clone().addScaledVector(side, -1.6),
+          wallAt.clone().addScaledVector(side, 1.6),
+          color,
+          3.2,
+        );
+        this.damageEnemiesInRadius(wallAt, 1.8, Math.round(damage * 0.45));
+      } else {
+        const mid = origin.clone().lerp(enemy, target ? 0.5 : 0.55);
+        this.vfx.iceWall(
+          mid.clone().addScaledVector(side, -2.0),
+          mid.clone().addScaledVector(side, 2.0),
+          color,
+          3.4,
+        );
+        this.damageEnemiesInRadius(mid, 1.6, Math.round(damage * 0.5));
+      }
+      this.vfx.frostGround(origin.clone().addScaledVector(dir, 1.2), 1.8, color, 0.5);
+      return;
+    }
+
+    if (slot === 3) {
+      // Frost shell + back dodge + delayed spline + ground explode
+      const shellPos = pp.clone().setY(0);
+      this.vfx.frozenShell(shellPos, color, 2.4);
+      this.vfx.frostGround(shellPos, 1.2, color, 0.4);
+      if (this.controller) {
+        this.controller.dash(fwd.clone().multiplyScalar(-1), 4.0, 0.36, 0, 0.55);
+      }
+      const to = aim.clone();
+      window.setTimeout(() => {
+        if (this.disposed) return;
+        this.vfx.splineStrike(shellPos.clone().setY(1.3), to.setY(0.8), color, (p) => {
+          this.vfx.frostGround(p, 1.6, color, 0.55);
+          this.damageEnemiesInRadius(p, 1.6, Math.round(damage * 0.7));
+        });
+      }, 350);
+      window.setTimeout(() => {
+        if (this.disposed) return;
+        this.vfx.frostGround(shellPos, 3.2, color, 0.9);
+        this.vfx.aoeBlast(shellPos.clone().setY(0.4), color, 3.0);
+        this.damageEnemiesInRadius(shellPos, 3.2, Math.round(damage * 1.1));
+      }, 1100);
+      return;
+    }
+
+    // Slot 4 — Blizzard
+    const center = aim.clone().setY(0);
+    this.vfx.blizzardField(center, 7, color, 3.2, (p, i) => {
+      this.damageEnemiesInRadius(p, 6.5, Math.round(damage * (0.35 + i * 0.05)));
+    });
+  }
+
+  private damageEnemiesInRadius(center: THREE.Vector3, radius: number, amount: number) {
+    for (const en of this.enemies) {
+      if (en.pos.distanceTo(center) <= radius) this.damageEnemy(en, amount);
+    }
+  }
+
   private damageEnemy(en: EnemyObj, amount: number) {
     en.hp = Math.max(0, en.hp - amount);
+    // Fire-aura impact (skill prefab damage read)
+    const p = en.pos.clone();
+    p.y += 0.9;
+    this.vfx.fireAura?.(p, amount > 40 ? 1.15 : 0.75);
     if (this.focusRing && en === this.focusTarget) {
       const mat = this.focusRing.material as THREE.MeshBasicMaterial;
       mat.color.setHex(0xffe080);
@@ -1259,7 +1379,8 @@ export class BrawlerScene {
     }
     const p = this.playerPos().clone();
     p.y += 1;
-    this.vfx.burst(p, 0xff5a5a, 10, 3);
+    // Fire-aura take-damage indication (same stack as Danger Room skill prefabs)
+    this.vfx.fireAura?.(p, 0.95);
     if (this.playerHp <= 0) {
       this.avatar?.playRoleOnce("death", 0.1);
       this.controller?.setLockTarget(null);
@@ -1291,6 +1412,16 @@ export class BrawlerScene {
       } catch {
         mesh.add(tpl.clone(true));
       }
+      // Propagate EntityPrefab combat / identity onto the live spawn root
+      mesh.userData.entityPrefab = tpl.userData.entityPrefab;
+      mesh.userData.warlordsRole = tpl.userData.warlordsRole;
+      mesh.userData.raceId = tpl.userData.raceId;
+      mesh.userData.presetId = tpl.userData.presetId;
+      mesh.userData.combatRange = tpl.userData.combatRange;
+      mesh.userData.combatDamage = tpl.userData.combatDamage;
+      mesh.userData.combatCd = tpl.userData.combatCd;
+      mesh.userData.moveSpeed = tpl.userData.moveSpeed;
+      mesh.userData.maxHp = tpl.userData.maxHp;
     } else {
       // Last resort only — prefer never shipping green box as final art
       console.warn("[BrawlerScene] spawn without grudge6 template — box placeholder");
@@ -1306,13 +1437,25 @@ export class BrawlerScene {
     mesh.userData.selectable = "hostile";
     mesh.userData.physicsLayer = "npc";
     this.scene.add(mesh);
+
+    // Combat from EntityPrefab (template userData), with ENEMY_* constants as fallback
+    const baseHp = numUd(tpl, "maxHp", ENEMY_HP);
+    const baseSpeed = numUd(tpl, "moveSpeed", ENEMY_SPEED);
+    const attackReach = numUd(tpl, "combatRange", ENEMY_ATTACK_REACH);
+    const attackDamage = numUd(tpl, "combatDamage", ENEMY_DAMAGE);
+    const attackCdMax = numUd(tpl, "combatCd", ENEMY_ATTACK_CD);
+    const waveHp = baseHp + Math.floor((this.wave - 1) * 8);
+
     this.enemies.push({
       mesh,
-      hp: ENEMY_HP + Math.floor((this.wave - 1) * 8),
-      maxHp: ENEMY_HP + Math.floor((this.wave - 1) * 8),
+      hp: waveHp,
+      maxHp: waveHp,
       pos: pos.clone(),
-      speed: ENEMY_SPEED * (0.8 + Math.random() * 0.4),
+      speed: baseSpeed * (0.8 + Math.random() * 0.4),
       attackCd: 0,
+      attackReach,
+      attackDamage,
+      attackCdMax,
       walkClock: Math.random() * Math.PI * 2,
     });
   }
@@ -1331,9 +1474,9 @@ export class BrawlerScene {
       }
       en.walkClock += dt * 4;
       en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
-      if (dist <= ENEMY_ATTACK_REACH && en.attackCd <= 0) {
-        en.attackCd = ENEMY_ATTACK_CD;
-        this.damagePlayer(ENEMY_DAMAGE);
+      if (dist <= en.attackReach && en.attackCd <= 0) {
+        en.attackCd = en.attackCdMax;
+        this.damagePlayer(en.attackDamage);
       }
     }
   }
@@ -1634,4 +1777,53 @@ function isDescendant(obj: THREE.Object3D, root: THREE.Object3D): boolean {
     p = p.parent;
   }
   return false;
+}
+
+/** Stamp uMMORPG EntityPrefab combat + identity onto a template / spawn root. */
+function stampPrefabCombat(root: THREE.Object3D, prefab: EntityPrefab): void {
+  root.userData.entityPrefab = prefab.id;
+  root.userData.warlordsRole = prefab.id;
+  root.userData.raceId = prefab.raceId;
+  root.userData.presetId = prefab.presetId;
+  root.userData.combatRange = prefab.combat.range;
+  root.userData.combatDamage = prefab.combat.damage;
+  root.userData.combatCd = prefab.combat.attackCooldown;
+  root.userData.moveSpeed = prefab.moveSpeed;
+  root.userData.maxHp = prefab.maxHp;
+  root.userData.combatStyle = prefab.combat.style;
+  root.userData.weaponId = prefab.weaponId;
+}
+
+/** Read numeric userData with constant fallback (missing template / voxel). */
+function numUd(
+  root: THREE.Object3D | null | undefined,
+  key: string,
+  fallback: number,
+): number {
+  if (!root) return fallback;
+  const v = Number(root.userData[key]);
+  return Number.isFinite(v) && v > 0 ? v : fallback;
+}
+
+/**
+ * Round-robin by race so a load cap still covers WK / BRB / ELF / DWF / ORC / UD
+ * instead of only the first N catalog entries (mostly orcs).
+ */
+function pickHostileLoadList(prefabs: EntityPrefab[], max: number): EntityPrefab[] {
+  if (prefabs.length <= max) return prefabs.slice();
+  const byRace = new Map<string, EntityPrefab[]>();
+  for (const p of prefabs) {
+    const arr = byRace.get(p.raceId) || [];
+    arr.push(p);
+    byRace.set(p.raceId, arr);
+  }
+  const buckets = [...byRace.values()].map((b) => b.slice());
+  const out: EntityPrefab[] = [];
+  let i = 0;
+  while (out.length < max && buckets.some((b) => b.length > 0)) {
+    const b = buckets[i % buckets.length]!;
+    if (b.length > 0) out.push(b.shift()!);
+    i++;
+  }
+  return out;
 }

@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "label": "Harvest & build operations (voxel SSOT)",
+  "notes": "Tools drive LMB / radial in harvest and build modes. Yields feed the material bag for crafting.",
+  "operations": [
+    {
+      "id": "gather",
+      "name": "Gather",
+      "glyph": "🌿",
+      "mode": "harvest",
+      "blurb": "Forage plants, herbs, fiber, and surface nodes.",
+      "tool": "hand",
+      "yields": ["mat_herb", "mat_berry", "mat_fiber"],
+      "channelSec": 1.2
+    },
+    {
+      "id": "skin",
+      "name": "Skin",
+      "glyph": "🥩",
+      "mode": "harvest",
+      "blurb": "Stand over a corpse · hold E to butcher (meat + leather).",
+      "tool": "knife",
+      "yields": ["mat_raw_meat", "mat_leather", "mat_bone"],
+      "channelSec": 2
+    },
+    {
+      "id": "mine",
+      "name": "Mine",
+      "glyph": "⛏",
+      "mode": "harvest",
+      "blurb": "Break ore and stone voxels for materials.",
+      "tool": "pick",
+      "yields": ["mat_stone", "mat_coal", "mat_iron_ore", "mat_crystal"],
+      "channelSec": 1.5
+    },
+    {
+      "id": "chop",
+      "name": "Chop",
+      "glyph": "🪓",
+      "mode": "harvest",
+      "blurb": "Fell trees and wood voxels for logs and sticks.",
+      "tool": "axe",
+      "yields": ["mat_log", "mat_stick", "mat_resin"],
+      "channelSec": 1.4
+    },
+    {
+      "id": "forage",
+      "name": "Forage",
+      "glyph": "🫐",
+      "mode": "harvest",
+      "blurb": "Search brush for food and rare mats.",
+      "tool": "hand",
+      "yields": ["mat_berry", "mat_herb", "mat_mushroom"],
+      "channelSec": 1
+    },
+    {
+      "id": "dig",
+      "name": "Dig",
+      "glyph": "🪣",
+      "mode": "harvest",
+      "blurb": "Dig soil and sand voxels for fill materials.",
+      "tool": "shovel",
+      "yields": ["mat_dirt", "mat_sand", "mat_clay"],
+      "channelSec": 1.1
+    },
+    {
+      "id": "fish",
+      "name": "Fish",
+      "glyph": "🎣",
+      "mode": "harvest",
+      "blurb": "Cast near water voxels for fish and kelp.",
+      "tool": "rod",
+      "yields": ["mat_fish", "mat_kelp"],
+      "channelSec": 3
+    },
+    {
+      "id": "farm",
+      "name": "Farm",
+      "glyph": "🌾",
+      "mode": "harvest",
+      "blurb": "Tend crop voxels and harvest mature plants.",
+      "tool": "hoe",
+      "yields": ["mat_wheat", "mat_seed", "mat_fiber"],
+      "channelSec": 1.3
+    },
+    {
+      "id": "place",
+      "name": "Place",
+      "glyph": "▣",
+      "mode": "build",
+      "blurb": "Place the selected block or kit on the voxel grid.",
+      "tool": "build"
+    },
+    {
+      "id": "wall",
+      "name": "Wall",
+      "glyph": "▤",
+      "mode": "build",
+      "blurb": "Select wood/stone wall kit for snap place.",
+      "tool": "build"
+    },
+    {
+      "id": "floor",
+      "name": "Floor",
+      "glyph": "▦",
+      "mode": "build",
+      "blurb": "Place floor / foundation plates.",
+      "tool": "build"
+    },
+    {
+      "id": "ramp",
+      "name": "Ramp",
+      "glyph": "◢",
+      "mode": "build",
+      "blurb": "Place ramps and stairs (voxel shapes).",
+      "tool": "build"
+    },
+    {
+      "id": "door",
+      "name": "Door",
+      "glyph": "🚪",
+      "mode": "build",
+      "blurb": "Place door / gate kits on walls.",
+      "tool": "build"
+    },
+    {
+      "id": "station",
+      "name": "Station",
+      "glyph": "🏭",
+      "mode": "build",
+      "blurb": "Place crafting stations (workbench, forge, loom).",
+      "tool": "build"
+    },
+    {
+      "id": "demolish",
+      "name": "Demolish",
+      "glyph": "🗑",
+      "mode": "build",
+      "blurb": "Remove placed blocks · partial refund with skill.",
+      "tool": "build"
+    },
+    {
+      "id": "paint",
+      "name": "Paint",
+      "glyph": "🎨",
+      "mode": "build",
+      "blurb": "Recolor / retype existing voxels from codex palette.",
+      "tool": "build"
+    }
+  ]
+}

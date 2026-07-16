@@ -322,6 +322,58 @@ export class Character {
     return dur;
   }
 
+  /**
+   * Play a CUT of a clip: slice `[from, to]` fractions of the parent, then
+   * play at `timeScale` with a short crossfade. Returns **wall-clock** duration
+   * (clip slice length / timeScale) so impact schedulers stay in sync.
+   *
+   * Used for timing-based skills (utility kick, etc.) where the authored
+   * wind-up is too slow — cut into the attack portion and speed it up.
+   */
+  playClipCut(
+    name: string,
+    opts: {
+      from?: number;
+      to?: number;
+      timeScale?: number;
+      fade?: number;
+    } = {},
+  ): number {
+    const from = THREE.MathUtils.clamp(opts.from ?? 0, 0, 1);
+    const to = THREE.MathUtils.clamp(opts.to ?? 1, 0, 1);
+    const timeScale = Math.max(0.05, opts.timeScale ?? 1);
+    const fade = opts.fade ?? 0.05;
+
+    if (!this.actions.has(name)) return 0;
+
+    // Cache subclip under a stable id so repeated V-kicks don't re-slice.
+    const cutId = `${name}__cut_${Math.round(from * 100)}_${Math.round(to * 100)}`;
+    if (!this.actions.has(cutId)) {
+      if (!this.registerSnippet({ id: cutId, parent: name, from, to })) return 0;
+    }
+
+    const action = this.actions.get(cutId);
+    if (!action) return 0;
+
+    this.clearOverlay();
+    this.beginSingle();
+    action.reset();
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.enabled = true;
+    action.setEffectiveTimeScale(timeScale);
+    action.setEffectiveWeight(1);
+    action.fadeIn(fade);
+    action.play();
+    if (this.current && this.current !== action) this.current.fadeOut(fade);
+    if (this.oneShot && this.oneShot !== action) this.oneShot.stop();
+    this.oneShot = action;
+    const rawDur = action.getClip().duration;
+    const wallDur = rawDur / timeScale;
+    this.oneShotEnd = wallDur;
+    return wallDur;
+  }
+
   /** Play a one-shot for a logical role (attack/jump). */
   playRoleOnce(role: AnimRole, fade = 0.12): number {
     const name = this.roleClip.get(role);

@@ -27,9 +27,11 @@ Open is the **single** Grudge Studio browser app for:
 
 ## Asset hosting
 
-- Prefer same-origin `public/` or R2 via `VITE_ASSET_BASE_URL` / `assetHost.ts`.  
-- Temporary CDN rewrites in `vercel.json` may still proxy heavy `/models/*` and `/anim/*` from the legacy Vercel host until assets are fully mirrored under Open/R2.  
-- **Do not** treat the legacy host as the product entry point.
+- **SSOT:** same-origin `artifacts/animator/public/` (models/grudge, weapons, anim, audio, avatar, backdrops).  
+- **Ingest from lab:** `node scripts/ingest-threejs-rapier.mjs` copies missing files from the threejs-rapier monorepo (never overwrites unless `FORCE_OVERWRITE=1`).  
+- Prefer R2 via `VITE_ASSET_BASE_URL` / fleet resolver for fleet packs (grudge6 FBX, baked anims).  
+- `vercel.json` may still proxy `/models/grudge/*`, `/models/weapons/*`, `/anim/*` to the legacy host as a **last-resort** fallback when a file is missing from the deploy.  
+- **Do not** treat the legacy host as the product entry point or feature SSOT.
 
 ## LED Mask UI rule
 
@@ -53,12 +55,27 @@ Right control rail: **vertical scroll inside the rail only** (`overflow-x: hidde
 - Character height via `fitCharacterHeight` (no 100× skinned AABB bug).  
 - Hand mounts prefer Bip001 / mixamo L/R sockets for dual weapons.
 
+## Ingest (threejs-rapier → Open)
+
+```bash
+# From gameopen root — pull missing public + source modules from local lab clone
+node scripts/ingest-threejs-rapier.mjs
+# Optional: THREEJS_RAPIER_ROOT=F:/GitHub/threejs-rapier-react-three-controller/...
+
+# App.tsx is NOT auto-merged (Open owns GRUDOX / Realms / fleet modes).
+# New lab components (LoadingScreen, DjStation, toolbox, …) land under src/
+# and must be wired deliberately if you want them on a surface.
+```
+
 ## Deploy
 
 ```bash
 # gameopen repo
 pnpm build   # or scripts/vercel-build.mjs
 # Vercel project gameopen → open.grudge-studio.com (CF Worker edge)
+# npm run deploy:prod
 ```
 
-After deploy, smoke: `/login` → Grudge ID → `/` library → `/dressing` · `/avatar` · `/ledmask` · `/danger`.
+After deploy, smoke: `/login` → Grudge ID → `/` library → `/dressing` · `/avatar` · `/ledmask` · `/danger`.  
+Confirm race GLBs are same-origin (not only legacy):  
+`https://open.grudge-studio.com/models/grudge/western-kingdoms_warrior.glb`

@@ -221,6 +221,20 @@ Room authority: `api-server/src/world/room.ts` (`WorldRoom`)
 | Pathing | `dungeonNav` | Nav graph for foes/allies |
 | Minimap | `DungeonMinimap.tsx` | UI only |
 
+### 4.9 Seed worlds & portal dungeons (deployments)
+
+| Minecraft | Grudge | Practice |
+|-----------|--------|----------|
+| World seed | `WorldSnapshot.seed` + `hashSeed(label)` | Same seed ⇒ same overworld base |
+| Stronghold / portal | `triggers.kind = "portal"` in seed deployment scene | Placed deterministically around spawn |
+| Enter Nether/end | Load dungeon instance from `portal.target` | `dungeonSeed = mix(worldSeed, portalId)` |
+| Return | Exit → `returnPosition` at overworld portal | `returnToPortal: true` |
+| Deploy / multiplayer | Mine-Loader share `POST /api/worlds` or seed query | Open catalogs in `content/worlds/seed-deployments.json` |
+
+**Contract:** `@workspace/voxel-canonical` `seedWorld.ts` · **UI:** Production Maps tab · **Doc:** [SEED_WORLD_DEPLOY.md](./SEED_WORLD_DEPLOY.md)
+
+**Production rule:** Dungeons are **found** via open-world portals, not primary free teleport menus.
+
 ---
 
 ## 5. Animation blending & libraries

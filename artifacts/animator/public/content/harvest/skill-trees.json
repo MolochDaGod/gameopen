@@ -1,0 +1,77 @@
+{
+  "version": 2,
+  "label": "Voxel skill trees",
+  "notes": "Local unlocks until Railway /api/professions is bound.",
+  "trees": [
+    {
+      "id": "harvest",
+      "name": "Harvest",
+      "color": "#7ee7a8",
+      "nodes": [
+        { "id": "h_gather", "name": "Gatherer", "desc": "Pick plants and forage nodes faster.", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "h_skin", "name": "Skinner", "desc": "Skin corpses for meat and leather.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_mine", "name": "Miner", "desc": "Mine ore veins; +yield on coal/iron.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_chop", "name": "Lumberjack", "desc": "Fell trees; planks convert faster.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_dig", "name": "Digger", "desc": "Shovel soil/sand; clay chance.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_fish", "name": "Angler", "desc": "Fish water voxels for food.", "tier": 2, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_farm", "name": "Farmer", "desc": "Tend crop voxels; seed reuse.", "tier": 2, "requires": ["h_gather"], "cost": 2 },
+        { "id": "h_rare", "name": "Prospector", "desc": "Chance for rare drops from nodes.", "tier": 2, "requires": ["h_mine", "h_chop"], "cost": 3 },
+        { "id": "h_master", "name": "Field master", "desc": "All harvest channels 20% faster.", "tier": 3, "requires": ["h_rare", "h_farm"], "cost": 4 }
+      ]
+    },
+    {
+      "id": "crafting",
+      "name": "Crafting",
+      "color": "#ffd28a",
+      "nodes": [
+        { "id": "c_hand", "name": "Handcraft", "desc": "Unlock hand recipes.", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "c_bench", "name": "Workbench", "desc": "Use workbench station recipes.", "tier": 1, "requires": ["c_hand"], "cost": 2 },
+        { "id": "c_cook", "name": "Camp cook", "desc": "Cook meat and brews at campfire.", "tier": 1, "requires": ["c_hand"], "cost": 2 },
+        { "id": "c_forge", "name": "Smith", "desc": "Smelt ores and forge tools.", "tier": 2, "requires": ["c_bench"], "cost": 3 },
+        { "id": "c_loom", "name": "Weaver", "desc": "Cloth, bandages, light armor kits.", "tier": 2, "requires": ["c_bench"], "cost": 3 },
+        { "id": "c_alchemy", "name": "Alchemist", "desc": "Salves, lamps, crystal crafts.", "tier": 2, "requires": ["c_cook"], "cost": 3 },
+        { "id": "c_batch", "name": "Batch craft", "desc": "Craft ×2 when materials allow.", "tier": 3, "requires": ["c_forge", "c_loom"], "cost": 4 }
+      ]
+    },
+    {
+      "id": "building",
+      "name": "Building",
+      "color": "#7fb0ff",
+      "nodes": [
+        { "id": "b_place", "name": "Place", "desc": "Place foundation blocks.", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "b_wall", "name": "Walls", "desc": "Wall and floor kits.", "tier": 1, "requires": ["b_place"], "cost": 2 },
+        { "id": "b_ramp", "name": "Ramps", "desc": "Ramps, stairs, doors.", "tier": 1, "requires": ["b_place"], "cost": 2 },
+        { "id": "b_station", "name": "Stations", "desc": "Place workbench / forge / loom.", "tier": 2, "requires": ["b_wall"], "cost": 3 },
+        { "id": "b_demo", "name": "Demolish", "desc": "Refund part of materials on break.", "tier": 2, "requires": ["b_wall"], "cost": 2 },
+        { "id": "b_paint", "name": "Palette", "desc": "Recolor voxels from codex blocks.", "tier": 2, "requires": ["b_place"], "cost": 2 },
+        { "id": "b_struct", "name": "Structures", "desc": "Multi-block stamps from maps library.", "tier": 3, "requires": ["b_ramp", "b_station"], "cost": 4 },
+        { "id": "b_snap", "name": "Grid snap", "desc": "Snap place + ghost preview polish.", "tier": 3, "requires": ["b_struct"], "cost": 3 }
+      ]
+    },
+    {
+      "id": "survival",
+      "name": "Survival",
+      "color": "#ff9a7a",
+      "nodes": [
+        { "id": "s_eat", "name": "Rations", "desc": "Food restores more HP.", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "s_light", "name": "Torchbearer", "desc": "Torch radius and duration up.", "tier": 1, "requires": ["s_eat"], "cost": 2 },
+        { "id": "s_bag", "name": "Pack mule", "desc": "+inventory slots for mats.", "tier": 2, "requires": ["s_eat"], "cost": 3 },
+        { "id": "s_rest", "name": "Camp rest", "desc": "Campfire heals slowly when idle.", "tier": 2, "requires": ["s_light"], "cost": 2 },
+        { "id": "s_hardy", "name": "Hardy", "desc": "+max HP from cooked food buffs.", "tier": 3, "requires": ["s_bag", "s_rest"], "cost": 4 }
+      ]
+    },
+    {
+      "id": "explorer",
+      "name": "Explorer",
+      "color": "#c4a0ff",
+      "nodes": [
+        { "id": "e_map", "name": "Cartographer", "desc": "Reveal map markers and map library tags.", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "e_trail", "name": "Trail sense", "desc": "Highlight harvest nodes nearby.", "tier": 1, "requires": ["e_map"], "cost": 2 },
+        { "id": "e_avatar", "name": "Avatar bond", "desc": "Import user cube heads to Explorer.", "tier": 1, "requires": ["e_map"], "cost": 1 },
+        { "id": "e_realm", "name": "Realm walker", "desc": "Faster handoff into Mine-Loader worlds.", "tier": 2, "requires": ["e_trail"], "cost": 3 },
+        { "id": "e_codex", "name": "Codex scholar", "desc": "Unlock full block filter categories.", "tier": 2, "requires": ["e_avatar"], "cost": 2 },
+        { "id": "e_legend", "name": "Pathfinder", "desc": "All explorer buffs; rare map stamps.", "tier": 3, "requires": ["e_realm", "e_codex"], "cost": 4 }
+      ]
+    }
+  ]
+}

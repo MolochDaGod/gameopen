@@ -26,6 +26,7 @@ const WEAPON_CDN: Partial<Record<WeaponId, string>> = {
   bow: `${CDN}/icons/pack/weapons/Bow_01.png`,
   crossbow: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   "hunter-rifle": `${CDN}/icons/pack/weapons/Crossbow_01.png`,
+  shotgun: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   pistol: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   rifle: `${CDN}/icons/pack/weapons/Crossbow_01.png`,
   staff: `${CDN}/icons/pack/misc/Flow.png`,

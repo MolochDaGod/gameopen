@@ -10,7 +10,7 @@ import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
 import { Controller } from "./Controller";
 import { Recoil, fovKick, screenCenterRay } from "./aim/AimSystem";
-import { Vfx } from "./Vfx";
+import { Vfx, type TurretHandle, type TurretVariant } from "./Vfx";
 import { AbilityOrchestrator } from "./abilities/abilityOrchestrator";
 import { deployAbility, getAbility, kitAbility, statusAbility, vfxSkill } from "./abilities/abilityRegistry";
 import { dispatchStatusRouting, routeStatusScope } from "./abilities/statusScopeRouting";
@@ -58,6 +58,52 @@ import { loadControls, saveControls } from "./controlsSettings";
 import { getCharacter, getWeapon, weaponCombat } from "./assets";
 import { offHandEligible, getT0Skill, t0SignatureSkills, mmToMeters } from "./arsenal";
 import { ELEMENT_THEME } from "./arsenal/elements";
+import { staffHoverTheme } from "./arsenal/staffHover";
+import {
+  DODGE_CUT,
+  FORCEFIELD_CUT,
+  PARRY_CUT,
+  RECOVERY_CUT,
+  UTILITY_KICK_CUT,
+} from "./combatCuts";
+import {
+  GUN_SHIELD,
+  SHOTGUN,
+  gunLoadout,
+  isGunWeapon,
+  isShotgunWeapon,
+  type GunLoadout,
+} from "./gunCombat";
+import { XBOW, isCrossbowWeapon } from "./crossbowCombat";
+import {
+  beginCastPlacement,
+  clampAim,
+  groundFromRay,
+  inCone,
+  type CastPlacementSession,
+  type CastPlacementSpec,
+} from "./castPlacement";
+import {
+  emptyCombatContext,
+  pickStateClip,
+  type CombatContextSnapshot,
+  type CombatSituation,
+} from "./combatContext";
+import {
+  multiPartFor,
+  nextSkillPart,
+  partForContext,
+  type SkillPartDef,
+  type SkillVfxOp,
+} from "./skillCombos";
+import {
+  defaultToolForMode,
+  MODE_BLURB,
+  MODE_LABEL,
+  nextMode,
+  RADIAL_BY_MODE,
+  type PlayerActivityMode,
+} from "./playerMode";
 import type { StaffElement } from "./types";
 import { defenseClips, defenseOutcomeClip, guardedHitClip, vulnerableReactionClip } from "./arsenal/holdStyle";
 import type { WeaponGroup } from "./arsenal/types";
@@ -158,18 +204,34 @@ const STRIKER_SIG_CD = [2.5, 5.0, 6.0, 7.0] as const;
 const STRIKER_SIG_ST = [12, 20, 25, 15] as const;
 
 /**
- * Pistol "Kiter" (Gunslinger) per-signature-skill cooldowns in seconds.
- * [sig0 Quick Draw, sig1 Smoke Phantom, sig2 Bear Trap, sig3 Hexaring Beam]
+ * Pistol per-slot cooldowns (Albion-style — independent, never global).
+ * [0 Quick Draw, 1 Smoke Phantom, 2 Dive Kick, 3 Hexaring Beam]
  */
-const PISTOL_SIG_CD = [3.0, 30.0, 12.0, 16.0] as const;
+const PISTOL_SIG_CD = [3.0, 18.0, 7.5, 16.0] as const;
 
-/** Stamina costs for each Kiter signature skill (parallel to PISTOL_SIG_CD). */
-const PISTOL_SIG_ST = [10, 25, 18, 22] as const;
+/** Stamina costs for each pistol signature skill (parallel to PISTOL_SIG_CD). */
+const PISTOL_SIG_ST = [10, 22, 14, 22] as const;
+
+/** Pistol aerial hover after backflip / dive-kick rebound (seconds). */
+const PISTOL_HOVER_AIM = 0.5;
 
 /** Independent cooldowns (s) for the Soulbinder's arcane-staff signature slots. */
 const ARCANE_SIG_CD = [4.0, 7.0, 11.0, 14.0] as const;
 /** Stamina costs for each arcane signature skill (parallel to ARCANE_SIG_CD). */
 const ARCANE_SIG_ST = [8, 16, 20, 24] as const;
+
+/**
+ * Ice Staff tank-mage signature cooldowns (s).
+ * [0 Ice Spline, 1 Ice Wall, 2 Frost Shell clone-dodge, 3 Blizzard]
+ */
+const ICE_SIG_CD = [2.2, 6.0, 9.0, 14.0] as const;
+/** Stamina costs for each ice-staff signature skill. */
+const ICE_SIG_ST = [8, 16, 20, 28] as const;
+/** Enemy must be closer than this (m) for ice wall to push-then-deploy. */
+const ICE_WALL_PUSH_RANGE = 3.2;
+/** Base / extended ice dash-slide distances (m). */
+const ICE_SLIDE_DIST = 3.6;
+const ICE_SLIDE_DIST_LONG = 6.8;
 
 /**
  * Gunblade "Tank" (Centurion) per-signature-skill cooldowns in seconds.
@@ -216,13 +278,20 @@ const MECH_ABILITIES = [
  * bolts at the CLOSEST living enemy. The bolts travel to where the enemy was when
  * fired (no homing) at 50% of the player's bullet speed and 150% of its size, so
  * a moving target can dodge them. Deals collision damage on arrival.
+ *
+ * Variants:
+ *  - classic (liked chassis) — skill 4 / heavy impact / kiter retreat
+ *  - gameReady (animated) — skill 2 medium impact for rifle family
  */
 const TURRET_LIFE = 6.0;
+const TURRET_LIFE_HEAVY = 8.0;
+const TURRET_LIFE_MED = 5.0;
 const TURRET_VOLLEY = 3;
 const TURRET_VOLLEY_GAP = 1.4;
 const TURRET_BOLT_SPEED = 24; // 50% of the kiter's 48-speed primary bullet
 const TURRET_BOLT_SCALE = 1.5; // 150% of the player's bolt size
 const TURRET_SHOT_DAMAGE = 9;
+const TURRET_SHOT_DAMAGE_HEAVY = 12;
 const TURRET_COLOR = 0x8fd0ff;
 
 /**
@@ -478,6 +547,7 @@ export class Studio {
   private onKeyUp = (e: KeyboardEvent) => {
     const t = e.target as HTMLElement | null;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    this.handleKeyUp(e.code);
   };
 
   private health = 100;
@@ -511,6 +581,15 @@ export class Studio {
   private recoverLock = 0;
   /** Utility Kick (KeyV) cooldown so the guard-breaking kick can't be spammed. */
   private kickCd = 0;
+  /** KeyE forcefield guard pulse cooldown. */
+  private forceFieldCd = 0;
+  /** Space smash-recovery cooldown (backflip out of tumble). */
+  private smashRecoverCd = 0;
+  /**
+   * Smash Bros–style tumble: set when launched / knocked / fallen so Space
+   * performs a cut backflip recovery instead of a normal jump.
+   */
+  private tumbleActive = false;
   /** Throw-bomb (KeyH) cooldown so the thrown grenade can't be spammed. */
   private throwCd = 0;
   /** Heal-potion (KeyJ) cooldown so the consumable can't trivialise fights. */
@@ -524,6 +603,47 @@ export class Studio {
   /** Pistol "Kiter" primary state: rounds fired this clip + a brief fire lock. */
   private pistolShots = 0;
   private pistolLock = 0;
+  /** Simplified gun ammo (pistol 5 / rifle 18). */
+  private gunAmmo = 0;
+  private gunClipMax = 0;
+  private gunReloadT = 0;
+  private gunFireLock = 0;
+  /** Hold-F charge for full discharge (plasma barrel). */
+  private fKeyDown = false;
+  private fHoldAccum = 0;
+  private gunCharging = false;
+  /**
+   * Casting-mouse session: ground placement for traps / AoE / walls / heals /
+   * teleport, or cone footprint skills. LMB confirms · RMB/Esc cancels.
+   */
+  private castPlacement: CastPlacementSession | null = null;
+  private castReticle: THREE.Mesh | null = null;
+  /** After M3 uppercut — LMB xbow prioritizes airborne bolt for this long. */
+  private airFollowT = 0;
+  /**
+   * Pistol hover-aim window after double-jump backflip or dive-kick rebound:
+   * face target, allow LMB (and skill 3 if off CD) while floating.
+   */
+  private pistolHoverAimT = 0;
+  /** Live combat context for multi-part skills + state-dependent anims. */
+  private combatCtx: CombatContextSnapshot = emptyCombatContext();
+  /** Multi-part skill chain (same slot pressed again within window). */
+  private skillChainSlot = -1;
+  private skillChainPart = 0;
+  private skillChainWindow = 0;
+  private afterDamageT = 99;
+  private lastComboStage = -1;
+  /** Seconds remaining of Smash-style tumble / ragdoll (for combat context). */
+  private tumbleT = 0;
+  /**
+   * Activity mode: combat · harvest · build. **Q** cycles.
+   * **X** always dodges. Hold **Tab** opens radial options for the mode.
+   */
+  private activityMode: import("./playerMode").PlayerActivityMode = "combat";
+  private activityTool = "attack";
+  private radialOpen = false;
+  private radialHoldT = 0;
+  private tabHoldArmed = false;
   /** Cooldown gating the kiter backstep's i-frame dodge so rapid fire can't chain
    *  the invuln window into continuous immunity (dodge re-arms every 0.6s). */
   private pistolDodgeCd = 0;
@@ -569,8 +689,10 @@ export class Studio {
   private raf = 0;
   private disposed = false;
   private hudAccum = 0;
-  /** Throttle for the looping leg-flame emitter while the Striker hovers. */
+  /** Throttle for the looping leg-flame / staff-disc emitter while hovering. */
   private hoverFlameAccum = 0;
+  /** Cooldown gating ice-staff A/D dash-slides. */
+  private iceSlideCd = 0;
   /** Last flame palette theme pushed to the VFX (avoids redundant per-frame swaps). */
   private fireThemeApplied: "fire" | "chi" = "fire";
   private fps = 60;
@@ -604,16 +726,28 @@ export class Studio {
     if (!this.input.locked) return;
     // Prefight / result / choice: no offense until fighting or free roam.
     if (this.arenaMatch?.isActive && !this.arenaMatch.isFighting) return;
-    if (e.button === 0) this.attack();
-    else if (e.button === 1) {
-      // Middle mouse (M3): the relocated motion-attack (formerly KeyT). Sits in
-      // place as the knock-up / stagger combo-starter slot.
+    if (e.button === 0) {
+      // Casting-mouse: LMB confirms placement / cone cast
+      if (this.castPlacement) {
+        this.confirmCastPlacement();
+        return;
+      }
+      this.attack();
+    } else if (e.button === 1) {
+      // Middle mouse (M3): surprise uppercut / unused attack slot
       e.preventDefault();
-      this.motionAttack(ATTACK3_MOTION);
-    } else if (e.button === 2) this.startBlock();
+      this.doSurpriseUppercut();
+    } else if (e.button === 2) {
+      // Cancel placement first; otherwise RMB = focus / block
+      if (this.castPlacement) {
+        this.cancelCastPlacement();
+        return;
+      }
+      this.startBlock();
+    }
   };
   private onMouseUp = (e: MouseEvent) => {
-    if (e.button === 2) this.endBlock();
+    if (e.button === 2 && !this.castPlacement) this.endBlock();
   };
   private onContextMenu = (e: MouseEvent) => e.preventDefault();
   private onResize = () => this.resize();
@@ -735,7 +869,8 @@ export class Studio {
       deployTurret: (at, faceDir, color, life) => {
         // Standing-chassis VFX only — the host (Targets) ticks the firing,
         // faction-aware damage and lifetime; we return the early-remove disposer.
-        return this.vfx.spawnTurret(at.clone(), faceDir.clone(), color, life);
+        const h = this.vfx.spawnTurret(at.clone(), faceDir.clone(), color, life, "classic");
+        return () => h.dispose();
       },
       turretBolt: (from, dir, dist, color, onLand) => {
         // Slow, oversized, dodgeable bolt — same VFX the player's turret fires.
@@ -772,9 +907,19 @@ export class Studio {
           if (clip) this.reactWithClip(clip, 0.1);
         } else if (state === "fallen") {
           this.setCombatFlash("KNOCKED DOWN", 1.5);
+          this.tumbleActive = true; // Space = smash backflip recover
+          this.tumbleT = Math.max(this.tumbleT, 1.6);
           if (clip) this.reactWithClip(clip, 0.1);
-          this.schedule(0.95, () => this.character?.reaction?.("fallen", 0.15, true));
-          this.schedule(1.5, () => this.playPlayerReaction("kipUp"));
+          this.schedule(0.95, () => {
+            if (!this.tumbleActive) return;
+            this.character?.reaction?.("fallen", 0.15, true);
+          });
+          this.schedule(1.5, () => {
+            if (!this.tumbleActive) return;
+            this.playPlayerReaction("kipUp");
+            this.tumbleActive = false;
+            this.tumbleT = 0;
+          });
         }
       },
       onDummyHitResult: (result, pos) => {
@@ -795,7 +940,20 @@ export class Studio {
             // Anime clash spark where the incoming blow is turned aside. The
             // parried enemy's own stun reaction + flash fire from onEnemyState
             // when its CC enters the vulnerable state (parry attackerReaction).
-            if (pos) this.vfx.parryClash(pos);
+            if (pos) {
+              this.vfx.parryClash(pos);
+              this.vfx.forceField(() => pos.clone(), PARRY_CUT.forceFieldRadius, PARRY_CUT.forceFieldLife, 0xffe8a0);
+              // Smash punish: hard stun + shield-break the nearest attacker.
+              this.targets.reactAt(pos, "stunned");
+              this.targets.shieldBreak(pos, 3.2, PARRY_CUT.stunOnSuccess);
+              this.targets.kickStagger(
+                pos,
+                2.8,
+                this.params.skillForce * 1.1,
+                PARRY_CUT.stunOnSuccess,
+                this.character?.root.position,
+              );
+            }
             break;
           case "blockStop":
             if (result.defenderReaction === "stunned") {
@@ -1160,6 +1318,17 @@ export class Studio {
    * model onto the hand bones. A token guards against overlapping async loads,
    * and a character-swap check prevents a stale mount landing on a new rig.
    */
+  private ensureGunAmmo(id: WeaponId) {
+    const load = gunLoadout(id);
+    if (!load) {
+      this.gunAmmo = 0;
+      this.gunClipMax = 0;
+      return;
+    }
+    this.gunClipMax = load.clip;
+    if (this.gunAmmo <= 0 || this.gunAmmo > load.clip) this.gunAmmo = load.clip;
+  }
+
   private async applyWeaponAsync(id: WeaponId) {
     const token = ++this.weaponToken;
     // Swapping weapons cancels any in-flight mace throw (clears the flying mesh;
@@ -1168,6 +1337,10 @@ export class Studio {
     // Remember the choice even for a martial artist, so it re-applies when the
     // player later switches to a weapon-capable character.
     this.weaponId = id;
+    this.ensureGunAmmo(id);
+    this.gunReloadT = 0;
+    this.gunFireLock = 0;
+    this.gunCharging = false;
 
     // Swap the rig's animation set (procedural Explorer maps id -> animSet clips;
     // the GLB Character has no clip-swap and ignores this).
@@ -1477,6 +1650,11 @@ export class Studio {
       this.doMechPunch();
       return;
     }
+    // Harvest / Build: LMB runs the selected radial tool (not combat swings).
+    if (this.activityMode !== "combat") {
+      this.runActivityTool();
+      return;
+    }
     // Mid offense-fail recovery: the swing was blocked/parried/dodged and the
     // player is paying the lost-tempo beat — no new attack until it clears.
     if (this.recoverLock > 0) return;
@@ -1523,12 +1701,18 @@ export class Studio {
       this.kickComboLock = dur > 0 ? dur * COMBO_PLAYTHROUGH : stage === 2 ? 0.55 : 0.3;
       return;
     }
-    // Pistol "Kiter" primary: proximity-adaptive shoot-and-backstep / MMA kick.
-    if (def.kiter && this.weaponId === "pistol") {
-      this.doPistolPrimary(def.kiter);
+    // Guns (simplified): LMB fires weapon — no hybrid MMA kick on primary.
+    // RMB focus steers aim; clip / burst rules live in doGunFire.
+    if (isGunWeapon(this.weaponId)) {
+      this.doGunFire();
       return;
     }
-    // Bows / guns: LMB always looses a weapon projectile (arrow or bullet).
+    // Heavy Crossbow — Albion shotgun cones + melee when close / air follow-up.
+    if (isCrossbowWeapon(this.weaponId)) {
+      this.doCrossbowPrimary();
+      return;
+    }
+    // Bows: LMB looses an arrow.
     if (this.isProjectileRangedWeapon(this.weaponId)) {
       this.doRangedPrimaryShot();
       return;
@@ -1539,6 +1723,7 @@ export class Studio {
     const stage = this.comboTimer > 0 ? this.comboIndex : 0;
     const dur = this.doComboHit(stage);
     this.comboIndex = (stage + 1) % 3;
+    this.lastComboStage = stage;
     // Lock + chain window ride the real clip length so each swing plays through
     // most of the way before the next hit chains (no more truncated half-swings).
     this.comboTimer = dur > 0 ? dur + COMBO_GRACE : COMBO_WINDOW;
@@ -1621,17 +1806,51 @@ export class Studio {
     }
     this.controller.faceToward(dir, 0.18);
 
-    // The real attack clip drives the joints (no canned motion). When the player
-    // is MOVING on the ground and the rig supports it, the swing layers over
-    // locomotion as an upper-body additive overlay (a fluid moving attack — legs
-    // keep walking) instead of a rooted full-body one-shot. Standing swings, or
-    // clips without upper-body tracks, fall back to the rooted one-shot.
+    // State-dependent attack clip: air / after damage / enemy windup / stage,
+    // then override primary, then role fallback. Air uses cut playback for snap.
+    this.refreshCombatContext();
+    const stageClips: Record<number, string[]> = {
+      0: ["meleeCombo1", "attack1", "attack"],
+      1: ["meleeCombo2", "attack2", "attack"],
+      2: ["meleeCombo1", "attack3", "attack2", "attack"],
+    };
+    const stateTable: Partial<Record<CombatSituation, string[]>> = {
+      air: ["jumpAttack", "attack", ...stageClips[stage]!],
+      hover: ["jumpAttack", "chargedShot", "attack", ...stageClips[stage]!],
+      after_damage: ["attack", "blockReact", ...stageClips[stage]!],
+      enemy_attacking: ["attack", "parryReact", ...stageClips[stage]!],
+      parry: ["parryReact", "attack", ...stageClips[stage]!],
+      ragdoll: ["getUp", "attack"],
+      knockdown: ["getUp", "attack"],
+      stunned: ["hurt", "attack"],
+      after_light: stageClips[stage],
+      ground: stageClips[stage],
+    };
+    const stateClip = pickStateClip(
+      stateTable,
+      this.combatCtx,
+      (n) => this.character!.hasClip(n),
+      stageClips[stage] ?? ["attack"],
+    );
     const primary = this.overrides.primary;
-    const overlayName = primary && this.character.hasClip(primary) ? primary : null;
+    const overlayName =
+      primary && this.character.hasClip(primary)
+        ? primary
+        : stateClip && this.character.hasClip(stateClip)
+          ? stateClip
+          : null;
     const cstate = this.controller.state;
     const moving = cstate.grounded && cstate.speed > 0.2;
+    const airish = this.combatCtx.airborne || this.combatCtx.hovering;
     let dur = 0;
-    if (moving && overlayName && this.character.playClipOverlay) {
+    if (airish && overlayName && this.character.playClipCut) {
+      dur = this.character.playClipCut(overlayName, {
+        from: 0.1,
+        to: 1,
+        timeScale: 1.4,
+        fade: 0.06,
+      }) || 0;
+    } else if (moving && overlayName && this.character.playClipOverlay) {
       dur = this.character.playClipOverlay(overlayName, cstate.speed);
     }
     if (dur <= 0) {
@@ -1767,8 +1986,9 @@ export class Studio {
       if (landed) {
         // A connecting blow heats the combat-music bed (finishers hit harder).
         this.bumpMusicHeat(finisher ? 0.45 : 0.28);
-        this.vfx.impact(center, color, strike.radius * (finisher ? 1.25 : 1));
-        this.vfx.impactExplode(center, this.fireThemeApplied);
+        // Fire aura = skill-prefab damage read (castAura + flame column + explode).
+        this.vfx.fireAura(center, finisher ? 1.3 : 0.95, this.fireThemeApplied);
+        this.vfx.impact(center, color, strike.radius * (finisher ? 1.0 : 0.75));
         // Connect the strike with the right flesh/steel impact. Bladed groups ring
         // metallic; everything else thuds. Finishers add a heavier hit + a bone snap.
         const grp = this.playerGroup();
@@ -2221,9 +2441,10 @@ export class Studio {
           break;
         case "crit":
           this.setCombatFlash("CRIT!", 0.9);
-          this.vfx.impactExplode(pos, this.fireThemeApplied);
+          this.vfx.fireAura(pos, 1.25, this.fireThemeApplied);
           break;
         case "hit":
+          this.vfx.fireAura(pos, 0.8, this.fireThemeApplied, { groundOnly: true });
           break;
       }
     };
@@ -2365,7 +2586,10 @@ export class Studio {
       this.hurt = 0.5;
       // Taking a blow drives the combat-music bed hardest — the fight is on.
       this.bumpMusicHeat(0.5);
-      this.vfx.impact(chest, SKILL_COLOR[kind] ?? 0xff5a6a, 1.2);
+      // Fire-aura damage indication (skill prefab castAura + flame + impactExplode).
+      const dmgScale = isSkill ? 1.35 : recoil > 8 ? 1.15 : 0.85;
+      this.vfx.fireAura(chest, dmgScale, this.fireThemeApplied);
+      this.vfx.impact(chest, SKILL_COLOR[kind] ?? 0xff5a6a, 0.7);
       // Heavy opponent hits read on the player the way they do on the dummies:
       // a skill/AOE launches (uppercut), a heavy physical blow staggers (big-blow).
       if (isSkill) this.playPlayerReaction("launched");
@@ -2473,7 +2697,17 @@ export class Studio {
    */
   private blockShield(center: THREE.Vector3, big = false): void {
     const p = center.clone();
-    this.vfx.forceField(() => p, big ? 1.4 : 1.1, big ? 0.5 : 0.38);
+    // Bigger, longer hex forcefield on guard so block reads like Smash shield.
+    this.vfx.forceField(
+      () => p,
+      big ? 1.65 : 1.35,
+      big ? 0.62 : 0.48,
+      big ? 0x88f0ff : 0x66e0ff,
+    );
+    if (big) {
+      this.vfx.shockwave(new THREE.Vector3(p.x, 0.05, p.z), 0x7ad8ff, 1.8, 0.35);
+      this.vfx.burst(p, 0xa8ecff, 12, 2.2);
+    }
   }
 
   private playPlayerDefenseReaction(outcome: DefensiveResult["outcome"], pos?: THREE.Vector3): void {
@@ -2561,22 +2795,48 @@ export class Studio {
         react("stunned", 0.1);
         break;
       case "fallen":
-        // Tip over, then push up off the ground.
+        // Tip over — Space can smash-recover; auto get-up still scheduled as backup.
+        this.tumbleActive = true;
+        this.tumbleT = Math.max(this.tumbleT, 1.5);
         react("fallDown", 0.12);
-        this.schedule(1.4, () => this.playPlayerReaction("getUp"));
+        this.schedule(1.4, () => {
+          if (!this.tumbleActive) return;
+          this.playPlayerReaction("getUp");
+          this.tumbleActive = false;
+          this.tumbleT = 0;
+        });
         break;
       case "knockBack":
-        // Shoved hard onto the back: the dedicated flying-back knock, hold the
-        // grounded pose, then kip up. (Falls back to fallDown on rigs lacking it.)
+        // Shoved hard onto the back — Smash tumble; Space = cut backflip recover.
+        this.tumbleActive = true;
+        this.tumbleT = Math.max(this.tumbleT, 1.6);
         if (!react("flyingBack", 0.1)) react("fallDown", 0.12);
-        this.schedule(0.95, () => this.character?.reaction?.("fallen", 0.15, true));
-        this.schedule(1.5, () => this.playPlayerReaction("kipUp"));
+        this.schedule(0.95, () => {
+          if (!this.tumbleActive) return;
+          this.character?.reaction?.("fallen", 0.15, true);
+        });
+        this.schedule(1.5, () => {
+          if (!this.tumbleActive) return;
+          this.playPlayerReaction("kipUp");
+          this.tumbleActive = false;
+          this.tumbleT = 0;
+        });
         break;
       case "launched":
-        // Popped into the air by an uppercut: launch pop, settle, acrobatic kip-up.
+        // Popped into the air — Space recovers early with backflip cut.
+        this.tumbleActive = true;
+        this.tumbleT = Math.max(this.tumbleT, 1.7);
         if (!react("uppercutLaunch", 0.08)) react("fallDown", 0.08);
-        this.schedule(1.0, () => this.character?.reaction?.("fallen", 0.15, true));
-        this.schedule(1.55, () => this.playPlayerReaction("kipUp"));
+        this.schedule(1.0, () => {
+          if (!this.tumbleActive) return;
+          this.character?.reaction?.("fallen", 0.15, true);
+        });
+        this.schedule(1.55, () => {
+          if (!this.tumbleActive) return;
+          this.playPlayerReaction("kipUp");
+          this.tumbleActive = false;
+          this.tumbleT = 0;
+        });
         break;
       case "bigBlow":
         // Heavy body blow that staggers but keeps the fighter on their feet.
@@ -2780,48 +3040,129 @@ export class Studio {
   /**
    * Deploy a stationary turret at `at`. It stands for a few seconds and, each
    * volley gap, fires a burst of slow, oversized bolts at the closest living
-   * enemy (see {@link TURRET_LIFE} et al). Used by the Archmage's F-skill and
-   * the Kiter's retreat.
+   * enemy. Used by Archmage F, Kiter retreat, and gun skill 2 / 4.
+   *
+   * @param opts.variant  classic (heavy / skill 4) | gameReady (animated skill 2)
+   * @param opts.color    gun / skill accent color
+   * @param opts.life     stand time (s)
+   * @param opts.damage   per-bolt damage
+   * @param opts.heavy    slightly larger bolts + more volleys
    */
-  private deployTurret(at: THREE.Vector3, faceDir?: THREE.Vector3) {
+  private deployTurret(
+    at: THREE.Vector3,
+    faceDir?: THREE.Vector3,
+    opts?: {
+      variant?: TurretVariant;
+      color?: number;
+      life?: number;
+      damage?: number;
+      heavy?: boolean;
+      scale?: number;
+    },
+  ) {
     if (!this.character) return;
     const base = at.clone();
     base.y = 0;
     const facing = faceDir ?? this.facing();
-    const muzzle = base.clone();
-    muzzle.y += 1.1;
-    // A turret is a deployed entity, not a one-shot cast: route it through the
-    // ability lifecycle's deploy phase so it shares the same timing + cancelAll
-    // teardown as every other ability. `deployAbility` derives the volley count
-    // from the lifetime exactly as the old inline `floor((life - 0.4)/gap)` did,
-    // and `abilities.update` runs with the same `dt` adjacent to `updatePending`,
-    // so each volley fires on the same frame the legacy `schedule` would have.
-    // onDeploy spawns the (self-timed) VFX turret; each onTick re-acquires the
-    // nearest enemy and fires a volley. The 0.4s `tail` reproduces the original's
-    // end dead-time; the entity has no extra teardown so onExpire is omitted.
+    const variant = opts?.variant ?? "classic";
+    const color = opts?.color ?? TURRET_COLOR;
+    const life = opts?.life ?? (opts?.heavy ? TURRET_LIFE_HEAVY : TURRET_LIFE);
+    const damage = opts?.damage ?? (opts?.heavy ? TURRET_SHOT_DAMAGE_HEAVY : TURRET_SHOT_DAMAGE);
+    const boltScale = opts?.scale ?? (opts?.heavy ? 1.75 : TURRET_BOLT_SCALE);
+    const volleys = opts?.heavy ? 4 : TURRET_VOLLEY;
+    const gap = opts?.heavy ? 1.2 : TURRET_VOLLEY_GAP;
+
+    let handle: TurretHandle | null = null;
+    // Deploy entity lifecycle — same as before, but volleys sample live muzzle +
+    // attack anim so bullets release on the attack pose.
     this.abilities.cast(
-      deployAbility("turret", "turret", TURRET_COLOR, {
-        life: TURRET_LIFE,
-        firstTick: 0.5,
-        interval: TURRET_VOLLEY_GAP,
-        tail: 0.4,
+      deployAbility("turret", "turret", color, {
+        life,
+        firstTick: 0.45,
+        interval: gap,
+        tail: 0.35,
       }),
       {
-        onDeploy: () => this.vfx.spawnTurret(base, facing, TURRET_COLOR, TURRET_LIFE),
-        onTick: () => this.fireTurretVolley(muzzle),
+        onDeploy: () => {
+          handle = this.vfx.spawnTurret(base, facing, color, life, variant);
+        },
+        onTick: () => this.fireTurretVolleyFrom(handle, color, damage, boltScale, volleys),
+        onExpire: () => {
+          handle?.playDestroy();
+          // Allow destroy clip a beat, then dispose
+          this.schedule(0.35, () => handle?.dispose());
+        },
       },
     );
   }
 
-  /** Fire one turret volley of slow, oversized, dodgeable bolts at its nearest enemy. */
+  /**
+   * Fire a turret volley: aim chassis/barrel at nearest enemy, play attack anim,
+   * then release bolts from the live muzzle (synced to attack wind-up).
+   */
+  private fireTurretVolleyFrom(
+    handle: TurretHandle | null,
+    color: number,
+    damage: number,
+    boltScale: number,
+    volleyCount: number,
+  ) {
+    if (this.disposed) return;
+    const fallbackMuz = this.character
+      ? this.character.root.position.clone().setY(this.character.root.position.y + 1.1)
+      : new THREE.Vector3();
+    const seed = handle?.alive ? handle.muzzleWorld() : fallbackMuz;
+    const enemy = this.targets.nearest(seed, 1).find((h) => h.alive);
+    if (!enemy) return;
+
+    // Aim before the burst so the barrel points at the target
+    const aimPt = enemy.position.clone();
+    aimPt.y += 0.95;
+    handle?.aimAt(aimPt);
+    handle?.playAttack();
+
+    // Attack anim lead-in (~0.12s) then each bolt of the volley
+    const attackLead = 0.12;
+    for (let i = 0; i < volleyCount; i++) {
+      this.schedule(attackLead + i * 0.16, () => {
+        if (this.disposed) return;
+        const e = enemy.alive ? enemy : this.targets.nearest(seed, 1).find((h) => h.alive);
+        if (!e) return;
+        const aim = e.position.clone();
+        aim.y += 0.9;
+        handle?.aimAt(aim);
+        const muzzle = handle?.alive ? handle.muzzleWorld() : seed.clone();
+        const dir = aim.clone().sub(muzzle);
+        const dist = dir.length();
+        if (dist < 1e-3) return;
+        dir.multiplyScalar(1 / dist);
+        this.vfx.muzzle(muzzle.clone(), dir, color);
+        this.vfx.chargedBolt(
+          muzzle.clone(),
+          dir,
+          color,
+          TURRET_BOLT_SPEED,
+          dist + 0.5,
+          (p) => {
+            this.vfx.aoeBlast(p, color, 1.0);
+            this.vfx.fireAura(p, 0.7, this.fireThemeApplied);
+            this.targets.blast(p, 1.0, damage, this.params.skillForce * 0.4);
+          },
+          boltScale,
+        );
+      });
+    }
+  }
+
+  /** Legacy entry — classic chassis at player feet (kiter / archmage). */
   private fireTurretVolley(muzzle: THREE.Vector3) {
+    // Keep for any residual callers: aimless fallback bolt spray from a point.
     if (this.disposed) return;
     const enemy = this.targets.nearest(muzzle, 1).find((h) => h.alive);
     if (!enemy) return;
     for (let i = 0; i < TURRET_VOLLEY; i++) {
       this.schedule(i * 0.16, () => {
         if (this.disposed) return;
-        // Re-acquire if the captured target died mid-volley so shots aren't wasted.
         const e = enemy.alive ? enemy : this.targets.nearest(muzzle, 1).find((h) => h.alive);
         if (!e) return;
         const aim = e.position.clone();
@@ -2838,9 +3179,6 @@ export class Studio {
           TURRET_BOLT_SPEED,
           dist + 0.5,
           (p) => {
-            // The bolt object is the damage producer: it deals collision damage
-            // where it lands, so a target that has moved off the firing line
-            // takes nothing (dodgeable).
             this.vfx.aoeBlast(p, TURRET_COLOR, 1.0);
             this.targets.blast(p, 1.0, TURRET_SHOT_DAMAGE, this.params.skillForce * 0.4);
           },
@@ -2952,10 +3290,274 @@ export class Studio {
     this.netStrike(p, radius, 30);
   }
 
+  /**
+   * Arm one hotbar slot only (Albion-style). Never touches other slots or F-skill CD.
+   */
+  private armSigSlot(idx: number, cd: number, staminaCost = 16) {
+    if (idx < 0 || idx > 3) return;
+    this.sigCooldowns[idx] = cd;
+    this.sigCooldownMaxes[idx] = cd;
+    this.stamina = Math.max(0, this.stamina - staminaCost);
+  }
+
+  /** Refresh combat context for state-dependent skills / clips. */
+  private refreshCombatContext() {
+    const cs = this.controller?.state;
+    const pState = this.sparring?.getPlayerState?.() ?? "idle";
+    let enemyAttacking = false;
+    let enemyVulnerable = false;
+    try {
+      const ecv = this.targets.focusedCombatView?.(
+        this.character?.root.position ?? new THREE.Vector3(),
+      );
+      if (ecv) {
+        const st = String(ecv.state ?? "");
+        enemyAttacking = st === "windup" || st === "attack" || st === "active";
+        enemyVulnerable =
+          st === "stunned" || st === "fallen" || st === "stagger" || st === "recover";
+      }
+    } catch {
+      /* optional */
+    }
+    this.combatCtx = {
+      airborne: cs ? !cs.grounded : false,
+      grounded: cs?.grounded ?? true,
+      hovering: this.controller?.isHovering ?? false,
+      playerState: String(pState),
+      blocking: this.blocking,
+      afterDamageT: this.afterDamageT,
+      tumbleT: this.tumbleT > 0 ? this.tumbleT : this.tumbleActive ? 0.5 : 0,
+      lastComboStage: this.lastComboStage,
+      lastSkillSlot: this.skillChainSlot,
+      skillPart: this.skillChainPart,
+      skillPartWindow: this.skillChainWindow,
+      enemyAttacking,
+      enemyVulnerable,
+    };
+  }
+
+  /**
+   * Multi-part skill (2–3 stages). Returns true if a multi-part skill handled
+   * this press. Arms full CD only when the chain ends (last part or window).
+   */
+  private tryMultiPartSkill(slot: number): boolean {
+    const skill = multiPartFor(this.weaponId, slot);
+    if (!skill || !this.character || !this.controller) return false;
+
+    this.refreshCombatContext();
+    const partIdx = nextSkillPart(
+      skill,
+      this.skillChainSlot,
+      this.skillChainPart,
+      this.skillChainWindow,
+      slot,
+    );
+    // If starting fresh but slot on CD, fail
+    if (partIdx === 0 && this.sigCooldowns[slot]! > 0 && this.skillChainWindow <= 0) {
+      return false;
+    }
+
+    const part = partForContext(skill, partIdx, this.combatCtx);
+    this.executeSkillPart(part, slot);
+
+    const isLast = partIdx >= skill.parts.length - 1 || part.window <= 0;
+    if (isLast) {
+      this.armSigSlot(slot, skill.cooldown, 14 + partIdx * 4);
+      this.skillChainSlot = -1;
+      this.skillChainPart = 0;
+      this.skillChainWindow = 0;
+    } else {
+      this.skillChainSlot = slot;
+      this.skillChainPart = partIdx;
+      this.skillChainWindow = part.window;
+      // Don't arm full CD mid-chain — only a tiny global-less lock via comboLock
+      this.comboLock = Math.max(this.comboLock, 0.12);
+    }
+    const chainTag =
+      skill.parts.length > 1
+        ? ` ${partIdx + 1}/${skill.parts.length}${isLast ? "" : " ›"}`
+        : "";
+    this.setCombatFlash(`${part.label.toUpperCase()}${chainTag}`, 0.5);
+    return true;
+  }
+
+  /** Play state-dependent clip + VFX + hit for one skill part. */
+  private executeSkillPart(part: SkillPartDef, slot: number) {
+    if (!this.character || !this.controller) return;
+    this.refreshCombatContext();
+
+    const clip = pickStateClip(
+      part.clips,
+      this.combatCtx,
+      (n) => this.character!.hasClip(n),
+      part.fallbackClips,
+    );
+    if (clip) {
+      if (this.character.playClipCut && (this.combatCtx.airborne || this.combatCtx.hovering)) {
+        this.character.playClipCut(clip, { from: 0.12, to: 1, timeScale: 1.45, fade: 0.06 });
+      } else {
+        this.character.playClipOnce(clip, 0.1);
+      }
+    }
+
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 12;
+    if (target) {
+      const p = this.toTargetPlanar(target);
+      dir = p.dir.clone();
+      dist = p.dist;
+    }
+    this.controller.faceToward(dir, 0.22);
+
+    if (part.dash && part.dash !== 0) {
+      const d = dir.clone();
+      if (part.dash < 0) d.negate();
+      this.controller.dash(d, Math.abs(part.dash), 0.22, 0.05, 0.45);
+    }
+    if (part.hop) this.controller.hop(part.hop);
+
+    const cast = part.castTime ?? 0;
+    const run = () => {
+      if (this.disposed || !this.character || !this.controller) return;
+      this.runSkillVfx(part.vfx, dir, dist, target?.position ?? null);
+      const origin = this.character.root.position.clone().addScaledVector(dir, 1.2);
+      origin.y += 1.0;
+      const radius = part.radius ?? 1.6;
+      const force = this.params.skillForce * (part.forceMul ?? 1);
+      this.targets.blast(origin, radius, part.damage, force, this.sparCtx);
+      if (part.shieldBreak) this.targets.shieldBreak(origin, radius, 2.5);
+      if (part.launch) this.targets.launch(origin, radius, part.damage * 0.3, 7);
+      this.vfx.fireAura(origin, 0.75 + part.part * 0.15, this.fireThemeApplied);
+    };
+    if (cast > 0.02) {
+      // Charge telegraph at muzzle — color from first charge/bolt op if present
+      const m = this.muzzleOrigin(dir);
+      let chargeCol = 0x9fd8ff;
+      for (const op of part.vfx) {
+        if (op.op === "charge" || op.op === "bolt" || op.op === "beam") {
+          chargeCol = op.color;
+          break;
+        }
+      }
+      this.vfx.skillCharge(m, chargeCol, 1 + part.part * 0.25, cast + 0.12);
+      this.schedule(cast, run);
+    } else {
+      run();
+    }
+    void slot;
+  }
+
+  /** Execute a VFX recipe list for a skill part (charge / bolt / beam / …). */
+  private runSkillVfx(
+    ops: SkillVfxOp[],
+    dir: THREE.Vector3,
+    dist: number,
+    targetPos: THREE.Vector3 | null,
+  ) {
+    if (!this.character || !this.controller) return;
+    const origin = this.muzzleOrigin(dir);
+    const aimDir = targetPos
+      ? targetPos.clone().sub(origin).setY(0).normalize()
+      : dir.clone();
+    if (aimDir.lengthSq() < 1e-4) aimDir.copy(dir);
+
+    for (const op of ops) {
+      switch (op.op) {
+        case "muzzle":
+          this.vfx.muzzle(origin, aimDir, op.color ?? 0xfff2a8);
+          break;
+        case "charge":
+          this.vfx.skillCharge(origin, op.color, op.scale ?? 1, 0.4);
+          break;
+        case "castAura":
+          this.vfx.castAura(origin, op.color);
+          break;
+        case "bolt": {
+          const range = op.range ?? Math.min(28, dist + 4);
+          const speed = op.speed ?? 48;
+          const col = op.color;
+          const sc = op.scale ?? 1;
+          const onHit = (p: THREE.Vector3) => {
+            this.vfx.fireAura(p, 0.85, this.fireThemeApplied);
+            this.targets.blast(p, 1.0, 12, this.params.skillForce * 0.5, this.sparCtx);
+          };
+          if (op.charged) this.vfx.chargedBolt(origin, aimDir, col, speed, range, onHit, sc);
+          else this.vfx.bolt(origin, aimDir, col, speed, range, onHit, sc);
+          break;
+        }
+        case "beam": {
+          const len = op.length ?? 18;
+          const life = op.life ?? 0.5;
+          const getO = () => this.muzzleOrigin(this.controller!.forward());
+          const getD = () => {
+            if (targetPos) {
+              const d = targetPos.clone().sub(getO());
+              if (d.lengthSq() > 1e-4) return d.normalize();
+            }
+            return this.controller!.forward();
+          };
+          this.vfx.beam(getO, getD, op.color, len, life);
+          // Tick damage along beam
+          for (let i = 0; i < 4; i++) {
+            this.schedule(i * (life / 4), () => {
+              if (this.disposed || !this.controller) return;
+              const o = getO();
+              const d = getD();
+              const tip = o.clone().addScaledVector(d, len * 0.85);
+              this.targets.blast(tip, 1.3, 10, this.params.skillForce * 0.45, this.sparCtx);
+              this.vfx.fireAura(tip, 0.7, this.fireThemeApplied);
+            });
+          }
+          break;
+        }
+        case "hexaring":
+          this.vfx.hexaring(() => this.muzzleOrigin(this.controller!.forward()), op.color, op.life ?? 0.8);
+          break;
+        case "fireAura":
+          this.vfx.fireAura(origin, op.scale ?? 1, this.fireThemeApplied);
+          break;
+        case "aoeBlast":
+          this.vfx.aoeBlast(origin, op.color, op.radius);
+          break;
+        case "shockwave":
+          this.vfx.shockwave(new THREE.Vector3(origin.x, 0.05, origin.z), op.color, op.radius, 0.45);
+          break;
+        case "slash": {
+          const q = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 0, 1),
+            aimDir.clone().setY(0).normalize(),
+          );
+          this.vfx.slashArc(origin.clone().setY(1.1), q, op.color);
+          break;
+        }
+        case "afterimage":
+          this.vfx.afterimage(
+            this.character.root,
+            this.character.root.position.clone(),
+            aimDir,
+            1.5,
+            op.color,
+            4,
+            0.28,
+          );
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
   /** Trigger the equipped weapon's signature skill (or a character signature). */
   useSkill(signatureIndex?: number) {
     if (!this.character) return false;
     if (this.spectating) return false;
+    // Skills only fire in combat mode (Q to return from harvest/build).
+    if (this.activityMode !== "combat") {
+      this.setCombatFlash(`${MODE_LABEL[this.activityMode]} · LMB tool / hold Tab`, 0.5);
+      return false;
+    }
     // Piloting the exo-armour: the skill bar fires the mech's bespoke kit
     // (Stomp on F, Plasma Cannon on 1, Grapple Throw on 2) instead of the pilot's.
     if (this.mech.isPiloted) {
@@ -2967,18 +3569,69 @@ export class Studio {
     const def = getCharacter(this.characterId);
     const isSig = signatureIndex != null;
 
-    // Striker (pure martial artist): each sig has its own independent cooldown —
-    // bypass the shared skillCooldown gate entirely so a lingering cooldown from
-    // a previous character never blocks Striker skills.
+    // ── Albion-style: each of 1–4 has its OWN cooldown. F uses skillCooldown only.
+    // Never gate all skills on a single timer (production bug fix).
+    // Multi-part chains: same slot may re-press inside window even if CD not armed yet.
+    if (isSig) {
+      // Mid-chain re-presses stay live even if a partial CD was armed elsewhere.
+      const chaining =
+        this.skillChainSlot === signatureIndex && this.skillChainWindow > 0;
+      if (!chaining && this.sigCooldowns[signatureIndex!]! > 0) return false;
+      // Multi-part skill combos (2–3 stages) take priority when defined.
+      if (this.tryMultiPartSkill(signatureIndex!)) return true;
+    } else if (this.skillCooldown > 0) {
+      return false;
+    }
+
+    // Striker (pure martial artist): each sig has its own independent cooldown.
     if (def.meleeStyle === "kick") {
       return this.doKickSig(isSig ? signatureIndex! : 0);
     }
 
-    // Pistol "Kiter" (Gunslinger): three bespoke signature skills on slots 2-4
-    // plus a simple fan-fire on slot 1, each with its own independent cooldown —
-    // bypass the shared skillCooldown gate like the kick fighter does.
-    if (def.kiter && this.weaponId === "pistol" && isSig) {
-      return this.doPistolSig(signatureIndex!, def.kiter);
+    // Pistol: full 1–4 kit (skill 3 = dive kick). Other guns: skill 3 vault.
+    // Slot 0 multi-part (charge→fan→beam) is handled by tryMultiPartSkill above.
+    // Turret deploys: rifle skill 2 = animated game-ready (medium); hunter skill 4
+    // = classic heavy chassis; pistol skill 4 can also drop classic heavy.
+    if (isGunWeapon(this.weaponId) && isSig) {
+      if (this.weaponId === "pistol") {
+        return this.doPistolSig(signatureIndex!, def.kiter ?? {
+          kickRange: 2.2,
+          clipSize: 5,
+          shotDamage: 15,
+          blastDamage: 28,
+          blastRadius: 2.4,
+          kickDamage: 22,
+          backstep: 1.6,
+        });
+      }
+      // Shotgun kit: slot 1 multiparts handled above; slot 1 fallback slug;
+      // slot 2 vault; slot 3 dragon breath. Rifle/sniper turrets as before.
+      if (isShotgunWeapon(this.weaponId)) {
+        if (signatureIndex === 1) return this.doShotgunSlug();
+        if (signatureIndex === 2) return this.doGunVault();
+        if (signatureIndex === 3) return this.doShotgunDragonBreath();
+      }
+      // Rifle skill 2 (slot 1) — medium animated turret
+      if (this.weaponId === "rifle" && signatureIndex === 1) {
+        return this.doGunDeployTurret("gameReady");
+      }
+      // Sniper (hunter-rifle) skill 2 — marked slug
+      if (this.weaponId === "hunter-rifle" && signatureIndex === 1) {
+        return this.doSniperMarkedShot();
+      }
+      // Sniper skill 4 + rifle skill 4 — heavy classic turret
+      if (
+        (this.weaponId === "hunter-rifle" || this.weaponId === "rifle") &&
+        signatureIndex === 3
+      ) {
+        return this.doGunDeployTurret("classic");
+      }
+      if (signatureIndex === 2) return this.doGunVault();
+    }
+    // Heavy Crossbow skill kit (Albion-style shotgun / trap / barrage).
+    // Slot 0 multi-part handled above; 1–3 stay bespoke.
+    if (isCrossbowWeapon(this.weaponId) && isSig) {
+      return this.doCrossbowSig(signatureIndex!);
     }
 
     // Arcane Staff "Soulbinder": four bespoke soul/void signature skills, each
@@ -3010,26 +3663,31 @@ export class Studio {
       return this.doFireCombo();
     }
 
-    // Staff ranged AOE kit (every staff EXCEPT the bespoke Arcane Soulbinder,
-    // handled above): signature slot 2 fires the scatter spline barrage and slot
-    // 3 the caster-centred pushback+stun nova. Other slots fall through to the
-    // element cast below (elemental staffs) or the generic signature path.
-    if (this.isStaffEquipped() && !(def.arcane && this.weaponId === "staff")) {
+    // Ice Staff tank-mage kit (no hover float): 1 spline, 2 wall, 3 frost shell,
+    // 4 blizzard. Independent per-slot CDs — same pattern as Soulbinder / Tank.
+    if (this.isIceStaff() && isSig) {
+      return this.doIceSig(signatureIndex!);
+    }
+
+    // Staff ranged AOE kit (every staff EXCEPT Arcane Soulbinder + Ice Staff):
+    // signature slot 2 scatter spline barrage, slot 3 caster-centred nova.
+    if (
+      this.isStaffEquipped() &&
+      !(def.arcane && this.weaponId === "staff") &&
+      !this.isIceStaff()
+    ) {
       if (isSig && signatureIndex === 1) return this.doStaffScatter();
       if (isSig && signatureIndex === 2) return this.doStaffNova();
     }
 
-    // Elemental Staff (fire / ice / storm / nature / holy): every signature slot
-    // AND the F key cast the equipped staff's element — its own themed homing
-    // projectile + matching status — driven by the WEAPON's `element` data, so
-    // any character wielding the staff casts it. Bypasses the per-character sig
-    // kits above and the shared skillCooldown gate (it owns its own cooldown).
+    // Elemental Staff: per-slot CD when signature; F-skill uses skillCooldown only.
     {
       const wElement = getWeapon(this.weaponId).element;
-      if (wElement) return this.doElementalCast(wElement);
+      if (wElement && !(this.isIceStaff() && isSig)) {
+        return this.doElementalCast(wElement, isSig ? signatureIndex! : undefined);
+      }
     }
 
-    if (this.skillCooldown > 0) return false;
     const slot: ActionSlot = isSig ? (`sig${signatureIndex! + 1}` as ActionSlot) : "fskill";
     const override = this.overrides[slot];
 
@@ -3037,11 +3695,10 @@ export class Studio {
     const origin = this.character.root.position.clone();
     const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, this.character.root.rotation.y, 0));
 
-    // Signature slot (1-4): T0 weapon kit (MM + kind) drives VFX/motion; character
-    // clip overrides still apply when authored.
+    // Signature slot (1-4): T0 weapon kit — **per-slot cooldown only** (not global).
     if (isSig) {
-      // Slot 1 (index 0) on bows/guns = primary projectile fire (arrow / bullet).
-      if (signatureIndex === 0 && this.isProjectileRangedWeapon(this.weaponId)) {
+      // Slot 1 on bows = primary projectile (no extra skill CD — fire rate uses comboLock).
+      if (signatureIndex === 0 && this.isProjectileRangedWeapon(this.weaponId) && !isGunWeapon(this.weaponId) && !isCrossbowWeapon(this.weaponId)) {
         this.doRangedPrimaryShot();
         return true;
       }
@@ -3064,8 +3721,6 @@ export class Studio {
       if (mode === "dash") {
         this.doDashSkill(kind, origin, fwd, dur);
       } else {
-        // Aimed spells: home onto a locked/front target so the projectile arcs
-        // toward the enemy instead of firing straight ahead.
         const aimed =
           kind === "fireDragon" ||
           kind === "meteor" ||
@@ -3076,13 +3731,6 @@ export class Studio {
         const picked = aimed ? this.pickTargetInFront(origin, fwd, 22, -0.2) : null;
         const pose = this.colliderPose() ?? undefined;
         if (aimed) {
-          // Data-driven path: every aimed signature spell runs through the
-          // orchestrator. The projectile arc + blast are owned entirely by the
-          // Vfx subsystem, so the cast is instant (duration 0) and `playSkill`
-          // fires synchronously inside `cast()` — identical to the pre-refactor
-          // inline call, but routed through the shared lifecycle so character
-          // swap / dispose `cancelAll()` covers stale closures. fireDragon +
-          // dark-blades carry a descriptive travel motion (projectile archetypes).
           const def2: AbilityDef =
             kind === "fireDragon"
               ? getAbility("fireDragonSig") ?? vfxSkill(kind, SKILL_COLOR[kind], { target: "aimed", travel: "dragon", maxFlight: 3 })
@@ -3097,9 +3745,9 @@ export class Studio {
           this.vfx.playSkill(kind, origin, fwd, quat, picked?.position, undefined, pose);
         }
       }
-      this.skillCooldownMax = Math.max(dur, t0?.cooldown ?? 1.4);
-      this.skillCooldown = this.skillCooldownMax;
-      this.stamina = Math.max(0, this.stamina - 20);
+      // Per-slot only — never skillCooldown (that was locking the whole bar).
+      const cd = Math.max(0.8, t0?.cooldown ?? 1.6);
+      this.armSigSlot(signatureIndex!, cd, 16);
       return true;
     }
 
@@ -3367,17 +4015,1108 @@ export class Studio {
     return true;
   }
 
-  // ----------------------------------------------------------- Pistol Kiter kit
+  // ----------------------------------------------------------- Simplified guns
 
-  /** Muzzle world position (pistol tip if mounted, else a fist-height point ahead). */
+  /** Poll F-hold for charge/reload and tick gun timers. */
+  private updateGunInput(dt: number) {
+    if (!isGunWeapon(this.weaponId)) {
+      this.fKeyDown = false;
+      this.fHoldAccum = 0;
+      this.gunCharging = false;
+      return;
+    }
+    if (this.gunReloadT > 0) this.gunReloadT = Math.max(0, this.gunReloadT - dt);
+    if (this.gunFireLock > 0) this.gunFireLock = Math.max(0, this.gunFireLock - dt);
+
+    const held = this.input.down("KeyF");
+    const load = gunLoadout(this.weaponId);
+    if (!load) return;
+
+    if (held) {
+      this.fKeyDown = true;
+      this.fHoldAccum += dt;
+      if (this.fHoldAccum >= load.chargeTime * 0.3) {
+        this.gunCharging = true;
+        // Plasma charge build-up on the barrel (skill fire-aura language)
+        if (this.controller && Math.floor(this.fHoldAccum * 12) !== Math.floor((this.fHoldAccum - dt) * 12)) {
+          const dir = this.controller.forward();
+          const m = this.muzzleOrigin(dir);
+          this.vfx.burst(m, load.plasmaColor, 5, 1.4);
+          this.vfx.castAura(m, load.plasmaColor);
+        }
+      }
+    } else if (this.fKeyDown) {
+      this.handleKeyUp("KeyF");
+    }
+  }
+
+  /**
+   * Play the shooting animation on every shot occurrence.
+   * Moving + grounded → upper-body overlay (legs keep strafe/walk/run);
+   * standing / air → full-body chargedShot cut timed to the bullet release.
+   */
+  private playGunShootAnim(releaseLead = 0.06): number {
+    if (!this.character || !this.controller) return 0;
+    const names = ["chargedShot", "attack", "rangedAttack", "shoot"];
+    let name: string | null = null;
+    for (const n of names) {
+      if (this.character.hasClip(n)) {
+        name = n;
+        break;
+      }
+    }
+    if (!name) {
+      if (this.character.hasRole("attack")) return this.character.playRoleOnce("attack", 0.08);
+      return 0;
+    }
+    const cs = this.controller.state;
+    const moving = cs.grounded && cs.speed > 0.25;
+    if (moving && this.character.playClipOverlay) {
+      const dur = this.character.playClipOverlay(name, Math.min(1, 0.55 + cs.speed * 0.08));
+      if (dur > 0) return dur;
+    }
+    if (this.character.playClipCut) {
+      const dur = this.character.playClipCut(name, {
+        from: releaseLead,
+        to: 1,
+        timeScale: 1.55,
+        fade: 0.05,
+      });
+      if (dur > 0) return dur;
+    }
+    return this.character.playClipOnce(name, 0.08);
+  }
+
+  /**
+   * Shotgun LMB — spend one shell, fan pellets in a cone. Close-range bonus.
+   * Anim leads pellet release for production gun feel.
+   */
+  private doShotgunPrimary(load: GunLoadout) {
+    if (!this.character || !this.controller) return;
+    const combat = weaponCombat("shotgun");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = SHOTGUN.range;
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      dir = planar.dir.clone();
+      dist = planar.dist;
+      if (this.locked) this.controller.setLockTarget(target.position);
+    }
+    dir.y = 0;
+    if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
+    dir.normalize();
+    this.controller.faceToward(dir, 0.28);
+    this.playGunShootAnim(0.08);
+
+    const close =
+      Number.isFinite(dist) && dist < SHOTGUN.closeRange ? SHOTGUN.closeMul : 1;
+    const dmg = Math.round(load.damage * close);
+    const origin = this.muzzleOrigin(dir);
+    this.gunFireLock = load.fireLock;
+
+    this.schedule(0.08, () => {
+      if (this.disposed || !this.character || this.gunAmmo <= 0) return;
+      this.gunAmmo -= 1;
+      this.recoil.kick(0.05, 0.04);
+      this.vfx.muzzle(origin, dir, load.color);
+      this.vfx.skillCharge(origin, load.color, 0.85, 0.2);
+      const up = new THREE.Vector3(0, 1, 0);
+      for (let i = 0; i < SHOTGUN.pellets; i++) {
+        const yaw = (Math.random() * 2 - 1) * SHOTGUN.halfAngle;
+        const pitch = (Math.random() * 2 - 1) * SHOTGUN.halfAngle * 0.55;
+        const pdir = dir
+          .clone()
+          .applyAxisAngle(up, yaw)
+          .applyAxisAngle(dir.clone().cross(up).normalize(), pitch)
+          .normalize();
+        const range = THREE.MathUtils.clamp(SHOTGUN.range, 4, 12);
+        this.vfx.chargedBolt(
+          origin.clone(),
+          pdir,
+          load.color,
+          40 + Math.random() * 8,
+          range,
+          (p) => {
+            this.vfx.impact(p, load.color, 0.85);
+            this.targets.blast(
+              p,
+              0.75,
+              dmg,
+              this.params.skillForce * GUN_SHIELD.hitForceMul * SHOTGUN.forceMul,
+              this.sparCtx,
+            );
+          },
+          0.7 + Math.random() * 0.25,
+        );
+      }
+      this.sfx?.play("whooshHeavy", origin, { volume: 0.75, rate: 0.85 });
+      // Small pushback on self for weight
+      this.controller?.applyImpulse(dir.clone().negate(), 1.2, 0.15, 2);
+    });
+  }
+
+  /** Shotgun skill 2 — single heavy slug (shield break + launch). */
+  private doShotgunSlug(): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    if (this.sigCooldowns[1]! > 0) return false;
+    const load = gunLoadout("shotgun");
+    if (!load) return false;
+    const combat = weaponCombat("shotgun");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 14;
+    if (target) {
+      const p = this.toTargetPlanar(target);
+      dir = p.dir.clone();
+      dist = p.dist;
+    }
+    this.controller.faceToward(dir, 0.22);
+    this.playGunShootAnim(0.05);
+    const color = load.plasmaColor;
+    this.vfx.skillCharge(this.muzzleOrigin(dir), color, 1.25, 0.35);
+    this.schedule(0.2, () => {
+      if (this.disposed || !this.character) return;
+      const origin = this.muzzleOrigin(dir);
+      this.vfx.muzzle(origin, dir, color);
+      this.vfx.chargedBolt(origin, dir, color, 46, Math.min(16, dist + 2), (p) => {
+        this.vfx.aoeBlast(p, color, 1.6);
+        this.vfx.fireAura(p, 1.15, this.fireThemeApplied);
+        this.targets.blast(p, 1.4, Math.round(load.damage * 4.2), this.params.skillForce * 1.35, this.sparCtx);
+        this.targets.shieldBreak(p, 1.6, GUN_SHIELD.utilityBreakSec);
+        this.targets.launch(p, 1.5, load.damage, 7);
+      }, 1.55);
+    });
+    this.armSigSlot(1, 6.5, 16);
+    this.setCombatFlash("SLUG", 0.45);
+    return true;
+  }
+
+  /** Shotgun skill 4 — Dragon Breath: wide fire cone + aura. */
+  private doShotgunDragonBreath(): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    if (this.sigCooldowns[3]! > 0) return false;
+    const load = gunLoadout("shotgun");
+    if (!load) return false;
+    const dir = this.controller.forward().clone().setY(0).normalize();
+    this.controller.faceToward(dir, 0.2);
+    this.playGunShootAnim(0.05);
+    const color = 0xff5020;
+    this.vfx.skillCharge(this.muzzleOrigin(dir), color, 1.45, 0.4);
+    this.schedule(0.25, () => {
+      if (this.disposed || !this.character || !this.controller) return;
+      const origin = this.muzzleOrigin(dir);
+      this.vfx.muzzle(origin, dir, color);
+      this.vfx.fireAura(origin, 1.3, this.fireThemeApplied);
+      // Fan of charged bolts + frontal blast
+      const up = new THREE.Vector3(0, 1, 0);
+      for (let i = -4; i <= 4; i++) {
+        const pdir = dir.clone().applyAxisAngle(up, i * 0.09).normalize();
+        this.vfx.chargedBolt(origin.clone(), pdir, color, 32, 7.5, (p) => {
+          this.vfx.fireAura(p, 0.9, this.fireThemeApplied);
+          this.targets.blast(p, 1.1, Math.round((load.damage || 8) * 1.8), this.params.skillForce * 0.9, this.sparCtx);
+        }, 1.1);
+      }
+      const cone = origin.clone().addScaledVector(dir, 3.2);
+      cone.y = origin.y;
+      this.vfx.aoeBlast(cone, color, 3.0);
+      this.vfx.shockwave(new THREE.Vector3(cone.x, 0.05, cone.z), 0xff7040, 3.2, 0.5);
+      this.targets.blast(cone, 3.0, Math.round(load.damage * 3.5), this.params.skillForce * 1.4, this.sparCtx);
+      this.targets.shieldBreak(cone, 3.2, GUN_SHIELD.utilityBreakSec);
+    });
+    this.armSigSlot(3, 11, 22);
+    this.setCombatFlash("DRAGON BREATH", 0.6);
+    return true;
+  }
+
+  /** Sniper skill 2 — marked charged slug. */
+  private doSniperMarkedShot(): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    if (this.sigCooldowns[1]! > 0) return false;
+    const load = gunLoadout("hunter-rifle");
+    if (!load) return false;
+    const combat = weaponCombat("hunter-rifle");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 30;
+    if (target) {
+      const p = this.toTargetPlanar(target);
+      dir = p.dir.clone();
+      dist = p.dist;
+    }
+    this.controller.faceToward(dir, 0.25);
+    this.playGunShootAnim(0.04);
+    const color = load.plasmaColor;
+    this.vfx.skillCharge(this.muzzleOrigin(dir), color, 1.3, 0.35);
+    this.vfx.hexaring(() => this.muzzleOrigin(dir), color, 0.55);
+    this.schedule(0.22, () => {
+      if (this.disposed || !this.character) return;
+      const origin = this.muzzleOrigin(dir);
+      this.vfx.muzzle(origin, dir, color);
+      this.vfx.chargedBolt(origin, dir, 0xffe080, 62, Math.min(34, dist + 4), (p) => {
+        this.vfx.fireAura(p, 1.2, this.fireThemeApplied);
+        this.vfx.impact(p, color, 1.5);
+        this.targets.blast(p, 1.1, Math.round(load.damage * 2.2), this.params.skillForce * 0.85, this.sparCtx);
+      }, 1.4);
+    });
+    this.armSigSlot(1, 7, 14);
+    this.setCombatFlash("MARKED", 0.45);
+    return true;
+  }
+
+  /**
+   * Deploy a gun-family turret at the player (slightly ahead).
+   * skill 2 / medium → gameReady animated; skill 4 / heavy → classic chassis.
+   */
+  private doGunDeployTurret(variant: TurretVariant): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    const load = gunLoadout(this.weaponId);
+    const color = load?.plasmaColor ?? load?.color ?? TURRET_COLOR;
+    const heavy = variant === "classic";
+    const slot = heavy ? 3 : 1;
+    if (this.sigCooldowns[slot]! > 0) return false;
+
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    if (target) dir = this.toTargetPlanar(target).dir.clone();
+    dir.y = 0;
+    if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+    dir.normalize();
+    this.controller.faceToward(dir, 0.2);
+
+    // Deploy cast pose (not a shoot — place gadget)
+    if (this.character.hasClip("cast")) this.character.playClipOnce("cast", 0.1);
+    else this.playGunShootAnim(0.1);
+
+    const at = this.character.root.position.clone().addScaledVector(dir, 1.4);
+    at.y = 0;
+    this.vfx.skillCharge(at.clone().setY(0.6), color, heavy ? 1.4 : 1.1, 0.4);
+    this.vfx.hexaring(() => at.clone().setY(0.4), color, 0.6);
+
+    this.schedule(0.28, () => {
+      if (this.disposed) return;
+      this.deployTurret(at, dir, {
+        variant,
+        color,
+        life: heavy ? TURRET_LIFE_HEAVY : TURRET_LIFE_MED,
+        damage: heavy ? TURRET_SHOT_DAMAGE_HEAVY : TURRET_SHOT_DAMAGE,
+        heavy,
+        scale: heavy ? 1.7 : 1.35,
+      });
+    });
+
+    this.armSigSlot(slot, heavy ? 12 : 8.5, heavy ? 22 : 16);
+    this.setCombatFlash(heavy ? "HEAVY TURRET" : "TURRET", 0.55);
+    return true;
+  }
+
+  /**
+   * LMB gun fire — focus steers aim (RMB lock / soft-lock target).
+   * Pistol: 1 bullet. Rifle: 3-round burst. Sniper: 1 hard shot.
+   * Shotgun: cone pellets. Empty → auto-reload.
+   * Every shot plays a shoot anim; bullets release on the attack pose lead.
+   */
+  private doGunFire() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.recoverLock > 0 || this.gunFireLock > 0 || this.gunReloadT > 0) return;
+    const load = gunLoadout(this.weaponId);
+    if (!load) return;
+
+    if (this.gunAmmo <= 0) {
+      this.sfx?.play("whooshLight", this.character.root.position, { volume: 0.35, rate: 1.6 });
+      this.doGunReload();
+      return;
+    }
+
+    if (isShotgunWeapon(this.weaponId)) {
+      this.doShotgunPrimary(load);
+      return;
+    }
+
+    const combat = weaponCombat(this.weaponId);
+    // Soft-lock / focus (RMB lock steers body via Controller.setLockTarget)
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 26;
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      dir = planar.dir.clone();
+      dist = planar.dist;
+      if (this.locked) this.controller.setLockTarget(target.position);
+    } else {
+      const ray = this.crosshairRay();
+      dir.copy(ray.direction);
+      dir.y = 0;
+      if (dir.lengthSq() < 1e-6) dir.copy(this.controller.forward());
+      dir.normalize();
+    }
+    this.controller.faceToward(dir, 0.28);
+
+    // Shoot anim once for the press; each bullet also re-triggers a light overlay
+    // so burst fire reads as continuous shooting while strafing.
+    this.playGunShootAnim(0.08);
+
+    const burst = Math.min(load.burst, this.gunAmmo);
+    // Bullet release lead matches cut into chargedShot attack portion
+    const releaseLead = 0.07;
+    for (let i = 0; i < burst; i++) {
+      this.schedule(releaseLead + i * 0.07, () => {
+        if (this.disposed || !this.character || this.gunAmmo <= 0) return;
+        // Re-aim each round at live target for strafe tracking
+        let d = dir.clone();
+        let di = dist;
+        const t = this.pickCrosshairTarget(combat);
+        if (t) {
+          const p = this.toTargetPlanar(t);
+          d = p.dir.clone();
+          di = p.dist;
+          this.controller?.faceToward(d, 0.2);
+        }
+        if (i > 0) this.playGunShootAnim(0.12);
+        this.fireOneGunRound(load, d, di, false);
+      });
+    }
+    this.gunFireLock = load.fireLock;
+  }
+
+  /** Tap F — reload cylinder / magazine. */
+  private doGunReload() {
+    const load = gunLoadout(this.weaponId);
+    if (!load || !this.character) return;
+    if (this.gunReloadT > 0) return;
+    if (this.gunAmmo >= load.clip) return;
+    this.gunReloadT = load.reloadTime;
+    this.gunAmmo = 0; // chamber open
+    if (this.character.hasClip("reload")) this.character.playClipOnce("reload", 0.1);
+    else if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.12);
+    this.setCombatFlash("RELOAD", 0.5);
+    this.schedule(load.reloadTime, () => {
+      if (this.disposed) return;
+      this.gunAmmo = load.clip;
+      this.setCombatFlash(`${load.clip} RDS`, 0.4);
+    });
+  }
+
+  /**
+   * Hold-F full discharge: pistol dumps remaining cylinder; rifle dumps remaining
+   * magazine as a plasma-charged volley. Barrel charge VFX while held.
+   */
+  private doGunFullDischarge() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.gunReloadT > 0) return;
+    const load = gunLoadout(this.weaponId);
+    if (!load) return;
+    if (this.gunAmmo <= 0) {
+      this.doGunReload();
+      return;
+    }
+
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 28;
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      dir = planar.dir.clone();
+      dist = planar.dist;
+    }
+    this.controller.faceToward(dir, 0.2);
+    this.playGunShootAnim(0.05);
+
+    const n = this.gunAmmo;
+    const gap = this.weaponId === "pistol" ? 0.08 : 0.05;
+    for (let i = 0; i < n; i++) {
+      this.schedule(0.08 + i * gap, () => {
+        if (this.disposed || !this.character || this.gunAmmo <= 0) return;
+        if (i % 2 === 0) this.playGunShootAnim(0.14);
+        this.fireOneGunRound(load, dir, dist, true);
+      });
+    }
+    this.gunFireLock = Math.max(load.fireLock, n * gap + 0.2);
+    this.setCombatFlash(this.weaponId === "pistol" ? "CYLINDER DUMP" : "FULL AUTO", 0.7);
+    this.bumpMusicHeat(0.35);
+  }
+
+  /** Single bullet / tracer with shield + reflect resolution. */
+  private fireOneGunRound(
+    load: GunLoadout,
+    dir: THREE.Vector3,
+    dist: number,
+    special: boolean,
+  ) {
+    if (!this.character || !this.controller || this.gunAmmo <= 0) return;
+    this.gunAmmo -= 1;
+    const color = special ? load.plasmaColor : load.color;
+    const origin = this.muzzleOrigin(dir);
+    const range = THREE.MathUtils.clamp(dist + 2, 4, 36);
+    const speed = special ? 58 : 52;
+    const dmg = special ? Math.round(load.damage * 1.15) : load.damage;
+
+    this.recoil.kick(special ? 0.04 : 0.022, special ? 0.035 : 0.018);
+    this.vfx.muzzle(origin, dir, color);
+    if (special) {
+      this.vfx.skillCharge(origin, load.plasmaColor, 1.1, 0.25);
+      this.vfx.burst(origin, load.plasmaColor, 10, 2.2);
+    }
+
+    // Enhanced charged slug vs plain bolt
+    const onHit = (p: THREE.Vector3) => {
+      this.resolveGunBulletImpact(p, origin, dmg, special, load);
+    };
+    if (special) {
+      this.vfx.chargedBolt(origin, dir, color, speed, range, onHit, 1.35);
+    } else {
+      this.vfx.chargedBolt(origin, dir, color, speed, range, onHit, 1.05);
+    }
+    this.sfx?.play("whooshHeavy", origin, { volume: special ? 0.7 : 0.45, rate: special ? 0.9 : 1.15 });
+  }
+
+  /** Impact: gunHit → forcefield / reflect / fire-aura damage. */
+  private resolveGunBulletImpact(
+    p: THREE.Vector3,
+    from: THREE.Vector3,
+    damage: number,
+    special: boolean,
+    load: GunLoadout,
+  ) {
+    const force = this.params.skillForce * GUN_SHIELD.hitForceMul * (special ? 1.25 : 1);
+    const gunHit = this.targets.gunHit?.bind(this.targets);
+    if (!gunHit) {
+      this.targets.blast(p, 1.15, damage, force, this.sparCtx);
+      this.vfx.fireAura(p, special ? 1.1 : 0.8, this.fireThemeApplied);
+      return;
+    }
+    const res = gunHit(p, 1.15, damage, force, {
+      hitsToBreak: GUN_SHIELD.hitsToBreak,
+      shieldMul: GUN_SHIELD.damageMul,
+      ctx: this.sparCtx,
+    });
+
+    if (res.outcome === "miss") {
+      this.vfx.impact(p, load.color, 0.7);
+      return;
+    }
+    const hitPos = res.pos ?? p;
+
+    if (res.outcome === "reflect") {
+      // Parry sends the round back at the shooter
+      this.setCombatFlash("REFLECT!", 0.55);
+      this.vfx.parryClash(hitPos, 0xffe8a0);
+      this.vfx.forceField(() => hitPos.clone(), 1.0, 0.25, 0xfff0c0);
+      const back = from.clone().sub(hitPos);
+      back.y = 0;
+      if (back.lengthSq() < 1e-4) back.copy(this.controller?.forward().negate() ?? new THREE.Vector3(0, 0, 1));
+      back.normalize();
+      this.vfx.bolt(hitPos.clone().setY(hitPos.y + 0.2), back, 0xff8866, 46, 22, (rp) => {
+        this.vfx.fireAura(rp, 0.9, this.fireThemeApplied);
+        // Chip the player when their own round comes home
+        if (this.character && rp.distanceTo(this.character.root.position) < 1.6) {
+          this.hurt = 0.4;
+          this.controller?.applyImpulse(back, 5, 0.8, 4);
+          this.vfx.fireAura(this.character.root.position.clone().setY(1), 1.0, this.fireThemeApplied);
+        }
+      }, 1.0);
+      return;
+    }
+
+    if (res.outcome === "block") {
+      this.vfx.forceField(() => hitPos.clone(), 1.2, 0.28, 0x66e0ff);
+      this.vfx.impact(hitPos, 0x88d0ff, 0.9);
+      this.sfx?.play("block", hitPos, { volume: 0.55, rate: 1.3 });
+      return;
+    }
+
+    if (res.outcome === "shieldBreak") {
+      this.setCombatFlash("SHIELD DOWN!", 0.8);
+      this.vfx.forceField(() => hitPos.clone(), 1.5, 0.4, 0xffaa60);
+      this.vfx.fireAura(hitPos, 1.2, this.fireThemeApplied);
+      this.vfx.shockwave(new THREE.Vector3(hitPos.x, 0.05, hitPos.z), 0xff9040, 2.0, 0.4);
+      return;
+    }
+
+    // Clean hit / crit
+    this.vfx.fireAura(hitPos, special ? 1.15 : 0.85, this.fireThemeApplied);
+    this.vfx.impact(hitPos, load.color, special ? 1.4 : 1.1);
+    if (res.outcome === "crit") this.triggerHitstop(0.06, 0.12);
+  }
+
+  /**
+   * Skill 3 — combat vault: dash away + hop up, keep focus lock if engaged,
+   * longbow dive / airDodge animation. Optional parting shot mid-air.
+   */
+  private doGunVault(): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    if (this.sigCooldowns[2]! > 0) return false;
+
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    let away = this.controller.forward().clone().negate();
+    if (target) {
+      away = this.toTargetPlanar(target).dir.clone().negate();
+    }
+    away.y = 0;
+    if (away.lengthSq() < 1e-4) away.set(0, 0, 1);
+    away.normalize();
+
+    // Face target while vaulting away (focus lock keeps camera)
+    if (target) this.controller.faceToward(this.toTargetPlanar(target).dir, 0.15);
+    if (this.locked && target) this.controller.setLockTarget(target.position);
+
+    // Animation: dive / air dodge / roll
+    const vaultClips = ["standing-dodge-backward", "airDodge", "dodgeB", "roll", "chargedShot"];
+    let animDur = 0;
+    for (const n of vaultClips) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        animDur = this.character.playClipCut(n, { from: 0.1, to: 1, timeScale: 1.5, fade: 0.06 });
+      }
+      if (animDur <= 0) animDur = this.character.playClipOnce(n, 0.08);
+      if (animDur > 0) break;
+    }
+
+    this.controller.hop(4.2);
+    this.controller.dash(away, 4.5, Math.max(0.32, animDur * 0.55), 0, 0.35);
+    this.vfx.afterimage(this.character.root, this.character.root.position.clone(), away, 3.5, 0x9ef0ff, 6, 0.4);
+    this.invuln = Math.max(this.invuln, 0.35);
+
+    // Parting shot at apex if we have ammo — shoot anim + timed release
+    this.schedule(0.18, () => {
+      if (this.disposed || this.gunAmmo <= 0) return;
+      const load = gunLoadout(this.weaponId);
+      if (!load || !this.controller) return;
+      let dir = this.controller.forward().clone();
+      let dist = 22;
+      if (target) {
+        const planar = this.toTargetPlanar(target);
+        dir = planar.dir.clone();
+        dist = planar.dist;
+      }
+      this.playGunShootAnim(0.1);
+      this.schedule(0.06, () => {
+        if (this.disposed || this.gunAmmo <= 0) return;
+        this.fireOneGunRound(load, dir, dist, false);
+      });
+    });
+
+    this.sigCooldowns[2] = 6.5;
+    this.sigCooldownMaxes[2] = 6.5;
+    this.stamina = Math.max(0, this.stamina - 14);
+    this.setCombatFlash("VAULT", 0.45);
+    return true;
+  }
+
+  /**
+   * M3 — surprise uppercut / unused attack slot.
+   * Guns: MMA kick → uppercut launch (shield break). Melee: uppercut or motion attack.
+   */
+  private doSurpriseUppercut() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.controller.isBusy || this.recoverLock > 0) return;
+
+    const combat = weaponCombat(isGunWeapon(this.weaponId) ? "pistol" : this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    if (target) dir = this.toTargetPlanar(target).dir.clone();
+    this.controller.faceToward(dir, 0.25);
+
+    // Prefer uppercut clip (unused in many kits), then mmaKick, then motion attack
+    let clipDur = 0;
+    if (this.character.hasClip("uppercut")) {
+      clipDur = this.character.playClipCut
+        ? this.character.playClipCut("uppercut", { from: 0.25, to: 1, timeScale: 1.7, fade: 0.05 })
+        : this.character.playClipOnce("uppercut", 0.08);
+    } else if (this.character.hasClip("mmaKick")) {
+      clipDur = this.character.playClipOnce("mmaKick", 0.08);
+    } else if (this.character.hasClip("jumpAttack")) {
+      clipDur = this.character.playClipOnce("jumpAttack", 0.08);
+    }
+
+    if (clipDur <= 0 && !isGunWeapon(this.weaponId)) {
+      this.motionAttack(ATTACK3_MOTION);
+      return;
+    }
+    if (clipDur <= 0) clipDur = 0.35;
+
+    this.controller.dash(dir, 1.4, Math.min(0.28, clipDur * 0.5), 0.1, 0.45);
+    this.controller.hop(2.2);
+    this.vfx.afterimage(this.character.root, this.character.root.position.clone(), dir, 1.2, 0xfff2a8, 4, 0.28);
+
+    this.abilities.cast(kitAbility("surpriseUppercut", "slam", 0xfff2a8, clipDur * 0.45), {
+      onImpact: () => {
+        if (!this.character) return;
+        const c = this.character.root.position.clone().addScaledVector(dir, 1.2);
+        c.y += 1.1;
+        // Shield break + launch (opens gun / xbow follow-ups)
+        this.targets.shieldBreak(c, 2.4, GUN_SHIELD.utilityBreakSec);
+        this.targets.launch(c, 2.2, 22, 8.5);
+        this.targets.kickStagger(c, 2.0, this.params.skillForce * 1.3, GUN_SHIELD.utilityBreakSec, this.character.root.position);
+        this.vfx.fireAura(c, 1.2, this.fireThemeApplied);
+        this.vfx.burst(c, 0xfff2a8, 22, 4);
+        this.vfx.shockwave(new THREE.Vector3(c.x, 0.05, c.z), 0xffd080, 2.0, 0.4);
+        this.setCombatFlash("UPPERCUT!", 0.55);
+        // Xbow / gun: LMB bolt prioritizes airborne targets briefly
+        this.airFollowT = XBOW.airFollowWindow;
+      },
+    });
+    this.stamina = Math.max(0, this.stamina - 10);
+  }
+
+  // ----------------------------------------------------------- Casting mouse
+
+  /** Enter ground-placement mode for a skill (trap / AoE / wall / heal / teleport). */
+  private startCastPlacement(spec: CastPlacementSpec) {
+    if (!this.character || !this.controller) return;
+    this.cancelCastPlacement();
+    const o = this.character.root.position;
+    const f = this.controller.forward();
+    this.castPlacement = beginCastPlacement(
+      spec,
+      { x: o.x, y: o.y, z: o.z },
+      { x: f.x, z: f.z },
+    );
+    this.ensureCastReticle();
+    this.setCombatFlash("PLACE · LMB", 0.8);
+  }
+
+  private ensureCastReticle() {
+    if (this.castReticle) return;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x66e0ff,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.95, 48), mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = 0.06;
+    this.scene.add(mesh);
+    this.castReticle = mesh;
+  }
+
+  private updateCastPlacement(dt: number) {
+    const s = this.castPlacement;
+    if (!s || !this.character) return;
+
+    // Live ground aim from camera center ray
+    const ray = this.crosshairRay();
+    const g = groundFromRay(ray.origin, ray.direction);
+    if (g) {
+      const live = this.character.root.position;
+      const clamped = clampAim(s, g.x, g.z, { x: live.x, z: live.z });
+      s.aimX = clamped.x;
+      s.aimZ = clamped.z;
+    }
+
+    // Reticle
+    if (this.castReticle) {
+      const mat = this.castReticle.material as THREE.MeshBasicMaterial;
+      mat.color.setHex(s.color);
+      const r = Math.max(0.6, s.kind === "cone" ? s.radius * 0.25 : s.radius * 0.55);
+      this.castReticle.scale.setScalar(r);
+      this.castReticle.position.set(s.aimX, 0.06, s.aimZ);
+      this.castReticle.visible = true;
+      mat.opacity = 0.4 + Math.sin(performance.now() * 0.008) * 0.15;
+    }
+
+    // Confirmed cast wind-up
+    if (s.confirmed) {
+      s.confirmElapsed += dt;
+      if (s.confirmElapsed >= s.castTime) {
+        this.resolveCastPlacement(s);
+        this.cancelCastPlacement();
+      }
+    }
+  }
+
+  private confirmCastPlacement() {
+    const s = this.castPlacement;
+    if (!s || s.confirmed) return;
+    s.confirmed = true;
+    s.confirmElapsed = 0;
+    // Freeze origin at confirm for non-placement cones that used live aim
+    if (s.freezeOrigin && this.character && this.controller) {
+      const o = this.character.root.position;
+      const f = this.controller.forward();
+      s.originX = o.x;
+      s.originY = o.y;
+      s.originZ = o.z;
+      const fl = Math.hypot(f.x, f.z) || 1;
+      s.faceX = f.x / fl;
+      s.faceZ = f.z / fl;
+    }
+    this.vfx.castAura(
+      new THREE.Vector3(s.aimX, 0.2, s.aimZ),
+      s.color,
+    );
+    if (this.character?.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.1);
+    else if (this.character?.hasRole("attack")) this.character.playRoleOnce("attack", 0.1);
+    this.setCombatFlash("CASTING…", s.castTime);
+  }
+
+  private cancelCastPlacement() {
+    this.castPlacement = null;
+    if (this.castReticle) this.castReticle.visible = false;
+  }
+
+  private resolveCastPlacement(s: CastPlacementSession) {
+    const ground = new THREE.Vector3(s.aimX, 0.05, s.aimZ);
+    switch (s.kind) {
+      case "trap":
+        this.resolveXbowTrap(s, ground);
+        break;
+      case "aoe":
+      case "heal":
+        this.vfx.auraRing(ground, s.color, s.radius, 0.7);
+        this.vfx.fireAura(ground.clone().setY(0.8), 1.0, this.fireThemeApplied);
+        this.targets.blast(ground, s.radius, 24, this.params.skillForce * 0.9);
+        if (s.kind === "heal") this.applyStatus("regen");
+        break;
+      case "turret":
+        this.vfx.castTurret(
+          ground.clone().setY(0.5),
+          new THREE.Vector3(s.faceX, 0, s.faceZ),
+          s.color,
+        );
+        this.setCombatFlash("TURRET", 0.6);
+        break;
+      case "wall":
+        this.vfx.iceWall(
+          ground.clone().add(new THREE.Vector3(-s.faceZ, 0, s.faceX).multiplyScalar(1.8)),
+          ground.clone().add(new THREE.Vector3(s.faceZ, 0, -s.faceX).multiplyScalar(1.8)),
+          s.color,
+          3.5,
+        );
+        break;
+      case "teleport":
+        if (this.character) {
+          this.vfx.burst(this.character.root.position.clone().setY(1), s.color, 16, 3);
+          this.character.root.position.set(s.aimX, 0, s.aimZ);
+          this.controller?.hop(0.15);
+          this.vfx.burst(new THREE.Vector3(s.aimX, 1, s.aimZ), s.color, 16, 3);
+        }
+        break;
+      case "cone":
+        this.resolveConeBlast(
+          s.originX,
+          s.originZ,
+          s.faceX,
+          s.faceZ,
+          s.radius,
+          s.coneHalfDeg ?? 28,
+          14,
+          s.color,
+          true,
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
+  private resolveXbowTrap(s: CastPlacementSession, ground: THREE.Vector3) {
+    // Delayed trap: blink telegraph then blast + stun + shield break
+    this.vfx.auraRing(ground, s.color, s.radius, 0.9);
+    this.telegraphs.add(ground, s.radius, () => {
+      if (this.disposed) return;
+      this.vfx.aoeBlast(ground, s.color, s.radius);
+      this.vfx.fireAura(ground.clone().setY(0.6), 1.1, this.fireThemeApplied);
+      this.targets.blast(ground, s.radius, XBOW.trapDamage, this.params.skillForce * 1.2);
+      this.targets.shieldBreak(ground, s.radius, GUN_SHIELD.utilityBreakSec);
+      this.markStun(ground, s.radius, 1.2);
+    });
+    this.setCombatFlash("CALTROPS", 0.55);
+  }
+
+  // ----------------------------------------------------------- Heavy Crossbow
+
+  /**
+   * LMB primary: close = rifle melee bash; after uppercut = air bolt;
+   * else Albion shotgun cone from cast-start footprint (short cast, dodgeable).
+   */
+  private doCrossbowPrimary() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.recoverLock > 0 || this.comboLock > 0) return;
+
+    const combat = weaponCombat("crossbow");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 12;
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      dir = planar.dir.clone();
+      dist = planar.dist;
+    }
+    this.controller.faceToward(dir, 0.25);
+
+    // Air follow-up bolt after M3 uppercut
+    if (this.airFollowT > 0) {
+      this.doCrossbowAirBolt(dir, target);
+      this.comboLock = 0.28;
+      return;
+    }
+
+    // Close-range rifle melee
+    if (target && dist <= XBOW.meleeRange) {
+      this.doCrossbowMelee(dir);
+      this.comboLock = 0.4;
+      return;
+    }
+
+    // Shotgun cone — freeze origin at cast start, resolve after short cast
+    const o = this.character.root.position.clone();
+    const fx = dir.x;
+    const fz = dir.z;
+    this.vfx.castAura(o.clone().setY(0.15), XBOW.coneColor);
+    this.vfx.auraRing(new THREE.Vector3(o.x, 0.05, o.z), XBOW.coneColor, XBOW.coneRange * 0.35, XBOW.castTime + 0.1);
+    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.08);
+    else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.08);
+
+    this.comboLock = XBOW.fireLock;
+    this.schedule(XBOW.castTime, () => {
+      if (this.disposed) return;
+      this.resolveConeBlast(
+        o.x,
+        o.z,
+        fx,
+        fz,
+        XBOW.coneRange,
+        XBOW.coneHalfDeg,
+        XBOW.pelletDamage,
+        XBOW.coneColor,
+        true,
+      );
+    });
+    this.bumpMusicHeat(0.12);
+  }
+
+  /** Close-range stock bash (rifle melee anims). */
+  private doCrossbowMelee(dir: THREE.Vector3) {
+    if (!this.character || !this.controller) return;
+    let dur = 0;
+    if (this.character.hasClip("mmaKick")) dur = this.character.playClipOnce("mmaKick", 0.08);
+    else if (this.character.hasClip("attack1")) dur = this.character.playClipOnce("attack1", 0.08);
+    else if (this.character.hasRole("attack")) dur = this.character.playRoleOnce("attack", 0.08);
+    this.controller.dash(dir, 0.7, 0.18, 0, 0.5);
+    this.abilities.cast(kitAbility("xbowMelee", "slam", XBOW.boltColor, dur > 0 ? dur * 0.4 : 0.16), {
+      onImpact: () => {
+        if (!this.character) return;
+        const c = this.character.root.position.clone().addScaledVector(dir, 1.1);
+        c.y += 1.0;
+        this.targets.blast(c, XBOW.meleeRange, XBOW.meleeDamage, this.params.skillForce * 1.2);
+        this.targets.shieldBreak(c, XBOW.meleeRange, GUN_SHIELD.utilityBreakSec);
+        this.vfx.impact(c, XBOW.boltColor, 1.6);
+        this.vfx.shockwave(new THREE.Vector3(c.x, 0.05, c.z), 0xffd080, 1.5, 0.35);
+      },
+    });
+  }
+
+  /** Follow-up bolt to airborne / launched enemies after uppercut. */
+  private doCrossbowAirBolt(dir: THREE.Vector3, target: { position: THREE.Vector3 } | null) {
+    if (!this.character || !this.controller) return;
+    // Prefer nearest downed / launched enemy
+    const air = this.targets.nearestDownedPoint?.(this.character.root.position, 14);
+    let aim = dir.clone();
+    let to = this.character.root.position.clone().addScaledVector(dir, 16);
+    to.y = 2.5;
+    if (air) {
+      to.copy(air);
+      to.y += 1.2;
+      aim = to.clone().sub(this.character.root.position).normalize();
+    } else if (target) {
+      to.copy(target.position);
+      to.y += 1.6;
+      aim = to.clone().sub(this.character.root.position).normalize();
+    }
+    this.controller.faceToward(new THREE.Vector3(aim.x, 0, aim.z).normalize(), 0.2);
+    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.08);
+    const origin = this.muzzleOrigin(aim);
+    this.vfx.muzzle(origin, aim, XBOW.chargeColor);
+    this.vfx.bolt(origin, aim, XBOW.chargeColor, 48, 22, (p) => {
+      this.vfx.fireAura(p, 1.15, this.fireThemeApplied);
+      this.targets.blast(p, 1.4, XBOW.chargeDamage, this.params.skillForce * 1.1);
+      this.targets.launch(p, 1.6, 8, 4);
+    }, 1.1);
+    this.setCombatFlash("AIR BOLT", 0.4);
+  }
+
+  /** F — magical charged bolt with barrel VFX. */
+  private doCrossbowChargedBolt() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.comboLock > 0 || this.skillCooldown > 0) return;
+    const combat = weaponCombat("crossbow");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    let dist = 20;
+    if (target) {
+      const p = this.toTargetPlanar(target);
+      dir = p.dir.clone();
+      dist = p.dist;
+    }
+    this.controller.faceToward(dir, 0.22);
+    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.1);
+    const origin = this.muzzleOrigin(dir);
+    this.vfx.castAura(origin, XBOW.chargeColor);
+    this.vfx.burst(origin, XBOW.chargeColor, 12, 2.5);
+    this.schedule(XBOW.chargeTime * 0.45, () => {
+      if (this.disposed || !this.character) return;
+      const o = this.muzzleOrigin(dir);
+      this.vfx.muzzle(o, dir, XBOW.chargeColor);
+      this.vfx.bolt(o, dir, XBOW.chargeColor, 40, Math.min(28, dist + 4), (p) => {
+        this.vfx.aoeBlast(p, XBOW.chargeColor, 2.2);
+        this.vfx.fireAura(p, 1.25, this.fireThemeApplied);
+        this.targets.blast(p, 2.2, XBOW.chargeDamage, this.params.skillForce * XBOW.knockForceMul);
+      }, 1.2);
+    });
+    this.skillCooldown = 1.2;
+    this.skillCooldownMax = 1.2;
+    this.comboLock = 0.5;
+  }
+
+  private doCrossbowSig(idx: number): boolean {
+    if (idx < 0 || idx > 3) return false;
+    if (this.sigCooldowns[idx]! > 0) return false;
+    switch (idx) {
+      case 0:
+        // Scatter — wider shotgun cone (placement-frozen origin)
+        return this.doXbowConeSkill(0, XBOW.coneRange + 1, XBOW.coneHalfDeg + 6, XBOW.pelletDamage + 2, XBOW.castTime, 4.5);
+      case 1:
+        return this.doXbowConeSkill(1, XBOW.explosiveRange, XBOW.explosiveHalfDeg, XBOW.explosiveDamage, XBOW.explosiveCast, 7.0, true);
+      case 2:
+        // Caltrop trap — casting mouse ground placement
+        this.startCastPlacement({
+          kind: "trap",
+          skillId: "xbow_caltrop",
+          slot: 2,
+          maxRange: XBOW.trapRange,
+          radius: XBOW.trapRadius,
+          castTime: XBOW.trapCast,
+          color: 0xffd24a,
+          freezeOrigin: false,
+        });
+        this.sigCooldowns[2] = 9;
+        this.sigCooldownMaxes[2] = 9;
+        this.stamina = Math.max(0, this.stamina - 16);
+        return true;
+      case 3:
+        return this.doXbowConeSkill(3, XBOW.sweepRange, XBOW.sweepHalfDeg, XBOW.sweepDamage, XBOW.sweepCast, 12, true);
+      default:
+        return false;
+    }
+  }
+
+  private doXbowConeSkill(
+    slot: number,
+    range: number,
+    halfDeg: number,
+    dmg: number,
+    cast: number,
+    cd: number,
+    explosive = false,
+  ): boolean {
+    if (!this.character || !this.controller) return false;
+    const o = this.character.root.position.clone();
+    const f = this.controller.forward().clone();
+    this.vfx.castAura(o.clone().setY(0.15), explosive ? XBOW.chargeColor : XBOW.coneColor);
+    this.vfx.auraRing(new THREE.Vector3(o.x, 0.05, o.z), XBOW.coneColor, range * 0.4, cast + 0.12);
+    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.1);
+    else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.1);
+
+    this.schedule(cast, () => {
+      if (this.disposed) return;
+      this.resolveConeBlast(o.x, o.z, f.x, f.z, range, halfDeg, dmg, explosive ? XBOW.chargeColor : XBOW.coneColor, true, explosive);
+    });
+    this.sigCooldowns[slot] = cd;
+    this.sigCooldownMaxes[slot] = cd;
+    this.stamina = Math.max(0, this.stamina - (10 + slot * 4));
+    return true;
+  }
+
+  /**
+   * Resolve shotgun / sweeping cone from a **frozen** cast footprint.
+   * Enemies that left the cone before resolve take nothing (dodgeable).
+   */
+  private resolveConeBlast(
+    ox: number,
+    oz: number,
+    faceX: number,
+    faceZ: number,
+    range: number,
+    halfDeg: number,
+    damage: number,
+    color: number,
+    knock = true,
+    explosive = false,
+  ) {
+    const origin = new THREE.Vector3(ox, 0.2, oz);
+    this.vfx.muzzle(origin.clone().setY(1.2), new THREE.Vector3(faceX, 0, faceZ), color);
+    // Visual cone spray — pellets
+    const pellets = explosive ? 7 : XBOW.pellets;
+    for (let i = 0; i < pellets; i++) {
+      const t = pellets === 1 ? 0 : (i / (pellets - 1)) * 2 - 1;
+      const ang = (t * halfDeg * Math.PI) / 180;
+      const cos = Math.cos(ang);
+      const sin = Math.sin(ang);
+      const dx = faceX * cos - faceZ * sin;
+      const dz = faceX * sin + faceZ * cos;
+      const dir = new THREE.Vector3(dx, 0.05, dz).normalize();
+      const end = origin.clone().addScaledVector(dir, range * (0.75 + Math.random() * 0.25));
+      end.y = 0.9;
+      this.vfx.bolt(origin.clone().setY(1.15), dir, color, 55, range, (p) => {
+        this.vfx.impact(p, color, 0.9);
+      }, 0.7);
+    }
+
+    // Damage anyone still inside the cast footprint cone
+    let hits = 0;
+    for (const h of this.targets.nearest(origin, 12)) {
+      const p = h.position;
+      if (!inCone(ox, oz, faceX, faceZ, p.x, p.z, range, halfDeg)) continue;
+      hits++;
+      const center = p.clone();
+      center.y += 0.9;
+      this.targets.blast(center, 1.1, damage, this.params.skillForce * (knock ? XBOW.knockForceMul : 0.5));
+      this.vfx.fireAura(center, explosive ? 1.1 : 0.75, this.fireThemeApplied);
+      if (explosive) {
+        this.vfx.aoeBlast(center, color, 1.8);
+        this.targets.shieldBreak(center, 1.6, 2.0);
+      }
+    }
+    this.vfx.shockwave(new THREE.Vector3(ox, 0.05, oz), color, range * 0.45, 0.4);
+    if (hits > 0) this.triggerHitstop(0.05, 0.1);
+    this.sfx?.play("whooshHeavy", origin, { volume: 0.7 });
+  }
+
+  // ----------------------------------------------------------- Pistol Kiter kit (legacy specials)
+
+  /** Muzzle world position (weapon tip / hand IK if mounted, else fist-height). */
   private muzzleOrigin(dir: THREE.Vector3): THREE.Vector3 {
     const pos = new THREE.Vector3();
     if (this.mounted?.tip) {
       this.mounted.tip.getWorldPosition(pos);
-    } else {
-      pos.copy(this.character.root.position);
-      pos.y += 1.3;
-      pos.addScaledVector(dir, 0.4);
+      // Nudge slightly along aim so tracers leave the bore, not the grip
+      const aim = dir.clone();
+      aim.y = 0;
+      if (aim.lengthSq() > 1e-6) {
+        aim.normalize();
+        pos.addScaledVector(aim, 0.06);
+      }
+    } else if (this.character) {
+      // Prefer right-hand bone world pose when the tip socket is missing
+      const hand = this.character.rightHand;
+      if (hand) {
+        hand.getWorldPosition(pos);
+        const aim = dir.clone();
+        if (aim.lengthSq() < 1e-6) aim.set(0, 0, 1);
+        aim.normalize();
+        pos.addScaledVector(aim, 0.28);
+        pos.y += 0.05;
+      } else {
+        pos.copy(this.character.root.position);
+        pos.y += 1.3;
+        pos.addScaledVector(dir, 0.4);
+      }
     }
     return pos;
   }
@@ -3394,7 +5133,8 @@ export class Studio {
       id === "crossbow" ||
       id === "pistol" ||
       id === "rifle" ||
-      id === "hunter-rifle"
+      id === "hunter-rifle" ||
+      id === "shotgun"
     );
   }
 
@@ -3511,6 +5251,7 @@ export class Studio {
         const center = this.character.root.position.clone().addScaledVector(dir, kit.kickRange * 0.7);
         center.y += 1.0;
         this.targets.blast(center, kit.kickRange + 0.4, kit.kickDamage, this.params.skillForce * 1.5);
+        this.targets.shieldBreak(center, kit.kickRange + 0.6, GUN_SHIELD.utilityBreakSec);
         this.vfx.impact(center, 0xfff2a8, kit.kickRange + 0.6);
         this.vfx.shockwave(new THREE.Vector3(center.x, 0.05, center.z), 0xffe08a, 1.6, 0.4);
       },
@@ -3534,23 +5275,26 @@ export class Studio {
       this.triggerHitstop(0.055, 0.14);
     }
 
-    // The explosive round uses the charged pose; ordinary rounds the gunplay attack.
-    if (explosive) this.character.playClipOnce("chargedShot", 0.1);
-    else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.1);
-
-    const origin = this.muzzleOrigin(dir);
-    this.vfx.burst(origin, color, explosive ? 16 : 9, 3);
-    const range = target ? THREE.MathUtils.clamp(dist + 0.3, 2, 24) : 24;
-    const speed = explosive ? 34 : 48;
-    this.vfx.bolt(origin, dir, color, speed, range, (p) => {
-      if (explosive) {
-        this.vfx.aoeBlast(p, color, kit.blastRadius);
-        this.vfx.shockwave(new THREE.Vector3(p.x, 0.05, p.z), 0xff5a2a, kit.blastRadius, 0.5);
-        this.targets.blast(p, kit.blastRadius, kit.blastDamage, this.params.skillForce * 1.6);
-      } else {
-        this.vfx.impact(p, color, 1.4);
-        this.targets.blast(p, 0.8, kit.shotDamage, this.params.skillForce * 0.5);
-      }
+    // Shoot anim on every round; bullet releases after a short attack lead.
+    this.playGunShootAnim(explosive ? 0.05 : 0.08);
+    this.schedule(0.07, () => {
+      if (this.disposed || !this.character) return;
+      const origin = this.muzzleOrigin(dir);
+      this.vfx.burst(origin, color, explosive ? 16 : 9, 3);
+      const range = target ? THREE.MathUtils.clamp(dist + 0.3, 2, 24) : 24;
+      const speed = explosive ? 34 : 48;
+      this.vfx.chargedBolt(origin, dir, color, speed, range, (p) => {
+        if (explosive) {
+          this.vfx.aoeBlast(p, color, kit.blastRadius);
+          this.vfx.shockwave(new THREE.Vector3(p.x, 0.05, p.z), 0xff5a2a, kit.blastRadius, 0.5);
+          this.vfx.fireAura(p, 1.1, this.fireThemeApplied);
+          this.targets.blast(p, kit.blastRadius, kit.blastDamage, this.params.skillForce * 1.6);
+        } else {
+          this.vfx.impact(p, color, 1.4);
+          this.vfx.fireAura(p, 0.7, this.fireThemeApplied);
+          this.targets.blast(p, 0.8, kit.shotDamage, this.params.skillForce * 0.5);
+        }
+      }, explosive ? 1.35 : 1.05);
     });
 
     // Kiter mobility: reverse-motion-math back-step away from the aim line after
@@ -3586,17 +5330,18 @@ export class Studio {
     }
   }
 
-  /** Dispatch a Kiter signature skill (slot index 0-3); independent cooldowns. */
+  /** Dispatch pistol signature skills — each slot has its own CD only. */
   private doPistolSig(idx: number, kit: KiterKit): boolean {
     if (idx < 0 || idx > 3) return false;
-    if (this.sigCooldowns[idx] > 0) return false;
+    if (this.sigCooldowns[idx]! > 0) return false;
     switch (idx) {
       case 0:
         return this.doPistolSig0(kit);
       case 1:
         return this.doPistolSig1(kit);
       case 2:
-        return this.doPistolSig2(kit);
+        // Skill 3 — diving kick → rebound backflip + 0.5s hover aim
+        return this.doPistolDiveKick(kit);
       case 3:
         return this.doPistolSig3(kit);
       default:
@@ -3605,9 +5350,126 @@ export class Studio {
   }
 
   private armSig(idx: number) {
-    this.sigCooldowns[idx] = PISTOL_SIG_CD[idx];
-    this.sigCooldownMaxes[idx] = PISTOL_SIG_CD[idx];
-    this.stamina = Math.max(0, this.stamina - PISTOL_SIG_ST[idx]);
+    this.armSigSlot(idx, PISTOL_SIG_CD[idx]!, PISTOL_SIG_ST[idx]!);
+  }
+
+  /**
+   * Pistol double-jump: cut backflip away from target, then 0.5s hover with
+   * pistol aimed at the enemy (LMB free to fire).
+   */
+  private doPistolAirBackflip() {
+    if (!this.character || !this.controller) return;
+    const combat = weaponCombat("pistol");
+    const target = this.pickCrosshairTarget(combat);
+    let away = this.controller.forward().clone().negate();
+    let face = this.controller.forward().clone();
+    if (target) {
+      const to = this.toTargetPlanar(target);
+      face = to.dir.clone();
+      away = to.dir.clone().negate();
+    }
+    away.y = 0;
+    face.y = 0;
+    if (away.lengthSq() < 1e-4) away.set(0, 0, 1);
+    if (face.lengthSq() < 1e-4) face.set(0, 0, -1);
+    away.normalize();
+    face.normalize();
+
+    // Cut backflip (fast)
+    let flipDur = 0;
+    if (this.character.hasClip("backflip") && this.character.playClipCut) {
+      flipDur = this.character.playClipCut("backflip", {
+        from: 0.12,
+        to: 1,
+        timeScale: 1.85,
+        fade: 0.04,
+      });
+    } else if (this.character.hasClip("backflip")) {
+      flipDur = this.character.playClipOnce("backflip", 0.06);
+    } else if (this.character.hasClip("airDodge")) {
+      flipDur = this.character.playClipOnce("airDodge", 0.06);
+    }
+    if (flipDur <= 0) flipDur = 0.38;
+
+    this.controller.faceToward(away, 0.1);
+    this.controller.backflip(Math.min(0.48, flipDur), 2.0);
+    this.controller.dash(away, 3.2, Math.min(0.35, flipDur * 0.7), 0, 0.4);
+    this.vfx.afterimage(this.character.root, this.character.root.position.clone(), away, 2.8, 0xfff2a8, 5, 0.32);
+    this.invuln = Math.max(this.invuln, 0.28);
+
+    // End with 0.5s hover aimed at enemy
+    this.schedule(Math.min(0.42, flipDur * 0.85), () => {
+      if (this.disposed || !this.controller || !this.character) return;
+      const apex = Math.max(1.8, this.character.root.position.y + 0.35);
+      this.controller.startHover(apex, PISTOL_HOVER_AIM);
+      this.pistolHoverAimT = PISTOL_HOVER_AIM;
+      this.controller.faceToward(face, 0.2);
+      if (target && this.locked) this.controller.setLockTarget(target.position);
+      this.setCombatFlash("AIM", 0.4);
+    });
+  }
+
+  /**
+   * Skill 3 — diving kick into target, then rebound into the same backflip +
+   * 0.5s hover aim (LMB or skill 3 again if off CD).
+   */
+  private doPistolDiveKick(kit: KiterKit): boolean {
+    if (!this.character || !this.controller || this.defeated) return false;
+    if (this.sigCooldowns[2]! > 0) return false;
+
+    const combat = weaponCombat("pistol");
+    const target = this.pickCrosshairTarget(combat);
+    let dir = this.controller.forward().clone();
+    if (target) dir = this.toTargetPlanar(target).dir.clone();
+    dir.y = 0;
+    if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+    dir.normalize();
+
+    this.controller.faceToward(dir, 0.2);
+    // Dive anim
+    let diveDur = 0;
+    const diveClips = ["standing-dodge-forward", "airDodge", "mmaKick", "jumpAttack", "roll"];
+    for (const n of diveClips) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        diveDur = this.character.playClipCut(n, { from: 0.15, to: 1, timeScale: 1.7, fade: 0.05 });
+      }
+      if (diveDur <= 0) diveDur = this.character.playClipOnce(n, 0.07);
+      if (diveDur > 0) break;
+    }
+    if (diveDur <= 0) diveDur = 0.32;
+
+    const diveDist = target
+      ? THREE.MathUtils.clamp(this.toTargetPlanar(target).dist - 0.5, 2.5, 7.5)
+      : 4.5;
+    this.controller.hop(1.6);
+    this.controller.dash(dir, diveDist, Math.min(0.38, diveDur * 0.65), 0.15, 0.55);
+    this.vfx.afterimage(this.character.root, this.character.root.position.clone(), dir, diveDist * 0.7, 0xffe080, 6, 0.35);
+    this.invuln = Math.max(this.invuln, 0.32);
+
+    // Kick impact mid-dive
+    this.abilities.cast(kitAbility("pistolDiveKick", "slam", 0xfff2a8, diveDur * 0.5), {
+      onImpact: () => {
+        if (!this.character) return;
+        const c = this.character.root.position.clone().addScaledVector(dir, 0.9);
+        c.y += 0.9;
+        this.targets.blast(c, kit.kickRange + 0.8, kit.kickDamage * 1.15, this.params.skillForce * 1.5);
+        this.targets.shieldBreak(c, kit.kickRange + 1.0, GUN_SHIELD.utilityBreakSec);
+        this.vfx.impact(c, 0xfff2a8, 2.0);
+        this.vfx.shockwave(new THREE.Vector3(c.x, 0.05, c.z), 0xffd080, 2.2, 0.4);
+        this.vfx.fireAura(c, 0.9, this.fireThemeApplied);
+      },
+    });
+
+    // Rebound: same backflip + hover aim as double-jump
+    this.schedule(Math.min(0.4, diveDur * 0.75), () => {
+      if (this.disposed || !this.controller || !this.character) return;
+      this.doPistolAirBackflip();
+    });
+
+    this.armSig(2);
+    this.setCombatFlash("DIVE KICK", 0.5);
+    return true;
   }
 
   /** Sig 1 — Quick Draw: a quick three-round fan at the crosshair target. */
@@ -3623,19 +5485,21 @@ export class Studio {
       dist = planar.dist;
     }
     this.controller.faceToward(dir, 0.2);
-    this.character.playClipOnce("chargedShot", 0.1);
+    this.playGunShootAnim(0.08);
     for (let i = 0; i < 3; i++) {
-      this.abilities.cast(kitAbility("pistolQuickDraw", "bolt", 0xfff2a8, i * 0.12), {
+      this.abilities.cast(kitAbility("pistolQuickDraw", "bolt", 0xfff2a8, 0.08 + i * 0.12), {
         onImpact: () => {
           if (!this.character) return;
+          this.playGunShootAnim(0.14);
           const d = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), (i - 1) * 0.08).normalize();
           const origin = this.muzzleOrigin(d);
           this.vfx.muzzle(origin, d, 0xfff2a8);
           const range = THREE.MathUtils.clamp(dist + 1, 3, 24);
-          this.vfx.bolt(origin, d, 0xfff2a8, 50, range, (p) => {
+          this.vfx.chargedBolt(origin, d, 0xfff2a8, 50, range, (p) => {
             this.vfx.impact(p, 0xfff2a8, 1.3);
+            this.vfx.fireAura(p, 0.75, this.fireThemeApplied);
             this.targets.blast(p, 0.9, kit.shotDamage, this.params.skillForce * 0.5);
-          });
+          }, 1.05);
         },
       });
     }
@@ -3713,8 +5577,8 @@ export class Studio {
   }
 
   /**
-   * Sig 3 — Bear Trap: lob a thrown bear-trap to the aimed point that detonates on
-   * landing, blasting + stunning everything in radius.
+   * Legacy bear-trap (still available via utility KeyH bomb style kits).
+   * Skill slot 3 is now {@link doGunVault} for all guns.
    */
   private doPistolSig2(kit: KiterKit): boolean {
     if (!this.character || !this.controller) return false;
@@ -3735,6 +5599,8 @@ export class Studio {
       this.vfx.aoeBlast(p, 0xffd24a, kit.blastRadius * 0.8);
       this.targets.blast(p, kit.blastRadius * 0.8, kit.kickDamage, this.params.skillForce * 0.8);
       this.markStun(p, kit.blastRadius * 0.8);
+      // Gunner utility breaks enemy forcefields
+      this.targets.shieldBreak(p, kit.blastRadius * 0.8, GUN_SHIELD.utilityBreakSec);
     });
     this.armSig(2);
     return true;
@@ -3747,7 +5613,7 @@ export class Studio {
    */
   private doPistolSig3(kit: KiterKit): boolean {
     if (!this.character || !this.controller) return false;
-    this.character.playClipOnce("chargedShot", 0.1);
+    this.playGunShootAnim(0.06);
     this.controller.startHover(2.4, 2.5);
     // Lock onto the crosshair target so the beam — and the damage resolved along
     // its swept line below — tracks the aimed enemy instead of firing straight
@@ -3990,17 +5856,23 @@ export class Studio {
    * self-regen for holy. Driven entirely by the equipped weapon's `element`
    * data (see `arsenal/elements.ts`), so any character wielding the staff casts.
    */
-  private doElementalCast(element: StaffElement): boolean {
+  /**
+   * Elemental staff cast. `slot` set (0–3) → that hotbar slot only.
+   * `slot` omitted (F-skill) → skillCooldown only.
+   */
+  private doElementalCast(element: StaffElement, slot?: number): boolean {
     if (!this.character || !this.controller) return false;
-    if (this.skillCooldown > 0) return false;
+    if (slot != null) {
+      if (this.sigCooldowns[slot]! > 0) return false;
+    } else if (this.skillCooldown > 0) {
+      return false;
+    }
     const theme = ELEMENT_THEME[element];
     const color = theme.color;
     const origin = this.character.root.position.clone();
     const fwd = this.facing();
     if (this.character.hasClip(theme.castClip)) this.character.playClipOnce(theme.castClip, 0.12);
     const muzzle = () => {
-      // Collider-bound (opt-in): stream from the casting hand's world pose; else
-      // a chest-height body point. The projectile still homes onto its target.
       const pose = this.colliderPose();
       if (pose) return pose.pos.clone();
       const m = this.character!.root.position.clone();
@@ -4035,9 +5907,12 @@ export class Studio {
         }
       },
     });
-    this.skillCooldownMax = 1.4;
-    this.skillCooldown = this.skillCooldownMax;
-    this.stamina = Math.max(0, this.stamina - 18);
+    if (slot != null) this.armSigSlot(slot, 1.4, 18);
+    else {
+      this.skillCooldownMax = 1.4;
+      this.skillCooldown = 1.4;
+      this.stamina = Math.max(0, this.stamina - 18);
+    }
     return true;
   }
 
@@ -4046,6 +5921,11 @@ export class Studio {
   /** True while the equipped weapon is a staff (the `magic` weapon group). */
   private isStaffEquipped(): boolean {
     return getWeapon(this.weaponId).group === "magic";
+  }
+
+  /** True while wielding the Ice Staff tank-mage kit. */
+  private isIceStaff(): boolean {
+    return this.weaponId === "staffIce" || getWeapon(this.weaponId).element === "ice";
   }
 
   /** Themed bolt/blast colour for the equipped staff (element tint, else arcane). */
@@ -4115,7 +5995,7 @@ export class Studio {
    */
   private doStaffScatter(): boolean {
     if (!this.character || !this.controller) return false;
-    if (this.skillCooldown > 0) return false;
+    if (this.sigCooldowns[1]! > 0) return false;
     const color = this.staffColor();
     const origin = this.character.root.position.clone();
     const fwd = this.controller.forward();
@@ -4126,8 +6006,6 @@ export class Studio {
 
     const BOLTS = 6;
     const SCATTER = 2.6;
-    // Capture the weapon generation so a mid-volley weapon/character swap (which
-    // clears `pending`) can't spawn stale bolts from the old staff.
     const token = this.weaponToken;
     for (let i = 0; i < BOLTS; i++) {
       const ang = (i / BOLTS) * Math.PI * 2 + Math.random() * 0.6;
@@ -4140,16 +6018,12 @@ export class Studio {
         this.vfx.aoeBlast(p, color, 1.6);
         this.sparringBlast(p, 1.6, 14, this.params.skillForce * 0.7);
       };
-      // Stagger the launches via the cancellable scheduler so the barrage reads as
-      // a volley, not a ring — and so swaps/disposal cancel any unlaunched bolts.
       this.schedule(i * 0.07, () => {
         if (this.disposed || token !== this.weaponToken) return;
         this.vfx.splineStrike(this.staffMuzzle(), to, color, onHit);
       });
     }
-    this.skillCooldownMax = 2.6;
-    this.skillCooldown = this.skillCooldownMax;
-    this.stamina = Math.max(0, this.stamina - 24);
+    this.armSigSlot(1, 2.6, 24);
     return true;
   }
 
@@ -4160,19 +6034,268 @@ export class Studio {
    */
   private doStaffNova(): boolean {
     if (!this.character || !this.controller) return false;
-    if (this.skillCooldown > 0) return false;
+    if (this.sigCooldowns[2]! > 0) return false;
     const color = this.staffColor();
     const center = this.character.root.position.clone();
     const RADIUS = this.params.aoeRadius * 1.2;
     if (this.character.hasClip("magicArea")) this.character.playClipOnce("magicArea", 0.12);
     this.vfx.aoeBlast(center, color, RADIUS);
-    // Heavy force so the blast genuinely shoves foes outward, plus a stun window.
     this.sparringBlast(center, RADIUS, 22, this.params.skillForce * 1.6);
     this.markStun(center, RADIUS);
-    this.skillCooldownMax = 3.2;
-    this.skillCooldown = this.skillCooldownMax;
-    this.stamina = Math.max(0, this.stamina - 28);
+    this.armSigSlot(2, 3.2, 28);
     return true;
+  }
+
+  // -------------------------------------------------------------- Ice Staff kit
+
+  private armIceSig(idx: number) {
+    this.sigCooldowns[idx] = ICE_SIG_CD[idx]!;
+    this.sigCooldownMaxes[idx] = ICE_SIG_CD[idx]!;
+    this.stamina = Math.max(0, this.stamina - ICE_SIG_ST[idx]!);
+  }
+
+  /** Dispatch Ice Staff tank-mage signatures (slots 1–4 / index 0–3). */
+  private doIceSig(idx: number): boolean {
+    if (idx < 0 || idx > 3) return false;
+    if (this.sigCooldowns[idx]! > 0) return false;
+    switch (idx) {
+      case 0:
+        return this.doIceSplineAttack();
+      case 1:
+        return this.doIceWall();
+      case 2:
+        return this.doIceCloneShell();
+      case 3:
+        return this.doIceBlizzard();
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Slot 1 — Ice Spline: high arc frost bolt via {@link Vfx.splineStrike}.
+   * Freezes on impact.
+   */
+  private doIceSplineAttack(): boolean {
+    if (!this.character || !this.controller) return false;
+    const color = this.staffColor();
+    const origin = this.character.root.position.clone();
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    const fwd = this.controller.forward();
+    let aimDir = fwd.clone();
+    if (target) {
+      const planar = this.toTargetPlanar(target);
+      aimDir = planar.dir.clone();
+    }
+    this.controller.faceToward(aimDir, 0.2);
+    if (this.character.hasClip("magicAttack")) this.character.playClipOnce("magicAttack", 0.1);
+    else if (this.character.hasClip("attack")) this.character.playClipOnce("attack", 0.1);
+
+    const from = this.staffMuzzle();
+    const to = target
+      ? target.position.clone().setY(Math.max(0.6, target.position.y))
+      : origin.clone().addScaledVector(fwd, 18).setY(from.y);
+    const onHit = (p: THREE.Vector3) => {
+      if (this.disposed) return;
+      this.vfx.frostGround(p, 1.8, color, 0.7);
+      this.vfx.aoeBlast(p, color, 1.5);
+      this.sparringBlast(p, 1.6, 22, this.params.skillForce * 0.7);
+      this.applyStatusScoped("frozen", "hostile");
+    };
+    this.vfx.splineStrike(from, to, color, onHit);
+    this.sfx?.play("whooshLight", from, { volume: 0.7 });
+    this.armIceSig(0);
+    return true;
+  }
+
+  /**
+   * Slot 2 — Ice Wall between caster and enemy.
+   * If the foe is inside {@link ICE_WALL_PUSH_RANGE}, shove them first, then
+   * deploy the wall in front of the caster with a small push AoE.
+   */
+  private doIceWall(): boolean {
+    if (!this.character || !this.controller) return false;
+    const color = this.staffColor();
+    const origin = this.character.root.position.clone();
+    const fwd = this.controller.forward();
+    const picked = this.pickTargetInFront(origin, fwd, 22, -0.15);
+    const enemyPos = picked
+      ? picked.position.clone()
+      : origin.clone().addScaledVector(fwd, 5);
+    enemyPos.y = 0;
+    origin.y = 0;
+
+    const toEnemy = new THREE.Vector3(enemyPos.x - origin.x, 0, enemyPos.z - origin.z);
+    const dist = toEnemy.length();
+    const dir = dist > 1e-3 ? toEnemy.normalize() : fwd.clone();
+
+    if (this.character.hasClip("magicArea")) this.character.playClipOnce("magicArea", 0.12);
+    else if (this.character.hasClip("magicAttack")) this.character.playClipOnce("magicAttack", 0.1);
+
+    if (picked && dist < ICE_WALL_PUSH_RANGE) {
+      // Close-range: knock foe away, then wall deploys in front of caster.
+      this.sparringBlast(enemyPos, 1.4, 18, this.params.skillForce * 1.8);
+      this.vfx.frostGround(enemyPos, 1.6, color, 0.5);
+      const wallA = origin.clone().addScaledVector(dir, 1.1);
+      const wallB = origin.clone().addScaledVector(dir, 1.1 + 0.01);
+      // Orient wall perpendicular to push direction via two points along facing.
+      const side = new THREE.Vector3(-dir.z, 0, dir.x);
+      this.vfx.iceWall(
+        wallA.clone().addScaledVector(side, -1.6),
+        wallA.clone().addScaledVector(side, 1.6),
+        color,
+        3.4,
+      );
+      // Small frontal AoE damage on deploy
+      const front = origin.clone().addScaledVector(dir, 1.4);
+      this.sparringBlast(front, 1.8, 14, this.params.skillForce * 1.1);
+      this.vfx.shockwave(front.setY(0.05), color, 2.0, 0.4);
+    } else {
+      // Standard: wall midway between caster and enemy (or ahead if no target).
+      const mid = origin.clone().lerp(enemyPos, picked ? 0.5 : 0.55);
+      const side = new THREE.Vector3(-dir.z, 0, dir.x);
+      this.vfx.iceWall(
+        mid.clone().addScaledVector(side, -2.0),
+        mid.clone().addScaledVector(side, 2.0),
+        color,
+        3.6,
+      );
+      this.sparringBlast(mid, 1.5, 12, this.params.skillForce * 0.85);
+      this.vfx.frostGround(mid, 2.0, color, 0.55);
+    }
+    this.sfx?.play("heavyHit", origin, { volume: 0.45, rate: 1.3 });
+    this.armIceSig(1);
+    return true;
+  }
+
+  /**
+   * Slot 3 — Frost Shell: leave a frozen copy of the caster, dodge backward,
+   * shell casts a spline ice attack then detonates ground frost (freeze AoE).
+   */
+  private doIceCloneShell(): boolean {
+    if (!this.character || !this.controller) return false;
+    const color = this.staffColor();
+    const shellPos = this.character.root.position.clone();
+    shellPos.y = 0;
+    const fwd = this.controller.forward();
+    const back = fwd.clone().multiplyScalar(-1);
+
+    // Frozen shell stays behind
+    this.vfx.frozenShell(shellPos, color, 2.6);
+    this.vfx.frostGround(shellPos, 1.2, color, 0.45);
+
+    // Caster back-dodges / slides away
+    this.controller.dash(back, 4.2, 0.38, 0, 0.55);
+    this.controller.faceToward(fwd, 0.15);
+    if (this.character.hasClip("dodge")) this.character.playClipOnce("dodge", 0.08);
+    else if (this.character.hasClip("roll")) this.character.playClipOnce("roll", 0.08);
+    else if (this.character.hasClip("walk")) {
+      /* motion from dash alone */
+    }
+
+    const combat = weaponCombat(this.weaponId);
+    const target = this.pickCrosshairTarget(combat);
+    const to = target
+      ? target.position.clone()
+      : shellPos.clone().addScaledVector(fwd, 14).setY(1.2);
+    const token = this.weaponToken;
+
+    // Shell casts spline after a beat, then explodes frost
+    this.schedule(0.35, () => {
+      if (this.disposed || token !== this.weaponToken) return;
+      const from = shellPos.clone().setY(1.35);
+      this.vfx.splineStrike(from, to.clone().setY(Math.max(0.5, to.y)), color, (p) => {
+        if (this.disposed) return;
+        this.vfx.frostGround(p, 1.6, color, 0.6);
+        this.sparringBlast(p, 1.5, 20, this.params.skillForce * 0.75);
+        this.applyStatusScoped("frozen", "hostile");
+      });
+    });
+    this.schedule(1.15, () => {
+      if (this.disposed || token !== this.weaponToken) return;
+      this.vfx.frostGround(shellPos, 3.4, color, 1.0);
+      this.vfx.aoeBlast(shellPos.clone().setY(0.4), color, 3.2);
+      this.sparringBlast(shellPos, 3.2, 28, this.params.skillForce * 1.25);
+      this.applyStatusScoped("frozen", "hostile");
+      this.markStun(shellPos, 2.8, 1.2);
+    });
+
+    this.armIceSig(2);
+    return true;
+  }
+
+  /**
+   * Slot 4 — Blizzard: sustained frost field, periodic freeze + damage ticks.
+   */
+  private doIceBlizzard(): boolean {
+    if (!this.character || !this.controller) return false;
+    const color = this.staffColor();
+    const origin = this.character.root.position.clone();
+    const fwd = this.controller.forward();
+    const picked = this.pickTargetInFront(origin, fwd, 24, -0.2);
+    const center = picked
+      ? picked.position.clone()
+      : origin.clone().addScaledVector(fwd, 8);
+    center.y = 0;
+
+    if (this.character.hasClip("magicArea")) this.character.playClipOnce("magicArea", 0.12);
+    else if (this.character.hasClip("magicAttack")) this.character.playClipOnce("magicAttack", 0.1);
+
+    const token = this.weaponToken;
+    this.vfx.blizzardField(center, 7.2, color, 3.6, (p, i) => {
+      if (this.disposed || token !== this.weaponToken) return;
+      this.sparringBlast(p, 6.5, 10 + i * 2, this.params.skillForce * 0.55);
+      if (i % 2 === 0) this.applyStatusScoped("frozen", "hostile");
+    });
+    this.sfx?.play("whooshHeavy", center, { volume: 0.55, rate: 0.85 });
+    this.armIceSig(3);
+    return true;
+  }
+
+  /**
+   * Ice staff grounded mobility: dash then slide. `extended` (AAA/DDD) travels
+   * farther and holds the slide recovery longer.
+   */
+  private doIceSlideDash(side: "L" | "R", extended: boolean) {
+    if (!this.character || !this.controller) return;
+    if (this.iceSlideCd > 0 || this.controller.isBusy) return;
+    if (!this.controller.isGrounded) return;
+
+    const fwd = this.controller.forward();
+    // Camera-right for lateral; combine with slight forward so slide feels committed.
+    const right = new THREE.Vector3(fwd.z, 0, -fwd.x).normalize();
+    const lat = side === "R" ? right : right.clone().multiplyScalar(-1);
+    const dir = lat.clone().addScaledVector(fwd, 0.35).normalize();
+
+    const dist = extended ? ICE_SLIDE_DIST_LONG : ICE_SLIDE_DIST;
+    const dur = extended ? 0.55 : 0.36;
+    this.controller.dash(dir, dist, dur, 0, 0.7);
+    this.controller.faceToward(dir, 0.12);
+
+    // Prefer dedicated slide/dodge clips; fall back to roll/walk.
+    const slideClips = extended
+      ? ["slide", "roll", "dodge", "run"]
+      : ["slide", "dodge", "roll", "run"];
+    for (const name of slideClips) {
+      if (this.character.hasClip(name)) {
+        this.character.playClipOnce(name, 0.08);
+        break;
+      }
+    }
+    // Frost trail under the slide path
+    const origin = this.character.root.position.clone();
+    this.vfx.frostGround(origin, extended ? 1.6 : 1.1, this.staffColor(), 0.4);
+    this.schedule(dur * 0.75, () => {
+      if (this.disposed || !this.character) return;
+      this.vfx.frostGround(this.character.root.position.clone(), 1.0, this.staffColor(), 0.35);
+      // End-of-slide pose: re-trigger slide if available for the "slide out"
+      if (this.character.hasClip("slide")) this.character.playClipOnce("slide", 0.1);
+      else if (this.character.hasClip("crouch")) this.character.playClipOnce("crouch", 0.1);
+    });
+
+    this.iceSlideCd = extended ? 1.1 : 0.55;
+    this.stamina = Math.max(0, this.stamina - (extended ? 14 : 8));
   }
 
   // ------------------------------------------------------------------- Tank kit
@@ -5085,25 +7208,42 @@ export class Studio {
       // Drain every queue each frame so stale taps can't carry across the stance.
       const pressA = this.input.consumePress("KeyA");
       const pressD = this.input.consumePress("KeyD");
+      // Triple-tap first so A-A-A doesn't also fire a double-tap dodge.
+      const tripA = this.input.consumeTripleTap("KeyA");
+      const tripD = this.input.consumeTripleTap("KeyD");
       const dblA = this.input.consumeDoubleTap("KeyA");
       const dblD = this.input.consumeDoubleTap("KeyD");
-      const rollLeft = this.blocking ? pressA : dblA;
-      const rollRight = this.blocking ? pressD : dblD;
-      if (rollLeft) this.dodgeRoll("L");
-      else if (rollRight) this.dodgeRoll("R");
+      if (this.isIceStaff()) {
+        // Ice tank-mage: AA/DD = dash+slide; AAA/DDD = longer dash+slide.
+        // RMB combat stance still uses single A/D as a short slide.
+        if (tripA) this.doIceSlideDash("L", true);
+        else if (tripD) this.doIceSlideDash("R", true);
+        else if (this.blocking ? pressA : dblA) this.doIceSlideDash("L", false);
+        else if (this.blocking ? pressD : dblD) this.doIceSlideDash("R", false);
+      } else {
+        const rollLeft = this.blocking ? pressA : dblA;
+        const rollRight = this.blocking ? pressD : dblD;
+        if (rollLeft) this.dodgeRoll("L");
+        else if (rollRight) this.dodgeRoll("R");
+      }
       if (this.controller.consumeDoubleJump()) {
         const p = this.character.root.position.clone();
         p.y += 0.4;
-        // Staffs: the double-jump becomes a ~2s levitation float (WASD-steerable,
-        // gravity suspended) instead of an air-lunge — a caster's hover from which
-        // LMB rains element bolts. The hover height tracks the current apex.
-        if (this.isStaffEquipped()) {
-          this.vfx.burst(p, this.staffColor(), 18, 3);
-          const apex = Math.max(2.2, this.character.root.position.y + 1.0);
-          this.controller.startHover(apex, STAFF_FLOAT_SECONDS);
+        // Pistol: cut backflip away from target → 0.5s hover aim (LMB ready).
+        if (this.weaponId === "pistol") {
+          this.doPistolAirBackflip();
+        } else if (this.isStaffEquipped()) {
+          // Staffs: double-jump levitation (per-element foot disc) — except Ice.
+          const hover = staffHoverTheme(getWeapon(this.weaponId).element);
+          this.vfx.burst(p, hover.color, 18, 3);
+          if (hover.noFloat || this.isIceStaff()) {
+            this.vfx.frostGround(this.character.root.position.clone(), 1.4, hover.color, 0.45);
+          } else {
+            const apex = Math.max(2.2, this.character.root.position.y + 1.0);
+            this.controller.startHover(apex, STAFF_FLOAT_SECONDS);
+          }
         } else {
           this.vfx.burst(p, 0x9fe8ff, 16, 3);
-          // Deterministic air-lunge toward the crosshair target (vertical arc kept).
           const weaponless = !!getCharacter(this.characterId).weaponless;
           const combat = weaponCombat(weaponless ? "none" : this.weaponId);
           const target = this.pickCrosshairTarget(combat);
@@ -5194,22 +7334,38 @@ export class Studio {
         // GPU trailing flame around the spinning/hovering body.
         this.vfx.flameTrailPoint(fp);
       }
-      // Looping leg-flame jets beneath the Striker's feet while hovering, so the
-      // power state reads as sustained thrust. Throttled to keep particle counts
-      // sane, and the accumulator resets the moment hover ends/jumps out so it
-      // fires immediately on the next hover.
+      // Hover foot FX: staffs get a per-element spinning disc (arcane / wind /
+      // nature / holy / fire); Striker keeps leg-flame jets. Ice never hovers.
       if (this.controller.isHovering) {
         this.hoverFlameAccum += dt;
-        const HOVER_FLAME_INTERVAL = 0.1;
-        while (this.hoverFlameAccum >= HOVER_FLAME_INTERVAL) {
-          this.hoverFlameAccum -= HOVER_FLAME_INTERVAL;
+        const HOVER_FX_INTERVAL = this.isStaffEquipped() ? 0.12 : 0.1;
+        while (this.hoverFlameAccum >= HOVER_FX_INTERVAL) {
+          this.hoverFlameAccum -= HOVER_FX_INTERVAL;
           const base = this.character.root.position;
-          const yaw = this.character.root.rotation.y;
-          const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-          for (const s of [-0.22, 0.22]) {
-            const foot = base.clone().addScaledVector(side, s);
-            foot.y += 0.1;
-            this.vfx.legFlame(foot);
+          if (this.isStaffEquipped()) {
+            const hover = staffHoverTheme(getWeapon(this.weaponId).element);
+            if (hover.style !== "none") {
+              this.vfx.hoverFootDisc(
+                base.clone().setY(0.05),
+                hover.color,
+                hover.style === "fire" ||
+                  hover.style === "wind" ||
+                  hover.style === "nature" ||
+                  hover.style === "holy" ||
+                  hover.style === "arcane" ||
+                  hover.style === "storm"
+                  ? hover.style
+                  : "arcane",
+              );
+            }
+          } else {
+            const yaw = this.character.root.rotation.y;
+            const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+            for (const s of [-0.22, 0.22]) {
+              const foot = base.clone().addScaledVector(side, s);
+              foot.y += 0.1;
+              this.vfx.legFlame(foot);
+            }
           }
         }
       } else {
@@ -5314,7 +7470,53 @@ export class Studio {
     if (this.hurt > 0) this.hurt = Math.max(0, this.hurt - dt);
     if (this.invuln > 0) this.invuln = Math.max(0, this.invuln - dt);
     if (this.pistolDodgeCd > 0) this.pistolDodgeCd = Math.max(0, this.pistolDodgeCd - dt);
+    if (this.airFollowT > 0) this.airFollowT = Math.max(0, this.airFollowT - dt);
+    if (this.pistolHoverAimT > 0) {
+      this.pistolHoverAimT = Math.max(0, this.pistolHoverAimT - dt);
+      // Keep pistol aimed at focus target while hovering after backflip / dive.
+      if (this.controller?.isHovering && this.weaponId === "pistol") {
+        const t = this.pickCrosshairTarget(weaponCombat("pistol"));
+        if (t) {
+          this.controller.faceToward(this.toTargetPlanar(t).dir, 0.35);
+          if (this.locked) this.controller.setLockTarget(t.position);
+        }
+      }
+    }
+    if (this.skillChainWindow > 0) {
+      this.skillChainWindow = Math.max(0, this.skillChainWindow - dt);
+      if (this.skillChainWindow <= 0) {
+        // Chain expired mid-combo — arm remaining CD for that slot
+        if (this.skillChainSlot >= 0) {
+          const sk = multiPartFor(this.weaponId, this.skillChainSlot);
+          if (sk) this.armSigSlot(this.skillChainSlot, sk.cooldown * 0.65, 10);
+        }
+        this.skillChainSlot = -1;
+        this.skillChainPart = 0;
+      }
+    }
+    // Hold Tab → open radial after a short press threshold (quick tap = cycle target).
+    if (this.tabHoldArmed && this.input.down("Tab")) {
+      this.radialHoldT += dt;
+      if (this.radialHoldT >= 0.18 && !this.radialOpen) {
+        this.radialOpen = true;
+      }
+    } else if (!this.input.down("Tab") && this.radialOpen && !this.tabHoldArmed) {
+      // Safety close if key state desyncs
+      this.radialOpen = false;
+    }
+    if (this.tumbleT > 0) {
+      this.tumbleT = Math.max(0, this.tumbleT - dt);
+      if (this.tumbleT <= 0) this.tumbleActive = false;
+    }
+    this.afterDamageT += dt;
+    if (this.hurt > 0.01) this.afterDamageT = 0;
+    this.refreshCombatContext();
+    this.updateGunInput(dt);
+    this.updateCastPlacement(dt);
     if (this.dodgeCd > 0) this.dodgeCd = Math.max(0, this.dodgeCd - dt);
+    if (this.iceSlideCd > 0) this.iceSlideCd = Math.max(0, this.iceSlideCd - dt);
+    if (this.forceFieldCd > 0) this.forceFieldCd = Math.max(0, this.forceFieldCd - dt);
+    if (this.smashRecoverCd > 0) this.smashRecoverCd = Math.max(0, this.smashRecoverCd - dt);
     if (this.respectWindow > 0) this.respectWindow = Math.max(0, this.respectWindow - dt);
 
     // Single combat authority: tick the player CC and read CC-authoritative
@@ -5381,8 +7583,21 @@ export class Studio {
       if (this.phantomTimer === 0) {
         // While suited up the pilot is hidden and the mech owns the speed
         // multiplier — let the mech keep ownership instead of clobbering it.
-        this.mechReconciler.restorePilotIfMechInactive();
+        this.mechReconciler.restorePlayerIfMechInactive();
       }
+    }
+    // Gun kit: RMB lock → slight kiting speed so A/D strafe + rolls stay fluid
+    // under upper-body shoot overlays. Restore base when lock drops.
+    if (
+      this.controller &&
+      this.phantomTimer <= 0 &&
+      this.recoverLock <= 0 &&
+      !getCharacter(this.characterId).tank &&
+      isGunWeapon(this.weaponId)
+    ) {
+      this.controller.setSpeedMultiplier(
+        this.locked ? this.baseSpeedMul() * 1.08 : this.baseSpeedMul(),
+      );
     }
     // Stamina is read from the CC each frame (see getPlayerStamina below the loop);
     // do NOT regen it locally — the CombatController handles regen internally.
@@ -5410,10 +7625,8 @@ export class Studio {
     const w = getWeapon(weaponless ? "none" : this.weaponId);
     const cs = this.controller?.state;
     const isKick = def.meleeStyle === "kick";
-    // Kiter (Gunslinger) also drives per-slot signature cooldowns on slots 1-4.
-    // The Flanged Mace drives its own slot-4 throw cooldown the same way.
-    const perSig =
-      isKick || (!!def.kiter && this.weaponId === "pistol") || this.weaponId === "mace";
+    // Albion-style: always expose per-slot sig CDs on the HUD (1–4 independent).
+    const perSig = true;
     // Project the Tab-locked enemy's head to screen pixels for the floating frame.
     let selectedTarget: HudSnapshot["selectedTarget"] = null;
     const tv = this.targets.selectedView();
@@ -5505,11 +7718,12 @@ export class Studio {
       enemyMaxPoise: ecv?.maxPoise ?? 0,
       enemyCritWindow: ecv?.critWindow ?? 0,
       enemyCombatState: ecv?.state ?? "idle",
-      // For the kick fighter the F-slot fires sig 0 (Flanchet Shot) and its
-      // cooldown is tracked in sigCooldowns[0], not the shared skillCooldown.
-      skillReady: isKick ? this.sigCooldowns[0] <= 0 : this.skillCooldown <= 0,
-      skillCooldown: isKick ? this.sigCooldowns[0] : this.skillCooldown,
-      skillCooldownMax: isKick ? this.sigCooldownMaxes[0] : this.skillCooldownMax,
+      // F-skill uses skillCooldown; kick maps F → sig0. Never use one timer for 1–4.
+      skillReady: isKick ? this.sigCooldowns[0]! <= 0 : this.skillCooldown <= 0,
+      skillCooldown: isKick ? this.sigCooldowns[0]! : this.skillCooldown,
+      skillCooldownMax: isKick
+        ? this.sigCooldownMaxes[0]! || 1
+        : this.skillCooldownMax,
       skyfallCooldown: this.skyfallCooldown,
       skyfallCooldownMax: 3.5,
       // Striker + Kiter expose per-skill cooldowns for each sig slot.
@@ -5528,6 +7742,9 @@ export class Studio {
       targetsAlive: this.targets.aliveCount,
       difficulty: this.difficulty,
       blocking: this.blocking,
+      activityMode: this.activityMode,
+      activityTool: this.activityTool,
+      radialOpen: this.radialOpen,
       hurt: this.hurt,
       // Suppress free-roam "Respawning…" overlay during arena (result UI owns it).
       defeated: this.defeated && !this.arenaMatch?.isActive,
@@ -5925,14 +8142,117 @@ export class Studio {
     this.controller?.setViewMode(this.viewMode);
   }
 
+  /** Q: cycle Combat → Harvest → Build → Combat. */
+  cycleActivityMode() {
+    const next = nextMode(this.activityMode);
+    this.setActivityMode(next);
+  }
+
+  setActivityMode(mode: PlayerActivityMode) {
+    this.activityMode = mode;
+    this.activityTool = defaultToolForMode(mode);
+    this.radialOpen = false;
+    this.setCombatFlash(`${MODE_LABEL[mode]} · ${MODE_BLURB[mode]}`, 0.85);
+  }
+
+  /** Open/close radial options wheel (hold Tab). */
+  setRadialOpen(open: boolean) {
+    this.radialOpen = open;
+  }
+
+  /** Select a radial tool for the current activity mode (public for HUD wheel). */
+  selectActivityTool(id: string) {
+    this.activityTool = id;
+    this.radialOpen = false;
+    this.tabHoldArmed = false;
+    this.radialHoldT = 0;
+    this.setCombatFlash(id.replace(/_/g, " ").toUpperCase(), 0.4);
+    // Immediate combat shortcuts from the wheel
+    if (this.activityMode === "combat") {
+      if (id === "dodge") this.performTimedDodgeRoll();
+      else if (id === "parry") this.doParry();
+      else if (id === "heavy") this.doHeavyAttack();
+      else if (id === "kick") this.utilityKick();
+      else if (id === "potion") this.healPotion();
+      else if (id === "skill") this.useSkill();
+      else if (id === "block") this.startBlock();
+    }
+  }
+
+  /** Cancel radial without changing tool. */
+  cancelRadial() {
+    this.radialOpen = false;
+    this.tabHoldArmed = false;
+    this.radialHoldT = 0;
+  }
+
+  private pickRadialByIndex(i: number) {
+    const opt = RADIAL_BY_MODE[this.activityMode][i];
+    if (opt) this.selectActivityTool(opt.id);
+  }
+
+  /**
+   * Non-combat primary action (LMB in harvest/build). Stubs flash + VFX until
+   * island harvest/build systems fully own resolution — mode gating is live.
+   */
+  private runActivityTool(toolId?: string) {
+    const id = toolId ?? this.activityTool;
+    if (this.activityMode === "combat") return;
+    const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
+    origin.y += 1;
+    if (this.activityMode === "harvest") {
+      this.setCombatFlash(`HARVEST · ${id.toUpperCase()}`, 0.45);
+      this.vfx.burst(origin, 0x7ee7a8, 14, 2.2);
+      this.vfx.castAura(origin, 0x7ee7a8);
+      return;
+    }
+    if (this.activityMode === "build") {
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      const place = origin.clone().addScaledVector(fwd, 2.2);
+      place.y = 0.05;
+      this.setCombatFlash(`BUILD · ${id.toUpperCase()}`, 0.45);
+      this.vfx.auraRing(place, 0x7fb0ff, 1.4, 0.5);
+      this.vfx.hexaring(() => place.clone().setY(0.4), 0x7fb0ff, 0.45);
+    }
+  }
+
   /** Wire keyboard skill/jump shortcuts that need engine-side actions. */
   handleKey(code: string) {
-    if (code === "Space") this.controller?.jump();
+    if (code === "Escape" && this.castPlacement) {
+      this.cancelCastPlacement();
+      return;
+    }
+    if (code === "Space") {
+      // Smash recovery: Space during tumble/ragdoll = cut backflip, not jump.
+      if (this.tumbleActive || this.recoverLock > 0.2) this.smashRecover();
+      else this.controller?.jump();
+    }
     else if (code === "KeyR") this.doHeavyAttack();
-    else if (code === "KeyF") this.useSkill();
-    else if (code === "KeyQ") this.sparring.parry();
+    else if (code === "KeyF") {
+      // Guns: F starts hold-charge / reload on release (see updateGunInput).
+      // Crossbow: F = charged magical bolt.
+      // Non-guns: F = f-skill.
+      if (isGunWeapon(this.weaponId)) {
+        this.fKeyDown = true;
+        this.fHoldAccum = 0;
+      } else if (isCrossbowWeapon(this.weaponId)) {
+        this.doCrossbowChargedBolt();
+      } else {
+        this.useSkill();
+      }
+    }
+    else if (code === "KeyE") {
+      // Harvest skin channel when in harvest mode; forcefield in combat.
+      if (this.activityMode === "harvest") this.runActivityTool("skin");
+      else this.forceFieldGuard();
+    }
+    else if (code === "KeyQ") {
+      // Mode swap: Combat ↔ Harvest ↔ Build (production world loop).
+      this.cycleActivityMode();
+    }
     else if (code === "KeyX") {
       // Elden Ring–style timed dodge roll (directional roll + ~0.5s i-frames).
+      // Always available — escape pressure in any activity mode.
       this.performTimedDodgeRoll();
     }
     else if (code === "KeyG") this.evade();
@@ -5941,25 +8261,226 @@ export class Studio {
     // KeyZ = straight stab: a dash into an extended main-hand thrust, blade
     // classes only (sword + knife); no-ops otherwise. KeyT's motion-attack moved
     // to the middle mouse button (M3); see onMouseDown.
-    else if (code === "KeyZ") this.stab();
+    else if (code === "KeyZ") {
+      if (this.activityMode === "combat") this.stab();
+    }
     // KeyT = Stomp finisher: a leaping execution that only fires when a
     // knocked-down (fallen) enemy is within reach; no-ops otherwise.
-    else if (code === "KeyT") this.stomp();
-    else if (code === "KeyV") this.utilityKick();
+    else if (code === "KeyT") {
+      if (this.activityMode === "combat") this.stomp();
+    }
+    else if (code === "KeyV") {
+      if (this.activityMode === "combat") this.utilityKick();
+    }
     // KeyH = throw a bomb (quick-draw overhand throw → arcing grenade → AoE blast).
-    else if (code === "KeyH") this.throwBomb();
+    else if (code === "KeyH") {
+      if (this.activityMode === "combat") this.throwBomb();
+    }
     // KeyJ = drink a heal potion (quick-draw use → restore HP). No-op at full HP.
     else if (code === "KeyJ") this.healPotion();
-    else if (code === "KeyC") this.headbutt();
+    // KeyC = parry (moved off Q so Q can cycle activity modes).
+    else if (code === "KeyC") {
+      if (this.activityMode === "combat") this.doParry();
+    }
     else if (code === "KeyB") this.toggleView();
-    else if (code === "Digit1") this.useSkill(0);
-    else if (code === "Digit2") this.useSkill(1);
-    else if (code === "Digit3") this.useSkill(2);
-    else if (code === "Digit4") this.useSkill(3);
+    else if (code === "Digit1") {
+      if (this.activityMode === "combat") this.useSkill(0);
+      else this.pickRadialByIndex(0);
+    }
+    else if (code === "Digit2") {
+      if (this.activityMode === "combat") this.useSkill(1);
+      else this.pickRadialByIndex(1);
+    }
+    else if (code === "Digit3") {
+      if (this.activityMode === "combat") this.useSkill(2);
+      else this.pickRadialByIndex(2);
+    }
+    else if (code === "Digit4") {
+      if (this.activityMode === "combat") this.useSkill(3);
+      else this.pickRadialByIndex(3);
+    }
+    else if (code === "Tab") {
+      // Hold Tab → radial; quick tap still cycles target (handled on keyup).
+      this.tabHoldArmed = true;
+      this.radialHoldT = 0;
+    }
+  }
+
+  /** Keyup path for F (gun reload vs hold-discharge) + Tab radial / cycle. */
+  handleKeyUp(code: string) {
+    if (code === "Tab") {
+      if (this.radialOpen) {
+        // Leave wheel open until UI commits (pointer release) or Esc/cancel.
+        // Tab release alone does not force-close so players can aim with the mouse.
+        this.tabHoldArmed = false;
+        return;
+      }
+      if (this.tabHoldArmed && this.radialHoldT < 0.18) {
+        // Quick tap: cycle lock target (Shift+Tab ally handled by input consumer).
+        this.cycleTarget();
+      }
+      this.tabHoldArmed = false;
+      this.radialHoldT = 0;
+      return;
+    }
+    if (code !== "KeyF") return;
+    if (!isGunWeapon(this.weaponId)) {
+      this.fKeyDown = false;
+      this.fHoldAccum = 0;
+      this.gunCharging = false;
+      return;
+    }
+    const load = gunLoadout(this.weaponId);
+    if (!load) return;
+    // Hold long enough → full discharge; short tap → reload.
+    if (this.fHoldAccum >= load.chargeTime) {
+      this.doGunFullDischarge();
+    } else {
+      this.doGunReload();
+    }
+    this.fKeyDown = false;
+    this.fHoldAccum = 0;
+    this.gunCharging = false;
   }
 
   /**
-   * Acrobatic evade (KeyQ): an air-dodge when airborne, a corkscrew ground
+   * Parry (KeyQ): CC parry window + cut animation into the parry snap at 2× so
+   * the press feels immediate. On success (handled in defense reactions) the
+   * attacker is stunned; here we also flash a brief forcefield for feedback.
+   */
+  private doParry() {
+    if (!this.character || this.defeated || this.spectating) return;
+    const cut = PARRY_CUT;
+    this.sparring.parry();
+
+    // Cut into the parry pose — try dedicated clips first.
+    const parryNames = ["parry", "parryReact", "blockReact", "block"];
+    let played = 0;
+    for (const n of parryNames) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        played = this.character.playClipCut(n, {
+          from: cut.from,
+          to: cut.to,
+          timeScale: cut.timeScale,
+          fade: cut.fade,
+        });
+      }
+      if (played <= 0) played = this.character.playClipOnce(n, cut.fade);
+      if (played > 0) break;
+    }
+    if (played <= 0) this.playPlayerReaction("parryReact");
+
+    const p = this.character.root.position.clone();
+    p.y += 1.05;
+    this.vfx.forceField(() => p, cut.forceFieldRadius, cut.forceFieldLife, 0xa0f0ff);
+    this.vfx.burst(p, 0xc8f4ff, 10, 2.0);
+    this.invuln = Math.max(this.invuln, cut.invuln);
+    this.sfx?.play("block", p, { volume: 0.75, rate: 1.25 });
+  }
+
+  /**
+   * KeyE forcefield guard: short raised block + large hex forcefield.
+   * Practical Smash-style shield pop without holding RMB the whole time.
+   */
+  private forceFieldGuard() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.forceFieldCd > 0) return;
+    const cut = FORCEFIELD_CUT;
+
+    this.sparring.startBlock();
+    this.blocking = true;
+    // Hold the CC block for cut.holdSec then drop if RMB isn't still down.
+    this.schedule(cut.holdSec, () => {
+      if (this.rmbHeld()) return; // still holding combat stance
+      this.blocking = false;
+      this.sparring.endBlock();
+      this.controller?.setLockTarget(null);
+    });
+
+    const guardNames = ["blockGuard", "block", "blockStart", "parry"];
+    for (const n of guardNames) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        const d = this.character.playClipCut(n, {
+          from: cut.from,
+          to: cut.to,
+          timeScale: cut.timeScale,
+          fade: cut.fade,
+        });
+        if (d > 0) break;
+      }
+      if (this.character.playClipOnce(n, cut.fade) > 0) break;
+    }
+
+    const origin = this.character.root.position.clone();
+    const getPos = () => {
+      const q = this.character?.root.position.clone() ?? origin.clone();
+      q.y += 1.0;
+      return q;
+    };
+    this.vfx.forceField(getPos, cut.radius, cut.life, cut.color);
+    this.vfx.shockwave(new THREE.Vector3(origin.x, 0.05, origin.z), cut.color, 2.2, 0.4);
+    this.vfx.burst(origin.clone().setY(1.0), 0xa8ecff, 16, 2.8);
+    this.sfx?.play("block", origin, { volume: 1, rate: 0.95 });
+    this.controller.addCameraShake(0.12);
+    this.forceFieldCd = cut.cooldown;
+    this.setCombatFlash("FORCEFIELD", 0.4);
+  }
+
+  /** True while RMB combat stance / block is still held. */
+  private rmbHeld(): boolean {
+    // InputState doesn't track mouse buttons; blocking flag + sparring state.
+    return this.blocking;
+  }
+
+  /**
+   * Smash recovery (Space while tumbled): cut into backflip / kip-up, procedural
+   * {@link Controller.backflip}, clear recover lock, re-enter active combat.
+   */
+  private smashRecover() {
+    if (!this.controller || !this.character || this.defeated) return;
+    if (this.smashRecoverCd > 0) return;
+    const cut = RECOVERY_CUT;
+
+    this.tumbleActive = false;
+    this.tumbleT = 0;
+    this.recoverLock = 0;
+    this.hurt = 0;
+
+    // Prefer backflip cut, then kipUp / get_up / airDodge.
+    const names = ["backflip", "kipUp", "airDodge", "get_up", "Get Up", "roll"];
+    let played = 0;
+    for (const n of names) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        played = this.character.playClipCut(n, {
+          from: cut.from,
+          to: cut.to,
+          timeScale: cut.timeScale,
+          fade: cut.fade,
+        });
+      }
+      if (played <= 0) played = this.character.playClipOnce(n, cut.fade);
+      if (played > 0) break;
+    }
+    if (played <= 0) this.playPlayerReaction("kipUp");
+
+    // Procedural backflip owns body pitch + soft landing (slower, readable fall).
+    this.controller.backflip(cut.flipDuration, cut.flipHop);
+    this.invuln = Math.max(this.invuln, cut.invuln);
+    this.smashRecoverCd = cut.cooldown;
+
+    const p = this.character.root.position.clone();
+    this.vfx.afterimage(this.character.root, p, this.controller.forward().negate(), 1.4, 0xb8f0ff, 5, 0.3);
+    this.vfx.burst(p.clone().setY(0.9), 0xd0f4ff, 14, 2.5);
+    this.sfx?.play("somersault", p, { volume: 0.7 });
+    this.setCombatFlash("RECOVER", 0.45);
+    this.bumpMusicHeat(0.2);
+  }
+
+  /**
+   * Acrobatic evade (KeyG): an air-dodge when airborne, a corkscrew ground
    * evade otherwise. Mobility only — drives a short {@link Controller.dash}
    * displacement, never any combat. Only procedural rigs ship these clips, so it
    * no-ops on GLB characters (matching the existing dodge behaviour).
@@ -6299,29 +8820,34 @@ export class Studio {
     if (grounded) this.controller.hop(1.15);
     else this.controller.hop(0.55);
 
-    // Longbow standing-dodge (F/B/L/R) is the SSOT dodge for every weapon skill.
-    // Explorer/procedural rigs resolve via rollDir → UNIVERSAL_MOVEMENT; GLB
-    // rigs try the same clip names if registered.
+    // Longbow standing-dodge pack is the SSOT for every weapon (F/B/L/R).
+    // Prefer cut playback (skip slow start, ~1.75×) for Smash-snappy feel.
+    const dodgeCut = DODGE_CUT;
     let animDur = 0;
-    if (ch.rollDir) {
-      animDur = ch.rollDir(cardinal, grounded ? 0.12 : 0.18);
-    }
-    if (animDur <= 0) {
-      // Clip-name fallbacks matching animations/bow/standing-dodge-*
-      const dodgeNames =
-        cardinal === "F"
-          ? ["standing-dodge-forward", "dodgeF", "dodge_forward", "roll"]
-          : cardinal === "B"
-            ? ["standing-dodge-backward", "dodgeB", "dodge_backward", "roll"]
-            : cardinal === "L"
-              ? ["standing-dodge-left", "dodgeL", "dodge_left", "roll"]
-              : ["standing-dodge-right", "dodgeR", "dodge_right", "roll"];
-      for (const n of dodgeNames) {
-        if (ch.hasClip(n)) {
-          animDur = ch.playClipOnce(n, grounded ? 0.12 : 0.18);
-          if (animDur > 0) break;
-        }
+    const dodgeNames =
+      cardinal === "F"
+        ? ["standing-dodge-forward", "standing_dodge_forward", "dodgeF", "dodge_forward", "roll"]
+        : cardinal === "B"
+          ? ["standing-dodge-backward", "standing_dodge_backward", "dodgeB", "dodge_backward", "roll"]
+          : cardinal === "L"
+            ? ["standing-dodge-left", "standing_dodge_left", "dodgeL", "dodge_left", "roll"]
+            : ["standing-dodge-right", "standing_dodge_right", "dodgeR", "dodge_right", "roll"];
+    for (const n of dodgeNames) {
+      if (!ch.hasClip(n)) continue;
+      if (ch.playClipCut) {
+        animDur = ch.playClipCut(n, {
+          from: dodgeCut.from,
+          to: dodgeCut.to,
+          timeScale: dodgeCut.timeScale,
+          fade: grounded ? dodgeCut.fade : 0.1,
+        });
       }
+      if (animDur <= 0) animDur = ch.playClipOnce(n, grounded ? dodgeCut.fade : 0.12);
+      if (animDur > 0) break;
+    }
+    // Procedural explorer rollDir only if longbow pack clips missing.
+    if (animDur <= 0 && ch.rollDir) {
+      animDur = ch.rollDir(cardinal, grounded ? 0.1 : 0.16);
     }
     if (animDur <= 0) {
       if (ch.hasRole("hurt")) ch.playRoleOnce("hurt", 0.1);
@@ -6418,18 +8944,18 @@ export class Studio {
   }
 
   /**
-   * Utility kick (KeyV): an overdriven guard-breaking shove. When it connects
-   * with an enemy in front it forces a stagger that bypasses a raised guard
-   * (guard-break) and shoves them back with heavy knockback + an impact burst.
-   * When nothing is in reach it stays a pure mobility hop (no regression).
-   * Procedural rigs only (no-ops on GLB rigs that ship no `utilityKick` clip).
+   * Utility kick (KeyV): cut-animation strike — skip slow wind-up, play the
+   * attack portion at 2× with a motion-blur blend-in, then a foot impact wave
+   * that **breaks blocks** and **pushes attackers** in a small AoE.
+   *
+   * Cut params: {@link UTILITY_KICK_CUT}. No-ops when the rig lacks `utilityKick`.
    */
   private utilityKick() {
     if (!this.controller || !this.character) return;
     if (this.controller.isBusy || this.kickCd > 0) return;
     if (!this.character.hasClip("utilityKick")) return;
 
-    // Steer the overdriven lunge toward a target in front so the shove connects.
+    const cut = UTILITY_KICK_CUT;
     const cfg = this.assistConfig();
     const origin = this.character.root.position.clone();
     const aim = this.controller.forward();
@@ -6437,38 +8963,93 @@ export class Studio {
     const dir = this.steerToward(aim, origin, picked, cfg.steer);
     this.controller.faceToward(dir, 0.25);
 
-    const dur = this.character.playClipOnce("utilityKick", 0.1);
-    // Overdrive: a longer, snappier lunge that closes onto the target (capped to
-    // the assist reach) instead of the old fixed 0.9 m hop.
-    const reach = picked
-      ? THREE.MathUtils.clamp(picked.dist - 0.6, 0.8, cfg.maxReach)
-      : 1.6;
-    const lungeDur = dur > 0 ? dur * 0.5 : 0.26;
-    const impactAt = 0.5;
-    this.controller.dash(dir, reach, lungeDur, 0, impactAt);
+    // CUT: slice into strike portion + 2× rate + short fade (snappy blend-in).
+    let dur = 0;
+    if (this.character.playClipCut) {
+      dur = this.character.playClipCut("utilityKick", {
+        from: cut.from,
+        to: cut.to,
+        timeScale: cut.timeScale,
+        fade: cut.fade,
+      });
+    }
+    if (dur <= 0) {
+      // Fallback: full clip sped via cut contract approximation
+      const full = this.character.playClipOnce("utilityKick", cut.fade);
+      dur = Math.max(0.12, (full * (cut.to - cut.from)) / cut.timeScale);
+    }
 
-    // Resolve the guard-breaking stagger at the moment of contact.
+    // Visual blur into the kick attack (ghost silhouettes + dash streak).
+    const blurDist = 1.1;
+    this.vfx.afterimage(
+      this.character.root,
+      origin,
+      dir,
+      blurDist,
+      0xffe0a0,
+      cut.blurCount,
+      cut.blurLife,
+    );
+    this.vfx.dashStreak(
+      origin.clone().setY(origin.y + 0.2),
+      origin.clone().addScaledVector(dir, blurDist).setY(origin.y + 0.2),
+      0xffd27a,
+    );
+
+    // Short overdrive lunge — matches the compressed cut duration.
+    const reach = picked
+      ? THREE.MathUtils.clamp(picked.dist - 0.55, 0.7, Math.min(cfg.maxReach, 3.2))
+      : 1.45;
+    const lungeDur = Math.max(0.14, dur * 0.85);
+    const impactAt = cut.impactAt;
+    this.controller.dash(dir, reach, lungeDur, 0.05, impactAt);
+
+    // Foot impact wave at the end of the attack portion.
     this.abilities.cast(kitAbility("utilityKick", "slam", 0xffd27a, lungeDur * impactAt), {
       onImpact: () => {
-        if (!this.character) return;
-        const hit = this.character.root.position.clone().addScaledVector(dir, reach * 0.5);
-        hit.y += 1.0;
-        // Heavy guard-breaking shove against the nearest enemy in kick reach.
+        if (!this.character || this.disposed) return;
         const kickFrom = this.character.root.position.clone();
-        kickFrom.y += 1.0;
-        const hitPos = this.targets.kickStagger(hit, 2.0, this.params.skillForce * 1.4, undefined, kickFrom);
+        // Foot plant slightly ahead of the body on the kick axis.
+        const foot = kickFrom.clone().addScaledVector(dir, 0.55);
+        foot.y = 0.06;
+        const chest = foot.clone().setY(0.9);
+        const radius = cut.aoeRadius;
+        const force = this.params.skillForce * cut.pushForceMul;
+
+        // Foot impact wave (ground + body-height)
+        this.vfx.shockwave(foot, 0xffb24d, radius * 1.15, 0.48);
+        this.vfx.aoeBlast(chest, 0xffd27a, radius * 0.85);
+        this.vfx.burst(foot.clone().setY(0.25), 0xffe8b0, 28, 5);
+        this.vfx.impact(chest, 0xffd27a, 2.4);
+        this.vfx.legFlame(foot.clone().setY(0.12));
+        this.controller?.addCameraShake(0.28);
+        this.sfx?.play("heavyHit", foot, { volume: 0.9, rate: 1.05 });
+
+        // Break blocks for everyone in the wave, then push them back.
+        this.targets.shieldBreak(chest, radius, cut.shieldBreakSec);
+        this.targets.blast(
+          chest,
+          radius,
+          cut.blastDamage,
+          force,
+          this.sparCtx,
+        );
+        // Primary guard-break stagger (through block) on nearest attacker.
+        const hitPos = this.targets.kickStagger(
+          chest,
+          radius,
+          force,
+          cut.shieldBreakSec,
+          kickFrom.clone().setY(1.0),
+        );
         if (hitPos) {
-          const impact = hitPos.clone();
-          this.vfx.impact(impact, 0xffd27a, 2.2);
-          this.vfx.burst(impact, 0xffe0a0, 34, 6);
-          this.vfx.impactExplode(impact, this.fireThemeApplied);
-          this.vfx.shockwave(new THREE.Vector3(impact.x, 0.05, impact.z), 0xffb24d, 1.6, 0.4);
+          this.vfx.impactExplode(hitPos, this.fireThemeApplied);
+          this.vfx.burst(hitPos, 0xffe0a0, 20, 4);
         }
       },
     });
 
-    // Pacing: responsive but not instantly spammable.
-    this.kickCd = 0.6;
+    this.kickCd = cut.cooldown;
   }
 
   /**
@@ -7232,7 +9813,7 @@ export class Studio {
     if (recoil > 0) this.controller?.applyImpulse(push, recoil * 0.5, recoil > 4 ? 1.5 : 0);
     if (!defended && amount > 0) {
       this.hurt = 0.5;
-      this.vfx.impact(chest, 0xff5a6a, 1.2);
+      this.vfx.fireAura(chest, amount > 20 ? 1.2 : 0.9, this.fireThemeApplied);
     } else if (outcome === "block") {
       this.vfx.impact(chest, 0x6ad0ff, 0.8);
     }
@@ -7356,6 +9937,13 @@ export class Studio {
     this.mech.dispose();
     this.indicators.dispose();
     this.telegraphs.dispose();
+    this.cancelCastPlacement();
+    if (this.castReticle) {
+      this.scene.remove(this.castReticle);
+      this.castReticle.geometry.dispose();
+      (this.castReticle.material as THREE.Material).dispose();
+      this.castReticle = null;
+    }
     this.pending.length = 0;
     this.abilities.cancelAll();
     this.scene.traverse((o) => {

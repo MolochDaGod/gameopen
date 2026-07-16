@@ -15,3 +15,4 @@ export * from "./types";
 export * from "./terrain";
 export * from "./catalog";
 export * from "./convert";
+export * from "./seedWorld";

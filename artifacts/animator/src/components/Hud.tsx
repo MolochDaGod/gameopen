@@ -5,6 +5,8 @@ import { resolveSlotIconUrl, resolveSlotLocalName } from "../three/skillIcons";
 import { Icon } from "./Icon";
 import type { HudEditApi, HudPanelBinding } from "../hud/useHudEditor";
 import type { HudPanelId } from "../hud/hudConfig";
+import { RadialMenu } from "./RadialMenu";
+import { MODE_COLOR, MODE_LABEL } from "../three/playerMode";
 
 interface Props {
   hud: HudSnapshot | null;
@@ -14,6 +16,11 @@ interface Props {
   onArenaRetry?: () => void;
   /** Arena match: clear opponents and return to free Danger Room. */
   onArenaReturn?: () => void;
+  /** Radial wheel: commit tool selection. */
+  onRadialSelect?: (id: string) => void;
+  onRadialCancel?: () => void;
+  /** Open full harvest production shell (craft / codex / maps / trees). */
+  onOpenProduction?: () => void;
 }
 
 /** Merge a panel's edit binding onto its base className + inline style. */
@@ -622,7 +629,15 @@ function CombatFlash({ text }: { text: string }) {
   );
 }
 
-export function Hud({ hud, edit, onArenaRetry, onArenaReturn }: Props) {
+export function Hud({
+  hud,
+  edit,
+  onArenaRetry,
+  onArenaReturn,
+  onRadialSelect,
+  onRadialCancel,
+  onOpenProduction,
+}: Props) {
   if (!hud) return null;
 
   const slotByName = (slot: string): SlotBinding | undefined => hud.slots.find((s) => s.slot === slot);
@@ -632,10 +647,99 @@ export function Hud({ hud, edit, onArenaRetry, onArenaReturn }: Props) {
     .map((id) => slotByName(id))
     .filter((s): s is SlotBinding => !!s);
 
+  const mode = hud.activityMode ?? "combat";
+  const modeColor = MODE_COLOR[mode];
+  const modeLabel = MODE_LABEL[mode];
+
   return (
     <>
       {/* Fire-tinted pulsing rim while the Striker hovers */}
       {hud.hovering && <div className="hover-vignette" />}
+
+      {/* Activity mode chip — Q cycles Combat / Harvest / Build */}
+      <div
+        style={{
+          position: "absolute",
+          top: 14,
+          left: 16,
+          zIndex: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 12px",
+            borderRadius: 999,
+            background: "rgba(6,10,18,0.78)",
+            border: `1px solid ${modeColor}66`,
+            boxShadow: `0 0 16px ${modeColor}22`,
+            fontFamily: "Rajdhani, system-ui, sans-serif",
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 99,
+              background: modeColor,
+              boxShadow: `0 0 8px ${modeColor}`,
+            }}
+          />
+          <span style={{ fontWeight: 800, letterSpacing: "0.14em", fontSize: 12, color: modeColor }}>
+            {modeLabel}
+          </span>
+          <span style={{ fontSize: 10, color: "#8a94b0", letterSpacing: "0.04em" }}>
+            {(hud.activityTool ?? "").toUpperCase()}
+          </span>
+          <span style={{ fontSize: 9, color: "#5e6688", marginLeft: 4 }}>Q · mode</span>
+        </div>
+        {(mode === "harvest" || mode === "build") && onOpenProduction && (
+          <button
+            type="button"
+            onClick={onOpenProduction}
+            style={{
+              pointerEvents: "auto",
+              alignSelf: "flex-start",
+              padding: "7px 12px",
+              borderRadius: 10,
+              border: `1px solid ${modeColor}88`,
+              background: "rgba(8,14,12,0.88)",
+              color: modeColor,
+              fontWeight: 800,
+              fontSize: 11,
+              letterSpacing: "0.08em",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            ⛏ PRODUCTION UI · P
+          </button>
+        )}
+        <div
+          style={{
+            fontSize: 9,
+            color: "#6a7390",
+            letterSpacing: "0.06em",
+            paddingLeft: 4,
+          }}
+        >
+          X dodge · hold Tab radial · C parry · P production
+        </div>
+      </div>
+
+      <RadialMenu
+        open={!!hud.radialOpen}
+        mode={mode}
+        selectedId={hud.activityTool ?? "attack"}
+        onSelect={(id) => onRadialSelect?.(id)}
+        onCancel={() => onRadialCancel?.()}
+      />
 
       {/* Red rim that fades after taking a hit */}
       {hud.hurt > 0 && (

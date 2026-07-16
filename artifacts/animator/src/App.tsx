@@ -32,6 +32,7 @@ import type {
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { Hud } from "./components/Hud";
+import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
 import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { AdminPanel } from "./components/AdminPanel";
@@ -399,6 +400,10 @@ export default function App() {
   const mountRef = useRef<HTMLDivElement>(null);
   const studioRef = useRef<Studio | null>(null);
   const [hud, setHud] = useState<HudSnapshot | null>(null);
+  /** Full harvest/build production shell (ops, craft, codex, maps, trees, avatars). */
+  const [harvestUiOpen, setHarvestUiOpen] = useState(false);
+  const harvestUiOpenRef = useRef(false);
+  harvestUiOpenRef.current = harvestUiOpen;
   const [equipOpen, setEquipOpen] = useState(false);
   const equipOpenRef = useRef(false);
   equipOpenRef.current = equipOpen;
@@ -717,12 +722,24 @@ export default function App() {
         if (next) document.exitPointerLock?.();
         return;
       }
-      if (e.code === "Tab") {
-        // Tab = lock-on / cycle the selected enemy; Shift+Tab rotates the ally.
+      // P = open full harvest production UI (craft / codex / maps / skill trees)
+      if (e.code === "KeyP") {
         e.preventDefault();
-        if (e.shiftKey) studioRef.current?.cycleAllyTarget();
-        else studioRef.current?.cycleTarget();
+        setHarvestUiOpen((v) => {
+          const next = !v;
+          if (next) document.exitPointerLock?.();
+          return next;
+        });
         return;
+      }
+      if (e.code === "Tab") {
+        // Shift+Tab = ally cycle. Tab hold = radial wheel; quick release = enemy cycle.
+        e.preventDefault();
+        if (e.shiftKey) {
+          studioRef.current?.cycleAllyTarget();
+          return;
+        }
+        // Fall through to studio.handleKey for hold-to-radial arming.
       }
       if (e.code === "Backquote") {
         // Admin panel hotkey (moved off Tab).
@@ -745,13 +762,26 @@ export default function App() {
         // In pointer-lock: fall through so studio.handleKey("KeyE") fires below.
       }
       if (e.code === "KeyC") {
-        toggleDangerPanel("anim");
-        return;
+        // In-game: C = parry. Out of lock: open clips panel.
+        if (!document.pointerLockElement) {
+          toggleDangerPanel("anim");
+          return;
+        }
       }
       studioRef.current?.handleKey(e.code);
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      // Tab radial release is handled here (Studio also listens for F hold-charge).
+      if (e.code === "Tab") studioRef.current?.handleKeyUp(e.code);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [mode, refreshAnim, toggleDangerPanel]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
@@ -774,16 +804,36 @@ export default function App() {
         if (next) document.exitPointerLock?.();
         return;
       }
+      if (e.code === "KeyP") {
+        e.preventDefault();
+        setHarvestUiOpen((v) => {
+          const next = !v;
+          if (next) document.exitPointerLock?.();
+          return next;
+        });
+        return;
+      }
       if (e.code === "Tab") {
         e.preventDefault();
-        if (e.shiftKey) studioRef.current?.cycleAllyTarget();
-        else studioRef.current?.cycleTarget();
-        return;
+        if (e.shiftKey) {
+          studioRef.current?.cycleAllyTarget();
+          return;
+        }
+        // Fall through → hold Tab radial / release cycle (studio).
       }
       studioRef.current?.handleKey(e.code);
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (e.code === "Tab") studioRef.current?.handleKeyUp(e.code);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [mode]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
@@ -1335,8 +1385,10 @@ export default function App() {
         <CampfireLobby
           onExit={() => setMode("doors")}
           onNavigate={(m) => {
+            // charactersgrudox wooden-sign → Open collection modes
             if (m === "lobbyWorld") navigate("realms");
             else if (m === "voxgrudge-native") navigate("voxgrudge-native");
+            else if (m === "home" || m === "hub") navigate("doors");
             else navigate(m as Mode);
           }}
           onAvatarEdit={() => navigate("avatar")}
@@ -1675,6 +1727,34 @@ export default function App() {
             edit={hudEdit}
             onArenaRetry={onArenaRetry}
             onArenaReturn={onArenaReturn}
+            onRadialSelect={(id) => studioRef.current?.selectActivityTool(id)}
+            onRadialCancel={() => studioRef.current?.cancelRadial()}
+            onOpenProduction={() => {
+              setHarvestUiOpen(true);
+              document.exitPointerLock?.();
+            }}
+          />
+          <HarvestProductionUI
+            open={harvestUiOpen}
+            activityMode={hud?.activityMode ?? "combat"}
+            activityTool={hud?.activityTool ?? "attack"}
+            onClose={() => setHarvestUiOpen(false)}
+            onSelectTool={(id) => studioRef.current?.selectActivityTool(id)}
+            onImportCharacter={(id) => {
+              if (id === "explorer" || id.startsWith("avatar-")) {
+                studioRef.current?.setCharacter("explorer");
+                setCharacterId("explorer");
+              } else {
+                studioRef.current?.setCharacter(id);
+                setCharacterId(id);
+              }
+              setHarvestUiOpen(false);
+            }}
+            onOpenRealms={() => setMode("realms")}
+            onOpenVoxel={() => {
+              setHarvestUiOpen(false);
+              setMode("voxel");
+            }}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -1738,6 +1818,34 @@ export default function App() {
             edit={hudEdit}
             onArenaRetry={onArenaRetry}
             onArenaReturn={onArenaReturn}
+            onRadialSelect={(id) => studioRef.current?.selectActivityTool(id)}
+            onRadialCancel={() => studioRef.current?.cancelRadial()}
+            onOpenProduction={() => {
+              setHarvestUiOpen(true);
+              document.exitPointerLock?.();
+            }}
+          />
+          <HarvestProductionUI
+            open={harvestUiOpen}
+            activityMode={hud?.activityMode ?? "combat"}
+            activityTool={hud?.activityTool ?? "attack"}
+            onClose={() => setHarvestUiOpen(false)}
+            onSelectTool={(id) => studioRef.current?.selectActivityTool(id)}
+            onImportCharacter={(id) => {
+              if (id === "explorer" || id.startsWith("avatar-")) {
+                studioRef.current?.setCharacter("explorer");
+                setCharacterId("explorer");
+              } else {
+                studioRef.current?.setCharacter(id);
+                setCharacterId(id);
+              }
+              setHarvestUiOpen(false);
+            }}
+            onOpenRealms={() => setMode("realms")}
+            onOpenVoxel={() => {
+              setHarvestUiOpen(false);
+              setMode("voxel");
+            }}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -1782,7 +1890,7 @@ export default function App() {
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                WASD move · Shift sprint · Space jump (×2) · LMB attack · Q parry · E block (hold) · X dodge · R heavy · Z / T combo · V kick · G evade · F / 1-4 skills · RMB block/lock · Tab lock-on · ` admin · E editor · C clips
+                WASD · Q mode (Combat/Harvest/Build) · hold Tab radial · X dodge · C parry · P production UI · F / 1–4 skills · RMB block
               </p>
             </div>
           )}

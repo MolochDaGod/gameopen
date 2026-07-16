@@ -1,4 +1,18 @@
 import type { WeaponDef, WeaponGripDef, WeaponId } from "../types";
+export {
+  GUN_FAMILIES,
+  GUN_WEAPON_IDS,
+  generateScriptableGun,
+  generateGunSkills,
+  gunFamilyForWeapon,
+  gunLoadoutForTier,
+  gunModelFile,
+  listAllGunWeapons,
+  isGunFamilyWeapon,
+  type GunFamilyId,
+  type GunFamilyDef,
+  type GunTierDef,
+} from "./gunClass";
 import { MELEE_WEAPONS } from "./melee";
 import { RANGED_WEAPONS } from "./ranged";
 import { MAGIC_WEAPONS } from "./magic";
@@ -18,6 +32,10 @@ export {
   mmToMeters,
 } from "./t0WeaponSkills";
 export type { T0SkillDef, T0SkillRole, T0WeaponKit } from "./t0WeaponSkills";
+export { staffHoverTheme } from "./staffHover";
+export type { StaffHoverStyle, StaffHoverTheme } from "./staffHover";
+export { ELEMENT_THEME } from "./elements";
+export type { ElementTheme, ElementProjectile } from "./elements";
 
 /** The "no weapon" prefab — a pure unarmed loadout (no model, no grip). */
 export const NONE: WeaponDef = {

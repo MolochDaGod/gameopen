@@ -127,29 +127,54 @@ function buildStaff(m: MountedWeapon): THREE.Group {
 
 function buildPistol(m: MountedWeapon): THREE.Group {
   const g = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: 0x2b2e35, metalness: 0.7, roughness: 0.35 });
+  // Matches gunCombat pistol palette: dark steel body + warm brass accents
+  const metal = new THREE.MeshStandardMaterial({
+    color: 0x2b2e35,
+    metalness: 0.78,
+    roughness: 0.32,
+    emissive: new THREE.Color(0xfff2a8),
+    emissiveIntensity: 0.08,
+  });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 0.85, roughness: 0.28 });
   const body = track(m, g, new THREE.BoxGeometry(0.06, 0.12, 0.26), metal);
   body.position.set(0, 0.04, 0.1);
   track(m, g, new THREE.BoxGeometry(0.05, 0.16, 0.08), GRIP()).position.set(0, -0.06, -0.02);
-  const barrel = track(m, g, new THREE.CylinderGeometry(0.015, 0.015, 0.16, 8), metal);
+  const barrel = track(m, g, new THREE.CylinderGeometry(0.015, 0.015, 0.16, 8), brass);
   barrel.rotation.x = Math.PI / 2;
   barrel.position.set(0, 0.06, 0.26);
-  addTip(m, g, 0); // muzzle handled via skill origin
-  m.tip!.position.set(0, 0.06, 0.34);
+  // Muzzle tip sits at barrel end so hand IK + fire both use the true bore
+  addTip(m, g, 0);
+  m.tip!.position.set(0, 0.06, 0.36);
   return g;
 }
 
 function buildRifle(m: MountedWeapon): THREE.Group {
   const g = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: 0x33363d, metalness: 0.6, roughness: 0.4 });
+  // Matches gunCombat rifle palette: cool steel + plasma-accent barrel ring
+  const metal = new THREE.MeshStandardMaterial({
+    color: 0x33363d,
+    metalness: 0.72,
+    roughness: 0.36,
+    emissive: new THREE.Color(0xffe8a0),
+    emissiveIntensity: 0.06,
+  });
+  const plasma = new THREE.MeshStandardMaterial({
+    color: 0x66e0ff,
+    metalness: 0.4,
+    roughness: 0.25,
+    emissive: new THREE.Color(0x66e0ff),
+    emissiveIntensity: 0.35,
+  });
   const body = track(m, g, new THREE.BoxGeometry(0.07, 0.1, 0.6), metal);
   body.position.set(0, 0.02, 0.2);
   const barrel = track(m, g, new THREE.CylinderGeometry(0.02, 0.02, 0.4, 10), metal);
   barrel.rotation.x = Math.PI / 2;
   barrel.position.set(0, 0.04, 0.5);
+  const ring = track(m, g, new THREE.TorusGeometry(0.028, 0.006, 6, 12), plasma);
+  ring.position.set(0, 0.04, 0.68);
   track(m, g, new THREE.BoxGeometry(0.06, 0.14, 0.18), GRIP()).position.set(0, -0.02, -0.12);
   addTip(m, g, 0);
-  m.tip!.position.set(0, 0.04, 0.72);
+  m.tip!.position.set(0, 0.04, 0.74);
   return g;
 }
 
@@ -161,6 +186,47 @@ function buildShield(m: MountedWeapon): THREE.Group {
   boss.rotation.x = Math.PI / 2;
   boss.position.set(0, 0.1, 0.06);
   addTip(m, g, 0.4);
+  return g;
+}
+
+function buildShotgun(m: MountedWeapon): THREE.Group {
+  const g = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({
+    color: 0x3a322c,
+    metalness: 0.65,
+    roughness: 0.4,
+    emissive: new THREE.Color(0xffb070),
+    emissiveIntensity: 0.08,
+  });
+  const tube = new THREE.MeshStandardMaterial({
+    color: 0xff7040,
+    metalness: 0.5,
+    roughness: 0.3,
+    emissive: new THREE.Color(0xff7040),
+    emissiveIntensity: 0.25,
+  });
+  // Shorter fatter receiver + dual-barrel read
+  const body = track(m, g, new THREE.BoxGeometry(0.09, 0.12, 0.48), metal);
+  body.position.set(0, 0.02, 0.14);
+  const b1 = track(m, g, new THREE.CylinderGeometry(0.022, 0.022, 0.32, 10), metal);
+  b1.rotation.x = Math.PI / 2;
+  b1.position.set(-0.02, 0.04, 0.42);
+  const b2 = track(m, g, new THREE.CylinderGeometry(0.022, 0.022, 0.32, 10), metal);
+  b2.rotation.x = Math.PI / 2;
+  b2.position.set(0.02, 0.04, 0.42);
+  const band = track(m, g, new THREE.TorusGeometry(0.04, 0.008, 6, 12), tube);
+  band.position.set(0, 0.04, 0.55);
+  track(m, g, new THREE.BoxGeometry(0.07, 0.16, 0.16), GRIP()).position.set(0, -0.04, -0.08);
+  addTip(m, g, 0);
+  m.tip!.position.set(0, 0.04, 0.6);
+  return g;
+}
+
+function buildSniper(m: MountedWeapon): THREE.Group {
+  // Longer rifle + scope ring (uses rifle palette)
+  const g = buildRifle(m);
+  // Extend tip further for sniper bore
+  if (m.tip) m.tip.position.set(0, 0.04, 0.95);
   return g;
 }
 
@@ -179,6 +245,8 @@ const BUILDERS: Partial<Record<WeaponId, (m: MountedWeapon) => THREE.Group>> = {
   staff: buildStaff,
   pistol: buildPistol,
   rifle: buildRifle,
+  "hunter-rifle": buildSniper,
+  shotgun: buildShotgun,
   shield: buildShield,
 };
 

@@ -1,0 +1,125 @@
+{
+  "format": "grudge.seed-world.catalog.v1",
+  "version": 2,
+  "label": "Minecraft-like seed world deployments",
+  "notes": "Same seed ⇒ same open world base + portal positions. chunkIdx MUST be 0..7 (Mine-Loader CHUNK_SIZES: 16,32,64,96,128,256,512,1024). Dungeons are reached only via portals. Multiplayer authority = Mine-Loader Railway (seed + scene + block edits).",
+  "chunkSizes": [16, 32, 64, 96, 128, 256, 512, 1024],
+  "api": {
+    "blocks": "https://mine-loader-api-production.up.railway.app/api/blocks",
+    "worlds": "https://mine-loader-api-production.up.railway.app/api/worlds",
+    "healthz": "https://mine-loader-api-production.up.railway.app/api/healthz",
+    "spa": "https://mine.grudge-studio.com",
+    "openProxy": "https://open.grudge-studio.com/api/worlds"
+  },
+  "journey": [
+    "Player joins seed world (lobby / library deploy)",
+    "Explore open-world overworld generated from seed + chunkIdx",
+    "Discover diamond/exclamation portal beacons (or trigger radius)",
+    "Enter portal → load dungeon instance (dungeon seed = mix(worldSeed, portalId))",
+    "Exit dungeon → return near portal in open world"
+  ],
+  "deployments": [
+    {
+      "id": "seed-grudge-plains",
+      "name": "Grudge Plains",
+      "blurb": "Starter overworld seed (256²) — four themed portals to dungeons.",
+      "seed": "grudge-plains",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 88,
+        "surfaceY": 2,
+        "themes": ["ruins", "crypt", "mine", "temple"]
+      }
+    },
+    {
+      "id": "seed-frost-coast",
+      "name": "Frost Coast",
+      "blurb": "Coastal tundra seed (512²) — ice temples and drowned mines.",
+      "seed": "frost-coast-01",
+      "chunkIdx": 6,
+      "biome": "coast",
+      "featured": true,
+      "deploy": "mine-loader",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 32,
+        "radiusMax": 110,
+        "surfaceY": 2,
+        "themes": ["temple", "mine", "crypt"]
+      }
+    },
+    {
+      "id": "seed-ember-peaks",
+      "name": "Ember Peaks",
+      "blurb": "Mountain seed (512²) — hard portals farther from spawn.",
+      "seed": "ember-peaks",
+      "chunkIdx": 6,
+      "biome": "mountains",
+      "featured": true,
+      "deploy": "both",
+      "portalPlan": {
+        "portalCount": 5,
+        "radiusMin": 40,
+        "radiusMax": 140,
+        "surfaceY": 4,
+        "themes": ["mine", "ruins", "temple", "crypt", "mine"]
+      }
+    },
+    {
+      "id": "seed-swamp-veil",
+      "name": "Swamp Veil",
+      "blurb": "Swamp overworld (256²) — crypt-heavy portal ring.",
+      "seed": "swamp-veil",
+      "chunkIdx": 5,
+      "biome": "swamp",
+      "featured": false,
+      "deploy": "open-playtest",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 20,
+        "radiusMax": 70,
+        "surfaceY": 1,
+        "themes": ["crypt", "ruins", "crypt"]
+      }
+    },
+    {
+      "id": "seed-desert-sun",
+      "name": "Desert Sun",
+      "blurb": "Desert seed (256²) — temple portals and sunken mine.",
+      "seed": "desert-sun-42",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 36,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": ["temple", "mine", "ruins", "temple"]
+      }
+    },
+    {
+      "id": "seed-mega-frontier",
+      "name": "Mega Frontier",
+      "blurb": "Large exploration seed (1024²) — engine max chunk; expect longer gen.",
+      "seed": "mega-frontier",
+      "chunkIdx": 7,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "mine-loader",
+      "portalPlan": {
+        "portalCount": 6,
+        "radiusMin": 48,
+        "radiusMax": 180,
+        "surfaceY": 2,
+        "themes": ["ruins", "crypt", "mine", "temple", "ruins", "mine"]
+      }
+    }
+  ]
+}

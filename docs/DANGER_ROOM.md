@@ -77,7 +77,11 @@ Slots: LMB primary · F skill · 1–4 signatures · R heavy/skyfall.
 | System | Input | Implementation |
 |--------|-------|----------------|
 | **Block** | **RMB hold** | `Studio.startBlock` / sparring CC; guard bounce + low-friction pushback on big hits |
-| **Parry** | **Q** | Perfect window → flash + **hitstop** + parryClash VFX |
+| **Parry** | **C** | Perfect window → flash + **hitstop** + parryClash VFX (moved off Q) |
+| **Dodge** | **X** | Timed directional roll + ~0.5s i-frames |
+| **Mode** | **Q** | Cycle **Combat → Harvest → Build → Combat** |
+| **Radial** | **hold Tab** | Mode-aware options wheel (release/click to select; quick Tab = lock cycle) |
+| **Production UI** | **P** | Full harvest/build shell: ops, crafting, recipes, Mine-Loader codex API, **seed world deployments** (Minecraft-like seeds + portal→dungeon), maps library, skill trees, systems, explorer/avatar import. Esc closes. Content: `content/harvest/*` · `content/worlds/seed-deployments.json` · [SEED_WORLD_DEPLOY.md](./SEED_WORLD_DEPLOY.md) |
 | **Dodge / timed roll** | **X** (or double-tap A/D) | Elden Ring–style directional **roll** (F/B/L/R clips), jump→roll hop + blend, afterimage/dust, **~0.5s i-frames** (`iframe` 0.06–0.56s). No move input → **back-roll**. |
 | **MM lunge** | Skills / AI `unique_movement` | `Controller.dash` + pack `lungeSpeed`/`lungeDuration`; `dashDistance` param |
 | **Pushback** | Hits / block | `applyImpulse` + `skillForce` / `outcomeForceScale` |

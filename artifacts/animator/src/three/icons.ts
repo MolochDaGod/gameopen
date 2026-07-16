@@ -62,6 +62,7 @@ export const WEAPON_ICON: Record<WeaponId, IconName> = {
   pistol: "stop",
   rifle: "defend",
   "hunter-rifle": "scout",
+  shotgun: "siege",
   javelin: "patrol",
   shield: "guard",
 };

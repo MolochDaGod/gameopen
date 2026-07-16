@@ -150,11 +150,11 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Meteor", "meteor", -100],
     ["power", "Inferno", "nova", -95],
   ]),
-  staffIce: kit("staffIce", "Arcane Staff", [
-    ["combo", "Frostbolt", "bolt", -70],
-    ["special", "Ice Nova", "nova", -85],
-    ["ranged", "Icicle Barrage", "bolt", -100],
-    ["power", "Blizzard", "nova", -95],
+  staffIce: kit("staffIce", "Ice Staff", [
+    ["combo", "Ice Spline", "bolt", -70],
+    ["special", "Ice Wall", "slam", 55],
+    ["ranged", "Frost Shell", "bolt", -40],
+    ["power", "Blizzard", "nova", -100],
   ]),
   staffStorm: kit("staffStorm", "Arcane Staff", [
     ["combo", "Spark", "bolt", -70],
@@ -174,23 +174,30 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Holy Lance", "bolt", -100],
     ["power", "Judgement", "nova", -95],
   ]),
-  pistol: kit("pistol", "Pistol", [
-    ["combo", "Double Tap", "muzzle", -70],
-    ["special", "Fan Fire", "muzzle", -85],
-    ["ranged", "Trick Shot", "muzzle", -100],
-    ["power", "Mag Dump", "muzzle", -95],
+  // Class GUN — labels/kind from arsenal/gunClass (6 tiers each elsewhere).
+  pistol: kit("pistol", "Revolver", [
+    ["combo", "Quick Draw", "muzzle", -70],
+    ["special", "Smoke Phantom", "muzzle", -85],
+    ["ranged", "Dive Kick", "slam", 70],
+    ["power", "Hexaring Beam", "laser", -95],
   ]),
   rifle: kit("rifle", "Rifle", [
-    ["combo", "Burst", "muzzle", -70],
-    ["special", "Suppress", "muzzle", -85],
-    ["ranged", "Long Shot", "muzzle", -100],
-    ["power", "High Explosive", "slam", -95],
+    ["combo", "3-Round Burst", "muzzle", -70],
+    ["special", "Deploy Turret", "turret", -85],
+    ["ranged", "Combat Vault", "muzzle", 55],
+    ["power", "Heavy Turret", "turret", -95],
   ]),
-  "hunter-rifle": kit("hunter-rifle", "Rifle", [
-    ["combo", "Hunter Burst", "muzzle", -70],
+  "hunter-rifle": kit("hunter-rifle", "Sniper Rifle", [
+    ["combo", "Marked Burst", "muzzle", -70],
     ["special", "Marked Shot", "muzzle", -85],
-    ["ranged", "Sniper", "muzzle", -100],
-    ["power", "Explosive Round", "slam", -95],
+    ["ranged", "Vault Shot", "muzzle", 55],
+    ["power", "Heavy Turret", "turret", -95],
+  ]),
+  shotgun: kit("shotgun", "Shotgun", [
+    ["combo", "Pump Chain", "muzzle", -40],
+    ["special", "Slug Piercer", "muzzle", -70],
+    ["ranged", "Combat Vault", "muzzle", 60],
+    ["power", "Dragon Breath", "nova", -90],
   ]),
   shield: kit("shield", "Tower Shield", [
     ["combo", "Shield Bash Combo", "slam", 70],
@@ -211,11 +218,11 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["power", "Lion Heart", "nova", 100],
   ]),
   // uMMORPG / master-weaponSkills families
-  crossbow: kit("crossbow", "Crossbow", [
-    ["combo", "Heavy Bolt", "muzzle", -70],
-    ["special", "Piercing Bolt", "muzzle", -85],
-    ["ranged", "Volley", "muzzle", -100],
-    ["power", "Sweeping Bolt", "slam", -95],
+  crossbow: kit("crossbow", "Heavy Crossbow", [
+    ["combo", "Scatter Bolt", "muzzle", -55],
+    ["special", "Explosive Burst", "slam", -70],
+    ["ranged", "Caltrop Trap", "nova", 40],
+    ["power", "Sweeping Barrage", "nova", -90],
   ]),
   wand: kit("wand", "Wand", [
     ["combo", "Magic Missile", "bolt", -70],

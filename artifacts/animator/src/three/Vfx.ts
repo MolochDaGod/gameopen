@@ -61,13 +61,35 @@ const THEME: Record<SkillKind, number> = {
 const MODEL_VFX = {
   dragon: ["models/vfx/dragon.glb", 2.4],
   meteor: ["models/vfx/meteor.glb", 1.8],
+  /** Classic / pack turret (liked chassis for heavy deploy / kiter). */
   turret: ["models/vfx/turret.glb", 1.4],
+  /**
+   * Animated game-ready turret (`idle` / `attack` / `destroy`) — skill 2 medium
+   * deploy for rifles; barrel node `Turret` aims at hostiles.
+   */
+  turretGameReady: ["models/vfx/turret-game-ready.glb", 1.15],
   elementalSwords: ["models/vfx/elemental-swords.glb", 2.2],
   soul: ["models/vfx/soul.glb", 1.1],
   laser: ["models/vfx/burst-laser.glb", 1.6],
   // The javelin weapon's GLB doubles as its thrown-projectile base mesh.
   javelin: ["models/weapons/javelin.glb", 1.7],
 } as const satisfies Record<string, readonly [string, number]>;
+
+/** Which turret chassis a deploy should use. */
+export type TurretVariant = "classic" | "gameReady";
+
+/**
+ * Live handle for a deployed turret — aim barrel, sample muzzle, drive attack
+ * anims. Studio owns damage timing; Vfx owns mesh + mixer.
+ */
+export interface TurretHandle {
+  dispose: () => void;
+  muzzleWorld: () => THREE.Vector3;
+  aimAt: (worldTarget: THREE.Vector3) => void;
+  playAttack: () => void;
+  playDestroy: () => void;
+  readonly alive: boolean;
+}
 
 /** Toxic-green acid palette for the Mimic's lob + AoE burst. */
 const ACID_CORE = 0xeaffb0;
@@ -98,6 +120,8 @@ export class Vfx {
   private modelTpls = new Map<string, THREE.Object3D>();
   /** Paths whose load is in flight, so we don't double-fetch a template. */
   private modelLoading = new Set<string>();
+  /** Animation clips keyed by the same path as {@link modelTpls}. */
+  private modelAnims = new Map<string, THREE.AnimationClip[]>();
 
   // ---- GPU flame system (continuous trail + impact explode) ----
   /** Shared uniforms driving the trailing-flame shader (live-tunable). */
@@ -365,6 +389,13 @@ export class Vfx {
         /* optional prop */
       }
     }
+    // Preload both turret chassis so skill 2 / 4 deploys never miss the first cast.
+    {
+      const classic = this.turretSpec("classic");
+      this.ensureModel(classic.path, classic.size, classic.alts);
+      const gr = this.turretSpec("gameReady");
+      this.ensureModel(gr.path, gr.size, gr.alts);
+    }
   }
 
   private add(e: Effect) {
@@ -380,14 +411,15 @@ export class Vfx {
    * caller can fall back to a procedural primitive for that cast — combat never
    * blocks on a heavy model download.
    */
-  private ensureModel(path: string, size: number): THREE.Object3D | null {
+  private ensureModel(path: string, size: number, altPaths: string[] = []): THREE.Object3D | null {
     const got = this.modelTpls.get(path);
     if (got) return got;
     if (!this.modelLoading.has(path)) {
       this.modelLoading.add(path);
+      const candidates = [path, ...altPaths];
       void Promise.all([import("./assets"), import("./loaders/gltf")])
         .then(([{ loadGltfFirst }, { sharedGltfLoader }]) =>
-          loadGltfFirst(path, sharedGltfLoader()),
+          loadGltfFirst(candidates, sharedGltfLoader()),
         )
         .then((g) => {
           if (this.disposed) return;
@@ -397,6 +429,10 @@ export class Vfx {
           const max = Math.max(sz.x, sz.y, sz.z) || 1;
           g.scene.scale.multiplyScalar(size / max);
           this.modelTpls.set(path, g.scene);
+          // Keep clips for animated turrets (idle / attack / destroy).
+          if (g.animations?.length) {
+            this.modelAnims.set(path, g.animations.slice());
+          }
         })
         .catch(() => {
           /* optional model — procedural fallback stays in play */
@@ -404,6 +440,78 @@ export class Vfx {
         .finally(() => this.modelLoading.delete(path));
     }
     return null;
+  }
+
+  /** Resolve chassis path + display size for a turret variant. */
+  private turretSpec(variant: TurretVariant = "classic"): {
+    path: string;
+    size: number;
+    alts: string[];
+  } {
+    if (variant === "gameReady") {
+      return {
+        path: MODEL_VFX.turretGameReady[0],
+        size: MODEL_VFX.turretGameReady[1],
+        alts: [],
+      };
+    }
+    return {
+      path: MODEL_VFX.turret[0],
+      size: MODEL_VFX.turret[1],
+      // Prefer classic pack; fall back to game-ready animated chassis if missing.
+      alts: [MODEL_VFX.turretGameReady[0]],
+    };
+  }
+
+  /**
+   * Find a child mesh/bone whose name matches a gun head / barrel for aim.
+   * Game-ready pack uses `Turret`; classic packs vary — fall back to root.
+   */
+  private findTurretAimNode(root: THREE.Object3D): THREE.Object3D {
+    let found: THREE.Object3D | null = null;
+    root.traverse((o) => {
+      if (found) return;
+      const n = (o.name || "").toLowerCase();
+      if (
+        n === "turret" ||
+        n.includes("barrel") ||
+        n.includes("gun") ||
+        n.includes("cannon") ||
+        n.includes("head")
+      ) {
+        found = o;
+      }
+    });
+    return found ?? root;
+  }
+
+  /** Approximate muzzle world position on a turret chassis. */
+  private turretMuzzleWorld(root: THREE.Object3D, aimNode: THREE.Object3D): THREE.Vector3 {
+    const p = new THREE.Vector3();
+    aimNode.getWorldPosition(p);
+    // Lift slightly and push along local +Z of aim node (barrel out).
+    const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(aimNode.getWorldQuaternion(new THREE.Quaternion()));
+    if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    p.addScaledVector(fwd, 0.35);
+    p.y = Math.max(p.y, root.position.y + 0.55);
+    return p;
+  }
+
+  /** Tint cloned materials toward a weapon / skill color (guns keep identity). */
+  private tintTurretMats(mats: THREE.Material[], color: number) {
+    const c = new THREE.Color(color);
+    for (const m of mats) {
+      const any = m as THREE.MeshStandardMaterial & THREE.MeshBasicMaterial;
+      if ("color" in any && any.color) {
+        // Soft blend so albedo still reads; emissive gets the gun accent.
+        any.color.lerp(c, 0.35);
+      }
+      if ("emissive" in any && any.emissive) {
+        any.emissive.copy(c);
+        any.emissiveIntensity = Math.max(any.emissiveIntensity ?? 0, 0.45);
+      }
+    }
   }
 
   /**
@@ -829,21 +937,40 @@ export class Vfx {
     });
   }
 
-  /** Deploy a turret ahead of the caster that muzzle-flashes a burst of shots. */
-  castTurret(from: THREE.Vector3, dir: THREE.Vector3, color = THEME.turret, onHit?: (p: THREE.Vector3) => void) {
-    const [path, size] = MODEL_VFX.turret;
+  /** Deploy a short-lived turret ahead of the caster that muzzle-flashes shots. */
+  castTurret(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    color = THEME.turret,
+    onHit?: (p: THREE.Vector3) => void,
+    variant: TurretVariant = "classic",
+  ) {
+    const spec = this.turretSpec(variant);
+    const path = spec.path;
+    const size = spec.size;
     const ground = dir.clone().setY(0).normalize();
     const base = from.clone().addScaledVector(ground, 1.5);
     base.y = 0;
-    const tpl = this.ensureModel(path, size);
+    const tpl = this.ensureModel(path, size, spec.alts);
     if (!tpl) {
       this.muzzle(from.clone().setY(from.y + 1), ground, color);
       onHit?.(base);
       return;
     }
     const { obj, mats } = this.cloneModelInstance(tpl);
+    this.tintTurretMats(mats, color);
     obj.position.copy(base);
     obj.lookAt(base.clone().add(ground));
+    const aimNode = this.findTurretAimNode(obj);
+    const clips = this.modelAnims.get(path) ?? [];
+    const mixer = clips.length ? new THREE.AnimationMixer(obj) : undefined;
+    const idleClip = clips.find((c) => /idle/i.test(c.name)) ?? clips[0];
+    const attackClip = clips.find((c) => /attack|fire|shoot/i.test(c.name));
+    if (mixer && idleClip) {
+      const a = mixer.clipAction(idleClip);
+      a.setLoop(THREE.LoopRepeat, Infinity);
+      a.play();
+    }
     const life = 2.4;
     let shots = 0;
     this.add({
@@ -853,6 +980,7 @@ export class Vfx {
       geos: [],
       mats,
       shared: true,
+      mixer,
       update: (e) => {
         const t = e.age / e.life;
         const fade = t < 0.15 ? t / 0.15 : t > 0.8 ? 1 - (t - 0.8) / 0.2 : 1;
@@ -860,7 +988,15 @@ export class Vfx {
         const want = Math.floor(e.age / 0.4);
         if (want > shots) {
           shots = want;
-          this.muzzle(obj.position.clone().setY(obj.position.y + 1), ground, color);
+          if (mixer && attackClip) {
+            const atk = mixer.clipAction(attackClip);
+            atk.reset();
+            atk.setLoop(THREE.LoopOnce, 1);
+            atk.clampWhenFinished = true;
+            atk.play();
+          }
+          const muz = this.turretMuzzleWorld(obj, aimNode);
+          this.muzzle(muz, ground, color);
         }
       },
     });
@@ -868,31 +1004,81 @@ export class Vfx {
   }
 
   /**
-   * Spawn a deployed turret model that stands for `life` seconds (fades in/out).
-   * Unlike {@link castTurret} this is purely the standing chassis — its firing,
-   * muzzle flashes and projectiles are driven by the Studio (which owns enemy
-   * positions and damage), so the deployed turret can actually shoot targets.
+   * Spawn a deployed turret chassis that stands for `life` seconds.
+   * Returns a handle so Studio can aim the barrel, play attack clips, and
+   * sample a correct muzzle for timed volleys.
+   *
+   * - `classic` — models/vfx/turret.glb (liked pack chassis; heavy / skill 4)
+   * - `gameReady` — animated idle/attack/destroy (skill 2 medium deploy)
    */
   spawnTurret(
     at: THREE.Vector3,
     faceDir: THREE.Vector3,
     color = THEME.turret,
     life = 6,
-  ): () => void {
-    const [path, size] = MODEL_VFX.turret;
+    variant: TurretVariant = "classic",
+  ): TurretHandle {
+    const spec = this.turretSpec(variant);
+    const path = spec.path;
+    const size = spec.size;
     const base = at.clone();
     base.y = 0;
     const ground = faceDir.clone().setY(0);
     if (ground.lengthSq() < 1e-4) ground.set(0, 0, 1);
     ground.normalize();
-    const tpl = this.ensureModel(path, size);
+    // Warm the template; may be null on first frame.
+    this.ensureModel(path, size, spec.alts);
+    const tpl = this.modelTpls.get(path) ?? null;
     if (!tpl) {
       this.nova(base.clone().setY(1), color);
-      return () => {};
+      // Retry once template loads: spawn a delayed chassis.
+      const retry: TurretHandle = {
+        dispose: () => {},
+        muzzleWorld: () => base.clone().setY(1.1),
+        aimAt: () => {},
+        playAttack: () => {},
+        playDestroy: () => {},
+        get alive() {
+          return false;
+        },
+      };
+      // Soft pulse while waiting for model
+      this.auraRing(base.clone().setY(0.05), color, 1.2, 0.8);
+      return retry;
     }
     const { obj, mats } = this.cloneModelInstance(tpl);
+    this.tintTurretMats(mats, color);
     obj.position.copy(base);
     obj.lookAt(base.clone().add(ground));
+    const aimNode = this.findTurretAimNode(obj);
+    const clips = this.modelAnims.get(path) ?? [];
+    const mixer = clips.length ? new THREE.AnimationMixer(obj) : undefined;
+    let idleAction: THREE.AnimationAction | null = null;
+    let attackAction: THREE.AnimationAction | null = null;
+    let destroyAction: THREE.AnimationAction | null = null;
+    if (mixer) {
+      const idleClip = clips.find((c) => /idle/i.test(c.name)) ?? clips[0];
+      const attackClip = clips.find((c) => /attack|fire|shoot/i.test(c.name));
+      const destroyClip = clips.find((c) => /destroy|death|die/i.test(c.name));
+      if (idleClip) {
+        idleAction = mixer.clipAction(idleClip);
+        idleAction.setLoop(THREE.LoopRepeat, Infinity);
+        idleAction.play();
+      }
+      if (attackClip) {
+        attackAction = mixer.clipAction(attackClip);
+        attackAction.setLoop(THREE.LoopOnce, 1);
+        attackAction.clampWhenFinished = true;
+      }
+      if (destroyClip) {
+        destroyAction = mixer.clipAction(destroyClip);
+        destroyAction.setLoop(THREE.LoopOnce, 1);
+        destroyAction.clampWhenFinished = true;
+      }
+    }
+
+    let disposed = false;
+    const face = ground.clone();
     const effect: Effect = {
       obj,
       age: 0,
@@ -900,22 +1086,85 @@ export class Vfx {
       geos: [],
       mats,
       shared: true,
+      mixer,
       update: (e) => {
         const t = e.age / e.life;
-        const fade = t < 0.1 ? t / 0.1 : t > 0.85 ? 1 - (t - 0.85) / 0.15 : 1;
+        // Fade in / out; hold solid mid-life
+        const fade = t < 0.08 ? t / 0.08 : t > 0.88 ? 1 - (t - 0.88) / 0.12 : 1;
         for (const m of mats) m.opacity = fade;
+        // Keep stand facing last aim yaw (XZ)
+        if (face.lengthSq() > 1e-6) {
+          const look = obj.position.clone().add(face);
+          look.y = obj.position.y;
+          obj.lookAt(look);
+        }
+        // Late life: play destroy if available once
+        if (t > 0.88 && destroyAction && !destroyAction.isRunning()) {
+          idleAction?.fadeOut(0.08);
+          destroyAction.reset().fadeIn(0.06).play();
+        }
       },
     };
     this.add(effect);
-    // Disposer: remove the chassis early (caster death / scene clear). No-ops if
-    // the effect already aged out and was swept by update().
-    return () => {
-      const i = this.effects.indexOf(effect);
-      if (i >= 0) {
-        this.free(effect);
-        this.effects.splice(i, 1);
-      }
+
+    const handle: TurretHandle = {
+      dispose: () => {
+        if (disposed) return;
+        disposed = true;
+        const i = this.effects.indexOf(effect);
+        if (i >= 0) {
+          this.free(effect);
+          this.effects.splice(i, 1);
+        }
+      },
+      muzzleWorld: () => this.turretMuzzleWorld(obj, aimNode),
+      aimAt: (worldTarget: THREE.Vector3) => {
+        if (disposed) return;
+        const to = worldTarget.clone().sub(obj.position);
+        to.y = 0;
+        if (to.lengthSq() < 1e-6) return;
+        to.normalize();
+        face.copy(to);
+        // Rotate only the gun head if it's a distinct child; else whole chassis.
+        if (aimNode !== obj) {
+          const headTarget = worldTarget.clone();
+          // Keep pitch modest so the gun doesn't nose-dive into the ground
+          const local = aimNode.parent
+            ? aimNode.parent.worldToLocal(headTarget.clone())
+            : headTarget;
+          aimNode.lookAt(local);
+        } else {
+          const look = obj.position.clone().add(to);
+          look.y = obj.position.y;
+          obj.lookAt(look);
+        }
+      },
+      playAttack: () => {
+        if (disposed || !attackAction) return;
+        idleAction?.crossFadeTo(attackAction, 0.05, false);
+        attackAction.reset();
+        attackAction.setEffectiveWeight(1);
+        attackAction.play();
+        // Return to idle after attack
+        const dur = attackAction.getClip().duration || 0.4;
+        window.setTimeout(() => {
+          if (disposed || !idleAction || !attackAction) return;
+          attackAction.crossFadeTo(idleAction, 0.1, false);
+          idleAction.enabled = true;
+          idleAction.play();
+        }, dur * 1000);
+      },
+      playDestroy: () => {
+        if (disposed || !destroyAction) return;
+        idleAction?.fadeOut(0.08);
+        attackAction?.fadeOut(0.05);
+        destroyAction.reset().play();
+      },
+      get alive() {
+        return !disposed && effect.age < effect.life;
+      },
     };
+    return handle;
   }
 
   /** Rain an elemental-sword cluster down onto a point ahead of the caster. */
@@ -1121,6 +1370,45 @@ export class Vfx {
   }
 
   /**
+   * Fire aura damage indication — same building blocks as skill fire prefabs:
+   *   castAura (telegraph ring) + rising flame column + fireBurst + GPU impactExplode.
+   *
+   * Used on take-damage / connect impact so hits read as the familiar fire-skill
+   * aura, not a flat spark. `scale` ~0.6 light chip, ~1.0 standard, ~1.4 heavy.
+   * `theme` selects fire vs chi palette (matches Striker / impactExplode).
+   */
+  fireAura(
+    pos: THREE.Vector3,
+    scale = 1,
+    theme?: FireTheme,
+    opts?: { groundOnly?: boolean; life?: number },
+  ) {
+    if (this.disposed) return;
+    const s = Math.max(0.35, scale);
+    const fireCol = THEME.fireDragon;
+    const mid = (theme ?? this.fireTheme) === "chi" ? 0x88c8ff : 0xff6a1e;
+    const ground = new THREE.Vector3(pos.x, 0.05, pos.z);
+    const chest = pos.clone();
+    if (chest.y < 0.4) chest.y = 0.95;
+
+    // Skill-style cast aura telegraph (ground rings)
+    this.castAura(chest, mid);
+    this.auraRing(ground, fireCol, 1.35 * s, opts?.life ?? 0.55);
+
+    // Rising flame column (StatusFx "burning" rise language, one-shot)
+    this.flame(chest.clone().setY(chest.y * 0.45), mid, Math.round(18 * s), 2.2 * s);
+    this.flame(chest, 0xffd27a, Math.round(10 * s), 1.6 * s);
+
+    // Hot fire puff + GPU explosion burst (same as skill impact path)
+    this.fireBurst(chest, new THREE.Vector3(0, 1, 0), 1.4 * s);
+    if (!opts?.groundOnly) {
+      this.impactExplode(chest, theme ?? this.fireTheme);
+      this.impactFlash(chest, fireCol);
+    }
+    this.smokePop(chest, mid, 0.7 * s);
+  }
+
+  /**
    * A blended impact: several effects layered so a hit reads with weight —
    * ground shockwave + scorch ring + radial spark burst + hot flash + smoke
    * puff, all tinted to the spell colour. `up` adds an extra vertical fire
@@ -1134,6 +1422,8 @@ export class Vfx {
     this.impactFlash(pos, color);
     this.smokePop(pos, color, scale);
     this.fireBurst(pos, up ? new THREE.Vector3(0, 1, 0) : undefined, 2.4 * scale);
+    // Fire skill aura read on heavy impacts
+    this.fireAura(pos, 0.75 * scale, undefined, { groundOnly: true });
   }
 
   /**
@@ -1804,6 +2094,171 @@ export class Vfx {
     });
   }
 
+  /**
+   * Charged / enhanced bullet — soft blended ShaderMaterial core + elongated
+   * additive trail + particle ribbon. Used by multi-part gun / xbow skills and
+   * LMB gun rounds for a premium “energy slug” read.
+   */
+  chargedBolt(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    color = 0xfff2a8,
+    speed = 48,
+    range = 22,
+    onHit?: (p: THREE.Vector3) => void,
+    scale = 1.25,
+  ) {
+    const group = new THREE.Group();
+    const d = dir.clone().normalize();
+    const c = new THREE.Color(color);
+
+    // Soft radial falloff slug (blended shader — not a hard sphere silhouette).
+    const coreGeo = new THREE.SphereGeometry(0.22 * scale, 16, 16);
+    const coreMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uColor: { value: c.clone() },
+        uCore: { value: new THREE.Color(0xffffff) },
+        uTime: { value: 0 },
+        uIntensity: { value: 1.15 },
+      },
+      vertexShader: `
+        varying vec3 vN;
+        varying vec3 vV;
+        void main() {
+          vN = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vV = normalize(-mv.xyz);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform vec3 uCore;
+        uniform float uTime;
+        uniform float uIntensity;
+        varying vec3 vN;
+        varying vec3 vV;
+        void main() {
+          float fres = pow(1.0 - max(dot(vN, vV), 0.0), 2.2);
+          float pulse = 0.85 + 0.15 * sin(uTime * 28.0);
+          vec3 col = mix(uCore, uColor, 0.55 + fres * 0.35) * uIntensity * pulse;
+          float a = (0.55 + fres * 0.45) * pulse;
+          gl_FragColor = vec4(col, a);
+        }
+      `,
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+
+    const shellGeo = new THREE.SphereGeometry(0.38 * scale, 14, 14);
+    const shellMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const shell = new THREE.Mesh(shellGeo, shellMat);
+
+    const trailGeo = new THREE.CylinderGeometry(0.03 * scale, 0.2 * scale, 1.35 * scale, 12, 1, true);
+    const trailMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const trail = new THREE.Mesh(trailGeo, trailMat);
+    trail.rotation.x = Math.PI / 2;
+    trail.position.z = 0.7 * scale;
+
+    // Thin corona ring for “charged” read
+    const ringGeo = new THREE.TorusGeometry(0.2 * scale, 0.025 * scale, 6, 20);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.y = Math.PI / 2;
+
+    group.add(shell, core, trail, ring);
+    group.position.copy(from);
+    group.lookAt(from.clone().add(d));
+
+    const life = range / speed;
+    this.add({
+      obj: group,
+      age: 0,
+      life,
+      geos: [coreGeo, shellGeo, trailGeo, ringGeo],
+      mats: [coreMat, shellMat, trailMat, ringMat],
+      update: (e, dt) => {
+        group.position.addScaledVector(d, speed * dt);
+        coreMat.uniforms.uTime.value = e.age;
+        const pulse = 0.85 + Math.sin(e.age * 42) * 0.2;
+        core.scale.setScalar(pulse);
+        shell.scale.setScalar(1.05 + Math.sin(e.age * 28) * 0.12);
+        shellMat.opacity = 0.22 + pulse * 0.12;
+        ring.rotation.z += dt * 14;
+        ringMat.opacity = 0.35 + pulse * 0.25;
+        trail.scale.y = 0.9 + pulse * 0.25;
+        // Soft spark ribbon (blended particle crumbs)
+        if (Math.random() < 0.62) {
+          this.burst(group.position.clone(), color, 2, 0.85 * scale);
+        }
+        if (e.age + dt >= e.life && onHit) {
+          onHit(group.position.clone());
+          this.impactFlash(group.position.clone(), color);
+          this.fireAura(group.position.clone(), 0.7 * scale);
+          onHit = undefined;
+        }
+      },
+    });
+  }
+
+  /**
+   * Skill charge build-up at a point (muzzle / hand): cast aura + rising motes +
+   * soft hex spin + inward-pull sparks — used before beams / charged bolts.
+   */
+  skillCharge(pos: THREE.Vector3, color = 0x9fd8ff, scale = 1, life = 0.45) {
+    this.castAura(pos, color);
+    this.auraRing(new THREE.Vector3(pos.x, 0.05, pos.z), color, 1.1 * scale, life);
+    this.burst(pos, color, Math.round(14 * scale), 2.2 * scale);
+    this.hexaring(() => pos.clone(), color, life);
+    // Expanding charge shell (reads as “power building”)
+    const geo = new THREE.SphereGeometry(0.35 * scale, 14, 14);
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      wireframe: true,
+    });
+    const shell = new THREE.Mesh(geo, mat);
+    shell.position.copy(pos);
+    this.add({
+      obj: shell,
+      age: 0,
+      life: Math.max(0.2, life),
+      geos: [geo],
+      mats: [mat],
+      update: (e) => {
+        const t = e.age / e.life;
+        shell.scale.setScalar(0.6 + t * 1.6);
+        mat.opacity = 0.55 * (1 - t);
+        shell.rotation.y += 0.08;
+        shell.rotation.x += 0.04;
+      },
+    });
+  }
+
   /** Quick flash at the muzzle plus a few bolts. */
   muzzle(pos: THREE.Vector3, dir: THREE.Vector3, color = 0xfff2a8) {
     const geo = new THREE.SphereGeometry(0.18, 8, 8);
@@ -2105,6 +2560,324 @@ export class Vfx {
             this.impactFlash(to.clone(), color);
             onHit?.(to.clone());
           }
+        }
+      },
+    });
+  }
+
+  /**
+   * Spinning disc under a hovering caster's feet — style varies by staff school
+   * (arcane runes, wind swirl, nature bloom, holy radiance, fire embers).
+   * Short-lived pulse; call on a throttle while hovering for a sustained look.
+   */
+  hoverFootDisc(
+    pos: THREE.Vector3,
+    color = 0xb98cff,
+    style: "arcane" | "wind" | "storm" | "nature" | "holy" | "fire" = "arcane",
+  ) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      map: ringTexture(),
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const disc = new THREE.Mesh(unitGroundPlane(), mat);
+    disc.position.y = 0.04;
+    disc.scale.setScalar(style === "wind" ? 1.35 : 1.1);
+    group.add(disc);
+
+    // Inner accent ring (arcane / holy get a tighter core)
+    if (style === "arcane" || style === "holy" || style === "nature") {
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: style === "holy" ? 0xfff6c8 : style === "nature" ? 0xc8ffb0 : 0xe8d0ff,
+        map: ringTexture(),
+        transparent: true,
+        opacity: 0.55,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const core = new THREE.Mesh(unitGroundPlane(), coreMat);
+      core.position.y = 0.05;
+      core.scale.setScalar(0.55);
+      group.add(core);
+    }
+
+    // Wind: vertical soft columns that suggest a vortex
+    const extraMats: THREE.Material[] = [mat];
+    if (style === "wind" || style === "storm") {
+      for (let i = 0; i < 3; i++) {
+        const ang = (i / 3) * Math.PI * 2;
+        const streak = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.12, 0.55),
+          new THREE.MeshBasicMaterial({
+            color,
+            transparent: true,
+            opacity: 0.35,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          }),
+        );
+        streak.position.set(Math.cos(ang) * 0.45, 0.28, Math.sin(ang) * 0.45);
+        streak.rotation.y = -ang;
+        group.add(streak);
+        extraMats.push(streak.material as THREE.Material);
+      }
+    }
+
+    group.position.set(pos.x, 0, pos.z);
+    const spin = style === "wind" || style === "storm" ? 9 : style === "fire" ? 6 : 4;
+    this.add({
+      obj: group,
+      age: 0,
+      life: 0.28,
+      geos: [],
+      mats: extraMats,
+      sharedMaps: true,
+      update: (e) => {
+        const t = e.age / e.life;
+        group.rotation.y += spin * 0.016;
+        const s = 0.9 + t * 0.55 + (style === "wind" ? Math.sin(e.age * 20) * 0.06 : 0);
+        disc.scale.setScalar(s * (style === "wind" ? 1.35 : 1.1));
+        mat.opacity = 0.85 * (1 - t);
+        for (const m of extraMats) {
+          if (m !== mat) (m as THREE.MeshBasicMaterial).opacity = 0.4 * (1 - t);
+        }
+      },
+    });
+
+    if (style === "fire") {
+      this.burst(pos.clone().setY(0.15), color, 6, 1.4);
+    }
+  }
+
+  /**
+   * Ice wall slab between two ground points (or in front of the caster).
+   * Semi-transparent cyan crystal barrier that fades after `life` seconds.
+   */
+  iceWall(a: THREE.Vector3, b: THREE.Vector3, color = 0x9fdcff, life = 3.2) {
+    const mid = a.clone().lerp(b, 0.5);
+    mid.y = 0;
+    const dir = new THREE.Vector3(b.x - a.x, 0, b.z - a.z);
+    const len = Math.max(1.2, dir.length());
+    if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+    else dir.normalize();
+    const width = Math.min(4.5, Math.max(2.2, len * 0.85));
+    const height = 2.4;
+    const depth = 0.35;
+
+    const geo = new THREE.BoxGeometry(width, height, depth);
+    const mat = new THREE.MeshPhysicalMaterial({
+      color,
+      transparent: true,
+      opacity: 0.55,
+      roughness: 0.15,
+      metalness: 0.05,
+      transmission: 0.45,
+      thickness: 0.6,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const wall = new THREE.Mesh(geo, mat);
+    wall.position.set(mid.x, height * 0.5, mid.z);
+    wall.rotation.y = Math.atan2(dir.x, dir.z) + Math.PI / 2;
+
+    // Ground frost line under the wall
+    this.shockwave(mid.clone().setY(0.02), color, width * 0.55, 0.55);
+
+    this.add({
+      obj: wall,
+      age: 0,
+      life,
+      geos: [geo],
+      mats: [mat],
+      update: (e) => {
+        const t = e.age / e.life;
+        // Grow in quickly, hold, then shatter-fade
+        if (t < 0.12) {
+          wall.scale.y = t / 0.12;
+          mat.opacity = 0.55 * (t / 0.12);
+        } else if (t > 0.75) {
+          const fade = 1 - (t - 0.75) / 0.25;
+          mat.opacity = 0.55 * fade;
+          wall.scale.y = 0.85 + 0.15 * fade;
+        } else {
+          wall.scale.y = 1;
+          mat.opacity = 0.55;
+        }
+      },
+    });
+  }
+
+  /**
+   * Frozen shell / ice statue left behind when the ice mage clones-and-dodges.
+   * Reads as a translucent humanoid ice shell (capsule + shoulders).
+   */
+  frozenShell(pos: THREE.Vector3, color = 0x9fdcff, life = 2.8): THREE.Group {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshPhysicalMaterial({
+      color,
+      transparent: true,
+      opacity: 0.5,
+      roughness: 0.12,
+      metalness: 0.08,
+      transmission: 0.5,
+      thickness: 0.8,
+      depthWrite: false,
+    });
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.9, 6, 12), mat);
+    body.position.y = 0.95;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), mat.clone());
+    head.position.y = 1.7;
+    const shardGeo = new THREE.ConeGeometry(0.12, 0.45, 5);
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      const shard = new THREE.Mesh(shardGeo, mat.clone());
+      shard.position.set(Math.cos(ang) * 0.4, 0.9 + (i % 2) * 0.3, Math.sin(ang) * 0.4);
+      shard.rotation.z = Math.cos(ang) * 0.4;
+      shard.rotation.x = Math.sin(ang) * 0.4;
+      group.add(shard);
+    }
+    group.add(body, head);
+    group.position.set(pos.x, 0, pos.z);
+
+    this.shockwave(pos.clone().setY(0.03), color, 1.4, 0.4);
+
+    const mats: THREE.Material[] = [mat];
+    group.traverse((o) => {
+      const m = (o as THREE.Mesh).material;
+      if (m) mats.push(...(Array.isArray(m) ? m : [m]));
+    });
+
+    this.add({
+      obj: group,
+      age: 0,
+      life,
+      geos: [body.geometry, head.geometry, shardGeo],
+      mats,
+      update: (e) => {
+        const t = e.age / e.life;
+        if (t < 0.1) group.scale.setScalar(0.6 + 4 * t);
+        else if (t > 0.82) {
+          const fade = 1 - (t - 0.82) / 0.18;
+          for (const mm of mats) {
+            (mm as THREE.MeshPhysicalMaterial).opacity = 0.5 * fade;
+          }
+          group.scale.setScalar(1 + (1 - fade) * 0.4);
+        }
+      },
+    });
+    return group;
+  }
+
+  /** Expanding frost circle on the ground (freeze AoE telegraph + impact). */
+  frostGround(pos: THREE.Vector3, radius = 3.2, color = 0x9fdcff, life = 1.1) {
+    this.shockwave(pos.clone().setY(0.04), color, radius, life * 0.55);
+    // Icy particle bloom
+    this.burst(pos.clone().setY(0.2), color, Math.round(18 + radius * 4), 2.4);
+    this.puff(pos.clone().setY(0.12), 0xe8f7ff, 10, 1.2);
+
+    // Lingering frost plate
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      map: ringTexture(),
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const plate = new THREE.Mesh(unitGroundPlane(), mat);
+    plate.position.set(pos.x, 0.03, pos.z);
+    plate.scale.setScalar(radius * 1.6);
+    this.add({
+      obj: plate,
+      age: 0,
+      life,
+      geos: [],
+      mats: [mat],
+      sharedMaps: true,
+      update: (e) => {
+        const t = e.age / e.life;
+        mat.opacity = 0.4 * (1 - t);
+        plate.scale.setScalar(radius * (1.4 + t * 0.5));
+      },
+    });
+  }
+
+  /**
+   * Blizzard field: falling ice sparks over a ground radius + expanding frost rings.
+   * `onTick` fires a few times so combat can apply freeze damage over the duration.
+   */
+  blizzardField(
+    center: THREE.Vector3,
+    radius = 7,
+    color = 0x9fdcff,
+    life = 3.5,
+    onTick?: (p: THREE.Vector3, i: number) => void,
+  ) {
+    const c = center.clone();
+    c.y = 0;
+    this.frostGround(c, radius * 0.55, color, 0.8);
+    this.nova(c.clone().setY(0.6), color);
+
+    const count = 48;
+    const pos = new Float32Array(count * 3);
+    const vel: THREE.Vector3[] = [];
+    for (let i = 0; i < count; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = Math.random() * radius;
+      pos[i * 3] = c.x + Math.cos(ang) * r;
+      pos[i * 3 + 1] = 3.5 + Math.random() * 2.5;
+      pos[i * 3 + 2] = c.z + Math.sin(ang) * r;
+      vel.push(new THREE.Vector3((Math.random() - 0.5) * 0.6, -2.2 - Math.random() * 1.8, (Math.random() - 0.5) * 0.6));
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({
+      color,
+      size: 0.18,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    const pts = new THREE.Points(geo, mat);
+    let ticks = 0;
+    this.add({
+      obj: pts,
+      age: 0,
+      life,
+      geos: [geo],
+      mats: [mat],
+      update: (e, dt) => {
+        const arr = geo.attributes.position.array as Float32Array;
+        for (let i = 0; i < count; i++) {
+          arr[i * 3] += vel[i]!.x * dt;
+          arr[i * 3 + 1] += vel[i]!.y * dt;
+          arr[i * 3 + 2] += vel[i]!.z * dt;
+          if (arr[i * 3 + 1]! < 0.05) {
+            const ang = Math.random() * Math.PI * 2;
+            const r = Math.random() * radius;
+            arr[i * 3] = c.x + Math.cos(ang) * r;
+            arr[i * 3 + 1] = 3.2 + Math.random() * 2;
+            arr[i * 3 + 2] = c.z + Math.sin(ang) * r;
+          }
+        }
+        geo.attributes.position.needsUpdate = true;
+        mat.opacity = 0.9 * (1 - e.age / e.life * 0.5);
+        // Pulse combat ticks ~every 0.55s
+        const want = Math.floor(e.age / 0.55);
+        while (ticks <= want && ticks < 6) {
+          onTick?.(c.clone(), ticks);
+          ticks++;
+          if (ticks % 2 === 0) this.shockwave(c.clone().setY(0.04), color, radius * 0.7, 0.45);
         }
       },
     });
@@ -3180,7 +3953,8 @@ export class Vfx {
   /**
    * A sustained energy beam from `getOrigin()` along `getDir()` for `life`
    * seconds. Origin + direction are re-sampled every frame so the beam tracks the
-   * caster (used by the Hexaring Beam skill). Bright additive core + soft glow.
+   * caster (used by Hexaring Beam / multi-part plasma). Bright additive core +
+   * soft glow + outer corona + tip sparks.
    */
   beam(
     getOrigin: () => THREE.Vector3,
@@ -3189,8 +3963,9 @@ export class Vfx {
     length = 22,
     life = 1.5,
   ) {
-    const coreGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 12, 1, true);
-    const glowGeo = new THREE.CylinderGeometry(0.42, 0.42, 1, 16, 1, true);
+    const coreGeo = new THREE.CylinderGeometry(0.1, 0.1, 1, 12, 1, true);
+    const glowGeo = new THREE.CylinderGeometry(0.36, 0.36, 1, 16, 1, true);
+    const coronaGeo = new THREE.CylinderGeometry(0.62, 0.55, 1, 16, 1, true);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -3201,21 +3976,34 @@ export class Vfx {
     const glowMat = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const coronaMat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.18,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
     const group = new THREE.Group();
-    group.add(new THREE.Mesh(coreGeo, coreMat), new THREE.Mesh(glowGeo, glowMat));
+    group.add(
+      new THREE.Mesh(coreGeo, coreMat),
+      new THREE.Mesh(glowGeo, glowMat),
+      new THREE.Mesh(coronaGeo, coronaMat),
+    );
     const up = new THREE.Vector3(0, 1, 0);
+    let sparkAcc = 0;
     this.add({
       obj: group,
       age: 0,
       life,
-      geos: [coreGeo, glowGeo],
-      mats: [coreMat, glowMat],
-      update: (e) => {
+      geos: [coreGeo, glowGeo, coronaGeo],
+      mats: [coreMat, glowMat, coronaMat],
+      update: (e, dt) => {
         const o = getOrigin();
         const d = getDir().clone().normalize();
         group.position.copy(o.clone().addScaledVector(d, length / 2));
@@ -3224,7 +4012,15 @@ export class Vfx {
         const t = e.age / e.life;
         const pulse = 0.8 + Math.sin(e.age * 40) * 0.2;
         coreMat.opacity = (1 - t * 0.3) * pulse;
-        glowMat.opacity = 0.4 * (1 - t * 0.3) * pulse;
+        glowMat.opacity = 0.42 * (1 - t * 0.3) * pulse;
+        coronaMat.opacity = 0.16 * (1 - t * 0.45) * pulse;
+        // Tip motes along the beam for “charged continuous” feel
+        sparkAcc += dt;
+        if (sparkAcc > 0.04) {
+          sparkAcc = 0;
+          const tip = o.clone().addScaledVector(d, length * (0.55 + Math.random() * 0.4));
+          this.burst(tip, color, 2, 1.1);
+        }
       },
     });
   }

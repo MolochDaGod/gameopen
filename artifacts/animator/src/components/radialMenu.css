@@ -1,0 +1,121 @@
+/* Radial options wheel — combat / harvest / build */
+
+.radial-root {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.radial-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(6, 10, 20, 0.35) 0%, rgba(4, 6, 12, 0.72) 70%);
+  backdrop-filter: blur(3px);
+}
+
+.radial-wheel {
+  position: relative;
+  width: min(420px, 78vw);
+  height: min(420px, 78vw);
+  z-index: 1;
+  filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.55));
+}
+
+.radial-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.radial-wedge {
+  stroke-width: 0.45;
+  transition: fill 0.08s ease, stroke 0.08s ease, transform 0.08s ease;
+  cursor: pointer;
+}
+
+.radial-wedge.is-active {
+  stroke-width: 0.7;
+  filter: drop-shadow(0 0 4px var(--radial-accent, #7fb0ff));
+}
+
+.radial-hub {
+  fill: rgba(8, 12, 22, 0.92);
+  stroke: var(--radial-accent, #7fb0ff);
+  stroke-width: 0.8;
+}
+
+.radial-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  transition: transform 0.08s ease, color 0.08s ease;
+}
+
+.radial-label.is-active {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.radial-glyph {
+  font-size: clamp(16px, 3.2vw, 22px);
+  line-height: 1;
+}
+
+.radial-name {
+  font-size: clamp(9px, 1.6vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+}
+
+.radial-hint {
+  font-size: 9px;
+  opacity: 0.65;
+  letter-spacing: 0.04em;
+  font-family: ui-monospace, monospace;
+}
+
+.radial-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  gap: 4px;
+  padding: 12px;
+  text-align: center;
+}
+
+.radial-mode {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-family: "Rajdhani", system-ui, sans-serif;
+}
+
+.radial-focus {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8eefc;
+  letter-spacing: 0.04em;
+}
+
+.radial-tip {
+  font-size: 9px;
+  color: #7d8aa5;
+  letter-spacing: 0.04em;
+  max-width: 120px;
+  line-height: 1.3;
+}

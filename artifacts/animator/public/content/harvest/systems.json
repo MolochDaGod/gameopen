@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "label": "Voxel game systems design",
+  "notes": "Inclusive production design for harvest / craft / build — what each system does and how it connects.",
+  "pillars": [
+    {
+      "id": "gather-loop",
+      "name": "Gather loop",
+      "glyph": "⛏",
+      "summary": "Operations yield materials into the bag. Tools (hand, pick, axe, shovel, rod) map to node types.",
+      "inputs": ["World voxels", "Nodes", "Corpses"],
+      "outputs": ["Material bag", "Food", "Ore / wood / fiber"]
+    },
+    {
+      "id": "craft-loop",
+      "name": "Craft loop",
+      "glyph": "⚒",
+      "summary": "Stations consume bag mats and emit tools, kits, consumables. Recipes are content SSOT under content/harvest.",
+      "inputs": ["Bag materials", "Station tier", "Skill unlocks"],
+      "outputs": ["Tools", "Build kits", "Food / heals"]
+    },
+    {
+      "id": "build-loop",
+      "name": "Build loop",
+      "glyph": "▣",
+      "summary": "Place / wall / floor / ramp / door / station ops snap kits onto the voxel grid. Demolish refunds with skill.",
+      "inputs": ["Build kits", "Codex block types", "Grid snap"],
+      "outputs": ["Structures", "Stations in world", "Defenses"]
+    },
+    {
+      "id": "codex-ssot",
+      "name": "Mine-Loader Codex",
+      "glyph": "📘",
+      "summary": "Blocks (~250) and mechanics definitions are SSOT from Mine-Loader /api/blocks and /api/definitions. Item catalog is browse reference until inventory binds.",
+      "inputs": ["GET /api/blocks", "GET /api/definitions"],
+      "outputs": ["Place types cat:…", "Rarity / roles", "Mechanics prose"]
+    },
+    {
+      "id": "maps-library",
+      "name": "Maps & assets library",
+      "glyph": "🗺",
+      "summary": "Arenas, dungeon GLBs, forge scenes, voxel templates, and live Realms island. Promote path: Open voxel → interchange → Mine-Loader scene.",
+      "inputs": ["MAP_TEMPLATES", "public/models", "content/scenes"],
+      "outputs": ["Playtest maps", "Realms worlds", "Danger Room layouts"]
+    },
+    {
+      "id": "seed-worlds",
+      "name": "Seed worlds & portal dungeons",
+      "glyph": "🌱",
+      "summary": "Minecraft-like deployments: one seed regenerates the open overworld. Dungeons are only reached by finding portals in that seed world (not free teleport menus in production).",
+      "inputs": ["World seed", "chunkIdx", "content/worlds/seed-deployments.json", "portal plan"],
+      "outputs": ["Overworld + portal triggers", "Dungeon instances (mix seed)", "Share codes / Realms launch"]
+    },
+    {
+      "id": "skill-trees",
+      "name": "Skill trees",
+      "glyph": "🌳",
+      "summary": "Harvest, crafting, building, survival, explorer trees unlock ops depth and craft tiers. Local until /api/professions.",
+      "inputs": ["XP / unlock points", "Requires graph"],
+      "outputs": ["Faster channels", "New stations", "Refund rates"]
+    },
+    {
+      "id": "avatar-import",
+      "name": "Explorer & avatars",
+      "glyph": "👤",
+      "summary": "Fleet characters plus user-made cube heads from Avatar Edit / LED Mask import onto Explorer for harvest play.",
+      "inputs": ["GameSession characters", "ledmask:avatarConfig", "avatarEdit builds"],
+      "outputs": ["Explorer body", "Saved player head", "Identity continuity"]
+    },
+    {
+      "id": "mode-ux",
+      "name": "Mode UX",
+      "glyph": "🎮",
+      "summary": "Q cycles combat ↔ harvest ↔ build. Hold Tab radial picks ops. P opens this production shell. X dodge, C parry stay combat-safe.",
+      "inputs": ["Q", "Tab hold", "P", "LMB"],
+      "outputs": ["Activity mode", "Active tool", "Production UI"]
+    }
+  ],
+  "controls": [
+    { "key": "Q", "action": "Cycle combat → harvest → build" },
+    { "key": "Hold Tab", "action": "Radial tool wheel (mode-colored)" },
+    { "key": "P", "action": "Toggle production UI" },
+    { "key": "LMB", "action": "Use active harvest/build tool" },
+    { "key": "X", "action": "Dodge (all modes)" },
+    { "key": "C", "action": "Parry (combat / pointer-lock)" },
+    { "key": "Esc", "action": "Close production UI / release lock" }
+  ],
+  "contentPaths": [
+    "content/harvest/operations.json",
+    "content/harvest/recipes.json",
+    "content/harvest/skill-trees.json",
+    "content/harvest/systems.json",
+    "content/worlds/seed-deployments.json",
+    "lib/voxel-canonical/src/seedWorld.ts",
+    "public/content/harvest/*",
+    "public/content/worlds/*"
+  ]
+}

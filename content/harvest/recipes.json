@@ -1,0 +1,372 @@
+{
+  "version": 2,
+  "label": "Voxel harvest & craft recipes",
+  "notes": "SSOT for Open harvest mode. Expand with Mine-Loader item catalog packs (stations, tools, structures).",
+  "stations": [
+    { "id": "hand", "name": "Hand craft", "glyph": "✋" },
+    { "id": "campfire", "name": "Campfire", "glyph": "🔥" },
+    { "id": "workbench", "name": "Workbench", "glyph": "🧰" },
+    { "id": "forge", "name": "Forge", "glyph": "⚒" },
+    { "id": "loom", "name": "Loom", "glyph": "🧵" },
+    { "id": "alchemy", "name": "Alchemy", "glyph": "⚗" },
+    { "id": "mason", "name": "Mason table", "glyph": "🧱" }
+  ],
+  "recipes": [
+    {
+      "id": "rcp_torch",
+      "name": "Torch",
+      "station": "hand",
+      "output": { "id": "itm_torch", "name": "Torch", "qty": 4 },
+      "inputs": [
+        { "id": "mat_stick", "name": "Stick", "qty": 1 },
+        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+      ],
+      "timeSec": 1,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_rope",
+      "name": "Rope",
+      "station": "hand",
+      "output": { "id": "mat_rope", "name": "Rope", "qty": 1 },
+      "inputs": [{ "id": "mat_fiber", "name": "Fiber", "qty": 3 }],
+      "timeSec": 1.5,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_leather_strap",
+      "name": "Leather strap",
+      "station": "hand",
+      "output": { "id": "mat_leather_strap", "name": "Leather strap", "qty": 2 },
+      "inputs": [{ "id": "mat_leather", "name": "Leather", "qty": 1 }],
+      "timeSec": 2,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_cooked_meat",
+      "name": "Cooked meat",
+      "station": "campfire",
+      "output": { "id": "itm_cooked_meat", "name": "Cooked meat", "qty": 1 },
+      "inputs": [
+        { "id": "mat_raw_meat", "name": "Raw meat", "qty": 1 },
+        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+      ],
+      "timeSec": 3,
+      "skill": "cooking",
+      "tier": 0,
+      "heal": 6
+    },
+    {
+      "id": "rcp_grilled_fish",
+      "name": "Grilled fish",
+      "station": "campfire",
+      "output": { "id": "itm_grilled_fish", "name": "Grilled fish", "qty": 1 },
+      "inputs": [
+        { "id": "mat_fish", "name": "Fish", "qty": 1 },
+        { "id": "mat_stick", "name": "Stick", "qty": 1 }
+      ],
+      "timeSec": 2.5,
+      "skill": "cooking",
+      "tier": 0,
+      "heal": 5
+    },
+    {
+      "id": "rcp_berry_brew",
+      "name": "Berry brew",
+      "station": "campfire",
+      "output": { "id": "itm_berry_brew", "name": "Berry brew", "qty": 1 },
+      "inputs": [
+        { "id": "mat_berry", "name": "Berry", "qty": 3 },
+        { "id": "mat_herb", "name": "Herb", "qty": 1 }
+      ],
+      "timeSec": 4,
+      "skill": "cooking",
+      "tier": 1,
+      "heal": 8
+    },
+    {
+      "id": "rcp_wood_plank",
+      "name": "Wood planks",
+      "station": "workbench",
+      "output": { "id": "mat_plank", "name": "Plank", "qty": 4 },
+      "inputs": [{ "id": "mat_log", "name": "Log", "qty": 1 }],
+      "timeSec": 1.5,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_stick_bundle",
+      "name": "Stick bundle",
+      "station": "workbench",
+      "output": { "id": "mat_stick", "name": "Stick", "qty": 8 },
+      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 1 }],
+      "timeSec": 1,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_pick",
+      "name": "Wood pickaxe",
+      "station": "workbench",
+      "output": { "id": "tool_pick_wood", "name": "Wood pickaxe", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 3 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 3,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_axe",
+      "name": "Wood axe",
+      "station": "workbench",
+      "output": { "id": "tool_axe_wood", "name": "Wood axe", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 3 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 3,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_shovel",
+      "name": "Wood shovel",
+      "station": "workbench",
+      "output": { "id": "tool_shovel_wood", "name": "Wood shovel", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 1 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 2,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_campfire_kit",
+      "name": "Campfire kit",
+      "station": "workbench",
+      "output": { "id": "build_campfire", "name": "Campfire", "qty": 1 },
+      "inputs": [
+        { "id": "mat_log", "name": "Log", "qty": 3 },
+        { "id": "mat_stick", "name": "Stick", "qty": 4 },
+        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+      ],
+      "timeSec": 4,
+      "skill": "building",
+      "tier": 0
+    },
+    {
+      "id": "rcp_workbench_kit",
+      "name": "Workbench kit",
+      "station": "hand",
+      "output": { "id": "build_workbench", "name": "Workbench", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 8 },
+        { "id": "mat_stick", "name": "Stick", "qty": 4 }
+      ],
+      "timeSec": 5,
+      "skill": "building",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_wall",
+      "name": "Wood wall kit",
+      "station": "workbench",
+      "output": { "id": "build_wall_wood", "name": "Wood wall", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 6 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 3,
+      "skill": "building",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_floor",
+      "name": "Wood floor kit",
+      "station": "workbench",
+      "output": { "id": "build_floor_wood", "name": "Wood floor", "qty": 2 },
+      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 4 }],
+      "timeSec": 2,
+      "skill": "building",
+      "tier": 0
+    },
+    {
+      "id": "rcp_wood_door",
+      "name": "Wood door kit",
+      "station": "workbench",
+      "output": { "id": "build_door_wood", "name": "Wood door", "qty": 1 },
+      "inputs": [
+        { "id": "mat_plank", "name": "Plank", "qty": 6 },
+        { "id": "mat_leather_strap", "name": "Leather strap", "qty": 1 }
+      ],
+      "timeSec": 4,
+      "skill": "building",
+      "tier": 1
+    },
+    {
+      "id": "rcp_wood_ramp",
+      "name": "Wood ramp kit",
+      "station": "workbench",
+      "output": { "id": "build_ramp_wood", "name": "Wood ramp", "qty": 2 },
+      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 3 }],
+      "timeSec": 2,
+      "skill": "building",
+      "tier": 0
+    },
+    {
+      "id": "rcp_stone_brick",
+      "name": "Stone brick",
+      "station": "mason",
+      "output": { "id": "mat_stone_brick", "name": "Stone brick", "qty": 1 },
+      "inputs": [{ "id": "mat_stone", "name": "Stone", "qty": 4 }],
+      "timeSec": 2,
+      "skill": "building",
+      "tier": 1
+    },
+    {
+      "id": "rcp_stone_wall",
+      "name": "Stone wall kit",
+      "station": "mason",
+      "output": { "id": "build_wall_stone", "name": "Stone wall", "qty": 1 },
+      "inputs": [
+        { "id": "mat_stone_brick", "name": "Stone brick", "qty": 6 },
+        { "id": "mat_clay", "name": "Clay", "qty": 1 }
+      ],
+      "timeSec": 4,
+      "skill": "building",
+      "tier": 1
+    },
+    {
+      "id": "rcp_iron_ingot",
+      "name": "Iron ingot",
+      "station": "forge",
+      "output": { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 },
+      "inputs": [
+        { "id": "mat_iron_ore", "name": "Iron ore", "qty": 2 },
+        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+      ],
+      "timeSec": 5,
+      "skill": "smithing",
+      "tier": 1
+    },
+    {
+      "id": "rcp_iron_pick",
+      "name": "Iron pickaxe",
+      "station": "forge",
+      "output": { "id": "tool_pick_iron", "name": "Iron pickaxe", "qty": 1 },
+      "inputs": [
+        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 3 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 6,
+      "skill": "smithing",
+      "tier": 2
+    },
+    {
+      "id": "rcp_iron_axe",
+      "name": "Iron axe",
+      "station": "forge",
+      "output": { "id": "tool_axe_iron", "name": "Iron axe", "qty": 1 },
+      "inputs": [
+        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 3 },
+        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+      ],
+      "timeSec": 6,
+      "skill": "smithing",
+      "tier": 2
+    },
+    {
+      "id": "rcp_nail",
+      "name": "Iron nails",
+      "station": "forge",
+      "output": { "id": "mat_nail", "name": "Nail", "qty": 8 },
+      "inputs": [{ "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 }],
+      "timeSec": 3,
+      "skill": "smithing",
+      "tier": 1
+    },
+    {
+      "id": "rcp_forge_kit",
+      "name": "Forge kit",
+      "station": "workbench",
+      "output": { "id": "build_forge", "name": "Forge", "qty": 1 },
+      "inputs": [
+        { "id": "mat_stone_brick", "name": "Stone brick", "qty": 12 },
+        { "id": "mat_iron_ore", "name": "Iron ore", "qty": 4 },
+        { "id": "mat_coal", "name": "Coal", "qty": 4 }
+      ],
+      "timeSec": 8,
+      "skill": "building",
+      "tier": 2
+    },
+    {
+      "id": "rcp_cloth_bandage",
+      "name": "Cloth bandage",
+      "station": "loom",
+      "output": { "id": "itm_bandage", "name": "Bandage", "qty": 2 },
+      "inputs": [{ "id": "mat_cloth", "name": "Cloth", "qty": 1 }],
+      "timeSec": 2,
+      "skill": "crafting",
+      "tier": 0,
+      "heal": 4
+    },
+    {
+      "id": "rcp_cloth",
+      "name": "Cloth",
+      "station": "loom",
+      "output": { "id": "mat_cloth", "name": "Cloth", "qty": 1 },
+      "inputs": [{ "id": "mat_fiber", "name": "Fiber", "qty": 4 }],
+      "timeSec": 3,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_leather_tunic",
+      "name": "Leather tunic kit",
+      "station": "loom",
+      "output": { "id": "armor_leather_chest", "name": "Leather tunic", "qty": 1 },
+      "inputs": [
+        { "id": "mat_leather", "name": "Leather", "qty": 4 },
+        { "id": "mat_leather_strap", "name": "Leather strap", "qty": 2 },
+        { "id": "mat_cloth", "name": "Cloth", "qty": 1 }
+      ],
+      "timeSec": 8,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_healing_salve",
+      "name": "Healing salve",
+      "station": "alchemy",
+      "output": { "id": "itm_salve", "name": "Healing salve", "qty": 1 },
+      "inputs": [
+        { "id": "mat_herb", "name": "Herb", "qty": 2 },
+        { "id": "mat_mushroom", "name": "Mushroom", "qty": 1 },
+        { "id": "mat_resin", "name": "Resin", "qty": 1 }
+      ],
+      "timeSec": 4,
+      "skill": "alchemy",
+      "tier": 1,
+      "heal": 12
+    },
+    {
+      "id": "rcp_crystal_lamp",
+      "name": "Crystal lamp kit",
+      "station": "alchemy",
+      "output": { "id": "build_crystal_lamp", "name": "Crystal lamp", "qty": 1 },
+      "inputs": [
+        { "id": "mat_crystal", "name": "Crystal", "qty": 2 },
+        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 }
+      ],
+      "timeSec": 5,
+      "skill": "alchemy",
+      "tier": 2
+    }
+  ]
+}

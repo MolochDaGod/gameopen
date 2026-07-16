@@ -91,7 +91,7 @@ export const DIFFICULTY_PROFILES: Record<Exclude<Difficulty, "passive">, Difficu
 };
 
 /** Melee weapons opponents can spar with (ranged weapons stay player-only). */
-const OPPONENT_WEAPONS: WeaponId[] = ["sword", "greatsword", "axe", "spear", "hammer", "dagger", "staff", "shield", "rifle", "hunter-rifle", "bow", "javelin"];
+const OPPONENT_WEAPONS: WeaponId[] = ["sword", "greatsword", "axe", "spear", "hammer", "dagger", "staff", "shield", "rifle", "hunter-rifle", "shotgun", "pistol", "bow", "javelin"];
 
 /**
  * The aimed projectile spells AI fighters can cast at the player. Mirrors the
@@ -354,6 +354,25 @@ export interface CombatTargets {
   nearestDownedPoint(from: THREE.Vector3, radius: number): THREE.Vector3 | null;
   blast(center: THREE.Vector3, radius: number, damage: number, force: number, ctx?: SparringContext): number;
   /**
+   * Gun bullet impact: forcefield soak / perfect-parry reflect / clean hit.
+   * Optional on non-Targets hosts that only support blast().
+   */
+  gunHit?(
+    center: THREE.Vector3,
+    radius: number,
+    damage: number,
+    force: number,
+    opts: {
+      hitsToBreak: number;
+      shieldMul: number;
+      ctx?: SparringContext;
+    },
+  ): {
+    outcome: "miss" | "hit" | "crit" | "block" | "reflect" | "shieldBreak";
+    pos: THREE.Vector3 | null;
+    dummyId: number | null;
+  };
+  /**
    * Player attack against the focused enemy (resolved through its CC), with
    * lighter AoE splash to others in range. Returns the focused result (or null
    * when nothing was in reach — then it falls back to a plain blast).
@@ -409,6 +428,19 @@ interface Dummy {
   lastState: CombatStateName;
   /** Force of the most recent landed hit, so a heavy stagger reads as a big body blow. */
   lastHitForce: number;
+  /**
+   * Smash-style hit stack: unguarded hits in a short window escalate knockback
+   * (combo / multi-projectile pressure). Reset on block/parry/dodge or timeout.
+   */
+  hitStack: number;
+  /** Seconds left before hitStack decays to 0. */
+  hitStackT: number;
+  /**
+   * Consecutive gun bullets soaked on a raised forcefield. At GUN_SHIELD.hitsToBreak
+   * the shield collapses (shieldBreak). Reset when not blocking or on timeout.
+   */
+  gunShieldHits: number;
+  gunShieldT: number;
   /**
    * Clean knock-up launch phase. `rising` while airborne and ascending,
    * `falling` after the apex; cleared on landing (which forces the fallen
@@ -773,6 +805,10 @@ export class Targets implements CombatTargets {
       maxPoise: cfg.maxPoise,
       lastState: "idle",
       lastHitForce: 0,
+      hitStack: 0,
+      hitStackT: 0,
+      gunShieldHits: 0,
+      gunShieldT: 0,
       flash: 0,
       flashColor: FLASH_COLOR.clone(),
       dead: false,
@@ -1739,15 +1775,40 @@ export class Targets implements CombatTargets {
 
     const scale = outcomeForceScale(result.outcome);
     if (scale > 0) {
+      // Smash-style knockback: unguarded hits shove 2–5 m; combo stacks escalate.
+      // Vel damp ≈ exp(-6t) → distance ≈ v0/6, so pushSpeed = meters * metersToSpeed.
+      const stack = d.hitStack;
+      const stackMul = 1 + Math.min(4, stack) * 0.2;
+      const meters = THREE.MathUtils.clamp(
+        physForce * scale * 0.3 * stackMul,
+        2.0,
+        5.2,
+      );
+      const pushSpeed = meters * 6.15;
       const push = this.chest(d).sub(source);
       push.y = 0;
       if (push.lengthSq() < 1e-4) push.set(Math.random() - 0.5, 0, Math.random() - 0.5);
       push.normalize();
-      d.vel.addScaledVector(push, physForce * scale);
-      d.vel.y += physForce * scale * 0.25;
+      d.vel.addScaledVector(push, pushSpeed);
+      d.vel.y = Math.max(d.vel.y, Math.min(9.5, meters * 1.15 + stack * 0.6));
+      // Heavier hits / multi-hit stacks enter launch → fallen ragdoll chain.
+      if (meters >= 3.35 || stack >= 2 || payload.force >= 2) {
+        if (!d.launchPhase) d.launchPhase = "rising";
+        if (d.avatar?.reaction && !d.dead) {
+          const rise = meters >= 4 ? "knockedUpBack" : "knockedUp";
+          if (!d.avatar.reaction(rise, 0.06) && !d.avatar.reaction("uppercutLaunch", 0.08)) {
+            d.avatar.reaction("fallDown", 0.1);
+          }
+        }
+      }
+      d.hitStack = stack + 1;
+      d.hitStackT = 1.15;
     }
 
     if (isDefended(result.outcome)) {
+      // Guard / dodge resets smash stack — defense stops the pressure string.
+      d.hitStack = 0;
+      d.hitStackT = 0;
       d.flash = 0.3;
       const parried = result.outcome === "perfectParry" || result.outcome === "deflect";
       d.flashColor.copy(parried ? PARRY_COLOR : DEFEND_COLOR);
@@ -1995,6 +2056,97 @@ export class Targets implements CombatTargets {
   }
 
   /**
+   * Gun bullet resolution at impact point.
+   *
+   * - Raised guard = forcefield: most damage is cut; consecutive hits lower the shield.
+   * - Perfect parry / deflect = **reflect** (caller should fire a bolt back at the shooter).
+   * - Clean hit = full damage + smash knockback.
+   *
+   * Returns outcome for VFX routing.
+   */
+  gunHit(
+    center: THREE.Vector3,
+    radius: number,
+    damage: number,
+    force: number,
+    opts: {
+      hitsToBreak: number;
+      shieldMul: number;
+      ctx?: SparringContext;
+    },
+  ): {
+    outcome: "miss" | "hit" | "crit" | "block" | "reflect" | "shieldBreak";
+    pos: THREE.Vector3 | null;
+    dummyId: number | null;
+  } {
+    const tmp = new THREE.Vector3();
+    let focused: Dummy | null = null;
+    let fd = Infinity;
+    for (const d of this.dummies) {
+      if (d.dead || d.faction !== "enemy") continue;
+      const dd = this.chest(d, tmp).distanceTo(center);
+      if (dd < fd && dd <= radius) {
+        fd = dd;
+        focused = d;
+      }
+    }
+    if (!focused) return { outcome: "miss", pos: null, dummyId: null };
+
+    // Prefer Tab-selected hostile when in radius
+    if (this.selectedId != null) {
+      const sel = this.dummies.find(
+        (x) => x.id === this.selectedId && !x.dead && x.faction === "enemy",
+      );
+      if (sel && this.chest(sel, tmp).distanceTo(center) <= radius) focused = sel;
+    }
+
+    const raisedGuard =
+      focused.shieldBreakT <= 0 && focused.blockHold > 0;
+
+    // Probe with full damage; CC decides block / parry / hit
+    const probeDmg = raisedGuard
+      ? Math.max(1, Math.round(damage * opts.shieldMul))
+      : damage;
+    const probeForce = raisedGuard ? force * 0.25 : force;
+    const result = this.hit(
+      focused,
+      {
+        force: 1,
+        damage: probeDmg,
+        poiseDamage: Math.round(probeDmg * (raisedGuard ? 0.35 : 0.55)),
+      },
+      center,
+      probeForce,
+      this.playerCC,
+      opts.ctx,
+    );
+    const pos = this.chest(focused);
+    if (!result) return { outcome: "hit", pos, dummyId: focused.id };
+
+    // Reflect: perfect parry / deflect sends the round home
+    if (result.outcome === "perfectParry" || result.outcome === "deflect") {
+      return { outcome: "reflect", pos, dummyId: focused.id };
+    }
+
+    // Forcefield soak: blockStop while guard up
+    if (result.outcome === "blockStop" || (isDefended(result.outcome) && raisedGuard)) {
+      focused.gunShieldHits += 1;
+      focused.gunShieldT = 1.4;
+      if (focused.gunShieldHits >= opts.hitsToBreak) {
+        focused.gunShieldHits = 0;
+        focused.shieldBreakT = Math.max(focused.shieldBreakT, 3.2);
+        focused.cc.applyVulnerableState("stunned");
+        return { outcome: "shieldBreak", pos, dummyId: focused.id };
+      }
+      return { outcome: "block", pos, dummyId: focused.id };
+    }
+
+    if (isDefended(result.outcome)) return { outcome: "block", pos, dummyId: focused.id };
+    if (result.outcome === "crit") return { outcome: "crit", pos, dummyId: focused.id };
+    return { outcome: "hit", pos, dummyId: focused.id };
+  }
+
+  /**
    * AoE blast restricted to a single faction (e.g. a boss skill hitting the
    * player's allies). Mirrors {@link blast} but filtered by `faction`, so an
    * enemy telegraph can resolve against everyone inside the circle.
@@ -2149,6 +2301,14 @@ export class Targets implements CombatTargets {
       if (d.stunT > 0) d.stunT = Math.max(0, d.stunT - dt);
       if (d.shieldBreakT > 0) d.shieldBreakT = Math.max(0, d.shieldBreakT - dt);
       if (d.slowT > 0) d.slowT = Math.max(0, d.slowT - dt);
+      if (d.hitStackT > 0) {
+        d.hitStackT = Math.max(0, d.hitStackT - dt);
+        if (d.hitStackT <= 0) d.hitStack = 0;
+      }
+      if (d.gunShieldT > 0) {
+        d.gunShieldT = Math.max(0, d.gunShieldT - dt);
+        if (d.gunShieldT <= 0) d.gunShieldHits = 0;
+      }
 
       // Knockback integration with ground clamp + bounds.
       d.vel.y -= 22 * dt;

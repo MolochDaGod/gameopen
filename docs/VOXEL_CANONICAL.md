@@ -54,6 +54,7 @@ Mine-loader empty scene (`Pl()`):
 
 - `blockEdits[].type` is a block type id, or `null` to clear.
 - `map` holds arena/dungeon generator config (opaque passthrough).
+- **Seed overworld + portals:** see [SEED_WORLD_DEPLOY.md](./SEED_WORLD_DEPLOY.md) and `@workspace/voxel-canonical` `seedWorld.ts`. Portal triggers use `kind: "portal"`; dungeon destinations use `target.type = "dungeon"`. Same world seed regenerates the same portal ring.
 
 ---
 

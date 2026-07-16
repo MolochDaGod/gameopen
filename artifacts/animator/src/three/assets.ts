@@ -16,9 +16,11 @@ import {
 } from "./fleetAssetResolver";
 
 /**
- * Lab host — only via Vercel same-origin rewrites for /models/grudge|/weapons|/anim
- * when missing from public/. Prefer {@link assetCandidates} multi-host resolution.
- * Never load absolute Animator lab CDN from Open (CORS).
+ * Legacy Animator lab host (archived). Open ships models/grudge, weapons, anim,
+ * audio, avatar, and backdrops under same-origin `public/` after
+ * `node scripts/ingest-threejs-rapier.mjs`. Prefer {@link assetCandidates}.
+ * Never load this CDN absolutely from the browser (CORS); vercel.json may
+ * still rewrite missing paths as a last-resort fallback.
  */
 export const ANIMATOR_ASSET_CDN =
   "https://threejs-rapier-react-three-controll.vercel.app";
@@ -613,8 +615,8 @@ export const CHARACTERS: CharacterDef[] = [
 ];
 
 // ---- Heroes of Grudge (6 races × 4 classes = 24 playable prefabs) ----
-// SSOT models: threejs-rapier-react-three-controll.vercel.app/models/grudge/*
-// Ported from the Animator character lab — Open must use these, not empty roster.
+// SSOT models: same-origin public/models/grudge/{race}_{class}.glb
+// (ingested from threejs-rapier Animator lab via scripts/ingest-threejs-rapier.mjs)
 
 type GrudgeClass = "knight" | "warrior" | "ranger" | "mage";
 

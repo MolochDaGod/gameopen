@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { Send, Trash2, DoorOpen, LayoutPanelTop } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Send,
+  Trash2,
+  DoorOpen,
+  LayoutPanelTop,
+  Dices,
+  RotateCcw,
+  UserCheck,
+  Check,
+} from "lucide-react";
 import { LedMask, type FaceType, type MaskState } from "../three/LedMask";
 import { SHELLS, type ShellId } from "../three/LedMaskShells";
 import { FaceTracker } from "../three/live/FaceTracker";
@@ -11,10 +20,57 @@ import { FrameSkinModal } from "./FrameSkinModal";
 import { FRAME_NONE, findFrame, loadFrameId, saveFrameId } from "./ledMaskFrames";
 import { RoomGallery } from "./RoomGallery";
 import type { RoomTarget } from "./ledMaskRooms";
+import { HeadStage } from "../three/avatar/HeadStage";
+import {
+  BROW_STYLES,
+  EYE_COLORS,
+  EYE_STYLES,
+  EXPRESSIONS,
+  EXTRA_STYLES,
+  FACIAL_HAIR_STYLES,
+  GEAR_COLORS,
+  HAIR_COLORS,
+  HAIR_STYLES,
+  HAT_STYLES,
+  HEADGEAR_STYLES,
+  MOUTH_STYLES,
+  PAINT_COLORS,
+  RACES,
+  defaultConfig,
+  earStylesFor,
+  randomConfig,
+  raceDef,
+  sanitizeConfig,
+  tuskStylesFor,
+  type AvatarConfig,
+  type RaceId,
+} from "../three/avatar/catalog";
+import { loadPlayerHeadConfig, savePlayerHeadConfig } from "../three/avatar/playerHead";
+import { cssHex } from "../three/avatar/pixels";
 
 interface Props {
   onExit: () => void;
   onNavigate: (target: RoomTarget) => void;
+}
+
+type RailTab = "live" | "design";
+type StageView = "led" | "avatar";
+
+const AVATAR_STORE = "ledmask:avatarConfig:v1";
+
+function loadLedAvatar(): AvatarConfig {
+  try {
+    const fromPlayer = loadPlayerHeadConfig();
+    if (fromPlayer) return fromPlayer;
+    const raw = localStorage.getItem(AVATAR_STORE);
+    if (raw) {
+      const parsed = sanitizeConfig(JSON.parse(raw));
+      if (parsed) return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return defaultConfig("human");
 }
 
 const FACES: { id: FaceType; glyph: string; label: string }[] = [
@@ -83,6 +139,8 @@ function describeMediaError(err: unknown, device: string): string {
 export function LedMaskMode({ onExit, onNavigate }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const maskRef = useRef<LedMask | null>(null);
+  const avatarMountRef = useRef<HTMLDivElement>(null);
+  const headStageRef = useRef<HeadStage | null>(null);
   const [banner, setBanner] = useState("HIGHPEAK DIGITAL");
   const [bannerOn, setBannerOn] = useState(false);
   const [face, setFace] = useState<FaceType>("smile");
@@ -93,6 +151,11 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
   const [draft, setDraft] = useState("");
   const [frameId, setFrameId] = useState<string>(loadFrameId);
   const [frameModal, setFrameModal] = useState(false);
+  const [railTab, setRailTab] = useState<RailTab>("live");
+  const [stageView, setStageView] = useState<StageView>("led");
+  const [avatarCfg, setAvatarCfg] = useState<AvatarConfig>(loadLedAvatar);
+  const [avatarSaved, setAvatarSaved] = useState(false);
+  const [avatarStageFailed, setAvatarStageFailed] = useState(false);
 
   const frame = frameId === FRAME_NONE ? undefined : findFrame(frameId);
   // Draw the chosen tile as a 9-slice bezel: a transparent solid border whose
@@ -155,6 +218,72 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
     };
   }, []);
 
+  // Voxel head stage — always attach once mount exists; survives tab switches.
+  useEffect(() => {
+    if (!avatarMountRef.current) return;
+    if (headStageRef.current) return;
+    try {
+      const stage = new HeadStage(avatarMountRef.current);
+      headStageRef.current = stage;
+      stage.setConfig(avatarCfg);
+      setAvatarStageFailed(false);
+    } catch (err) {
+      console.error("LedMask: avatar HeadStage unavailable", err);
+      setAvatarStageFailed(true);
+    }
+    return () => {
+      headStageRef.current?.dispose();
+      headStageRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    headStageRef.current?.setConfig(avatarCfg);
+    try {
+      localStorage.setItem(AVATAR_STORE, JSON.stringify(avatarCfg));
+    } catch {
+      /* ignore */
+    }
+    setAvatarSaved(false);
+  }, [avatarCfg]);
+
+  const patchAvatar = useCallback((p: Partial<AvatarConfig>) => {
+    setAvatarCfg((c) => ({ ...c, ...p }));
+  }, []);
+
+  const switchRace = useCallback((race: RaceId) => {
+    setAvatarCfg((prev) => {
+      // Keep last build for race if we stored one under player head; else defaults.
+      try {
+        const raw = localStorage.getItem(`ledmask:avatarRace:${race}`);
+        if (raw) {
+          const parsed = sanitizeConfig(JSON.parse(raw));
+          if (parsed && parsed.race === race) return parsed;
+        }
+      } catch {
+        /* ignore */
+      }
+      return defaultConfig(race);
+    });
+  }, []);
+
+  // Persist per-race so hopping races restores last design
+  useEffect(() => {
+    try {
+      localStorage.setItem(`ledmask:avatarRace:${avatarCfg.race}`, JSON.stringify(avatarCfg));
+    } catch {
+      /* ignore */
+    }
+  }, [avatarCfg]);
+
+  const race = useMemo(() => raceDef(avatarCfg.race), [avatarCfg.race]);
+
+  const saveAvatarToCharacter = useCallback(() => {
+    savePlayerHeadConfig(avatarCfg);
+    setAvatarSaved(true);
+  }, [avatarCfg]);
+
   // Keyboard shortcuts mirror the original prototype (ignored while typing).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -211,11 +340,16 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
     }
   }, [streaming]);
 
-  // Keep the chat log pinned to the newest message.
+  // Keep the rail (and chat) scrolled to the newest message while chatting.
   useEffect(() => {
-    const el = logRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+    const rail = document.querySelector(".ledmask-controls");
+    if (rail && railTab === "live") {
+      // Only auto-scroll if user is near the bottom of the rail
+      const el = rail as HTMLElement;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      if (nearBottom || messages.length <= 2) el.scrollTop = el.scrollHeight;
+    }
+  }, [messages, railTab]);
 
   const runBanner = () => {
     // Typing a message + RUN also turns the banner on so it's visible.
@@ -408,7 +542,9 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
       <div className="ledmask-head">
         <div>
           <h1 className="ledmask-title">VOXEL LED MASK</h1>
-          <p className="ledmask-sub">AI companion face · talks, emotes, and watches your cursor</p>
+          <p className="ledmask-sub">
+            AI companion · voxel face design · race, hair &amp; expression studio
+          </p>
         </div>
         <div className="ledmask-head-right">
           <span className="ledmask-live">
@@ -430,253 +566,589 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
 
       <div className="ledmask-grid">
         <div className="ledmask-stage">
+          <div className="ledmask-stage-tabs" role="tablist" aria-label="Stage view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={stageView === "led"}
+              className={"ledmask-stage-tab" + (stageView === "led" ? " is-active" : "")}
+              onClick={() => setStageView("led")}
+            >
+              LED Mask
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={stageView === "avatar"}
+              className={"ledmask-stage-tab" + (stageView === "avatar" ? " is-active" : "")}
+              onClick={() => {
+                setStageView("avatar");
+                setRailTab("design");
+              }}
+            >
+              Voxel Avatar
+            </button>
+          </div>
+
           <div
-            className={"ledmask-canvas-wrap" + (frame ? " has-frame" : "")}
-            style={stageFrameStyle}
-            onPointerMove={onPointerMove}
-            onPointerLeave={onPointerLeave}
+            className={
+              "ledmask-canvas-wrap" +
+              (frame && stageView === "led" ? " has-frame" : "") +
+              (stageView === "avatar" ? " is-avatar" : "")
+            }
+            style={stageView === "led" ? stageFrameStyle : undefined}
+            onPointerMove={stageView === "led" ? onPointerMove : undefined}
+            onPointerLeave={stageView === "led" ? onPointerLeave : undefined}
           >
-            <canvas ref={canvasRef} className="ledmask-canvas" />
-            {webglFailed && (
+            {/* Stack both views so LED WebGL keeps a real size when tabbed away */}
+            <canvas
+              ref={canvasRef}
+              className="ledmask-canvas"
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: stageView === "led" ? 1 : 0,
+                pointerEvents: stageView === "led" ? "auto" : "none",
+                zIndex: stageView === "led" ? 1 : 0,
+              }}
+            />
+            <div
+              ref={avatarMountRef}
+              className="ledmask-avatar-mount"
+              style={{
+                opacity: stageView === "avatar" ? 1 : 0,
+                pointerEvents: stageView === "avatar" ? "auto" : "none",
+                zIndex: stageView === "avatar" ? 2 : 0,
+              }}
+            />
+            {stageView === "led" && webglFailed && (
               <div className="ledmask-fallback">
                 WebGL unavailable in this view — open in a browser tab to see the mask render.
               </div>
             )}
+            {stageView === "avatar" && avatarStageFailed && (
+              <div className="ledmask-fallback">
+                Avatar stage unavailable — open in a browser tab with WebGL enabled.
+              </div>
+            )}
           </div>
+          <p className="ledmask-stage-hint">
+            {stageView === "led"
+              ? "Drag to gaze · numpad for faces · design tab for race & hair"
+              : "Orbit the cube head · edit race, hair & parts in the rail"}
+          </p>
         </div>
 
+        {/* Single scroll surface for the entire right rail */}
         <div className="ledmask-controls">
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">🤖 TALK TO THE MASK</div>
-            <div className="ledmask-chat">
-              <div className="ledmask-chat-log" ref={logRef}>
-                {messages.length === 0 && (
-                  <div className="ledmask-chat-empty">
-                    Say something — the mask answers, shows how it feels on its face,
-                    and follows your cursor with its eyes.
+          <div className="ledmask-rail-tabs" role="tablist" aria-label="Control panels">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={railTab === "live"}
+              className={"ledmask-rail-tab" + (railTab === "live" ? " is-active" : "")}
+              onClick={() => {
+                setRailTab("live");
+                setStageView("led");
+              }}
+            >
+              Live
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={railTab === "design"}
+              className={"ledmask-rail-tab" + (railTab === "design" ? " is-active" : "")}
+              onClick={() => {
+                setRailTab("design");
+                setStageView("avatar");
+              }}
+            >
+              Design
+            </button>
+          </div>
+
+          {railTab === "live" && (
+            <>
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Talk to the mask</div>
+                <div className="ledmask-chat">
+                  <div className="ledmask-chat-log" ref={logRef}>
+                    {messages.length === 0 && (
+                      <div className="ledmask-chat-empty">
+                        Say something — the mask answers, shows mood on its face, and follows
+                        your cursor with its eyes.
+                      </div>
+                    )}
+                    {messages.map((m, i) => {
+                      const text = m.role === "assistant" ? parseMood(m.content).clean : m.content;
+                      const pending = m.role === "assistant" && !text;
+                      return (
+                        <div key={i} className={`ledmask-msg ${m.role}`}>
+                          {pending ? (
+                            <div className="ledmask-bubble">
+                              <span className="ledmask-typing">
+                                <span />
+                                <span />
+                                <span />
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="ledmask-bubble">{text}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="ledmask-chat-row">
+                    <textarea
+                      className="ledmask-chat-input"
+                      rows={2}
+                      value={draft}
+                      placeholder={ready ? "Ask the mask anything…" : "Connecting…"}
+                      disabled={!ready}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          submitChat();
+                        }
+                      }}
+                    />
+                    <button
+                      className="ledmask-run"
+                      onClick={submitChat}
+                      disabled={!ready || streaming || !draft.trim()}
+                      title="Send"
+                    >
+                      <Send size={15} />
+                    </button>
+                  </div>
+                  <button
+                    className="ledmask-chat-clear"
+                    onClick={() => {
+                      clear();
+                      lastMoodRef.current = "";
+                    }}
+                    disabled={messages.length === 0 || streaming}
+                  >
+                    <Trash2 size={12} /> Clear conversation
+                  </button>
+                </div>
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Active mode — mirror your face</div>
+                <p className="ledmask-hint" style={{ margin: "0 0 10px" }}>
+                  Camera mirrors expression · mic lip-syncs · captions go to the banner.
+                </p>
+                <div className="ledmask-active-row">
+                  <button
+                    className={"ledmask-state" + (camOn ? " is-active" : "")}
+                    onClick={toggleCamera}
+                    disabled={!mediaSupported || camLoading}
+                  >
+                    {camLoading ? "STARTING…" : camOn ? "■ CAMERA" : "▶ CAMERA"}
+                  </button>
+                  <button
+                    className={"ledmask-state" + (micOn ? " is-active" : "")}
+                    onClick={toggleMic}
+                    disabled={!mediaSupported || micLoading}
+                  >
+                    {micLoading ? "STARTING…" : micOn ? "■ MIC" : "▶ MIC"}
+                  </button>
+                  <button
+                    className={"ledmask-state" + (ccOn ? " is-active" : "")}
+                    onClick={toggleCaptions}
+                    disabled={!captionsSupported}
+                    title={captionsSupported ? "" : "Needs Chrome or Edge"}
+                  >
+                    {ccOn ? "■ CAPTIONS" : "▶ CAPTIONS"}
+                  </button>
+                </div>
+                {camOn && (
+                  <p className="ledmask-active-live">
+                    ● Live — the AI is reading your expression. The camera feed is never shown.
+                  </p>
+                )}
+                <div ref={previewRef} className="ledmask-active-preview" aria-hidden="true" />
+                {ccOn && (
+                  <div className="ledmask-active-cc">{liveCaption || "Listening…"}</div>
+                )}
+                {camLoading && <p className="ledmask-hint">Loading face model (first use only)…</p>}
+                {!mediaSupported && (
+                  <p className="ledmask-active-err">Camera/mic capture isn't available in this browser.</p>
+                )}
+                {activeErr && <p className="ledmask-active-err">{activeErr}</p>}
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Scrolling banner</div>
+                <div className="ledmask-banner-row" style={{ marginBottom: 8, alignItems: "center" }}>
+                  <button
+                    className={"ledmask-state" + (bannerOn ? " is-active" : "")}
+                    onClick={toggleBanner}
+                  >
+                    {bannerOn ? "■ BANNER ON" : "▶ BANNER OFF"}
+                  </button>
+                  <span className="ledmask-hint" style={{ margin: 0 }}>
+                    Captions / RUN turn the banner on.
+                  </span>
+                </div>
+                <div className="ledmask-banner-row">
+                  <input
+                    className="ledmask-input"
+                    value={banner}
+                    onChange={(e) => setBanner(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") runBanner();
+                    }}
+                    placeholder="Type a message…"
+                  />
+                  <button className="ledmask-run" onClick={runBanner}>
+                    RUN
+                  </button>
+                </div>
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Head shell</div>
+                <p className="ledmask-hint" style={{ margin: "0 0 10px" }}>
+                  Housing around the LED face. Saved automatically.
+                </p>
+                <div className="ledmask-faces">
+                  {SHELLS.map((s) => (
+                    <button
+                      key={s.id}
+                      className={"ledmask-face" + (shell === s.id ? " is-active" : "")}
+                      onClick={() => applyShell(s.id)}
+                    >
+                      <span className="ledmask-face-glyph">{s.glyph}</span>
+                      <span className="ledmask-face-label">{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">LED expressions</div>
+                <div className="ledmask-faces">
+                  {FACES.map((f) => (
+                    <button
+                      key={f.id}
+                      className={"ledmask-face" + (face === f.id ? " is-active" : "")}
+                      onClick={() => applyFace(f.id)}
+                    >
+                      <span className="ledmask-face-glyph">{f.glyph}</span>
+                      <span className="ledmask-face-label">{f.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Animation states</div>
+                <div className="ledmask-states">
+                  {STATES.map((s) => (
+                    <button
+                      key={s.id}
+                      className={
+                        "ledmask-state" +
+                        (s.danger ? " is-danger" : "") +
+                        (state === s.id ? " is-active" : "")
+                      }
+                      onClick={() => applyState(s.id)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="ledmask-hint">Shortcuts: I · T · S · W · C · A</p>
+              </section>
+
+              <section className="ledmask-panel">
+                <div className="ledmask-panel-title">Combat — damage &amp; casting</div>
+                <div className="ledmask-states">
+                  <button className="ledmask-state" onClick={castSpell}>
+                    CAST SPELL
+                  </button>
+                  <button className="ledmask-state is-danger" onClick={takeHit}>
+                    TAKE HIT
+                  </button>
+                  <button className="ledmask-state" onClick={repair}>
+                    REPAIR
+                  </button>
+                </div>
+                <div className="ledmask-banner-row" style={{ marginTop: 10, alignItems: "center" }}>
+                  <span className="ledmask-face-label" style={{ minWidth: 64 }}>
+                    HEALTH {Math.round(health * 100)}%
+                  </span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(health * 100)}
+                    onChange={(e) => applyHealth(Number(e.target.value) / 100)}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <p className="ledmask-hint">Shortcuts: C cast · H hit · R repair</p>
+              </section>
+            </>
+          )}
+
+          {railTab === "design" && (
+            <section className="ledmask-panel">
+              <div className="ledmask-panel-title">Voxel character design</div>
+              <p className="ledmask-hint" style={{ margin: "0 0 12px" }}>
+                Cube modular head — race, hair, eyes, and gear. Saved to this device;
+                “Save to character” applies the head in Explorer / campfire.
+              </p>
+              <div className="lm-avatar-actions" style={{ marginBottom: 14 }}>
+                <button
+                  type="button"
+                  className="ledmask-state"
+                  onClick={() => setAvatarCfg(randomConfig(avatarCfg.race))}
+                >
+                  <Dices size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+                  Randomize
+                </button>
+                <button
+                  type="button"
+                  className="ledmask-state"
+                  onClick={() => setAvatarCfg(defaultConfig(avatarCfg.race))}
+                >
+                  <RotateCcw size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  className={"ledmask-state" + (avatarSaved ? " is-active" : "")}
+                  onClick={saveAvatarToCharacter}
+                >
+                  {avatarSaved ? (
+                    <Check size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+                  ) : (
+                    <UserCheck size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+                  )}
+                  {avatarSaved ? "On character" : "Save to character"}
+                </button>
+              </div>
+
+              <div className="lm-avatar-tools">
+                <div className="lm-sec">
+                  <h4>Race</h4>
+                  <div className="lm-races">
+                    {RACES.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        className={"lm-race" + (avatarCfg.race === r.id ? " is-on" : "")}
+                        onClick={() => switchRace(r.id)}
+                      >
+                        <span
+                          className="lm-race-dot"
+                          style={{ background: cssHex(r.skins[0]!) }}
+                        />
+                        <span className="lm-race-name">{r.label}</span>
+                        <span className="lm-race-blurb">{r.blurb}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Skin tone</h4>
+                  <div className="lm-swatches">
+                    {race.skins.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={"lm-swatch" + (avatarCfg.skin === i ? " is-on" : "")}
+                        style={{ background: cssHex(c) }}
+                        onClick={() => patchAvatar({ skin: i })}
+                        aria-label={`Skin ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Hair</h4>
+                  <LmChips
+                    items={HAIR_STYLES}
+                    value={avatarCfg.hair}
+                    onPick={(hair) => patchAvatar({ hair })}
+                  />
+                  {avatarCfg.hair !== "bald" && (
+                    <div className="lm-swatches">
+                      {HAIR_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={"lm-swatch" + (avatarCfg.hairColor === c ? " is-on" : "")}
+                          style={{ background: cssHex(c) }}
+                          onClick={() => patchAvatar({ hairColor: c })}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Eyes</h4>
+                  <LmChips
+                    items={EYE_STYLES}
+                    value={avatarCfg.eyes}
+                    onPick={(eyes) => patchAvatar({ eyes })}
+                  />
+                  <div className="lm-swatches">
+                    {EYE_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={"lm-swatch" + (avatarCfg.eyeColor === c ? " is-on" : "")}
+                        style={{ background: cssHex(c) }}
+                        onClick={() => patchAvatar({ eyeColor: c })}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Brows</h4>
+                  <LmChips
+                    items={BROW_STYLES}
+                    value={avatarCfg.brows}
+                    onPick={(brows) => patchAvatar({ brows })}
+                  />
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Mouth</h4>
+                  <LmChips
+                    items={MOUTH_STYLES}
+                    value={avatarCfg.mouth}
+                    onPick={(mouth) => patchAvatar({ mouth })}
+                  />
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Expression</h4>
+                  <LmChips
+                    items={EXPRESSIONS}
+                    value={avatarCfg.expression}
+                    onPick={(expression) => patchAvatar({ expression })}
+                  />
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Facial hair</h4>
+                  <LmChips
+                    items={FACIAL_HAIR_STYLES}
+                    value={avatarCfg.facialHair}
+                    onPick={(facialHair) => patchAvatar({ facialHair })}
+                  />
+                  {avatarCfg.facialHair !== "none" && (
+                    <div className="lm-swatches">
+                      {HAIR_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={
+                            "lm-swatch" + (avatarCfg.facialHairColor === c ? " is-on" : "")
+                          }
+                          style={{ background: cssHex(c) }}
+                          onClick={() => patchAvatar({ facialHairColor: c })}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Ears</h4>
+                  <LmChips
+                    items={earStylesFor(avatarCfg.race)}
+                    value={avatarCfg.ears}
+                    onPick={(ears) => patchAvatar({ ears })}
+                  />
+                </div>
+
+                {tuskStylesFor(avatarCfg.race).length > 1 && (
+                  <div className="lm-sec">
+                    <h4>Tusks</h4>
+                    <LmChips
+                      items={tuskStylesFor(avatarCfg.race)}
+                      value={avatarCfg.tusks}
+                      onPick={(tusks) => patchAvatar({ tusks })}
+                    />
                   </div>
                 )}
-                {messages.map((m, i) => {
-                  const text = m.role === "assistant" ? parseMood(m.content).clean : m.content;
-                  const pending = m.role === "assistant" && !text;
-                  return (
-                    <div key={i} className={`ledmask-msg ${m.role}`}>
-                      {pending ? (
-                        <div className="ledmask-bubble">
-                          <span className="ledmask-typing">
-                            <span />
-                            <span />
-                            <span />
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="ledmask-bubble">{text}</div>
-                      )}
+
+                <div className="lm-sec">
+                  <h4>Headgear</h4>
+                  <LmChips
+                    items={HEADGEAR_STYLES}
+                    value={avatarCfg.headgear}
+                    onPick={(headgear) => patchAvatar({ headgear })}
+                  />
+                  {avatarCfg.headgear !== "none" && (
+                    <div className="lm-swatches">
+                      {GEAR_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={
+                            "lm-swatch" + (avatarCfg.headgearColor === c ? " is-on" : "")
+                          }
+                          style={{ background: cssHex(c) }}
+                          onClick={() => patchAvatar({ headgearColor: c })}
+                        />
+                      ))}
                     </div>
-                  );
-                })}
+                  )}
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Hat</h4>
+                  <LmChips
+                    items={HAT_STYLES}
+                    value={avatarCfg.hat}
+                    onPick={(hat) => patchAvatar({ hat })}
+                  />
+                </div>
+
+                <div className="lm-sec">
+                  <h4>Extras</h4>
+                  <LmChips
+                    items={EXTRA_STYLES}
+                    value={avatarCfg.extra}
+                    onPick={(extra) => patchAvatar({ extra })}
+                  />
+                  {avatarCfg.extra === "warpaint" && (
+                    <div className="lm-swatches">
+                      {PAINT_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={"lm-swatch" + (avatarCfg.extraColor === c ? " is-on" : "")}
+                          style={{ background: cssHex(c) }}
+                          onClick={() => patchAvatar({ extraColor: c })}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="ledmask-chat-row">
-                <textarea
-                  className="ledmask-chat-input"
-                  rows={1}
-                  value={draft}
-                  placeholder={ready ? "Ask the mask anything…" : "Connecting…"}
-                  disabled={!ready}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      submitChat();
-                    }
-                  }}
-                />
-                <button
-                  className="ledmask-run"
-                  onClick={submitChat}
-                  disabled={!ready || streaming || !draft.trim()}
-                  title="Send"
-                >
-                  <Send size={15} />
-                </button>
-              </div>
-              <button
-                className="ledmask-chat-clear"
-                onClick={() => {
-                  clear();
-                  lastMoodRef.current = "";
-                }}
-                disabled={messages.length === 0 || streaming}
-              >
-                <Trash2 size={12} /> Clear conversation
-              </button>
-            </div>
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">🎥 ACTIVE MODE — MIRROR YOUR FACE</div>
-            <p className="ledmask-hint" style={{ margin: "0 0 10px" }}>
-              Camera mirrors your real expression onto the mask · mic lip-syncs the
-              mouth to your voice · speech is captioned onto the banner.
-            </p>
-            <div className="ledmask-active-row">
-              <button
-                className={"ledmask-state" + (camOn ? " is-active" : "")}
-                onClick={toggleCamera}
-                disabled={!mediaSupported || camLoading}
-              >
-                {camLoading ? "STARTING…" : camOn ? "■ CAMERA" : "▶ CAMERA"}
-              </button>
-              <button
-                className={"ledmask-state" + (micOn ? " is-active" : "")}
-                onClick={toggleMic}
-                disabled={!mediaSupported || micLoading}
-              >
-                {micLoading ? "STARTING…" : micOn ? "■ MIC" : "▶ MIC"}
-              </button>
-              <button
-                className={"ledmask-state" + (ccOn ? " is-active" : "")}
-                onClick={toggleCaptions}
-                disabled={!captionsSupported}
-                title={captionsSupported ? "" : "Needs Chrome or Edge"}
-              >
-                {ccOn ? "■ CAPTIONS" : "▶ CAPTIONS"}
-              </button>
-            </div>
-            {camOn && (
-              <p className="ledmask-active-live">
-                ● Live — the AI is reading your expression. The camera feed itself is never shown.
-              </p>
-            )}
-            {/* Invisible 1px holder: keeps the camera <video> decoding for the face
-                model without ever showing the raw feed. */}
-            <div ref={previewRef} className="ledmask-active-preview" aria-hidden="true" />
-            {ccOn && (
-              <div className="ledmask-active-cc">{liveCaption || "Listening…"}</div>
-            )}
-            {camLoading && <p className="ledmask-hint">Loading face model (first use only)…</p>}
-            {!mediaSupported && (
-              <p className="ledmask-active-err">Camera/mic capture isn't available in this browser.</p>
-            )}
-            {activeErr && <p className="ledmask-active-err">{activeErr}</p>}
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">📜 SCROLLING BANNER</div>
-            <div className="ledmask-banner-row" style={{ marginBottom: 8, alignItems: "center" }}>
-              <button
-                className={"ledmask-state" + (bannerOn ? " is-active" : "")}
-                onClick={toggleBanner}
-              >
-                {bannerOn ? "■ BANNER ON" : "▶ BANNER OFF"}
-              </button>
-              <span className="ledmask-hint" style={{ margin: 0 }}>
-                Off by default. Turning captions on (or hitting RUN) switches it back on.
-              </span>
-            </div>
-            <div className="ledmask-banner-row">
-              <input
-                className="ledmask-input"
-                value={banner}
-                onChange={(e) => setBanner(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") runBanner();
-                }}
-                placeholder="Type a message…"
-              />
-              <button className="ledmask-run" onClick={runBanner}>
-                RUN
-              </button>
-            </div>
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">🪖 HEAD SHELL</div>
-            <p className="ledmask-hint" style={{ margin: "0 0 10px" }}>
-              Swap the procedural housing around the LED face. Your pick is saved.
-            </p>
-            <div className="ledmask-faces">
-              {SHELLS.map((s) => (
-                <button
-                  key={s.id}
-                  className={"ledmask-face" + (shell === s.id ? " is-active" : "")}
-                  onClick={() => applyShell(s.id)}
-                >
-                  <span className="ledmask-face-glyph">{s.glyph}</span>
-                  <span className="ledmask-face-label">{s.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">FACE OPTIONS</div>
-            <div className="ledmask-faces">
-              {FACES.map((f) => (
-                <button
-                  key={f.id}
-                  className={"ledmask-face" + (face === f.id ? " is-active" : "")}
-                  onClick={() => applyFace(f.id)}
-                >
-                  <span className="ledmask-face-glyph">{f.glyph}</span>
-                  <span className="ledmask-face-label">{f.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">ANIMATION STATES</div>
-            <div className="ledmask-states">
-              {STATES.map((s) => (
-                <button
-                  key={s.id}
-                  className={
-                    "ledmask-state" +
-                    (s.danger ? " is-danger" : "") +
-                    (state === s.id ? " is-active" : "")
-                  }
-                  onClick={() => applyState(s.id)}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <p className="ledmask-hint">Shortcuts: I · T · S · W · C · A</p>
-          </section>
-
-          <section className="ledmask-panel">
-            <div className="ledmask-panel-title">⚡ COMBAT — DAMAGE &amp; CASTING</div>
-            <div className="ledmask-states">
-              <button className="ledmask-state" onClick={castSpell}>
-                CAST SPELL
-              </button>
-              <button className="ledmask-state is-danger" onClick={takeHit}>
-                TAKE HIT
-              </button>
-              <button className="ledmask-state" onClick={repair}>
-                REPAIR
-              </button>
-            </div>
-            <div className="ledmask-banner-row" style={{ marginTop: 10, alignItems: "center" }}>
-              <span className="ledmask-face-label" style={{ minWidth: 64 }}>
-                HEALTH {Math.round(health * 100)}%
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={Math.round(health * 100)}
-                onChange={(e) => applyHealth(Number(e.target.value) / 100)}
-                style={{ flex: 1 }}
-              />
-            </div>
-            <p className="ledmask-hint">Shortcuts: C cast · H hit · R repair</p>
-          </section>
+            </section>
+          )}
         </div>
       </div>
 
-      <RoomGallery onNavigate={onNavigate} />
+      <div className="ledmask-rooms">
+        <RoomGallery onNavigate={onNavigate} />
+      </div>
 
       <FrameSkinModal
         open={frameModal}
@@ -684,6 +1156,31 @@ export function LedMaskMode({ onExit, onNavigate }: Props) {
         onPick={pickFrame}
         onClose={() => setFrameModal(false)}
       />
+    </div>
+  );
+}
+
+function LmChips<T extends string>({
+  items,
+  value,
+  onPick,
+}: {
+  items: { id: T; label: string }[];
+  value: T;
+  onPick: (v: T) => void;
+}) {
+  return (
+    <div className="lm-chips">
+      {items.map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          className={"lm-chip" + (value === s.id ? " is-on" : "")}
+          onClick={() => onPick(s.id)}
+        >
+          {s.label}
+        </button>
+      ))}
     </div>
   );
 }

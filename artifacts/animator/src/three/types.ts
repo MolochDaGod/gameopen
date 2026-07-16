@@ -38,9 +38,11 @@ export type WeaponId =
   | "scythe"
   | "pistol"
   | "rifle"
+  /** Sniper rifle (production name); id kept for fleet compat. */
+  | "hunter-rifle"
+  | "shotgun"
   | "shield"
   | "gunblade"
-  | "hunter-rifle"
   | "javelin";
 
 export type SkillKind =
@@ -864,6 +866,15 @@ export interface Avatar {
   playRole(role: AnimRole, fade?: number): void;
   playRoleOnce(role: AnimRole, fade?: number): number;
   playClipOnce(name: string, fade?: number): number;
+  /**
+   * Optional cut-animation: play a fraction slice of a clip at `timeScale`
+   * (wall-clock duration returned). Character implements fully; other avatars
+   * may approximate.
+   */
+  playClipCut?(
+    name: string,
+    opts?: { from?: number; to?: number; timeScale?: number; fade?: number },
+  ): number;
   setLocomotionRate(rate: number): void;
   readonly isOneShotActive: boolean;
   /**
@@ -972,6 +983,15 @@ export interface HudSnapshot {
   difficulty: Difficulty;
   /** True while the player is holding block (RMB). */
   blocking: boolean;
+  /**
+   * Activity mode: combat (fight) · harvest (gather) · build (place).
+   * **Q** cycles. **X** dodge always. Hold **Tab** for radial options.
+   */
+  activityMode: "combat" | "harvest" | "build";
+  /** Selected radial tool id for the current mode. */
+  activityTool: string;
+  /** True while the radial options wheel is open (hold Tab). */
+  radialOpen: boolean;
   /** Counts down briefly after the player takes a hit (drives a hurt vignette). */
   hurt: number;
   /** True while the player is downed and waiting to respawn. */
