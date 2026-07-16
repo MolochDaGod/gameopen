@@ -16,6 +16,7 @@ import type { Animator } from "../explorer/Animator";
 import type { CharacterLook } from "../explorer/types";
 import { CHARACTER_HEIGHT_M } from "../types";
 import { baseIdToRaceKey, type GenesisHeroOption } from "../../lib/grudoxRoster";
+import { EtherealSky } from "../lobby/etherealSky";
 
 export interface CampfireSlotView {
   index: number;
@@ -43,7 +44,7 @@ export class CampfireLobbyScene {
   private disposed = false;
   private torch: TorchHandle | null = null;
   private mist?: THREE.Points;
-  private falls?: THREE.Points;
+  private ethereal: EtherealSky | null = null;
   private ro?: ResizeObserver;
   private heroes: (Animator | null)[] = [null, null, null, null];
   private seats: THREE.Group[] = [];
@@ -76,9 +77,9 @@ export class CampfireLobbyScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // Ethereal Falls palette — cool mist + warm campfire
-    this.scene.background = new THREE.Color(0x060c14);
-    this.scene.fog = new THREE.FogExp2(0x0a1420, 0.055);
+    // Night clearing + fog (EtherealSky is fog-immune, like charactersgrudox lobby)
+    this.scene.background = new THREE.Color(0x05080f);
+    this.scene.fog = new THREE.FogExp2(0x05080f, 0.048);
 
     this.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 80);
     this.camera.position.set(0, 2.8, 7.2);
@@ -175,6 +176,8 @@ export class CampfireLobbyScene {
     for (const h of this.heroes) h?.dispose();
     this.heroes = [null, null, null, null];
     this.torch?.dispose();
+    this.ethereal?.dispose();
+    this.ethereal = null;
     this.composer.dispose();
     this.renderer.dispose();
   }
@@ -229,16 +232,13 @@ export class CampfireLobbyScene {
 
     this.mist = this.buildMist();
     this.scene.add(this.mist);
-    this.falls = this.buildFalls();
-    this.scene.add(this.falls);
 
-    // Distant cliff suggestion
-    const cliff = new THREE.Mesh(
-      new THREE.BoxGeometry(18, 10, 2),
-      new THREE.MeshStandardMaterial({ color: 0x0e1828, roughness: 1, metalness: 0 }),
-    );
-    cliff.position.set(0, 4, -9);
-    this.scene.add(cliff);
+    // Canon Ethereal Falls skyline (charactersgrudox Lobby SSOT)
+    try {
+      this.ethereal = new EtherealSky(this.scene);
+    } catch (err) {
+      console.warn("[CampfireLobby] EtherealSky init failed", err);
+    }
   }
 
   private buildSeats(): void {
@@ -344,29 +344,6 @@ export class CampfireLobbyScene {
     return new THREE.Points(geo, mat);
   }
 
-  /** Soft waterfall sheets behind the overlook */
-  private buildFalls(): THREE.Points {
-    const n = 600;
-    const pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 10;
-      pos[i * 3 + 1] = 2 + Math.random() * 7;
-      pos[i * 3 + 2] = -7.5 + Math.random() * 1.2;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({
-      color: 0xa8d4ff,
-      size: 0.08,
-      transparent: true,
-      opacity: 0.35,
-      depthWrite: false,
-    });
-    const p = new THREE.Points(geo, mat);
-    p.userData.base = pos.slice();
-    return p;
-  }
-
   private onPointerDown = (e: PointerEvent): void => {
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -402,24 +379,16 @@ export class CampfireLobbyScene {
     const t = this.clock.elapsedTime;
 
     this.torch?.update(dt);
+    this.ethereal?.update(t);
 
-    // Gentle orbit camera
-    this.orbit += dt * 0.08;
-    const r = 7.0;
-    this.camera.position.x = Math.sin(this.orbit) * r * 0.35;
-    this.camera.position.z = 6.8 + Math.cos(this.orbit) * 0.4;
-    this.camera.position.y = 2.6 + Math.sin(this.orbit * 0.7) * 0.15;
-    this.camera.lookAt(0, 1.05, 0);
+    // Gentle orbit camera — overlook toward the falls (-Z)
+    this.orbit += dt * 0.06;
+    const r = 7.4;
+    this.camera.position.x = Math.sin(this.orbit) * r * 0.32;
+    this.camera.position.z = 7.2 + Math.cos(this.orbit) * 0.35;
+    this.camera.position.y = 2.7 + Math.sin(this.orbit * 0.7) * 0.12;
+    this.camera.lookAt(0, 1.15, -2.5);
 
-    // Falls drift down
-    if (this.falls) {
-      const arr = this.falls.geometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < arr.length; i += 3) {
-        arr[i + 1]! -= dt * (1.8 + (i % 7) * 0.05);
-        if (arr[i + 1]! < 1.5) arr[i + 1] = 8.5;
-      }
-      this.falls.geometry.attributes.position.needsUpdate = true;
-    }
     if (this.mist) {
       this.mist.rotation.y = t * 0.02;
     }
