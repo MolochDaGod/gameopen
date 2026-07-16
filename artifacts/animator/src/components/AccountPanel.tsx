@@ -29,7 +29,7 @@ import {
 import { raceCharacterIdForFleetRace } from "../three/assets";
 import { GRUDOX_ZONES } from "../game/grudoxZones";
 import { embedSessionForZone } from "../lib/inAppLaunch";
-import { assetUrl, publicUrl } from "../lib/fleet";
+import { publicUrl } from "../lib/fleet";
 import { assetCandidates } from "../three/assets";
 import { CharacterPicker } from "./CharacterPicker";
 import {
