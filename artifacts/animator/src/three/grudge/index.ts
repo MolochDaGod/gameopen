@@ -36,6 +36,7 @@ export {
   normalizeCharacterGroup,
   applyGearPreset,
   applyBodyTexture,
+  meshKey,
 } from "./loadCharacter";
 
 export { loadBodyTexture } from "./texture";
