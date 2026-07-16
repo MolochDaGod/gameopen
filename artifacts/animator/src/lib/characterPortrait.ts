@@ -193,11 +193,12 @@ function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
 
 function cdnFallbacks(paper: PaperRaceKey): string[] {
   const stem = paperRacePngStem(paper);
-  // Historical Warlords / fleet locations (may 404 — last resort only)
+  // Historical Warlords / fleet locations (may 404 — last resort only).
+  // Never use assets.grudge-studio.com/gameopen/* (incomplete; mass 404s).
   return [
     `${FLEET.assets}/sprites/portraits/${stem}.png`,
     `${FLEET.assets}/portraits/${stem}.png`,
-    `${FLEET.assets}/gameopen/races/${stem}.png`,
+    `${FLEET.assets}/races/${stem}.png`,
   ];
 }
 

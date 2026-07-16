@@ -309,15 +309,14 @@ export async function bridgeLaunchToken(launchToken: string): Promise<string | n
     JSON.stringify({ launchToken, audience: origin }),
     JSON.stringify({ grudge_token: launchToken, audience: origin }),
   ];
+  // Only probe endpoints that exist in production.
+  // `/api/auth/grudge-bridge` 404s on id.grudge-studio.com and Railway — do not hit it.
   const urls = [
     // Builder Railway (works in production — 400 without body, not 404)
     `${FLEET.gameData}/api/auth/session/exchange`,
-    `${FLEET.gameData}/api/auth/grudge-bridge`,
     // Same-origin rewrites (Open → id or Railway)
     apiUrl("/api/auth/session/exchange"),
-    apiUrl("/api/auth/grudge-bridge"),
     `${FLEET.auth}/api/auth/session/exchange`,
-    `${FLEET.auth}/api/auth/grudge-bridge`,
   ];
   for (const url of urls) {
     for (const body of bodies) {

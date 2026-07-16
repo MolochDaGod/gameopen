@@ -9,7 +9,7 @@
  *    characters/*.glb, /assets/{race}/… modular kit, /anims/baked.
  *  - **Arena** `grudge-arena.grudge-studio.com` — skinned race GLBs for combat.
  *  - **ObjectStore/info** registry JSON for icons/definitions (optional lookup).
- *  - Incomplete `assets.grudge-studio.com/gameopen/*` — last resort only.
+ *  - Incomplete `assets.grudge-studio.com/gameopen/*` — never use for loads.
  *
  * Loaders must use {@link resolveAssetCandidates} / {@link loadGltfFirst} with
  * Draco + Meshopt (+ KTX2 when renderer bound) so compressed GLBs decode.
@@ -21,8 +21,6 @@ const _viteBase = import.meta.env.BASE_URL || "/";
 export const FLEET_ASSET_HOSTS = {
   /** Primary binary CDN (R2 grudge-assets via r2-cdn Worker). */
   r2: "https://assets.grudge-studio.com",
-  /** Incomplete Open mirror — avoid unless dual-uploaded. */
-  r2Gameopen: "https://assets.grudge-studio.com/gameopen",
   open: "https://open.grudge-studio.com",
   gameopenVercel: "https://gameopen.vercel.app",
   /** Skinned grudge6 race GLBs + anim JSON (combat runtime). */
@@ -31,6 +29,13 @@ export const FLEET_ASSET_HOSTS = {
   objectStorePages: "https://molochdagod.github.io/ObjectStore",
   infoApi: "https://info.grudge-studio.com/api/v1",
 } as const;
+
+/**
+ * Incomplete R2 prefix — never use for GLB/texture loads.
+ * Probed 2026-07: `assets.grudge-studio.com/gameopen/models/**` mass-404s.
+ */
+export const R2_GAMEOPEN_PREFIX_DO_NOT_USE =
+  "https://assets.grudge-studio.com/gameopen";
 
 function cleanPath(path: string): string {
   return path.replace(/^\//, "").replace(/\\/g, "/");
@@ -276,10 +281,8 @@ export function resolveAssetCandidates(path: string): string[] {
     }
   }
 
-  // 6) Incomplete gameopen R2 prefix — last resort
-  for (const a of aliases) {
-    urls.push(abs(FLEET_ASSET_HOSTS.r2Gameopen, a));
-  }
+  // Never append r2Gameopen — that prefix 404s for Open lab pack (props/races/vfx)
+  // and only pollutes the network panel + lastErr when all real hosts fail.
 
   return [...new Set(urls.filter(Boolean))];
 }

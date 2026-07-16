@@ -29,16 +29,25 @@ let html = fs.readFileSync(indexPath, "utf8");
 const bootstrap = `
 <script>
   // Grudge fleet: prefer R2 CDN for heavy assets when configured
+  // Default: same-origin public/ (Open ships models under Vercel static).
+  // R2 /gameopen prefix is incomplete — only enable with explicit VITE_USE_R2=true
+  // AND a working base (prefer assets.grudge-studio.com root, not /gameopen).
   window.__GAMEOPEN__ = window.__GAMEOPEN__ || {
-    assetsCdn: ${JSON.stringify(process.env.VITE_ASSET_BASE_URL || "https://assets.grudge-studio.com/gameopen")},
-    useR2: ${JSON.stringify(process.env.VITE_USE_R2 !== "false")},
+    assetsCdn: ${JSON.stringify(process.env.VITE_ASSET_BASE_URL || "https://assets.grudge-studio.com")},
+    useR2: ${JSON.stringify(process.env.VITE_USE_R2 === "true")},
     apiBase: ${JSON.stringify(process.env.VITE_API_BASE_URL || "")},
   };
-  // Rewrite relative /models /anim /icons to CDN when R2 flag on and not localhost
+  // Rewrite relative /models /anim /icons to CDN only when R2 flag is explicitly on
   (function () {
     if (!window.__GAMEOPEN__.useR2) return;
     if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
     var cdn = window.__GAMEOPEN__.assetsCdn.replace(/\\/$/, "");
+    // Refuse incomplete gameopen prefix (mass 404s for props/races/vfx)
+    if (/\\/gameopen\\/?$/i.test(cdn)) {
+      console.warn("[gameopen] refusing R2 rewrite to incomplete /gameopen prefix");
+      window.__GAMEOPEN__.useR2 = false;
+      return;
+    }
     var prefixes = ["/models/", "/anim/", "/icons/", "/ui/"];
     var origFetch = window.fetch.bind(window);
     window.fetch = function (input, init) {
