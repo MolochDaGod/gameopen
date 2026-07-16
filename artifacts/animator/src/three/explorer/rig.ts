@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import type { CharacterLook } from "./types";
 import { SHELLS, DEFAULT_SHELL, PANEL_Z, OPENING_CENTER_Y, type ShellId } from "../LedMaskShells";
+import { applyAvatarHead, loadPlayerHeadConfig, type AvatarHeadHandle } from "../avatar/playerHead";
+import { skinToneOf } from "../avatar/catalog";
 
 /** Recolourable / patternable body parts of the procedural box rig. */
 export type VoxelPart = "skin" | "shirt" | "pants" | "boot" | "hat" | "eye";
@@ -52,6 +54,9 @@ export class VoxelCharacter {
   private readonly ledGeometries: THREE.BufferGeometry[] = [];
   private readonly ledMaterials: THREE.Material[] = [];
   private readonly ledTextures: THREE.Texture[] = [];
+  /** Avatar Edit modular head (pixel faces + hair) — play-shell parity. */
+  private avatarHeadFx: AvatarHeadHandle | null = null;
+  private avatarSkinHex: number | null = null;
 
   constructor(skeletonSource: THREE.Object3D, look: CharacterLook, targetHeight = 2) {
     this.root = new THREE.Group();
@@ -141,7 +146,14 @@ export class VoxelCharacter {
     m.needsUpdate = true;
   }
 
+  /** Per-frame avatar-head effects (hair-strand wind sway); absolute seconds. */
+  updateHeadFx(timeSec: number): void {
+    this.avatarHeadFx?.update(timeSec);
+  }
+
   dispose(): void {
+    this.avatarHeadFx?.dispose();
+    this.avatarHeadFx = null;
     for (const g of this.geometries) g.dispose();
     for (const m of Object.values(this.mats)) m.dispose();
     for (const m of this.extraMats) m.dispose();
@@ -196,6 +208,18 @@ export class VoxelCharacter {
         this.eyeMeshes.push(eye);
       }
       this.addHat(head, look);
+
+      // Player-authored Avatar Edit head (play-shell Explorer design system).
+      // Skipped under LED mask; optional override via look.avatarHead.
+      if (look.avatarHead && look.hat !== "ledMask") {
+        const cfg = loadPlayerHeadConfig();
+        if (cfg) {
+          this.avatarHeadFx = applyAvatarHead(head, cfg, 0.44);
+          for (const eye of this.eyeMeshes) eye.visible = false;
+          this.avatarSkinHex = skinToneOf(cfg);
+          this.mats.skin.color.setHex(this.avatarSkinHex);
+        }
+      }
     }
 
     // Optional cape, hung from the upper back so it sways with the torso.

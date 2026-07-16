@@ -230,7 +230,7 @@ export function AvatarEditMode({ onExit }: Props) {
   const saveToCharacter = useCallback(() => {
     savePlayerHeadConfig(cfg);
     setSavedToCharacter(true);
-    notice("Saved — your Explorer wears this head");
+    notice("Saved — Explorer / campfire heroes wear this head");
   }, [cfg, notice]);
 
   const copyCode = useCallback(() => {

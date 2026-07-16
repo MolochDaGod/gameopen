@@ -69,6 +69,7 @@ import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { AvatarEditMode } from "./components/AvatarEditMode";
 import { CharactersGrudoxMode } from "./components/CharactersGrudoxMode";
+import { CampfireLobby } from "./components/CampfireLobby";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
 import { CollectionHealth } from "./components/CollectionHealth";
@@ -1329,15 +1330,30 @@ export default function App() {
   }
 
   if (mode === "characters") {
+    // Ethereal Falls campfire — 4-slot GRUDOX heroes + Explorer Avatar Edit system
     return shell(
       withScreenTheme(
-        <CharactersGrudoxMode
+        <CampfireLobby
           onExit={() => setMode("doors")}
           onNavigate={(m) => {
-            // Map hub local modes onto Open AppMode (lobbyWorld → Realms live)
             if (m === "lobbyWorld") navigate("realms");
             else if (m === "voxgrudge-native") navigate("voxgrudge-native");
             else navigate(m as Mode);
+          }}
+          onAvatarEdit={() => navigate("avatar")}
+          onPlayDanger={(hero) => {
+            gameSession.selectCharacter(hero.id);
+            const animId =
+              hero.baseId === "explorer" || !hero.baseId
+                ? "explorer"
+                : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
+                  ? hero.baseId
+                  : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
+            setCharacterId(animId === "human" ? "race-human" : animId);
+            studioRef.current?.setCharacter(
+              animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
+            );
+            navigate("danger");
           }}
         />,
       ),

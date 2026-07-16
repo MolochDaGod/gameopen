@@ -286,10 +286,15 @@ export class ExplorerCharacter implements Avatar {
   }
 
   async load(): Promise<void> {
+    // Explorer uses Avatar Edit modular head (play-shell parity) unless look overrides.
+    const look =
+      this.def.id === "explorer"
+        ? { ...this.def.look, avatarHead: true }
+        : this.def.look;
     const animator = await createAnimatedCharacter({
       height: CHARACTER_HEIGHT_M,
       weapon: this.weaponClass,
-      look: this.def.look,
+      look,
     });
     if (this.disposed) {
       animator.dispose();
@@ -404,6 +409,24 @@ export class ExplorerCharacter implements Avatar {
       default:
         return 0;
     }
+  }
+
+  /**
+   * Cut-animation approximation for the procedural rig: plays the full verb,
+   * returns a shortened wall-clock duration so impact scheduling matches the
+   * GLB `playClipCut` contract (slice × timeScale). True track slicing lives
+   * on {@link Character}.
+   */
+  playClipCut(
+    name: string,
+    opts: { from?: number; to?: number; timeScale?: number; fade?: number } = {},
+  ): number {
+    const from = Math.min(1, Math.max(0, opts.from ?? 0));
+    const to = Math.min(1, Math.max(from + 0.05, opts.to ?? 1));
+    const scale = Math.max(0.05, opts.timeScale ?? 1);
+    const full = this.playClipOnce(name);
+    if (full <= 0) return 0;
+    return Math.max(0.08, (full * (to - from)) / scale);
   }
 
   playClipOnce(name: string): number {

@@ -287,4 +287,10 @@ export interface CharacterLook {
   cape?: boolean;
   /** Cape colour (defaults to a deep slate when unset). */
   capeColor?: string;
+  /**
+   * When true, dress the box head with the player's saved Avatar Edit build
+   * (pixel faces + ears/nose/tusks/hair) if one exists — same path as
+   * threejs-rapier play-shell Explorer. Ignored while `hat === "ledMask"`.
+   */
+  avatarHead?: boolean;
 }

@@ -582,6 +582,8 @@ export class Animator {
     }
 
     this.mixer.update(dt);
+    // Modular avatar head hair / talk loop (Avatar Edit → Explorer)
+    this.character.updateHeadFx(this.time);
   }
 
   dispose(): void {

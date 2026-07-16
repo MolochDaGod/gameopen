@@ -419,6 +419,8 @@ export const DEFAULT_LOOK: CharacterLook = {
   hatColor: "#b03030",
   cape: false,
   capeColor: "#1a1e2b",
+  // Opt-in per character; ExplorerCharacter enables for the player Explorer.
+  avatarHead: false,
 };
 
 export interface CreateAnimatedCharacterOptions {
