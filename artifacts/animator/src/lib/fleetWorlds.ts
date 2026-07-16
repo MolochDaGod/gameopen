@@ -15,6 +15,8 @@
 export const FLEET_WORLD_HOSTS = {
   /** Authoritative voxel Realms SPA (Mine-Loader monorepo deploy) */
   mineLoader: "https://mine-loader.vercel.app/",
+  /** Mine-Loader Railway API (world authority + Codex /api/blocks) */
+  mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   /** Mine-Loader GitHub SSOT */
   mineLoaderGithub: "https://github.com/MolochDaGod/mine-loader",
   /** Full open-world VoxGrudge (CDN Three openworld HTML) */

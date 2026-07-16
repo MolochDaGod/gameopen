@@ -108,6 +108,14 @@ export const MINE_LOADER_FLEET = {
     (typeof import.meta !== "undefined" &&
       (import.meta.env?.VITE_MINE_LOADER_EDGE as string | undefined)) ||
     "https://mine-loader.vercel.app/",
+  /**
+   * World + Codex API (Railway, 1 replica). Vercel SPA rewrites `/api/*` here.
+   * Direct host is a fallback when same-origin / SPA proxy is cold.
+   */
+  api:
+    (typeof import.meta !== "undefined" &&
+      (import.meta.env?.VITE_MINE_LOADER_API as string | undefined)) ||
+    "https://mine-loader-api-production.up.railway.app",
   /** Blocks catalog path (same-origin rewrite preferred when wired). */
   blocksApi: "/api/blocks",
   healthz: "/api/healthz",

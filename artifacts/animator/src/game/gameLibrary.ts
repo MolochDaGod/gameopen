@@ -104,7 +104,7 @@ export const MINE_LOADER = {
   /** Live host (mine-loader.vercel.app — custom DNS may be pending) */
   clientUrl: MINE_LOADER_FLEET.client,
   edgeUrl: MINE_LOADER_FLEET.edge,
-  /** Placeholder until Railway hostname is finalized */
+  /** Live Railway API (world authority + Codex catalog) */
   apiHost: "https://mine-loader-api-production.up.railway.app",
   docs: "docs/FLEET_DEPLOY.md",
   openContract: "docs/MINE_LOADER_SSOT.md",

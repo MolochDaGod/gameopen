@@ -1,8 +1,12 @@
 import type { CatalogBlock, CatalogResponse } from "./types";
 import { catalogTypeId, parseCssColor } from "./terrain";
 
-/** Primary live Codex host (Voxel Realms / mine-loader). */
+/** Primary live Codex host (Voxel Realms / mine-loader SPA). */
 export const MINE_LOADER_ORIGIN = "https://mine-loader.vercel.app";
+
+/** Railway world + Codex API (1 replica; Vercel rewrites /api/* here). */
+export const MINE_LOADER_API_ORIGIN =
+  "https://mine-loader-api-production.up.railway.app";
 
 /** Preferred same-origin path (Vercel rewrite / Railway proxy). */
 export const BLOCKS_API_PATH = "/api/blocks";
@@ -10,6 +14,7 @@ export const BLOCKS_API_PATH = "/api/blocks";
 const DEFAULT_FETCH_URLS = [
   BLOCKS_API_PATH,
   `${MINE_LOADER_ORIGIN}/api/blocks`,
+  `${MINE_LOADER_API_ORIGIN}/api/blocks`,
 ] as const;
 
 let cache: CatalogResponse | null = null;
