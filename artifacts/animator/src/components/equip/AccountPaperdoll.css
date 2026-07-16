@@ -52,6 +52,16 @@
   align-items: start;
 }
 
+@media (max-width: 900px) {
+  .ap-chars-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .ap-chars-layout > aside {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
 @media (max-width: 820px) {
   .ap-main {
     grid-template-columns: 1fr;

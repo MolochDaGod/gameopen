@@ -116,11 +116,19 @@ export type CreateCharacterInput = {
   /** Catalog id e.g. race-human for Open mesh resolver */
   catalogId?: string;
   gameEra?: "warlords" | "nexus" | "armada";
+  /**
+   * Starting equipment bag (mesh_ids + slots + open loadout).
+   * Built via {@link buildStartingEquipment} for GrudaChain / main-panel parity.
+   */
+  equipment?: Record<string, unknown>;
+  saveData?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 };
 
 /**
  * POST Railway /api/characters — create Warlords-era fleet character.
  * Body fields dual-written for schema variants (raceId vs race, gameEra vs era).
+ * Starting gear (mesh_ids) is written into equipment + saveData.open for Danger Room.
  */
 export async function createFleetCharacter(
   input: CreateCharacterInput,
@@ -129,6 +137,20 @@ export async function createFleetCharacter(
   const raceId = normalizeRaceId(input.raceId);
   const classId = input.classId || "warrior";
   const era = input.gameEra || "warlords";
+  const equipment = input.equipment || {};
+  const saveData = {
+    ...(input.saveData || {}),
+    equipment,
+    open: (equipment as { open?: unknown }).open || input.saveData?.open,
+  };
+  const config = {
+    catalogId: input.catalogId,
+    source: "gameopen-account",
+    from: "charactersgrudox",
+    ...(input.config || {}),
+    equipment,
+    open: (equipment as { open?: unknown }).open,
+  };
 
   const bodies: Record<string, unknown>[] = [
     {
@@ -138,7 +160,9 @@ export async function createFleetCharacter(
       gameEra: era,
       era,
       prefabId: input.catalogId,
-      config: { catalogId: input.catalogId, source: "gameopen-account", from: "charactersgrudox" },
+      equipment,
+      saveData,
+      config,
     },
     {
       name,
@@ -146,6 +170,9 @@ export async function createFleetCharacter(
       class: classId,
       game_era: era,
       era,
+      equipment,
+      save_data: saveData,
+      config,
     },
   ];
 

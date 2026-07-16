@@ -42,6 +42,15 @@ import {
   type PaperSlotId,
   type PaperEquipped,
 } from "./equip/AccountPaperdoll";
+import {
+  buildStartingEquipment,
+  classFromStarterWeapon,
+  meshIdsSummary,
+  paperEquippedFromSlots,
+  paperEquippedFromStarter,
+  type StarterWeaponChoice,
+} from "../lib/startingEquipment";
+import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
 import "./equip/AccountPaperdoll.css";
 
 type TabId = "characters" | "shared" | "wallet" | "games" | "grudox" | "treaty";
@@ -75,10 +84,11 @@ export function AccountPanel({
   const [createMsg, setCreateMsg] = useState<string | null>(null);
   const [createBusy, setCreateBusy] = useState(false);
   const [paperToast, setPaperToast] = useState("");
-  const [createWeapon, setCreateWeapon] = useState<"sword" | "axe" | "staff" | null>("sword");
+  const [createWeapon, setCreateWeapon] = useState<StarterWeaponChoice>("sword");
   const [profile, setProfile] = useState<FleetAccountProfile | null>(null);
   const [bag, setBag] = useState<ResourceMap>({});
   const [sharedBusy, setSharedBusy] = useState(false);
+
   const [handoffFrom] = useState(() => getHandoffFrom());
   const [treatyInput, setTreatyInput] = useState("");
   const [treatyLog, setTreatyLog] = useState<{ who: string; text: string; t: number }[]>(() => {
@@ -139,23 +149,91 @@ export function AccountPanel({
     }
   }, [snap.account, wallet, refreshShared, refreshWallet]);
 
-  /** Create on Railway when signed in; local draft when guest. */
+  /** Selected fleet character (GrudaChain) for paperdoll + mesh inventory. */
+  const selectedChar = useMemo(
+    () =>
+      snap.characters.find((c) => c.id === snap.selectedCharacterId) ??
+      snap.characters[0] ??
+      null,
+    [snap.characters, snap.selectedCharacterId],
+  );
+
+  /** Preview starter kit for create flow (weapon cycle → class preset meshes). */
+  const createStarter = useMemo(() => {
+    const paperKey = catalogIdToPaperRace(createRace);
+    const raceHint =
+      paperKey === "elf"
+        ? "high-elves"
+        : paperKey === "human"
+          ? "western-kingdoms"
+          : paperKey;
+    return buildStartingEquipment(raceHint, createWeapon, createRace);
+  }, [createRace, createWeapon]);
+
+  /** Paperdoll: selected character gear, else create-hero starter preview. */
+  const paperEquipped = useMemo((): PaperEquipped => {
+    if (selectedChar) {
+      const vis = resolveCharacterEquipmentVisualSync(selectedChar);
+      const fromSlots = paperEquippedFromSlots(vis.slotIcons, vis.slotLabels);
+      if (Object.keys(fromSlots).length) return fromSlots;
+      // Class default meshes → show weapon/chest labels from starter of that class
+      const w =
+        vis.presetId === "mage"
+          ? "staff"
+          : vis.presetId === "warrior"
+            ? "axe"
+            : "sword";
+      return paperEquippedFromStarter(
+        buildStartingEquipment(vis.raceId, w as StarterWeaponChoice, createRace),
+      );
+    }
+    return paperEquippedFromStarter(createStarter);
+  }, [selectedChar, createStarter, createRace]);
+
+  /** Mesh ids for inventory panel (character or create preview). */
+  const activeMeshIds = useMemo(() => {
+    if (selectedChar) {
+      return resolveCharacterEquipmentVisualSync(selectedChar).meshIds;
+    }
+    return createStarter.meshIds;
+  }, [selectedChar, createStarter]);
+
+  /** Create on Railway when signed in; local draft when guest. Always attach starting gear. */
   const createCharacter = async () => {
     const paperKey = catalogIdToPaperRace(createRace);
     const name = createName.trim() || RACE_DISPLAY[paperKey].name || "Hero";
     const raceKey = createRace.replace(/^race-/, "").replace(/-/g, "_");
     const raceId = raceKey === "high_elf" ? "elf" : raceKey === "high_elves" ? "elf" : raceKey;
+    const classId = classFromStarterWeapon(createWeapon);
+    const starter = buildStartingEquipment(
+      raceKey === "high_elf" || raceKey === "elf" ? "high-elves" : raceKey,
+      createWeapon,
+      createRace,
+    );
 
     if (snap.account && getStoredToken()) {
       setCreateBusy(true);
-      setCreateMsg("Creating on Railway…");
+      setCreateMsg("Creating on Railway with starting gear…");
       try {
         const res = await createFleetCharacter({
           name,
           raceId,
-          classId: "warrior",
+          classId,
           catalogId: createRace,
           gameEra: "warlords",
+          equipment: starter as unknown as Record<string, unknown>,
+          saveData: {
+            equipment: starter,
+            open: starter.open,
+            meshIds: starter.meshIds,
+            mesh_ids: starter.meshIds,
+          },
+          config: {
+            catalogId: createRace,
+            source: "charactersgrudox",
+            equipment: starter,
+            open: starter.open,
+          },
         });
         if (!res.ok) {
           setCreateMsg(res.error);
@@ -163,7 +241,9 @@ export function AccountPanel({
         }
         await gameSession.refreshCharacters();
         gameSession.selectCharacter(res.id);
-        setCreateMsg(`Fleet character ${name} · ${res.id.slice(0, 8)}… · Warlords era`);
+        setCreateMsg(
+          `Fleet ${name} · ${classId} · ${starter.meshIds.length} meshes · ${res.id.slice(0, 8)}…`,
+        );
         onPlayRace?.(createRace);
       } finally {
         setCreateBusy(false);
@@ -171,18 +251,32 @@ export function AccountPanel({
       return;
     }
 
-    // Guest draft — local only (not SSOT)
+    // Guest draft — local only (not SSOT) but still carries mesh_ids for Danger Room
     const id = `local_${createRace}_${Date.now().toString(36)}`;
     const draft: GrudgeCharacter = {
       id,
       name,
-      raceId: raceKey === "high_elf" ? "high-elves" : raceKey,
-      classId: "warrior",
+      raceId: raceKey === "high_elf" || raceKey === "elf" ? "high-elves" : raceKey,
+      classId,
       level: 1,
-      config: { catalogId: createRace, source: "charactersgrudox" },
+      config: {
+        catalogId: createRace,
+        source: "charactersgrudox",
+        equipment: starter,
+        open: starter.open,
+        meshIds: starter.meshIds,
+      },
+      saveData: {
+        equipment: starter,
+        open: starter.open,
+        meshIds: starter.meshIds,
+        mesh_ids: starter.meshIds,
+      },
     };
     gameSession.upsertLocalCharacter(draft);
-    setCreateMsg(`Local draft ${name} · sign in to save to fleet Postgres`);
+    setCreateMsg(
+      `Local ${name} · ${classId} · ${starter.meshIds.length} starter meshes · sign in to save fleet`,
+    );
     onPlayRace?.(createRace);
   };
 
@@ -295,186 +389,301 @@ export function AccountPanel({
 
       <div style={body}>
         {tab === "characters" && (
-          <div style={col}>
-            <CharacterPicker />
+          <div className="ap-chars-layout" style={charsLayout}>
+            {/* ── LEFT: characters · paperdoll · create ── */}
+            <div style={col}>
+              <CharacterPicker />
 
-            {/* ── TI /equipment main panel (banner + paperdoll + race art) ── */}
-            <div
-              className="ap-banner"
-              style={{
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.88)), url(${publicUrl("rooms/equipment-banner.png")})`,
-              }}
-            >
-              <div>
-                <p className="ap-banner-kicker">Equipment · Create</p>
-                <h2 className="ap-banner-title">GRUDGE WARLORD LOADOUT</h2>
-                <p className="ap-banner-sub">
-                  Tactical Infinity <strong>/equipment</strong> chrome · race portraits · paperdoll
-                  slots · charactersgrudox models under <code>models/races/*.glb</code>
-                </p>
+              <div
+                className="ap-banner"
+                style={{
+                  backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.88)), url(${publicUrl("rooms/equipment-banner.png")})`,
+                }}
+              >
+                <div>
+                  <p className="ap-banner-kicker">uMMORPG main panel · Equipment</p>
+                  <h2 className="ap-banner-title">GRUDGE WARLORD LOADOUT</h2>
+                  <p className="ap-banner-sub">
+                    Mesh visibility from <strong>gear presets / mesh_ids</strong> · GrudaChain
+                    characters spawn with starter kit · inventory on the right
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="ap-main">
-              <AccountPaperdoll
-                race={catalogIdToPaperRace(createRace)}
-                title="GRUDGE WARLORD"
-                heroName={createName.trim() || undefined}
-                equipped={
-                  {
-                    weapon: createWeapon
-                      ? {
-                          name: createWeapon === "sword" ? "Sword" : createWeapon === "axe" ? "Axe" : "Staff",
-                          iconName:
-                            createWeapon === "staff"
-                              ? "skill-vfx-lab"
-                              : createWeapon === "axe"
-                                ? "charge"
-                                : "equip",
-                        }
-                      : undefined,
-                  } satisfies PaperEquipped
-                }
-                onSlotClick={(id: PaperSlotId) => {
-                  if (id === "weapon") {
-                    const cycle: Array<"sword" | "axe" | "staff"> = ["sword", "axe", "staff"];
-                    const i = createWeapon ? cycle.indexOf(createWeapon) : -1;
-                    const next = cycle[(i + 1) % cycle.length];
-                    setCreateWeapon(next);
-                    setPaperToast(`Main hand → ${next}`);
-                    return;
+              <div className="ap-main">
+                <AccountPaperdoll
+                  race={
+                    selectedChar
+                      ? catalogIdToPaperRace(
+                          (typeof selectedChar.config?.baseId === "string" &&
+                            selectedChar.config.baseId) ||
+                            (selectedChar.raceId
+                              ? `race-${selectedChar.raceId}`
+                              : createRace),
+                        )
+                      : catalogIdToPaperRace(createRace)
                   }
-                  if (id === "add") {
-                    setPaperToast("Pick a race below, name your hero, then Create");
-                    return;
+                  title="GRUDGE WARLORD"
+                  heroName={
+                    selectedChar?.name || createName.trim() || undefined
                   }
-                  setPaperToast(`${id} — armor catalogue soon (TI paperdoll parity)`);
+                  equipped={paperEquipped}
+                  onSlotClick={(id: PaperSlotId) => {
+                    if (id === "weapon" && !selectedChar) {
+                      const cycle: StarterWeaponChoice[] = ["sword", "axe", "staff"];
+                      const i = cycle.indexOf(createWeapon);
+                      const next = cycle[(i + 1) % cycle.length];
+                      setCreateWeapon(next);
+                      setPaperToast(
+                        `Main hand → ${next} · class ${classFromStarterWeapon(next)}`,
+                      );
+                      return;
+                    }
+                    if (id === "add") {
+                      setPaperToast("Pick a race, set weapon, then Create — starter mesh_ids apply");
+                      return;
+                    }
+                    setPaperToast(
+                      selectedChar
+                        ? `${id} · ${paperEquipped[id]?.name || "empty"} (mesh kit from account)`
+                        : `${id} — create hero to lock starter gear`,
+                    );
+                  }}
+                />
+
+                <div className="ap-side">
+                  <div className="ap-side-card">
+                    <h4>Create hero</h4>
+                    <p className="ap-hint">
+                      Weapon slot cycles sword / axe / staff → class preset +{" "}
+                      <code>mesh_ids</code> for Danger Room. Inventory stays on the right.
+                    </p>
+                    <div className="ap-action-row" style={{ marginTop: 10 }}>
+                      <input
+                        className="ap-input"
+                        value={createName}
+                        onChange={(e) => setCreateName(e.target.value)}
+                        placeholder="Hero name"
+                      />
+                      <button
+                        type="button"
+                        className="ap-btn ap-btn-primary"
+                        disabled={createBusy}
+                        onClick={() => void createCharacter()}
+                      >
+                        {createBusy
+                          ? "Saving…"
+                          : snap.account
+                            ? "Create on fleet"
+                            : "Create local draft"}
+                      </button>
+                      <button
+                        type="button"
+                        className="ap-btn"
+                        onClick={() => onPlayRace?.(createRace)}
+                      >
+                        Play race preview
+                      </button>
+                      <button
+                        type="button"
+                        className="ap-btn"
+                        onClick={() => {
+                          const url = characterStudioCreateUrl({
+                            token: getStoredToken(),
+                            returnTo:
+                              typeof window !== "undefined"
+                                ? `${window.location.origin}/account?open=1&from=charactersgrudox`
+                                : "https://gameopen.vercel.app/account?open=1&from=charactersgrudox",
+                          });
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        }}
+                      >
+                        Character Studio ↗
+                      </button>
+                    </div>
+                    <p className="ap-toast">{paperToast || createMsg || "\u00a0"}</p>
+                    <p className="ap-hint">
+                      Starter: <strong>{classFromStarterWeapon(createWeapon)}</strong> ·{" "}
+                      {createStarter.meshIds.length} meshes · weapon{" "}
+                      <strong>{createWeapon}</strong>
+                    </p>
+                    {!snap.account && (
+                      <p className="ap-hint">
+                        Sign in with Grudge ID to write characters + gear to Railway Postgres.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <h3 style={{ ...h3, color: "#fcd34d" }}>Race kit · portraits</h3>
+              <RacePortraitGrid
+                selected={catalogIdToPaperRace(createRace)}
+                onSelect={(race: PaperRaceKey) => {
+                  setCreateRace(RACE_DISPLAY[race].catalogId);
+                  setPaperToast(`Race → ${RACE_DISPLAY[race].name}`);
                 }}
               />
 
-              <div className="ap-side">
-                <div className="ap-side-card">
-                  <h4>Create hero</h4>
-                  <p className="ap-hint">
-                    Click paperdoll slots to cycle starter weapon. Select a race portrait, then
-                    create on fleet (Railway) or local draft.
-                  </p>
-                  <div className="ap-action-row" style={{ marginTop: 10 }}>
-                    <input
-                      className="ap-input"
-                      value={createName}
-                      onChange={(e) => setCreateName(e.target.value)}
-                      placeholder="Hero name"
-                    />
-                    <button
-                      type="button"
-                      className="ap-btn ap-btn-primary"
-                      disabled={createBusy}
-                      onClick={() => void createCharacter()}
-                    >
-                      {createBusy
-                        ? "Saving…"
-                        : snap.account
-                          ? "Create on fleet"
-                          : "Create local draft"}
-                    </button>
-                    <button
-                      type="button"
-                      className="ap-btn"
-                      onClick={() => onPlayRace?.(createRace)}
-                    >
-                      Play race preview
-                    </button>
-                    <button
-                      type="button"
-                      className="ap-btn"
-                      onClick={() => {
-                        const url = characterStudioCreateUrl({
-                          token: getStoredToken(),
-                          returnTo:
-                            typeof window !== "undefined"
-                              ? `${window.location.origin}/account?open=1&from=charactersgrudox`
-                              : "https://gameopen.vercel.app/account?open=1&from=charactersgrudox",
-                        });
-                        window.open(url, "_blank", "noopener,noreferrer");
-                      }}
-                    >
-                      Character Studio ↗
-                    </button>
-                  </div>
-                  <p className="ap-toast">{paperToast || createMsg || "\u00a0"}</p>
-                  {!snap.account && (
-                    <p className="ap-hint">
-                      Sign in with Grudge ID to write characters to Railway Postgres. Local drafts
-                      stay on this device only.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <h3 style={{ ...h3, color: "#fcd34d" }}>Race kit · portraits</h3>
-            <RacePortraitGrid
-              selected={catalogIdToPaperRace(createRace)}
-              onSelect={(race: PaperRaceKey) => {
-                setCreateRace(RACE_DISPLAY[race].catalogId);
-                setPaperToast(`Race → ${RACE_DISPLAY[race].name}`);
-              }}
-            />
-
-            <h3 style={h3}>Fleet roster · era=warlords</h3>
-            {snap.characters.length === 0 ? (
-              <p style={muted}>
-                No fleet characters yet — create above, open Character Studio, or sign in and Refresh.
-              </p>
-            ) : (
-              <ul style={list}>
-                {snap.characters.map((c) => {
-                  const glb = raceCharacterIdForFleetRace(c.raceId);
-                  const paperRace = catalogIdToPaperRace(
-                    (typeof c.config?.baseId === "string" && c.config.baseId) ||
-                      (c.raceId ? `race-${c.raceId}` : "race-human"),
-                  );
-                  const active = c.id === snap.selectedCharacterId;
-                  return (
-                    <li
-                      key={c.id}
-                      style={{
-                        ...listItem,
-                        borderColor: active ? "#fcd34d" : "rgba(146,64,14,0.35)",
-                        background: "rgba(12,10,9,0.75)",
-                      }}
-                    >
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        {/*
-                          Portrait cascade: Railway avatarUrl → race×class PNG →
-                          race PNG; voxel characters use voxel-head art.
-                          See lib/characterPortrait.ts + docs/CHARACTER_AVATARS.md
-                        */}
-                        <CharacterAvatar character={c} size={48} />
-                        <div>
-                          <strong style={{ color: "#fef3c7" }}>{c.name}</strong>
-                          <span style={muted}> · {c.raceId || "—"} · L{c.level ?? 1}</span>
-                          <div style={{ fontSize: 11, opacity: 0.65 }}>
-                            model {glb}
-                            {c.avatarUrl ? " · custom avatar" : ""}
-                            {paperRace ? ` · ${paperRace}` : ""}
+              <h3 style={h3}>Fleet roster · era=warlords</h3>
+              {snap.characters.length === 0 ? (
+                <p style={muted}>
+                  No fleet characters yet — create above (includes starting equipment), or sign in
+                  and Refresh.
+                </p>
+              ) : (
+                <ul style={list}>
+                  {snap.characters.map((c) => {
+                    const glb = raceCharacterIdForFleetRace(c.raceId);
+                    const paperRace = catalogIdToPaperRace(
+                      (typeof c.config?.baseId === "string" && c.config.baseId) ||
+                        (c.raceId ? `race-${c.raceId}` : "race-human"),
+                    );
+                    const active = c.id === snap.selectedCharacterId;
+                    const vis = resolveCharacterEquipmentVisualSync(c);
+                    return (
+                      <li
+                        key={c.id}
+                        style={{
+                          ...listItem,
+                          borderColor: active ? "#fcd34d" : "rgba(146,64,14,0.35)",
+                          background: "rgba(12,10,9,0.75)",
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                          <CharacterAvatar character={c} size={48} />
+                          <div>
+                            <strong style={{ color: "#fef3c7" }}>{c.name}</strong>
+                            <span style={muted}>
+                              {" "}
+                              · {c.raceId || "—"} · {c.classId || vis.presetId} · L
+                              {c.level ?? 1}
+                            </span>
+                            <div style={{ fontSize: 11, opacity: 0.65 }}>
+                              {vis.meshIds.length} meshes · {vis.source}
+                              {paperRace ? ` · ${paperRace}` : ""}
+                            </div>
                           </div>
                         </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            type="button"
+                            style={btnGhost}
+                            onClick={() => gameSession.selectCharacter(c.id)}
+                          >
+                            Select
+                          </button>
+                          <button
+                            type="button"
+                            style={btnPrimary}
+                            onClick={() => onPlayRace?.(glb)}
+                          >
+                            Play
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {/* ── RIGHT: account inventory (shared bag + character mesh kit) ── */}
+            <aside style={inventoryAside} aria-label="Account inventory">
+              <div style={invCard}>
+                <h3 style={{ ...h3, margin: 0, color: "#ffd24d" }}>Account inventory</h3>
+                <p style={{ ...muted, marginTop: 4 }}>
+                  Shared bag (all characters) · Railway <code>/api/account/resources</code>
+                </p>
+                {!snap.account ? (
+                  <p style={muted}>Sign in to load the shared account bag.</p>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ fontSize: 12, opacity: 0.8 }}>
+                        {profile?.grudgeId || snap.account.grudgeId}
+                      </span>
+                      <button
+                        type="button"
+                        style={btnGhost}
+                        disabled={sharedBusy}
+                        onClick={() => void refreshShared()}
+                      >
+                        {sharedBusy ? "…" : "Reload"}
+                      </button>
+                    </div>
+                    {(profile?.gbux != null || profile?.credits != null) && (
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#ffd24d" }}>
+                        {profile.gbux ?? profile.credits}{" "}
+                        <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.8 }}>GBUX</span>
                       </div>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button type="button" style={btnGhost} onClick={() => gameSession.selectCharacter(c.id)}>
-                          Select
-                        </button>
-                        <button type="button" style={btnPrimary} onClick={() => onPlayRace?.(glb)}>
-                          Play
-                        </button>
-                      </div>
+                    )}
+                    {bagEntries.length === 0 ? (
+                      <p style={muted}>Bag empty — harvest on Island / GRUDOX fills it.</p>
+                    ) : (
+                      <ul style={{ ...list, maxHeight: 220, overflow: "auto" }}>
+                        {bagEntries.map(([id, n]) => (
+                          <li key={id} style={{ ...listItem, padding: "8px 10px" }}>
+                            <span style={{ textTransform: "capitalize", fontSize: 13 }}>
+                              {id.replace(/_/g, " ")}
+                            </span>
+                            <span style={{ color: "#ffd24d", fontWeight: 700 }}>×{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div style={invCard}>
+                <h3 style={{ ...h3, margin: 0, color: "#4fc3ff" }}>Character kit</h3>
+                <p style={{ ...muted, marginTop: 4 }}>
+                  uMMORPG equip → <code>mesh_ids</code> (main panel / Danger Room)
+                </p>
+                {selectedChar ? (
+                  <p style={{ fontSize: 12, margin: "4px 0 8px" }}>
+                    <strong style={{ color: "#eaf4ff" }}>{selectedChar.name}</strong>
+                    <span style={muted}>
+                      {" "}
+                      · {resolveCharacterEquipmentVisualSync(selectedChar).source}
+                    </span>
+                  </p>
+                ) : (
+                  <p style={muted}>Create preview · {classFromStarterWeapon(createWeapon)}</p>
+                )}
+                <ul style={{ ...list, maxHeight: 280, overflow: "auto" }}>
+                  {meshIdsSummary(activeMeshIds).map((label, i) => (
+                    <li
+                      key={`${activeMeshIds[i]}-${i}`}
+                      style={{
+                        ...listItem,
+                        padding: "6px 10px",
+                        fontSize: 12,
+                        fontFamily: "ui-monospace, monospace",
+                      }}
+                    >
+                      <span style={{ opacity: 0.9 }}>{label}</span>
+                      <span style={{ opacity: 0.45, fontSize: 10 }}>mesh</span>
                     </li>
-                  );
-                })}
-              </ul>
-            )}
+                  ))}
+                  {activeMeshIds.length === 0 && (
+                    <li style={muted}>No mesh_ids — class preset will apply on play</li>
+                  )}
+                </ul>
+                {selectedChar && (
+                  <button
+                    type="button"
+                    style={{ ...btnPrimary, marginTop: 8, width: "100%" }}
+                    onClick={() =>
+                      onPlayRace?.(raceCharacterIdForFleetRace(selectedChar.raceId))
+                    }
+                  >
+                    Play with this kit
+                  </button>
+                )}
+              </div>
+            </aside>
           </div>
         )}
 
@@ -727,11 +936,39 @@ const tabBtn: CSSProperties = {
 };
 
 const body: CSSProperties = {
-  maxWidth: 1080,
+  maxWidth: 1140,
   margin: "0 auto",
 };
 
 const col: CSSProperties = { display: "flex", flexDirection: "column", gap: 12 };
+
+/** Characters left · account inventory right (desktop). */
+const charsLayout: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(260px, 320px)",
+  gap: 16,
+  alignItems: "start",
+};
+
+const inventoryAside: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+  position: "sticky",
+  top: 12,
+  alignSelf: "start",
+};
+
+const invCard: CSSProperties = {
+  padding: 14,
+  borderRadius: 14,
+  border: "1px solid rgba(146,64,14,0.4)",
+  background: "linear-gradient(180deg, rgba(28,25,23,0.95), rgba(7,11,20,0.92))",
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+  boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+};
 
 const h3: CSSProperties = {
   margin: "8px 0 0",
