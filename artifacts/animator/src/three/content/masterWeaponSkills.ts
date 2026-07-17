@@ -12,7 +12,7 @@
  */
 import type { SkillKind, WeaponId } from "../types";
 import { contentCandidates } from "../../lib/fleetSsot";
-import { cdnIconUrl } from "../skillIcons";
+import { cdnIconUrl, resolveSlotIconUrl } from "../skillIcons";
 import { spearClipForSkillId } from "../ummorpg/spearCombat";
 
 export const MASTER_WEAPON_SKILLS_VERSION = "3.1.0";
@@ -382,11 +382,14 @@ export function masterKitToSignatureSkills(kit: MasterWeaponKit): {
 }[] {
   const isSpear =
     kit.masterType === "SPEAR" || kit.weaponId === "spear" || kit.weaponId === "javelin";
-  return kit.skills.map((s) => {
+  return kit.skills.map((s, i) => {
     const gap = s.mm >= 85 && s.mm > 0;
     const clip = isSpear
       ? spearClipForSkillId(s.id)
       : "attack";
+    const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+    // Prefer warrior skill_nobg for sword/knife/melee over weak catalog art
+    const iconUrl = resolveSlotIconUrl(role, kit.weaponId, { cdnUrl: s.iconUrl });
     return {
       label: s.label,
       clip,
@@ -394,7 +397,7 @@ export function masterKitToSignatureSkills(kit: MasterWeaponKit): {
       mode: gap ? ("dash" as const) : ("default" as const),
       mm: s.mm,
       cooldown: s.cooldown,
-      iconUrl: s.iconUrl,
+      iconUrl,
       skillId: s.id,
       damage: s.damage,
     };

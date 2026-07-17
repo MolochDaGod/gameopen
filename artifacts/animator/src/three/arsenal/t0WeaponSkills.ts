@@ -18,6 +18,7 @@ import {
 } from "../content/masterWeaponSkills";
 import { isSpearWeapon, spearSignatureRows } from "../ummorpg/spearCombat";
 import { heavySignatureRows, isHeavy2hWeapon } from "../combat/heavyWeaponCombat";
+import { resolveSlotIconUrl } from "../skillIcons";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -37,6 +38,8 @@ export type T0SkillDef = {
   mode?: "default" | "dash";
   /** Seconds skill locks combat (cooldown floor) */
   cooldown?: number;
+  /** Skill icon URL (warrior skill_nobg for sword/knife/melee). */
+  iconUrl?: string | null;
 };
 
 export type T0WeaponKit = {
@@ -58,14 +61,20 @@ function kit(
   family: string,
   rows: Array<[T0SkillRole, string, SkillKind, number, ("default" | "dash")?]>,
 ): T0WeaponKit {
-  const skills = rows.map(([role, label, kind, mm, mode]) => ({
-    role,
-    label: label || `${family} ${ROLE_LABEL[role]}`,
-    kind,
-    mm,
-    mode,
-    cooldown: role === "power" ? 4.5 : role === "special" ? 2.8 : role === "ranged" ? 2.2 : 1.6,
-  })) as T0WeaponKit["skills"];
+  const skills = rows.map(([role, label, kind, mm, mode], i) => {
+    const slotRole =
+      i === 0 ? "sig1" : i === 1 ? "sig2" : i === 2 ? "sig3" : "sig4";
+    return {
+      role,
+      label: label || `${family} ${ROLE_LABEL[role]}`,
+      kind,
+      mm,
+      mode,
+      cooldown: role === "power" ? 4.5 : role === "special" ? 2.8 : role === "ranged" ? 2.2 : 1.6,
+      // Bind warrior skill_nobg art for sword/knife/melee kits at kit build time
+      iconUrl: resolveSlotIconUrl(slotRole as "sig1" | "sig2" | "sig3" | "sig4", weaponId),
+    };
+  }) as T0WeaponKit["skills"];
   return { weaponId, family, skills };
 }
 
@@ -315,16 +324,32 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
   const cat = getCachedMasterWeaponSkills();
   if (cat) {
     const mk = buildMasterKit(weaponId as WeaponId, cat);
-    if (mk) return masterKitToSignatureSkills(mk);
+    if (mk) {
+      // Overlay warrior skill_nobg icons for sword/knife/melee (catalog often
+      // ships generic slash/flow or missing art).
+      return masterKitToSignatureSkills(mk).map((row, i) => {
+        const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+        const iconUrl = resolveSlotIconUrl(role, weaponId as WeaponId, {
+          cdnUrl: row.iconUrl,
+        });
+        return { ...row, iconUrl };
+      });
+    }
   }
-  return getT0Kit(weaponId).skills.map((s) => ({
-    label: s.label,
-    clip: "attack",
-    kind: s.kind,
-    mode: s.mode ?? (s.mm >= 80 ? "dash" : "default"),
-    mm: s.mm,
-    cooldown: s.cooldown ?? 2,
-  }));
+  return getT0Kit(weaponId).skills.map((s, i) => {
+    const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+    return {
+      label: s.label,
+      clip: "attack",
+      kind: s.kind,
+      mode: s.mode ?? (s.mm >= 80 ? "dash" : "default"),
+      mm: s.mm,
+      cooldown: s.cooldown ?? 2,
+      iconUrl:
+        s.iconUrl ||
+        resolveSlotIconUrl(role, weaponId as WeaponId),
+    };
+  });
 }
 
 /** Map MM (−100…+100) → metres (matches Studio MM_TO_M = 0.01). */
