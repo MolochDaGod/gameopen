@@ -726,3 +726,62 @@ export function unlockSkillNode(id: string): string[] {
 export function prettyMatId(id: string): string {
   return id.replace(/^(mat_|itm_|build_|tool_|armor_)/, "").replace(/_/g, " ");
 }
+
+/** Weapon-combat tree nodes → skill slot gates (1–4 + power). */
+export const WEAPON_TREE_SLOT_GATES: Record<number, string> = {
+  0: "w_combo",
+  1: "w_special",
+  2: "w_ranged",
+  3: "w_power",
+};
+
+/**
+ * Whether signature skill slot index (0–3) is unlocked by the weapon-combat tree.
+ * No weapon-tree progress → all slots open (first-run UX).
+ * Once any `w_*` node is unlocked, require `w_basic` + the slot's node.
+ */
+export function isWeaponSkillSlotUnlocked(slotIndex: number, unlocks = loadSkillUnlocks()): boolean {
+  const weaponNodes = unlocks.filter((u) => u.startsWith("w_"));
+  if (weaponNodes.length === 0) return true;
+  if (!unlocks.includes("w_basic")) return false;
+  const gate = WEAPON_TREE_SLOT_GATES[slotIndex];
+  if (!gate) return true;
+  return unlocks.includes(gate);
+}
+
+/** CD multiplier from weapon master node. */
+export function weaponSkillCdMul(unlocks = loadSkillUnlocks()): number {
+  return unlocks.includes("w_master") ? 0.85 : 1;
+}
+
+/** Minecraft-like harvest yields into bag (local until Railway bag). */
+export function applyHarvestYield(
+  opId: string,
+  bag: Record<string, number> = loadBag(),
+  yields?: string[],
+): Record<string, number> {
+  const next = { ...(Object.keys(bag).length ? bag : loadBag()) };
+  const list =
+    yields && yields.length
+      ? yields
+      : opId === "mine"
+        ? ["mat_stone", "mat_coal"]
+        : opId === "chop"
+          ? ["mat_log", "mat_stick"]
+          : opId === "gather" || opId === "forage"
+            ? ["mat_herb", "mat_berry"]
+            : opId === "skin"
+              ? ["mat_raw_meat", "mat_leather"]
+              : opId === "dig"
+                ? ["mat_dirt", "mat_clay"]
+                : opId === "fish"
+                  ? ["mat_fish"]
+                  : opId === "farm"
+                    ? ["mat_fiber", "mat_berry"]
+                    : ["mat_stick"];
+  for (const id of list) {
+    next[id] = (next[id] ?? 0) + 1 + (Math.random() < 0.25 ? 1 : 0);
+  }
+  saveBag(next);
+  return next;
+}

@@ -9,6 +9,11 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
 import { resolveHudPortrait } from "../lib/hudPortrait";
+import {
+  isWeaponSkillSlotUnlocked,
+  loadSkillUnlocks,
+  applyHarvestYield,
+} from "../game/harvestCatalog";
 import { Controller } from "./Controller";
 import { Recoil, fovKick, screenCenterRay } from "./aim/AimSystem";
 import { Vfx, type TurretHandle, type TurretVariant } from "./Vfx";
@@ -1313,6 +1318,7 @@ export class Studio {
   getSlotBindings(): SlotBinding[] {
     const weapon = this.weaponId;
     const t0 = t0SignatureSkills(weapon);
+    const unlocks = loadSkillUnlocks();
     return SLOT_META.map(({ slot, key }) => {
       const d = this.slotDefault(slot);
       const override = this.overrides[slot];
@@ -1320,20 +1326,23 @@ export class Studio {
         slot === "primary" || slot === "fskill"
           ? slot
           : (slot as "sig1" | "sig2" | "sig3" | "sig4");
-      // Prefer master-weaponSkills pack icons on signature slots 1–4
       const sigIdx =
         slot === "sig1" ? 0 : slot === "sig2" ? 1 : slot === "sig3" ? 2 : slot === "sig4" ? 3 : -1;
       const masterIcon = sigIdx >= 0 ? t0[sigIdx]?.iconUrl : null;
+      const iconUrl =
+        masterIcon || resolveSlotIconUrl(role, weapon, { cdnUrl: masterIcon });
+      // Equipped weapon skill tree drives sig labels (T0 / master kit).
+      const label =
+        sigIdx >= 0 && t0[sigIdx]?.label ? t0[sigIdx]!.label : d.label;
+      const locked = sigIdx >= 0 && !isWeaponSkillSlotUnlocked(sigIdx, unlocks);
       return {
         slot,
         key,
-        label: d.label,
+        label: locked ? `${label} 🔒` : label,
         clip: override ?? d.clip,
         custom: !!override,
         icon: resolveSlotLocalName(role, weapon),
-        iconUrl: masterIcon || resolveSlotIconUrl(role, weapon, {
-          cdnUrl: masterIcon,
-        }),
+        iconUrl,
       };
     });
   }
@@ -3650,6 +3659,12 @@ export class Studio {
     if (this.recoverLock > 0) return false;
     const def = getCharacter(this.characterId);
     const isSig = signatureIndex != null;
+
+    // Weapon-combat skill tree gates slots 1–4 (equipped kit still sets anims/VFX).
+    if (isSig && !isWeaponSkillSlotUnlocked(signatureIndex!)) {
+      this.setCombatFlash("SKILL LOCKED · unlock in P · Skill trees", 0.7);
+      return false;
+    }
 
     // ── Albion-style: each of 1–4 has its OWN cooldown. F uses skillCooldown only.
     // Never gate all skills on a single timer (production bug fix).
@@ -8283,8 +8298,9 @@ export class Studio {
   }
 
   /**
-   * Non-combat primary action (LMB in harvest/build). Stubs flash + VFX until
-   * island harvest/build systems fully own resolution — mode gating is live.
+   * Non-combat primary action (LMB in harvest/build).
+   * Minecraft-like: harvest tools write yields into the production bag;
+   * build shows place ghost. Full world authority remains Mine-Loader.
    */
   private runActivityTool(toolId?: string) {
     const id = toolId ?? this.activityTool;
@@ -8292,16 +8308,19 @@ export class Studio {
     const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
     origin.y += 1;
     if (this.activityMode === "harvest") {
-      this.setCombatFlash(`HARVEST · ${id.toUpperCase()}`, 0.45);
+      applyHarvestYield(id);
+      this.setCombatFlash(`HARVEST · ${id.toUpperCase()} · bag +yield`, 0.5);
       this.vfx.burst(origin, 0x7ee7a8, 14, 2.2);
       this.vfx.castAura(origin, 0x7ee7a8);
+      // Swing anim so harvest feels like mining/chopping, not a static pose.
+      this.character?.playRoleOnce?.("attack", 0.08);
       return;
     }
     if (this.activityMode === "build") {
       const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
       const place = origin.clone().addScaledVector(fwd, 2.2);
       place.y = 0.05;
-      this.setCombatFlash(`BUILD · ${id.toUpperCase()}`, 0.45);
+      this.setCombatFlash(`BUILD · ${id.toUpperCase()} · place ghost`, 0.45);
       this.vfx.auraRing(place, 0x7fb0ff, 1.4, 0.5);
       this.vfx.hexaring(() => place.clone().setY(0.4), 0x7fb0ff, 0.45);
     }

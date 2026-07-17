@@ -5,6 +5,7 @@
 import {
   buildSeedDeployment,
   clampChunkIdx,
+  chunkBlocks,
   DEFAULT_CHUNK_IDX,
   deploymentToScene,
   deploymentToSharePayload,
@@ -14,6 +15,8 @@ import {
   type SeedWorldBiome,
   type SeedWorldDeployment,
 } from "@workspace/voxel-canonical";
+
+export { chunkBlocks, clampChunkIdx, DEFAULT_CHUNK_IDX };
 import {
   buildMineLoaderUrl,
   mineLoaderApiCandidates,

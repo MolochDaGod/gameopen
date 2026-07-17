@@ -341,7 +341,15 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
   const portalBlocks = dep.portals.flatMap((p) => [
     { x: p.position.x, y: p.position.y, z: p.position.z, type: "diamond" as const },
     { x: p.position.x, y: p.position.y + 1, z: p.position.z, type: "exclamation" as const },
+    // Path ring so portals read as intentional deployments, not single voxels.
+    { x: p.position.x + 1, y: p.position.y, z: p.position.z, type: "stone" as const },
+    { x: p.position.x - 1, y: p.position.y, z: p.position.z, type: "stone" as const },
+    { x: p.position.x, y: p.position.y, z: p.position.z + 1, type: "stone" as const },
+    { x: p.position.x, y: p.position.y, z: p.position.z - 1, type: "stone" as const },
   ]);
+
+  // Spawn pad + biome-hint blocks (deterministic, small — authority still gen terrain).
+  const spawnPad = biomeSpawnPad(dep.world.biome, dep.world.seedNumber);
 
   return {
     version: base.version,
@@ -352,6 +360,7 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
     paths: Array.isArray(overlay.paths) ? overlay.paths : [],
     blockEdits: [
       ...(Array.isArray(overlay.blockEdits) ? overlay.blockEdits : []),
+      ...spawnPad,
       ...portalBlocks,
     ],
     spawn: overlay.spawn ?? { x: 0, y: 2, z: 0 },
@@ -359,14 +368,67 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
       kind: "seed-overworld",
       seed: dep.world.seedNumber,
       chunkIdx: dep.world.chunkIdx,
+      chunkBlocks: chunkBlocks(dep.world.chunkIdx),
       biome: dep.world.biome,
+      /** Chunk gen hint for Mine-Loader: regenerate columns from seed. */
+      gen: {
+        mode: "chunked",
+        chunkIdx: dep.world.chunkIdx,
+        side: chunkBlocks(dep.world.chunkIdx),
+        seed: dep.world.seedNumber,
+      },
       portals: dep.portals.map((p) => ({
         id: p.id,
         dungeonId: p.dungeon.dungeonId,
         dungeonSeed: p.dungeon.seed,
+        theme: p.dungeon.theme,
+        templateId: p.dungeon.templateId,
       })),
     },
   };
+}
+
+/** Small deterministic spawn platform + biome accent blocks. */
+function biomeSpawnPad(
+  biome: SeedWorldBiome,
+  seed: number,
+): { x: number; y: number; z: number; type: string }[] {
+  const floor =
+    biome === "desert"
+      ? "sand"
+      : biome === "swamp"
+        ? "dirt"
+        : biome === "tundra" || biome === "coast"
+          ? "stone"
+          : biome === "mountains"
+            ? "stone"
+            : "grass";
+  const accent =
+    biome === "forest"
+      ? "log"
+      : biome === "mountains"
+        ? "coal"
+        : biome === "desert"
+          ? "sand"
+          : "dirt";
+  const rng = makeSeedRng(mixSeed(seed, 0xc0ffee));
+  const out: { x: number; y: number; z: number; type: string }[] = [];
+  for (let dx = -2; dx <= 2; dx++) {
+    for (let dz = -2; dz <= 2; dz++) {
+      out.push({ x: dx, y: 0, z: dz, type: floor });
+      if (Math.abs(dx) === 2 && Math.abs(dz) === 2) {
+        out.push({ x: dx, y: 1, z: dz, type: accent });
+      }
+    }
+  }
+  // Scatter 3 accent blocks near spawn (still on the pad ring).
+  for (let i = 0; i < 3; i++) {
+    const a = Math.floor(rng() * 5) - 2;
+    const b = Math.floor(rng() * 5) - 2;
+    if (a === 0 && b === 0) continue;
+    out.push({ x: a, y: 1, z: b, type: accent });
+  }
+  return out;
 }
 
 /** Payload for Mine-Loader share / private world create (opaque data blob). */

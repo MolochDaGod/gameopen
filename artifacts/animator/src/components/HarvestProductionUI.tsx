@@ -61,6 +61,16 @@ import {
 import { savePlayerHeadConfig } from "../three/avatar/playerHead";
 import type { AvatarConfig } from "../three/avatar/catalog";
 import { sanitizeConfig } from "../three/avatar/catalog";
+import {
+  blockIconUrl,
+  hideBrokenImg,
+  matIconUrl,
+  opIconUrl,
+  recipeItemIconUrl,
+  treeIconName,
+} from "../lib/gameMedia";
+import { Icon } from "./Icon";
+import { chunkBlocks } from "../game/seedWorlds";
 import "./harvestProduction.css";
 
 export interface HarvestProductionUIProps {
@@ -361,7 +371,21 @@ export function HarvestProductionUI({
                       showNotice(`Tool: ${op.name}`);
                     }}
                   >
-                    <span className="hp-card-glyph">{op.glyph}</span>
+                    <span className="hp-card-glyph">
+                      <img
+                        src={opIconUrl(op.id)}
+                        alt=""
+                        width={28}
+                        height={28}
+                        onError={(e) => {
+                          e.currentTarget.replaceWith(
+                            Object.assign(document.createElement("span"), {
+                              textContent: op.glyph,
+                            }),
+                          );
+                        }}
+                      />
+                    </span>
                     <span className="hp-card-title">{op.name}</span>
                     <span className="hp-card-blurb">{op.blurb}</span>
                     {op.channelSec != null && (
@@ -418,6 +442,8 @@ export function HarvestProductionUI({
                   {filteredRecipes.map((r) => {
                     const ok = canCraft(r, bag);
                     const busy = craftingId === r.id;
+                    // Minecraft-style 3×3 craft grid: pad inputs into 9 cells.
+                    const cells = Array.from({ length: 9 }, (_, i) => r.inputs[i] ?? null);
                     return (
                       <div key={r.id} className={"hp-recipe" + (ok ? "" : " is-locked")}>
                         <div className="hp-recipe-head">
@@ -426,20 +452,45 @@ export function HarvestProductionUI({
                             T{r.tier} · {r.station}
                           </span>
                         </div>
+                        <div className="hp-craft-grid-wrap" aria-label="Crafting grid">
+                          <div className="hp-craft-grid">
+                            {cells.map((cell, i) => (
+                              <div
+                                key={i}
+                                className={"hp-craft-cell" + (cell ? "" : " is-empty")}
+                                title={cell ? `${cell.name} ×${cell.qty}` : "Empty"}
+                              >
+                                {cell ? (
+                                  <>
+                                    <img
+                                      src={recipeItemIconUrl(cell.id)}
+                                      alt=""
+                                      className="hp-item-icon"
+                                      onError={(e) => hideBrokenImg(e.currentTarget)}
+                                    />
+                                    <span className="hp-cell-qty">×{cell.qty}</span>
+                                  </>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="hp-craft-arrow" aria-hidden>
+                            →
+                          </span>
+                          <div className="hp-craft-out" title={`${r.output.name} ×${r.output.qty}`}>
+                            <img
+                              src={recipeItemIconUrl(r.output.id)}
+                              alt=""
+                              className="hp-item-icon"
+                              onError={(e) => hideBrokenImg(e.currentTarget)}
+                            />
+                            <span className="hp-cell-qty">×{r.output.qty}</span>
+                          </div>
+                        </div>
                         <div className="hp-recipe-out">
-                          → {r.output.name} ×{r.output.qty}
+                          {r.output.name}
                           {r.heal ? ` · +${r.heal} HP` : ""}
                         </div>
-                        <ul className="hp-recipe-in">
-                          {r.inputs.map((i) => (
-                            <li key={i.id}>
-                              {i.name} ×{i.qty}{" "}
-                              <em className={(bag[i.id] ?? 0) >= i.qty ? "ok" : "miss"}>
-                                ({bag[i.id] ?? 0} bag)
-                              </em>
-                            </li>
-                          ))}
-                        </ul>
                         <button
                           type="button"
                           className="hp-btn primary"
@@ -463,7 +514,15 @@ export function HarvestProductionUI({
                       .sort(([a], [b]) => a.localeCompare(b))
                       .map(([id, n]) => (
                         <li key={id}>
-                          <span>{prettyMatId(id)}</span>
+                          <span className="hp-bag-item">
+                            <img
+                              src={matIconUrl(id)}
+                              alt=""
+                              className="hp-item-icon sm"
+                              onError={(e) => hideBrokenImg(e.currentTarget)}
+                            />
+                            {prettyMatId(id)}
+                          </span>
                           <strong>{n}</strong>
                         </li>
                       ))}
@@ -593,10 +652,16 @@ export function HarvestProductionUI({
                     />
                   </label>
 
-                  <h4>Blocks sample</h4>
+                  <h4>Blocks sample (deploy as cat:id in seed maps)</h4>
                   <div className="hp-grid mini">
                     {filteredBlocks.map((b) => (
-                      <div key={b.id || b.name} className="hp-mini-card" title={b.id}>
+                      <div key={b.id || b.name} className="hp-mini-card hp-block-card" title={b.id}>
+                        <img
+                          src={blockIconUrl(b.id || "stone")}
+                          alt=""
+                          className="hp-block-icon"
+                          onError={(e) => hideBrokenImg(e.currentTarget)}
+                        />
                         <strong>{b.name}</strong>
                         <span>{b.category || b.id}</span>
                         {b.id && <code className="hp-code">cat:{b.id}</code>}
@@ -719,10 +784,10 @@ export function HarvestProductionUI({
                       <span className="hp-card-blurb">{dep.world.blurb}</span>
                       <span className="hp-card-meta">
                         seed {String(dep.world.seed)} · #{dep.world.seedNumber} · chunk{" "}
-                        {dep.world.chunkIdx} · {dep.world.biome}
+                        {dep.world.chunkIdx} ({chunkBlocks(dep.world.chunkIdx)}²) · {dep.world.biome}
                       </span>
                       <span className="hp-badge soft">
-                        {dep.portals.length} portals → dungeons
+                        {dep.portals.length} portals → dungeons · chunk gen
                       </span>
                     </div>
                   );
@@ -894,14 +959,16 @@ export function HarvestProductionUI({
             <section className="hp-panel">
               <h3>Skill trees</h3>
               <p className="hp-lead">
-                Unlock harvest, crafting, building, survival, and explorer nodes. Progress is stored
-                locally until Railway <code>/api/professions</code> is bound.
+                Unlock harvest, crafting, building, survival, explorer, and{" "}
+                <b>weapon combat</b> nodes. Weapon tree gates Danger Room slots 1–4 and ties
+                equipped kit skills (anims + VFX) to progression. Local until Railway{" "}
+                <code>/api/professions</code>.
               </p>
               <div className="hp-trees">
                 {trees.map((tree) => (
                   <div key={tree.id} className="hp-tree">
                     <h4 style={{ color: tree.color }}>
-                      {tree.name}
+                      <Icon name={treeIconName(tree.id)} size={16} /> {tree.name}
                       <span className="hp-tree-count">
                         {tree.nodes.filter((n) => unlocks.includes(n.id)).length}/{tree.nodes.length}
                       </span>
