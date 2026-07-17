@@ -87,6 +87,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Drop the crop so faces sit lower in the ring (not cut off at top) */
+  object-position: center 28%;
+  transform: scale(1.12) translateY(6%);
   border-radius: 50%;
   user-select: none;
   -webkit-user-drag: none;

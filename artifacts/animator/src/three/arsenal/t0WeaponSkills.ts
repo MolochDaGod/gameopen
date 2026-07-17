@@ -16,6 +16,8 @@ import {
   getCachedMasterWeaponSkills,
   masterKitToSignatureSkills,
 } from "../content/masterWeaponSkills";
+import { isSpearWeapon, spearSignatureRows } from "../ummorpg/spearCombat";
+import { heavySignatureRows, isHeavy2hWeapon } from "../combat/heavyWeaponCombat";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -108,11 +110,12 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Throwing Knives", "bolt", 55],
     ["power", "Shadow Ambush", "slash", 100, "dash"],
   ]),
+  // Madarame: 1_1/1_2 base · 1_5 lunge · skill2_1 speed/AoE · dragontail
   spear: kit("spear", "Spear", [
-    ["combo", "Spear Combo", "thrust", 70],
-    ["special", "Sweep", "slash", 85],
-    ["ranged", "Javelin", "bolt", 55],
-    ["power", "Skewer Charge", "slam", 100, "dash"],
+    ["combo", "Spear Combo", "thrust", 55],
+    ["special", "Piercing Lunge", "thrust", 100, "dash"],
+    ["ranged", "Spear Rush", "nova", 70, "dash"],
+    ["power", "Dragontail Sweep", "nova", 50],
   ]),
   hammer: kit("hammer", "War Hammer", [
     ["combo", "Hammer Combo", "slam", 70],
@@ -222,7 +225,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["combo", "Scatter Bolt", "muzzle", -55],
     ["special", "Explosive Burst", "slam", -70],
     ["ranged", "Caltrop Trap", "nova", 40],
-    ["power", "Sweeping Barrage", "nova", -90],
+    ["power", "Skyfall Barrage", "meteor", -90],
   ]),
   wand: kit("wand", "Wand", [
     ["combo", "Magic Missile", "bolt", -70],
@@ -273,7 +276,41 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
   iconUrl?: string | null;
   skillId?: string;
   damage?: number;
+  castTime?: number;
+  dashM?: number;
+  dashDur?: number;
 }[] {
+  // Heavy 2H: Madarame + annihilate GS (variable MM / intensity)
+  if (isHeavy2hWeapon(weaponId)) {
+    return heavySignatureRows(weaponId);
+  }
+  // SPEAR: uMMORPG runtime table (clips + charge distances) — always available offline
+  if (isSpearWeapon(weaponId)) {
+    const cat = getCachedMasterWeaponSkills();
+    if (cat) {
+      const mk = buildMasterKit(weaponId as WeaponId, cat);
+      if (mk) {
+        // Merge master names/icons with spearCombat clip/dash plan
+        const base = spearSignatureRows();
+        const master = masterKitToSignatureSkills(mk);
+        return base.map((row, i) => {
+          const m = master[i];
+          return {
+            ...row,
+            label: m?.label || row.label,
+            iconUrl: m?.iconUrl ?? row.iconUrl,
+            damage: m?.damage ?? row.damage,
+            cooldown: m?.cooldown ?? row.cooldown,
+            skillId: m?.skillId || row.skillId,
+            clip: row.clip, // keep polearm Madarame roles
+            mode: row.mode,
+            mm: row.mm,
+          };
+        });
+      }
+    }
+    return spearSignatureRows();
+  }
   // Prefer ObjectStore master-weaponSkills (uMMORPG catalog) when loaded
   const cat = getCachedMasterWeaponSkills();
   if (cat) {

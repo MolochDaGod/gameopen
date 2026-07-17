@@ -906,8 +906,8 @@ export interface Avatar {
    * GLB rigs omit this and fall back to the generic `hurt` role.
    */
   reaction?(key: string, fade?: number, hold?: boolean): number;
-  /** Procedural rig only: swap locomotion clip set (ground vs. swim traversal). */
-  setTraversalMode?(mode: "ground" | "swim"): void;
+  /** Procedural rig only: swap locomotion (ground / climb wall-run / swim). */
+  setTraversalMode?(mode: "ground" | "climb" | "swim"): void;
   /**
    * Procedural rig only: play the equipped weapon's category ready / guard pose
    * (and any draw flourish) on stance entry, blending back to idle. GLB rigs omit
@@ -969,11 +969,23 @@ export interface HudSnapshot {
   sigCooldownMaxes: number[];
   /** True while the Striker's Hover skill is keeping the player airborne. */
   hovering: boolean;
+  /** True while the browser pointer is locked (mouse look active). */
   locked: boolean;
+  /**
+   * Hard FOCUS combat mode (RMB toggle). Soft lock when false — LMB selects,
+   * wider free-aim. Hard: LMB attacks, tight free-aim around centre.
+   */
+  focusLocked?: boolean;
   /** True while the first-person camera is active (KeyB toggles it). */
   firstPerson: boolean;
   /** Crosshair spread in px (grows with movement + recoil bloom). */
   aimSpread: number;
+  /**
+   * Free-aim crosshair offset from screen centre in NDC-ish units (~[-0.5, 0.5]).
+   * 0,0 = crosshair sits on the fixed centre **dot**.
+   */
+  aimNdcX?: number;
+  aimNdcY?: number;
   /**
    * Where the focused enemy sits relative to the player's Optimal Weapon Range:
    * "optimal" (green ring) = in the sweet spot, "close" (red) = inside the inner

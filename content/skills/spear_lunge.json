@@ -1,0 +1,42 @@
+{
+  "id": "spear_lunge",
+  "family": "spear",
+  "slotKind": "secondary",
+  "hotbarSlot": 2,
+  "name": "Piercing Lunge",
+  "description": "Lunging spear skill (Madarame attack1_5) — gap close ~3m.",
+  "animKey": "attack5",
+  "anim": {
+    "path": "/anims/baked/polearm/attack5.json",
+    "sourceClip": "attack1_5",
+    "status": "ready",
+    "notes": "Madarame bake — polearm/attack5 lunging skill"
+  },
+  "motion": { "kind": "lunge", "dashM": 3.2, "dashDur": 0.34, "mm": 100 },
+  "power": 1.2,
+  "cost": { "stamina": 6, "mana": 0 },
+  "cooldown": 3.2,
+  "hitWindows": [{ "t": 0.35, "kind": "melee", "radius": 1.6, "angleDeg": 70 }],
+  "vfx": {
+    "cast": "#80d0ff",
+    "impact": "#90d0ff",
+    "mode": "charge",
+    "ops": ["charge", "afterimage", "slash", "shockwave"]
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Spear_05.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_05.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "ready",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-000087--81C8667",
+  "damageType": "physical",
+  "ship": true
+}

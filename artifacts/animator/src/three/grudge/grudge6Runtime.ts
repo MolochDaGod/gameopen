@@ -10,11 +10,13 @@ import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
   ANIM_PACK_CLIPS,
-  SPRINT_CLIP,
+  SPRINT_LOCO_MULT,
   asAnimPack,
   loadBakedClip,
   type AnimPack,
 } from "./anims";
+// re-export for Studio weapon→pack swaps
+export { animPackForWeapon } from "./anims";
 import { RACE_ASSETS, type RaceId } from "./raceAssets";
 import { getPreset, type PresetId } from "./gearPresets";
 import { applyBodyTexture, applyGearPreset, meshKey } from "./loadCharacter";
@@ -323,14 +325,69 @@ export async function loadGrudge6CombatRig(
     }
   };
 
-  // Core locomotion + weapon pack attack (player-parity combat base)
+  // Core locomotion + weapon pack attack (player-parity combat base).
+  // NEVER load SPRINT_CLIP / locomotion/running — that JSON is run-to-roll.
+  // Sprint = clone of pack run (arena bakedAnimLoader parity).
   await Promise.all([
     loadRole("idle", pack.idle),
     loadRole("walk", pack.walk),
     loadRole("run", pack.run),
     loadRole("attack", pack.attack),
-    loadRole("sprint", SPRINT_CLIP).catch(() => loadRole("sprint", pack.run)),
   ]);
+
+  // Pack extras (polearm combo / skills from Madarame bake, etc.)
+  if (pack.extras?.length) {
+    await Promise.all(
+      pack.extras.map(async (rel) => {
+        const role = rel.split("/").pop() || rel;
+        // Don't overwrite core roles already loaded
+        if (clips.has(role)) return;
+        await loadRole(role, rel);
+      }),
+    );
+  }
+
+  // Sprint from true run cycle only (time-scale applied by AnimationDirector /
+  // GrudgeAvatar setLocomotionRate when speed band is high).
+  if (clips.has("run")) {
+    const runClip = clips.get("run")!;
+    const sprintClip = runClip.clone();
+    sprintClip.name = "sprint";
+    // Slightly faster cycle so sprint reads distinct without a separate bake.
+    clips.set("sprint", sprintClip);
+    roles.set("sprint", "sprint");
+    sprintClip.userData = {
+      ...(sprintClip.userData || {}),
+      locoMult: SPRINT_LOCO_MULT,
+      source: "clone:run",
+    };
+  }
+
+  // Role aliases for T0 weapon skills / Studio multiPart names
+  if (animPack === "polearm") {
+    const alias = (from: string, to: string) => {
+      if (!clips.has(to) && clips.has(from)) {
+        clips.set(to, clips.get(from)!);
+        roles.set(to, to);
+      }
+    };
+    // Madarame: 1_1=attack, 1_2=attack2, 1_3=attack3, 1_4=attack4, 1_5=attack5, skill2_1=skill2
+    alias("attack", "combo");
+    alias("attack", "thrust");
+    alias("attack", "attack1");
+    alias("attack2", "slash");
+    alias("attack4", "overhead"); // drive-in +MM
+    alias("attack5", "skill1"); // lunging skill
+    alias("skill2", "skill2");
+    alias("skill3", "skill3");
+    alias("skill4", "skill4");
+    alias("skill4", "power");
+    alias("special", "special");
+    alias("attack", "sig1");
+    alias("attack5", "sig2");
+    alias("skill2", "sig3");
+    alias("special", "sig4");
+  }
 
   // Optional skill / cast / defense aliases — best-effort, never block load.
   // Magic kits load a dedicated cast clip; other packs alias cast → attack.

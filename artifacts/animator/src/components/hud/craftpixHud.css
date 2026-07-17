@@ -130,7 +130,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Face framing: drop crop so eyes/face sit lower in the ring */
+  object-position: center 28%;
+  transform: scale(1.12) translateY(6%);
   border-radius: 50%;
+  display: block;
 }
 .cx-avatar-letter {
   display: grid;

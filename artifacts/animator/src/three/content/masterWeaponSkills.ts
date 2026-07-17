@@ -13,6 +13,7 @@
 import type { SkillKind, WeaponId } from "../types";
 import { contentCandidates } from "../../lib/fleetSsot";
 import { cdnIconUrl } from "../skillIcons";
+import { spearClipForSkillId } from "../ummorpg/spearCombat";
 
 export const MASTER_WEAPON_SKILLS_VERSION = "3.1.0";
 
@@ -133,12 +134,20 @@ export function damageTypeToSkillKind(dt?: string, projectile?: string | null): 
 
 /** MM guess from range / role (matches T0 sheet conventions). */
 export function estimateMm(skill: MasterSkill, slot: MasterSlotType): number {
+  const name = skill.name || skill.id || "";
+  const effects = (skill.effects || []).join(" ");
+  const blob = `${name} ${effects} ${skill.description || ""}`.toLowerCase();
+  // uMMORPG SPEAR gap-closers — force strong +MM for charge / lunge / vault
+  if (/lunge|vault|charge|rush|skewer charge|gap/.test(blob)) return 100;
+  if (/throw|javelin|rain|storm|phantom|missile|arrow/.test(blob) && /range|throw|homing/.test(blob)) {
+    return -70;
+  }
   const ranged =
     !!skill.projectile ||
-    (typeof skill.range === "number" && skill.range > 4) ||
-    /bolt|shot|missile|arrow|cast|blast|wave|rain/i.test(skill.name);
+    (typeof skill.range === "number" && skill.range > 8) ||
+    /bolt|shot|missile|arrow|cast|blast|wave|rain|throw|javelin/i.test(name);
   if (slot === "ultimate") return ranged ? -95 : 100;
-  if (slot === "ability") return ranged ? -85 : 85;
+  if (slot === "ability") return ranged ? -85 : 90;
   if (slot === "secondary") return ranged ? -70 : 85;
   return ranged ? -70 : 70;
 }
@@ -283,6 +292,10 @@ export function buildMasterKit(
   if (!catalog) return null;
   const masterType = WEAPON_TO_MASTER[weaponId];
   if (!masterType) return null;
+  // SPEAR: prefer lunge/vault gap-close hotbar (uMMORPG Danger kit)
+  if (masterType === "SPEAR") {
+    return buildSpearMasterKit(weaponId, catalog);
+  }
   const wt = catalog.weaponTypes.find((w) => w.id === masterType);
   if (!wt) return null;
 
@@ -367,17 +380,73 @@ export function masterKitToSignatureSkills(kit: MasterWeaponKit): {
   skillId?: string;
   damage?: number;
 }[] {
-  return kit.skills.map((s) => ({
-    label: s.label,
-    clip: "attack",
-    kind: s.kind,
-    mode: s.mm >= 90 && s.mm > 0 ? ("dash" as const) : ("default" as const),
-    mm: s.mm,
-    cooldown: s.cooldown,
-    iconUrl: s.iconUrl,
-    skillId: s.id,
-    damage: s.damage,
-  }));
+  const isSpear =
+    kit.masterType === "SPEAR" || kit.weaponId === "spear" || kit.weaponId === "javelin";
+  return kit.skills.map((s) => {
+    const gap = s.mm >= 85 && s.mm > 0;
+    const clip = isSpear
+      ? spearClipForSkillId(s.id)
+      : "attack";
+    return {
+      label: s.label,
+      clip,
+      kind: s.kind,
+      mode: gap ? ("dash" as const) : ("default" as const),
+      mm: s.mm,
+      cooldown: s.cooldown,
+      iconUrl: s.iconUrl,
+      skillId: s.id,
+      damage: s.damage,
+    };
+  });
+}
+
+/**
+ * SPEAR kit: prefer uMMORPG gap-close bar (thrust · lunge · vault · dragontail)
+ * when those skill ids exist in the catalog.
+ */
+export function buildSpearMasterKit(
+  weaponId: WeaponId,
+  catalog: MasterWeaponSkillsCatalog | null = _catalog,
+): MasterWeaponKit | null {
+  if (!catalog) return null;
+  const wt = catalog.weaponTypes.find((w) => w.id === "SPEAR");
+  if (!wt) return null;
+  const all = (wt.slots || []).flatMap((sl) =>
+    (sl.skills || []).map((sk) => ({ sk, slot: sl.type as MasterSlotType })),
+  );
+  const pick = (id: string, slot: MasterSlotType): MasterKitSkill | null => {
+    const hit = all.find((x) => x.sk.id === id);
+    if (hit) return toKitSkill(hit.sk, slot);
+    const any = all.find((x) => x.slot === slot);
+    return any ? toKitSkill(any.sk, slot) : null;
+  };
+  const prefer = ["spear_thrust", "spear_lunge", "spear_cyclone", "spear_dragontail"] as const;
+  const slots: MasterSlotType[] = ["primary", "secondary", "ability", "ultimate"];
+  const skills = prefer.map((id, i) => {
+    const slot = slots[i]!;
+    return (
+      pick(id, slot) ||
+      placeholder(
+        slot,
+        id.replace("spear_", "").replace(/_/g, " "),
+        i === 3 ? "nova" : "thrust",
+        i === 0 ? 55 : 100,
+      )
+    );
+  }) as MasterWeaponKit["skills"];
+  // Force gap-close MM on lunge/vault
+  if (skills[1]) skills[1] = { ...skills[1], mm: 100, kind: skills[1].kind };
+  if (skills[2]) skills[2] = { ...skills[2], mm: 100, kind: skills[2].kind || "slam" };
+  return {
+    masterType: "SPEAR",
+    weaponId,
+    family: wt.name || "Spear",
+    iconUrl: cdnIconUrl(wt.icon || "/icons/pack/weapons/Spear_01.png"),
+    skills,
+    source: "master-weaponSkills",
+    version: catalog.version,
+  };
 }
 
 /** List all master type ids present in the catalog (for importers / UI). */

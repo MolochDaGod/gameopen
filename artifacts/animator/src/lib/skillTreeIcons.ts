@@ -83,23 +83,32 @@ export function resolveCatalogIconPath(pathOrUrl: string): string | null {
     try {
       const u = new URL(p);
       const rel = u.pathname.replace(/^\//, "");
+      // Prefer local public warrior skill set when available
+      if (/icons\/skill_nobg\/warriorskill_/i.test(rel)) {
+        return preferLocalSkillNobg(rel.startsWith("/") ? rel : `/${rel}`);
+      }
       if (BROKEN_TO_PACK[rel]) {
         return `${ASSETS_CDN}/${BROKEN_TO_PACK[rel]}`;
       }
       if (isSkillCatalogPath(rel) && u.hostname.includes("assets.grudge-studio")) {
-        return `${SKILL_ICON_HOSTS[0]}/${rel}`;
+        return preferLocalSkillNobg(`${SKILL_ICON_HOSTS[0]}/${rel}`);
       }
       // Still allow skillIcons remap for pack paths
-      return cdnIconUrl(p) || p;
+      return preferLocalSkillNobg(cdnIconUrl(p) || p);
     } catch {
-      return p;
+      return preferLocalSkillNobg(p);
     }
   }
+
+  // Already a local public path
+  if (p.startsWith("/icons/")) return preferLocalSkillNobg(p);
 
   p = p.replace(/^\//, "");
   if (BROKEN_TO_PACK[p]) p = BROKEN_TO_PACK[p];
 
   if (isSkillCatalogPath(p)) {
+    // Local first for warrior set
+    if (/skill_nobg\/warriorskill_/i.test(p)) return preferLocalSkillNobg(`/${p}`);
     return `${SKILL_ICON_HOSTS[0]}/${p}`;
   }
 
@@ -114,6 +123,13 @@ function isSkillCatalogPath(rel: string): boolean {
     r.startsWith("icons/skills/") ||
     r.startsWith("icons/skill/")
   );
+}
+
+/** Prefer local public copies of skill_nobg (shipped under public/icons). */
+function preferLocalSkillNobg(pathOrUrl: string): string {
+  const m = pathOrUrl.match(/icons\/skill_nobg\/(Warriorskill_\d+_nobg\.png)/i);
+  if (m) return `/icons/skill_nobg/${m[1]}`;
+  return pathOrUrl;
 }
 
 function absFromRelative(p: string): string {
@@ -158,19 +174,19 @@ function pickFallbackKey(src: SkillIconSource): FallbackKey {
   return "generic";
 }
 
-/** Original pack art used when a node has no icon field (still real images, not emoji). */
+/** Original pack art when a node has no icon — prefer local skill_nobg + pack. */
 const FALLBACK_CDN: Record<FallbackKey, string> = {
-  warrior: `${SKILL_ICON_HOSTS[0]}/icons/skill_nobg/Warriorskill_01_nobg.png`,
+  warrior: `/icons/skill_nobg/Warriorskill_01_nobg.png`,
   mage: `${SKILL_ICON_HOSTS[0]}/icons/skill_nobg/Mageskill_01_nobg.png`,
   ranger: `${SKILL_ICON_HOSTS[0]}/icons/skill_nobg/Archerskill_01_nobg.png`,
   worge: `${ASSETS_CDN}/icons/pack/misc/Naturecircle.png`,
-  harvest: `${ASSETS_CDN}/icons/pack/misc/Slash_07.png`,
+  harvest: `/icons/harvest.png`,
   craft: `${ASSETS_CDN}/icons/pack/misc/Effect.png`,
-  build: `${ASSETS_CDN}/icons/pack/misc/Flow.png`,
-  weapon: `${ASSETS_CDN}/icons/pack/weapons/Sword_01.png`,
+  build: `/icons/build.png`,
+  weapon: `/icons/skill_nobg/Warriorskill_05_nobg.png`,
   camp: `${ASSETS_CDN}/icons/pack/misc/Naturecircle.png`,
-  passive: `${ASSETS_CDN}/icons/pack/misc/Flow.png`,
-  generic: `${ASSETS_CDN}/icons/pack/misc/Effect.png`,
+  passive: `/icons/skill_nobg/Warriorskill_10_nobg.png`,
+  generic: `/icons/skill_nobg/Warriorskill_02_nobg.png`,
 };
 
 function fallbackIconUrl(key: FallbackKey): string {
@@ -227,11 +243,20 @@ export const NODE_ICON_OVERRIDES: Record<string, string> = {
   camp_muster: "/icons/pack/weapons/Sword_01.png",
   camp_husbandry: "/icons/pack/misc/Slash_07.png",
   camp_drill: "/icons/pack/weapons/Spear_01.png",
-  // Class L0 defaults (bridges may omit icons)
+  // Class L0 defaults (bridges may omit icons) — warrior uses craftpix skill_nobg set
   w_l0_warbound: "/icons/skill_nobg/Warriorskill_01_nobg.png",
   m_l0_leyline: "/icons/skill_nobg/Mageskill_01_nobg.png",
   r_l0_log: "/icons/skill_nobg/Archerskill_01_nobg.png",
   wr_l0_bear: "/icons/pack/misc/Naturecircle.png",
+  // Common warrior actives (map to warrior skill_nobg when catalog omits art)
+  w_l1_cleave: "/icons/skill_nobg/Warriorskill_03_nobg.png",
+  w_l1_bash: "/icons/skill_nobg/Warriorskill_05_nobg.png",
+  w_l2_warcry: "/icons/skill_nobg/Warriorskill_08_nobg.png",
+  w_l2_charge: "/icons/skill_nobg/Warriorskill_12_nobg.png",
+  w_l3_execute: "/icons/skill_nobg/Warriorskill_18_nobg.png",
+  w_l3_fortify: "/icons/skill_nobg/Warriorskill_14_nobg.png",
+  w_l4_rend: "/icons/skill_nobg/Warriorskill_22_nobg.png",
+  w_l4_bulwark: "/icons/skill_nobg/Warriorskill_24_nobg.png",
 };
 
 /** Enrich a node with catalog icon + override if missing. */

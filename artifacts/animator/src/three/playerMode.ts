@@ -32,19 +32,29 @@ export const MODE_COLOR: Record<PlayerActivityMode, string> = {
   build: "#7fb0ff",
 };
 
+/** Local public icons (real UI pack assets) for mode banner. */
+export const MODE_ICON: Record<PlayerActivityMode, string> = {
+  combat: "/icons/combat-pad.png",
+  harvest: "/icons/harvest.png",
+  build: "/icons/build.png",
+};
+
+/** Craftpix frame used behind the centre mode banner. */
+export const MODE_BANNER_FRAME = "/ui/craftpix/part3/ab2_shurtcut_frame.png";
+
 export const MODE_BLURB: Record<PlayerActivityMode, string> = {
-  // Keys match hud/quickActions.ts SSOT (Q mode, C parry, X dodge).
-  combat: "Fight · skills · C parry · X dodge · Q cycle mode",
-  harvest: "Gather · mine · chop · farm · fish · P production",
+  // Keys match hud/quickActions.ts SSOT.
+  combat: "RMB focus · LMB atk · soft LMB select · X roll · C parry · E guard",
+  harvest: "LMB select node · RMB go harvest · soft aim · P production",
   build: "Place · walls · stations · demolish · P production",
 };
 
 /** Radial wedges per activity mode. */
 export const RADIAL_BY_MODE: Record<PlayerActivityMode, RadialOption[]> = {
   combat: [
-    { id: "attack", label: "Attack", glyph: "⚔", hint: "LMB", color: "#ff9a7a" },
-    { id: "block", label: "Block", glyph: "🛡", hint: "RMB", color: "#7fd0ff" },
-    { id: "dodge", label: "Dodge", glyph: "↷", hint: "X", color: "#9fe8ff" },
+    { id: "attack", label: "Attack", glyph: "⚔", hint: "LMB+", color: "#ff9a7a" },
+    { id: "block", label: "Guard", glyph: "🛡", hint: "E", color: "#7fd0ff" },
+    { id: "dodge", label: "Roll", glyph: "↷", hint: "X", color: "#9fe8ff" },
     { id: "parry", label: "Parry", glyph: "✦", hint: "C", color: "#ffe08a" },
     { id: "heavy", label: "Heavy", glyph: "💥", hint: "R", color: "#ffb24d" },
     { id: "kick", label: "Kick", glyph: "🦵", hint: "V", color: "#c8a0ff" },

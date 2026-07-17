@@ -40,11 +40,23 @@ export const XBOW = {
   explosiveHalfDeg: 32,
   explosiveDamage: 18,
   explosiveCast: 0.38,
-  /** Skill 4 sweeping bolt */
+  /** Skill 4 sweeping bolt (legacy cone params; skill 4 is skyfall barrage). */
   sweepRange: 11,
   sweepHalfDeg: 40,
   sweepDamage: 14,
   sweepCast: 0.45,
+  /**
+   * Skill 4 — Skyfall Barrage: 2s channel, fire 5 smaller R-special skyfall
+   * bolts at the aim point (reuses skyfallStrike VFX at reduced scale).
+   */
+  barrageChannel: 2.0,
+  barrageCount: 5,
+  barrageScale: 0.42,
+  barrageDamage: 16,
+  barrageAoe: 1.35,
+  barrageRise: 3.2,
+  barrageColor: 0xb98cff,
+  barrageCd: 12,
   /** Skill 3 trap placement */
   trapRange: 10,
   trapRadius: 2.4,

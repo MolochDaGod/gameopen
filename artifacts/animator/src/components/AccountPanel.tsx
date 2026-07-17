@@ -51,12 +51,22 @@ import {
   type StarterWeaponChoice,
 } from "../lib/startingEquipment";
 import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
+import {
+  listGrudachainTestLibrary,
+  repairTestHeroEquipment,
+  repairAllIncompleteTestHeroes,
+  type TestHeroCard,
+} from "../lib/grudachainTestLibrary";
+import { warmProductionMedia } from "../lib/productionMedia";
+import { matIconUrl, warmGameMedia } from "../lib/gameMedia";
+import { portraitOnError } from "../lib/characterPortrait";
 import "./equip/AccountPaperdoll.css";
 
-type TabId = "characters" | "shared" | "wallet" | "games" | "grudox" | "treaty";
+type TabId = "characters" | "shared" | "wallet" | "games" | "grudox" | "treaty" | "testlib";
 
 const TABS: { id: TabId; label: string; tone: string }[] = [
   { id: "characters", label: "Characters", tone: "#4fc3ff" },
+  { id: "testlib", label: "GRUDACHAIN QA", tone: "#e8c96a" },
   { id: "shared", label: "Shared bag", tone: "#ffd24d" },
   { id: "wallet", label: "Wallet", tone: "#9fe8a0" },
   { id: "games", label: "Games", tone: "#ff7a7a" },
@@ -88,6 +98,11 @@ export function AccountPanel({
   const [profile, setProfile] = useState<FleetAccountProfile | null>(null);
   const [bag, setBag] = useState<ResourceMap>({});
   const [sharedBusy, setSharedBusy] = useState(false);
+  /** GRUDACHAIN production test library cards */
+  const [testCards, setTestCards] = useState<TestHeroCard[]>([]);
+  const [testSummary, setTestSummary] = useState({ total: 0, ready: 0, needsFix: 0 });
+  const [testBusy, setTestBusy] = useState(false);
+  const [testMsg, setTestMsg] = useState<string | null>(null);
 
   const [handoffFrom] = useState(() => getHandoffFrom());
   const [treatyInput, setTreatyInput] = useState("");
@@ -148,6 +163,39 @@ export function AccountPanel({
       if (!wallet) void refreshWallet();
     }
   }, [snap.account, wallet, refreshShared, refreshWallet]);
+
+  /** Warm production catalogs whenever Account hub mounts. */
+  useEffect(() => {
+    warmGameMedia();
+    void warmProductionMedia();
+  }, []);
+
+  const refreshTestLibrary = useCallback(async () => {
+    setTestBusy(true);
+    setTestMsg(null);
+    try {
+      const lib = await listGrudachainTestLibrary();
+      setTestCards(lib.cards);
+      setTestSummary(lib.summary);
+      if (!lib.authenticated) {
+        setTestMsg("Sign in with Grudge ID (GRUDACHAIN) to load Railway test heroes.");
+      } else if (!lib.cards.length) {
+        setTestMsg("No characters yet — create heroes on Characters tab with starting gear.");
+      } else {
+        setTestMsg(
+          `${lib.summary.ready}/${lib.summary.total} production-ready · ${lib.summary.needsFix} need mesh/icon fix`,
+        );
+      }
+    } catch (e) {
+      setTestMsg(e instanceof Error ? e.message : "Test library load failed");
+    } finally {
+      setTestBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === "testlib" && snap.account) void refreshTestLibrary();
+  }, [tab, snap.account, refreshTestLibrary]);
 
   /** Selected fleet character (GrudaChain) for paperdoll + mesh inventory. */
   const selectedChar = useMemo(
@@ -320,7 +368,7 @@ export function AccountPanel({
             ACCOUNT<span className="brand-accent"> HUB</span>
           </div>
           <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.75 }}>
-            Railway Postgres SSOT · charactersgrudox races · shared account bag · GRUDOX
+            Railway Postgres SSOT · production icons · GRUDACHAIN test heroes · GRUDOX
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -388,6 +436,179 @@ export function AccountPanel({
       </nav>
 
       <div style={body}>
+        {tab === "testlib" && (
+          <div style={col}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <h3 style={{ margin: "0 0 6px", color: "#e8c96a" }}>GRUDACHAIN test library</h3>
+                <p style={{ margin: 0, fontSize: 12, opacity: 0.8, maxWidth: 560 }}>
+                  Production heroes on your signed-in Grudge account — mesh_ids, equipment icons from
+                  master-items, portraits, readiness score. Use Repair to PATCH Railway with class gear
+                  presets, then play Danger / Production.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
+                <button type="button" style={btnGhost} disabled={testBusy} onClick={() => void refreshTestLibrary()}>
+                  {testBusy ? "Scanning…" : "Rescan"}
+                </button>
+                <button
+                  type="button"
+                  style={btnPrimary}
+                  disabled={testBusy || !snap.account}
+                  onClick={() => {
+                    void (async () => {
+                      setTestBusy(true);
+                      setTestMsg("Repairing incomplete heroes…");
+                      const res = await repairAllIncompleteTestHeroes("sword");
+                      await gameSession.refreshCharacters();
+                      await refreshTestLibrary();
+                      setTestMsg(
+                        `Repaired ${res.repaired.length}` +
+                          (res.failed.length ? ` · failed ${res.failed.length}` : ""),
+                      );
+                      setTestBusy(false);
+                    })();
+                  }}
+                >
+                  Repair all incomplete
+                </button>
+              </div>
+            </div>
+            {testMsg && (
+              <div style={{ ...banner, marginTop: 12 }}>
+                {testMsg}
+                {testSummary.total > 0 && (
+                  <span style={{ marginLeft: 10, opacity: 0.85 }}>
+                    ready {testSummary.ready} · fix {testSummary.needsFix}
+                  </span>
+                )}
+              </div>
+            )}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 12,
+                marginTop: 16,
+              }}
+            >
+              {testCards.map((card) => (
+                <div
+                  key={card.id}
+                  style={{
+                    border: `1px solid ${card.readiness.ok ? "#3a7a4a" : "#7a4a2a"}`,
+                    borderRadius: 12,
+                    padding: 12,
+                    background: "rgba(8,12,18,0.72)",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <img
+                      src={card.portrait.url}
+                      alt=""
+                      width={48}
+                      height={48}
+                      style={{ borderRadius: 8, objectFit: "cover", background: "#111" }}
+                      onError={(e) =>
+                        portraitOnError(e.currentTarget, card.portrait.candidates)
+                      }
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{card.name}</div>
+                      <div style={{ fontSize: 11, opacity: 0.7 }}>
+                        {card.raceId} · {card.classId} · score {card.readiness.score}
+                      </div>
+                    </div>
+                    <img
+                      src={card.weaponIconUrl}
+                      alt=""
+                      width={32}
+                      height={32}
+                      style={{ objectFit: "contain" }}
+                      onError={(e) => {
+                        e.currentTarget.style.visibility = "hidden";
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: 10, marginTop: 8, color: "#a8b8c8" }}>
+                    meshes {card.equipment.meshIds.length} · {card.equipment.source}
+                    {!card.readiness.ok && card.readiness.missing.length
+                      ? ` · missing ${card.readiness.missing.join(", ")}`
+                      : ""}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      style={btnGhost}
+                      onClick={() => {
+                        gameSession.selectCharacter(card.id);
+                        onEnterGame?.("danger");
+                      }}
+                    >
+                      Play Danger
+                    </button>
+                    <button
+                      type="button"
+                      style={btnGhost}
+                      disabled={testBusy}
+                      onClick={() => {
+                        void (async () => {
+                          const ch = snap.characters.find((c) => c.id === card.id);
+                          if (!ch) {
+                            setTestMsg("Character not in session — Refresh");
+                            return;
+                          }
+                          setTestBusy(true);
+                          const res = await repairTestHeroEquipment(ch, "sword");
+                          await gameSession.refreshCharacters();
+                          await refreshTestLibrary();
+                          setTestMsg(
+                            res.ok
+                              ? `Repaired ${card.name}`
+                              : `Repair failed: ${res.error}`,
+                          );
+                          setTestBusy(false);
+                        })();
+                      }}
+                    >
+                      Repair gear
+                    </button>
+                    {onPlayRace && (
+                      <button
+                        type="button"
+                        style={btnGhost}
+                        onClick={() => {
+                          gameSession.selectCharacter(card.id);
+                          const catalog =
+                            card.raceId?.includes("elf")
+                              ? "race-high-elf"
+                              : card.raceId?.includes("orc")
+                                ? "race-orc"
+                                : card.raceId?.includes("dwarf")
+                                  ? "race-dwarf"
+                                  : card.raceId?.includes("barb")
+                                    ? "race-barbarian"
+                                    : card.raceId?.includes("undead")
+                                      ? "race-undead"
+                                      : "race-human";
+                          onPlayRace(catalog);
+                        }}
+                      >
+                        Equip race
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {!testCards.length && !testBusy && (
+              <p style={{ opacity: 0.65, fontSize: 13, marginTop: 20 }}>
+                Empty library. Sign in as GRUDACHAIN, create characters with starting gear, then Rescan.
+              </p>
+            )}
+          </div>
+        )}
+
         {tab === "characters" && (
           <div className="ap-chars-layout" style={charsLayout}>
             {/* ── LEFT: characters · paperdoll · create ── */}
@@ -624,8 +845,20 @@ export function AccountPanel({
                       <ul style={{ ...list, maxHeight: 220, overflow: "auto" }}>
                         {bagEntries.map(([id, n]) => (
                           <li key={id} style={{ ...listItem, padding: "8px 10px" }}>
-                            <span style={{ textTransform: "capitalize", fontSize: 13 }}>
-                              {id.replace(/_/g, " ")}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                              <img
+                                src={matIconUrl(id.startsWith("mat_") ? id : `mat_${id}`)}
+                                alt=""
+                                width={22}
+                                height={22}
+                                style={{ objectFit: "contain" }}
+                                onError={(e) => {
+                                  e.currentTarget.style.visibility = "hidden";
+                                }}
+                              />
+                              <span style={{ textTransform: "capitalize", fontSize: 13 }}>
+                                {id.replace(/_/g, " ")}
+                              </span>
                             </span>
                             <span style={{ color: "#ffd24d", fontWeight: 700 }}>×{n}</span>
                           </li>
@@ -725,7 +958,19 @@ export function AccountPanel({
                   <ul style={list}>
                     {bagEntries.map(([id, n]) => (
                       <li key={id} style={listItem}>
-                        <strong style={{ textTransform: "capitalize" }}>{id.replace(/_/g, " ")}</strong>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                          <img
+                            src={matIconUrl(id.startsWith("mat_") ? id : `mat_${id}`)}
+                            alt=""
+                            width={24}
+                            height={24}
+                            style={{ objectFit: "contain" }}
+                            onError={(e) => {
+                              e.currentTarget.style.visibility = "hidden";
+                            }}
+                          />
+                          <strong style={{ textTransform: "capitalize" }}>{id.replace(/_/g, " ")}</strong>
+                        </span>
                         <span style={{ color: "#ffd24d", fontWeight: 700 }}>×{n}</span>
                       </li>
                     ))}

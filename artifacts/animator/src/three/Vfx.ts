@@ -349,13 +349,19 @@ export class Vfx {
           side: THREE.DoubleSide,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
+          // Premultiplied-style soft edge: better with particle atlases
+          opacity: 1,
         });
+        if (src?.map) {
+          src.map.colorSpace = THREE.SRGBColorSpace;
+          src.map.anisotropy = 4;
+          src.map.needsUpdate = true;
+        }
         const arc = new THREE.Mesh(geo, mat);
         norm(arc, 2.6);
         collected.push({ name: m.name || o.name || "", order: collected.length, mesh: arc });
       });
-      // Stable order so the editor's "Slash N" tabs always map to the same arc;
-      // fall back to traversal order to break ties on duplicate/empty names.
+      // Stable alphabetical order — arc index is deterministic forever for a pack
       collected.sort((a, b) => a.name.localeCompare(b.name) || a.order - b.order);
       for (const c of collected) this.slashArcs.push(c.mesh);
     } catch {
@@ -2226,6 +2232,111 @@ export class Vfx {
    * Skill charge build-up at a point (muzzle / hand): cast aura + rising motes +
    * soft hex spin + inward-pull sparks — used before beams / charged bolts.
    */
+  /**
+   * Annihilate SwordBlaster-style slash projectile.
+   * Tall thin additive slab that flies forward; multi-angle fan for type-style lanes.
+   * lane -1/0/+1 → yaw offset; knockDown=true uses stronger impact radius (type 3).
+   */
+  slashBlaster(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts?: {
+      color?: number;
+      range?: number;
+      duration?: number;
+      lane?: number;
+      knockDown?: boolean;
+      onHit?: (p: THREE.Vector3) => void;
+    },
+  ) {
+    const color = opts?.color ?? 0x40ffff;
+    const range = opts?.range ?? 14;
+    const duration = opts?.duration ?? 0.32;
+    const lane = opts?.lane ?? 0;
+    const travel = dir.clone();
+    travel.y = 0;
+    if (travel.lengthSq() < 1e-6) travel.set(0, 0, 1);
+    travel.normalize();
+    // Annihilate: ±π/5 yaw for side blasters
+    const yaw = lane * (Math.PI / 5);
+    const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    travel.applyQuaternion(qYaw);
+    const width = 0.22;
+    const height = 2.6;
+    const depth = 1.4;
+    const geo = new THREE.BoxGeometry(width, height, depth);
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.92,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    const start = from.clone();
+    start.y = Math.max(1.1, from.y);
+    mesh.position.copy(start);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), travel);
+    this.addTrail(mesh, color, { width: 0.35 });
+    const target = start.clone().addScaledVector(travel, range);
+    let hit = opts?.onHit;
+    this.add({
+      obj: mesh,
+      age: 0,
+      life: duration,
+      geos: [geo],
+      mats: [mat],
+      update: (e, _dt) => {
+        const t = Math.min(1, e.age / e.life);
+        mesh.position.lerpVectors(start, target, t);
+        mat.opacity = 0.95 * (1 - t * 0.55);
+        if (hit && t > 0.35) {
+          const p = mesh.position.clone();
+          hit(p);
+          hit = undefined;
+        }
+      },
+    });
+  }
+
+  /**
+   * Fan of 1 or 3 slash blasters (annihilate charged greatsword / hadouken style).
+   * count=3 → left, center, right angles; center can knockDown for Pop-like finisher.
+   */
+  castSlashBlasters(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts?: {
+      color?: number;
+      count?: 1 | 3;
+      range?: number;
+      onHit?: (p: THREE.Vector3) => void;
+    },
+  ) {
+    const count = opts?.count ?? 3;
+    const color = opts?.color ?? 0x40ffff;
+    const range = opts?.range ?? 15;
+    const lanes = count === 1 ? [0] : ([-1, 0, 1] as const);
+    for (const lane of lanes) {
+      this.slashBlaster(from, dir, {
+        color,
+        range,
+        duration: 0.3,
+        lane,
+        knockDown: lane === 0,
+        onHit: lane === 0 ? opts?.onHit : undefined,
+      });
+    }
+  }
+
+  /** Pop-style expanding AoE ring (annihilate Pop) — visual only; damage via blast. */
+  popAoE(pos: THREE.Vector3, color = 0x40ffff, radius = 3.2, life = 0.28) {
+    this.aoeBlast(pos, color, radius);
+    this.shockwave(new THREE.Vector3(pos.x, 0.05, pos.z), color, radius * 1.15, life);
+    this.burst(pos, color, 22, 3.2);
+  }
+
   skillCharge(pos: THREE.Vector3, color = 0x9fd8ff, scale = 1, life = 0.45) {
     this.castAura(pos, color);
     this.auraRing(new THREE.Vector3(pos.x, 0.05, pos.z), color, 1.1 * scale, life);
@@ -2281,69 +2392,55 @@ export class Vfx {
   }
 
   /**
-   * A short-lived slash at a position facing a direction. Uses a big textured
-   * anime crescent (GLB) when loaded — sweeping, growing and fading like a real
-   * blade arc — and falls back to a thin additive ribbon until the model loads.
+   * Slash crescent at hand/blade pose.
+   * Prefer {@link slashArcParam} or {@link playMeleeSlash} for deterministic arcs.
+   * Default uses arc index 0 (never Math.random).
    */
   slashArc(pos: THREE.Vector3, quat: THREE.Quaternion, color = 0x9fe8ff) {
     if (this.slashArcs.length > 0) {
-      this.glbSlash(pos, quat, color);
+      this.slashArcParam(0, pos, quat, {
+        rotate: 0,
+        scale: 1,
+        direction: 0,
+        bend: 0,
+        thickness: 1,
+        particles: 6,
+        color: `#${color.toString(16).padStart(6, "0")}`,
+      });
       return;
     }
-    const curve = new THREE.EllipseCurve(0, 0, 1.1, 1.1, -Math.PI * 0.35, Math.PI * 0.35, false, 0);
-    const pts = curve.getPoints(24).map((p) => new THREE.Vector3(p.x, p.y, 0));
+    this.proceduralSlashRibbon(pos, quat, color);
+  }
+
+  /** Thin additive ellipse fallback when attack-slashes.glb is missing. */
+  private proceduralSlashRibbon(
+    pos: THREE.Vector3,
+    quat: THREE.Quaternion,
+    color: number,
+    scale = 1,
+  ) {
+    const curve = new THREE.EllipseCurve(0, 0, 1.1 * scale, 1.1 * scale, -Math.PI * 0.35, Math.PI * 0.35, false, 0);
+    const pts = curve.getPoints(28).map((p) => new THREE.Vector3(p.x, p.y, 0));
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const mat = new THREE.LineBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const mat = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
     const line = new THREE.Line(geo, mat);
     line.position.copy(pos);
     line.quaternion.copy(quat);
     this.add({
       obj: line,
       age: 0,
-      life: 0.3,
+      life: 0.28,
       geos: [geo],
       mats: [mat],
       update: (e) => {
         mat.opacity = 1 - e.age / e.life;
-        const s = 1 + e.age * 1.2;
+        const s = 1 + e.age * 1.15;
         line.scale.set(s, s, s);
-      },
-    });
-  }
-
-  /**
-   * Textured anime slash crescent: clones a random arc, tints it, and sweeps it
-   * through the swing (quick scale-in + roll + fade). Geometry/textures are
-   * shared with the template (shared:true) so only the cloned material is freed.
-   */
-  private glbSlash(pos: THREE.Vector3, quat: THREE.Quaternion, color = 0x9fe8ff) {
-    const tpl = this.slashArcs[Math.floor(Math.random() * this.slashArcs.length)];
-    const mat = (tpl.material as THREE.MeshBasicMaterial).clone();
-    mat.color = new THREE.Color(color);
-    const arc = new THREE.Mesh(tpl.geometry, mat);
-    arc.position.copy(pos);
-    arc.quaternion.copy(quat);
-    // Face the arc out from the actor and give each swing a little variety.
-    arc.rotateY(Math.PI / 2);
-    const roll = (Math.random() - 0.5) * 0.9;
-    arc.rotateZ(roll);
-    const flip = Math.random() < 0.5 ? 1 : -1;
-    const base = tpl.scale.x;
-    this.add({
-      obj: arc,
-      age: 0,
-      life: 0.26,
-      geos: [],
-      mats: [mat],
-      shared: true,
-      update: (e, dt) => {
-        const t = e.age / e.life;
-        const s = base * (0.7 + t * 0.9);
-        arc.scale.set(s * flip, s, s);
-        // Gentle sweep through the swing for motion.
-        arc.rotateZ(roll * dt * 2.2);
-        // Bright pop, quick fade for a snappy strike.
-        mat.opacity = t < 0.25 ? t / 0.25 : 1 - (t - 0.25) / 0.75;
       },
     });
   }
@@ -2361,55 +2458,170 @@ export class Vfx {
    * back to the procedural ribbon until the GLB has loaded.
    */
   slashArcParam(index: number, pos: THREE.Vector3, quat: THREE.Quaternion, p: SlashFxParams) {
+    const colorHex = new THREE.Color(p.color).getHex();
     if (this.slashArcs.length === 0) {
-      this.slashArc(pos, quat, new THREE.Color(p.color).getHex());
+      this.proceduralSlashRibbon(pos, quat, colorHex, p.scale);
+      if (p.particles > 0) {
+        this.burst(pos.clone(), colorHex, Math.round(p.particles), 2.4 * p.scale, {
+          spread: 0.35 * p.scale,
+          sizeScale: p.scale,
+        });
+      }
       return;
     }
+    // Deterministic index — NEVER Math.random
     const i = Math.max(0, Math.min(this.slashArcs.length - 1, Math.floor(index)));
-    const tpl = this.slashArcs[i];
+    const tpl = this.slashArcs[i]!;
     const mat = (tpl.material as THREE.MeshBasicMaterial).clone();
     mat.color = new THREE.Color(p.color);
+    mat.transparent = true;
+    mat.blending = THREE.AdditiveBlending;
+    mat.depthWrite = false;
+    mat.side = THREE.DoubleSide;
+    // Keep atlas map; boost readability via white core lerp early in life
+    if (mat.map) {
+      mat.map.colorSpace = THREE.SRGBColorSpace;
+      mat.needsUpdate = true;
+    }
     const deformed = p.bend !== 0 || p.thickness !== 1;
     const geo = deformed ? this.deformSlashGeo(tpl.geometry, p.bend, p.thickness) : tpl.geometry;
     const arc = new THREE.Mesh(geo, mat);
     arc.position.copy(pos);
     arc.quaternion.copy(quat);
-    // Base outward facing, then user yaw (direction) and roll (rotate).
+    // Base outward facing, then authored yaw (direction) and roll (rotate).
     arc.rotateY(Math.PI / 2 + THREE.MathUtils.degToRad(p.direction));
     arc.rotateZ(THREE.MathUtils.degToRad(p.rotate));
-    // Preserve the template's (possibly non-uniform) proportions instead of
-    // collapsing them to a single uniform axis, then apply the user scale.
     const baseScale = tpl.scale.clone().multiplyScalar(p.scale);
     if (p.particles > 0) {
-      // Spread the sparks across the arc's actual world footprint and scale both
-      // the spread radius and sprite size with the effect, so a bigger arc reads
-      // as a bigger burst instead of a tiny pinpoint at the origin.
       tpl.geometry.computeBoundingSphere();
       const radius =
         (tpl.geometry.boundingSphere?.radius ?? 1) *
         Math.max(baseScale.x, baseScale.y, baseScale.z);
-      this.burst(pos.clone(), new THREE.Color(p.color).getHex(), Math.round(p.particles), 3 * p.scale, {
-        spread: radius,
+      this.burst(pos.clone(), colorHex, Math.round(p.particles), 2.8 * p.scale, {
+        spread: Math.max(0.2, radius * 0.35),
         sizeScale: p.scale,
       });
     }
+    const core = new THREE.Color(p.color).lerp(new THREE.Color(0xffffff), 0.5);
+    const tint = new THREE.Color(p.color);
     this.add({
       obj: arc,
       age: 0,
-      life: 0.36,
+      life: 0.34,
       geos: [],
       ownGeos: deformed ? [geo] : undefined,
       mats: [mat],
       shared: true,
       update: (e, dt) => {
         const t = e.age / e.life;
-        const grow = 0.7 + t * 0.9;
+        // Fast bloom → hold → fade (Souls/action-game slash timing)
+        const grow = t < 0.22 ? 0.72 + (t / 0.22) * 0.55 : 1.27 - ((t - 0.22) / 0.78) * 0.12;
         arc.scale.copy(baseScale).multiplyScalar(grow);
-        // Gentle sweep so the strike reads as motion, not a static decal.
-        arc.rotateZ(0.4 * dt);
-        mat.opacity = t < 0.25 ? t / 0.25 : 1 - (t - 0.25) / 0.75;
+        // Authored roll direction only (no random flip)
+        const rollSign = p.rotate >= 0 ? 1 : -1;
+        arc.rotateZ(0.55 * dt * rollSign);
+        if (t < 0.16) mat.color.copy(core);
+        else mat.color.lerp(tint, Math.min(1, (t - 0.16) / 0.18));
+        mat.opacity = t < 0.18 ? t / 0.18 : Math.max(0, 1 - (t - 0.18) / 0.82);
       },
     });
+  }
+
+  /**
+   * Play a full deterministic melee slash pack: primary (+ optional secondary) arc
+   * from {@link MeleeStrikeFxProfile}. No random crescent selection.
+   */
+  playMeleeSlash(
+    pos: THREE.Vector3,
+    quat: THREE.Quaternion,
+    profile: {
+      arcIndex: number;
+      arc: SlashFxParams;
+      secondaryArcIndex?: number;
+      secondaryArc?: SlashFxParams;
+      secondaryDelay?: number;
+    },
+  ) {
+    const n = Math.max(1, this.slashArcs.length);
+    const idx = ((profile.arcIndex % n) + n) % n;
+    this.slashArcParam(idx, pos, quat, profile.arc);
+    if (
+      profile.secondaryArc &&
+      profile.secondaryArcIndex != null &&
+      this.slashArcs.length > 0
+    ) {
+      const delay = profile.secondaryDelay ?? 0.045;
+      const sIdx = ((profile.secondaryArcIndex % n) + n) % n;
+      const p2 = pos.clone();
+      const q2 = quat.clone();
+      const params = profile.secondaryArc;
+      // Schedule via effect age — spawn delayed secondary as zero-life marker effect
+      this.add({
+        obj: new THREE.Object3D(),
+        age: 0,
+        life: delay + 0.02,
+        geos: [],
+        mats: [],
+        update: (e) => {
+          if (e.age >= delay && !(e as { _fired?: boolean })._fired) {
+            (e as { _fired?: boolean })._fired = true;
+            this.slashArcParam(sIdx, p2, q2, params);
+          }
+        },
+      });
+    }
+  }
+
+  /**
+   * Forward slash-wave projectile (melee projectile deploy) — flat additive disc
+   * that travels along `dir` and calls onHit at end / optional range.
+   */
+  slashWave(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts: { speed?: number; range?: number; color?: number; onHit?: (p: THREE.Vector3) => void } = {},
+  ) {
+    const speed = opts.speed ?? 14;
+    const range = opts.range ?? 5;
+    const color = opts.color ?? 0x9fd0ff;
+    const d = dir.clone();
+    d.y = 0;
+    if (d.lengthSq() < 1e-6) d.set(0, 0, 1);
+    d.normalize();
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    // Thin horizontal ring as cutting wave
+    const mesh = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.55, 24), mat);
+    mesh.position.copy(from);
+    mesh.position.y = Math.max(0.9, from.y);
+    mesh.lookAt(mesh.position.clone().add(d));
+    mesh.rotateX(Math.PI / 2);
+    const life = range / speed;
+    this.add({
+      obj: mesh,
+      age: 0,
+      life,
+      geos: [mesh.geometry],
+      mats: [mat],
+      update: (e, dt) => {
+        mesh.position.addScaledVector(d, speed * dt);
+        const t = e.age / e.life;
+        mat.opacity = 0.95 * (1 - t * t);
+        const s = 0.85 + t * 1.4;
+        mesh.scale.set(s, s, s);
+        if (t > 0.92 && opts.onHit) {
+          opts.onHit(mesh.position.clone());
+          opts.onHit = undefined;
+        }
+      },
+    });
+    // Trail dust along path start
+    this.burst(from.clone(), color, 6, 1.5, { spread: 0.2 });
   }
 
   /**
@@ -2889,13 +3101,25 @@ export class Vfx {
    * rise->fall arc (decelerate up, accelerate down) with a lateral curve,
    * adapted from the CopperCube `action_3D_Explosion_Physics` reference.
    */
-  skyfallStrike(from: THREE.Vector3, to: THREE.Vector3, color = 0xb98cff, rise = 5, onHit?: (p: THREE.Vector3) => void) {
+  /**
+   * Skyfall bolt (R special VFX). Optional `scale` (default 1) shrinks the head
+   * for multi-shot barrages (e.g. crossbow skill 4).
+   */
+  skyfallStrike(
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    color = 0xb98cff,
+    rise = 5,
+    onHit?: (p: THREE.Vector3) => void,
+    scale = 1,
+  ) {
+    const sc = THREE.MathUtils.clamp(scale, 0.25, 2.5);
     const mid = from.clone().lerp(to, 0.5);
     // Lateral curve offset (the reference's Fly_Width) perpendicular to travel.
     const side = new THREE.Vector3(-(to.z - from.z), 0, to.x - from.x);
     if (side.lengthSq() > 1e-6) side.normalize();
-    const peak = mid.clone().addScaledVector(side, (Math.random() - 0.5) * 3);
-    peak.y = Math.max(from.y, to.y) + rise;
+    const peak = mid.clone().addScaledVector(side, (Math.random() - 0.5) * 3 * sc);
+    peak.y = Math.max(from.y, to.y) + rise * (0.55 + 0.45 * sc);
     const curve = new THREE.QuadraticBezierCurve3(from.clone(), peak, to.clone());
     const SEG = 48;
     const pts = curve.getPoints(SEG);
@@ -2911,10 +3135,10 @@ export class Vfx {
     const trail = new THREE.Line(trailGeo, trailMat);
     trailGeo.setDrawRange(0, 1);
 
-    const coreGeo = new THREE.SphereGeometry(0.3, 12, 12);
+    const coreGeo = new THREE.SphereGeometry(0.3 * sc, 12, 12);
     const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const core = new THREE.Mesh(coreGeo, coreMat);
-    const haloGeo = new THREE.SphereGeometry(0.7, 12, 12);
+    const haloGeo = new THREE.SphereGeometry(0.7 * sc, 12, 12);
     const haloMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
     const halo = new THREE.Mesh(haloGeo, haloMat);
     const head = new THREE.Group();
@@ -2924,8 +3148,8 @@ export class Vfx {
     const group = new THREE.Group();
     group.add(trail, head);
 
-    const riseTime = 0.26;
-    const fallTime = 0.3;
+    const riseTime = 0.22 + 0.04 * sc;
+    const fallTime = 0.26 + 0.04 * sc;
     const travel = riseTime + fallTime;
     let fired = false;
     this.add({
@@ -3951,10 +4175,8 @@ export class Vfx {
   }
 
   /**
-   * A sustained energy beam from `getOrigin()` along `getDir()` for `life`
-   * seconds. Origin + direction are re-sampled every frame so the beam tracks the
-   * caster (used by Hexaring Beam / multi-part plasma). Bright additive core +
-   * soft glow + outer corona + tip sparks.
+   * Tracking beam (legacy Hexaring): origin/dir re-sampled each frame.
+   * Prefer {@link lockedBeam} for combat casts that freeze aim at cast start.
    */
   beam(
     getOrigin: () => THREE.Vector3,
@@ -3962,67 +4184,241 @@ export class Vfx {
     color = 0x9fd8ff,
     length = 22,
     life = 1.5,
+    radius = 0.36,
   ) {
-    const coreGeo = new THREE.CylinderGeometry(0.1, 0.1, 1, 12, 1, true);
-    const glowGeo = new THREE.CylinderGeometry(0.36, 0.36, 1, 16, 1, true);
-    const coronaGeo = new THREE.CylinderGeometry(0.62, 0.55, 1, 16, 1, true);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const glowMat = new THREE.MeshBasicMaterial({
+    this.spawnBeamVisual({
+      getOrigin,
+      getDir,
       color,
+      coreColor: 0xffffff,
+      length,
+      life,
+      radius,
+      locked: false,
+    });
+  }
+
+  /**
+   * Multi-shader locked combat beam — aim frozen at cast start.
+   * Layers: opaque-ish outer shell + additive mid glow + hot core + scroll noise.
+   * Radius 0.1–1 m (cylinder half-width for VFX; damage uses same radius).
+   */
+  lockedBeam(opts: {
+    origin: THREE.Vector3;
+    dir: THREE.Vector3;
+    color?: number;
+    coreColor?: number;
+    length?: number;
+    life?: number;
+    /** Visual / damage cylinder radius (m), clamped 0.1–1. */
+    radius?: number;
+  }) {
+    const o = opts.origin.clone();
+    const d = opts.dir.clone();
+    d.y = 0;
+    if (d.lengthSq() < 1e-6) d.set(0, 0, 1);
+    d.normalize();
+    const radius = Math.min(1, Math.max(0.1, opts.radius ?? 0.45));
+    this.spawnBeamVisual({
+      getOrigin: () => o,
+      getDir: () => d,
+      color: opts.color ?? 0x9fd8ff,
+      coreColor: opts.coreColor ?? 0xffffff,
+      length: opts.length ?? 18,
+      life: opts.life ?? 0.9,
+      radius,
+      locked: true,
+    });
+  }
+
+  private spawnBeamVisual(opts: {
+    getOrigin: () => THREE.Vector3;
+    getDir: () => THREE.Vector3;
+    color: number;
+    coreColor: number;
+    length: number;
+    life: number;
+    radius: number;
+    locked: boolean;
+  }) {
+    const r = Math.min(1, Math.max(0.1, opts.radius));
+    // Multi-layer cylinders (unit height along Y, scaled to length)
+    const coreGeo = new THREE.CylinderGeometry(r * 0.22, r * 0.22, 1, 14, 1, true);
+    const midGeo = new THREE.CylinderGeometry(r * 0.55, r * 0.55, 1, 18, 1, true);
+    const outerGeo = new THREE.CylinderGeometry(r, r * 0.92, 1, 20, 1, true);
+    const shellGeo = new THREE.CylinderGeometry(r * 1.08, r * 1.02, 1, 16, 1, true);
+
+    // Hot core — near-white additive
+    const coreMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(opts.coreColor) },
+        uLife: { value: 1 },
+      },
       transparent: true,
-      opacity: 0.45,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uLife;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float pulse = 0.75 + 0.25 * sin(uTime * 28.0 + vUv.y * 12.0);
+          float edge = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x);
+          float a = edge * pulse * uLife;
+          gl_FragColor = vec4(uColor * 1.4, a);
+        }
+      `,
+    });
+    // Mid ethereal glow
+    const midMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(opts.color) },
+        uLife: { value: 1 },
+      },
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uLife;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        float n(vec2 p) {
+          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+        void main() {
+          float scroll = fract(vUv.y * 3.0 - uTime * 2.2);
+          float noise = n(vec2(vUv.x * 8.0, scroll * 6.0));
+          float band = smoothstep(0.2, 0.55, noise) * smoothstep(0.95, 0.6, scroll);
+          float a = (0.35 + 0.25 * noise) * band * uLife;
+          gl_FragColor = vec4(uColor, a);
+        }
+      `,
+    });
+    // Outer soft shell — slightly opaque so beam reads in bright scenes
+    const outerMat = new THREE.MeshBasicMaterial({
+      color: opts.color,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.NormalBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    // Far corona additive
+    const shellMat = new THREE.MeshBasicMaterial({
+      color: opts.color,
+      transparent: true,
+      opacity: 0.12,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
-    const coronaMat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity: 0.18,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
+
     const group = new THREE.Group();
     group.add(
       new THREE.Mesh(coreGeo, coreMat),
-      new THREE.Mesh(glowGeo, glowMat),
-      new THREE.Mesh(coronaGeo, coronaMat),
+      new THREE.Mesh(midGeo, midMat),
+      new THREE.Mesh(outerGeo, outerMat),
+      new THREE.Mesh(shellGeo, shellMat),
     );
     const up = new THREE.Vector3(0, 1, 0);
     let sparkAcc = 0;
     this.add({
       obj: group,
       age: 0,
-      life,
-      geos: [coreGeo, glowGeo, coronaGeo],
-      mats: [coreMat, glowMat, coronaMat],
+      life: opts.life,
+      geos: [coreGeo, midGeo, outerGeo, shellGeo],
+      mats: [coreMat, midMat, outerMat, shellMat],
       update: (e, dt) => {
-        const o = getOrigin();
-        const d = getDir().clone().normalize();
-        group.position.copy(o.clone().addScaledVector(d, length / 2));
+        const o = opts.getOrigin();
+        const d = opts.getDir().clone().normalize();
+        // Lock: still re-read origin if callback moves with hand, but dir frozen by caller
+        group.position.copy(o.clone().addScaledVector(d, opts.length / 2));
         group.quaternion.setFromUnitVectors(up, d);
-        group.scale.set(1, length, 1);
+        group.scale.set(1, opts.length, 1);
         const t = e.age / e.life;
-        const pulse = 0.8 + Math.sin(e.age * 40) * 0.2;
-        coreMat.opacity = (1 - t * 0.3) * pulse;
-        glowMat.opacity = 0.42 * (1 - t * 0.3) * pulse;
-        coronaMat.opacity = 0.16 * (1 - t * 0.45) * pulse;
-        // Tip motes along the beam for “charged continuous” feel
+        const lifeFade = 1 - t * 0.35;
+        const pulse = 0.85 + Math.sin(e.age * 36) * 0.15;
+        coreMat.uniforms.uTime.value = e.age;
+        coreMat.uniforms.uLife.value = lifeFade * pulse;
+        midMat.uniforms.uTime.value = e.age;
+        midMat.uniforms.uLife.value = lifeFade;
+        outerMat.opacity = 0.22 * lifeFade;
+        shellMat.opacity = 0.12 * lifeFade * pulse;
         sparkAcc += dt;
-        if (sparkAcc > 0.04) {
+        if (sparkAcc > 0.05) {
           sparkAcc = 0;
-          const tip = o.clone().addScaledVector(d, length * (0.55 + Math.random() * 0.4));
-          this.burst(tip, color, 2, 1.1);
+          const tip = o.clone().addScaledVector(d, opts.length * (0.5 + Math.random() * 0.45));
+          this.burst(tip, opts.color, 2, 1.0);
         }
       },
     });
+  }
+
+  /**
+   * Charge-up ethereal field while casting a beam (spins / rises / pulls inward).
+   * Call once at cast start; self-disposes after `life`.
+   */
+  beamChargeUp(
+    getPos: () => THREE.Vector3,
+    color = 0xb0d8ff,
+    life = 0.55,
+  ) {
+    this.castAura(getPos(), color);
+    this.skillCharge(getPos(), color, 1.15, Math.min(life, 0.5));
+    // Spinning ethereal rings
+    for (let i = 0; i < 3; i++) {
+      const geo = new THREE.TorusGeometry(0.45 + i * 0.22, 0.035, 8, 40);
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.55 - i * 0.12,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const ring = new THREE.Mesh(geo, mat);
+      const spin = (1.2 + i * 0.7) * (i % 2 === 0 ? 1 : -1);
+      const tilt = 0.4 + i * 0.25;
+      this.add({
+        obj: ring,
+        age: 0,
+        life,
+        geos: [geo],
+        mats: [mat],
+        update: (e) => {
+          const p = getPos();
+          ring.position.copy(p);
+          ring.position.y += 0.15 + Math.sin(e.age * 6 + i) * 0.08;
+          ring.rotation.x = tilt;
+          ring.rotation.z = e.age * spin;
+          const t = e.age / e.life;
+          mat.opacity = (0.55 - i * 0.12) * (1 - t) * (0.6 + 0.4 * Math.sin(e.age * 14));
+          const s = 0.7 + t * 1.1;
+          ring.scale.setScalar(s);
+        },
+      });
+    }
+    // Rising motes
+    this.flame(getPos().clone(), color, 16, 1.8);
   }
 
   /**

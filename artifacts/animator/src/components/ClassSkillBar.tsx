@@ -143,11 +143,14 @@ export function ClassSkillBar({ characterId, onCast, visible = true }: Props) {
     sub?: string,
   ) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    // Keep tooltip on-screen (clamp horizontal)
+    const x = Math.min(window.innerWidth - 24, Math.max(24, r.left + r.width / 2));
+    const y = Math.min(window.innerHeight - 12, r.bottom + 10);
     setTip({
-      x: r.left + r.width / 2,
-      y: r.bottom + 8,
+      x,
+      y,
       title,
-      body,
+      body: body || "No description.",
       sub,
     });
   };
@@ -226,9 +229,13 @@ export function ClassSkillBar({ characterId, onCast, visible = true }: Props) {
               onMouseEnter={(e) =>
                 showTip(
                   e,
-                  s.empty ? "Empty slot" : s.name,
-                  s.desc,
-                  s.empty ? undefined : `${s.kind} · CD ${s.cooldownSec}s · ${s.key}`,
+                  s.empty ? "Empty class skill" : s.name,
+                  s.empty
+                    ? "Unlock actives on the Class Path (K → Class). L0 passives appear as buffs above."
+                    : s.desc || "Class skill — Shift + number to cast.",
+                  s.empty
+                    ? "K · Class Path"
+                    : `${(s.kind || "active").toUpperCase()} · CD ${s.cooldownSec}s · ${s.key}`,
                 )
               }
               onMouseLeave={() => setTip(null)}

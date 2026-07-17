@@ -17,17 +17,18 @@ describe("quickActions SSOT", () => {
     expect(rightWingSlots(slots)).toHaveLength(6);
   });
 
-  it("keeps mode on Q and parry on C (not swapped)", () => {
+  it("keeps mode on Q and parry on C; RMB is focus not block", () => {
     expect(QUICK_ACTIONS.mode.key).toBe("Q");
     expect(QUICK_ACTIONS.parry.key).toBe("C");
     expect(QUICK_ACTIONS.dodge.key).toBe("X");
-    expect(QUICK_ACTIONS.block.key).toBe("RMB");
+    expect(QUICK_ACTIONS.block.key).toBe("E");
+    expect(QUICK_ACTIONS.primary.key).toBe("LMB");
   });
 
-  it("legend mentions mode + parry + dodge", () => {
-    expect(COMBAT_KEY_LEGEND).toMatch(/Q mode/i);
+  it("legend mentions focus + roll + parry", () => {
+    expect(COMBAT_KEY_LEGEND).toMatch(/focus/i);
     expect(COMBAT_KEY_LEGEND).toMatch(/C parry/i);
-    expect(COMBAT_KEY_LEGEND).toMatch(/X dodge/i);
+    expect(COMBAT_KEY_LEGEND).toMatch(/X roll/i);
   });
 
   it("clampQuickSlots pads and sanitizes", () => {

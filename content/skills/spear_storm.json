@@ -4,31 +4,22 @@
   "slotKind": "ultimate",
   "hotbarSlot": 4,
   "name": "Storm of Spears",
-  "description": "Rain spectral spears on area",
-  "animKey": "attack",
+  "description": "Rain spectral spears / ultimate AoE (Madarame special / skill4).",
+  "animKey": "special",
   "anim": {
-    "path": "/anim/base/attack",
-    "status": "placeholder",
-    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+    "path": "/anims/baked/polearm/special.json",
+    "sourceClip": "bankai",
+    "status": "ready",
+    "notes": "Madarame bake — polearm/special ultimate presentation"
   },
   "power": 4,
-  "cost": {
-    "stamina": 3,
-    "mana": 0
-  },
+  "cost": { "stamina": 18, "mana": 0 },
   "cooldown": 50,
-  "hitWindows": [
-    {
-      "t": 0.18,
-      "kind": "projectile",
-      "radius": 0.4,
-      "speed": 28
-    }
-  ],
+  "hitWindows": [{ "t": 0.45, "kind": "aoe", "radius": 4.5 }],
   "vfx": {
-    "cast": "#d8c38a",
-    "impact": "#e8d9a0",
-    "mode": "directional"
+    "cast": "#70c0ff",
+    "impact": "#90d0ff",
+    "mode": "aoe"
   },
   "icon": {
     "path": "icons/pack/weapons/Spear_35.png",
@@ -38,7 +29,7 @@
   },
   "readiness": {
     "data": "ready",
-    "anim": "placeholder",
+    "anim": "ready",
     "vfx": "ready",
     "icon": "ready",
     "combat": "ready"

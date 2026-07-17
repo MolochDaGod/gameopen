@@ -6,23 +6,29 @@
   "twoHanded": true,
   "baseDamage": 22,
   "attackSpeed": 1,
-  "animPack": "sword_shield",
+  "animPack": "polearm",
   "skills": [
     "spear_thrust",
-    "spear_javelin",
-    "spear_impale",
+    "spear_lunge",
+    "spear_cyclone",
     "spear_storm"
   ],
+  "combo": {
+    "clips": ["attack", "attack2", "attack4", "attack3"],
+    "source": ["attack1_1", "attack1_2", "attack1_4", "attack1_3"],
+    "notes": "Base 1_1/1_2 · drive-in 1_4(+MM) · finisher 1_3"
+  },
   "mesh": {
     "path": "models/weapons/spear.glb",
     "format": "glb",
     "status": "ready",
-    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+    "notes": "Open arsenal spear GLB; race kits also carry ELF_weapon_spear etc."
   },
   "tags": [
     "master-weaponSkills",
     "ummorpg-port",
-    "spear"
+    "spear",
+    "madarame-polearm"
   ],
   "ship": true,
   "readiness": {
@@ -30,7 +36,8 @@
     "mesh": "ready",
     "combat": "ready",
     "present": "ready",
-    "icon": "ready"
+    "icon": "ready",
+    "anim": "ready"
   },
   "icon": {
     "path": "icons/pack/weapons/Spear_01.png",

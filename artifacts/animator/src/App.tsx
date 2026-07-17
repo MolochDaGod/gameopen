@@ -1884,6 +1884,9 @@ export default function App() {
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
             rangeState={hud?.owrRange ?? "none"}
+            aimNdcX={hud?.aimNdcX ?? 0}
+            aimNdcY={hud?.aimNdcY ?? 0}
+            focusLocked={hud?.focusLocked ?? false}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
@@ -1981,7 +1984,7 @@ export default function App() {
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                WASD · LMB attack · ⇧1–5 class · B camp · I loadout · K systems · Esc
+                Centre dot · free-aim crosshair · LMB select · RMB snap+focus · X roll
               </p>
             </div>
           )}
@@ -2019,6 +2022,9 @@ export default function App() {
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
             rangeState={hud?.owrRange ?? "none"}
+            aimNdcX={hud?.aimNdcX ?? 0}
+            aimNdcY={hud?.aimNdcY ?? 0}
+            focusLocked={hud?.focusLocked ?? false}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
@@ -2137,7 +2143,7 @@ export default function App() {
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                WASD · Q mode · ⇧1–5 class · B camp · I loadout · K systems · P production
+                Dot centre · free-aim · LMB select · RMB snap+focus · harvest LMB/RMB · X roll
               </p>
             </div>
           )}

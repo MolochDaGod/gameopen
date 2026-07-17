@@ -459,16 +459,34 @@ html, body, #root {
 .tab:hover { border-color: #4fc3ff; color: #fff; }
 .tab.on { background: rgba(79,195,255,0.22); border-color: #4fc3ff; color: #fff; }
 
-/* ---- crosshair ---- */
+/* ---- centre aim dot (fixed screen middle) + free-aim crosshair ---- */
+.aim-center-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 5px rgba(180, 230, 255, 0.85), 0 0 1px #fff;
+  pointer-events: none;
+  z-index: 6;
+}
 .crosshair {
   --ch-gap: 0px;
   --ch-color: #6fe0ff;
   position: absolute;
+  /* left/top set inline from free-aim NDC; default centre */
   top: 50%; left: 50%;
   width: 26px; height: 26px;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  z-index: 7;
 }
+/* Soft lock: slightly larger, cooler ticks */
+.crosshair-soft { --ch-color: #7ee0ff; }
+/* Hard FOCUS: tighter, warmer (combat commit) */
+.crosshair-focus { --ch-color: #ffd080; }
+.crosshair-focus .ch-line { opacity: 0.95; }
 .ch-dot {
   position: absolute; top: 50%; left: 50%;
   width: 3px; height: 3px; border-radius: 50%;

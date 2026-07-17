@@ -41,6 +41,15 @@ export function Icon({ name, src, fallbackName, size = 22, className, title }: P
       loading="lazy"
       decoding="async"
       onError={() => {
+        // Local skill_nobg warrior → info CDN (ObjectStore)
+        if (!triedLive && url.includes("/icons/skill_nobg/Warriorskill_")) {
+          setTriedLive(true);
+          const file = url.split("/").pop();
+          if (file) {
+            setUrl(`https://info.grudge-studio.com/icons/skill_nobg/${file}`);
+            return;
+          }
+        }
         if (!triedLive && name) {
           setTriedLive(true);
           void iconUrlLive(name).then((live) => {

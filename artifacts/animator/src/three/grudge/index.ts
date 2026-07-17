@@ -21,12 +21,23 @@ export { RACE_GEAR_PRESETS, PRESET_IDS, getPreset } from "./gearPresets";
 export type { AnimPack, LoadoutClips } from "./anims";
 export {
   ANIM_PACK_CLIPS,
+  BANNED_LOCOMOTION_CLIPS,
   SPRINT_CLIP,
+  SPRINT_LOCO_MULT,
   asAnimPack,
+  animPackForWeapon,
+  isBannedLocomotionClip,
   bakedClipUrl,
   toRotationOnlyClip,
   loadBakedClip,
 } from "./anims";
+export { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
+export {
+  SPEAR_SKILLS,
+  AXE_SKILLS,
+  familyFromWeaponId,
+  skillPackForFamily,
+} from "./weaponSkillPacks";
 
 export {
   powerOfTenScale,

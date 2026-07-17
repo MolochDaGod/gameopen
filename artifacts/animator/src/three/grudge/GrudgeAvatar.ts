@@ -19,6 +19,7 @@ import {
   clipsFromRoleMap,
 } from "../ummorpg/animationDirector";
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
+import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -48,6 +49,9 @@ export class GrudgeAvatar implements Avatar {
   private model: THREE.Object3D | null = null;
   private mixer: THREE.AnimationMixer | null = null;
   private footGrounder = new FootGrounder();
+  /** Off-hand grip toward spear / 2H shaft (post-mixer). */
+  private twoHandGrip = new TwoHandGrip();
+  private gripWeaponId: string | null = null;
   private actions = new Map<string, THREE.AnimationAction>();
   private roleClip = new Map<AnimRole, string>();
   private current: THREE.AnimationAction | null = null;
@@ -175,6 +179,7 @@ export class GrudgeAvatar implements Avatar {
       this.footGrounder.bind(this.model);
       this.footGrounder.setEnabled(true);
       this.footGrounder.setGroundSampler(() => ({ y: 0, normal: null }));
+      this.twoHandGrip.bind(this.model, null);
 
       // AnimationDirector (uMMORPG Animator layers: loco + skill override)
       try {
@@ -565,6 +570,16 @@ export class GrudgeAvatar implements Avatar {
     this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
   }
 
+  /**
+   * Wire arsenal weapon mesh for two-hand / spear grip assist.
+   * Call from Studio after attachWeapon when weapon is 2H or spear.
+   */
+  setGripWeapon(weapon: THREE.Object3D | null, weaponId?: string | null): void {
+    this.gripWeaponId = weaponId ?? null;
+    this.twoHandGrip.setWeapon(weapon);
+    this.twoHandGrip.enabled = wantsTwoHandGrip(weaponId);
+  }
+
   update(dt: number): void {
     if (!this.mixer) return;
     // beginFrame → mixer → apply (foot plant; matches Character)
@@ -575,6 +590,11 @@ export class GrudgeAvatar implements Avatar {
       this.mixer.update(dt);
     }
     this.applyArmWidth();
+    // Two-hand grip after mixer so Madarame arm pose + shaft hold stay coherent
+    this.twoHandGrip.setAttacking(this.isOneShotActive);
+    if (wantsTwoHandGrip(this.gripWeaponId)) {
+      this.twoHandGrip.apply(dt, { strength: this.isOneShotActive ? 0.65 : 0.4 });
+    }
     this.updateColliderTransform();
     this.footGrounder.apply(dt);
     if (this.oneShot) {

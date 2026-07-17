@@ -277,6 +277,11 @@ export interface CombatTargets {
   /** Register the player's CombatController (so player hits can be parried). */
   setPlayerCC(cc: CombatController | null): void;
   cycleSelection(): void;
+  /**
+   * Soft-lock select: pick living enemy under aim ray (crosshair) and set red
+   * outline. Returns display name when a new selection is made.
+   */
+  selectUnderAim?(ray: THREE.Ray, maxDist?: number, softCos?: number): string | null;
   /** Rotate the GREEN ally selection (Shift+Tab). Optional: dungeon has no allies. */
   cycleAllySelection?(): void;
   selectedView(): {
@@ -386,6 +391,24 @@ export interface CombatTargets {
   ): DefensiveResult | null;
   launch(center: THREE.Vector3, radius: number, damage: number, upVel: number): number;
   reactAt(nearPos: THREE.Vector3, reaction: "stagger" | "stunned" | "fallen"): void;
+  /**
+   * Locked beam cylinder damage + crowd-control physics.
+   * Hits every living enemy whose chest lies within `radius` of the segment.
+   */
+  beamCylinder?(
+    origin: THREE.Vector3,
+    dir: THREE.Vector3,
+    length: number,
+    radius: number,
+    damage: number,
+    force: number,
+    physics: {
+      mode: "none" | "stun" | "launch" | "explode" | "ragdoll";
+      knockback: number;
+      knockUp: number;
+    },
+    ctx?: SparringContext,
+  ): number;
   /** Host-authoritative NPC roster for coop broadcast. */
   netSnapshot(): NpcState[];
   /** Apply a peer-forwarded hit against a host-owned NPC by id. */
@@ -1117,8 +1140,8 @@ export class Targets implements CombatTargets {
   }
 
   /**
-   * Tab lock-on: advance the selection to the next living enemy (wraps). Clears
-   * the selection when no enemies stand.
+   * Tab soft-lock cycle: advance the selection to the next living enemy (wraps).
+   * Clears the selection when no enemies stand. Does not enable hard focus.
    */
   cycleSelection(): void {
     const live = this.dummies.filter((d) => !d.dead && d.faction === "enemy");
@@ -1139,6 +1162,32 @@ export class Targets implements CombatTargets {
     const idx = live.findIndex((d) => d.id === this.selectedId);
     const next = live[(idx + 1) % live.length];
     this.setSelected(next.id);
+  }
+
+  /**
+   * Soft-lock select under aim: LMB when not in hard focus. Sets red outline
+   * without engaging hard face-lock (that is RMB toggle in Studio).
+   */
+  selectUnderAim(ray: THREE.Ray, maxDist = 22, softCos = 0.82): string | null {
+    const handle = this.raycast(ray, maxDist, softCos);
+    if (!handle) return null;
+    // Match handle chest to dummy
+    let best: Dummy | null = null;
+    let bestD = Infinity;
+    for (const d of this.dummies) {
+      if (d.dead || d.faction !== "enemy") continue;
+      const c = this.chest(d);
+      const dd = c.distanceToSquared(handle.position);
+      if (dd < bestD) {
+        bestD = dd;
+        best = d;
+      }
+    }
+    if (!best || bestD > 2.5) return null;
+    this.setSelected(best.id);
+    return best.roleLabel
+      ? best.roleLabel
+      : getWeapon(best.weaponId).label;
   }
 
   /**
@@ -2146,6 +2195,34 @@ export class Targets implements CombatTargets {
     return { outcome: "hit", pos, dummyId: focused.id };
   }
 
+  /** Residual explode splash that skips the primary beam target. */
+  private splashExcept(
+    except: Dummy,
+    center: THREE.Vector3,
+    radius: number,
+    damage: number,
+    force: number,
+    ctx?: SparringContext,
+  ): number {
+    let hits = 0;
+    const tmp = new THREE.Vector3();
+    for (const d of this.dummies) {
+      if (d.dead || d.faction !== "enemy" || d === except) continue;
+      const falloff = aoeFalloff(this.chest(d, tmp).distanceTo(center), radius);
+      if (falloff < 0) continue;
+      this.hit(
+        d,
+        { force: 1, damage: damage * falloff, poiseDamage: Math.round(damage * falloff * 0.5) },
+        center,
+        force * (0.5 + falloff * 0.5),
+        this.playerCC,
+        ctx,
+      );
+      hits++;
+    }
+    return hits;
+  }
+
   /**
    * AoE blast restricted to a single faction (e.g. a boss skill hitting the
    * player's allies). Mirrors {@link blast} but filtered by `faction`, so an
@@ -2196,6 +2273,147 @@ export class Targets implements CombatTargets {
     }
     hits.sort((a, b) => a.dist - b.dist);
     return hits.map((h) => h.group);
+  }
+
+  /**
+   * Damage + physics along a locked beam segment (cylinder of `radius`).
+   * Aim is frozen by the caller; each tick re-samples living enemies.
+   * Physics modes:
+   *  - stun: freeze + CC stunned + light shove
+   *  - launch: knock-up (may land prone)
+   *  - explode: AoE blast residue + hard launch + shield-break
+   *  - ragdoll: clean launch (≥8 up) → rising → fallen on land
+   * Works for NPCs / enemies / bosses (any Dummy with a CC).
+   */
+  beamCylinder(
+    origin: THREE.Vector3,
+    dir: THREE.Vector3,
+    length: number,
+    radius: number,
+    damage: number,
+    force: number,
+    physics: {
+      mode: "none" | "stun" | "launch" | "explode" | "ragdoll";
+      knockback: number;
+      knockUp: number;
+    },
+    ctx?: SparringContext,
+  ): number {
+    const d = dir.clone();
+    d.y = 0;
+    if (d.lengthSq() < 1e-6) d.set(0, 0, 1);
+    d.normalize();
+    const r = Math.min(1, Math.max(0.1, radius));
+    const len = Math.max(0.5, length);
+    let hits = 0;
+    const tmp = new THREE.Vector3();
+    const chest = new THREE.Vector3();
+    for (const dummy of this.dummies) {
+      if (dummy.dead || dummy.faction !== "enemy") continue;
+      this.chest(dummy, chest);
+      const vx = chest.x - origin.x;
+      const vy = chest.y - origin.y;
+      const vz = chest.z - origin.z;
+      const proj = vx * d.x + vy * d.y + vz * d.z;
+      if (proj < -r * 0.25 || proj > len + r * 0.25) continue;
+      const closest = origin.clone().addScaledVector(d, THREE.MathUtils.clamp(proj, 0, len));
+      const dist = closest.distanceTo(chest);
+      if (dist > r) continue;
+
+      // Damage through CC (parry/block still resolve)
+      this.hit(
+        dummy,
+        {
+          force: physics.mode === "explode" || physics.mode === "ragdoll" ? 3 : 2,
+          damage,
+          poiseDamage: Math.round(damage * 0.7),
+        },
+        closest,
+        force * 0.55,
+        this.playerCC,
+        ctx,
+      );
+
+      // Horizontal shove along beam + outward from axis
+      const out = chest.clone().sub(closest);
+      out.y = 0;
+      if (out.lengthSq() < 1e-4) {
+        out.set(-d.z, 0, d.x);
+      }
+      out.normalize();
+      const kb = physics.knockback;
+      dummy.vel.addScaledVector(d, kb * 0.55);
+      dummy.vel.addScaledVector(out, kb * 0.45);
+      dummy.flash = Math.max(dummy.flash, 0.28);
+      dummy.flashColor.copy(FLASH_COLOR);
+      dummy.model?.react();
+
+      switch (physics.mode) {
+        case "stun": {
+          dummy.stunT = Math.max(dummy.stunT, STUN_SECONDS);
+          dummy.cc.applyVulnerableState("stunned");
+          dummy.state = "idle";
+          dummy.stateT = 0;
+          dummy.pendingSkill = false;
+          if (dummy.avatar?.reaction && !dummy.dead) {
+            dummy.avatar.reaction("stunned", 0.1);
+          }
+          break;
+        }
+        case "launch": {
+          const up = Math.max(4, physics.knockUp);
+          dummy.vel.y = Math.max(dummy.vel.y, up * 0.85);
+          if (up >= 8) {
+            dummy.launchPhase = "rising";
+            if (dummy.avatar?.reaction && !dummy.dead) {
+              if (!dummy.avatar.reaction("knockedUp", 0.06))
+                dummy.avatar.reaction("fallDown", 0.1);
+            }
+          } else if (dummy.avatar?.reaction && !dummy.dead) {
+            if (!dummy.avatar.reaction("uppercutLaunch", 0.08))
+              dummy.avatar.reaction("fallDown", 0.1);
+          }
+          break;
+        }
+        case "explode": {
+          dummy.shieldBreakT = Math.max(dummy.shieldBreakT, SHIELD_BREAK_SECONDS);
+          dummy.vel.y = Math.max(dummy.vel.y, 9.2);
+          dummy.vel.addScaledVector(out, kb * 0.8);
+          dummy.launchPhase = "rising";
+          if (dummy.avatar?.reaction && !dummy.dead) {
+            if (!dummy.avatar.reaction("knockedUpBack", 0.06))
+              dummy.avatar.reaction("fallDown", 0.1);
+          }
+          // Splash only — skip the already-hit dummy to avoid double damage
+          this.splashExcept(dummy, closest, r * 1.8, damage * 0.35, force * 0.4, ctx);
+          break;
+        }
+        case "ragdoll": {
+          // Clean launch → fallen on land (update loop applies fallen + KO pose)
+          dummy.vel.y = Math.max(dummy.vel.y, 9.5);
+          dummy.vel.addScaledVector(d, kb * 0.7);
+          dummy.vel.addScaledVector(out, kb * 0.5);
+          dummy.launchPhase = "rising";
+          dummy.shieldBreakT = Math.max(dummy.shieldBreakT, SHIELD_BREAK_SECONDS * 0.6);
+          if (dummy.avatar?.reaction && !dummy.dead) {
+            if (!dummy.avatar.reaction("knockedUpBack", 0.06))
+              dummy.avatar.reaction("fallDown", 0.1);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+
+      if (dummy.cc.getHealth() <= 0 && !dummy.dead) {
+        dummy.dead = true;
+        dummy.launchPhase = undefined;
+        dummy.respawn = 2.6;
+        this.onDeath?.(this.chest(dummy, tmp));
+      }
+      hits++;
+    }
+    return hits;
   }
 
   /**

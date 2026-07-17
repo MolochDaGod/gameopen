@@ -4,31 +4,22 @@
   "slotKind": "ability",
   "hotbarSlot": 3,
   "name": "Impale",
-  "description": "Pin target, dealing DoT",
-  "animKey": "attack",
+  "description": "True finisher strike (Madarame attack1_3) — after drive-in (attack1_4).",
+  "animKey": "attack3",
   "anim": {
-    "path": "/anim/base/attack",
-    "status": "placeholder",
-    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+    "path": "/anims/baked/polearm/attack3.json",
+    "sourceClip": "attack1_3",
+    "status": "ready",
+    "notes": "Madarame bake — polearm/attack3 combo finisher hit"
   },
-  "power": 1.1111111111111112,
-  "cost": {
-    "stamina": 3,
-    "mana": 0
-  },
-  "cooldown": 10,
-  "hitWindows": [
-    {
-      "t": 0.22,
-      "kind": "melee",
-      "radius": 1.4,
-      "angleDeg": 90
-    }
-  ],
+  "power": 1.2,
+  "cost": { "stamina": 5, "mana": 0 },
+  "cooldown": 5,
+  "hitWindows": [{ "t": 0.4, "kind": "melee", "radius": 1.7, "angleDeg": 100 }],
   "vfx": {
-    "cast": "#d8c38a",
-    "impact": "#e8d9a0",
-    "mode": "none"
+    "cast": "#ffe080",
+    "impact": "#ffd060",
+    "mode": "slash"
   },
   "icon": {
     "path": "icons/pack/weapons/Spear_30.png",
@@ -38,7 +29,7 @@
   },
   "readiness": {
     "data": "ready",
-    "anim": "placeholder",
+    "anim": "ready",
     "vfx": "ready",
     "icon": "ready",
     "combat": "ready"

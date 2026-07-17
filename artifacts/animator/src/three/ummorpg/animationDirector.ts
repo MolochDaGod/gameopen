@@ -104,7 +104,11 @@ export class AnimationDirector {
   private applyLocoWeights(fade: number): void {
     if (this.busy) return; // overlay owns influence
     const role = this.locoFromGait(this.gait);
-    if (role === this.loco) return;
+    if (role === this.loco) {
+      // Keep sprint rate applied if already on sprint (clone of run).
+      this.applySprintRate(role);
+      return;
+    }
     const next = this.actions.get(role);
     const prev = this.actions.get(this.loco);
     if (!next) return;
@@ -113,8 +117,26 @@ export class AnimationDirector {
     next.setEffectiveWeight(1);
     next.fadeIn(fade);
     next.play();
-    if (prev && prev !== next) prev.fadeOut(fade);
+    this.applySprintRate(role);
+    if (prev && prev !== next) {
+      prev.fadeOut(fade);
+      prev.setEffectiveTimeScale(1);
+    }
     this.loco = role;
+  }
+
+  /** Sprint uses a run clone — speed up cycle so it reads as sprint (not roll). */
+  private applySprintRate(role: LocoRole): void {
+    const sprint = this.actions.get("sprint");
+    const run = this.actions.get("run");
+    if (sprint) {
+      const mult =
+        typeof sprint.getClip()?.userData?.locoMult === "number"
+          ? (sprint.getClip().userData.locoMult as number)
+          : 1.75;
+      sprint.setEffectiveTimeScale(role === "sprint" ? mult : 1);
+    }
+    if (run && role !== "sprint") run.setEffectiveTimeScale(1);
   }
 
   /**

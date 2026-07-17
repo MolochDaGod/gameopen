@@ -106,39 +106,102 @@ export const DODGE_CUT = {
   fade: 0.06,
 } as const satisfies ClipCutOpts;
 
-/** Utility Kick (KeyV) — cut into the strike, 2×, foot wave on impact. */
+/**
+ * Utility Kick (KeyV) + Shadow Kick smart-parry.
+ *
+ * Clip: `animations/extra/utility-kick` (Mixamo-style standing kick).
+ * Runtime full length is whatever the loaded clip reports (typically ~1.0–1.4s);
+ * all fractions below are of that full clip.
+ *
+ * Phases (wall-clock ≈ fraction × fullDur / timeScale):
+ *
+ *  1. **OPEN (parry window)** — `openFrom`→`openTo` at `openTimeScale`
+ *     Body is **planted** (no dash). This is the smart-parry trigger window:
+ *     if melee damage would land, we teleport behind the attacker and jump to
+ *     FINISH at high speed (Shadow Kick).
+ *
+ *  2. **COMMIT** (no parry) — `finishFrom`→`finishTo` at `finishTimeScale`
+ *     Short lunge + foot-wave impact (original V-kick offense).
+ *
+ *  3. **SHADOW FINISH** (parry fired) — same finish slice at `shadowTimeScale`
+ *     Instant warp behind foe, no open leftover, impact ASAP.
+ *
+ * Example at fullDur = 1.2s:
+ *  - Open:  (0.38−0)×1.2 / 1.0  = **0.46s** planted parry window
+ *  - Commit finish: (1−0.40)×1.2 / 2.1 ≈ **0.34s** to impact ~0.21s in
+ *  - Shadow finish: (1−0.42)×1.2 / 3.2 ≈ **0.22s** total after teleport
+ */
 export const UTILITY_KICK_CUT = {
-  /** Skip slow setup; start near the kick extension. */
-  from: 0.4,
-  to: 1,
-  timeScale: 2,
-  /** Snappy blend into the cut (not a long crossfade). */
+  // ── Open (planted smart-parry window) ─────────────────────────────────
+  /** Start of open (fraction of full clip). */
+  openFrom: 0,
+  /** End of open / start of kick extension (was the old skip-to `from: 0.4`). */
+  openTo: 0.38,
+  /** Open plays near real-time so the plant reads as a read window. */
+  openTimeScale: 1.0,
+  // ── Finish (strike portion) ───────────────────────────────────────────
+  finishFrom: 0.4,
+  finishTo: 1,
+  finishTimeScale: 2.1,
+  /** Shadow Kick finish after successful smart parry — faster. */
+  shadowTimeScale: 3.2,
+  /** Snappy blend into cuts. */
   fade: 0.04,
   /**
-   * When impact resolves as a fraction of the *played* cut wall-clock duration.
+   * Impact as fraction of the *played finish* wall-clock duration.
    * ~0.55–0.7 lands on the foot plant for most kick clips.
    */
-  impactAt: 0.62,
-  /** Motion-blur ghost count at cut-in. */
+  impactAt: 0.58,
+  /** Shadow finish hits earlier in the sped-up slice. */
+  shadowImpactAt: 0.42,
+  /** Motion-blur ghost count at finish / shadow cut-in. */
   blurCount: 5,
   blurLife: 0.22,
+  /** Extra afterimages on shadow teleport. */
+  shadowBlurCount: 8,
+  shadowBlurLife: 0.32,
   /** Foot impact AoE (m). */
   aoeRadius: 2.7,
   /** Shield-break window (s) after connect. */
   shieldBreakSec: 2.2,
   /** Base knockback multiplier on skillForce. */
   pushForceMul: 1.55,
+  /** Shadow Kick force / damage mul. */
+  shadowForceMul: 1.85,
+  shadowDamageMul: 1.35,
   /** Damage component of the multi-push blast. */
   blastDamage: 18,
-  /** Cooldown after cast. */
-  cooldown: 0.55,
+  /** Metres behind attacker to land on shadow parry. */
+  shadowBehindM: 1.35,
+  /** Brief i-frames covering the teleport + finish start. */
+  shadowInvuln: 0.55,
+  /** Cooldown after cast (armed at open start). */
+  cooldown: 0.85,
+  // Legacy aliases used by any remaining from/to callers
+  from: 0.4,
+  to: 1,
+  timeScale: 2.1,
 } as const satisfies ClipCutOpts & {
+  openFrom: number;
+  openTo: number;
+  openTimeScale: number;
+  finishFrom: number;
+  finishTo: number;
+  finishTimeScale: number;
+  shadowTimeScale: number;
   impactAt: number;
+  shadowImpactAt: number;
   blurCount: number;
   blurLife: number;
+  shadowBlurCount: number;
+  shadowBlurLife: number;
   aoeRadius: number;
   shieldBreakSec: number;
   pushForceMul: number;
+  shadowForceMul: number;
+  shadowDamageMul: number;
   blastDamage: number;
+  shadowBehindM: number;
+  shadowInvuln: number;
   cooldown: number;
 };

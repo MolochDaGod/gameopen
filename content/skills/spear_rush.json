@@ -1,0 +1,59 @@
+{
+  "id": "spear_cyclone",
+  "family": "spear",
+  "slotKind": "ability",
+  "hotbarSlot": 3,
+  "name": "Spear Rush",
+  "description": "Speed move (Madarame skill2_1) — blur + slash; re-press for AoE finisher.",
+  "animKey": "skill2",
+  "anim": {
+    "path": "/anims/baked/polearm/skill2.json",
+    "sourceClip": "skill2_1",
+    "status": "ready",
+    "notes": "Madarame bake — polearm/skill2 speed + multi-part AoE finisher"
+  },
+  "multiPart": [
+    {
+      "label": "Spear Rush",
+      "clip": "skill2",
+      "dashM": 2.6,
+      "vfx": ["afterimage", "slash", "charge"]
+    },
+    {
+      "label": "AoE Finisher",
+      "clip": "attack3",
+      "dashM": 0.8,
+      "radius": 3.2,
+      "vfx": ["afterimage", "slash", "aoeBlast", "shockwave"]
+    }
+  ],
+  "motion": { "kind": "charge", "dashM": 2.8, "dashDur": 0.38, "mm": 70 },
+  "power": 1.6,
+  "cost": { "stamina": 10, "mana": 0 },
+  "cooldown": 8,
+  "hitWindows": [
+    { "t": 0.3, "kind": "melee", "radius": 2.2, "angleDeg": 180 },
+    { "t": 0.55, "kind": "aoe", "radius": 3.0 }
+  ],
+  "vfx": {
+    "cast": "#a0d8ff",
+    "impact": "#80d0ff",
+    "mode": "blur_slash_aoe"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Spear_10.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_10.png",
+    "source": "objectstore-master-weaponSkills@3.1.0",
+    "status": "ready"
+  },
+  "readiness": {
+    "data": "ready",
+    "anim": "ready",
+    "vfx": "ready",
+    "icon": "ready",
+    "combat": "ready"
+  },
+  "masterUuid": "SKIL-20260604081946-00008D-CYCLONE",
+  "damageType": "physical",
+  "ship": true
+}

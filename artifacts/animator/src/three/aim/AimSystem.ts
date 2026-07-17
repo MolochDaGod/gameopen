@@ -50,6 +50,43 @@ export function screenCenterRay(camera: THREE.Camera, out = new THREE.Ray()): TH
 }
 
 /**
+ * Aim ray through a free-aim crosshair offset from screen centre.
+ * `ndcX` / `ndcY` are in roughly [-1, 1] (0 = centre). Positive X = right,
+ * positive Y = up (screen space). Used so soft-lock can drift aim while a
+ * fixed centre **dot** stays at screen middle.
+ */
+export function screenAimRay(
+  camera: THREE.Camera,
+  ndcX = 0,
+  ndcY = 0,
+  out = new THREE.Ray(),
+): THREE.Ray {
+  // No offset → identical to centre ray (cheap path).
+  if (Math.abs(ndcX) < 1e-5 && Math.abs(ndcY) < 1e-5) {
+    return screenCenterRay(camera, out);
+  }
+  // Unproject a point on the near plane at the offset NDC, then another on the
+  // far plane; direction = far - near. Works for both perspective cameras.
+  const cam = camera as THREE.PerspectiveCamera;
+  const origin = new THREE.Vector3();
+  camera.getWorldPosition(origin);
+  // NDC: x right, y up — Three.js NDC y is up.
+  const near = new THREE.Vector3(ndcX, ndcY, 0.5);
+  near.unproject(cam);
+  const dir = near.sub(origin).normalize();
+  out.origin.copy(origin);
+  out.direction.copy(dir);
+  return out;
+}
+
+/** Soft-lock free-aim max (NDC half-extent) — generous mouse play. */
+export const AIM_SOFT_MAX = 0.48;
+/** Hard FOCUS free-aim max — tight micro-adjust around centre. */
+export const AIM_HARD_MAX = 0.14;
+/** Non-combat / harvest free-aim max. */
+export const AIM_FREE_MAX = 0.55;
+
+/**
  * Rotate `dir` by a random offset inside a cone of half-angle `spreadRad`. Uses a
  * uniform disc sample on the plane perpendicular to `dir` so the distribution is
  * even (no clustering toward the centre). `rng` defaults to Math.random but can be

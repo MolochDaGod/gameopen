@@ -3,8 +3,10 @@
 // hudConfig / Hud.tsx / playerMode legends.
 //
 // Keybind SSOT (Danger Room / Open combat):
-//   Q = activity mode cycle (not parry)
-//   C = parry · X = dodge · RMB = block · R = heavy · F / 1–4 skills · J heal · H bomb · V kick
+//   Q = activity mode cycle
+//   RMB = toggle hard FOCUS (face+lock) / soft lock
+//   LMB = attack/combo in FOCUS · select target in soft lock
+//   C = parry · X = roll · E = forcefield guard · R = heavy · F / 1–4 skills
 
 import type { IconName } from "../three/icons";
 
@@ -43,7 +45,13 @@ export interface QuickAction {
  * Do not re-hardcode keys in Hud.tsx or mode blurbs without updating this file.
  */
 export const QUICK_ACTIONS: Record<QuickActionId, QuickAction> = {
-  primary: { id: "primary", label: "Attack", icon: "attack", key: "LMB", kind: "action" },
+  primary: {
+    id: "primary",
+    label: "Attack / Select",
+    icon: "attack",
+    key: "LMB",
+    kind: "action",
+  },
   fskill: { id: "fskill", label: "Weapon Skill", icon: "skill-vfx-lab", key: "F", kind: "skill" },
   sig1: { id: "sig1", label: "Signature 1", icon: "scout", key: "1", kind: "skill" },
   sig2: { id: "sig2", label: "Signature 2", icon: "ambush", key: "2", kind: "skill" },
@@ -51,8 +59,8 @@ export const QUICK_ACTIONS: Record<QuickActionId, QuickAction> = {
   sig4: { id: "sig4", label: "Signature 4", icon: "skill-vfx-lab", key: "4", kind: "skill" },
   heavy: { id: "heavy", label: "Heavy / Skyfall", icon: "charge", key: "R", kind: "action" },
   parry: { id: "parry", label: "Parry", icon: "rally", key: "C", kind: "action" },
-  block: { id: "block", label: "Block", icon: "guard", key: "RMB", kind: "action" },
-  dodge: { id: "dodge", label: "Dodge", icon: "retreat", key: "X", kind: "action" },
+  block: { id: "block", label: "Forcefield", icon: "guard", key: "E", kind: "action" },
+  dodge: { id: "dodge", label: "Roll", icon: "retreat", key: "X", kind: "action" },
   kick: { id: "kick", label: "Kick", icon: "attack", key: "V", kind: "action" },
   bomb: { id: "bomb", label: "Bomb", icon: "siege", key: "H", kind: "item" },
   heal: { id: "heal", label: "Heal Tonic", icon: "rest", key: "J", kind: "item" },
@@ -121,14 +129,14 @@ export function clampQuickSlots(raw: unknown): QuickSlots {
 
 /** Short footer legend used by Hud / mode chip (always matches Studio keys). */
 export const COMBAT_KEY_LEGEND =
-  "Q mode · X dodge · C parry · RMB block · R heavy · F/1–4 skills · hold Tab radial · P production";
+  "RMB focus · LMB atk/select · X roll · C parry · E guard · R heavy · F/1–4 · Q mode · P prod";
 
 export const COMBAT_KEY_CHIPS: readonly string[] = [
-  "Q: Mode",
-  "RMB: Block",
+  "RMB: Focus",
+  "LMB: Atk / Select",
   "X: Roll",
   "C: Parry",
+  "E: Guard",
   "R: Heavy",
-  "H: Bomb",
   "J: Heal",
 ];

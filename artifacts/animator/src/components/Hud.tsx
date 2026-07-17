@@ -6,7 +6,13 @@ import { Icon } from "./Icon";
 import type { HudEditApi, HudPanelBinding } from "../hud/useHudEditor";
 import type { HudPanelId } from "../hud/hudConfig";
 import { RadialMenu } from "./RadialMenu";
-import { MODE_COLOR, MODE_LABEL } from "../three/playerMode";
+import {
+  MODE_BANNER_FRAME,
+  MODE_COLOR,
+  MODE_ICON,
+  MODE_LABEL,
+  type PlayerActivityMode,
+} from "../three/playerMode";
 import { UnitFrame } from "./hud/UnitFrame";
 import { CraftpixHarvestHud } from "./hud/CraftpixHarvestHud";
 import { portraitOnError } from "../lib/characterPortrait";
@@ -701,7 +707,7 @@ function CombatFlash({ text }: { text: string }) {
     <div
       style={{
         position: "absolute",
-        top: "28%",
+        top: "32%",
         left: "50%",
         transform: "translateX(-50%)",
         pointerEvents: "none",
@@ -732,6 +738,62 @@ function CombatFlash({ text }: { text: string }) {
   );
 }
 
+/**
+ * Activity mode banner — top centre, above combat/harvest chrome.
+ * Uses local pack icons + Craftpix shortcut frame (real UI assets).
+ * Re-keys on mode so Q swaps animate cleanly.
+ */
+function ModeBanner({ mode, tool }: { mode: PlayerActivityMode; tool: string }) {
+  const color = MODE_COLOR[mode];
+  const label = MODE_LABEL[mode];
+  const icon = MODE_ICON[mode];
+  return (
+    <div className="mode-banner" key={mode} aria-live="polite">
+      <div
+        className="mode-banner-inner"
+        style={
+          {
+            ["--mode-color" as string]: color,
+            backgroundImage: `url(${MODE_BANNER_FRAME})`,
+          } as CSSProperties
+        }
+      >
+        <img
+          className="mode-banner-icon"
+          src={icon}
+          alt=""
+          draggable={false}
+          onError={(e) => {
+            // Fallback chain for missing local icons
+            const el = e.currentTarget;
+            if (mode === "combat" && !el.src.includes("attack")) el.src = "/icons/attack.png";
+            else if (mode === "harvest" && !el.src.includes("loot")) el.src = "/icons/loot.png";
+            else if (mode === "build" && !el.src.includes("building")) el.src = "/icons/building-kit.png";
+          }}
+        />
+        <div className="mode-banner-text">
+          <span className="mode-banner-label">{label}</span>
+          <span className="mode-banner-tool">{(tool || "—").toUpperCase()}</span>
+        </div>
+        <span className="mode-banner-hint">Q · cycle</span>
+      </div>
+      {/* Sibling modes for context (dimmed) */}
+      <div className="mode-banner-rail" aria-hidden>
+        {(["combat", "harvest", "build"] as PlayerActivityMode[]).map((m) => (
+          <span
+            key={m}
+            className={`mode-rail-dot ${m === mode ? "on" : ""}`}
+            style={{ ["--dot-color" as string]: MODE_COLOR[m] } as CSSProperties}
+            title={MODE_LABEL[m]}
+          >
+            <img src={MODE_ICON[m]} alt="" draggable={false} />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Hud({
   hud,
   edit,
@@ -746,8 +808,6 @@ export function Hud({
   const slotByName = (slot: string): SlotBinding | undefined => hud.slots.find((s) => s.slot === slot);
 
   const mode = hud.activityMode ?? "combat";
-  const modeColor = MODE_COLOR[mode];
-  const modeLabel = MODE_LABEL[mode];
   const isHarvestBuild = mode === "harvest" || mode === "build";
 
   return (
@@ -755,63 +815,15 @@ export function Hud({
       {/* Fire-tinted pulsing rim while the Striker hovers */}
       {hud.hovering && <div className="hover-vignette" />}
 
-      {/* Activity mode chip — Q cycles Combat / Harvest / Build */}
-      <div
-        style={{
-          position: "absolute",
-          top: 14,
-          left: 16,
-          zIndex: 12,
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "6px 12px",
-            borderRadius: 999,
-            background: "rgba(6,10,18,0.78)",
-            border: `1px solid ${modeColor}66`,
-            boxShadow: `0 0 16px ${modeColor}22`,
-            fontFamily: "Rajdhani, system-ui, sans-serif",
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 99,
-              background: modeColor,
-              boxShadow: `0 0 8px ${modeColor}`,
-            }}
-          />
-          <span style={{ fontWeight: 800, letterSpacing: "0.14em", fontSize: 12, color: modeColor }}>
-            {modeLabel}
-          </span>
-          <span style={{ fontSize: 10, color: "#8a94b0", letterSpacing: "0.04em" }}>
-            {(hud.activityTool ?? "").toUpperCase()}
-          </span>
-          <span style={{ fontSize: 9, color: "#5e6688", marginLeft: 4 }}>Q · mode</span>
+      {/* Mode banner — top centre, above class skills / vitals (Q cycle) */}
+      <ModeBanner mode={mode} tool={hud.activityTool ?? ""} />
+
+      {/* Combat key legend — bottom-left, not competing with centre mode banner */}
+      {!isHarvestBuild && (
+        <div className="combat-key-legend" aria-hidden>
+          {COMBAT_KEY_LEGEND}
         </div>
-        {/* Harvest/build: production opens from craftpix bar (P). Combat keeps legend. */}
-        {!isHarvestBuild && (
-          <div
-            style={{
-              fontSize: 9,
-              color: "#6a7390",
-              letterSpacing: "0.06em",
-              paddingLeft: 4,
-            }}
-          >
-            {COMBAT_KEY_LEGEND}
-          </div>
-        )}
-      </div>
+      )}
 
       <RadialMenu
         open={!!hud.radialOpen}
@@ -1051,6 +1063,128 @@ export function Hud({
         @keyframes combat-flash-in {
           from { opacity: 0; transform: translateX(-50%) scale(0.82); }
           to   { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+        @keyframes mode-banner-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.92); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        .mode-banner {
+          position: absolute;
+          top: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 22;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          pointer-events: none;
+          animation: mode-banner-in 0.28s ease-out;
+          font-family: Rajdhani, system-ui, sans-serif;
+        }
+        .mode-banner-inner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 200px;
+          padding: 8px 16px 8px 10px;
+          border-radius: 10px;
+          background-color: rgba(6, 10, 18, 0.88);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          border: 1px solid color-mix(in srgb, var(--mode-color) 55%, transparent);
+          box-shadow:
+            0 6px 24px rgba(0, 0, 0, 0.5),
+            0 0 18px color-mix(in srgb, var(--mode-color) 22%, transparent);
+          backdrop-filter: blur(8px);
+        }
+        .mode-banner-icon {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+          border-radius: 8px;
+          background: rgba(0, 0, 0, 0.35);
+          border: 1px solid color-mix(in srgb, var(--mode-color) 40%, transparent);
+          box-shadow: 0 0 10px color-mix(in srgb, var(--mode-color) 25%, transparent);
+          image-rendering: auto;
+        }
+        .mode-banner-text {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          min-width: 88px;
+        }
+        .mode-banner-label {
+          font-weight: 900;
+          letter-spacing: 0.16em;
+          font-size: 14px;
+          color: var(--mode-color);
+          text-shadow: 0 0 10px color-mix(in srgb, var(--mode-color) 40%, transparent);
+        }
+        .mode-banner-tool {
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          color: #9aa4c0;
+          font-weight: 600;
+        }
+        .mode-banner-hint {
+          margin-left: auto;
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          color: #5e6688;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+        .mode-banner-rail {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .mode-rail-dot {
+          width: 22px;
+          height: 22px;
+          border-radius: 6px;
+          opacity: 0.35;
+          border: 1px solid transparent;
+          display: grid;
+          place-items: center;
+          background: rgba(6, 10, 18, 0.7);
+          transition: opacity 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+        .mode-rail-dot img {
+          width: 14px;
+          height: 14px;
+          object-fit: contain;
+        }
+        .mode-rail-dot.on {
+          opacity: 1;
+          border-color: color-mix(in srgb, var(--dot-color) 70%, transparent);
+          box-shadow: 0 0 10px color-mix(in srgb, var(--dot-color) 35%, transparent);
+        }
+        .combat-key-legend {
+          position: absolute;
+          left: 14px;
+          bottom: 118px;
+          z-index: 11;
+          font-size: 9px;
+          color: #6a7390;
+          letter-spacing: 0.06em;
+          max-width: 220px;
+          line-height: 1.35;
+          pointer-events: none;
+          text-shadow: 0 1px 2px #000;
+        }
+        /* Craftpix shortcut frame on action slots */
+        .act-slot.act-compact .act-icon {
+          background-image: url(/ui/craftpix/part3/ab2_shurtcut_frame_small.png);
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+          background-color: rgba(4, 8, 16, 0.65);
+          border-radius: 6px;
+        }
+        .act-slot .act-icon img,
+        .act-slot .act-icon .icon-img {
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
         }
         .vital-poise .vital-fill {
           transition: width 0.25s, background 0.3s;

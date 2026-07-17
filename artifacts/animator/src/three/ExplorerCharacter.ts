@@ -370,8 +370,8 @@ export class ExplorerCharacter implements Avatar {
     return this.animator.reaction(key as ActionKey, fade, hold);
   }
 
-  /** Swap the locomotion clip set between ground and swim (dungeon water band). */
-  setTraversalMode(mode: "ground" | "swim"): void {
+  /** Swap locomotion: ground, climb (wall-run / climb-up), or swim. */
+  setTraversalMode(mode: "ground" | "climb" | "swim"): void {
     this.animator?.setMode(mode);
   }
 

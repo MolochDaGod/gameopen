@@ -6,53 +6,145 @@ import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 // set of pre-baked Bip001 clips (idle / walk / run / attack). The clips were
 // retargeted offline to Bip001 by the viewer's bake tool and shipped as JSON
 // under `/anims/baked/<rel>.json`; we load them directly (no runtime retarget).
-export type AnimPack = "magic" | "sword_shield" | "longbow" | "unarmed";
+//
+// SSOT with grudge-arena `src/bakedAnimLoader.js` ANIM_PACK_CLIPS (2026-07)
+// + Open `polearm` pack baked from ikkaku_madarame.glb (spear / 2H).
+export type AnimPack = "magic" | "sword_shield" | "longbow" | "unarmed" | "polearm";
 
 export interface LoadoutClips {
   idle: string;
   walk: string;
   run: string;
   attack: string;
+  /** Optional extra roles loaded for weapon skills (combo / skill1–4). */
+  extras?: string[];
 }
 
-// Paths are relative to `/anims/baked/`, WITHOUT the `.json` extension. Every
-// path below is verified to exist on disk (see character-viewer/public/anims/baked).
+/**
+ * HARD BAN — never use these as walk / run / sprint locomotion.
+ *
+ * - `locomotion/running` (~2.5s) is a **run-into-roll** transition, not a cycle.
+ * - `uploads_2026_06/locomotion/running` (~1.6s) is the same class of bad upload
+ *   (pelvis first≠last, tips/tumbles). Arena marks it as ~180° wrong / moonwalk.
+ * - `uploads/locomotion/Quick_Roll_To_Run` is an evade roll, not run.
+ *
+ * Sprint must clone the pack `run` clip (see loadGrudge6CombatRig), never these.
+ */
+export const BANNED_LOCOMOTION_CLIPS = [
+  "locomotion/running",
+  "uploads_2026_06/locomotion/running",
+  "uploads/locomotion/Quick_Roll_To_Run",
+  "boxanimations/locomotion/Quick Roll To Run (1)",
+] as const;
+
+export function isBannedLocomotionClip(rel: string): boolean {
+  const n = String(rel || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\.json$/i, "");
+  return (BANNED_LOCOMOTION_CLIPS as readonly string[]).some(
+    (b) => n === b || n.endsWith(`/${b}`) || n.includes("Quick_Roll_To_Run") || n.includes("Quick Roll To Run"),
+  );
+}
+
+// Paths are relative to `/anims/baked/`, WITHOUT the `.json` extension.
+// Walk/run must be **looping cycles** (pelvis first≈last). Verified on arena CDN.
 export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
   unarmed: {
     idle: "unarmed/fight_idle",
-    walk: "locomotion/walking",
-    run: "locomotion/running",
+    // Pack-neutral cycle walk (locomotion/walking tips Arena GLB kits → “falling”).
+    walk: "magic/Standing Walk Forward",
+    // True forward run cycle — NOT locomotion/running (run-to-roll).
+    run: "uploads_2026_06/locomotion/torch run forward",
     attack: "unarmed/punching",
   },
   magic: {
     idle: "magic/standing idle",
-    walk: "locomotion/walking",
+    walk: "magic/Standing Walk Forward",
     run: "magic/Standing Run Forward",
     attack: "magic/standing 1h cast spell 01",
   },
   sword_shield: {
     idle: "sword_shield/sword and shield idle",
-    walk: "locomotion/walking",
+    // No dedicated sword walk bake — use clean magic forward walk cycle.
+    walk: "magic/Standing Walk Forward",
     run: "sword_shield/sword and shield run",
     attack: "sword_shield/sword and shield attack",
   },
   longbow: {
     idle: "longbow/standing idle 01",
-    walk: "locomotion/walking",
+    walk: "longbow/standing walk forward",
     run: "longbow/standing run forward",
     attack: "longbow/standing aim recoil",
   },
+  /**
+   * Spear / 2H polearm — baked from Madarame (`ikkaku_madarame.glb`).
+   * Same-origin: public/anims/baked/polearm/*.json
+   * attack1_1..5 → attack..attack5 · skill1–4 for hotbar · special = bankai
+   */
+  polearm: {
+    idle: "polearm/idle",
+    walk: "polearm/walk",
+    run: "polearm/run",
+    attack: "polearm/attack",
+    extras: [
+      "polearm/attack2",
+      "polearm/attack3",
+      "polearm/attack4",
+      "polearm/attack5",
+      "polearm/skill1",
+      "polearm/skill2",
+      "polearm/skill3",
+      "polearm/skill4",
+      "polearm/special",
+      "polearm/combo",
+      "polearm/thrust",
+      "polearm/slash",
+      "polearm/overhead",
+      "polearm/power",
+      "polearm/hurt",
+      "polearm/death",
+    ],
+  },
 };
+
+/** Map arsenal weapon id → anim pack (overrides class default when 2H/spear). */
+export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
+  const w = String(weaponId || "").toLowerCase();
+  if (!w || w === "none") return null;
+  if (
+    w === "spear" ||
+    w === "javelin" ||
+    w === "lance" ||
+    w === "greatsword" ||
+    w === "greataxe" ||
+    w === "hammer2h" ||
+    w === "halberd" ||
+    w === "polearm"
+  ) {
+    return "polearm";
+  }
+  if (w.startsWith("staff") || w === "wand") return "magic";
+  if (w === "bow" || w === "longbow" || w === "crossbow") return "longbow";
+  if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer") {
+    return "sword_shield";
+  }
+  return null;
+}
 
 export function asAnimPack(value: string): AnimPack {
   return value in ANIM_PACK_CLIPS ? (value as AnimPack) : "unarmed";
 }
 
-// Dedicated sprint locomotion clip (uploaded 2026-06). Pack-agnostic body
-// locomotion the world crossfades to while sprinting, instead of time-scaling
-// the run clip (which causes foot-slide). Baked rotation-only like the rest, so
-// it works on every race at any scale.
-export const SPRINT_CLIP = "uploads_2026_06/locomotion/running";
+/**
+ * @deprecated Do not load this for sprint. It points at the banned run-to-roll
+ * upload. Runtime **clones pack.run** for sprint (arena parity).
+ * Kept only so old imports compile; never pass to loadBakedClip for gait.
+ */
+export const SPRINT_CLIP = "locomotion/running";
+
+/** Playback scale for sprint band vs run (matches arena SPRINT_LOCO_MULT). */
+export const SPRINT_LOCO_MULT = 1.75;
 
 // Build the primary URL for a baked clip (R2 default; loaders try all hosts).
 export function bakedClipUrl(rel: string, baseOverride?: string): string {
@@ -86,6 +178,14 @@ export function toRotationOnlyClip(clip: THREE.AnimationClip): THREE.AnimationCl
 
 // Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip (multi-host).
 export async function loadBakedClip(rel: string, baseOverride?: string): Promise<THREE.AnimationClip> {
+  if (isBannedLocomotionClip(rel)) {
+    throw assetLoadError(
+      `anims/baked/${rel}.json`,
+      new Error(
+        `banned locomotion clip (run-to-roll / bad sprint): ${rel} — use pack run cycle instead`,
+      ),
+    );
+  }
   let lastErr: unknown;
   for (const url of bakedClipCandidates(rel, baseOverride)) {
     try {

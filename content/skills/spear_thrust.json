@@ -4,32 +4,21 @@
   "slotKind": "primary",
   "hotbarSlot": 1,
   "name": "Quick Thrust",
-  "description": "Fast jab with extended reach",
+  "description": "Base spear jab (Madarame attack1_1). LMB combo opener.",
   "animKey": "attack",
   "anim": {
-    "path": "/anim/base/attack",
-    "status": "placeholder",
-    "notes": "Mapped to Danger Room attack one-shot until dedicated clip bake"
+    "path": "/anims/baked/polearm/attack.json",
+    "sourceClip": "attack1_1",
+    "status": "ready",
+    "notes": "Madarame bake — polearm/attack (rotation-only Bip001)"
   },
-  "power": 0.8888888888888888,
-  "cost": {
-    "stamina": 3,
-    "mana": 0
-  },
+  "comboChain": ["attack", "attack2", "attack4", "attack3"],
+  "comboNotes": "LMB: attack1_1 → 1_2 → 1_4(+MM) → 1_3 finisher",
+  "power": 0.9,
+  "cost": { "stamina": 3, "mana": 0 },
   "cooldown": 1,
-  "hitWindows": [
-    {
-      "t": 0.22,
-      "kind": "melee",
-      "radius": 1.4,
-      "angleDeg": 90
-    }
-  ],
-  "vfx": {
-    "cast": "#d8c38a",
-    "impact": "#e8d9a0",
-    "mode": "none"
-  },
+  "hitWindows": [{ "t": 0.22, "kind": "melee", "radius": 1.5, "angleDeg": 90 }],
+  "vfx": { "cast": "#9fe8ff", "impact": "#c8e8ff", "mode": "slash" },
   "icon": {
     "path": "icons/pack/weapons/Spear_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_01.png",
@@ -38,7 +27,7 @@
   },
   "readiness": {
     "data": "ready",
-    "anim": "placeholder",
+    "anim": "ready",
     "vfx": "ready",
     "icon": "ready",
     "combat": "ready"

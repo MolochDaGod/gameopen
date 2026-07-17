@@ -67,8 +67,11 @@ export class Controller {
   private didDoubleJump = false;
   /** Seconds left of a fast-turn window (set by faceToward) for crosshair lock. */
   private facingBoost = 0;
-  /** Lock-on stance: when set, the camera frames this world point and the body
-   *  faces it (so A/D reads as a strafe). Null = free-look. */
+  /**
+   * Hard focus lock: camera frames this point and body faces it so A/D is pure
+   * strafe. Soft lock (selected target without RMB) leaves this null so A/D is
+   * camera-relative walk/run. Null = free / soft-lock locomotion.
+   */
   private lockTarget: THREE.Vector3 | null = null;
 
   /** Camera framing: orbit "third" person, or eye-anchored "first" person. */
@@ -148,6 +151,23 @@ export class Controller {
   private landedWithDouble = false;
   private slamActive = false;
   private justSlamLanded = false;
+
+  // ── Wall traversal (once-per-ground air charges) ───────────────────────
+  /** One wall jump allowed between ground contacts. */
+  private airWallJumpUsed = false;
+  /** One double-jump / staff hover allowed between ground contacts. */
+  private airDoubleUsed = false;
+  private wallRunActive = false;
+  private wallRunElapsed = 0;
+  private wallRunMax = 1.35;
+  private wallNormal = new THREE.Vector3(0, 0, 1);
+  private justWallJumped = false;
+  private justWallRunStart = false;
+  private justWallRunEnd = false;
+  /** Min height (m) above floor before wall-run can start. */
+  private readonly WALL_RUN_MIN_Y = 0.4;
+  /** Probe reach for wall contact (m). */
+  private readonly WALL_PROBE = 0.62;
 
   constructor(
     private character: Avatar,
@@ -351,13 +371,19 @@ export class Controller {
   }
 
   jump() {
+    // Wall jump takes priority when airborne near a wall (Space on wall run /
+    // near wall). Independent of double-jump charge — enables triple jump:
+    // ground → double/hover → wall (or ground → wall → double).
+    if (!this.grounded && this.tryWallJump()) return;
+
     // A hover is cancelled by jumping out of it (kept feeling responsive).
+    // Does NOT grant a free second double — only cancels the float.
     if (this.hoverActive) {
       this.hoverActive = false;
       this.vertical = Math.sqrt(2 * this.params.gravity * this.params.jumpHeight) * 0.95;
       this.jumpsLeft = 0;
       this.didDoubleJump = true;
-      this.justDoubleJumped = true;
+      this.airDoubleUsed = true;
       this.character.playRoleOnce("jump", 0.08);
       return;
     }
@@ -366,13 +392,222 @@ export class Controller {
       this.grounded = false;
       this.jumpsLeft = 1;
       this.didDoubleJump = false;
+      this.airDoubleUsed = false;
+      this.airWallJumpUsed = false;
       this.character.playRoleOnce("jump", 0.1);
-    } else if (this.jumpsLeft > 0 && !this.didDoubleJump) {
+    } else if (this.jumpsLeft > 0 && !this.didDoubleJump && !this.airDoubleUsed) {
+      // One double-jump / staff-hover per ground cycle.
       this.vertical = Math.sqrt(2 * this.params.gravity * this.params.jumpHeight) * 0.95;
       this.jumpsLeft = 0;
       this.didDoubleJump = true;
+      this.airDoubleUsed = true;
       this.justDoubleJumped = true;
       this.character.playRoleOnce("jump", 0.08);
+    }
+  }
+
+  /**
+   * Probe for a nearby vertical surface: room bounds or obstacle pillars.
+   * Returns outward wall normal (points away from the wall into free space).
+   */
+  probeWall(reach = this.WALL_PROBE): { normal: THREE.Vector3; dist: number } | null {
+    const pos = this.character.root.position;
+    const candidates: { n: THREE.Vector3; d: number }[] = [];
+    const b = this.bound;
+    // Room box walls
+    if (pos.x >= b - reach) candidates.push({ n: new THREE.Vector3(-1, 0, 0), d: Math.max(0, b - pos.x) });
+    if (pos.x <= -b + reach) candidates.push({ n: new THREE.Vector3(1, 0, 0), d: Math.max(0, pos.x + b) });
+    if (pos.z >= b - reach) candidates.push({ n: new THREE.Vector3(0, 0, -1), d: Math.max(0, b - pos.z) });
+    if (pos.z <= -b + reach) candidates.push({ n: new THREE.Vector3(0, 0, 1), d: Math.max(0, pos.z + b) });
+    // Pillar / obstacle circles (Danger Room)
+    if (this.obstacles) {
+      for (const o of this.obstacles()) {
+        const dx = pos.x - o.x;
+        const dz = pos.z - o.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 1e-4) continue;
+        const gap = d - o.r;
+        if (gap < reach && gap > -0.25) {
+          candidates.push({
+            n: new THREE.Vector3(dx / d, 0, dz / d),
+            d: Math.max(0, gap),
+          });
+        }
+      }
+    }
+    if (candidates.length === 0) return null;
+    let best = candidates[0]!;
+    for (let i = 1; i < candidates.length; i++) {
+      if (candidates[i]!.d < best.d) best = candidates[i]!;
+    }
+    return { normal: best.n.clone(), dist: best.d };
+  }
+
+  /** True when airborne and close enough to a wall for jump / run. */
+  nearWall(reach = this.WALL_PROBE): boolean {
+    if (this.grounded) return false;
+    return this.probeWall(reach) != null;
+  }
+
+  /**
+   * Kick off a nearby wall: foot-plant → jump away + up (higher than double).
+   * One use between ground contacts. Returns true if the jump fired.
+   */
+  tryWallJump(): boolean {
+    if (this.grounded || this.airWallJumpUsed || this.isBusy) return false;
+    if (this.hoverActive) return false;
+    const wall = this.probeWall(this.WALL_PROBE + 0.15);
+    if (!wall) return false;
+
+    this.airWallJumpUsed = true;
+    this.endWallRun(false);
+    this.hoverActive = false;
+
+    const g = this.params.gravity;
+    const h = this.params.jumpHeight;
+    // Higher than a normal double-jump
+    this.vertical = Math.sqrt(2 * g * h) * 1.22;
+    this.grounded = false;
+    // Push away from wall + slight tangential keep
+    const push = 7.2;
+    this.velocity.set(wall.normal.x * push, 0, wall.normal.z * push);
+    this.extVel.set(wall.normal.x * 3.5, 0, wall.normal.z * 3.5);
+    this.extVelDamp = 5;
+    this.wallNormal.copy(wall.normal);
+    this.wantFacing = Math.atan2(wall.normal.x, wall.normal.z);
+    this.justWallJumped = true;
+
+    // Prefer wall-kick / jump-away / utility kick clips when present
+    const avatar = this.character as Avatar & {
+      hasClip?: (n: string) => boolean;
+      playClipOnce?: (n: string, f?: number) => number;
+      reaction?: (n: string, f?: number) => boolean;
+    };
+    if (avatar.playClipOnce && avatar.hasClip) {
+      if (avatar.hasClip("jumpAway")) avatar.playClipOnce("jumpAway", 0.06);
+      else if (avatar.hasClip("utilityKick")) avatar.playClipOnce("utilityKick", 0.06);
+      else if (avatar.hasClip("mmaKick")) avatar.playClipOnce("mmaKick", 0.06);
+      else if (avatar.hasClip("backJump")) avatar.playClipOnce("backJump", 0.06);
+      else this.character.playRoleOnce("jump", 0.06);
+    } else {
+      this.character.playRoleOnce("jump", 0.06);
+    }
+    return true;
+  }
+
+  /** True while body is stuck to a wall running / climbing. */
+  get isWallRunning(): boolean {
+    return this.wallRunActive;
+  }
+
+  /** Outward normal of the wall we're on (or last wall). */
+  getWallNormal(out = new THREE.Vector3()): THREE.Vector3 {
+    return out.copy(this.wallNormal);
+  }
+
+  consumeWallJump(): boolean {
+    const v = this.justWallJumped;
+    this.justWallJumped = false;
+    return v;
+  }
+
+  consumeWallRunStart(): boolean {
+    const v = this.justWallRunStart;
+    this.justWallRunStart = false;
+    return v;
+  }
+
+  consumeWallRunEnd(): boolean {
+    const v = this.justWallRunEnd;
+    this.justWallRunEnd = false;
+    return v;
+  }
+
+  /** Air charges remaining (for HUD / debug). */
+  get airCharges(): { double: boolean; wallJump: boolean } {
+    return { double: !this.airDoubleUsed, wallJump: !this.airWallJumpUsed };
+  }
+
+  private endWallRun(notify = true) {
+    if (!this.wallRunActive) return;
+    this.wallRunActive = false;
+    this.wallRunElapsed = 0;
+    if (notify) this.justWallRunEnd = true;
+  }
+
+  /**
+   * Hold Shift while airborne near a wall (after a run jump) to wall-run.
+   * Space during wall-run = wall jump. Gravity suspended; climb with W.
+   */
+  private updateWallRun(dt: number, sprinting: boolean, move: THREE.Vector3, mag: number) {
+    const pos = this.character.root.position;
+
+    if (this.wallRunActive) {
+      this.wallRunElapsed += dt;
+      const wall = this.probeWall(this.WALL_PROBE + 0.28);
+      if (this.grounded || !sprinting || !wall || this.wallRunElapsed >= this.wallRunMax) {
+        this.endWallRun(true);
+        return;
+      }
+      this.wallNormal.copy(wall.normal);
+
+      this.vertical = 0;
+      this.grounded = false;
+      // Climb up with W; S descends; slight auto-rise for "run up wall"
+      const climb =
+        this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2
+          ? 3.6
+          : this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2
+            ? -2.2
+            : 0.45;
+      pos.y += climb * dt;
+      pos.y = Math.max(0.05, pos.y);
+
+      const n = this.wallNormal;
+      const tangent = new THREE.Vector3(-n.z, 0, n.x);
+      let along = 0;
+      if (mag > 0.06) {
+        along = move.x * tangent.x + move.z * tangent.z;
+      } else {
+        const f = this.forward();
+        along = f.x * tangent.x + f.z * tangent.z;
+        if (Math.abs(along) < 0.15) along = 1;
+      }
+      const sign = along >= 0 ? 1 : -1;
+      const runSpeed = this.params.moveSpeed * 1.15 * this.speedMult;
+      pos.x += tangent.x * sign * runSpeed * dt;
+      pos.z += tangent.z * sign * runSpeed * dt;
+      // Keep pressed against wall
+      pos.x -= n.x * 0.03;
+      pos.z -= n.z * 0.03;
+      pos.x = THREE.MathUtils.clamp(pos.x, -this.bound, this.bound);
+      pos.z = THREE.MathUtils.clamp(pos.z, -this.bound, this.bound);
+      this.wantFacing = Math.atan2(
+        -n.x * 0.4 + tangent.x * sign,
+        -n.z * 0.4 + tangent.z * sign,
+      );
+      this.smoothedSpeed = runSpeed;
+      return;
+    }
+
+    // Start: airborne + hold Shift + near wall + min height
+    if (
+      !this.grounded &&
+      sprinting &&
+      !this.isBusy &&
+      !this.hoverActive &&
+      !this.spinActive &&
+      pos.y >= this.WALL_RUN_MIN_Y
+    ) {
+      const wall = this.probeWall(this.WALL_PROBE + 0.12);
+      if (wall && wall.dist < this.WALL_PROBE) {
+        this.wallRunActive = true;
+        this.wallRunElapsed = 0;
+        this.wallNormal.copy(wall.normal);
+        this.justWallRunStart = true;
+        this.vertical = 0;
+        this.velocity.set(0, 0, 0);
+      }
     }
   }
 
@@ -598,8 +833,10 @@ export class Controller {
     this.hoverHeight = height;
     this.slamActive = false;
     this.grounded = false;
-    this.jumpsLeft = 1;
-    this.didDoubleJump = false;
+    // Same once-per-ground rule as startHover (double-jump charge spent).
+    this.jumpsLeft = 0;
+    this.didDoubleJump = true;
+    this.airDoubleUsed = true;
     this.vertical = 0;
     const back = this.forward().multiplyScalar(-backHop);
     this.velocity.x = back.x;
@@ -661,8 +898,11 @@ export class Controller {
     this.hoverWasActive = true;
     this.vertical = 0;
     this.grounded = false;
-    this.jumpsLeft = 1;
-    this.didDoubleJump = false;
+    // Hover is the staff double-jump effect — one per ground cycle.
+    // Keep one mid-hover jump only to *exit* float (not a free second double).
+    this.jumpsLeft = 0;
+    this.didDoubleJump = true;
+    this.airDoubleUsed = true;
   }
 
   /** Cancel the hover early (e.g. character took damage). */
@@ -702,24 +942,37 @@ export class Controller {
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
   }
 
+  /**
+   * Optional splitter: Studio free-aim routes part of mouse to reticle offset
+   * and returns residual deltas for camera look. Null = all mouse → camera.
+   */
+  onAimLook: ((dx: number, dy: number) => { camDx: number; camDy: number }) | null = null;
+
   update(dt: number) {
     const mouse = this.input.consumeMouse();
+    let lookDx = mouse.dx;
+    let lookDy = mouse.dy;
+    if (this.onAimLook && (this.input.locked || this.input.lookActive)) {
+      const split = this.onAimLook(mouse.dx, mouse.dy);
+      lookDx = split.camDx;
+      lookDy = split.camDy;
+    }
     // Apply look from the mouse (pointer lock) OR from a touch look-pad drag.
     if (this.input.locked || this.input.lookActive) {
       const sens = 0.0022 * this.params.mouseSensitivity;
       const invert = this.params.invertY ? -1 : 1;
       // While locked on, the camera yaw is driven by the target, not the mouse.
-      if (!this.lockTarget) this.yaw -= mouse.dx * sens;
+      if (!this.lockTarget) this.yaw -= lookDx * sens;
       if (this.viewMode === "first") {
         // First person: dragging the mouse down looks down. fpPitch is the look
         // elevation (+ up), so drag-down decreases it; invertY flips. Near-±90°
         // clamp avoids gimbal flip at straight up/down.
-        this.fpPitch = THREE.MathUtils.clamp(this.fpPitch - mouse.dy * sens * invert, -1.45, 1.45);
+        this.fpPitch = THREE.MathUtils.clamp(this.fpPitch - lookDy * sens * invert, -1.45, 1.45);
       } else {
         // Pitch up = camera rises and looks DOWN. By default dragging the mouse
         // down looks down (pitch up); invertY flips it. Clamp stays positive so
         // the orbit never drops the camera under the floor.
-        this.pitch = THREE.MathUtils.clamp(this.pitch + mouse.dy * sens * invert, 0.06, 1.3);
+        this.pitch = THREE.MathUtils.clamp(this.pitch + lookDy * sens * invert, 0.06, 1.3);
       }
     }
     // Wheel zooms the third-person orbit distance; in first person there is no
@@ -828,16 +1081,22 @@ export class Controller {
       pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       moving = false;
     } else {
-      if (moving) {
+      // Attempt / maintain wall-run before free air locomotion
+      this.updateWallRun(dt, sprinting, move, mag);
+      if (this.wallRunActive) {
+        this.velocity.set(0, 0, 0);
+        moving = true; // keep loco blend "running"
+      } else if (moving) {
         move.normalize();
         this.velocity.copy(move).multiplyScalar(speed * intensity);
         this.wantFacing = Math.atan2(move.x, move.z);
+        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
+        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       } else {
         this.velocity.multiplyScalar(0.001);
+        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
+        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       }
-      // Apply horizontal movement with simple room bounds.
-      pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
-      pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
     }
 
     // External knockback rides on top of every branch and decays smoothly.
@@ -925,6 +1184,9 @@ export class Controller {
         this.grounded = true;
         this.jumpsLeft = 2;
         this.didDoubleJump = false;
+        this.airDoubleUsed = false;
+        this.airWallJumpUsed = false;
+        this.endWallRun(false);
       }
     } else if (this.rollActive) {
       this.rollElapsed += dt;
@@ -955,6 +1217,10 @@ export class Controller {
         this.hoverActive = false;
         this.hoverEnd = true;
       }
+    } else if (this.wallRunActive) {
+      // Gravity suspended while wall-running (climb handled in updateWallRun).
+      this.vertical = 0;
+      this.grounded = false;
     } else {
       // Gravity + ground.
       const prevVertical = this.vertical;
@@ -993,6 +1259,9 @@ export class Controller {
         this.grounded = true;
         this.jumpsLeft = 2;
         this.didDoubleJump = false;
+        this.airDoubleUsed = false;
+        this.airWallJumpUsed = false;
+        this.endWallRun(false);
         this.skyfallArmed = false;
         this.character.root.rotation.x = 0;
       }
@@ -1021,6 +1290,9 @@ export class Controller {
         this.grounded = true;
         this.jumpsLeft = 2;
         this.didDoubleJump = false;
+        this.airDoubleUsed = false;
+        this.airWallJumpUsed = false;
+        this.endWallRun(false);
         this.skyfallArmed = false;
       } else if (!res.grounded) {
         this.grounded = false;

@@ -19,7 +19,8 @@ export type HudPanelId =
   | "enemy"
   | "status"
   | "reticle"
-  | "mech";
+  | "mech"
+  | "classbar";
 
 export const HUD_PANEL_IDS: HudPanelId[] = [
   "vitals",
@@ -29,6 +30,7 @@ export const HUD_PANEL_IDS: HudPanelId[] = [
   "status",
   "reticle",
   "mech",
+  "classbar",
 ];
 
 /** Human-facing metadata for the editor's layer list. */
@@ -40,6 +42,7 @@ export const HUD_PANEL_META: Record<HudPanelId, { label: string; hint: string }>
   status: { label: "Status Notifier", hint: "Buff / debuff chips" },
   reticle: { label: "Reticle", hint: "Aiming crosshair" },
   mech: { label: "Mech Cockpit", hint: "Armour integrity + slam (piloting only)" },
+  classbar: { label: "Class Skills", hint: "Upper Shift+1–5 class bar + passives" },
 };
 
 export interface PanelLayout {

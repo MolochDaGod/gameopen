@@ -79,39 +79,75 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
   },
 ] as const;
 
-// ── Axe / greatsword pack ────────────────────────────────────────────────────
+// ── Axe / greatsword pack (Madarame polearm bake — same-origin baked JSON) ────
 export const AXE_SKILLS: readonly SkillPack[] = [
   {
     animKey: "axe_primary",
     slot: 1,
     label: "Heavy Strike",
-    clipPath: "anim/greataxe/great-axe-combo.fbx",
-    reach: 2.0, damage: 28, lungeSpeed: 4.5, lungeDuration: 0.30,
+    clipPath: "anims/baked/polearm/attack.json",
+    reach: 2.2, damage: 28, lungeSpeed: 4.5, lungeDuration: 0.30,
     vfxColor: 0xff8c44, cooldown: 0,
   },
   {
     animKey: "axe_secondary",
     slot: 2,
     label: "Overhead Slam",
-    clipPath: "anim/greatsword/great-sword-overhead.fbx",
-    reach: 2.2, damage: 38, lungeSpeed: 5.0, lungeDuration: 0.35,
+    clipPath: "anims/baked/polearm/overhead.json",
+    reach: 2.5, damage: 38, lungeSpeed: 5.0, lungeDuration: 0.35,
     vfxColor: 0xff6020, cooldown: 2.0,
   },
   {
     animKey: "axe_ability",
     slot: 3,
-    label: "Spin Attack",
-    clipPath: "anim/greatsword/great-sword-high-spin-attack.fbx",
-    reach: 2.8, damage: 42, lungeSpeed: 1.5, lungeDuration: 0.55,
+    label: "Cleave Combo",
+    clipPath: "anims/baked/polearm/attack5.json",
+    reach: 2.8, damage: 42, lungeSpeed: 2.0, lungeDuration: 0.45,
     vfxColor: 0xff4400, cooldown: 5.0,
   },
   {
     animKey: "axe_ultimate",
     slot: 4,
     label: "Berserker Rush",
-    clipPath: "anim/greatsword/great-sword-combo.fbx",
-    reach: 2.6, damage: 55, lungeSpeed: 9.0, lungeDuration: 0.42,
+    clipPath: "anims/baked/polearm/special.json",
+    reach: 3.0, damage: 55, lungeSpeed: 9.0, lungeDuration: 0.42,
     vfxColor: 0xff2200, cooldown: 10.0,
+  },
+] as const;
+
+// ── Spear (Madarame): 1_1 base · 1_5 lunge · skill2_1 rush/AoE · ultimate ───
+export const SPEAR_SKILLS: readonly SkillPack[] = [
+  {
+    animKey: "spear_thrust",
+    slot: 1,
+    label: "Spear Combo",
+    clipPath: "anims/baked/polearm/attack.json",
+    reach: 4.0, damage: 40, lungeSpeed: 4.0, lungeDuration: 0.18,
+    vfxColor: 0xc8e8ff, cooldown: 0,
+  },
+  {
+    animKey: "spear_lunge",
+    slot: 2,
+    label: "Piercing Lunge",
+    clipPath: "anims/baked/polearm/attack5.json",
+    reach: 6.0, damage: 55, lungeSpeed: 10.0, lungeDuration: 0.34,
+    vfxColor: 0x90d0ff, cooldown: 3.2,
+  },
+  {
+    animKey: "spear_cyclone",
+    slot: 3,
+    label: "Spear Rush",
+    clipPath: "anims/baked/polearm/skill2.json",
+    reach: 5.0, damage: 80, lungeSpeed: 9.0, lungeDuration: 0.38,
+    vfxColor: 0xa0d8ff, cooldown: 8.0,
+  },
+  {
+    animKey: "spear_dragontail",
+    slot: 4,
+    label: "Dragontail Sweep",
+    clipPath: "anims/baked/polearm/special.json",
+    reach: 6.0, damage: 120, lungeSpeed: 3.0, lungeDuration: 0.28,
+    vfxColor: 0xffd080, cooldown: 18.0,
   },
 ] as const;
 
@@ -230,7 +266,7 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
     case "greatsword":return AXE_SKILLS;
     case "axe":       return AXE_SKILLS;
     case "mace":      return AXE_SKILLS;
-    case "spear":     return SWORD_SKILLS; // spear uses 1H reach patterns
+    case "spear":     return SPEAR_SKILLS;
     case "magic":     return MAGIC_SKILLS;
     case "longbow":   return LONGBOW_SKILLS;
     case "unarmed":   return STRIKER_SKILLS;
@@ -243,11 +279,24 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
   switch (animPack) {
     case "sword_shield": return "sword";
     case "2h_melee":     return "greatsword";
+    case "polearm":      return "spear";
     case "longbow":      return "longbow";
     case "magic":        return "magic";
     case "unarmed":      return "unarmed";
     default:             return "sword";
   }
+}
+
+/** Map arsenal weapon id → skill family (spear ≠ sword). */
+export function familyFromWeaponId(weaponId: string | null | undefined): WeaponFamily {
+  const w = String(weaponId || "").toLowerCase();
+  if (w === "spear" || w === "javelin" || w === "lance" || w === "halberd") return "spear";
+  if (w === "greatsword" || w === "greataxe" || w === "hammer2h") return "greatsword";
+  if (w === "axe" || w === "mace" || w === "hammer") return "axe";
+  if (w.startsWith("staff") || w === "wand") return "magic";
+  if (w === "bow" || w === "longbow" || w === "crossbow") return "longbow";
+  if (w === "none" || w === "unarmed" || w === "fist") return "unarmed";
+  return "sword";
 }
 
 /** Primary attack skill (slot 1) for a weapon family. */

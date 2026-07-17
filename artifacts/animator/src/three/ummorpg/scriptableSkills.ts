@@ -20,6 +20,7 @@ import {
 } from "../content/masterWeaponSkills";
 import { WEAPON_COMBAT } from "./prefabProfile";
 import { generateGunSkills, gunFamilyForWeapon } from "../arsenal/gunClass";
+import { isSpearWeapon, spearClipForSkillId, spearSkillById } from "./spearCombat";
 
 /** uMMORPG-like skill definition (runtime). */
 export interface ScriptableSkill {
@@ -71,23 +72,27 @@ function kitSkillToScriptable(
   weaponId: WeaponId,
   range: number,
 ): ScriptableSkill {
+  const spear = isSpearWeapon(weaponId) ? spearSkillById(sk.id) : null;
+  const animation = isSpearWeapon(weaponId)
+    ? spearClipForSkillId(sk.id)
+    : SLOT_ANIM[sk.slot] || "attack";
   return {
     id: sk.id,
     name: sk.label,
-    description: sk.description || "",
+    description: sk.description || spear?.description || "",
     iconUrl: sk.iconUrl,
-    cooldown: sk.cooldown,
-    castTime: sk.castTime,
-    damage: sk.damage,
-    range,
+    cooldown: sk.cooldown || spear?.cooldown || 1.2,
+    castTime: sk.castTime || spear?.castTime || 0,
+    damage: sk.damage || spear?.damage || 40,
+    range: spear?.range ?? range,
     mana: sk.mana,
-    stamina: sk.stamina,
-    animation: SLOT_ANIM[sk.slot] || "attack",
-    kind: sk.kind,
+    stamina: sk.stamina || spear?.stamina || 0,
+    animation,
+    kind: spear?.kind || sk.kind,
     damageType: sk.damageType,
     slot: sk.slot,
     masterId: sk.id,
-    hitWindow: sk.castTime > 0.05 ? [0.4, 0.75] : [0.28, 0.55],
+    hitWindow: spear?.hitWindow || (sk.castTime > 0.05 ? [0.4, 0.75] : [0.28, 0.55]),
     requiresWeaponType: WEAPON_TO_MASTER[weaponId],
   };
 }

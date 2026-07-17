@@ -783,6 +783,7 @@ export const TRAVERSAL_SETS: Record<"climb" | "swim", TraversalSet> = {
  */
 export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   // Traversal transitions (mode exits): root-motion drives the body in lockstep.
+  // Wall-run uses setTraversalMode("climb") → TRAVERSAL_SETS (climbing-up-wall).
   mantle: "animations/climb/climbing-to-top",
   swimExit: "animations/swim/swimming-to-edge",
   // Farming verbs.

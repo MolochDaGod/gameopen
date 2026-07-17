@@ -19,6 +19,11 @@ import { resolvePresetId, resolveRaceId } from "./raceModel";
 
 import { FLEET } from "./fleet";
 import { contentCandidates, fetchCatalogJson } from "./fleetSsot";
+import {
+  productionItemIconUrl,
+  resolveProductionIconUrl,
+  getProductionMediaIndex,
+} from "./productionMedia";
 
 const CDN = FLEET.assets;
 
@@ -121,8 +126,11 @@ function equipmentBag(ch: GrudgeCharacter | null | undefined): Record<string, un
 }
 
 /**
- * Resolve item icon URL.
- * Prefer same-origin Open icons (always deployed), then R2 CDN paths.
+ * Resolve item icon URL (production best practice):
+ *  1. Explicit iconUrl / CDN path on the item
+ *  2. master-items catalog via productionMedia
+ *  3. Same-origin Open icons (always deployed)
+ *  4. R2 pack fallback
  * Never invent bare `icons/wcs/equipment/<slug>.png` as the only option —
  * that path 404s for most fleet item ids.
  */
@@ -136,8 +144,13 @@ function iconUrlFromItem(raw: unknown): string | null {
   if (typeof raw === "string") {
     if (raw.startsWith("http")) return raw;
     if (raw.startsWith("/")) return raw; // same-origin absolute path
-    if (raw.startsWith("icons/")) return sameOrigin(raw);
-    // slug → Open pack icon first (equip/attack/etc exist locally)
+    if (raw.startsWith("icons/")) {
+      return resolveProductionIconUrl(raw) || sameOrigin(raw);
+    }
+    // Catalog id / slug → production master-items when warm
+    if (getProductionMediaIndex()?.itemCount) {
+      return productionItemIconUrl(raw);
+    }
     const bare = raw.replace(/\.png$/i, "").split("/").pop() || raw;
     return sameOrigin(`icons/${bare}.png`);
   }
@@ -153,15 +166,18 @@ function iconUrlFromItem(raw: unknown): string | null {
     if (typeof cand === "string" && cand) {
       if (cand.startsWith("http")) return cand;
       if (cand.startsWith("/")) return cand;
+      const prod = resolveProductionIconUrl(cand);
+      if (prod) return prod;
       if (cand.startsWith("icons/")) return sameOrigin(cand);
-      // Relative CDN key
       if (cand.includes("/")) return r2(cand);
       return sameOrigin(`icons/${cand.replace(/\.png$/i, "")}.png`);
     }
     const id = o.itemId || o.id || o.slug || o.name;
     if (typeof id === "string" && id) {
+      if (getProductionMediaIndex()?.itemCount) {
+        return productionItemIconUrl(id);
+      }
       const bare = id.replace(/\.png$/i, "").split("/").pop() || id;
-      // Prefer known local RPG icons over missing WCS equipment keys
       return sameOrigin(`icons/${bare}.png`);
     }
   }
