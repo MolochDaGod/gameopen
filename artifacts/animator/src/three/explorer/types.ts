@@ -102,6 +102,12 @@ export type ActionKey =
   | "dodgeR"
   | "dash"
   | "dashAttack"
+  /** Documents Slash Advance.fbx — lunging gap-close slash (sword dashAttack). */
+  | "slashAdvance"
+  /** Documents Flip Kick.fbx — unarmed signature special. */
+  | "flipKick"
+  /** Documents quickkick.fbx — short hop-kick. */
+  | "quickKick"
   | "slide"
   // --- Acrobatic UX movement blends (priority one-shots, class-independent). ---
   /** Aerial evade — air-dodge one-shot fired while airborne. */
@@ -118,6 +124,12 @@ export type ActionKey =
   | "spinEvade"
   /** Corkscrew evade roll. */
   | "corkscrewEvade"
+  /** Sprint roll into run (Documents rollRunning.fbx) — forward dodge while moving. */
+  | "rollRun"
+  /** Combat running arc (Documents Running Arc.fbx) — curved sprint loco flourish. */
+  | "runningArc"
+  /** Wall-run stride (Documents Wall Run.fbx) — climb traversal while running on wall. */
+  | "wallRun"
   /** Quick sidestep evade — lean/step off the attack line ("evading a threat"). */
   | "evadeThreat"
   // --- Extra footwork / acrobatics + dirty melee (user clip batch). ---
@@ -255,6 +267,8 @@ export type ActionKey =
   | "hitHead"
   /** Alias for hitHead — older Dressing Room / hit-to-head key. */
   | "hitToHead"
+  /** Pain / agony writhe (Documents Agony.fbx) — heavy sustained hurt reaction. */
+  | "agony"
   /** Crawling while injured. */
   | "injuredCrawl"
   /** Getting up from a fallen/knocked-down state. */

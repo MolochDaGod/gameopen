@@ -309,7 +309,15 @@ export class Animator {
    * accelerated playback for a more exaggerated Elden Ring–style tumble.
    */
   roll(dir: "F" | "B" | "L" | "R", fade = 0.16): number {
+    // Forward sprint-roll: Documents rollRunning.fbx exits into a run — prefer
+    // when moving at pace so X-roll while running reads as combat parkour.
+    const sprintRoll =
+      dir === "F" && this.move.speed > 0.45
+        ? this.resolveMovement("rollRun" as ActionKey) ??
+          resolveGlobalAction("rollRun")
+        : undefined;
     const id =
+      sprintRoll ??
       this.resolveMovement(`dodge${dir}` as ActionKey) ??
       this.resolveMovement("dodgeF");
     if (!id) return 0;
@@ -622,11 +630,34 @@ export class Animator {
    * Other movement falls back: equipped class → unarmed → Layer A base pack.
    */
   private resolveMovement(key: ActionKey): string | undefined {
-    if (key === "dodgeF" || key === "dodgeB" || key === "dodgeL" || key === "dodgeR") {
-      const uni = (UNIVERSAL_MOVEMENT as Record<string, string>)[key];
+    // Directional dodges F/L/R always prefer the longbow standing-dodge pack
+    // (fleet SSOT). dodgeB allows class override first (bow uses archer
+    // standing-dodge-backward; rifle uses jump-backward) then universal.
+    const uni = (UNIVERSAL_MOVEMENT as Record<string, string>)[key];
+    if (key === "dodgeF" || key === "dodgeL" || key === "dodgeR") {
       if (uni && this.clips.has(uni)) return uni;
     }
-    const style = this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key];
+    if (key === "dodgeB") {
+      const style =
+        this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key] ?? uni;
+      return this.preferLoaded(style, key);
+    }
+    // Shared loco one-shots: rollRun / wallRun / runningArc / jumpAway / etc.
+    if (
+      uni &&
+      this.clips.has(uni) &&
+      (key === "rollRun" ||
+        key === "runningArc" ||
+        key === "wallRun" ||
+        key === "jumpAway" ||
+        key === "jumpAttack" ||
+        key === "dash" ||
+        key === "jumpAir" ||
+        key === "land")
+    ) {
+      return uni;
+    }
+    const style = this.resolve(key) ?? WEAPON_SETS.unarmed.actions[key] ?? uni;
     return this.preferLoaded(style, key);
   }
 

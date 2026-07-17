@@ -3164,7 +3164,9 @@ export class Studio {
         if (planar > 0.4 || recoil >= 12) this.playPlayerReaction("knockedUpBack");
         else this.playPlayerReaction("knockedUp");
       } else if (recoil > 8) {
-        this.playPlayerReaction("bigBlow");
+        // Heavy body hit — prefer Agony writhe when available, else bigBlow
+        if (this.character?.hasClip?.("agony")) this.playPlayerReaction("agony");
+        else this.playPlayerReaction("bigBlow");
       } else {
         this.playPlayerReaction("hitHead");
       }
@@ -3341,6 +3343,7 @@ export class Studio {
       | "knockedUp"
       | "knockedUpBack"
       | "bigBlow"
+      | "agony"
       | "knockedOut"
       | "wallCrash"
       | "getUp"
@@ -3438,6 +3441,12 @@ export class Studio {
       case "bigBlow":
         // Heavy body blow that staggers but keeps the fighter on their feet.
         if (!react("bigBlow", 0.1)) react("stumble", 0.08);
+        break;
+      case "agony":
+        // Documents Agony.fbx — sustained pain writhe (heavy non-launch hit)
+        if (!react("agony", 0.12)) {
+          if (!react("bigBlow", 0.1)) react("hitHead", 0.1);
+        }
         break;
       case "knockedOut":
         // Full collapse: knock-out drop, hold the grounded pose, then a slow get-up.
@@ -8603,12 +8612,14 @@ export class Studio {
         if (this.character.hasClip("jumpAway")) this.character.playClipOnce("jumpAway", 0.05);
         else if (this.character.hasClip("utilityKick")) this.character.playClipOnce("utilityKick", 0.05);
       }
-      // Wall run / freehang: climb loco = hanging idle + freehang climb
+      // Wall run / freehang: Documents Wall Run.fbx on start; climb hang loco after
       if (this.controller.consumeWallRunStart()) {
         this.character.setTraversalMode?.("climb");
         this.setCombatFlash("WALL RUN", 0.5);
-        // Entry: jump-to-freehang when airborne, else stand-to-freehang
-        if (this.character.hasClip("jumpToFreehang")) {
+        // Prefer dedicated wall-run stride clip, then freehang entry pack
+        if (this.character.hasClip("wallRun")) {
+          this.character.playClipOnce("wallRun", 0.08);
+        } else if (this.character.hasClip("jumpToFreehang")) {
           this.character.playClipOnce("jumpToFreehang", 0.08);
         } else if (this.character.hasClip("standToFreehang")) {
           this.character.playClipOnce("standToFreehang", 0.08);
@@ -8622,6 +8633,10 @@ export class Studio {
       // Keep climb mode while wall-running → freehang idle/climb loco
       if (this.controller.isWallRunning) {
         this.character.setTraversalMode?.("climb");
+        // Re-trigger wall-run stride if the one-shot ended and we're still running
+        if (this.character.hasClip("wallRun") && !this.character.isOneShotActive) {
+          this.character.playClipOnce("wallRun", 0.1);
+        }
       }
       // Slam touchdown: detonate the ground explosion + force wave. This takes
       // priority over (and suppresses) the generic landing flair below.

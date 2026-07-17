@@ -47,6 +47,14 @@ export const VERBS = [
   "spinEvade",
   "corkscrewEvade",
   "evadeThreat",
+  // Documents locomotion pack (rollRunning / Running Arc / Wall Run / Jump Away).
+  "rollRun",
+  "runningArc",
+  "wallRun",
+  "jumpAway",
+  "quickKick",
+  "flipKick",
+  "slashAdvance",
   // Extra footwork / acrobatics + dirty melee (user clip batch).
   "stylishFlip",
   "backJump",
@@ -59,6 +67,12 @@ export const VERBS = [
   "hurricaneKick",
   // Ground finisher (execution on a knocked-down enemy).
   "stomp",
+  // Take-hit / recover
+  "hitHead",
+  "agony",
+  "getUp",
+  "knockedUp",
+  "knockedUpBack",
   // Extra casting / greatsword bodies (vfx-sandbox library).
   "castSpell2",
   "magicChannel",
@@ -125,6 +139,13 @@ export const PREVIEW_VERB_KEYS: Record<string, ActionKey> = {
   spinEvade: "spinEvade",
   corkscrewEvade: "corkscrewEvade",
   evadeThreat: "evadeThreat",
+  rollRun: "rollRun",
+  runningArc: "runningArc",
+  wallRun: "wallRun",
+  jumpAway: "jumpAway",
+  quickKick: "quickKick",
+  flipKick: "flipKick",
+  slashAdvance: "slashAdvance",
   stylishFlip: "stylishFlip",
   backJump: "backJump",
   runningFlip: "runningFlip",
@@ -135,6 +156,11 @@ export const PREVIEW_VERB_KEYS: Record<string, ActionKey> = {
   headbutt: "headbutt",
   hurricaneKick: "hurricaneKick",
   stomp: "stomp",
+  hitHead: "hitHead",
+  agony: "agony",
+  getUp: "getUp",
+  knockedUp: "knockedUp",
+  knockedUpBack: "knockedUpBack",
   castSpell2: "castSpell2",
   magicChannel: "magicChannel",
   overheadSlash: "overheadSlash",
@@ -170,10 +196,11 @@ export const CLIP_CATEGORIES: ReadonlyArray<{ label: string; verbs: readonly str
   { label: "Skills & Magic", verbs: ["skill", "cast", "magicAttack", "magicArea", "castSpell2", "magicChannel"] },
   { label: "Greatsword", verbs: ["overheadSlash"] },
   { label: "Defense", verbs: ["block", "blockGuard", "blockLeft", "blockRight", "blockReact", "blockReactWide", "blockReactHeavy", "parry"] },
-  { label: "Movement", verbs: ["dash", "roll", "jump", "slide", "pivotR", "sideStepL", "jumpDown"] },
-  { label: "Acrobatics", verbs: ["airDodge", "utilityKick", "frontFlip", "twistFlip", "butterflyTwirl", "spinEvade", "corkscrewEvade", "evadeThreat", "stylishFlip", "backJump", "runningFlip", "longBackJump", "kipUp"] },
-  { label: "Finishers", verbs: ["stomp"] },
+  { label: "Movement", verbs: ["dash", "roll", "rollRun", "runningArc", "wallRun", "jumpAway", "jump", "slide", "pivotR", "sideStepL", "jumpDown"] },
+  { label: "Acrobatics", verbs: ["airDodge", "utilityKick", "quickKick", "flipKick", "frontFlip", "twistFlip", "butterflyTwirl", "spinEvade", "corkscrewEvade", "evadeThreat", "stylishFlip", "backJump", "runningFlip", "longBackJump", "kipUp"] },
+  { label: "Finishers", verbs: ["stomp", "slashAdvance"] },
   { label: "Gunslinger", verbs: ["pistolWhip", "uppercut", "chargedShot", "mmaKick"] },
+  { label: "Reactions", verbs: ["hitHead", "agony", "getUp", "knockedUp", "knockedUpBack"] },
   { label: "Gestures", verbs: ["gestureAcknowledge", "gestureCocky", "gestureDismiss", "gestureHappy", "gestureLookAway", "gestureRelievedSigh", "gestureHeadShake", "gestureWeightShift"] },
   { label: "Utility", verbs: ["throw", "death", "hit"] },
 ];
@@ -515,6 +542,21 @@ export class ExplorerCharacter implements Avatar {
         return a.movement("spinEvade");
       case "corkscrewEvade":
         return a.movement("corkscrewEvade");
+      case "rollRun":
+      case "runningArc":
+      case "wallRun":
+      case "jumpAway":
+        return a.movement(name as ActionKey);
+      case "quickKick":
+      case "flipKick":
+      case "slashAdvance":
+        return a.playAction(name as ActionKey);
+      case "hitHead":
+      case "agony":
+      case "getUp":
+      case "knockedUp":
+      case "knockedUpBack":
+        return a.reaction(name as ActionKey);
       case "hurricaneKick":
         return a.playAction("hurricaneKick");
       default:

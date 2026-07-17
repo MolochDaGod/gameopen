@@ -99,7 +99,8 @@ export const BASE_PACK_FALLBACKS: Record<string, string> = {
 
 export const UNIVERSAL_MOVEMENT = {
   dodgeF:    "animations/bow/standing-dodge-forward",
-  // Documents Dodging Back.fbx
+  // Documents Dodging Back.fbx as universal back-dodge; bow overrides with archer
+  // standing-dodge-backward (Documents archer after shotStanding Dodge Backward.fbx).
   dodgeB:    "animations/reactions/dodging-back",
   dodgeL:    "animations/bow/standing-dodge-left",
   dodgeR:    "animations/bow/standing-dodge-right",
@@ -113,9 +114,21 @@ export const UNIVERSAL_MOVEMENT = {
   hitHead:       "animations/reactions/hit-on-side-of-head",
   knockedUp:     "animations/reactions/knocked-up",
   knockedUpBack: "animations/reactions/knocked-up-and-back",
+  // Documents Jump Away.fbx — wall-kick / leap-off
+  jumpAway:      "animations/extra/jump-away",
+  // Documents rollRunning.fbx — forward roll that exits into run (sprint dodge)
+  rollRun:       "animations/extra/roll-running",
+  // Documents Running Arc.fbx — curved combat sprint flourish
+  runningArc:    "animations/extra/running-arc",
+  // Documents Wall Run.fbx — wall-run stride (also TRAVERSAL wall-run path)
+  wallRun:       "animations/climb/wall-run",
+  // Documents 2Standing Melee Run Jump Attack.fbx — air / gap-close strike
+  jumpAttack:    "animations/extra/run-jump-attack",
   // Acrobatic UX movement blends (priority one-shots, any loadout).
   airDodge:       "animations/extra/aerial-evade",
   utilityKick:    "animations/extra/utility-kick",
+  // Documents quickkick.fbx — short utility hop-kick (also unarmed attack2)
+  quickKick:      "animations/striker/quick-kick",
   frontFlip:      "animations/extra/front-flip",
   twistFlip:      "animations/extra/front-twist-flip",
   butterflyTwirl: "animations/extra/butterfly-twirl",
@@ -204,9 +217,12 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       // (its own committed clip). Chains after the punch->elbow combo so the LMB
       // chain is a real two-part hand-to-hand combo (rides each clip's duration).
       comboHit2: "animations/striker/knee-jabs-to-uppercut",
-      // Signature unarmed special: an acrobatic flip-kick (was a dup of the kick).
+      // Documents Flip Kick.fbx — signature unarmed special
       skill: "animations/striker/flip-kick",
+      flipKick: "animations/striker/flip-kick",
+      quickKick: "animations/striker/quick-kick",
       hit: "animations/bow/standing-react-small-from-front",
+      // Documents Standing Death Forward 01.fbx
       death: "animations/bow/standing-death-forward-01",
       jumpAir: UNIVERSAL_MOVEMENT.jumpAir,
       land: UNIVERSAL_MOVEMENT.land,
@@ -215,8 +231,15 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       dodgeL: UNIVERSAL_MOVEMENT.dodgeL,
       dodgeR: UNIVERSAL_MOVEMENT.dodgeR,
       dash: UNIVERSAL_MOVEMENT.dash,
-      // New-batch quick-kick doubles as the lunging dash-attack (was the kick).
+      // Documents quickkick.fbx — lunging dash-attack + LMB finisher
       dashAttack: "animations/striker/quick-kick",
+      // Documents 2Standing Melee Run Jump Attack.fbx
+      jumpAttack: "animations/extra/run-jump-attack",
+      // Documents rollRunning / Running Arc / Wall Run / Jump Away
+      rollRun: UNIVERSAL_MOVEMENT.rollRun,
+      runningArc: UNIVERSAL_MOVEMENT.runningArc,
+      wallRun: UNIVERSAL_MOVEMENT.wallRun,
+      jumpAway: UNIVERSAL_MOVEMENT.jumpAway,
       // Acrobatic UX movement blends — resolveMovement() falls every class back
       // to the unarmed set, so registering them here makes them universal.
       airDodge: UNIVERSAL_MOVEMENT.airDodge,
@@ -258,7 +281,9 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       // Documents One Hand Sword Combo.fbx — primary LMB / skill combo
       attack1: "animations/sword/one-hand-sword-combo",
       attack2: "animations/sword/sword-and-shield-attack",
-      attack3: "animations/sword/sword-and-shield-attack-3",
+      // Documents Standing Melee Attack Backhand.fbx
+      attack3: "animations/sword/melee-attack-backhand",
+      // Documents St1able Sword Inward Slash.fbx
       attack4: "animations/sword/inward-slash",
       attack5: "animations/sword/sword-and-shield-attack-5",
       attack6: "animations/sword/two-hand-sword-combo",
@@ -268,12 +293,18 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       skill: "animations/knife/dual-weapon-combo",
       dualWeaponCombo: "animations/knife/dual-weapon-combo",
       oneHandSwordCombo: "animations/sword/one-hand-sword-combo",
+      // Documents Sword And Shield Block.fbx
       blockStart: "animations/sword/sword-and-shield-block",
       blockIdle: "animations/sword/sword-and-shield-block-idle",
       draw: "animations/sword/draw-sword-1",
       sheath: "animations/sword/sheath-sword-1",
       death: "animations/sword/sword-and-shield-death",
+      // Documents Slash Advance.fbx — lunging gap-close
       dashAttack: "animations/sword/slash-advance",
+      // Documents 2Standing Melee Run Jump Attack.fbx
+      jumpAttack: "animations/extra/run-jump-attack",
+      outsideSlash: "animations/sword/melee-attack-backhand",
+      insideSlash: "animations/sword/inward-slash",
       stab: "animations/knife/stabbing",
       turnL: "animations/sword/sword-and-shield-turn",
       turnR: "animations/sword/sword-and-shield-turn-2",
@@ -628,8 +659,7 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
     actions: {
       // New-batch dedicated combat aim idle (was the pistol idle pose, 2nd use).
       aim: "animations/extra/aim-idle",
-      // Real one-shot fire clip (was a frozen idle pose): drives the attack
-      // clock via its own duration like every other one-shot action.
+      // Documents 2Gunplay.fbx — one-shot fire pose (duration-driven attack clock)
       attack1: "animations/pistol/gunplay",
       // Quick-draw from the holster.
       draw: "animations/pistol/drawing-gun",
@@ -690,7 +720,8 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       jumpAir: UNIVERSAL_MOVEMENT.jumpAir,
       land: UNIVERSAL_MOVEMENT.land,
       dodgeF: UNIVERSAL_MOVEMENT.dodgeF,
-      dodgeB: UNIVERSAL_MOVEMENT.dodgeB,
+      // Documents archer after shotStanding Dodge Backward.fbx
+      dodgeB: "animations/bow/standing-dodge-backward",
       dodgeL: UNIVERSAL_MOVEMENT.dodgeL,
       dodgeR: UNIVERSAL_MOVEMENT.dodgeR,
       dash: UNIVERSAL_MOVEMENT.dash,
@@ -754,7 +785,9 @@ export interface TraversalSet {
 
 export const TRAVERSAL_SETS: Record<"climb" | "swim", TraversalSet> = {
   climb: {
-    // Documents pack: Hanging Idle + Freehang Climb as primary wall-hang loco
+    // Documents pack: Hanging Idle + Freehang Climb as primary wall-hang loco.
+    // Wall Run.fbx is the forward stroke when sprint-running on a wall (Studio
+    // plays wallRun one-shot on start; freehang-climb covers vertical hang climb).
     idle: "animations/climb/hanging-idle",
     forward: "animations/climb/freehang-climb",
     back: "animations/climb/climbing-down-wall",
@@ -765,6 +798,9 @@ export const TRAVERSAL_SETS: Record<"climb" | "swim", TraversalSet> = {
     back: "animations/swim/swimming",
   },
 };
+
+/** Clip id for Documents Wall Run.fbx — preferred while controller wall-run is active. */
+export const WALL_RUN_CLIP_ID = "animations/climb/wall-run";
 
 /**
  * Class-INDEPENDENT one-shot clips (traversal transitions, farming, magic). These
@@ -803,13 +839,27 @@ export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   magicChannel: "animations/magic/standing-2h-magic",
   // Greatsword variant (available everywhere; pair with heavy/cast skills).
   overheadSlash: "animations/greatsword/great-sword-overhead",
-  // Horizontal slash PAIR (class-independent). The outward swing is the sword
-  // pack's backhand outward slash; the inward swing is the committed forehand
-  // sword slash that crosses the body the other way — a matched in/out pair.
-  insideSlash: "animations/sword/sword-and-shield-attack",
-  outsideSlash: "animations/sword/outward-slash",
+  // Horizontal slash PAIR (class-independent). Documents St1able Sword Inward Slash
+  // + Standing Melee Attack Backhand — matched in/out pair.
+  insideSlash: "animations/sword/inward-slash",
+  outsideSlash: "animations/sword/melee-attack-backhand",
+  // Documents Slash Advance.fbx — universal lunging dash-slash fallback
+  slashAdvance: "animations/sword/slash-advance",
+  // Documents 2Standing Melee Run Jump Attack.fbx
+  jumpAttack: "animations/extra/run-jump-attack",
+  // Documents Running Arc / rollRunning / Wall Run — loco one-shots any loadout
+  runningArc: "animations/extra/running-arc",
+  rollRun: "animations/extra/roll-running",
+  wallRun: "animations/climb/wall-run",
+  // Documents Jump Away.fbx
+  jumpAway: "animations/extra/jump-away",
+  // Documents quickkick / Flip Kick — mobility / unarmed fallbacks
+  quickKick: "animations/striker/quick-kick",
+  flipKick: "animations/striker/flip-kick",
   // Universal raised-guard hold — the looped block pose used as a class-independent
   // fallback so any weapon (or a class missing a bespoke block) still guards.
+  // Documents Sword And Shield Block also lives on sword blockStart; this is the
+  // class-independent guard loop for kits without a bespoke block.
   blockGuard: "animations/block/standing-block-idle",
   // Personality gesture idles (vfx-sandbox library) — class-independent emotes.
   gestureAcknowledge: "animations/gestures/acknowledging",
@@ -874,11 +924,12 @@ export const GLB_CLIP_IDS: ReadonlySet<string> = new Set([
  * animator's `public/anim/` folder (same convention as all other catalog ids).
  */
 export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
-  // Parry flourish on the defending fighter (upgraded clip from the block pack).
+  // Documents parry.fbx — flourish on the defending fighter.
   parryReact:   "animations/block/parry",
   // Directional + weighted guarded-hit reacts — played when a hit lands on a
   // raised guard, then blended back into the held guard pose. Class-independent
   // so EVERY weapon gets a real reaction (no silent no-op on a soaked hit).
+  // Documents Right Block.fbx / Standing Block React Large.fbx
   blockLeft:        "animations/block/left-block",
   blockRight:       "animations/block/right-block",
   blockReact:       "animations/block/standing-block-react-large",
@@ -890,6 +941,7 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   // Fall / knock-down sequence.
   fallDown:     "animations/reactions/falling",
   fallen:       "animations/reactions/fallen",
+  // Documents 2Getting Up.fbx
   getUp:        "animations/reactions/get-up",
   // Daze reactions.
   stunned:      "animations/reactions/stunned",
@@ -897,6 +949,8 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   hitHead:      "animations/reactions/hit-on-side-of-head",
   // Alias kept for older keys / Dressing Room preview
   hitToHead:    "animations/reactions/hit-to-head",
+  // Documents Agony.fbx — heavy sustained pain (crit / long hurt)
+  agony:        "animations/reactions/agony",
   // Launched / wall reactions.
   wallCrash:    "animations/reactions/wall-crash",
   // Injured locomotion.
@@ -908,7 +962,8 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   // Documents Knocked Unconscious.fbx
   knockedOut:      "animations/reactions/knocked-unconscious",
   knockedUnconscious: "animations/reactions/knocked-unconscious",
-  jumpAway:        "animations/reactions/jump-away",
+  // Documents Jump Away.fbx
+  jumpAway:        "animations/extra/jump-away",
   // Documents knocked up.fbx / knocked up and back.fbx — launch hit reactions
   knockedUp:       "animations/reactions/knocked-up",
   knockedUpBack:   "animations/reactions/knocked-up-and-back",
