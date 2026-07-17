@@ -97,8 +97,10 @@ const ONE_HAND_DEFENSE: DefenseStyle = {
   block: "blockStart",
   parry: "parryReact",
   dodge: "spinEvade",
-  stumble: "stumble",
-  fall: "fallDown",
+  // Documents Hit On Side Of Head.fbx — primary take-hit flinch (loco pack)
+  stumble: "hitHead",
+  // Documents knocked up.fbx — launch / knockdown
+  fall: "knockedUp",
   recover: "getUp",
   blockLeft: "blockLeft",
   blockRight: "blockRight",
@@ -110,8 +112,10 @@ const TWO_HAND_DEFENSE: DefenseStyle = {
   block: "blockStart",
   parry: "parryReact",
   dodge: "spinEvade",
-  stumble: "bigBlow",
-  fall: "flyingBack",
+  // Heavy 2H still flinches with side-of-head; bigBlow stays available as alias.
+  stumble: "hitHead",
+  // Documents knocked up and back.fbx — directional launch on heavy knockdown
+  fall: "knockedUpBack",
   recover: "getUp",
   blockLeft: "blockLeft",
   blockRight: "blockRight",
@@ -186,8 +190,8 @@ export const HOLD_STYLES: Record<WeaponGroup, HoldStyle> = {
       parry: "parryReact",
       // Backstep evade — ranged keeps its distance rather than rolling through.
       dodge: "dodgeB",
-      stumble: "stumble",
-      fall: "fallDown",
+      stumble: "hitHead",
+      fall: "knockedUp",
       recover: "getUp",
       blockLeft: "blockLeft",
       blockRight: "blockRight",
@@ -209,8 +213,8 @@ export const HOLD_STYLES: Record<WeaponGroup, HoldStyle> = {
       block: "blockStart",
       parry: "parryReact",
       dodge: "spinEvade",
-      stumble: "stumble",
-      fall: "fallDown",
+      stumble: "hitHead",
+      fall: "knockedUp",
       recover: "getUp",
       blockLeft: "blockLeft",
       blockRight: "blockRight",

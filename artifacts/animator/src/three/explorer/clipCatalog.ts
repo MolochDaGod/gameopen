@@ -107,6 +107,12 @@ export const UNIVERSAL_MOVEMENT = {
   // Documents Falling Idle.fbx — airborne fall loop
   jumpAir:   "animations/reactions/falling-idle",
   land:      "animations/bow/fall-a-land-to-standing-idle-01",
+  // Documents take-hit locomotion pack (also in GLOBAL_REACTIONS — listed here so
+  // every weapon class preloads them with its loco set via clipIdsForClass).
+  // Hit On Side Of Head.fbx / knocked up.fbx / knocked up and back.fbx
+  hitHead:       "animations/reactions/hit-on-side-of-head",
+  knockedUp:     "animations/reactions/knocked-up",
+  knockedUpBack: "animations/reactions/knocked-up-and-back",
   // Acrobatic UX movement blends (priority one-shots, any loadout).
   airDodge:       "animations/extra/aerial-evade",
   utilityKick:    "animations/extra/utility-kick",
@@ -887,14 +893,15 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   getUp:        "animations/reactions/get-up",
   // Daze reactions.
   stunned:      "animations/reactions/stunned",
-  hitHead:      "animations/reactions/hit-to-head",
+  // Documents Hit On Side Of Head.fbx — primary take-hit flinch (loco hit react)
+  hitHead:      "animations/reactions/hit-on-side-of-head",
+  // Alias kept for older keys / Dressing Room preview
+  hitToHead:    "animations/reactions/hit-to-head",
   // Launched / wall reactions.
   wallCrash:    "animations/reactions/wall-crash",
   // Injured locomotion.
   injuredCrawl: "animations/reactions/running-crawl",
-  // Knock reactions (vfx-sandbox library): a hard knock onto the back, an
-  // upward launch pop, a heavy body-blow stagger, a full knock-out collapse,
-  // and an evasive leap-away.
+  // Knock reactions
   flyingBack:      "animations/reactions/flying-back",
   uppercutLaunch:  "animations/reactions/uppercut",
   bigBlow:         "animations/reactions/big-body-blow",
@@ -902,8 +909,7 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   knockedOut:      "animations/reactions/knocked-unconscious",
   knockedUnconscious: "animations/reactions/knocked-unconscious",
   jumpAway:        "animations/reactions/jump-away",
-  // Documents Dodging Back.fbx also usable as jumpAway fallback
-  // Clean knock-up launcher chain
+  // Documents knocked up.fbx / knocked up and back.fbx — launch hit reactions
   knockedUp:       "animations/reactions/knocked-up",
   knockedUpBack:   "animations/reactions/knocked-up-and-back",
   // Documents Falling Idle.fbx
@@ -981,8 +987,10 @@ export function clipIdsForClass(weapon: WeaponClass): string[] {
   const ids = new Set<string>([SKELETON_SOURCE_ID]);
   for (const id of Object.values(set.loco)) if (id) ids.add(id);
   for (const id of Object.values(set.actions)) if (id) ids.add(id);
-  // Longbow directional dodges are the fleet-wide dodge pack for every weapon.
+  // Longbow directional dodges + take-hit loco pack (hitHead / knockedUp*) for every weapon.
   for (const id of Object.values(UNIVERSAL_MOVEMENT)) if (id) ids.add(id);
+  // Full GLOBAL_REACTIONS so take-hit never fails to resolve after a class-only load.
+  for (const id of Object.values(GLOBAL_REACTIONS)) if (id) ids.add(id);
   return [...ids];
 }
 

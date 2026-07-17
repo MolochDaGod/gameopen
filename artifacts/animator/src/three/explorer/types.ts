@@ -251,8 +251,10 @@ export type ActionKey =
   | "stunned"
   /** Launched into a wall and crashing. */
   | "wallCrash"
-  /** Reeling hit-to-head reaction. */
+  /** Reeling hit-to-head / side-of-head flinch (Documents Hit On Side Of Head). */
   | "hitHead"
+  /** Alias for hitHead — older Dressing Room / hit-to-head key. */
+  | "hitToHead"
   /** Crawling while injured. */
   | "injuredCrawl"
   /** Getting up from a fallen/knocked-down state. */

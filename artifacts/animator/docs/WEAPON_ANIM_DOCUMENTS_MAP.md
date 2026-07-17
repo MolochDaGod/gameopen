@@ -12,7 +12,9 @@ Runtime paths: `artifacts/animator/public/anim/animations/…`.
 | **multiUpward Thrust.fbx** | `spear/upward-thrust.fbx` | Spear **LMB open / stab** (attack1, stab); T0 “Upward Thrust” | In pack · wired |
 | **11Upward Thrust.fbx** | `spear/rising-thrust.fbx` | Spear **power poke / rising stab** (stab, T0 power) | In pack · wired |
 | **spear1.fbx** | `spear/spear1.fbx` | Spear **F skill + mid combo** (skill, attack2); T0 “Spear Flurry” | **Imported** · wired |
-| **knocked up.fbx** | `reactions/knocked-up.fbx` | **CC reaction** when launched (not a weapon skill) | In pack · reaction only |
+| **knocked up.fbx** | `reactions/knocked-up.fbx` | **Take-hit loco** launch (skill / knock-up) | In pack · wired loco + reaction |
+| **knocked up and back.fbx** | `reactions/knocked-up-and-back.fbx` | **Take-hit loco** directional launch | In pack · wired loco + reaction |
+| **Hit On Side Of Head.fbx** | `reactions/hit-on-side-of-head.fbx` | **Take-hit loco** flinch (stumble / hitHead) | In pack · wired loco + reaction |
 | **greataxe.fbx** | `greataxe/great-axe-combo.fbx` | Greataxe **LMB combo** (attack1); T0 greataxe combo | In pack · wired |
 | **quiickGreat Sword Slash.fbx** | `greatsword/quick-slash.fbx` | Greatsword **fast cut** (stab / T0 special “Quick GS Slash”) | In pack · wired |
 | **Run With Sword.fbx** | `sword/run-with-sword.fbx` | Sword / 1H melee **run locomotion** (runF) | **Imported** · wired |
@@ -51,8 +53,10 @@ Runtime paths: `artifacts/animator/public/anim/animations/…`.
 | 2 Special | Dual Weapon Combo | `dual-weapon-combo` |
 | 3–4 | Cleave / Execute | existing dash/slam |
 
-### Not weapon skills
-- **knocked up** → victim reaction when launched  
+### Not weapon skills (locomotion / reactions)
+- **Hit On Side Of Head** → `hitHead` flinch (default take-hit / stumble)
+- **knocked up** → `knockedUp` launch chain
+- **knocked up and back** → `knockedUpBack` directional launch
 - **intoout** → guard / stance hold (optional parry body)
 
 ## Notes

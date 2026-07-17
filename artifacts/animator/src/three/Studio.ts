@@ -3154,10 +3154,20 @@ export class Studio {
       const dmgScale = isSkill ? 1.35 : recoil > 8 ? 1.15 : 0.85;
       this.vfx.fireAura(chest, dmgScale, this.fireThemeApplied);
       this.vfx.impact(chest, SKILL_COLOR[kind] ?? 0xff5a6a, 0.7);
-      // Heavy opponent hits read on the player the way they do on the dummies:
-      // a skill/AOE launches (uppercut), a heavy physical blow staggers (big-blow).
-      if (isSkill) this.playPlayerReaction("launched");
-      else if (recoil > 8) this.playPlayerReaction("bigBlow");
+      // Take-hit locomotion: Documents knocked-up / hit-on-side-of-head pack.
+      //  - skill / strong launch → knockedUp or knockedUpBack
+      //  - heavy body hit → bigBlow
+      //  - medium / default → hitHead (side-of-head flinch)
+      if (isSkill || recoil >= 10) {
+        // Prefer knock-up-and-back when shove has clear planar direction
+        const planar = Math.hypot(push.x, push.z);
+        if (planar > 0.4 || recoil >= 12) this.playPlayerReaction("knockedUpBack");
+        else this.playPlayerReaction("knockedUp");
+      } else if (recoil > 8) {
+        this.playPlayerReaction("bigBlow");
+      } else {
+        this.playPlayerReaction("hitHead");
+      }
     } else {
       // A blocked/parried/dodged blow still means an active exchange.
       this.bumpMusicHeat(0.3);
@@ -3328,6 +3338,8 @@ export class Studio {
       | "fallen"
       | "knockBack"
       | "launched"
+      | "knockedUp"
+      | "knockedUpBack"
       | "bigBlow"
       | "knockedOut"
       | "wallCrash"
@@ -3348,12 +3360,37 @@ export class Studio {
       if (c.hasRole("hurt")) c.playRoleOnce("hurt", fade);
       return false;
     };
+    /** Launch chain: knock-up clip → falling idle → fallen hold → kip-up. */
+    const playLaunch = (upKey: "knockedUp" | "knockedUpBack" | "uppercutLaunch") => {
+      this.tumbleActive = true;
+      this.tumbleT = Math.max(this.tumbleT, 1.75);
+      if (!react(upKey, 0.08)) {
+        if (!react("uppercutLaunch", 0.08)) react("fallDown", 0.08);
+      }
+      // Apex: airborne falling idle (Documents Falling Idle)
+      this.schedule(0.45, () => {
+        if (!this.tumbleActive) return;
+        this.character?.reaction?.("fallingIdle", 0.12);
+      });
+      this.schedule(1.05, () => {
+        if (!this.tumbleActive) return;
+        this.character?.reaction?.("fallen", 0.15, true);
+      });
+      this.schedule(1.6, () => {
+        if (!this.tumbleActive) return;
+        this.playPlayerReaction("kipUp");
+        this.tumbleActive = false;
+        this.tumbleT = 0;
+      });
+    };
     switch (kind) {
       case "stumble":
-        react("stumble", 0.07);
+        // Light take-hit — prefer side-of-head flinch over generic stumble
+        if (!react("hitHead", 0.08)) react("stumble", 0.07);
         break;
       case "hitHead":
-        react("hitHead", 0.12);
+        // Documents Hit On Side Of Head.fbx
+        if (!react("hitHead", 0.1)) react("stumble", 0.08);
         break;
       case "stunned":
         react("stunned", 0.1);
@@ -3386,21 +3423,17 @@ export class Studio {
           this.tumbleT = 0;
         });
         break;
+      case "knockedUp":
+        // Documents knocked up.fbx
+        playLaunch("knockedUp");
+        break;
+      case "knockedUpBack":
+        // Documents knocked up and back.fbx
+        playLaunch("knockedUpBack");
+        break;
       case "launched":
-        // Popped into the air — Space recovers early with backflip cut.
-        this.tumbleActive = true;
-        this.tumbleT = Math.max(this.tumbleT, 1.7);
-        if (!react("uppercutLaunch", 0.08)) react("fallDown", 0.08);
-        this.schedule(1.0, () => {
-          if (!this.tumbleActive) return;
-          this.character?.reaction?.("fallen", 0.15, true);
-        });
-        this.schedule(1.55, () => {
-          if (!this.tumbleActive) return;
-          this.playPlayerReaction("kipUp");
-          this.tumbleActive = false;
-          this.tumbleT = 0;
-        });
+        // Popped into the air — prefer knocked-up pack, then uppercut launch.
+        playLaunch("knockedUp");
         break;
       case "bigBlow":
         // Heavy body blow that staggers but keeps the fighter on their feet.
