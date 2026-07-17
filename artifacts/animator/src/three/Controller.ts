@@ -49,9 +49,15 @@ export class Controller {
   /** Transient move-speed multiplier (e.g. the Kiter's Smoke Phantom sprint). */
   private speedMult = 1;
   private bound = 15;
-  /** Half-extent of the flat-floor play box when no KCC is active. */
+  /** Half-extent of the flat-floor play box (Danger Room analytic walls / clamp). */
   private roomBound = 15;
-  /** Pluggable world collision (dungeon KCC). Null = flat Danger Room floor. */
+  /**
+   * When a CollisionProvider is set (Rapier KCC), bound is usually huge so mesh
+   * worlds aren't clipped. Danger Room still sets {@link keepRoomBounds} so the
+   * arena box + wall-run probes keep working on top of the shared KCC ground.
+   */
+  private keepRoomBounds = false;
+  /** Pluggable world collision (Rapier KCC SSOT). Null = pure Y=0 fallback. */
   private collision: CollisionProvider | null = null;
   /** Live interior obstacle circles (XZ) for Danger Room push-out collision —
    *  pillars, training dummies and opponents. Only consulted on the null
@@ -279,15 +285,20 @@ export class Controller {
   }
 
   /**
-   * Swap the world-collision backend. When a provider is set the box bounds are
-   * lifted (the dungeon KCC owns collision) and, if `spawn` is given, the body
-   * teleports there with its fall/jump state reset. Passing null restores the
-   * flat Danger Room floor + room bounds — Danger Room feel is untouched while
-   * no provider is set.
+   * Swap the world-collision backend (fleet SSOT: Rapier KCC from
+   * `@workspace/grudge-physics`). When a provider is set, mesh worlds lift the
+   * box clamp; Danger Room passes `keepRoomBounds: true` so arena walls + circle
+   * obstacles still apply on top of the shared ground KCC. Passing null restores
+   * pure Y=0 fallback (prefer re-applying the Danger Room KCC instead).
    */
-  setCollision(p: CollisionProvider | null, spawn?: THREE.Vector3) {
+  setCollision(
+    p: CollisionProvider | null,
+    spawn?: THREE.Vector3,
+    opts?: { keepRoomBounds?: boolean },
+  ) {
     this.collision = p;
-    this.bound = p ? 1e5 : this.roomBound;
+    this.keepRoomBounds = !!(p && opts?.keepRoomBounds);
+    this.bound = p && !this.keepRoomBounds ? 1e5 : this.roomBound;
     if (!p) this.occluders = [];
     if (spawn) {
       this.character.root.position.copy(spawn);
@@ -1108,11 +1119,11 @@ export class Controller {
       this.extVel.z *= damp;
     }
 
-    // Danger Room interior collision: push the body out of static props (corner
-    // pillars, training dummies) and live opponents so you can't walk through
-    // them. The dungeon/arena run a Rapier KCC (collision provider) instead, so
-    // this XZ push-out only runs on the null path and leaves that feel intact.
-    if (!this.collision && this.obstacles) {
+    // Danger Room / arena living obstacles: XZ circle push-out for pillars and
+    // NPCs. Runs when there is no KCC, OR when keepRoomBounds (shared DR ground
+    // KCC) so bodies still can't walk through dummies. Full mesh dungeons skip
+    // this (keepRoomBounds false) — trimeshes own collision.
+    if ((!this.collision || this.keepRoomBounds) && this.obstacles) {
       const PLAYER_R = 0.35;
       const obs = this.obstacles();
       // Pass 1: radial push out of every overlapping circle (smooth slide when

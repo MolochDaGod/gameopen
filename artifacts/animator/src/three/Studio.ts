@@ -50,7 +50,11 @@ import { DungeonEnemies } from "./dungeon/DungeonEnemies";
 import { isInWaterBand, traversalModeFor } from "./dungeon/water";
 import { VoxelArena } from "./voxel/VoxelArena";
 import type { VoxelMap } from "./voxel/types";
-import { PhysicsSystem } from "./PhysicsSystem";
+import {
+  PhysicsSystem,
+  createScenePhysics,
+  type CharacterCapsuleKcc,
+} from "./PhysicsSystem";
 import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
 import {
   aoeFalloff,
@@ -89,6 +93,13 @@ import { ELEMENT_THEME } from "./arsenal/elements";
 import { staffHoverTheme } from "./arsenal/staffHover";
 import { CampBuildSystem } from "./camp/CampBuildSystem";
 import { getPlaceable } from "./camp/placeables";
+import { ForestWorld } from "./ForestWorld";
+import {
+  loadTestWorldId,
+  saveTestWorldId,
+  TEST_WORLDS,
+  type TestWorldId,
+} from "./testWorlds";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
   advanceBeamSession,
@@ -487,6 +498,12 @@ export class Studio {
   /** Guards against re-triggering the async arena load. */
   private enteringArena = false;
   private physics: PhysicsSystem | null = null;
+  /**
+   * Shared Danger Room player KCC (Rapier capsule on ground plane). Fleet SSOT
+   * from `@workspace/grudge-physics`. Restored when leaving dungeon/arena mesh
+   * collision; living NPCs stay on circle obstacles + keepRoomBounds.
+   */
+  private playerKcc: CharacterCapsuleKcc | null = null;
   /** Shared pmndrs post-processing composer over the main scene (null = direct render). */
   private postfx: MysticalComposer | null = null;
   private input: InputState;
@@ -704,6 +721,8 @@ export class Studio {
   private tabHoldArmed = false;
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
+  private forestWorld: ForestWorld | null = null;
+  private testWorldId: TestWorldId = "danger-room";
   /** Cooldown gating the kiter backstep's i-frame dodge so rapid fire can't chain
    *  the invuln window into continuous immunity (dodge re-arms every 0.6s). */
   private pistolDodgeCd = 0;
@@ -744,6 +763,7 @@ export class Studio {
   /** Harvest soft-select: world point of the node LMB selected (RMB walks to harvest). */
   private harvestSelectPos: THREE.Vector3 | null = null;
   private harvestSelectName = "";
+  private harvestSelectNodeId: string | null = null;
   /** While true, auto-walk toward harvestSelectPos then swing harvest. */
   private harvestMoveActive = false;
   /** Combat-music intensity 0..1: combat events push it up, it decays between
@@ -949,13 +969,13 @@ export class Studio {
         this.setCombatFlash(`NPC SLOT · ${hint}`, 0.7);
       },
     });
-    // Sandbox claim so gated buildings can ghost-place in Danger Room without
-    // first planting a flag (still places a real claim flag mesh at z=-6).
+    // Sandbox claim so gated buildings can ghost-place without planting first
     this.campBuild.seedSandboxClaim(new THREE.Vector3(0, 0, -6));
-    // Small island = voxel/camp production test starting ground
-    void this.campBuild.loadSmallIsland({ scale: 1 }).then((ok) => {
-      if (ok) this.setCombatFlash("ISLAND · small_island camp test", 1.2);
+    // Outdoor test worlds: danger-room | sailtest | forest-map
+    this.forestWorld = new ForestWorld(this.scene, {
+      flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
     });
+    void this.setTestWorld(loadTestWorldId());
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
     this.telegraphs = new TelegraphField(this.scene);
@@ -1138,26 +1158,42 @@ export class Studio {
   }
 
   /**
-   * Bring up the Rapier physics core (+ a solid ground plane). Async (the wasm
-   * runtime loads off-thread), so the render loop guards on `physics` being
-   * present and bails cleanly if the Studio is disposed mid-load.
+   * Bring up the fleet SSOT physics stack (@workspace/grudge-physics):
+   * Rapier world + ground plane + player capsule KCC + optional mesh-bvh.
+   * Same path every Warlords host should use (Danger Room, island, zone, …).
    */
   private async initPhysics() {
-    const physics = new PhysicsSystem();
     try {
-      await physics.init();
+      const { physics, playerKcc } = await createScenePhysics({
+        kind: "danger-room",
+        ground: true,
+        player: { x: 0, y: 0, z: 0 },
+        meshBvh: true,
+      });
+      if (this.disposed || !physics.world) {
+        physics.dispose();
+        return;
+      }
+      this.physics = physics;
+      this.playerKcc = playerKcc;
+      this.applyDangerRoomCollision();
     } catch (err) {
       console.error("[Studio] physics init failed", err);
-      return;
     }
-    if (this.disposed || !physics.world) {
-      physics.dispose();
-      return;
-    }
-    // Solid ground so the player capsule and dynamic props rest on it instead of
-    // hovering over the Danger Room's purely-visual floor plane.
-    physics.addGroundPlane(0);
-    this.physics = physics;
+  }
+
+  /**
+   * Attach / re-attach the Danger Room player KCC with arena room bounds.
+   * Call after controller recreate, exit dungeon, or physics ready.
+   */
+  private applyDangerRoomCollision(spawn?: THREE.Vector3) {
+    if (!this.controller || !this.playerKcc) return;
+    const feet =
+      spawn ??
+      this.character?.root.position.clone() ??
+      new THREE.Vector3(0, 0, 0);
+    this.playerKcc.teleportFeet(feet);
+    this.controller.setCollision(this.playerKcc, spawn, { keepRoomBounds: true });
   }
 
   /** Knock any authored arena training bags inside `radius` of `center` (melee/skill impacts). */
@@ -1321,6 +1357,8 @@ export class Studio {
       const npcs = this.targets instanceof Targets ? this.targets.obstacleCircles() : [];
       return [...this.room.obstacles, ...npcs];
     });
+    // Re-apply shared Danger Room KCC after controller recreate (character swap).
+    if (!this.inDungeon && !this.inArena) this.applyDangerRoomCollision();
     // Re-apply the camera framing (controller is rebuilt on every swap).
     this.controller.setViewMode(this.viewMode);
     this.resolveOverrides(id);
@@ -2830,36 +2868,54 @@ export class Studio {
     else this.setCombatFlash("SELECT · —", 0.3);
   }
 
-  /** Harvest LMB: soft-select node under free-aim (target or ground aim point). */
+  /** Harvest LMB: soft-select Warlords harvest node under free-aim (forest/sailtest). */
   private selectHarvestUnderCrosshair() {
-    const combat = weaponCombat(this.weaponId);
     const softCos = 0.85;
-    const name = this.targets.selectUnderAim?.(this.crosshairRay(), 24, softCos);
     const ray = this.crosshairRay();
-    // Prefer living target position; else ground plane hit ~14m along aim
+    const caster = new THREE.Raycaster(ray.origin, ray.direction, 0.2, 32);
+    // Prefer real harvest nodes (ore / flower / wood / skin)
+    const node = this.forestWorld?.pickHarvest(caster, 28) ?? null;
+    if (node) {
+      this.harvestSelectPos = node.position.clone();
+      this.harvestSelectName = `${node.kind}:${node.tool}`;
+      this.harvestSelectNodeId = node.id;
+      // Prefer matching production tool for the node
+      if (node.tool) this.activityTool = node.tool;
+      this.harvestMoveActive = false;
+      this.vfx.auraRing(
+        new THREE.Vector3(node.position.x, 0.08, node.position.z),
+        0x7ee7a8,
+        1.2,
+        0.55,
+      );
+      this.setCombatFlash(
+        `HARVEST SELECT · ${node.kind.toUpperCase()} · ${node.tool} · ×${node.remaining}`,
+        0.65,
+      );
+      return;
+    }
+    const name = this.targets.selectUnderAim?.(ray, 24, softCos);
     let pos: THREE.Vector3 | null = null;
     const t = this.targets.raycast(ray, 24, softCos);
     if (t) {
       pos = t.position.clone();
       this.harvestSelectName = name || "node";
-    } else {
-      // Intersect y=0 ground
-      if (Math.abs(ray.direction.y) > 1e-4) {
-        const dist = -ray.origin.y / ray.direction.y;
-        if (dist > 0.5 && dist < 28) {
-          pos = ray.origin.clone().addScaledVector(ray.direction, dist);
-          this.harvestSelectName = this.activityTool || "gather";
-        }
-      }
-      if (!pos) {
-        const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
-        const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
-        pos = origin.clone().addScaledVector(fwd, 4);
-        pos.y = 0;
+    } else if (Math.abs(ray.direction.y) > 1e-4) {
+      const dist = -ray.origin.y / ray.direction.y;
+      if (dist > 0.5 && dist < 28) {
+        pos = ray.origin.clone().addScaledVector(ray.direction, dist);
         this.harvestSelectName = this.activityTool || "gather";
       }
     }
+    if (!pos) {
+      const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      pos = origin.clone().addScaledVector(fwd, 4);
+      pos.y = 0;
+      this.harvestSelectName = this.activityTool || "gather";
+    }
     this.harvestSelectPos = pos;
+    this.harvestSelectNodeId = null;
     this.harvestMoveActive = false;
     this.vfx.auraRing(new THREE.Vector3(pos.x, 0.06, pos.z), 0x7ee7a8, 1.1, 0.55);
     this.setCombatFlash(`HARVEST SELECT · ${this.harvestSelectName.toUpperCase()}`, 0.55);
@@ -8835,6 +8891,18 @@ export class Studio {
     this.indicators.setOverhead(this.targets.selectedHostileHead?.() ?? null);
     this.indicators.update(dt);
     this.telegraphs.update(dt);
+    // Sailtest water / wind
+    this.forestWorld?.update(dt);
+    // Light wind assist when sailing map + character near water surface
+    if (this.testWorldId === "sailtest" && this.forestWorld?.sail && this.character && this.controller) {
+      const y = this.character.root.position.y;
+      const wy = this.forestWorld.sail.waterSurfaceY;
+      if (y < wy + 1.2) {
+        const w = this.forestWorld.sail.windVelocity(0.35);
+        this.character.root.position.x += w.x * dt;
+        this.character.root.position.z += w.z * dt;
+      }
+    }
     // Camp placeables: animation mixers, towers, traps + ghost follow
     if (this.campBuild) {
       const hostiles: THREE.Vector3[] = [];
@@ -9367,10 +9435,8 @@ export class Studio {
     this.locked = false;
     this.controller?.setLockTarget(null);
 
-    // Restore the Danger Room zone (see DANGER_ROOM_ZONE in dungeon/water.ts):
-    // null collision = room-bound clamp + Y=0 floor, no occluders, no water band,
-    // ground traversal, and the sparring population re-shown below.
-    this.controller?.setCollision(null);
+    // Restore the Danger Room zone: shared Rapier KCC + room bounds (not null).
+    // No occluders, no water band, ground traversal, sparring population re-shown.
     this.controller?.setCameraOccluders([]);
     this.controller?.clearWaterBand();
     this.character?.setTraversalMode?.("ground");
@@ -9393,8 +9459,10 @@ export class Studio {
     this.wireTargetCombatHooks();
     this.dangerTargets = null;
 
-    // Drop the player back just inside the arena, healed.
-    this.character?.root.position.set(0, 0, 4);
+    // Drop the player back just inside the arena, healed — on shared DR KCC.
+    const home = new THREE.Vector3(0, 0, 4);
+    this.character?.root.position.copy(home);
+    this.applyDangerRoomCollision(home);
     this.health = this.maxHealth;
     this.stamina = this.maxStamina;
     this.defeated = false;
@@ -9708,6 +9776,52 @@ export class Studio {
     this.setCombatFlash(`${MODE_LABEL[mode]}`, 0.7);
   }
 
+  /**
+   * Switch test map: Danger Room (combat) · Sailtest (island) · Forest Map (harvest).
+   * Persists selection; applies fog + default activity mode.
+   */
+  async setTestWorld(id: TestWorldId): Promise<boolean> {
+    const def = TEST_WORLDS[id];
+    if (!def) return false;
+    this.testWorldId = id;
+    saveTestWorldId(id);
+
+    // Do NOT load small_island under camp on sailtest — SAILTEST.glb is the dual-island mesh.
+    // Camp placeables still use seedSandboxClaim for build rights.
+
+    if (this.forestWorld) {
+      const ok = await this.forestWorld.load(def);
+      if (!ok && def.kind !== "combat") return false;
+    }
+
+    // Atmosphere: sailtest Sky/fog applied inside SailEnvironment; else fog from def
+    if (def.sailing) {
+      // SailEnvironment already set fog/background
+    } else if (def.fog) {
+      this.scene.fog = new THREE.Fog(def.fog.color, def.fog.near, def.fog.far);
+      if (this.scene.background instanceof THREE.Color) {
+        this.scene.background.setHex(def.fog.background ?? def.fog.color);
+      }
+    } else {
+      this.applyRoomAtmosphere?.(true);
+    }
+
+    if (def.defaultMode) this.setActivityMode(def.defaultMode);
+    this.setCombatFlash(
+      `MAP · ${def.name} · ${def.uuid.slice(0, 8)}… · seed ${def.seed}`,
+      1.5,
+    );
+    return true;
+  }
+
+  getTestWorldId(): TestWorldId {
+    return this.testWorldId;
+  }
+
+  getTestWorldUuid(): string {
+    return TEST_WORLDS[this.testWorldId]?.uuid ?? "";
+  }
+
   /** Open/close radial options wheel (hold Tab). */
   setRadialOpen(open: boolean) {
     this.radialOpen = open;
@@ -9755,12 +9869,31 @@ export class Studio {
     const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
     origin.y += 1;
     if (this.activityMode === "harvest") {
-      applyHarvestYield(id);
-      this.setCombatFlash(`HARVEST · ${id.toUpperCase()} · bag +yield`, 0.5);
-      this.vfx.burst(origin, 0x7ee7a8, 14, 2.2);
-      this.vfx.castAura(origin, 0x7ee7a8);
-      // Swing anim so harvest feels like mining/chopping, not a static pose.
-      this.character?.playRoleOnce?.("attack", 0.08);
+      // Prefer selected forest/sailtest harvest node (tool-matched)
+      const nodeId = this.harvestSelectNodeId;
+      const node = nodeId ? this.forestWorld?.harvestNode(nodeId) : null;
+      const tool = node?.tool || id;
+      applyHarvestYield(tool);
+      // Tool swing animation (attack role = chop/mine/gather feel)
+      const played =
+        this.character?.playRoleOnce?.("attack", 0.08) ??
+        this.character?.playClipOnce?.("attack", 0.1);
+      void played;
+      const at = this.harvestSelectPos?.clone().setY(0.5) ?? origin;
+      this.vfx.burst(at, 0x7ee7a8, 16, 2.4);
+      this.vfx.castAura(at, 0x7ee7a8);
+      if (node) {
+        this.setCombatFlash(
+          `HARVEST · ${node.kind.toUpperCase()} · ${tool} · left ${node.remaining}`,
+          0.65,
+        );
+        if (node.remaining <= 0) {
+          this.harvestSelectNodeId = null;
+          this.harvestSelectPos = null;
+        }
+      } else {
+        this.setCombatFlash(`HARVEST · ${tool.toUpperCase()} · bag +yield`, 0.5);
+      }
       return;
     }
     if (this.activityMode === "build") {

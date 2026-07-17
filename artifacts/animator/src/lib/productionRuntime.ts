@@ -12,29 +12,18 @@
  * Prefer importing these numbers over hardcoding new gravity/tick rates per game.
  */
 
-/** Fixed physics substep (Hz). Match Rapier world.timestep. */
-export const PHYSICS_HZ = 60;
-export const PHYSICS_DT = 1 / PHYSICS_HZ;
-/** Max physics substeps per render frame (prevents spiral of death). */
-export const PHYSICS_MAX_SUBSTEPS = 5;
-
-/** Default world gravity Y (m/s²). Danger Room / VoxelArena baseline. */
-export const GRAVITY_Y = -12;
-
-/** Character capsule (metres). Total height ≈ 2*radius + 2*halfHeight. */
-export const PLAYER_CAPSULE = {
-  radius: 0.35,
-  halfHeight: 0.55,
-  /** KCC skin / offset */
-  controllerOffset: 0.08,
-} as const;
-
 /**
- * Canonical fitted character height in metres (human-scale SSOT).
- * Maps, cameras, capsules, and grudge6 normalize to this.
- * 1.8 m ≈ adult human — matches arena / survival world scale.
+ * Physics constants — re-export fleet SSOT from `@workspace/grudge-physics`
+ * so every Open surface shares one capsule / tick / gravity definition.
  */
-export const PLAYER_HEIGHT_M = 1.8;
+export {
+  PHYSICS_HZ,
+  PHYSICS_DT,
+  PHYSICS_MAX_SUBSTEPS,
+  GRAVITY_Y,
+  PLAYER_CAPSULE,
+  PLAYER_HEIGHT_M,
+} from "@workspace/grudge-physics";
 
 /** Third-person camera defaults (Controller). */
 export const CAMERA = {

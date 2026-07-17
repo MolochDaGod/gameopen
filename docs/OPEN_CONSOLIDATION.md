@@ -51,7 +51,7 @@ Right control rail: **vertical scroll inside the rail only** (`overflow-x: hidde
 ## three.js practices (Open)
 
 - Engine owns `WebGLRenderer` + loop; React is HUD only.  
-- Rapier for production physics where used.  
+- **Physics SSOT:** `@workspace/grudge-physics` (Rapier 0.19 + capsule KCC + optional mesh-bvh) — see [`WARLORDS_PHYSICS_SSOT.md`](./WARLORDS_PHYSICS_SSOT.md). Same stack for Danger Room, dungeon, island, zone, instance.  
 - Character height via `fitCharacterHeight` (no 100× skinned AABB bug).  
 - Hand mounts prefer Bip001 / mixamo L/R sockets for dual weapons.
 
