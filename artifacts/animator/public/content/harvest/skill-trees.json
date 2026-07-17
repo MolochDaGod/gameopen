@@ -72,6 +72,21 @@
         { "id": "e_codex", "name": "Codex scholar", "desc": "Unlock full block filter categories.", "tier": 2, "requires": ["e_avatar"], "cost": 2 },
         { "id": "e_legend", "name": "Pathfinder", "desc": "All explorer buffs; rare map stamps.", "tier": 3, "requires": ["e_realm", "e_codex"], "cost": 4 }
       ]
+    },
+    {
+      "id": "weapon-combat",
+      "name": "Weapon combat",
+      "color": "#ff7a7a",
+      "notes": "Maps to T0 / master-weaponSkills kits (1–4). Explorer + Danger Room VFX kinds.",
+      "nodes": [
+        { "id": "w_basic", "name": "Basic attack", "desc": "LMB combo + light skill VFX (slash/bolt).", "tier": 0, "requires": [], "cost": 1 },
+        { "id": "w_combo", "name": "Combo kit", "desc": "Skill slot 1 — combo role; gap-close MM.", "tier": 1, "requires": ["w_basic"], "cost": 2 },
+        { "id": "w_special", "name": "Special kit", "desc": "Skill slot 2 — special VFX (nova/slam).", "tier": 1, "requires": ["w_basic"], "cost": 2 },
+        { "id": "w_ranged", "name": "Ranged kit", "desc": "Skill slot 3 — bolt/projectile kit.", "tier": 1, "requires": ["w_basic"], "cost": 2 },
+        { "id": "w_power", "name": "Power move", "desc": "Skill slot 4 — power dash/slam VFX.", "tier": 2, "requires": ["w_combo", "w_special"], "cost": 3 },
+        { "id": "w_parry", "name": "Parry timing", "desc": "C parry window + counter VFX.", "tier": 2, "requires": ["w_basic"], "cost": 2 },
+        { "id": "w_master", "name": "Weapon master", "desc": "All kit slots CD −15%; full T0 tree.", "tier": 3, "requires": ["w_power", "w_ranged", "w_parry"], "cost": 4 }
+      ]
     }
   ]
 }

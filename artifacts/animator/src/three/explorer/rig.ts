@@ -2,7 +2,11 @@ import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import type { CharacterLook } from "./types";
 import { SHELLS, DEFAULT_SHELL, PANEL_Z, OPENING_CENTER_Y, type ShellId } from "../LedMaskShells";
-import { applyAvatarHead, loadPlayerHeadConfig, type AvatarHeadHandle } from "../avatar/playerHead";
+import {
+  applyAvatarHead,
+  ensurePlayerHeadConfig,
+  type AvatarHeadHandle,
+} from "../avatar/playerHead";
 import { skinToneOf } from "../avatar/catalog";
 
 /** Recolourable / patternable body parts of the procedural box rig. */
@@ -151,6 +155,38 @@ export class VoxelCharacter {
     this.avatarHeadFx?.update(timeSec);
   }
 
+  /**
+   * Re-apply Avatar Edit face (e.g. after saving in Avatar Edit or importing).
+   * Safe to call multiple times; disposes prior head FX.
+   */
+  refreshAvatarHead(): boolean {
+    if (!this.headMesh) return false;
+    this.avatarHeadFx?.dispose();
+    this.avatarHeadFx = null;
+    const cfg = ensurePlayerHeadConfig();
+    this.avatarHeadFx = applyAvatarHead(this.headMesh, cfg, 0.44);
+    for (const eye of this.eyeMeshes) eye.visible = false;
+    this.avatarSkinHex = skinToneOf(cfg);
+    this.mats.skin.color.setHex(this.avatarSkinHex);
+    return true;
+  }
+
+  /**
+   * Mine-Loader-style equipment tints: apply tier colors to armor body parts
+   * (shirt / pants / boot) so equipped loadout reads on the box explorer.
+   */
+  applyEquipmentTints(tints: {
+    shirt?: number;
+    pants?: number;
+    boot?: number;
+    hat?: number;
+  }): void {
+    if (tints.shirt != null) this.mats.shirt.color.setHex(tints.shirt);
+    if (tints.pants != null) this.mats.pants.color.setHex(tints.pants);
+    if (tints.boot != null) this.mats.boot.color.setHex(tints.boot);
+    if (tints.hat != null) this.mats.hat.color.setHex(tints.hat);
+  }
+
   dispose(): void {
     this.avatarHeadFx?.dispose();
     this.avatarHeadFx = null;
@@ -209,16 +245,15 @@ export class VoxelCharacter {
       }
       this.addHat(head, look);
 
-      // Player-authored Avatar Edit head (play-shell Explorer design system).
+      // Player-authored Avatar Edit head (play-shell / Mine-Loader Explorer design).
+      // Always ensure a face config so the head is never a blank skin cube.
       // Skipped under LED mask; optional override via look.avatarHead.
       if (look.avatarHead && look.hat !== "ledMask") {
-        const cfg = loadPlayerHeadConfig();
-        if (cfg) {
-          this.avatarHeadFx = applyAvatarHead(head, cfg, 0.44);
-          for (const eye of this.eyeMeshes) eye.visible = false;
-          this.avatarSkinHex = skinToneOf(cfg);
-          this.mats.skin.color.setHex(this.avatarSkinHex);
-        }
+        const cfg = ensurePlayerHeadConfig();
+        this.avatarHeadFx = applyAvatarHead(head, cfg, 0.44);
+        for (const eye of this.eyeMeshes) eye.visible = false;
+        this.avatarSkinHex = skinToneOf(cfg);
+        this.mats.skin.color.setHex(this.avatarSkinHex);
       }
     }
 

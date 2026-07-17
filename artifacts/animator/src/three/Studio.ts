@@ -1081,6 +1081,13 @@ export class Studio {
   /** Account / main-panel mesh_ids applied on next grudge6 spawn. */
   private pendingMeshIds: string[] | null = null;
   private lastSpawnMeshKey = "";
+  /** Mine-Loader-style body tints for procedural Explorer (tier armor). */
+  private pendingExplorerTints: {
+    shirt?: number;
+    pants?: number;
+    boot?: number;
+    hat?: number;
+  } | null = null;
 
   /**
    * Set equipment mesh_ids from fleet character (main panel SSOT).
@@ -1088,6 +1095,24 @@ export class Studio {
    */
   setEquipmentMeshIds(ids: string[] | null | undefined): void {
     this.pendingMeshIds = ids?.length ? ids.slice() : null;
+  }
+
+  /** Body armor tints for Explorer (Mine-Loader equipment visual). */
+  setExplorerEquipmentTints(
+    tints: { shirt?: number; pants?: number; boot?: number; hat?: number } | null,
+  ): void {
+    this.pendingExplorerTints = tints;
+    if (this.character instanceof ExplorerCharacter && tints) {
+      this.character.applyEquipmentTints(tints);
+    }
+  }
+
+  /** Re-apply Avatar Edit face on the live Explorer (after save / import). */
+  refreshExplorerHead(): boolean {
+    if (this.character instanceof ExplorerCharacter) {
+      return this.character.refreshAvatarHead();
+    }
+    return false;
   }
 
   private async spawnCharacter(id: string) {
@@ -1193,6 +1218,29 @@ export class Studio {
     this.skillCooldownMax = 0;
     // Characters may declare a weapon to spawn with (e.g. the Gunslinger's pistol).
     if (def.defaultWeapon) this.weaponId = def.defaultWeapon;
+
+    // Explorer: live weapon skill tree = T0 kit signatures (HUD 1–4 + VFX kinds).
+    // Ensures procedural rig always has combat skill defs even when CharacterDef
+    // signatures are static demo rows.
+    if (next instanceof ExplorerCharacter || def.procedural) {
+      const t0 = t0SignatureSkills(this.weaponId);
+      if (t0.length) {
+        def.signatureSkills = t0.map((s) => ({
+          label: s.label,
+          clip: s.clip || "attack",
+          kind: s.kind,
+          mode: s.mode,
+        }));
+        // Keep def pointer in sync for HUD/getSlotBindings
+        (next as { def: typeof def }).def = def;
+      }
+      if (this.pendingExplorerTints && next instanceof ExplorerCharacter) {
+        next.applyEquipmentTints(this.pendingExplorerTints);
+      }
+      // Ensure avatar face is painted (seeded default if never saved).
+      if (next instanceof ExplorerCharacter) next.refreshAvatarHead();
+    }
+
     this.applyWeapon(this.weaponId);
     this.applyModelYaw();
     this.onCharacterLoaded?.(id);
@@ -1346,6 +1394,18 @@ export class Studio {
     // Swap the rig's animation set (procedural Explorer maps id -> animSet clips;
     // the GLB Character has no clip-swap and ignores this).
     this.character?.setWeaponId?.(id);
+    // Explorer skill tree: rebind HUD 1–4 + VFX kinds to T0 / master-weaponSkills kit.
+    if (this.character instanceof ExplorerCharacter || this.character?.def?.procedural) {
+      const t0 = t0SignatureSkills(id);
+      if (t0.length && this.character?.def) {
+        this.character.def.signatureSkills = t0.map((s) => ({
+          label: s.label,
+          clip: s.clip || "attack",
+          kind: s.kind,
+          mode: s.mode,
+        }));
+      }
+    }
     // Show the weapon's category ready / guard pose (and draw flourish) on stance
     // entry. Procedural rig only; GLB rigs omit it and keep their own idle.
     this.character?.readyPose?.(id);

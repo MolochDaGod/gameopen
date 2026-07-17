@@ -659,6 +659,21 @@ export class ExplorerCharacter implements Avatar {
     this.animator?.character.setLedMask(shellId);
   }
 
+  /** Re-apply Avatar Edit face after save / import (in-game Explorer). */
+  refreshAvatarHead(): boolean {
+    return this.animator?.character.refreshAvatarHead() ?? false;
+  }
+
+  /** Mine-Loader-style armor tier tints on the procedural body. */
+  applyEquipmentTints(tints: {
+    shirt?: number;
+    pants?: number;
+    boot?: number;
+    hat?: number;
+  }): void {
+    this.animator?.character.applyEquipmentTints(tints);
+  }
+
   // ---- per-frame ----
 
   update(dt: number): void {

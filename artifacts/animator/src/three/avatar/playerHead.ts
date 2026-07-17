@@ -12,7 +12,7 @@
  */
 import * as THREE from "three";
 import { FACE, type Grid, cssHex } from "./pixels";
-import { sanitizeConfig, type AvatarConfig } from "./catalog";
+import { defaultConfig, sanitizeConfig, type AvatarConfig, type RaceId as AvatarRaceId } from "./catalog";
 import { composeHead, composeTalkFrames, type FaceName } from "./composeHead";
 import { createHairBoxMaterial, createHairFx, type HairBoxMaterial } from "./hairStrands";
 import { createHairMotionRig } from "./hairMotion";
@@ -35,10 +35,27 @@ export function loadPlayerHeadConfig(): AvatarConfig | null {
   }
 }
 
+/**
+ * Head config for in-game Explorer face. If the player never saved Avatar Edit,
+ * seed a race-default head so the cube always has a real painted face (Mine-Loader
+ * / play-shell parity) rather than a blank skin block.
+ */
+export function ensurePlayerHeadConfig(race: AvatarRaceId = "human"): AvatarConfig {
+  const existing = loadPlayerHeadConfig();
+  if (existing) return existing;
+  const cfg = defaultConfig(race);
+  savePlayerHeadConfig(cfg);
+  return cfg;
+}
+
 /** Persist the player's in-game head (best-effort). */
 export function savePlayerHeadConfig(cfg: AvatarConfig): void {
   try {
     localStorage.setItem(PLAYER_HEAD_KEY, JSON.stringify(cfg));
+    // Notify live Danger Room / Explorer to re-paint the face without full respawn.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("avatarHead:saved", { detail: cfg }));
+    }
   } catch {
     /* storage full/blocked — the editor still works, it just won't persist */
   }

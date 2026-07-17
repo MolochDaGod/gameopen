@@ -423,34 +423,71 @@ export default function App() {
       void Promise.all([
         import("./lib/characterLoadout"),
         import("./lib/characterEquipmentMesh"),
-      ]).then(([{ loadoutFromCharacter }, { resolveCharacterEquipmentVisual }]) => {
-        const loadout = loadoutFromCharacter(ch);
-        const avatarId = loadout.avatarId || raceAvatar;
-        setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
-        // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
-        void resolveCharacterEquipmentVisual(ch).then((vis) => {
-          const studio = studioRef.current;
-          if (!studio) return;
-          studio.setEquipmentMeshIds(vis.meshIds);
-          studio.setCharacter(avatarId);
-          console.info(
-            "[Open] account character visual",
-            ch.name,
-            vis.source,
-            vis.raceId,
-            vis.presetId,
-            `meshes=${vis.meshIds.length}`,
-            vis.gearPresetId || "",
-          );
-        });
-        // Apply saved weapons so logged-in play uses the character's gear
-        if (loadout.weaponId) {
-          setWeaponId(loadout.weaponId);
-          studioRef.current?.setWeapon(loadout.weaponId);
-        }
-        setOffHandState(loadout.offHand);
-        studioRef.current?.setOffHand(loadout.offHand);
-      });
+        import("./lib/characterPortrait"),
+      ]).then(
+        ([
+          { loadoutFromCharacter },
+          { resolveCharacterEquipmentVisual },
+          { isVoxelCharacter },
+        ]) => {
+          const loadout = loadoutFromCharacter(ch);
+          // Explorer (cube + Avatar face) when user chose explorer, voxel head, or
+          // avatarId=explorer — Mine-Loader style playable box controller path.
+          // Otherwise fleet grudge6 race kit (mesh_ids + atlas).
+          const preferExplorer =
+            loadout.avatarId === "explorer" ||
+            loadout.avatarId?.startsWith("avatar-") ||
+            isVoxelCharacter(ch);
+          const avatarId = preferExplorer ? "explorer" : loadout.avatarId || raceAvatar;
+          setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
+          // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
+          void resolveCharacterEquipmentVisual(ch).then((vis) => {
+            const studio = studioRef.current;
+            if (!studio) return;
+            if (preferExplorer) {
+              // Mine-Loader tier tints on procedural body (chest/legs/boots).
+              const tierHex: Record<string, number> = {
+                leather: 0x8a5a33,
+                wood: 0x8a6b3f,
+                iron: 0xc8ccd4,
+                gold: 0xe8c53a,
+                diamond: 0x59d6d0,
+              };
+              // Optional bag fields if present on open save
+              const bag = (ch.saveData?.open as { armorTier?: Record<string, string> }) || {};
+              const at = bag.armorTier || {};
+              studio.setExplorerEquipmentTints({
+                shirt: tierHex[at.chest || "iron"] ?? tierHex.iron,
+                pants: tierHex[at.legs || "iron"] ?? tierHex.iron,
+                boot: tierHex[at.boots || "leather"] ?? tierHex.leather,
+              });
+              studio.setEquipmentMeshIds(null);
+              studio.setCharacter("explorer");
+              studio.refreshExplorerHead();
+            } else {
+              studio.setEquipmentMeshIds(vis.meshIds);
+              studio.setCharacter(avatarId);
+            }
+            console.info(
+              "[Open] account character visual",
+              ch.name,
+              preferExplorer ? "explorer+avatarFace" : vis.source,
+              vis.raceId,
+              vis.presetId,
+              preferExplorer ? "procedural" : `meshes=${vis.meshIds.length}`,
+              vis.gearPresetId || "",
+            );
+          });
+          // Apply saved weapons so logged-in play uses the character's gear
+          // (Explorer mounts real GLB weapons + T0 skill tree / VFX).
+          if (loadout.weaponId) {
+            setWeaponId(loadout.weaponId);
+            studioRef.current?.setWeapon(loadout.weaponId);
+          }
+          setOffHandState(loadout.offHand);
+          studioRef.current?.setOffHand(loadout.offHand);
+        },
+      );
     };
     applyAvatarAndLoadout();
     return gameSession.subscribe(applyAvatarAndLoadout);
@@ -841,6 +878,15 @@ export default function App() {
   useEffect(() => {
     studioRef.current?.setTouchMode(isMobile);
   }, [isMobile]);
+
+  // Avatar Edit "Save to Character" → live Explorer face refresh (Mine-Loader parity).
+  useEffect(() => {
+    const onSaved = () => {
+      studioRef.current?.refreshExplorerHead();
+    };
+    window.addEventListener("avatarHead:saved", onSaved);
+    return () => window.removeEventListener("avatarHead:saved", onSaved);
+  }, []);
 
   const onCharacter = useCallback((id: string) => {
     setCharacterId(id);
@@ -1743,6 +1789,7 @@ export default function App() {
             onImportCharacter={(id) => {
               if (id === "explorer" || id.startsWith("avatar-")) {
                 studioRef.current?.setCharacter("explorer");
+                studioRef.current?.refreshExplorerHead();
                 setCharacterId("explorer");
               } else {
                 studioRef.current?.setCharacter(id);
@@ -1834,6 +1881,7 @@ export default function App() {
             onImportCharacter={(id) => {
               if (id === "explorer" || id.startsWith("avatar-")) {
                 studioRef.current?.setCharacter("explorer");
+                studioRef.current?.refreshExplorerHead();
                 setCharacterId("explorer");
               } else {
                 studioRef.current?.setCharacter(id);
