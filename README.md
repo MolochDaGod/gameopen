@@ -130,6 +130,7 @@ See **[docs/ASSET_PRODUCTION_PIPELINE.md](docs/ASSET_PRODUCTION_PIPELINE.md)**.
 | [CHARACTER_MESH_DELIVERY.md](docs/CHARACTER_MESH_DELIVERY.md) | Cloudflare R2 mesh/atlas/skeleton/anims |
 | [GAMEPLAY_LOAD_STACK.md](docs/GAMEPLAY_LOAD_STACK.md) | Anims, controller, skills, panel, HUD boot |
 | [CANONICAL_DATA_LAYER.md](docs/CANONICAL_DATA_LAYER.md) | Railway / info / R2 / D1 / worlds SSOT |
+| [DANGER_ROOM_UX_CONSOLIDATION.md](docs/DANGER_ROOM_UX_CONSOLIDATION.md) | One Danger Room, HUD, equip, grudge6 hands |
 | [MINE_LOADER_SSOT.md](docs/MINE_LOADER_SSOT.md) | World editor SSOT, physics, lobby promote |
 | [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
 | [OPEN_CONSOLIDATION.md](docs/OPEN_CONSOLIDATION.md) | threejs-rapier → Open |

@@ -49,7 +49,7 @@ Controller drives **Avatar.root** only — never scale the kit after height fit.
 
 ## Scriptable skills (weapon skills)
 
-Catalog SSOT: `objectstore…/master-weaponSkills.json` (v3.1.x).
+Catalog SSOT: `info.grudge-studio.com/api/v1/master-weaponSkills.json` (v3.1.x; multi-host via `fleetSsot`).
 
 | Slot | uMMORPG | Web hotbar |
 |------|---------|------------|

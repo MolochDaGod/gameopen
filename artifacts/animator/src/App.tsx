@@ -413,8 +413,10 @@ export default function App() {
   }, [mode]);
   const [characterId, setCharacterId] = useState("explorer");
   // Drive avatar + equipment from signed-in fleet character (GrudaChain / Railway).
-  // Production path: race kit + atlas texture + mesh_ids from account equipment /
-  // ObjectStore gear_presets (main panel SSOT) — not untextured catalog GLBs.
+  // Production path: race kit + atlas + mesh_ids (uMMORPG main panel) — not catalog GLBs.
+  // IMPORTANT: re-apply when Studio mounts (danger/play) — loadout often resolves
+  // before studioRef exists; that race caused wrong mesh/scale/equip.
+  const applyFleetLoadoutRef = useRef<() => void>(() => undefined);
   useEffect(() => {
     const applyAvatarAndLoadout = () => {
       const ch = gameSession.selectedCharacter();
@@ -443,7 +445,11 @@ export default function App() {
           // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
           void resolveCharacterEquipmentVisual(ch).then((vis) => {
             const studio = studioRef.current;
-            if (!studio) return;
+            if (!studio) {
+              // Studio not mounted yet — characterId/weapon state still updated;
+              // danger/play mount effect will re-call applyFleetLoadoutRef.
+              return;
+            }
             if (preferExplorer) {
               // Mine-Loader tier tints on procedural body (chest/legs/boots).
               const tierHex: Record<string, number> = {
@@ -465,6 +471,7 @@ export default function App() {
               studio.setCharacter("explorer");
               studio.refreshExplorerHead();
             } else {
+              // Class gear preset + account mesh_ids → Toon RTS kit visibility
               studio.setEquipmentMeshIds(vis.meshIds);
               studio.setCharacter(avatarId);
             }
@@ -479,7 +486,7 @@ export default function App() {
             );
           });
           // Apply saved weapons so logged-in play uses the character's gear
-          // (Explorer mounts real GLB weapons + T0 skill tree / VFX).
+          // (Explorer mounts arsenal GLB; grudge6 uses kit handheld meshes).
           if (loadout.weaponId) {
             setWeaponId(loadout.weaponId);
             studioRef.current?.setWeapon(loadout.weaponId);
@@ -489,6 +496,7 @@ export default function App() {
         },
       );
     };
+    applyFleetLoadoutRef.current = applyAvatarAndLoadout;
     applyAvatarAndLoadout();
     return gameSession.subscribe(applyAvatarAndLoadout);
   }, []);
@@ -637,6 +645,8 @@ export default function App() {
       studio.setTouchMode(isMobile);
       // Hand the live relay client to the engine for multiplayer rooms.
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
+      // Re-apply fleet mesh_ids / weapon after Studio exists (fixes race with loadout).
+      applyFleetLoadoutRef.current();
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start renderer", err);
@@ -675,6 +685,7 @@ export default function App() {
       studio.setTimeScale(timeScale);
       studioRef.current = studio;
       studio.setTouchMode(isMobile);
+      applyFleetLoadoutRef.current();
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start play session", err);

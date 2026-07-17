@@ -1422,6 +1422,19 @@ export class Studio {
     if (!character || !rightHand || !leftHand) return;
     if (getCharacter(this.characterId).weaponless) return; // martial artist: no weapon
 
+    // uMMORPG / grudge6 kit path: handheld weapons already live as child meshes
+    // on the race FBX (mesh_ids / gear preset). Mounting a second arsenal GLB
+    // doubles weapons and breaks scale. Prefer kit mesh; external GLB only when
+    // kit has no weapon pieces (Explorer / catalog GLB heroes).
+    const kitMeshes =
+      this.pendingMeshIds ||
+      (character instanceof GrudgeAvatar ? character.getMeshIds() : null) ||
+      [];
+    if (kitMeshes.some((n) => /weapon|sword|axe|bow|staff|spear|dagger|hammer|mace|shield|quiver/i.test(n))) {
+      this.applyOffHand();
+      return;
+    }
+
     const def = getWeapon(id);
     const mounted = await mountWeaponModel(def, rightHand, leftHand);
     // Discard if a newer weapon/character selection superseded this load.
@@ -1457,6 +1470,14 @@ export class Studio {
     if (getCharacter(this.characterId).weaponless) return; // martial artist: bare hands only
     const id = this.offHandId;
     if (!id || !offHandEligible(this.weaponId)) return;
+    // Kit already shows shield / offhand via mesh_ids — don't double-mount.
+    const kitMeshes =
+      this.pendingMeshIds ||
+      (character instanceof GrudgeAvatar ? character.getMeshIds() : null) ||
+      [];
+    if (kitMeshes.some((n) => /shield|xtra|quiver|offhand|l_hand/i.test(n))) {
+      return;
+    }
     const mounted = await mountWeaponModel(getWeapon(id), rightHand, leftHand);
     if (this.disposed || token !== this.offHandToken || this.character !== character) {
       unmountWeapon(mounted);
