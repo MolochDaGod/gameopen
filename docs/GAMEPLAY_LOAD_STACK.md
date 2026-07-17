@@ -100,13 +100,15 @@ If any of **4b–4e** fails, show a **load error strip** with retry — do not d
 
 | Need | Implementation | Gate |
 |------|----------------|------|
-| Vitals | HP / stamina / resource bars | update every frame via snapshot |
-| Action bar | LMB · F · 1–4 · R · block hint | icons + CD masks |
-| Target | soft/hard target frame | name + HP if selected |
+| Vitals | UnitFrame HP / SP (+ poise) | update via HudSnapshot |
+| Portrait | `hudPortrait` / account avatarUrl | ring shows face |
+| 6+6 wings | **`hud/quickActions.ts` SSOT** | LMB F 1–4 + X C R V J H |
+| Target | UnitFrame hostile when locked | name + HP |
 | Mode | Combat / Harvest / Build badge | Q cycle visible |
-| Feedback | damage numbers / hitstop / toasts | readable, not spam |
+| Feedback | combat flash / hitstop | readable, not spam |
 
-**Code:** `Hud.tsx`, `HudSnapshot` in `types.ts`, Studio `onHud`.
+**Code:** `Hud.tsx`, `UnitFrame`, `quickActions.ts`, `HudSnapshot` · Studio `onHud`.  
+**Consolidation map:** [SYSTEMS_HUD_UX_CONSOLIDATION.md](./SYSTEMS_HUD_UX_CONSOLIDATION.md).
 
 ---
 

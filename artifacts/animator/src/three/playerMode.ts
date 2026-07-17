@@ -33,7 +33,8 @@ export const MODE_COLOR: Record<PlayerActivityMode, string> = {
 };
 
 export const MODE_BLURB: Record<PlayerActivityMode, string> = {
-  combat: "Fight · skills · parry · dodge (X)",
+  // Keys match hud/quickActions.ts SSOT (Q mode, C parry, X dodge).
+  combat: "Fight · skills · C parry · X dodge · Q cycle mode",
   harvest: "Gather · mine · chop · farm · fish · P production",
   build: "Place · walls · stations · demolish · P production",
 };
