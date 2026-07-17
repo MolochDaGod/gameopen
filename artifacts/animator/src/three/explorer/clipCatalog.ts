@@ -264,8 +264,11 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       comboHit1: "animations/combo/melee-combo-1-hit1",
       comboHit2: "animations/combo/melee-combo-1-hit2",
       comboHit3: "animations/combo/melee-combo-1-hit3",
-      // The class special is now a sword-and-shield spell-casting flourish.
-      skill: "animations/sword/sword-and-shield-casting",
+      // Sword + off-hand dagger kit: Dual Weapon Combo is the F / skill flourish
+      // (Documents Dual Weapon Combo.fbx → animations/knife/dual-weapon-combo).
+      skill: "animations/knife/dual-weapon-combo",
+      // Shared dual-wield key (aliases skill for overrides / skill bar).
+      dualWeaponCombo: "animations/knife/dual-weapon-combo",
       blockStart: "animations/sword/sword-and-shield-block",
       blockIdle: "animations/sword/sword-and-shield-block-idle",
       draw: "animations/sword/draw-sword-1",
@@ -281,7 +284,7 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       turnR: "animations/sword/sword-and-shield-turn-2",
     },
     // USER-DIRECTED: the 3-hit melee-combo-1 (one sliced hit per click) now caps
-    // with a committed inward-slash finisher (attack4) for a 4-hit chain.
+    // with dual-weapon flurry skill on F; LMB chain still ends with inward slash.
     combo: ["comboHit1", "comboHit2", "comboHit3", "attack4"],
     strafe: false,
   },
@@ -317,8 +320,9 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       attack3: "animations/greatsword/great-sword-slash-3",
       attack4: "animations/greatsword/great-sword-slash-4",
       attack5: "animations/greatsword/great-sword-slash-5",
-      // The class special is a sweeping high-spin AOE swing.
-      skill: "animations/greatsword/great-sword-high-spin-attack",
+      // 2H skill: Dual Weapon Combo flurry (shared dual-wield bake) as weapon skill.
+      skill: "animations/knife/dual-weapon-combo",
+      dualWeaponCombo: "animations/knife/dual-weapon-combo",
       // Lunging dash-attack covers ground (slide attack from the sword pack).
       // USER-DIRECTED: this lunging slide ALSO opens the combo chain (see `combo`).
       dashAttack: "animations/sword/great-sword-slide-attack",
@@ -381,8 +385,10 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       // parry-react flourish are weapon-independent (see Studio + sparring).
       blockStart: "animations/bow/standing-block",
       blockIdle: "animations/bow/standing-block",
-      // Dedicated dual-blade flurry special (was borrowing the sword slash).
+      // Dual daggers: Dual Weapon Combo is the F skill + combo finisher.
+      // Source: Documents/Dual Weapon Combo.fbx → animations/knife/dual-weapon-combo.
       skill: "animations/knife/dual-weapon-combo",
+      dualWeaponCombo: "animations/knife/dual-weapon-combo",
       dashAttack: "animations/knife/stabbing",
       // Straight main-hand thrust (dash-stab); same clip as the dagger jab.
       stab: "animations/knife/stabbing",
@@ -394,9 +400,8 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       death: "animations/bow/standing-death-forward-01",
       hit: "animations/bow/standing-react-small-from-front",
     },
-    // USER-DIRECTED: the 3-hit melee-combo-1, one sliced hit per click (same as
-    // the sword). The old attack-based dagger chain is retired (kept as actions).
-    combo: ["comboHit1", "comboHit2", "comboHit3"],
+    // 3-hit melee-combo-1 then dual-weapon flurry finisher (skill clip).
+    combo: ["comboHit1", "comboHit2", "comboHit3", "skill"],
     strafe: false,
   },
 
@@ -538,9 +543,9 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       attack1: "animations/greataxe/great-axe-combo",
       attack2: "animations/greatsword/heavy-weapon-swing",
       attack3: "animations/sword/two-hand-sword-combo",
-      // Signature special is now a running leap attack (new batch, 2nd use) — a
-      // committed forward-leaping cleave that covers ground.
-      skill: "animations/extra/run-jump-attack",
+      // 2H skill: Dual Weapon Combo (shared dual-wield flurry bake).
+      skill: "animations/knife/dual-weapon-combo",
+      dualWeaponCombo: "animations/knife/dual-weapon-combo",
       dashAttack: "animations/sword/great-sword-slide-attack",
       stab: "animations/greatsword/great-sword-jump-attack",
       blockStart: "animations/greatsword/great-sword-blocking-2",
@@ -572,8 +577,9 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       attack1: "animations/greatsword/heavy-weapon-swing",
       attack2: "animations/greatsword/great-sword-slash-2",
       attack3: "animations/greatsword/great-sword-jump-attack",
-      // Whirling maul sweep special.
-      skill: "animations/greatsword/great-sword-high-spin-attack",
+      // 2H skill: Dual Weapon Combo flurry.
+      skill: "animations/knife/dual-weapon-combo",
+      dualWeaponCombo: "animations/knife/dual-weapon-combo",
       dashAttack: "animations/sword/great-sword-slide-attack",
       stab: "animations/greatsword/great-sword-jump-attack",
       blockStart: "animations/greatsword/great-sword-blocking-2",
@@ -785,6 +791,8 @@ export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   // Traversal transitions (mode exits): root-motion drives the body in lockstep.
   // Wall-run uses setTraversalMode("climb") → TRAVERSAL_SETS (climbing-up-wall).
   mantle: "animations/climb/climbing-to-top",
+  // Dual Weapon Combo — fallback for kits that don't override skill.
+  dualWeaponCombo: "animations/knife/dual-weapon-combo",
   swimExit: "animations/swim/swimming-to-edge",
   // Farming verbs.
   harvest: "animations/farming/dig-and-plant-seeds",

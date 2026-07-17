@@ -835,9 +835,7 @@ export class Studio {
         return;
       }
       e.preventDefault();
-      // Always snap free-aim crosshair onto the centre dot
-      this.snapAimToCenter();
-      // Harvest: RMB = move to selected node and harvest it
+      // Harvest: RMB = move to selected node and harvest it (not focus toggle)
       if (this.activityMode === "harvest") {
         this.beginHarvestMove();
         return;
@@ -848,12 +846,14 @@ export class Studio {
         this.setCombatFlash("Place cancelled", 0.4);
         return;
       }
-      // Combat: toggle hard FOCUS ↔ soft lock (character aims at crosshair either way)
+      // Combat: sticky toggle hard FOCUS ↔ soft lock/select.
+      // Not a one-shot "snap aim to middle" — focus stays until toggled off.
+      // Free-aim only recenters when ENTERING focus (soft lock keeps aim free).
       this.toggleFocusMode();
     }
   };
   private onMouseUp = (_e: MouseEvent) => {
-    // Focus is toggle (not hold). Block is C parry / E forcefield — not RMB.
+    // Focus is sticky toggle (not hold). Block is C parry / E forcefield — not RMB.
   };
   private onContextMenu = (e: MouseEvent) => e.preventDefault();
   private onResize = () => this.resize();
@@ -935,10 +935,27 @@ export class Studio {
     this.campBuild = new CampBuildSystem(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.8),
       getPlayerPos: () => this.character?.root.position.clone() ?? new THREE.Vector3(),
+      onAreaDamage: (pos, _radius, damage, kind) => {
+        // Visual + flash; towers/traps apply pressure cue (full dummy HP hook later)
+        this.vfx.burst(pos.clone().setY(pos.y + 0.6), kind === "tower" ? 0xffaa44 : 0xff5555, 14, 2.4);
+        this.vfx.impact(pos.clone().setY(pos.y + 0.4), kind === "tower" ? 0xffcc66 : 0xff6666, 1.1);
+        this.setCombatFlash(
+          kind === "tower" ? `TOWER HIT · ${damage}` : `TRAP · ${damage}`,
+          0.35,
+        );
+      },
+      onSpawnNpc: (at, hint) => {
+        this.vfx.auraRing(at.clone().setY(0.05), 0x6ee7b7, 1.2, 0.6);
+        this.setCombatFlash(`NPC SLOT · ${hint}`, 0.7);
+      },
     });
     // Sandbox claim so gated buildings can ghost-place in Danger Room without
     // first planting a flag (still places a real claim flag mesh at z=-6).
     this.campBuild.seedSandboxClaim(new THREE.Vector3(0, 0, -6));
+    // Small island = voxel/camp production test starting ground
+    void this.campBuild.loadSmallIsland({ scale: 1 }).then((ok) => {
+      if (ok) this.setCombatFlash("ISLAND · small_island camp test", 1.2);
+    });
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
     this.telegraphs = new TelegraphField(this.scene);
@@ -2752,10 +2769,10 @@ export class Studio {
   }
 
   /**
-   * RMB (after snap): hard FOCUS ↔ soft lock.
-   * FOCUS = face locked target, A/D strafe, LMB attack/combo (tight free-aim).
+   * RMB sticky toggle: hard FOCUS ↔ soft lock/select.
+   * FOCUS = face locked target (soft-lock retention), A/D strafe, LMB attack/combo.
    * Soft lock = selection outline, LMB selects, free walk (wide free-aim).
-   * Both modes aim attacks / ranged VFX at the free-aim crosshair.
+   * Does NOT clear on RMB release — toggles only. Not a one-shot middle snap.
    */
   private toggleFocusMode() {
     if (this.defeated) return;
@@ -2775,13 +2792,13 @@ export class Studio {
       }
     }
     if (!lp) lp = this.targets.acquireNearest(p);
+    // Entering focus: optional aim recenter once (sticky mode from here)
+    this.snapAimToCenter();
     if (!lp) {
-      this.setCombatFlash("NO TARGET", 0.55);
-      // Still allow hard-aim style (tight reticle) without a lock target
+      // Focus without target = free-aim combat mode (still sticky until RMB again)
       this.locked = true;
       this.controller?.setLockTarget(null);
-      this.snapAimToCenter();
-      this.setCombatFlash("FOCUS · AIM", 0.4);
+      this.setCombatFlash("FOCUS · AIM (toggle)", 0.55);
       return;
     }
     this.locked = true;
@@ -2790,14 +2807,14 @@ export class Studio {
     const max = AIM_HARD_MAX;
     this.aimNdcX = THREE.MathUtils.clamp(this.aimNdcX, -max, max);
     this.aimNdcY = THREE.MathUtils.clamp(this.aimNdcY, -max, max);
-    this.setCombatFlash("FOCUS", 0.4);
+    this.setCombatFlash("FOCUS LOCK (toggle)", 0.45);
   }
 
   private exitHardFocus() {
     this.locked = false;
     this.controller?.setLockTarget(null);
-    // Keep red outline selection (soft lock) if any
-    this.setCombatFlash("SOFT LOCK", 0.4);
+    // Keep soft-lock selection outline; free-aim stays where player left it
+    this.setCombatFlash("SOFT LOCK / SELECT", 0.45);
   }
 
   /**
@@ -4496,7 +4513,12 @@ export class Studio {
     ) {
       return this.doStaffBeamCast();
     }
+    // Dual Weapon Combo F-skill — sword+dagger, dual daggers, 2H melee skills.
+    if (!override && this.canUseDualWeaponCombo(this.weaponId)) {
+      return this.doDualWeaponComboSkill();
+    }
     if (override && this.character.hasClip(override)) this.character.playClipOnce(override, 0.1);
+    else if (this.character.hasClip("skill")) this.character.playClipOnce("skill", 0.1);
     else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.1);
     // Data-driven path: the generic weapon F-skill is a pure-VFX instant cast,
     // routed through the orchestrator (shared lifecycle + cancelAll teardown).
@@ -4507,6 +4529,87 @@ export class Studio {
     this.skillCooldownMax = w.cooldown;
     this.skillCooldown = w.cooldown;
     this.stamina = Math.max(0, this.stamina - 15);
+    return true;
+  }
+
+  /**
+   * Weapons that play Dual Weapon Combo.fbx as F skill:
+   * dual daggers, sword+dagger, and two-handed melee skills.
+   */
+  private canUseDualWeaponCombo(weaponId: WeaponId): boolean {
+    return (
+      weaponId === "dagger" ||
+      weaponId === "sword" ||
+      weaponId === "greatsword" ||
+      weaponId === "greataxe" ||
+      weaponId === "hammer2h" ||
+      isHeavy2hWeapon(weaponId)
+    );
+  }
+
+  /**
+   * F-skill: Dual Weapon Combo flurry — plays dualWeaponCombo/skill clip with
+   * multi-hit slash VFX + blast. Used by daggers, sword+dagger, and 2H kits.
+   */
+  private doDualWeaponComboSkill(): boolean {
+    if (!this.character || !this.controller) return false;
+    if (this.skillCooldown > 0) return false;
+    const combat = weaponCombat(this.weaponId);
+    const origin = this.character.root.position.clone();
+    const fwd = this.controller.forward();
+    const target = this.pickCrosshairTarget(combat);
+    let dir = fwd.clone();
+    if (target) {
+      const p = this.toTargetPlanar(target);
+      dir = p.dir.clone();
+    }
+    this.controller.faceToward(dir, 0.22);
+
+    // Prefer dualWeaponCombo → skill → attack
+    let dur = 0;
+    if (this.character.hasClip("dualWeaponCombo")) {
+      dur = this.character.playClipOnce("dualWeaponCombo", 0.1);
+    } else if (this.character.hasClip("skill")) {
+      dur = this.character.playClipOnce("skill", 0.1);
+    } else if (this.character.hasRole("attack")) {
+      dur = this.character.playRoleOnce("attack", 0.1);
+    }
+    if (dur <= 0) dur = 0.85;
+
+    const color = 0xffd080;
+    this.vfx.afterimage(this.character.root, origin, dir, 1.4, color, 6, 0.28);
+    this.vfx.dashStreak(
+      origin.clone().setY(0.2),
+      origin.clone().addScaledVector(dir, 1.6).setY(0.2),
+      color,
+    );
+    // Short advance into the flurry
+    this.controller.dash(dir, 1.35, Math.min(0.35, dur * 0.4), 0.05, 0.45);
+
+    // Multi-hit along the combo (3 ticks)
+    const hits = 3;
+    const dmg = Math.round(18 + combat.intensity * 0.35);
+    for (let i = 0; i < hits; i++) {
+      const t = dur * (0.28 + i * 0.22);
+      this.schedule(t, () => {
+        if (this.disposed || !this.character) return;
+        const pos = this.character.root.position.clone().addScaledVector(dir, 1.1);
+        pos.y += 1.0;
+        this.vfx.slashArc(pos, this.character.root.quaternion, color);
+        this.vfx.impact(pos, color, 1.4);
+        this.targets.blast(pos, 1.8, dmg, this.params.skillForce * 0.9, this.sparCtx);
+        if (i === hits - 1) {
+          this.vfx.shockwave(new THREE.Vector3(pos.x, 0.05, pos.z), color, 2.2, 0.4);
+          this.targets.shieldBreak(pos, 2.0, 1.4);
+        }
+      });
+    }
+    this.sfx?.play("whooshHeavy", origin, { volume: 0.75, rate: 1.05 });
+    this.setCombatFlash("DUAL WEAPON COMBO", 0.55);
+    this.skillCooldownMax = Math.max(getWeapon(this.weaponId).cooldown, 1.4);
+    this.skillCooldown = this.skillCooldownMax;
+    this.stamina = Math.max(0, this.stamina - 16);
+    this.bumpMusicHeat(0.35);
     return true;
   }
 
@@ -8682,7 +8785,19 @@ export class Studio {
     this.indicators.setOverhead(this.targets.selectedHostileHead?.() ?? null);
     this.indicators.update(dt);
     this.telegraphs.update(dt);
-    // Camp placeable ghost follows aim / forward place point
+    // Camp placeables: animation mixers, towers, traps + ghost follow
+    if (this.campBuild) {
+      const hostiles: THREE.Vector3[] = [];
+      try {
+        for (const f of this.targets.fighterViews()) {
+          if (f.dead || f.faction !== "enemy") continue;
+          hostiles.push(f.group.position.clone());
+        }
+      } catch {
+        /* ignore */
+      }
+      this.campBuild.update(dt, this.character?.root.position, hostiles);
+    }
     if (this.campBuild?.isGhostActive && this.character) {
       const origin = this.character.root.position.clone();
       origin.y = 0;
@@ -9609,10 +9724,16 @@ export class Studio {
         barracks: "barracks",
         archery: "archery",
         station: "miner_forge",
-        door: "gate",
+        door: "door",
+        gate: "gate",
         farm_plot: "farm_plot",
         floor: "farm_plot",
         ramp: "watchtower",
+        tower: "watchtower",
+        trap: "bear_trap",
+        bench: "work_bench",
+        forge: "miner_forge",
+        chest: "storage_chest",
       };
       if (this.campBuild?.isGhostActive) {
         const s = this.campBuild.commitPlace();
@@ -9702,6 +9823,11 @@ export class Studio {
       }
     }
     else if (code === "KeyE") {
+      // Camp interact first: doors / gates / workbenches near player
+      const pp = this.character?.root.position;
+      if (pp && this.campBuild?.tryInteract(pp)) {
+        return;
+      }
       // Harvest skin channel when in harvest mode; forcefield in combat.
       if (this.activityMode === "harvest") this.runActivityTool("skin");
       else this.forceFieldGuard();

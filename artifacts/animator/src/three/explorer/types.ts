@@ -60,6 +60,11 @@ export type ActionKey =
   /** Leaping/airborne overhead — two-handed downward swing used as an aerial finisher. */
   | "jumpAttack"
   | "skill"
+  /**
+   * Dual-wield flurry (Dual Weapon Combo.fbx) — sword+dagger, dual daggers,
+   * and 2H weapon F-skills.
+   */
+  | "dualWeaponCombo"
   | "blockStart"
   | "blockIdle"
   // --- Full block/parry defense set (class-independent guarded-hit clips). ---

@@ -89,15 +89,15 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Unarmed Ranged", "bolt", 55],
     ["power", "Unarmed Power", "slam", 100, "dash"],
   ]),
-  sword: kit("sword", "Sword and Shield", [
+  sword: kit("sword", "Sword and Knife", [
     ["combo", "Sword Combo", "slash", 70],
-    ["special", "Shield Bash", "slam", 85],
+    ["special", "Dual Weapon Combo", "slash", 85],
     ["ranged", "Sword Throw", "bolt", 55],
     ["power", "Blade Storm", "nova", 100],
   ]),
   greatsword: kit("greatsword", "Great Sword", [
     ["combo", "Greatsword Combo", "slash", 70],
-    ["special", "Whirlwind", "nova", 85],
+    ["special", "Dual Weapon Combo", "slash", 85],
     ["ranged", "Shockwave", "slam", 55],
     ["power", "Judgement", "slam", 100, "dash"],
   ]),
@@ -109,13 +109,13 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   ]),
   greataxe: kit("greataxe", "Battle Axe", [
     ["combo", "Greataxe Combo", "slash", 70],
-    ["special", "Carnage Spin", "nova", 85],
+    ["special", "Dual Weapon Combo", "slash", 85],
     ["ranged", "Cleave Wave", "slash", 55],
     ["power", "Execute", "slam", 100, "dash"],
   ]),
   dagger: kit("dagger", "Daggers", [
     ["combo", "Dagger Combo", "slash", 70],
-    ["special", "Fan of Knives", "nova", 85],
+    ["special", "Dual Weapon Combo", "slash", 85],
     ["ranged", "Throwing Knives", "bolt", 55],
     ["power", "Shadow Ambush", "slash", 100, "dash"],
   ]),
@@ -134,7 +134,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   ]),
   hammer2h: kit("hammer2h", "War Hammer", [
     ["combo", "2H Hammer Combo", "slam", 70],
-    ["special", "Quake", "slam", 85],
+    ["special", "Dual Weapon Combo", "slash", 85],
     ["ranged", "Rubble Shot", "bolt", 55],
     ["power", "Anvil Drop", "slam", 100, "dash"],
   ]),

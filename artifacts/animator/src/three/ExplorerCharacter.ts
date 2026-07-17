@@ -448,6 +448,8 @@ export class ExplorerCharacter implements Avatar {
         return a.playAction("meleeComboB");
       case "skill":
         return a.skill();
+      case "dualWeaponCombo":
+        return a.playAction("dualWeaponCombo") || a.skill();
       case "cast":
         return a.magic("castSpell");
       case "magicAttack":
