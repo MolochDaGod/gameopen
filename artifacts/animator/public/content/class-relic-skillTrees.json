@@ -1,0 +1,662 @@
+{
+  "version": "1.2.0",
+  "generated": "2026-06-05T19:55:00.000Z",
+  "updated": "2026-07-17",
+  "description": "Class relic skill-tree rules for Grudge Warlords. One relic / book per class. Freeform gear still allowed; relic unlocks class systems. UI + combat should read this file.",
+  "totalRelics": 4,
+  "slotCount": 5,
+  "freeformNote": "Any race may equip any weapon/armor. Class relic grants systems (forms, spell slots, sidearm) — never hard-locks loot.",
+  "relics": [
+    {
+      "id": "WARRIOR_BATTLE_FORMS",
+      "class": "Warrior",
+      "classId": "warrior",
+      "name": "Battle Forms",
+      "subtitle": "Warbound Battle Forms",
+      "icon": "/icons/pack/weapons/Sword_54.png",
+      "summary": "Warrior identity is Battle Forms: defensive, offensive, self-healing, fear, and high-damage stances. Warriors carry weapons in both hands and may carry a shield. Larger parry, block, and stamina pools under form.",
+      "equipmentRules": [
+        "Can dual wield eligible one-handed melee weapons (main + off-hand).",
+        "Can equip a shield in the off-hand instead of a second weapon.",
+        "Can wield eligible two-handed weapons in one hand via training (fair conversion: slower recovery, normalized damage, proc bonus — not full 2H power).",
+        "Battle Forms modify pools: parry window, block chance/factor, stamina max/regen, threat, and self-heal.",
+        "Melee attacks gain natural aim assist in a short cone and directional push on hit."
+      ],
+      "battleForms": [
+        {
+          "id": "form_bulwark",
+          "name": "Bulwark Form",
+          "role": "defensive",
+          "description": "Larger block/parry windows, raised defense, stamina pool for sustained guard.",
+          "bonuses": {
+            "blockChance": 0.15,
+            "parryWindow": 0.2,
+            "maxStamina": 30,
+            "defense": 12
+          }
+        },
+        {
+          "id": "form_onslaught",
+          "name": "Onslaught Form",
+          "role": "offensive",
+          "description": "Higher damage and attack tempo; trades some defense for pressure.",
+          "bonuses": {
+            "damage": 0.2,
+            "attackSpeed": 0.1,
+            "defense": -0.05
+          }
+        },
+        {
+          "id": "form_bloodward",
+          "name": "Bloodward Form",
+          "role": "self_healing",
+          "description": "Self-healing on hit / on successful block; modest sustain.",
+          "bonuses": {
+            "lifesteal": 0.08,
+            "healOnBlock": 0.03
+          }
+        },
+        {
+          "id": "form_dread",
+          "name": "Dread Form",
+          "role": "fear",
+          "description": "Fear-causing presence; weakens nearby foes and can proc fear on heavy hits.",
+          "bonuses": {
+            "fearProc": 0.12,
+            "enemyDamageTakenNearby": 0.08
+          }
+        },
+        {
+          "id": "form_colossus",
+          "name": "Colossus Form",
+          "role": "large_damage",
+          "description": "Large damage stance — slower swings, heavy impact, shove.",
+          "bonuses": {
+            "damage": 0.35,
+            "attackSpeed": -0.1,
+            "pushForce": 0.25
+          }
+        }
+      ],
+      "actionSlots": [
+        {
+          "slot": 1,
+          "name": "Main-Hand Attack",
+          "type": "weapon",
+          "description": "Primary weapon strike based on equipped main-hand."
+        },
+        {
+          "slot": 2,
+          "name": "Off-Hand / Shield",
+          "type": "weapon",
+          "description": "Second 1H weapon strike or shield bash/block depending on off-hand equip."
+        },
+        {
+          "slot": 3,
+          "name": "Battle Form Toggle",
+          "type": "stance",
+          "description": "Cycle or select active Battle Form (Bulwark / Onslaught / Bloodward / Dread / Colossus)."
+        },
+        {
+          "slot": 4,
+          "name": "Form Signature",
+          "type": "ability",
+          "description": "Form-specific active (e.g. War Cry, Shield Wall, Fear Roar)."
+        },
+        {
+          "slot": 5,
+          "name": "Stamina Guard",
+          "type": "defensive",
+          "description": "Parry / block / hold-guard consuming the expanded stamina pool."
+        }
+      ],
+      "tiers": [
+        {
+          "tier": 1,
+          "label": "T1",
+          "nodes": [
+            {
+              "type": "sig",
+              "name": "Battle Forms",
+              "description": "Unlock form system and dual-wield / shield carrying."
+            },
+            {
+              "type": "ability",
+              "name": "Dual Wield + Shield Carry",
+              "description": "Weapons in both hands, or weapon + shield."
+            }
+          ]
+        },
+        {
+          "tier": 2,
+          "label": "T2",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Bulwark Form",
+              "description": "Defensive form — larger parry/block and stamina."
+            },
+            {
+              "type": "ability",
+              "name": "Onslaught Form",
+              "description": "Offensive form — damage and tempo."
+            }
+          ]
+        },
+        {
+          "tier": 3,
+          "label": "T3",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Bloodward Form",
+              "description": "Self-healing form on hit/block."
+            },
+            {
+              "type": "ability",
+              "name": "Dread Form",
+              "description": "Fear-causing form."
+            }
+          ]
+        },
+        {
+          "tier": 4,
+          "label": "T4",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Colossus Form",
+              "description": "Large damage stance with heavy shove."
+            },
+            {
+              "type": "passive",
+              "name": "Expanded Guard Pools",
+              "description": "Baseline larger stamina, parry, and block under any form."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "RANGER_LOG",
+      "class": "Ranger",
+      "classId": "ranger",
+      "name": "Ranger's Log",
+      "subtitle": "Ranger's Log (poisons, stealth, quick swap)",
+      "icon": "/icons/pack/weapons/Bow_01.png",
+      "legacyNames": ["Nimble Fingers", "Quickfinger Talisman", "Nimble Book"],
+      "summary": "Ranger identity is the Ranger's Log: stealth (invisible), automatic poison application, and quick weapon swap from ranged non-magic into a 1H sidearm (dagger/sword/mace/axe). Sidearm slot is a half-size weapon slot to the right of the main weapon when class is Ranger; it activates when the non-magical ranged weapon is on cooldown.",
+      "equipmentRules": [
+        "Primary: non-magical ranged (bow, crossbow, gun, similar).",
+        "Sidearm slot (UI): ~50% width, to the right of the main weapon slot, visible only when class is Ranger.",
+        "Sidearm accepts one-handed melee: dagger, sword, mace, axe (not magic implements).",
+        "When ranged weapon is on cooldown (reload, ability CD, or empty chamber), Ranger Quick Swap activates the sidearm automatically or via hotkey.",
+        "Ranger's Log poison tree auto-applies poison on eligible weapon hits (ranged and sidearm).",
+        "Stealth / invisible tree from the Log grants invisibility skills and nodes.",
+        "Quick Fingers tempo: faster ranged handling; dodge/dash still benefits Ranger mobility."
+      ],
+      "sidearmSlot": {
+        "id": "ranger_sidearm",
+        "ui": {
+          "visibleWhenClass": "ranger",
+          "placement": "right_of_main_weapon",
+          "sizeScale": 0.5,
+          "label": "Sidearm"
+        },
+        "accepts": ["dagger", "sword", "1h_sword", "mace", "1h_axe", "axe"],
+        "rejects": ["staff", "wand", "tome", "bow", "crossbow", "gun", "2h"],
+        "activateWhen": [
+          "ranged_weapon_on_cooldown",
+          "ranged_reload",
+          "explicit_quick_swap_hotkey"
+        ],
+        "quickSwap": {
+          "name": "Ranger Quick Swap",
+          "description": "Enhances swap speed from non-magical ranged into sidearm; returns to ranged when ready.",
+          "swapSpeedBonus": 0.35
+        }
+      },
+      "logTrees": [
+        {
+          "id": "stealth",
+          "name": "Invisible Path",
+          "description": "Invisibility, prowl, break-from-stealth openers."
+        },
+        {
+          "id": "poison",
+          "name": "Poison Path",
+          "description": "Auto-apply poison from Ranger's Log on hits; potency and DoT nodes."
+        },
+        {
+          "id": "quick_swap",
+          "name": "Quick Swap Path",
+          "description": "Ranged ↔ sidearm tempo, sidearm damage while ranged is on CD."
+        }
+      ],
+      "actionSlots": [
+        {
+          "slot": 1,
+          "name": "Ranged Primary",
+          "type": "weapon",
+          "description": "Non-magical ranged attack."
+        },
+        {
+          "slot": 2,
+          "name": "Sidearm Strike",
+          "type": "weapon",
+          "description": "1H sidearm attack when quick-swap is active."
+        },
+        {
+          "slot": 3,
+          "name": "Stealth / Vanish",
+          "type": "ability",
+          "description": "Invisible from Ranger's Log stealth tree."
+        },
+        {
+          "slot": 4,
+          "name": "Poison Coat",
+          "type": "ability",
+          "description": "Empower or refresh Log auto-poison."
+        },
+        {
+          "slot": 5,
+          "name": "Quick Swap",
+          "type": "utility",
+          "description": "Force swap to sidearm / back to ranged."
+        }
+      ],
+      "tiers": [
+        {
+          "tier": 1,
+          "label": "T1",
+          "nodes": [
+            {
+              "type": "sig",
+              "name": "Ranger's Log",
+              "description": "Unlock Log identity: poison auto-apply foundation and sidearm slot UI."
+            },
+            {
+              "type": "ability",
+              "name": "Sidearm Slot",
+              "description": "Half-size weapon slot right of main weapon for 1H melee sidearm."
+            }
+          ]
+        },
+        {
+          "tier": 2,
+          "label": "T2",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Auto Poison",
+              "description": "Hits apply Log poison without a separate cast (potency from tree)."
+            },
+            {
+              "type": "ability",
+              "name": "Quick Swap on Ranged CD",
+              "description": "When non-magical ranged is on cooldown, sidearm activates."
+            }
+          ]
+        },
+        {
+          "tier": 3,
+          "label": "T3",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Invisible",
+              "description": "Stealth tree unlock — enter invisibility."
+            },
+            {
+              "type": "passive",
+              "name": "Swap Enhancements",
+              "description": "Faster swap and sidearm damage while ranged recovers."
+            }
+          ]
+        },
+        {
+          "tier": 4,
+          "label": "T4",
+          "nodes": [
+            {
+              "type": "passive",
+              "name": "Poison Mastery",
+              "description": "Stronger DoTs and multi-stack poison from the Log."
+            },
+            {
+              "type": "ability",
+              "name": "Ambush from Invisible",
+              "description": "Breaking stealth with sidearm or ranged applies bonus openers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MAGE_WAND",
+      "class": "Mage",
+      "classId": "mage",
+      "name": "Wand Spellbook",
+      "subtitle": "Wand · Spell Book · Elemental Craft",
+      "icon": "/icons/pack/weapons/staff_1.png",
+      "summary": "Mage identity is the Wand + Spell Book: portals, mobility, buffs, heals, and elemental Water/Fire schools with crafting benefits for those elements.",
+      "equipmentRules": [
+        "Wand (or compact staff) is the spell focus; off-hand tome/spell book holds recipes.",
+        "Spell book slots accept spell recipes: portals, mobility, buffs, heals, Fire, Water.",
+        "Slots 1–3: assignable spell recipes / class abilities.",
+        "Slot 4: Place Teleport / portal utility (anchors).",
+        "Slot 5: utility (heal, mend, conjure, slow fall).",
+        "Fire school unlocks fire crafting bonuses (smelt, cook, forge heat).",
+        "Water school unlocks water crafting/gathering bonuses (brew, alchemy, fishing assist)."
+      ],
+      "spellSchools": [
+        {
+          "id": "portal",
+          "name": "Portals",
+          "examples": ["Place Teleport", "Portal Pair", "Recall Anchor"]
+        },
+        {
+          "id": "mobility",
+          "name": "Mobility",
+          "examples": ["Blink", "Slow Fall", "Swift Current"]
+        },
+        {
+          "id": "buff",
+          "name": "Buffs",
+          "examples": ["Arcane Fortify", "Haste Sigil", "Ward"]
+        },
+        {
+          "id": "heal",
+          "name": "Heals",
+          "examples": ["Lesser Heal", "Mend", "Divine Heal", "Water Mend"]
+        },
+        {
+          "id": "fire",
+          "name": "Fire",
+          "examples": ["Fire Bolt", "Fireball", "Flame Brand"],
+          "craftingBenefits": [
+            "Faster smelt / forge heat",
+            "Campfire cook time reduction",
+            "Fire reagent yield on craft"
+          ]
+        },
+        {
+          "id": "water",
+          "name": "Water",
+          "examples": ["Water Bolt", "Tidal Pulse", "Frost-Water hybrid"],
+          "craftingBenefits": [
+            "Alchemy / brew quality",
+            "Fishing assist when Water school known",
+            "Cleanse reagents efficiency"
+          ]
+        }
+      ],
+      "actionSlots": [
+        {
+          "slot": 1,
+          "name": "Spell Book Slot I",
+          "type": "recipe-slot",
+          "accepts": ["spellRecipe", "classAbility"],
+          "examples": ["Portal", "Fire Bolt", "Lesser Heal"]
+        },
+        {
+          "slot": 2,
+          "name": "Spell Book Slot II",
+          "type": "recipe-slot",
+          "accepts": ["spellRecipe", "classAbility"],
+          "examples": ["Blink", "Water Bolt", "Mend"]
+        },
+        {
+          "slot": 3,
+          "name": "Spell Book Slot III",
+          "type": "recipe-slot",
+          "accepts": ["spellRecipe", "classAbility"],
+          "examples": ["Buff", "Fireball", "Slow Fall"]
+        },
+        {
+          "slot": 4,
+          "name": "Portal / Place Teleport",
+          "type": "fixed-utility",
+          "description": "Portal anchors and teleport placeables."
+        },
+        {
+          "slot": 5,
+          "name": "Spell Book Utility",
+          "type": "utility-slot",
+          "examples": ["Heal", "Conjure", "Element Craft Focus"]
+        }
+      ],
+      "tiers": [
+        {
+          "tier": 1,
+          "label": "T1",
+          "nodes": [
+            {
+              "type": "sig",
+              "name": "Wand Spellcraft",
+              "description": "Unlock spell book slots and wand casting."
+            },
+            {
+              "type": "ability",
+              "name": "Spell Book Slot I",
+              "description": "First recipe slot (portal / heal / elemental)."
+            }
+          ]
+        },
+        {
+          "tier": 2,
+          "label": "T2",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Fire School",
+              "description": "Fire spells + fire crafting benefits."
+            },
+            {
+              "type": "ability",
+              "name": "Water School",
+              "description": "Water spells + water/alchemy crafting benefits."
+            }
+          ]
+        },
+        {
+          "tier": 3,
+          "label": "T3",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Portals & Mobility",
+              "description": "Place teleport, blink, slow fall."
+            },
+            {
+              "type": "ability",
+              "name": "Buffs & Heals",
+              "description": "Party/self buffs and mend line."
+            }
+          ]
+        },
+        {
+          "tier": 4,
+          "label": "T4",
+          "nodes": [
+            {
+              "type": "passive",
+              "name": "Element Craft Synergy",
+              "description": "Fire/Water school knowledge improves matching crafting stations."
+            },
+            {
+              "type": "ability",
+              "name": "Full Spell Book",
+              "description": "All three recipe slots + utility slot online."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "WORGE_NATURE_GRIMOIRE",
+      "class": "Worge",
+      "classId": "worge",
+      "name": "Nature Grimoire",
+      "subtitle": "Forms · Nature spells · Root Portal · Farm assist",
+      "icon": "/icons/pack/misc/Naturecircle.png",
+      "legacyNames": ["Worge Grimoire", "Book of Secrets"],
+      "summary": "Worge identity is the Nature Grimoire: animal forms, nature spells (heals, buffs), Root Portal (sprout a travel tree to the Worge's camp for party and self), and farming assist.",
+      "defaultUnlockedForms": ["bear"],
+      "plannedClassTreeForms": ["raptor", "flight", "bird"],
+      "futureForms": [
+        "cheetah",
+        "wolf",
+        "crab",
+        "tuna",
+        "spider",
+        "rhino",
+        "horse",
+        "treant",
+        "wereowl",
+        "werebear",
+        "werewolf",
+        "frog",
+        "goat",
+        "shark",
+        "dragon"
+      ],
+      "equipmentRules": [
+        "At selection, Bear Form is unlocked (L0).",
+        "While transformed, grimoire supplies form-specific action slots 1–5.",
+        "Human form uses nature spells: heals, buffs, storm/root utility.",
+        "Root Portal: sprout a temporary tree; party and player may enter to return to the casting Worge's camp (home island / warcamp bind).",
+        "Farming assist: grimoire nodes speed crop tend, gather, and nature-node yield near the Worge."
+      ],
+      "natureSpells": [
+        {
+          "id": "nature_heal",
+          "name": "Nature's Grasp / Soothing Rain",
+          "role": "heal"
+        },
+        {
+          "id": "nature_buff",
+          "name": "Bark Skin / Wild Growth",
+          "role": "buff"
+        },
+        {
+          "id": "root_portal",
+          "name": "Root Portal",
+          "role": "portal",
+          "description": "Quickly sprouts a travel tree. Anyone in the party (and the Worge) who enters is returned to the Worge's camp bind point. Duration and charges scale with grimoire nodes.",
+          "placeable": "root_portal_tree",
+          "destination": "worge_camp",
+          "partyUsable": true,
+          "sproutTimeSec": 2.5
+        },
+        {
+          "id": "farm_assist",
+          "name": "Grove Husbandry",
+          "role": "farming",
+          "description": "Assist farming: faster tend/harvest on crops and nature nodes while Grimoire farming nodes are unlocked."
+        }
+      ],
+      "actionSlots": [
+        {
+          "slot": 1,
+          "name": "Shift+1 Tank Form",
+          "type": "form-slot",
+          "defaultForm": "bear",
+          "description": "Tank form. Starts with Bear."
+        },
+        {
+          "slot": 2,
+          "name": "Nature Spell / Form Utility",
+          "type": "form-ability",
+          "description": "Heal, buff, or form utility."
+        },
+        {
+          "slot": 3,
+          "name": "Shift+3 DPS Form",
+          "type": "form-slot",
+          "plannedForm": "raptor",
+          "description": "DPS/stealth form (Raptor via tree)."
+        },
+        {
+          "slot": 4,
+          "name": "Root Portal",
+          "type": "placeable",
+          "description": "Sprout camp-return tree for party."
+        },
+        {
+          "slot": 5,
+          "name": "Shift+5 Flight / Farm Assist",
+          "type": "form-slot",
+          "plannedForm": "flight",
+          "description": "Flight form or farming assist toggle when unlocked."
+        }
+      ],
+      "tiers": [
+        {
+          "tier": 1,
+          "label": "T1",
+          "nodes": [
+            {
+              "type": "sig",
+              "name": "Nature Grimoire",
+              "description": "Unlock forms book + Bear Form at start."
+            },
+            {
+              "type": "ability",
+              "name": "Nature Heals & Buffs",
+              "description": "Baseline nature heal/buff spells in human form."
+            }
+          ]
+        },
+        {
+          "tier": 2,
+          "label": "T2",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Root Portal",
+              "description": "Sprout tree portal to Worge camp for party and self."
+            },
+            {
+              "type": "passive",
+              "name": "Grove Husbandry",
+              "description": "Farming assist near crops and nature nodes."
+            }
+          ]
+        },
+        {
+          "tier": 3,
+          "label": "T3",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Raptor Form",
+              "description": "DPS/stealth form unlock."
+            },
+            {
+              "type": "passive",
+              "name": "Form Ability Swap",
+              "description": "Slots 1–5 change with active form."
+            }
+          ]
+        },
+        {
+          "tier": 4,
+          "label": "T4",
+          "nodes": [
+            {
+              "type": "ability",
+              "name": "Flight Form",
+              "description": "Bird/flight form unlock."
+            },
+            {
+              "type": "passive",
+              "name": "Camp Root Network",
+              "description": "Root Portal lasts longer / more party uses per cast."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

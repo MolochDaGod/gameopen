@@ -18,7 +18,9 @@ export type WarlordsRoleKind =
   | "traveler"
   | "merchant"
   | "guard"
-  | "quest_npc";
+  | "quest_npc"
+  /** Camp / army commander — elite unit that can lead RTS squads. */
+  | "commander";
 
 export interface WarlordsRole {
   /** Stable id for spawners / UI. */
@@ -90,20 +92,36 @@ export const WARLORDS_ROLES: WarlordsRole[] = [
   { id: "hostile-wk-mage", label: "Hedge Wizard", kind: "hostile", raceId: "western-kingdoms", presetId: "mage" },
   { id: "hostile-wk-brawler", label: "Street Fighter", kind: "hostile", raceId: "western-kingdoms", presetId: "unarmed" },
 
-  // ── Travelers (road / town wanderers — light kit) ───────────────────────
-  { id: "traveler-wk-unarmed", label: "Kingdom Traveler", kind: "traveler", raceId: "western-kingdoms", presetId: "unarmed" },
+  // ── Travelers (uMMORPG Npc wanderers — light kit, low aggro) ────────────
+  { id: "traveler-wk-unarmed", label: "Kingdom Traveler", kind: "traveler", raceId: "western-kingdoms", presetId: "unarmed", note: "uMMORPG Npc traveler" },
   { id: "traveler-wk-ranger", label: "Wayfarer Archer", kind: "traveler", raceId: "western-kingdoms", presetId: "ranger" },
   { id: "traveler-elf-ranger", label: "Elven Wanderer", kind: "traveler", raceId: "high-elves", presetId: "ranger" },
   { id: "traveler-brb-unarmed", label: "Barbarian Traveler", kind: "traveler", raceId: "barbarians", presetId: "unarmed" },
   { id: "traveler-dwf-unarmed", label: "Dwarf Traveler", kind: "traveler", raceId: "dwarves", presetId: "unarmed" },
+  { id: "traveler-orc-unarmed", label: "Orc Road-walker", kind: "traveler", raceId: "orcs", presetId: "unarmed" },
+  { id: "traveler-ud-ranger", label: "Shade Wayfarer", kind: "traveler", raceId: "undead", presetId: "ranger" },
+  { id: "traveler-elf-mage", label: "Elven Pilgrim", kind: "traveler", raceId: "high-elves", presetId: "mage" },
+
+  // ── Commanders (uMMORPG elite / camp army leaders — train from barracks+) ─
+  { id: "commander-wk-knight", label: "Kingdom Commander", kind: "commander", raceId: "western-kingdoms", presetId: "knight", note: "uMMORPG commander prefab · WK" },
+  { id: "commander-wk-warrior", label: "Field Marshal", kind: "commander", raceId: "western-kingdoms", presetId: "warrior" },
+  { id: "commander-orc-warchief", label: "Orc Warlord", kind: "commander", raceId: "orcs", presetId: "knight", note: "ORC commander" },
+  { id: "commander-brb-champion", label: "Barbarian War-chief", kind: "commander", raceId: "barbarians", presetId: "knight" },
+  { id: "commander-elf-blade", label: "Elven Captains", kind: "commander", raceId: "high-elves", presetId: "knight" },
+  { id: "commander-dwf-iron", label: "Dwarf Thane", kind: "commander", raceId: "dwarves", presetId: "knight" },
+  { id: "commander-ud-dk", label: "Death Captain", kind: "commander", raceId: "undead", presetId: "knight" },
+  { id: "commander-elf-mage", label: "Arcane Marshal", kind: "commander", raceId: "high-elves", presetId: "mage" },
 
   // ── Merchants / quest / guards (uMMORPG Npc prefab roles) ───────────────
-  { id: "merchant-wk-unarmed", label: "Kingdom Merchant", kind: "merchant", raceId: "western-kingdoms", presetId: "unarmed" },
+  { id: "merchant-wk-unarmed", label: "Kingdom Merchant", kind: "merchant", raceId: "western-kingdoms", presetId: "unarmed", note: "uMMORPG merchant" },
   { id: "merchant-dwf-unarmed", label: "Dwarf Trader", kind: "merchant", raceId: "dwarves", presetId: "unarmed" },
-  { id: "guard-wk-knight", label: "City Guard", kind: "guard", raceId: "western-kingdoms", presetId: "knight" },
+  { id: "merchant-elf-unarmed", label: "Elven Broker", kind: "merchant", raceId: "high-elves", presetId: "unarmed" },
+  { id: "guard-wk-knight", label: "City Guard", kind: "guard", raceId: "western-kingdoms", presetId: "knight", note: "uMMORPG guard" },
   { id: "guard-wk-warrior", label: "Watch Warrior", kind: "guard", raceId: "western-kingdoms", presetId: "warrior" },
+  { id: "guard-dwf-knight", label: "Gate Warden", kind: "guard", raceId: "dwarves", presetId: "knight" },
   { id: "quest-elf-mage", label: "Elven Sage", kind: "quest_npc", raceId: "high-elves", presetId: "mage" },
   { id: "quest-ud-mage", label: "Necromancer Contact", kind: "quest_npc", raceId: "undead", presetId: "mage" },
+  { id: "quest-wk-unarmed", label: "Village Elder", kind: "quest_npc", raceId: "western-kingdoms", presetId: "unarmed" },
 ];
 
 const byId = new Map(WARLORDS_ROLES.map((r) => [r.id, r]));

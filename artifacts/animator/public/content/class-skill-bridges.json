@@ -1,0 +1,1047 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-17",
+  "description": "Additive bridge nodes for existing master-skillTrees.json. Does not replace class skills — fills levels between milestones 0→1→5→10→15→20 with selectable passives/procs/health.",
+  "extends": "master-skillTrees.json",
+  "progression": {
+    "milestones": [
+      0,
+      1,
+      5,
+      10,
+      15,
+      20
+    ],
+    "selectOneClass": true,
+    "notes": [
+      "Level 0: granted when the class is selected from the row (always free).",
+      "Level 1: starting active/passive band from master-skillTrees.",
+      "Levels 5/10/15/20: major milestone bands from master-skillTrees.",
+      "Bridge levels (2–4, 6–9, 11–14, 16–19): choose nodes — passives, procs, vitality, etc."
+    ],
+    "classExceptions": {
+      "worge": {
+        "level0Note": "Bear form knowledge is always granted at selection (grimoire / relic default).",
+        "autoForms": [
+          "bear"
+        ]
+      }
+    }
+  },
+  "level0": {
+    "warrior": [
+      {
+        "id": "w_l0_warbound",
+        "name": "Warbound Stance",
+        "description": "Class selected — frontline identity online.",
+        "effect": "+baseline threat awareness",
+        "kind": "passive",
+        "auto": true,
+        "bonuses": {
+          "defense": 2
+        }
+      }
+    ],
+    "mage": [
+      {
+        "id": "m_l0_leyline",
+        "name": "Ley Attunement",
+        "description": "Class selected — mana channels open.",
+        "effect": "+baseline mana regen",
+        "kind": "passive",
+        "auto": true,
+        "bonuses": {
+          "manaRegen": 1
+        }
+      }
+    ],
+    "ranger": [
+      {
+        "id": "r_l0_log",
+        "name": "Ranger's Log (Start)",
+        "description": "Class selected — Log online: poison foundation + sidearm slot unlock.",
+        "effect": "Sidearm UI; poison path seed",
+        "kind": "passive",
+        "auto": true,
+        "bonuses": {
+          "attackSpeed": 2
+        }
+      }
+    ],
+    "worge": [
+      {
+        "id": "wr_l0_bear",
+        "name": "Bear Form (Start)",
+        "description": "Starting form unlocked at selection (Nature Grimoire default).",
+        "effect": "Form: Bear available",
+        "kind": "form",
+        "auto": true,
+        "formId": "bear",
+        "bonuses": {
+          "defense": 3
+        }
+      }
+    ]
+  },
+  "bridges": {
+    "warrior": [
+      {
+        "id": "w_b_iron_frame",
+        "name": "Iron Frame",
+        "requiredLevel": 2,
+        "requires": [
+          "w_taunt"
+        ],
+        "kind": "passive",
+        "description": "Hardened physique between basics and specialization.",
+        "effect": "+Max HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 40
+        }
+      },
+      {
+        "id": "w_b_second_wind",
+        "name": "Second Wind",
+        "requiredLevel": 3,
+        "requires": [
+          "w_quick_strike"
+        ],
+        "kind": "passive",
+        "description": "Recover stamina after a successful block/parry window.",
+        "effect": "+Stamina regen",
+        "cost": 1,
+        "bonuses": {
+          "staminaRegen": 2
+        }
+      },
+      {
+        "id": "w_b_blood_rhythm",
+        "name": "Blood Rhythm",
+        "requiredLevel": 4,
+        "requires": [
+          "w_rending_strikes"
+        ],
+        "kind": "proc",
+        "description": "Bleed stacks tick slightly harder.",
+        "effect": "+Bleed damage",
+        "cost": 1,
+        "bonuses": {
+          "procPower": 0.05
+        }
+      },
+      {
+        "id": "w_b_form_bulwark",
+        "name": "Bulwark Form",
+        "requiredLevel": 5,
+        "requires": [
+          "w_l0_warbound"
+        ],
+        "kind": "selection",
+        "description": "Defensive Battle Form — larger parry/block/stamina.",
+        "effect": "Battle Form: Bulwark",
+        "cost": 2,
+        "bonuses": {
+          "blockChance": 0.1,
+          "maxStamina": 20
+        }
+      },
+      {
+        "id": "w_b_form_onslaught",
+        "name": "Onslaught Form",
+        "requiredLevel": 5,
+        "requires": [
+          "w_l0_warbound"
+        ],
+        "kind": "selection",
+        "description": "Offensive Battle Form — damage tempo.",
+        "effect": "Battle Form: Onslaught",
+        "cost": 2,
+        "bonuses": {
+          "damage": 0.1
+        }
+      },
+      {
+        "id": "w_b_shield_wall_prep",
+        "name": "Shield Habit",
+        "requiredLevel": 6,
+        "requires": [
+          "w_guardian_aura"
+        ],
+        "kind": "passive",
+        "description": "Bridge into advanced defense.",
+        "effect": "+Block factor",
+        "cost": 1,
+        "bonuses": {
+          "blockFactor": 3
+        }
+      },
+      {
+        "id": "w_b_war_pulse",
+        "name": "War Pulse",
+        "requiredLevel": 7,
+        "requires": [
+          "w_damage_surge"
+        ],
+        "kind": "passive",
+        "description": "Damage buffs last slightly longer.",
+        "effect": "+Buff duration",
+        "cost": 1,
+        "bonuses": {
+          "buffDuration": 0.1
+        }
+      },
+      {
+        "id": "w_b_grit",
+        "name": "Grit",
+        "requiredLevel": 8,
+        "requires": [
+          "w_demoralizing_shout"
+        ],
+        "kind": "passive",
+        "description": "Extra vitality before advanced tier.",
+        "effect": "+Max HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 60
+        }
+      },
+      {
+        "id": "w_b_cleave_edge",
+        "name": "Cleaving Edge",
+        "requiredLevel": 9,
+        "requires": [
+          "w_quick_strike"
+        ],
+        "kind": "selection",
+        "description": "Choose pressure: wider light hits.",
+        "effect": "+Light AoE on heavy swings",
+        "cost": 2,
+        "bonuses": {
+          "cleaveChance": 0.1
+        }
+      },
+      {
+        "id": "w_b_form_bloodward",
+        "name": "Bloodward Form",
+        "requiredLevel": 10,
+        "requires": [
+          "w_l0_warbound"
+        ],
+        "kind": "selection",
+        "description": "Self-healing Battle Form.",
+        "effect": "Battle Form: Bloodward",
+        "cost": 2,
+        "bonuses": {
+          "lifesteal": 0.05
+        }
+      },
+      {
+        "id": "w_b_veteran_core",
+        "name": "Veteran Core",
+        "requiredLevel": 11,
+        "requires": [
+          "w_dual_wield",
+          "w_shield_spec"
+        ],
+        "kind": "passive",
+        "description": "Mid-tier toughness.",
+        "effect": "+Defense + Max HP",
+        "cost": 2,
+        "bonuses": {
+          "defense": 5,
+          "maxHp": 80
+        }
+      },
+      {
+        "id": "w_b_executioner_focus",
+        "name": "Executioner Focus",
+        "requiredLevel": 12,
+        "requires": [
+          "w_sunder_armor"
+        ],
+        "kind": "passive",
+        "description": "Damage vs low-HP targets climbs.",
+        "effect": "+Execute window feel",
+        "cost": 2,
+        "bonuses": {
+          "executeBonus": 0.05
+        }
+      },
+      {
+        "id": "w_b_hold_the_line",
+        "name": "Hold the Line",
+        "requiredLevel": 13,
+        "requires": [
+          "w_life_drain"
+        ],
+        "kind": "passive",
+        "description": "Small lifesteal on blocked hits.",
+        "effect": "+Sustain",
+        "cost": 1,
+        "bonuses": {
+          "lifesteal": 0.02
+        }
+      },
+      {
+        "id": "w_b_battle_hardened",
+        "name": "Battle Hardened",
+        "requiredLevel": 14,
+        "requires": [
+          "w_concussive_blow"
+        ],
+        "kind": "passive",
+        "description": "CC resistance climbs.",
+        "effect": "+CC resist",
+        "cost": 1,
+        "bonuses": {
+          "ccResistance": 5
+        }
+      },
+      {
+        "id": "w_b_form_dread",
+        "name": "Dread Form",
+        "requiredLevel": 15,
+        "requires": [
+          "w_l0_warbound"
+        ],
+        "kind": "selection",
+        "description": "Fear-causing Battle Form.",
+        "effect": "Battle Form: Dread",
+        "cost": 2,
+        "bonuses": {
+          "fearProc": 0.1
+        }
+      },
+      {
+        "id": "w_b_form_colossus",
+        "name": "Colossus Form",
+        "requiredLevel": 15,
+        "requires": [
+          "w_l0_warbound"
+        ],
+        "kind": "selection",
+        "description": "Large damage Battle Form.",
+        "effect": "Battle Form: Colossus",
+        "cost": 2,
+        "bonuses": {
+          "damage": 0.2
+        }
+      },
+      {
+        "id": "w_b_legend_blood",
+        "name": "Legend Blood",
+        "requiredLevel": 16,
+        "requires": [
+          "w_execute"
+        ],
+        "kind": "passive",
+        "description": "Toward legendary band.",
+        "effect": "+Crit damage",
+        "cost": 2,
+        "bonuses": {
+          "critDamage": 5
+        }
+      },
+      {
+        "id": "w_b_unbreakable",
+        "name": "Unbreakable",
+        "requiredLevel": 18,
+        "requires": [
+          "w_double_strike"
+        ],
+        "kind": "passive",
+        "description": "Large vitality node before ultimate tier.",
+        "effect": "+Max HP",
+        "cost": 2,
+        "bonuses": {
+          "maxHp": 120
+        }
+      }
+    ],
+    "mage": [
+      {
+        "id": "m_b_mana_lattice",
+        "name": "Mana Lattice",
+        "requiredLevel": 2,
+        "requires": [
+          "m_mana_flow"
+        ],
+        "kind": "passive",
+        "description": "Smoother mana between basics and arts.",
+        "effect": "+Max Mana",
+        "cost": 1,
+        "bonuses": {
+          "maxMana": 30
+        }
+      },
+      {
+        "id": "m_b_focus_lens",
+        "name": "Focus Lens",
+        "requiredLevel": 3,
+        "requires": [
+          "m_arcane_focus"
+        ],
+        "kind": "passive",
+        "description": "Spell power climbs slightly.",
+        "effect": "+Spell power",
+        "cost": 1,
+        "bonuses": {
+          "spellPower": 4
+        }
+      },
+      {
+        "id": "m_b_mobility_page",
+        "name": "Mobility Page",
+        "requiredLevel": 3,
+        "requires": [
+          "m_l0_leyline"
+        ],
+        "kind": "selection",
+        "description": "Blink / slow fall style mobility in spell book.",
+        "effect": "Mobility recipes",
+        "cost": 1,
+        "bonuses": {
+          "moveSpeed": 0.05
+        }
+      },
+      {
+        "id": "m_b_hex_echo",
+        "name": "Hex Echo",
+        "requiredLevel": 4,
+        "requires": [
+          "m_enfeeble"
+        ],
+        "kind": "proc",
+        "description": "Debuffs last a moment longer.",
+        "effect": "+Debuff duration",
+        "cost": 1,
+        "bonuses": {
+          "debuffDuration": 0.1
+        }
+      },
+      {
+        "id": "m_b_spellbook_fire",
+        "name": "Fire Page",
+        "requiredLevel": 5,
+        "requires": [
+          "m_l0_leyline"
+        ],
+        "kind": "selection",
+        "description": "Fire school in the wand spell book + fire crafting benefits.",
+        "effect": "Fire spells; forge/cook synergy",
+        "cost": 1,
+        "bonuses": {
+          "fireDamage": 0.05,
+          "craftFire": 0.1
+        }
+      },
+      {
+        "id": "m_b_spellbook_water",
+        "name": "Water Page",
+        "requiredLevel": 5,
+        "requires": [
+          "m_l0_leyline"
+        ],
+        "kind": "selection",
+        "description": "Water school + alchemy/brew/fish assist.",
+        "effect": "Water spells; brew/fish synergy",
+        "cost": 1,
+        "bonuses": {
+          "waterDamage": 0.05,
+          "craftWater": 0.1
+        }
+      },
+      {
+        "id": "m_b_ember_core",
+        "name": "Ember Core",
+        "requiredLevel": 6,
+        "requires": [
+          "m_fire_mastery"
+        ],
+        "kind": "passive",
+        "description": "Fire damage bridge.",
+        "effect": "+Fire damage",
+        "cost": 1,
+        "bonuses": {
+          "fireDamage": 0.05
+        }
+      },
+      {
+        "id": "m_b_portal_page",
+        "name": "Portal Page",
+        "requiredLevel": 6,
+        "requires": [
+          "m_l0_leyline"
+        ],
+        "kind": "selection",
+        "description": "Portal / place teleport recipes in the spell book.",
+        "effect": "Portal slot wiring",
+        "cost": 2,
+        "bonuses": {
+          "portalCharges": 1
+        }
+      },
+      {
+        "id": "m_b_frost_vein",
+        "name": "Frost Vein",
+        "requiredLevel": 7,
+        "requires": [
+          "m_ice_mastery"
+        ],
+        "kind": "passive",
+        "description": "Slow power bridge.",
+        "effect": "+Slow strength",
+        "cost": 1,
+        "bonuses": {
+          "slowPower": 0.05
+        }
+      },
+      {
+        "id": "m_b_vital_ward",
+        "name": "Vital Ward",
+        "requiredLevel": 8,
+        "requires": [
+          "m_blessing"
+        ],
+        "kind": "passive",
+        "description": "Healer path health.",
+        "effect": "+Max HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 35
+        }
+      },
+      {
+        "id": "m_b_spark_choice",
+        "name": "Spark or Mend",
+        "requiredLevel": 9,
+        "requires": [
+          "m_flame_brand"
+        ],
+        "kind": "selection",
+        "description": "Choose tempo: slightly faster cast recovery.",
+        "effect": "+Cast recovery",
+        "cost": 2,
+        "bonuses": {
+          "cooldownReduction": 0.03
+        }
+      },
+      {
+        "id": "m_b_arcane_battery",
+        "name": "Arcane Battery",
+        "requiredLevel": 11,
+        "requires": [
+          "m_meteor"
+        ],
+        "kind": "passive",
+        "description": "Large mana pool mid-tree.",
+        "effect": "+Max Mana",
+        "cost": 2,
+        "bonuses": {
+          "maxMana": 50
+        }
+      },
+      {
+        "id": "m_b_chain_lattice",
+        "name": "Chain Lattice",
+        "requiredLevel": 12,
+        "requires": [
+          "m_chain_lightning"
+        ],
+        "kind": "passive",
+        "description": "Lightning jumps more reliably.",
+        "effect": "+Chain chance",
+        "cost": 2,
+        "bonuses": {
+          "chainBonus": 0.1
+        }
+      },
+      {
+        "id": "m_b_lucid_mind",
+        "name": "Lucid Mind",
+        "requiredLevel": 14,
+        "requires": [
+          "m_sleep"
+        ],
+        "kind": "passive",
+        "description": "CC spells stick slightly longer.",
+        "effect": "+CC duration",
+        "cost": 1,
+        "bonuses": {
+          "ccDuration": 0.1
+        }
+      },
+      {
+        "id": "m_b_sanctum",
+        "name": "Sanctum",
+        "requiredLevel": 16,
+        "requires": [
+          "m_holy_nova"
+        ],
+        "kind": "passive",
+        "description": "Heals slightly stronger.",
+        "effect": "+Heal power",
+        "cost": 2,
+        "bonuses": {
+          "healPower": 0.08
+        }
+      },
+      {
+        "id": "m_b_archon_shell",
+        "name": "Archon Shell",
+        "requiredLevel": 18,
+        "requires": [
+          "m_spell_echo"
+        ],
+        "kind": "passive",
+        "description": "Toward ultimate — shield of will.",
+        "effect": "+Magic resist + HP",
+        "cost": 2,
+        "bonuses": {
+          "magicResist": 8,
+          "maxHp": 50
+        }
+      }
+    ],
+    "ranger": [
+      {
+        "id": "r_b_steady_eye",
+        "name": "Steady Eye",
+        "requiredLevel": 2,
+        "requires": [
+          "r_precision"
+        ],
+        "kind": "passive",
+        "description": "Accuracy bridge.",
+        "effect": "+Accuracy",
+        "cost": 1,
+        "bonuses": {
+          "accuracy": 5
+        }
+      },
+      {
+        "id": "r_b_fleet_foot",
+        "name": "Fleet Foot",
+        "requiredLevel": 3,
+        "requires": [
+          "r_swift_draw"
+        ],
+        "kind": "passive",
+        "description": "Move a little faster while kiting.",
+        "effect": "+Move speed",
+        "cost": 1,
+        "bonuses": {
+          "moveSpeed": 0.05
+        }
+      },
+      {
+        "id": "r_b_barbed_habits",
+        "name": "Barbed Habits",
+        "requiredLevel": 4,
+        "requires": [
+          "r_crippling_shot"
+        ],
+        "kind": "proc",
+        "description": "Cripple effects land cleaner.",
+        "effect": "+Proc on hit",
+        "cost": 1,
+        "bonuses": {
+          "procChance": 0.03
+        }
+      },
+      {
+        "id": "r_b_lung_capacity",
+        "name": "Lung Capacity",
+        "requiredLevel": 6,
+        "requires": [
+          "r_evasion"
+        ],
+        "kind": "passive",
+        "description": "Stamina for longer kites.",
+        "effect": "+Max Stamina",
+        "cost": 1,
+        "bonuses": {
+          "maxStamina": 20
+        }
+      },
+      {
+        "id": "r_b_mark_synergy",
+        "name": "Mark Synergy",
+        "requiredLevel": 7,
+        "requires": [
+          "r_hunters_mark"
+        ],
+        "kind": "passive",
+        "description": "Marked targets take a bit more damage from you.",
+        "effect": "+Damage vs marked",
+        "cost": 1,
+        "bonuses": {
+          "markedDamage": 0.05
+        }
+      },
+      {
+        "id": "r_b_venom_potency",
+        "name": "Venom Potency",
+        "requiredLevel": 8,
+        "requires": [
+          "r_venom_arrow"
+        ],
+        "kind": "proc",
+        "description": "Poison ticks harder.",
+        "effect": "+Poison",
+        "cost": 1,
+        "bonuses": {
+          "poisonPower": 0.08
+        }
+      },
+      {
+        "id": "r_b_choice_trap_or_crit",
+        "name": "Trapline or Critline",
+        "requiredLevel": 9,
+        "requires": [
+          "r_headshot"
+        ],
+        "kind": "selection",
+        "description": "Specialize prep before sharpshooter.",
+        "effect": "+Crit chance",
+        "cost": 2,
+        "bonuses": {
+          "critChance": 3
+        }
+      },
+      {
+        "id": "r_b_piercing_habits",
+        "name": "Piercing Habits",
+        "requiredLevel": 11,
+        "requires": [
+          "r_piercing"
+        ],
+        "kind": "passive",
+        "description": "Armor pen climbs.",
+        "effect": "+Armor pen",
+        "cost": 2,
+        "bonuses": {
+          "armorPenetration": 5
+        }
+      },
+      {
+        "id": "r_b_trail_vitals",
+        "name": "Trail Vitals",
+        "requiredLevel": 12,
+        "requires": [
+          "r_trap"
+        ],
+        "kind": "passive",
+        "description": "Health for long hunts.",
+        "effect": "+Max HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 45
+        }
+      },
+      {
+        "id": "r_b_multishot_spread",
+        "name": "Controlled Spread",
+        "requiredLevel": 13,
+        "requires": [
+          "r_multishot"
+        ],
+        "kind": "passive",
+        "description": "Multi-projectile reliability.",
+        "effect": "+Multi hit chance",
+        "cost": 2,
+        "bonuses": {
+          "multishotBonus": 0.05
+        }
+      },
+      {
+        "id": "r_b_shadow_step",
+        "name": "Shadow Step",
+        "requiredLevel": 16,
+        "requires": [
+          "r_wind_walk"
+        ],
+        "kind": "passive",
+        "description": "Stealth windows a touch longer.",
+        "effect": "+Stealth duration",
+        "cost": 2,
+        "bonuses": {
+          "stealthDuration": 0.15
+        }
+      },
+      {
+        "id": "r_b_apex_eye",
+        "name": "Apex Eye",
+        "requiredLevel": 18,
+        "requires": [
+          "r_sniper"
+        ],
+        "kind": "passive",
+        "description": "Toward legendary — crit damage.",
+        "effect": "+Crit damage",
+        "cost": 2,
+        "bonuses": {
+          "critDamage": 8
+        }
+      },
+      {
+        "id": "r_b_sidearm_ready",
+        "name": "Sidearm Ready",
+        "requiredLevel": 5,
+        "requires": [
+          "r_l0_log"
+        ],
+        "kind": "passive",
+        "description": "Quick swap to sidearm when non-magical ranged is on cooldown.",
+        "effect": "Activate half-size sidearm slot",
+        "cost": 1,
+        "bonuses": {
+          "swapSpeed": 0.2
+        }
+      },
+      {
+        "id": "r_b_log_poison",
+        "name": "Log Poison",
+        "requiredLevel": 6,
+        "requires": [
+          "r_l0_log"
+        ],
+        "kind": "proc",
+        "description": "Ranger's Log auto-applies poison on eligible hits.",
+        "effect": "Auto poison on hit",
+        "cost": 1,
+        "bonuses": {
+          "poisonPower": 0.1
+        }
+      },
+      {
+        "id": "r_b_log_vanish",
+        "name": "Log Vanish",
+        "requiredLevel": 10,
+        "requires": [
+          "r_l0_log"
+        ],
+        "kind": "selection",
+        "description": "Invisible path entry from Ranger's Log.",
+        "effect": "Stealth skill unlock seed",
+        "cost": 2,
+        "bonuses": {
+          "stealthDuration": 0.1
+        }
+      }
+    ],
+    "worge": [
+      {
+        "id": "wr_b_bark_layer",
+        "name": "Bark Layer",
+        "requiredLevel": 2,
+        "requires": [
+          "wr_bark_skin"
+        ],
+        "kind": "passive",
+        "description": "Extra hide after selection form.",
+        "effect": "+Max HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 50
+        }
+      },
+      {
+        "id": "wr_b_storm_coil",
+        "name": "Storm Coil",
+        "requiredLevel": 3,
+        "requires": [
+          "wr_storm_touch"
+        ],
+        "kind": "passive",
+        "description": "Storm damage climbs.",
+        "effect": "+Storm damage",
+        "cost": 1,
+        "bonuses": {
+          "stormDamage": 0.05
+        }
+      },
+      {
+        "id": "wr_b_feral_tick",
+        "name": "Feral Tick",
+        "requiredLevel": 4,
+        "requires": [
+          "wr_feral_instinct"
+        ],
+        "kind": "proc",
+        "description": "Proc chance climbs.",
+        "effect": "+Proc chance",
+        "cost": 1,
+        "bonuses": {
+          "procChance": 0.04
+        }
+      },
+      {
+        "id": "wr_b_totem_heart",
+        "name": "Totem Heart",
+        "requiredLevel": 6,
+        "requires": [
+          "wr_wild_growth"
+        ],
+        "kind": "passive",
+        "description": "Heals and totems slightly stronger.",
+        "effect": "+Heal power",
+        "cost": 1,
+        "bonuses": {
+          "healPower": 0.06
+        }
+      },
+      {
+        "id": "wr_b_weapon_flow",
+        "name": "Weapon Flow",
+        "requiredLevel": 7,
+        "requires": [
+          "wr_weapon_mastery"
+        ],
+        "kind": "passive",
+        "description": "Hybrid weapons hit cleaner.",
+        "effect": "+Weapon damage",
+        "cost": 1,
+        "bonuses": {
+          "weaponDamage": 0.04
+        }
+      },
+      {
+        "id": "wr_b_bleed_choice",
+        "name": "Rend Focus",
+        "requiredLevel": 8,
+        "requires": [
+          "wr_lacerate"
+        ],
+        "kind": "selection",
+        "description": "Specialize bleed pressure before shapeshifter.",
+        "effect": "+Bleed",
+        "cost": 2,
+        "bonuses": {
+          "bleedPower": 0.08
+        }
+      },
+      {
+        "id": "wr_b_form_endurance",
+        "name": "Form Endurance",
+        "requiredLevel": 9,
+        "requires": [
+          "wr_soothing_rain"
+        ],
+        "kind": "passive",
+        "description": "Stay shifted longer (feel).",
+        "effect": "+Form sustain / HP",
+        "cost": 1,
+        "bonuses": {
+          "maxHp": 55
+        }
+      },
+      {
+        "id": "wr_b_iron_pelt",
+        "name": "Iron Pelt",
+        "requiredLevel": 11,
+        "requires": [
+          "wr_iron_hide"
+        ],
+        "kind": "passive",
+        "description": "Bear path toughness.",
+        "effect": "+Defense in form",
+        "cost": 2,
+        "bonuses": {
+          "defense": 8
+        }
+      },
+      {
+        "id": "wr_b_venom_edge_plus",
+        "name": "Venom Edge+",
+        "requiredLevel": 12,
+        "requires": [
+          "wr_venom_edge"
+        ],
+        "kind": "proc",
+        "description": "Poison path.",
+        "effect": "+Poison",
+        "cost": 1,
+        "bonuses": {
+          "poisonPower": 0.08
+        }
+      },
+      {
+        "id": "wr_b_root_depth",
+        "name": "Root Depth",
+        "requiredLevel": 13,
+        "requires": [
+          "wr_entangle"
+        ],
+        "kind": "passive",
+        "description": "Roots last slightly longer.",
+        "effect": "+CC duration",
+        "cost": 1,
+        "bonuses": {
+          "ccDuration": 0.1
+        }
+      },
+      {
+        "id": "wr_b_tempest_core",
+        "name": "Tempest Core",
+        "requiredLevel": 16,
+        "requires": [
+          "wr_tempest"
+        ],
+        "kind": "passive",
+        "description": "Toward legendary storm.",
+        "effect": "+Storm power",
+        "cost": 2,
+        "bonuses": {
+          "stormDamage": 0.1
+        }
+      },
+      {
+        "id": "wr_b_alpha_blood",
+        "name": "Alpha Blood",
+        "requiredLevel": 18,
+        "requires": [
+          "wr_primal_roar"
+        ],
+        "kind": "passive",
+        "description": "Health spike before ultimate.",
+        "effect": "+Max HP",
+        "cost": 2,
+        "bonuses": {
+          "maxHp": 100
+        }
+      },
+      {
+        "id": "wr_b_root_portal",
+        "name": "Root Portal",
+        "requiredLevel": 5,
+        "requires": [
+          "wr_l0_bear"
+        ],
+        "kind": "selection",
+        "description": "Sprout a travel tree; party and self return to the Worge's camp.",
+        "effect": "Place root_portal_tree → worge_camp",
+        "cost": 2,
+        "bonuses": {
+          "portalCharges": 1
+        }
+      },
+      {
+        "id": "wr_b_grove_farm",
+        "name": "Grove Husbandry",
+        "requiredLevel": 7,
+        "requires": [
+          "wr_wild_growth"
+        ],
+        "kind": "passive",
+        "description": "Farming assist — faster tend/harvest on crops and nature nodes.",
+        "effect": "+Farm / gather speed",
+        "cost": 1,
+        "bonuses": {
+          "harvestBonus": 0.1
+        }
+      }
+    ]
+  }
+}

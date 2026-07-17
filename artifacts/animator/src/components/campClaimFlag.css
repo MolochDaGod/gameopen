@@ -1,0 +1,377 @@
+/* Camp Claim Flag hub — territory management shell */
+
+.ccf-root {
+  position: absolute;
+  inset: 0;
+  z-index: 58;
+  display: grid;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+  background: rgba(4, 8, 14, 0.78);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  font-family: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+  color: #e2eaf6;
+}
+
+.ccf-shell {
+  width: min(1120px, 100%);
+  height: min(740px, 92vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid rgba(212, 164, 0, 0.35);
+  background:
+    radial-gradient(900px 380px at 8% 0%, rgba(212, 164, 0, 0.12), transparent 55%),
+    radial-gradient(700px 360px at 95% 90%, rgba(46, 120, 90, 0.14), transparent 50%),
+    #0b1018;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.ccf-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(212, 164, 0, 0.18);
+  flex-wrap: wrap;
+}
+
+.ccf-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ccf-flag {
+  font-size: 1.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(212, 164, 0, 0.35));
+}
+
+.ccf-brand h2 {
+  margin: 0;
+  font-family: "Cinzel", ui-serif, Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #e8c547;
+}
+
+.ccf-brand p {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  color: #8fa3c0;
+  max-width: 52ch;
+  line-height: 1.35;
+}
+
+.ccf-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ccf-pill {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  color: #9ef0c8;
+  background: rgba(16, 60, 42, 0.45);
+}
+
+.ccf-pill.warn {
+  border-color: rgba(212, 164, 0, 0.4);
+  color: #f0d78a;
+  background: rgba(60, 48, 12, 0.45);
+}
+
+.ccf-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #c8d0e0;
+  cursor: pointer;
+}
+.ccf-close:hover {
+  border-color: #e8c547;
+  color: #e8c547;
+}
+
+.ccf-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.ccf-tab {
+  flex: 1 1 auto;
+  min-width: 72px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9aabbf;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ccf-tab:hover {
+  color: #e2eaf6;
+  background: rgba(255, 255, 255, 0.04);
+}
+.ccf-tab.active {
+  color: #0b1018;
+  background: linear-gradient(180deg, #e8c547, #c49a1a);
+  border-color: rgba(255, 220, 120, 0.4);
+}
+
+.ccf-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 16px 18px;
+}
+
+.ccf-page-intro {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #8fa3c0;
+  line-height: 1.4;
+}
+
+.ccf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.ccf-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(160deg, rgba(22, 30, 46, 0.95), rgba(12, 16, 26, 0.98));
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.ccf-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e8eef8;
+}
+
+.ccf-card .sub {
+  font-size: 0.72rem;
+  color: #7d8aa5;
+  line-height: 1.35;
+}
+
+.ccf-card .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.ccf-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a8b8d0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ccf-tag.gold {
+  color: #f0d78a;
+  border-color: rgba(212, 164, 0, 0.35);
+  background: rgba(60, 48, 12, 0.4);
+}
+
+.ccf-tag.green {
+  color: #9ef0c8;
+  border-color: rgba(110, 231, 183, 0.3);
+  background: rgba(16, 60, 42, 0.35);
+}
+
+.ccf-tag.blue {
+  color: #9ec5ff;
+  border-color: rgba(100, 150, 255, 0.3);
+  background: rgba(20, 40, 80, 0.4);
+}
+
+.ccf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ccf-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ccf-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2a7a55, #6ee7b7);
+  transition: width 0.2s ease;
+}
+
+.ccf-bar-fill.gold {
+  background: linear-gradient(90deg, #8a6a12, #e8c547);
+}
+
+.ccf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ccf-btn {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #dfe8f5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.ccf-btn:hover:not(:disabled) {
+  border-color: #6ee7b7;
+  color: #9ef0c8;
+}
+.ccf-btn.primary {
+  background: linear-gradient(180deg, #3d8f66, #2a6b4a);
+  border-color: rgba(110, 231, 183, 0.4);
+  color: #e8fff4;
+}
+.ccf-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.ccf-btn.gold {
+  background: linear-gradient(180deg, #c49a1a, #8a6a12);
+  border-color: rgba(232, 197, 71, 0.45);
+  color: #1a1408;
+}
+.ccf-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ccf-skill-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.22);
+  margin-bottom: 8px;
+}
+
+.ccf-skill-row h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.ccf-skill-row p {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #7d8aa5;
+  grid-column: 1 / -1;
+}
+
+.ccf-notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 231, 183, 0.25);
+  background: rgba(16, 50, 38, 0.35);
+  font-size: 0.8rem;
+  color: #b8f0d0;
+  line-height: 1.4;
+}
+
+.ccf-notice.dim {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  color: #9aabbf;
+}
+
+.ccf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.ccf-table th,
+.ccf-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ccf-table th {
+  color: #8fa3c0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+.ccf-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ccf-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 760px) {
+  .ccf-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ccf-section-title {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+}
+
+.ccf-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: #7d8aa5;
+  font-size: 0.9rem;
+}

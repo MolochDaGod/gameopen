@@ -30,6 +30,9 @@ export {
   prefabFromRoleId,
   playerPrefab,
   listHostilePrefabs,
+  listUnitPrefabs,
+  listCommanderPrefabs,
+  listTravelerPrefabs,
   presetForWeaponKind,
   type EntityPrefab,
   type PrefabCombatProfile,
@@ -44,3 +47,19 @@ export {
   type ScriptableSkill,
   type ScriptableWeapon,
 } from "./scriptableSkills";
+
+export {
+  SPEAR_UMMORPG_SKILLS,
+  SPEAR_HOTBAR_PREFER,
+  SPEAR_ANIM_CLIP,
+  SPEAR_COMBO_CLIPS,
+  SPEAR_FINISHER_ENTRY_MM,
+  isSpearWeapon,
+  spearHotbarSkills,
+  spearSignatureRows,
+  spearChargePlan,
+  spearClipForSkillId,
+  spearSkillById,
+  type SpearSkillRuntime,
+  type SpearMotionKind,
+} from "./spearCombat";

@@ -1,8 +1,14 @@
 /**
  * Unified game media — icons & images for HUD skills, craft mats, harvest ops,
- * codex blocks, and seed-world UI. Prefer absolute CDN, then same-origin icons.
+ * codex blocks, and seed-world UI.
+ *
+ * Production order (best practice):
+ *  1. Fleet definitions catalog (master-items / materials) via productionMedia
+ *  2. Absolute R2 pack icons (assets.grudge-studio.com)
+ *  3. Same-origin local RPG icons
  *
  * SSOT companions:
+ *  - `lib/productionMedia.ts` (catalog warm + item icon resolve)
  *  - `three/skillIcons.ts` (weapon/skill pack art)
  *  - `three/icons.ts` (local RPG icon set)
  *  - Mine-Loader `blockIcons` (sliced block PNGs when available)
@@ -10,11 +16,17 @@
 import { cdnIconUrl, resolveSlotIconUrl, type SlotIconRole } from "../three/skillIcons";
 import { iconUrl, type IconName } from "../three/icons";
 import type { WeaponId } from "../three/types";
+import {
+  getProductionMediaIndex,
+  productionItemIconUrl,
+  productionRecipeIconUrl,
+  warmProductionMedia,
+} from "./productionMedia";
 
 const CDN = "https://assets.grudge-studio.com";
 const ML_BLOCKS = "https://mine-loader.vercel.app/assets/block-icons";
 
-/** Material / bag item → icon path (R2 pack or local). */
+/** Material / bag item → icon path (R2 pack or local) — used only before catalog warm. */
 const MAT_ICONS: Record<string, string> = {
   mat_stick: `${CDN}/icons/pack/misc/Flow.png`,
   mat_log: `${CDN}/icons/pack/misc/Slash_07.png`,
@@ -39,6 +51,11 @@ const MAT_ICONS: Record<string, string> = {
   build_wall: `${CDN}/icons/pack/misc/Effect.png`,
   build_floor: `${CDN}/icons/pack/misc/Effect.png`,
 };
+
+/** Fire-and-forget catalog warm for production icons. */
+export function warmGameMedia(): void {
+  void warmProductionMedia().catch(() => undefined);
+}
 
 /** Harvest op id → local icon name. */
 const OP_ICONS: Record<string, IconName> = {
@@ -67,7 +84,11 @@ const TREE_ICONS: Record<string, IconName> = {
 };
 
 export function matIconUrl(matId: string): string {
-  return MAT_ICONS[matId] || `${CDN}/icons/pack/misc/Flow.png`;
+  // Prefer fleet master-items / materials when catalogs are warm
+  if (getProductionMediaIndex()?.itemCount) {
+    return productionItemIconUrl(matId);
+  }
+  return MAT_ICONS[matId] || productionItemIconUrl(matId) || `${CDN}/icons/pack/misc/Flow.png`;
 }
 
 export function opIconName(opId: string): IconName {
@@ -99,8 +120,11 @@ export function skillSlotMedia(
   return { iconUrl: abs, localName: role };
 }
 
-/** Recipe output/input chip image. */
+/** Recipe output/input chip image — production catalog first. */
 export function recipeItemIconUrl(itemId: string): string {
+  if (getProductionMediaIndex()?.itemCount) {
+    return productionRecipeIconUrl(itemId);
+  }
   if (itemId.startsWith("mat_") || itemId.startsWith("tool_") || itemId.startsWith("build_")) {
     return matIconUrl(itemId);
   }

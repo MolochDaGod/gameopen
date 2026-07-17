@@ -8,6 +8,7 @@ import type { HudPanelId } from "../hud/hudConfig";
 import { RadialMenu } from "./RadialMenu";
 import { MODE_COLOR, MODE_LABEL } from "../three/playerMode";
 import { UnitFrame } from "./hud/UnitFrame";
+import { CraftpixHarvestHud } from "./hud/CraftpixHarvestHud";
 import { portraitOnError } from "../lib/characterPortrait";
 import {
   COMBAT_KEY_LEGEND,
@@ -747,6 +748,7 @@ export function Hud({
   const mode = hud.activityMode ?? "combat";
   const modeColor = MODE_COLOR[mode];
   const modeLabel = MODE_LABEL[mode];
+  const isHarvestBuild = mode === "harvest" || mode === "build";
 
   return (
     <>
@@ -796,38 +798,19 @@ export function Hud({
           </span>
           <span style={{ fontSize: 9, color: "#5e6688", marginLeft: 4 }}>Q · mode</span>
         </div>
-        {(mode === "harvest" || mode === "build") && onOpenProduction && (
-          <button
-            type="button"
-            onClick={onOpenProduction}
+        {/* Harvest/build: production opens from craftpix bar (P). Combat keeps legend. */}
+        {!isHarvestBuild && (
+          <div
             style={{
-              pointerEvents: "auto",
-              alignSelf: "flex-start",
-              padding: "7px 12px",
-              borderRadius: 10,
-              border: `1px solid ${modeColor}88`,
-              background: "rgba(8,14,12,0.88)",
-              color: modeColor,
-              fontWeight: 800,
-              fontSize: 11,
-              letterSpacing: "0.08em",
-              cursor: "pointer",
-              fontFamily: "inherit",
+              fontSize: 9,
+              color: "#6a7390",
+              letterSpacing: "0.06em",
+              paddingLeft: 4,
             }}
           >
-            ⛏ PRODUCTION UI · P
-          </button>
+            {COMBAT_KEY_LEGEND}
+          </div>
         )}
-        <div
-          style={{
-            fontSize: 9,
-            color: "#6a7390",
-            letterSpacing: "0.06em",
-            paddingLeft: 4,
-          }}
-        >
-          {COMBAT_KEY_LEGEND}
-        </div>
       </div>
 
       <RadialMenu
@@ -879,109 +862,118 @@ export function Hud({
       <CombatFlash text={hud.combatFlash} />
 
       {/*
-        threejs-rapier combat HUD cluster:
-          [6 skill wing]  [UnitFrame portrait + HP/SP]  [6 utility wing]
-        Portrait uses account/race art; slots mirror keyboard combat kit.
+        Mode-switched player chrome:
+          combat  → threejs-rapier cluster (6 skill + UnitFrame + 6 utility)
+          harvest/build → Craftpix Part_3 bar (HP/SP, avatar, gold, professions, 6 tools)
       */}
-      <div {...applyBind(bindOf(edit, "vitals"), "rpg-combat-cluster uf-panel uf-panel-player")}>
-        {/* LEFT wing — quickActions SSOT (skills) */}
-        <div className="rpg-slot-wing rpg-slot-wing-left" aria-label="Combat skills">
-          {hud.mech ? (
-            <>
-              <SkillSlot compact keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
-              {hud.mech.abilities.map((a) => (
-                <SkillSlot
-                  compact
-                  key={a.key}
-                  keyLabel={a.key}
-                  name={a.name}
-                  icon={a.icon}
-                  cd={a.cd}
-                  cdMax={a.cdMax}
-                  accent
-                />
-              ))}
-              {Array.from({ length: Math.max(0, 5 - hud.mech.abilities.length) }).map((_, i) => (
-                <div key={`pad-m-${i}`} className="act-slot act-compact act-empty" />
-              ))}
-            </>
-          ) : (
-            leftWingSlots(defaultQuickSlots()).map((id, i) => {
-              if (!id) return <div key={`L${i}`} className="act-slot act-compact act-empty" />;
+      {isHarvestBuild ? (
+        <CraftpixHarvestHud
+          hud={hud}
+          mode={mode}
+          onSelectTool={(id) => onRadialSelect?.(id)}
+          onOpenProduction={onOpenProduction}
+        />
+      ) : (
+        <div {...applyBind(bindOf(edit, "vitals"), "rpg-combat-cluster uf-panel uf-panel-player")}>
+          {/* LEFT wing — quickActions SSOT (skills) */}
+          <div className="rpg-slot-wing rpg-slot-wing-left" aria-label="Combat skills">
+            {hud.mech ? (
+              <>
+                <SkillSlot compact keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
+                {hud.mech.abilities.map((a) => (
+                  <SkillSlot
+                    compact
+                    key={a.key}
+                    keyLabel={a.key}
+                    name={a.name}
+                    icon={a.icon}
+                    cd={a.cd}
+                    cdMax={a.cdMax}
+                    accent
+                  />
+                ))}
+                {Array.from({ length: Math.max(0, 5 - hud.mech.abilities.length) }).map((_, i) => (
+                  <div key={`pad-m-${i}`} className="act-slot act-compact act-empty" />
+                ))}
+              </>
+            ) : (
+              leftWingSlots(defaultQuickSlots()).map((id, i) => {
+                if (!id) return <div key={`L${i}`} className="act-slot act-compact act-empty" />;
+                const pres = wingPresentation(id, hud, slotByName);
+                const { cd, cdMax } = wingCooldown(id, hud);
+                return (
+                  <SkillSlot
+                    compact
+                    key={`L-${id}`}
+                    keyLabel={pres.key}
+                    name={pres.name}
+                    icon={pres.icon}
+                    iconUrl={pres.iconUrl}
+                    cd={cd}
+                    cdMax={cdMax}
+                  />
+                );
+              })
+            )}
+          </div>
+
+          {/* CENTER: UnitFrame portrait (threejs-rapier style) */}
+          <div className="rpg-unitframe-wrap">
+            <UnitFrame
+              side="left"
+              variant="player"
+              name={hud.character}
+              sub={hud.weaponLabel}
+              hp={{ value: hud.health, max: hud.maxHealth }}
+              energy={{ value: hud.stamina, max: hud.maxStamina }}
+              badge={<span title={`Lv ${hud.level ?? 1}`}>{hud.level ?? 1}</span>}
+              portrait={
+                hud.portraitUrl ? (
+                  <img
+                    className="uf-portrait-img"
+                    src={hud.portraitUrl}
+                    alt={hud.character}
+                    draggable={false}
+                    onError={(e) =>
+                      portraitOnError(e.currentTarget, hud.portraitCandidates ?? [])
+                    }
+                  />
+                ) : (
+                  <span className="uf-portrait-letter">
+                    {(hud.character || "?").slice(0, 1).toUpperCase()}
+                  </span>
+                )
+              }
+            />
+            <div className="rpg-poise-under">
+              <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
+              <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
+            </div>
+          </div>
+
+          {/* RIGHT wing — utility (quickActions SSOT) */}
+          <div className="rpg-slot-wing rpg-slot-wing-right" aria-label="Utility options">
+            {rightWingSlots(defaultQuickSlots()).map((id, i) => {
+              if (!id) return <div key={`R${i}`} className="act-slot act-compact act-empty" />;
               const pres = wingPresentation(id, hud, slotByName);
               const { cd, cdMax } = wingCooldown(id, hud);
               return (
                 <SkillSlot
                   compact
-                  key={`L-${id}`}
+                  key={`R-${id}`}
                   keyLabel={pres.key}
                   name={pres.name}
                   icon={pres.icon}
                   iconUrl={pres.iconUrl}
                   cd={cd}
                   cdMax={cdMax}
+                  accent={id === "dodge" || id === "parry"}
                 />
               );
-            })
-          )}
-        </div>
-
-        {/* CENTER: UnitFrame portrait (threejs-rapier style) */}
-        <div className="rpg-unitframe-wrap">
-          <UnitFrame
-            side="left"
-            variant="player"
-            name={hud.character}
-            sub={hud.weaponLabel}
-            hp={{ value: hud.health, max: hud.maxHealth }}
-            energy={{ value: hud.stamina, max: hud.maxStamina }}
-            badge={<span title={`Lv ${hud.level ?? 1}`}>{hud.level ?? 1}</span>}
-            portrait={
-              hud.portraitUrl ? (
-                <img
-                  className="uf-portrait-img"
-                  src={hud.portraitUrl}
-                  alt={hud.character}
-                  draggable={false}
-                  onError={(e) =>
-                    portraitOnError(e.currentTarget, hud.portraitCandidates ?? [])
-                  }
-                />
-              ) : (
-                <span className="uf-portrait-letter">
-                  {(hud.character || "?").slice(0, 1).toUpperCase()}
-                </span>
-              )
-            }
-          />
-          <div className="rpg-poise-under">
-            <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
-            <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
+            })}
           </div>
         </div>
-
-        {/* RIGHT wing — utility (quickActions SSOT) */}
-        <div className="rpg-slot-wing rpg-slot-wing-right" aria-label="Utility options">
-          {rightWingSlots(defaultQuickSlots()).map((id, i) => {
-            if (!id) return <div key={`R${i}`} className="act-slot act-compact act-empty" />;
-            const pres = wingPresentation(id, hud, slotByName);
-            const { cd, cdMax } = wingCooldown(id, hud);
-            return (
-              <SkillSlot
-                compact
-                key={`R-${id}`}
-                keyLabel={pres.key}
-                name={pres.name}
-                icon={pres.icon}
-                iconUrl={pres.iconUrl}
-                cd={cd}
-                cdMax={cdMax}
-                accent={id === "dodge" || id === "parry"}
-              />
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* Enemy panel (top-right) — UnitFrame-style target when locked */}
       {hud.selectedTarget ? (
@@ -1004,48 +996,51 @@ export function Hud({
         <EnemyPanel hud={hud} edit={edit} />
       )}
 
-      {/* Bottom center action bar kept for mech / wide skill read — secondary */}
-      <div {...applyBind(bindOf(edit, "actionbar"), "rpg-actionbar rpg-actionbar-secondary")}>
-        {hud.mech ? (
-          <>
-            <SkillSlot keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
-            {hud.mech.abilities.map((a) => (
-              <SkillSlot
-                key={a.key}
-                keyLabel={a.key}
-                name={a.name}
-                icon={a.icon}
-                cd={a.cd}
-                cdMax={a.cdMax}
-                accent
-              />
-            ))}
-          </>
-        ) : (
-          <>
-            <Icon name={WEAPON_ICON[hud.weapon]} size={22} />
-            <span className="rpg-actionbar-hint">{COMBAT_KEY_LEGEND}</span>
-          </>
-        )}
-      </div>
+      {/* Combat-only secondary action bar + readout (harvest/build use Craftpix bar) */}
+      {!isHarvestBuild && (
+        <>
+          <div {...applyBind(bindOf(edit, "actionbar"), "rpg-actionbar rpg-actionbar-secondary")}>
+            {hud.mech ? (
+              <>
+                <SkillSlot keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
+                {hud.mech.abilities.map((a) => (
+                  <SkillSlot
+                    key={a.key}
+                    keyLabel={a.key}
+                    name={a.name}
+                    icon={a.icon}
+                    cd={a.cd}
+                    cdMax={a.cdMax}
+                    accent
+                  />
+                ))}
+              </>
+            ) : (
+              <>
+                <Icon name={WEAPON_ICON[hud.weapon]} size={22} />
+                <span className="rpg-actionbar-hint">{COMBAT_KEY_LEGEND}</span>
+              </>
+            )}
+          </div>
 
-      {/* Combat readout */}
-      <div {...applyBind(bindOf(edit, "stats"), "rpg-stats")}>
-        <span className="now-playing" title="Currently playing animation">
-          ▶ {hud.clip || "idle"}
-        </span>
-        <span>
-          <em>Targets</em> {hud.targetsAlive}
-        </span>
-        <span className={`spar-diff diff-${hud.difficulty}`}>
-          <em>Spar</em> {hud.difficulty}
-        </span>
-        {hud.blocking && <span className="spar-block">▣ Block</span>}
-        <span>
-          <em>Jumps</em> {hud.jumpsLeft}
-        </span>
-        <span className="dim">{hud.fps} fps</span>
-      </div>
+          <div {...applyBind(bindOf(edit, "stats"), "rpg-stats")}>
+            <span className="now-playing" title="Currently playing animation">
+              ▶ {hud.clip || "idle"}
+            </span>
+            <span>
+              <em>Targets</em> {hud.targetsAlive}
+            </span>
+            <span className={`spar-diff diff-${hud.difficulty}`}>
+              <em>Spar</em> {hud.difficulty}
+            </span>
+            {hud.blocking && <span className="spar-block">▣ Block</span>}
+            <span>
+              <em>Jumps</em> {hud.jumpsLeft}
+            </span>
+            <span className="dim">{hud.fps} fps</span>
+          </div>
+        </>
+      )}
 
       {/* CSS for new combat animations */}
       <style>{`

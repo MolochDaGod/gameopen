@@ -4,6 +4,11 @@
  */
 import { MINE_LOADER_LIVE, buildMineLoaderUrl } from "../auth/mineLoaderConfig";
 import { getStoredToken } from "../lib/grudgeAuth";
+import {
+  enrichSkillNodeIcons,
+  pickCatalogIconFields,
+  resolveTreeHeaderIconUrl,
+} from "../lib/skillTreeIcons";
 import { MAP_TEMPLATES } from "../three/voxel/templates";
 import { gameSession } from "./GameSession";
 
@@ -50,19 +55,77 @@ export interface CraftRecipe {
   heal?: number;
 }
 
+/** Node kinds on the class path (milestone band vs bridge choices). */
+export type SkillNodeKind =
+  | "milestone"
+  | "bridge"
+  | "passive"
+  | "proc"
+  | "selection"
+  | "form"
+  | "active";
+
 export interface SkillNode {
   id: string;
   name: string;
   desc: string;
+  /**
+   * Display band 0–3 (legacy Craftpix ribbon).
+   * Prefer {@link requiredLevel} for the 0/1/5/10/15/20 path.
+   */
   tier: number;
   requires: string[];
   cost: number;
+  /** Character level gate (0 = selection, then 1,5,10,15,20 milestones). */
+  requiredLevel?: number;
+  kind?: SkillNodeKind;
+  /** Auto-granted when class is selected (level 0). */
+  auto?: boolean;
+  /** Optional flat bonuses (HP, procs, etc.) for bridge nodes. */
+  bonuses?: Record<string, number>;
+  formId?: string;
+  passive?: boolean;
+  /**
+   * Original catalog icon path (e.g. /icons/skill_nobg/Warriorskill_01_nobg.png).
+   * Prefer {@link iconUrl} for absolute CDN when resolved.
+   */
+  icon?: string;
+  /** Absolute (CDN) or relative icon URL for UI &lt;img&gt;. */
+  iconUrl?: string;
 }
 export interface SkillTree {
   id: string;
   name: string;
   color: string;
   nodes: SkillNode[];
+  /** Class key when this tree is a fleet class tree (`warrior` …). */
+  classKey?: string;
+  /** Tree header icon (class relic / pack). */
+  icon?: string;
+  iconUrl?: string;
+}
+
+/** Milestone levels on the class skill path. */
+export const CLASS_SKILL_MILESTONES = [0, 1, 5, 10, 15, 20] as const;
+
+export function skillBandLabel(requiredLevel: number): string {
+  if (requiredLevel <= 0) return "L0 · Select";
+  if (requiredLevel === 1) return "L1 · Start";
+  if (requiredLevel === 5) return "L5";
+  if (requiredLevel === 10) return "L10";
+  if (requiredLevel === 15) return "L15";
+  if (requiredLevel === 20) return "L20";
+  if (requiredLevel < 5) return `L${requiredLevel} · Bridge`;
+  if (requiredLevel < 10) return `L${requiredLevel} · Bridge`;
+  if (requiredLevel < 15) return `L${requiredLevel} · Bridge`;
+  return `L${requiredLevel} · Bridge`;
+}
+
+export function tierFromRequiredLevel(lv: number): number {
+  if (lv <= 1) return 0;
+  if (lv <= 5) return 1;
+  if (lv <= 10) return 2;
+  return 3;
 }
 
 export interface HarvestOp {
@@ -350,12 +413,280 @@ export async function loadHarvestRecipes(): Promise<{
   };
 }
 
+type BridgeFile = {
+  level0?: Record<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      description?: string;
+      effect?: string;
+      kind?: SkillNodeKind;
+      auto?: boolean;
+      formId?: string;
+      bonuses?: Record<string, number>;
+    }>
+  >;
+  bridges?: Record<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      requiredLevel: number;
+      requires?: string[];
+      kind?: SkillNodeKind;
+      description?: string;
+      effect?: string;
+      cost?: number;
+      bonuses?: Record<string, number>;
+      formId?: string;
+    }>
+  >;
+};
+
+/**
+ * Map fleet `master-skillTrees.json` (character.grudge-studio.com / info SSOT)
+ * into the SkillTree shape used by ClassSkillTreePanel.
+ * Optionally merges additive bridge nodes (levels between 1/5/10/15/20).
+ */
+function mapMasterSkillTrees(raw: unknown, bridges: BridgeFile | null): SkillTree[] {
+  const root = raw as {
+    skillTrees?: Record<
+      string,
+      {
+        className?: string;
+        color?: string;
+        icon?: string;
+        iconUrl?: string;
+        tiers?: Array<{
+          name?: string;
+          requiredLevel?: number;
+          skills?: Array<Record<string, unknown>>;
+        }>;
+      }
+    >;
+  };
+  if (!root?.skillTrees) return [];
+  const out: SkillTree[] = [];
+  for (const [classId, cls] of Object.entries(root.skillTrees)) {
+    const treeId = `class-${classId}`;
+    const nodes: SkillNode[] = [];
+
+    // Level 0 — granted at class selection (one class from the row)
+    for (const s of bridges?.level0?.[classId] || []) {
+      const rawNode = s as unknown as Record<string, unknown>;
+      const ic = pickCatalogIconFields(rawNode);
+      nodes.push(
+        enrichSkillNodeIcons(
+          {
+            id: s.id,
+            name: s.name,
+            desc: [s.description, s.effect].filter(Boolean).join(" — ") || s.name,
+            tier: 0,
+            requiredLevel: 0,
+            requires: [],
+            cost: 0,
+            kind: s.kind || "passive",
+            auto: s.auto !== false,
+            formId: s.formId,
+            bonuses: s.bonuses,
+            passive: s.kind === "passive" || s.kind === "form",
+            icon: ic.icon,
+            iconUrl: ic.iconUrl,
+          },
+          treeId,
+        ),
+      );
+    }
+
+    // Milestone tiers from existing master-skillTrees (1 / 5 / 10 / 15 / 20)
+    (cls.tiers || []).forEach((tier, tierIdx) => {
+      const reqLv = typeof tier.requiredLevel === "number" ? tier.requiredLevel : [1, 5, 10, 15, 20][tierIdx] ?? 1;
+      const skills = tier.skills || [];
+      skills.forEach((s, skillIdx) => {
+        const id = typeof s.id === "string" ? s.id : "";
+        const name = typeof s.name === "string" ? s.name : "";
+        if (!id || !name) return;
+        const passive = !!s.passive;
+        const procEffect = s.procEffect;
+        const kind: SkillNodeKind = passive ? "passive" : procEffect ? "proc" : "milestone";
+        const ic = pickCatalogIconFields(s);
+        const requires = typeof s.requires === "string" ? [s.requires] : Array.isArray(s.requires) ? (s.requires as string[]) : [];
+        nodes.push(
+          enrichSkillNodeIcons(
+            {
+              id,
+              name,
+              desc:
+                [s.description, s.effect].filter((x) => typeof x === "string").join(" — ") || name,
+              tier: tierFromRequiredLevel(reqLv),
+              requiredLevel: reqLv,
+              requires,
+              cost: typeof s.maxPoints === "number" ? (s.maxPoints as number) : 1,
+              kind,
+              passive,
+              bonuses: (s.bonuses as Record<string, number>) || undefined,
+              auto: reqLv === 1 && skillIdx === 0 ? false : undefined,
+              icon: ic.icon,
+              iconUrl: ic.iconUrl,
+            },
+            treeId,
+          ),
+        );
+      });
+    });
+
+    // Bridge nodes between milestones (selections, passives, procs, health, …)
+    for (const b of bridges?.bridges?.[classId] || []) {
+      const rawB = b as unknown as Record<string, unknown>;
+      const ic = pickCatalogIconFields(rawB);
+      nodes.push(
+        enrichSkillNodeIcons(
+          {
+            id: b.id,
+            name: b.name,
+            desc: [b.description, b.effect].filter(Boolean).join(" — ") || b.name,
+            tier: tierFromRequiredLevel(b.requiredLevel),
+            requiredLevel: b.requiredLevel,
+            requires: b.requires || [],
+            cost: b.cost ?? 1,
+            kind: b.kind || "bridge",
+            bonuses: b.bonuses,
+            formId: b.formId,
+            passive: b.kind === "passive" || b.kind === "proc",
+            icon: ic.icon,
+            iconUrl: ic.iconUrl,
+          },
+          treeId,
+        ),
+      );
+    }
+
+    // Stable order: by requiredLevel then name
+    nodes.sort((a, b) => (a.requiredLevel ?? 0) - (b.requiredLevel ?? 0) || a.name.localeCompare(b.name));
+
+    if (!nodes.length) continue;
+    const treeIcons = pickCatalogIconFields(cls as unknown as Record<string, unknown>);
+    const treeEnriched = enrichSkillNodeIcons(
+      {
+        id: treeId,
+        icon: treeIcons.icon || cls.icon,
+        iconUrl: treeIcons.iconUrl || cls.iconUrl,
+        classKey: classId,
+      },
+      treeId,
+    );
+    out.push({
+      id: treeId,
+      name: cls.className || classId,
+      color: cls.color || "#d4a400",
+      classKey: classId,
+      icon: treeEnriched.icon,
+      iconUrl: treeEnriched.iconUrl,
+      nodes,
+    });
+  }
+  return out;
+}
+
+/** Class combat skill trees from fleet SSOT + additive bridges. */
+export async function loadClassSkillTreesFromFleet(): Promise<SkillTree[]> {
+  const [data, bridgeData] = await Promise.all([
+    tryJson<unknown>([
+      "/api/objectstore/v1/master-skillTrees.json",
+      "https://info.grudge-studio.com/api/v1/master-skillTrees.json",
+      "https://objectstore.grudge-studio.com/api/v1/master-skillTrees.json",
+    ]),
+    tryJson<BridgeFile>([
+      "/api/objectstore/v1/class-skill-bridges.json",
+      "https://info.grudge-studio.com/api/v1/class-skill-bridges.json",
+      "https://objectstore.grudge-studio.com/api/v1/class-skill-bridges.json",
+      // Local fallback copy if published under content later
+      "/content/class-skill-bridges.json",
+    ]),
+  ]);
+  return mapMasterSkillTrees(data, bridgeData);
+}
+
+/**
+ * Grant level-0 (selection) nodes for a class — free, always.
+ * Call when the player picks one class from the row (Worge includes Bear start).
+ */
+export function grantClassSelectionSkills(classKey: string): string[] {
+  const key = classKey.replace(/^class-/, "");
+  const cur = new Set(loadSkillUnlocks());
+  // Known L0 ids from bridges (also re-applied after trees load)
+  const defaults: Record<string, string[]> = {
+    warrior: ["w_l0_warbound"],
+    mage: ["m_l0_leyline"],
+    ranger: ["r_l0_log"],
+    worge: ["wr_l0_bear"],
+  };
+  for (const id of defaults[key] || []) cur.add(id);
+  const arr = [...cur];
+  try {
+    localStorage.setItem(UNLOCK_KEY, JSON.stringify(arr));
+  } catch {
+    /* ignore */
+  }
+  return arr;
+}
+
+/** Unlock every `auto` node on a loaded class tree (level 0 + any flagged). */
+export function grantAutoNodesFromTree(tree: SkillTree | undefined): string[] {
+  if (!tree) return loadSkillUnlocks();
+  const cur = new Set(loadSkillUnlocks());
+  for (const n of tree.nodes) {
+    if (n.auto || n.requiredLevel === 0) cur.add(n.id);
+  }
+  const arr = [...cur];
+  try {
+    localStorage.setItem(UNLOCK_KEY, JSON.stringify(arr));
+  } catch {
+    /* ignore */
+  }
+  return arr;
+}
+
+/**
+ * Production skill trees:
+ * 1) Local harvest/craft/build/weapon-combat content (skill-trees.json)
+ * 2) Fleet master-skillTrees (Warrior / Mage / Ranger / Worge) — character skills page SSOT
+ */
+/** Ensure every node on a tree has icon + resolved iconUrl (original catalog preferred). */
+export function enrichTreeIcons(tree: SkillTree): SkillTree {
+  const nodes = (tree.nodes || []).map((n) =>
+    enrichSkillNodeIcons(
+      {
+        ...n,
+        icon: n.icon,
+        iconUrl: n.iconUrl,
+      },
+      tree.id,
+    ),
+  );
+  const header = resolveTreeHeaderIconUrl(tree.id, tree.iconUrl || tree.icon);
+  return {
+    ...tree,
+    icon: tree.icon || header,
+    iconUrl: tree.iconUrl || header,
+    nodes,
+  };
+}
+
 export async function loadSkillTrees(): Promise<SkillTree[]> {
   const data = await tryJson<{ trees?: SkillTree[] }>([
     "/api/content/harvest/skill-trees.json",
     "/content/harvest/skill-trees.json",
   ]);
-  return data?.trees?.length ? data.trees : FALLBACK_TREES;
+  const rawLocal = data?.trees?.length ? data.trees : FALLBACK_TREES;
+  const local = rawLocal.map(enrichTreeIcons);
+  const classTrees = (await loadClassSkillTreesFromFleet()).map(enrichTreeIcons);
+  if (!classTrees.length) return local;
+  // Prefer class trees first, then keep harvest/weapon content without id clash
+  const seen = new Set(classTrees.map((t) => t.id));
+  const rest = local.filter((t) => !seen.has(t.id));
+  return [...classTrees, ...rest];
 }
 
 export async function loadOperations(): Promise<HarvestOp[]> {

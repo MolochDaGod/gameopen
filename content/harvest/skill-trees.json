@@ -8,15 +8,114 @@
       "name": "Harvest",
       "color": "#7ee7a8",
       "nodes": [
-        { "id": "h_gather", "name": "Gatherer", "desc": "Pick plants and forage nodes faster.", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "h_skin", "name": "Skinner", "desc": "Skin corpses for meat and leather.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_mine", "name": "Miner", "desc": "Mine ore veins; +yield on coal/iron.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_chop", "name": "Lumberjack", "desc": "Fell trees; planks convert faster.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_dig", "name": "Digger", "desc": "Shovel soil/sand; clay chance.", "tier": 1, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_fish", "name": "Angler", "desc": "Fish water voxels for food.", "tier": 2, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_farm", "name": "Farmer", "desc": "Tend crop voxels; seed reuse.", "tier": 2, "requires": ["h_gather"], "cost": 2 },
-        { "id": "h_rare", "name": "Prospector", "desc": "Chance for rare drops from nodes.", "tier": 2, "requires": ["h_mine", "h_chop"], "cost": 3 },
-        { "id": "h_master", "name": "Field master", "desc": "All harvest channels 20% faster.", "tier": 3, "requires": ["h_rare", "h_farm"], "cost": 4 }
+        {
+          "id": "h_gather",
+          "name": "Gatherer",
+          "desc": "Pick plants and forage nodes faster.",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "h_skin",
+          "name": "Skinner",
+          "desc": "Skin corpses for meat and leather.",
+          "tier": 1,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "h_mine",
+          "name": "Miner",
+          "desc": "Mine ore veins; +yield on coal/iron.",
+          "tier": 1,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/weapons/Hammer_01.png",
+          "iconUrl": "/icons/pack/weapons/Hammer_01.png"
+        },
+        {
+          "id": "h_chop",
+          "name": "Lumberjack",
+          "desc": "Fell trees; planks convert faster.",
+          "tier": 1,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/weapons/Axe_01.png",
+          "iconUrl": "/icons/pack/weapons/Axe_01.png"
+        },
+        {
+          "id": "h_dig",
+          "name": "Digger",
+          "desc": "Shovel soil/sand; clay chance.",
+          "tier": 1,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "h_fish",
+          "name": "Angler",
+          "desc": "Fish water voxels for food.",
+          "tier": 2,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "h_farm",
+          "name": "Farmer",
+          "desc": "Tend crop voxels; seed reuse.",
+          "tier": 2,
+          "requires": [
+            "h_gather"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "h_rare",
+          "name": "Prospector",
+          "desc": "Chance for rare drops from nodes.",
+          "tier": 2,
+          "requires": [
+            "h_mine",
+            "h_chop"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Chaos_2.png",
+          "iconUrl": "/icons/pack/misc/Chaos_2.png"
+        },
+        {
+          "id": "h_master",
+          "name": "Field master",
+          "desc": "All harvest channels 20% faster.",
+          "tier": 3,
+          "requires": [
+            "h_rare",
+            "h_farm"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        }
       ]
     },
     {
@@ -24,13 +123,89 @@
       "name": "Crafting",
       "color": "#ffd28a",
       "nodes": [
-        { "id": "c_hand", "name": "Handcraft", "desc": "Unlock hand recipes.", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "c_bench", "name": "Workbench", "desc": "Use workbench station recipes.", "tier": 1, "requires": ["c_hand"], "cost": 2 },
-        { "id": "c_cook", "name": "Camp cook", "desc": "Cook meat and brews at campfire.", "tier": 1, "requires": ["c_hand"], "cost": 2 },
-        { "id": "c_forge", "name": "Smith", "desc": "Smelt ores and forge tools.", "tier": 2, "requires": ["c_bench"], "cost": 3 },
-        { "id": "c_loom", "name": "Weaver", "desc": "Cloth, bandages, light armor kits.", "tier": 2, "requires": ["c_bench"], "cost": 3 },
-        { "id": "c_alchemy", "name": "Alchemist", "desc": "Salves, lamps, crystal crafts.", "tier": 2, "requires": ["c_cook"], "cost": 3 },
-        { "id": "c_batch", "name": "Batch craft", "desc": "Craft ×2 when materials allow.", "tier": 3, "requires": ["c_forge", "c_loom"], "cost": 4 }
+        {
+          "id": "c_hand",
+          "name": "Handcraft",
+          "desc": "Unlock hand recipes.",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "c_bench",
+          "name": "Workbench",
+          "desc": "Use workbench station recipes.",
+          "tier": 1,
+          "requires": [
+            "c_hand"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "c_cook",
+          "name": "Camp cook",
+          "desc": "Cook meat and brews at campfire.",
+          "tier": 1,
+          "requires": [
+            "c_hand"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "c_forge",
+          "name": "Smith",
+          "desc": "Smelt ores and forge tools.",
+          "tier": 2,
+          "requires": [
+            "c_bench"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/weapons/Hammer_01.png",
+          "iconUrl": "/icons/pack/weapons/Hammer_01.png"
+        },
+        {
+          "id": "c_loom",
+          "name": "Weaver",
+          "desc": "Cloth, bandages, light armor kits.",
+          "tier": 2,
+          "requires": [
+            "c_bench"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "c_alchemy",
+          "name": "Alchemist",
+          "desc": "Salves, lamps, crystal crafts.",
+          "tier": 2,
+          "requires": [
+            "c_cook"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Chaos_2.png",
+          "iconUrl": "/icons/pack/misc/Chaos_2.png"
+        },
+        {
+          "id": "c_batch",
+          "name": "Batch craft",
+          "desc": "Craft ×2 when materials allow.",
+          "tier": 3,
+          "requires": [
+            "c_forge",
+            "c_loom"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        }
       ]
     },
     {
@@ -38,14 +213,101 @@
       "name": "Building",
       "color": "#7fb0ff",
       "nodes": [
-        { "id": "b_place", "name": "Place", "desc": "Place foundation blocks.", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "b_wall", "name": "Walls", "desc": "Wall and floor kits.", "tier": 1, "requires": ["b_place"], "cost": 2 },
-        { "id": "b_ramp", "name": "Ramps", "desc": "Ramps, stairs, doors.", "tier": 1, "requires": ["b_place"], "cost": 2 },
-        { "id": "b_station", "name": "Stations", "desc": "Place workbench / forge / loom.", "tier": 2, "requires": ["b_wall"], "cost": 3 },
-        { "id": "b_demo", "name": "Demolish", "desc": "Refund part of materials on break.", "tier": 2, "requires": ["b_wall"], "cost": 2 },
-        { "id": "b_paint", "name": "Palette", "desc": "Recolor voxels from codex blocks.", "tier": 2, "requires": ["b_place"], "cost": 2 },
-        { "id": "b_struct", "name": "Structures", "desc": "Multi-block stamps from maps library.", "tier": 3, "requires": ["b_ramp", "b_station"], "cost": 4 },
-        { "id": "b_snap", "name": "Grid snap", "desc": "Snap place + ghost preview polish.", "tier": 3, "requires": ["b_struct"], "cost": 3 }
+        {
+          "id": "b_place",
+          "name": "Place",
+          "desc": "Place foundation blocks.",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "b_wall",
+          "name": "Walls",
+          "desc": "Wall and floor kits.",
+          "tier": 1,
+          "requires": [
+            "b_place"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "b_ramp",
+          "name": "Ramps",
+          "desc": "Ramps, stairs, doors.",
+          "tier": 1,
+          "requires": [
+            "b_place"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "b_station",
+          "name": "Stations",
+          "desc": "Place workbench / forge / loom.",
+          "tier": 2,
+          "requires": [
+            "b_wall"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/weapons/Hammer_01.png",
+          "iconUrl": "/icons/pack/weapons/Hammer_01.png"
+        },
+        {
+          "id": "b_demo",
+          "name": "Demolish",
+          "desc": "Refund part of materials on break.",
+          "tier": 2,
+          "requires": [
+            "b_wall"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Chaos_2.png",
+          "iconUrl": "/icons/pack/misc/Chaos_2.png"
+        },
+        {
+          "id": "b_paint",
+          "name": "Palette",
+          "desc": "Recolor voxels from codex blocks.",
+          "tier": 2,
+          "requires": [
+            "b_place"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "b_struct",
+          "name": "Structures",
+          "desc": "Multi-block stamps from maps library.",
+          "tier": 3,
+          "requires": [
+            "b_ramp",
+            "b_station"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "b_snap",
+          "name": "Grid snap",
+          "desc": "Snap place + ghost preview polish.",
+          "tier": 3,
+          "requires": [
+            "b_struct"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        }
       ]
     },
     {
@@ -53,11 +315,65 @@
       "name": "Survival",
       "color": "#ff9a7a",
       "nodes": [
-        { "id": "s_eat", "name": "Rations", "desc": "Food restores more HP.", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "s_light", "name": "Torchbearer", "desc": "Torch radius and duration up.", "tier": 1, "requires": ["s_eat"], "cost": 2 },
-        { "id": "s_bag", "name": "Pack mule", "desc": "+inventory slots for mats.", "tier": 2, "requires": ["s_eat"], "cost": 3 },
-        { "id": "s_rest", "name": "Camp rest", "desc": "Campfire heals slowly when idle.", "tier": 2, "requires": ["s_light"], "cost": 2 },
-        { "id": "s_hardy", "name": "Hardy", "desc": "+max HP from cooked food buffs.", "tier": 3, "requires": ["s_bag", "s_rest"], "cost": 4 }
+        {
+          "id": "s_eat",
+          "name": "Rations",
+          "desc": "Food restores more HP.",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "s_light",
+          "name": "Torchbearer",
+          "desc": "Torch radius and duration up.",
+          "tier": 1,
+          "requires": [
+            "s_eat"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "s_bag",
+          "name": "Pack mule",
+          "desc": "+inventory slots for mats.",
+          "tier": 2,
+          "requires": [
+            "s_eat"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "s_rest",
+          "name": "Camp rest",
+          "desc": "Campfire heals slowly when idle.",
+          "tier": 2,
+          "requires": [
+            "s_light"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "s_hardy",
+          "name": "Hardy",
+          "desc": "+max HP from cooked food buffs.",
+          "tier": 3,
+          "requires": [
+            "s_bag",
+            "s_rest"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        }
       ]
     },
     {
@@ -65,12 +381,77 @@
       "name": "Explorer",
       "color": "#c4a0ff",
       "nodes": [
-        { "id": "e_map", "name": "Cartographer", "desc": "Reveal map markers and map library tags.", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "e_trail", "name": "Trail sense", "desc": "Highlight harvest nodes nearby.", "tier": 1, "requires": ["e_map"], "cost": 2 },
-        { "id": "e_avatar", "name": "Avatar bond", "desc": "Import user cube heads to Explorer.", "tier": 1, "requires": ["e_map"], "cost": 1 },
-        { "id": "e_realm", "name": "Realm walker", "desc": "Faster handoff into Mine-Loader worlds.", "tier": 2, "requires": ["e_trail"], "cost": 3 },
-        { "id": "e_codex", "name": "Codex scholar", "desc": "Unlock full block filter categories.", "tier": 2, "requires": ["e_avatar"], "cost": 2 },
-        { "id": "e_legend", "name": "Pathfinder", "desc": "All explorer buffs; rare map stamps.", "tier": 3, "requires": ["e_realm", "e_codex"], "cost": 4 }
+        {
+          "id": "e_map",
+          "name": "Cartographer",
+          "desc": "Reveal map markers and map library tags.",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "e_trail",
+          "name": "Trail sense",
+          "desc": "Highlight harvest nodes nearby.",
+          "tier": 1,
+          "requires": [
+            "e_map"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Slash_07.png",
+          "iconUrl": "/icons/pack/misc/Slash_07.png"
+        },
+        {
+          "id": "e_avatar",
+          "name": "Avatar bond",
+          "desc": "Import user cube heads to Explorer.",
+          "tier": 1,
+          "requires": [
+            "e_map"
+          ],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "e_realm",
+          "name": "Realm walker",
+          "desc": "Faster handoff into Mine-Loader worlds.",
+          "tier": 2,
+          "requires": [
+            "e_trail"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Flow.png",
+          "iconUrl": "/icons/pack/misc/Flow.png"
+        },
+        {
+          "id": "e_codex",
+          "name": "Codex scholar",
+          "desc": "Unlock full block filter categories.",
+          "tier": 2,
+          "requires": [
+            "e_avatar"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Chaos_2.png",
+          "iconUrl": "/icons/pack/misc/Chaos_2.png"
+        },
+        {
+          "id": "e_legend",
+          "name": "Pathfinder",
+          "desc": "All explorer buffs; rare map stamps.",
+          "tier": 3,
+          "requires": [
+            "e_realm",
+            "e_codex"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        }
       ]
     },
     {
@@ -79,13 +460,91 @@
       "color": "#ff7a7a",
       "notes": "Maps to T0 / master-weaponSkills kits (1–4). Explorer + Danger Room VFX kinds.",
       "nodes": [
-        { "id": "w_basic", "name": "Basic attack", "desc": "LMB combo + light skill VFX (slash/bolt).", "tier": 0, "requires": [], "cost": 1 },
-        { "id": "w_combo", "name": "Combo kit", "desc": "Skill slot 1 — combo role; gap-close MM.", "tier": 1, "requires": ["w_basic"], "cost": 2 },
-        { "id": "w_special", "name": "Special kit", "desc": "Skill slot 2 — special VFX (nova/slam).", "tier": 1, "requires": ["w_basic"], "cost": 2 },
-        { "id": "w_ranged", "name": "Ranged kit", "desc": "Skill slot 3 — bolt/projectile kit.", "tier": 1, "requires": ["w_basic"], "cost": 2 },
-        { "id": "w_power", "name": "Power move", "desc": "Skill slot 4 — power dash/slam VFX.", "tier": 2, "requires": ["w_combo", "w_special"], "cost": 3 },
-        { "id": "w_parry", "name": "Parry timing", "desc": "C parry window + counter VFX.", "tier": 2, "requires": ["w_basic"], "cost": 2 },
-        { "id": "w_master", "name": "Weapon master", "desc": "All kit slots CD −15%; full T0 tree.", "tier": 3, "requires": ["w_power", "w_ranged", "w_parry"], "cost": 4 }
+        {
+          "id": "w_basic",
+          "name": "Basic attack",
+          "desc": "LMB combo + light skill VFX (slash/bolt).",
+          "tier": 0,
+          "requires": [],
+          "cost": 1,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_combo",
+          "name": "Combo kit",
+          "desc": "Skill slot 1 — combo role; gap-close MM.",
+          "tier": 1,
+          "requires": [
+            "w_basic"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_special",
+          "name": "Special kit",
+          "desc": "Skill slot 2 — special VFX (nova/slam).",
+          "tier": 1,
+          "requires": [
+            "w_basic"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_ranged",
+          "name": "Ranged kit",
+          "desc": "Skill slot 3 — bolt/projectile kit.",
+          "tier": 1,
+          "requires": [
+            "w_basic"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_power",
+          "name": "Power move",
+          "desc": "Skill slot 4 — power dash/slam VFX.",
+          "tier": 2,
+          "requires": [
+            "w_combo",
+            "w_special"
+          ],
+          "cost": 3,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_parry",
+          "name": "Parry timing",
+          "desc": "C parry window + counter VFX.",
+          "tier": 2,
+          "requires": [
+            "w_basic"
+          ],
+          "cost": 2,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        },
+        {
+          "id": "w_master",
+          "name": "Weapon master",
+          "desc": "All kit slots CD −15%; full T0 tree.",
+          "tier": 3,
+          "requires": [
+            "w_power",
+            "w_ranged",
+            "w_parry"
+          ],
+          "cost": 4,
+          "icon": "/icons/pack/misc/Effect.png",
+          "iconUrl": "/icons/pack/misc/Effect.png"
+        }
       ]
     }
   ]

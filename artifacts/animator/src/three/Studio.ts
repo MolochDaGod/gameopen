@@ -63,8 +63,24 @@ import { loadSound, saveSound, type SoundSettings } from "./soundSettings";
 import { loadControls, saveControls } from "./controlsSettings";
 import { getCharacter, getWeapon, weaponCombat } from "./assets";
 import { offHandEligible, getT0Skill, t0SignatureSkills, mmToMeters } from "./arsenal";
+import {
+  isSpearWeapon,
+  spearChargePlan,
+  SPEAR_COMBO_CLIPS,
+  SPEAR_FINISHER_ENTRY_MM,
+  spearSkillById,
+  spearSignatureRows,
+  type SpearSkillRuntime,
+} from "./ummorpg/spearCombat";
+import {
+  heavyProfile,
+  heavySignatureRows,
+  isHeavy2hWeapon,
+} from "./combat/heavyWeaponCombat";
 import { ELEMENT_THEME } from "./arsenal/elements";
 import { staffHoverTheme } from "./arsenal/staffHover";
+import { CampBuildSystem } from "./camp/CampBuildSystem";
+import { getPlaceable } from "./camp/placeables";
 import {
   DODGE_CUT,
   FORCEFIELD_CUT,
@@ -650,6 +666,8 @@ export class Studio {
   private radialOpen = false;
   private radialHoldT = 0;
   private tabHoldArmed = false;
+  /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
+  private campBuild: CampBuildSystem | null = null;
   /** Cooldown gating the kiter backstep's i-frame dodge so rapid fire can't chain
    *  the invuln window into continuous immunity (dodge re-arms every 0.6s). */
   private pistolDodgeCd = 0;
@@ -832,6 +850,13 @@ export class Studio {
       },
     });
     this.targets = new Targets(this.scene);
+    this.campBuild = new CampBuildSystem(this.scene, {
+      flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.8),
+      getPlayerPos: () => this.character?.root.position.clone() ?? new THREE.Vector3(),
+    });
+    // Sandbox claim so gated buildings can ghost-place in Danger Room without
+    // first planting a flag (still places a real claim flag mesh at z=-6).
+    this.campBuild.seedSandboxClaim(new THREE.Vector3(0, 0, -6));
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
     this.telegraphs = new TelegraphField(this.scene);
@@ -1440,6 +1465,17 @@ export class Studio {
       (character instanceof GrudgeAvatar ? character.getMeshIds() : null) ||
       [];
     if (kitMeshes.some((n) => /weapon|sword|axe|bow|staff|spear|dagger|hammer|mace|shield|quiver/i.test(n))) {
+      // Polearm / 2H grip assist: bind off-hand toward kit weapon child mesh
+      if (character instanceof GrudgeAvatar) {
+        let weaponMesh: THREE.Object3D | null = null;
+        character.root.traverse((o) => {
+          if (weaponMesh) return;
+          if (/weapon|spear|axe|sword|hammer/i.test(o.name) && (o as THREE.Mesh).isMesh) {
+            weaponMesh = o;
+          }
+        });
+        character.setGripWeapon(weaponMesh, id);
+      }
       this.applyOffHand();
       return;
     }
@@ -1452,6 +1488,9 @@ export class Studio {
       return;
     }
     this.mounted = mounted;
+    if (character instanceof GrudgeAvatar) {
+      character.setGripWeapon(mounted.objects[0] ?? null, id);
+    }
     // Re-evaluate the off-hand: switching mains can make a shield (in)eligible.
     this.applyOffHand();
   }
@@ -1808,12 +1847,14 @@ export class Studio {
       this.doRangedPrimaryShot();
       return;
     }
-    // Weapon characters run a 3-hit combo. A brief lock stops spam from skipping
-    // stages; the chain window (comboTimer) resets the combo to hit 0 when idle.
+    // Weapon characters run a 3-hit combo (spear = 4: 1_1 → 1_2 → 1_4+MM → 1_3).
+    // A brief lock stops spam from skipping stages; the chain window resets to 0.
     if (this.comboLock > 0) return;
     const stage = this.comboTimer > 0 ? this.comboIndex : 0;
     const dur = this.doComboHit(stage);
-    this.comboIndex = (stage + 1) % 3;
+    const comboLen =
+      isSpearWeapon(this.weaponId) || isHeavy2hWeapon(this.weaponId) ? 4 : 3;
+    this.comboIndex = (stage + 1) % comboLen;
     this.lastComboStage = stage;
     // Lock + chain window ride the real clip length so each swing plays through
     // most of the way before the next hit chains (no more truncated half-swings).
@@ -1900,28 +1941,42 @@ export class Studio {
     // State-dependent attack clip: air / after damage / enemy windup / stage,
     // then override primary, then role fallback. Air uses cut playback for snap.
     this.refreshCombatContext();
-    const stageClips: Record<number, string[]> = {
-      0: ["meleeCombo1", "attack1", "attack"],
-      1: ["meleeCombo2", "attack2", "attack"],
-      2: ["meleeCombo1", "attack3", "attack2", "attack"],
-    };
+    // Spear / heavy 2H (Madarame): attack1_1 → 1_2 → 1_4(+MM) → 1_3 finisher
+    const spear = isSpearWeapon(wid);
+    const heavy = heavyProfile(wid);
+    const fourHit = spear || !!heavy;
+    const heavyClips = heavy?.comboClips;
+    const stageClips: Record<number, string[]> = fourHit
+      ? {
+          0: [...(heavyClips?.[0] || SPEAR_COMBO_CLIPS[0] || ["attack"])],
+          1: [...(heavyClips?.[1] || SPEAR_COMBO_CLIPS[1] || ["attack2"])],
+          2: [...(heavyClips?.[2] || SPEAR_COMBO_CLIPS[2] || ["attack4"])],
+          3: [...(heavyClips?.[3] || SPEAR_COMBO_CLIPS[3] || ["attack3"])],
+        }
+      : {
+          0: ["meleeCombo1", "attack1", "attack"],
+          1: ["meleeCombo2", "attack2", "attack"],
+          2: ["meleeCombo1", "attack3", "attack2", "attack"],
+        };
+    const stageKey = fourHit ? Math.min(stage, 3) : Math.min(stage, 2);
+    const stageList = stageClips[stageKey] ?? stageClips[0]!;
     const stateTable: Partial<Record<CombatSituation, string[]>> = {
-      air: ["jumpAttack", "attack", ...stageClips[stage]!],
-      hover: ["jumpAttack", "chargedShot", "attack", ...stageClips[stage]!],
-      after_damage: ["attack", "blockReact", ...stageClips[stage]!],
-      enemy_attacking: ["attack", "parryReact", ...stageClips[stage]!],
-      parry: ["parryReact", "attack", ...stageClips[stage]!],
+      air: ["jumpAttack", "attack", ...stageList],
+      hover: ["jumpAttack", "chargedShot", "attack", ...stageList],
+      after_damage: ["attack", "blockReact", ...stageList],
+      enemy_attacking: ["attack", "parryReact", ...stageList],
+      parry: ["parryReact", "attack", ...stageList],
       ragdoll: ["getUp", "attack"],
       knockdown: ["getUp", "attack"],
       stunned: ["hurt", "attack"],
-      after_light: stageClips[stage],
-      ground: stageClips[stage],
+      after_light: stageList,
+      ground: stageList,
     };
     const stateClip = pickStateClip(
       stateTable,
       this.combatCtx,
       (n) => this.character!.hasClip(n),
-      stageClips[stage] ?? ["attack"],
+      stageList,
     );
     const primary = this.overrides.primary;
     const overlayName =
@@ -1952,15 +2007,20 @@ export class Studio {
 
     const color = SKILL_COLOR[getWeapon(wid).kind] ?? 0x9fe8ff;
     this.swingColor = color;
-    const finisher = stage === 2;
+    // Spear / 2H: stage 2 = drive-in (+MM), stage 3 = finisher
+    const finisher = fourHit ? stage >= 3 : stage === 2;
+    const spearDriveIn = fourHit && stage === 2;
+    const mmScale = heavy?.mmScale ?? 1;
+    const intensityMul = heavy?.intensity ?? 1;
+    const stageDash = heavy?.stageDashM;
 
     // Slash whoosh for THIS combo cut — emitted from the weapon's blade/edge (its
     // collision-damage part) so the cut sounds like it comes from the steel, not
     // the chest. Finishers get the heavier air-rip.
     this.sfx?.play(
-      finisher ? "whooshHeavy" : "whooshLight",
+      finisher || spearDriveIn ? "whooshHeavy" : "whooshLight",
       this.bladeEmitPos(),
-      { volume: finisher ? 0.95 : 0.8 },
+      { volume: finisher || spearDriveIn ? 0.95 : 0.8 },
     );
 
     // Respect-through-range verdict: classify this swing against the OWR of both
@@ -1998,13 +2058,54 @@ export class Studio {
       // Motion-blur tail built from the character's OWN mesh.
       this.vfx.afterimage(this.character.root, origin, dir, Math.max(close, 0.6), color, 4, 0.3);
       this.scheduleComboHit(dashDur * impactAt, dir, rMin, rMax, intensityN, color, finisher, verdict);
+    } else if (spearDriveIn) {
+      // Madarame attack1_4 — strong +MM gap close (scaled for axe/mace/GS)
+      const baseMm = heavy
+        ? (stageDash?.[2] ?? 1.35) / MM_TO_M
+        : SPEAR_FINISHER_ENTRY_MM;
+      const lunge = baseMm * MM_TO_M * mmScale + 0.35 * intensityN * intensityMul;
+      const dashDur = heavy ? 0.28 / (heavy.timeScale || 1) : 0.26;
+      const impactAt = 0.52;
+      this.controller.dash(dir, lunge, dashDur, lunge * 0.1, impactAt);
+      this.vfx.afterimage(this.character.root, origin, dir, Math.max(lunge, 1.0), color, 5, 0.35);
+      this.vfx.skillCharge(
+        this.muzzleOrigin(dir),
+        heavy?.color ?? 0x70d0ff,
+        1.1,
+        0.22,
+      );
+      // Greatsword drive-in can throw a single slash blaster (annihilate teaser)
+      if (heavy?.slashProjectiles) {
+        this.vfx.castSlashBlasters(this.muzzleOrigin(dir), dir, {
+          color: heavy.color,
+          count: 1,
+          range: 11,
+        });
+      }
+      this.scheduleComboHit(
+        dashDur * impactAt,
+        dir,
+        rMin,
+        rMax,
+        intensityN * 1.1 * intensityMul,
+        color,
+        false,
+        verdict,
+      );
     } else {
       // Forward gap-closer lunge (USER-DIRECTED): each follow-up swing drives the
-      // body INTO the enemy. Base advance comes from the motion-math knob; a small
+      // body INTO the enemy. Base advance comes from the motion-math knobs; a small
       // intensity bonus keeps heavier weapons hitting weightier. Only a slight
       // recoil so the combo keeps the ground it gained (~1m+ across hits 1-2).
-      const lunge = COMBO_ADVANCE_MM * MM_TO_M + 0.3 * intensityN;
-      const dashDur = 0.18;
+      const profileDash =
+        stageDash && stage >= 0 && stage < stageDash.length
+          ? stageDash[stage]!
+          : undefined;
+      const lunge =
+        profileDash ??
+        ((spear && stage === 1 ? 40 : COMBO_ADVANCE_MM) * MM_TO_M +
+          0.3 * intensityN) * mmScale;
+      const dashDur = heavy ? 0.2 / heavy.timeScale : 0.18;
       const impactAt = 0.5;
       this.controller.dash(dir, lunge, dashDur, lunge * 0.12, impactAt);
       // The finisher is a big committed swing whose blade lands near the END of the
@@ -3634,6 +3735,29 @@ export class Studio {
             0.28,
           );
           break;
+        case "slashBlaster": {
+          const range = op.range ?? Math.min(18, dist + 6);
+          this.vfx.castSlashBlasters(origin, aimDir, {
+            color: op.color,
+            count: op.count ?? 3,
+            range,
+            onHit: (p) => {
+              this.targets.blast(p, 1.4, 18, this.params.skillForce * 0.7, this.sparCtx);
+              this.vfx.fireAura(p, 0.9, this.fireThemeApplied);
+            },
+          });
+          break;
+        }
+        case "popAoE":
+          this.vfx.popAoE(origin, op.color, op.radius);
+          this.targets.blast(
+            origin,
+            op.radius,
+            22,
+            this.params.skillForce * 1.1,
+            this.sparCtx,
+          );
+          break;
         default:
           break;
       }
@@ -3798,6 +3922,14 @@ export class Studio {
       if (signatureIndex === 0 && this.isProjectileRangedWeapon(this.weaponId) && !isGunWeapon(this.weaponId) && !isCrossbowWeapon(this.weaponId)) {
         this.doRangedPrimaryShot();
         return true;
+      }
+      // uMMORPG SPEAR: dedicated charge / lunge / vault gap-close path
+      if (isSpearWeapon(this.weaponId)) {
+        return this.doSpearSignature(signatureIndex!, override ?? null);
+      }
+      // Heavy 2H: greataxe / hammer2h / greatsword (Madarame + annihilate GS dash)
+      if (isHeavy2hWeapon(this.weaponId)) {
+        return this.doHeavy2hSignature(signatureIndex!, override ?? null);
       }
       const t0 = getT0Skill(this.weaponId, signatureIndex!);
       const sig = def.signatureSkills[signatureIndex!];
@@ -3981,6 +4113,210 @@ export class Studio {
     }
     aim.normalize();
     return { pos, quat, aim };
+  }
+
+  /**
+   * Heavy 2H signature (greataxe / hammer2h / greatsword).
+   * Madarame clips with per-weapon MM/intensity; greatsword uses annihilate-style
+   * slide dash + slash blasters + Pop AoE.
+   */
+  private doHeavy2hSignature(slotIndex: number, clipOverride: string | null): boolean {
+    if (!this.character || !this.controller) return false;
+    const profile = heavyProfile(this.weaponId);
+    if (!profile) return false;
+    const rows = heavySignatureRows(this.weaponId);
+    const row = rows[Math.max(0, Math.min(3, slotIndex))];
+    if (!row) return false;
+
+    // Prefer multi-part chains when defined (jump / slide / aoe)
+    if (this.tryMultiPartSkill(slotIndex)) return true;
+
+    const clipName = clipOverride || row.clip;
+    let dur = 0;
+    if (this.character.hasClip(clipName)) {
+      dur = this.character.playClipOnce(clipName, 0.1);
+    } else if (this.character.hasClip("attack")) {
+      dur = this.character.playClipOnce("attack", 0.1);
+    }
+
+    // Playback intensity — slower = heavier
+    if (dur > 0 && profile.timeScale !== 1 && this.character.setOverdrive) {
+      // no-op if not GrudgeAvatar; Character uses clip timeScale elsewhere
+    }
+
+    const fwd = this.facing();
+    const origin = this.character.root.position.clone();
+    const cfg = this.assistConfig();
+    const picked = this.pickTargetInFront(origin, fwd, cfg.acqRange + 4, cfg.minDot);
+    const dir = this.steerToward(fwd, origin, picked, cfg.steer);
+    this.controller.faceToward(dir, 0.2);
+
+    const dashM =
+      row.dashM ??
+      Math.abs(row.mm) * MM_TO_M * profile.mmScale * profile.skillDashMul;
+    const isDash = row.mode === "dash" || dashM >= 1.0;
+    const isJump = /jump/i.test(row.label) || /jump/i.test(clipName);
+    const isSlide = /slide|dash/i.test(row.label);
+    const isAoe = row.kind === "nova" || /aoe|whirl|apocalypse|cataclysm/i.test(row.label);
+
+    const muzzle = this.muzzleOrigin(dir);
+    this.vfx.skillCharge(muzzle, profile.color, 1.15, 0.2);
+
+    if (isJump) {
+      this.controller.hop?.(0.9);
+    }
+
+    const runImpact = () => {
+      if (this.disposed || !this.character || !this.controller) return;
+      const pos = this.character.root.position.clone();
+      const strike = pos.clone().addScaledVector(dir, 1.5);
+      strike.y += 1.0;
+      const radius = (isAoe ? 3.2 : 2.2) * profile.aoeMul;
+      const dmg = (row.damage ?? 45) * profile.intensity;
+      this.targets.blast(strike, radius, dmg, this.params.skillForce * profile.intensity, this.sparCtx);
+      if (row.blasters || profile.slashProjectiles) {
+        this.vfx.castSlashBlasters(muzzle, dir, {
+          color: profile.color,
+          count: profile.blasterCount,
+          range: isSlide ? 16 : 12,
+          onHit: (p) => {
+            this.targets.blast(p, 1.5, dmg * 0.45, this.params.skillForce * 0.8, this.sparCtx);
+          },
+        });
+      }
+      if (isAoe) {
+        this.vfx.popAoE(strike, profile.color, radius);
+      }
+      this.vfx.playSkill(row.kind, pos, dir, this.character.root.quaternion, picked?.position ?? null);
+      this.setCombatFlash(row.label.toUpperCase(), 0.45);
+    };
+
+    if (isDash && dashM >= 0.8) {
+      let dist = dashM;
+      if (picked) dist = THREE.MathUtils.clamp(picked.dist - 1.1, 1.0, dashM);
+      const endpoint = origin.clone().addScaledVector(dir, dist);
+      const dashDur = isSlide ? 0.38 : 0.3;
+      this.controller.dash(dir, dist, dashDur, dist * 0.08, 0.5);
+      this.vfx.dashStreak(origin, endpoint, profile.color);
+      this.vfx.afterimage(this.character.root, origin, dir, Math.max(dist, 1.2), profile.color, 6, 0.4);
+      this.schedule(dashDur * 0.5, runImpact);
+    } else {
+      if (dashM > 0.2) this.controller.dash(dir, dashM, 0.2, dashM * 0.12, 0.45);
+      this.schedule(0.12, runImpact);
+    }
+
+    this.armSigSlot(slotIndex, Math.max(0.9, row.cooldown), 12);
+    void dur;
+    return true;
+  }
+
+  /**
+   * uMMORPG SPEAR signature (1–4): Madarame polearm clip + charge/lunge dash +
+   * telegraph VFX. Slot map: thrust · piercing lunge · vault charge · dragontail.
+   * Gap-closers use Controller.dash with skill-authored distances (3–6.5m).
+   */
+  private doSpearSignature(slotIndex: number, clipOverride: string | null): boolean {
+    if (!this.character || !this.controller) return false;
+    const rows = spearSignatureRows();
+    const row = rows[Math.max(0, Math.min(3, slotIndex))]!;
+    const skill: SpearSkillRuntime | null =
+      spearSkillById(row.skillId || null) ||
+      ({
+        id: row.skillId || `spear_slot_${slotIndex}`,
+        name: row.label,
+        description: "",
+        clip: row.clip,
+        kind: row.kind,
+        mm: row.mm,
+        mode: row.mode || "default",
+        motion: row.mode === "dash" ? "charge" : "none",
+        dashM: row.dashM ?? Math.abs(mmToMeters(row.mm)),
+        dashDur: row.dashDur ?? 0.28,
+        castTime: row.castTime ?? 0.12,
+        cooldown: row.cooldown,
+        damage: row.damage ?? 45,
+        range: 4,
+        stamina: 6,
+        vfxColor: row.vfxColor ?? 0x90d0ff,
+        hitWindow: row.hitWindow ?? [0.28, 0.55],
+      } as SpearSkillRuntime);
+
+    const clipName = clipOverride || skill.clip || "thrust";
+    let dur = 0;
+    if (this.character.hasClip(clipName)) {
+      dur = this.character.playClipOnce(clipName, 0.1);
+    } else if (this.character.hasClip("attack")) {
+      dur = this.character.playClipOnce("attack", 0.1);
+    } else if (this.character.hasRole?.("attack")) {
+      dur = this.character.playRoleOnce?.("attack", 0.1) ?? 0;
+    }
+
+    // Grip assist already bound on weapon equip (kit spear mesh / arsenal).
+    // isOneShotActive ramps strength during this attack.
+
+    const fwd = this.facing();
+    const origin = this.character.root.position.clone();
+    const plan = spearChargePlan(skill);
+    const cfg = this.assistConfig();
+    const picked = this.pickTargetInFront(origin, fwd, Math.max(cfg.acqRange, skill.range + 2), cfg.minDot);
+    let dir = this.steerToward(fwd, origin, picked, cfg.steer);
+    this.controller.faceToward(dir, 0.2);
+
+    // Charge telegraph at spear tip / hand
+    const muzzle = this.muzzleOrigin(dir);
+    if (plan.telegraph > 0.05) {
+      this.vfx.skillCharge(muzzle, plan.chargeColor, 1.15 + slotIndex * 0.1, plan.telegraph + 0.08);
+    }
+
+    const runImpact = () => {
+      if (this.disposed || !this.character || !this.controller) return;
+      const pos = this.character.root.position.clone();
+      const strike = pos.clone().addScaledVector(dir, 1.4);
+      strike.y += 1.0;
+      const radius =
+        skill.motion === "vault" || skill.kind === "nova"
+          ? 2.4 + slotIndex * 0.2
+          : skill.motion === "throw"
+            ? 1.1
+            : 1.65;
+      const dmg = skill.damage * (0.85 + this.params.skillForce * 0.02);
+      this.targets.blast(strike, radius, dmg, this.params.skillForce * 0.9, this.sparCtx);
+      this.vfx.playSkill(skill.kind, pos, dir, this.character.root.quaternion, picked?.position ?? null);
+      if (skill.motion === "throw" || skill.kind === "bolt") {
+        this.vfx.skillCharge(muzzle, plan.chargeColor, 0.8, 0.2);
+      }
+      this.setCombatFlash(skill.name.toUpperCase(), 0.45);
+    };
+
+    if (plan.isGapClose && plan.distance >= 0.8) {
+      // Cap dash toward locked target so we don't overshoot
+      let dist = plan.distance;
+      if (picked) {
+        dist = THREE.MathUtils.clamp(picked.dist - 1.15, 0.9, plan.distance);
+      }
+      const endpoint = origin.clone().addScaledVector(dir, dist);
+      this.controller.dash(dir, dist, plan.duration, dist * 0.08, plan.impactAt);
+      this.vfx.dashStreak(origin, endpoint, plan.chargeColor);
+      this.schedule(Math.max(plan.telegraph, plan.duration * plan.impactAt), runImpact);
+    } else if (skill.motion === "throw") {
+      // Javelin / phantom — ranged poke with keep-distance backstep optional
+      if (skill.mm < -40) {
+        this.controller.dash(dir.clone().negate(), 0.45, 0.16, 0, 0.5);
+      }
+      this.vfx.playSkill("bolt", origin, dir, this.character.root.quaternion, picked?.position ?? null);
+      this.schedule(Math.max(0.12, skill.castTime), runImpact);
+    } else {
+      // Short thrust advance
+      if (plan.distance > 0.15) {
+        this.controller.dash(dir, plan.distance, plan.duration, plan.distance * 0.12, 0.45);
+      }
+      this.schedule(Math.max(0.08, skill.castTime), runImpact);
+    }
+
+    const cd = Math.max(0.7, skill.cooldown || row.cooldown || 1.5);
+    this.armSigSlot(slotIndex, cd, 8 + skill.stamina);
+    void dur;
+    return true;
   }
 
   /**
@@ -7551,6 +7887,15 @@ export class Studio {
     this.indicators.setOverhead(this.targets.selectedHostileHead?.() ?? null);
     this.indicators.update(dt);
     this.telegraphs.update(dt);
+    // Camp placeable ghost follows aim / forward place point
+    if (this.campBuild?.isGhostActive && this.character) {
+      const origin = this.character.root.position.clone();
+      origin.y = 0;
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      const place = origin.clone().addScaledVector(fwd, 3.2);
+      place.y = 0;
+      this.campBuild.updateGhost(place);
+    }
     this.updatePending(dt);
     // Advance data-driven abilities here (same `dt`, adjacent to updatePending)
     // so their cast/impact phases land on the same frame as the legacy schedule.
@@ -8202,6 +8547,68 @@ export class Studio {
   }
 
   /**
+   * Class skill bar (Shift+1–5): play cast/attack + light status feedback.
+   * Full ability graph still resolves from fleet skill ids; this is the combat feel hook.
+   */
+  fireClassSkill(skill: {
+    id: string;
+    name: string;
+    kind?: string;
+  }): boolean {
+    if (!this.character) return false;
+    const k = (skill.kind || "").toLowerCase();
+    // Prefer cast/magic clips for mage-ish / form; attack otherwise
+    const preferCast =
+      k.includes("form") ||
+      k.includes("place") ||
+      k.includes("selection") ||
+      skill.id.startsWith("m_") ||
+      skill.id.startsWith("wr_");
+    const clipCandidates = preferCast
+      ? ["cast", "magicAttack", "magicArea", "attack", "idle"]
+      : ["attack", "cast", "magicAttack", "idle"];
+    let played = false;
+    for (const c of clipCandidates) {
+      if (this.character.hasClip?.(c)) {
+        this.character.playClipOnce(c, 0.12);
+        played = true;
+        break;
+      }
+    }
+    if (!played) this.previewClip("attack");
+
+    // Lightweight status feedback by class skill prefix / kind
+    const id = skill.id.toLowerCase();
+    if (id.includes("heal") || id.includes("mend") || id.includes("blood") || id.includes("sooth")) {
+      this.applyStatus("regen");
+    } else if (id.includes("fire") || id.includes("burn") || id.includes("ember")) {
+      this.applyStatus("burning", true);
+    } else if (id.includes("poison") || id.includes("venom") || id.includes("nature")) {
+      this.applyStatus("poisoned", true);
+    } else if (id.includes("frost") || id.includes("ice") || id.includes("freeze")) {
+      this.applyStatus("frozen", true);
+    } else if (id.includes("storm") || id.includes("shock") || id.includes("thunder")) {
+      this.applyStatus("shocked", true);
+    } else if (
+      id.includes("guard") ||
+      id.includes("bulwark") ||
+      id.includes("shield") ||
+      id.includes("iron") ||
+      id.includes("bark")
+    ) {
+      this.applyStatus("shielded");
+    } else if (id.includes("war") || id.includes("onslaught") || id.includes("power") || id.includes("surge")) {
+      this.applyStatus("empowered");
+    } else if (id.includes("haste") || id.includes("swift") || id.includes("quick")) {
+      this.applyStatus("haste");
+    } else if (preferCast || k === "form") {
+      this.applyStatus("empowered");
+    }
+
+    return true;
+  }
+
+  /**
    * Apply a status by scope, mirroring the historical {@link applyStatus}
    * routing exactly: ally buffs follow the Shift+Tab ally (AOE splashes onto
    * every ally in {@link FRIENDLY_AOE_RADIUS}), hostile debuffs follow the
@@ -8318,18 +8725,85 @@ export class Studio {
     }
     if (this.activityMode === "build") {
       const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
-      const place = origin.clone().addScaledVector(fwd, 2.2);
-      place.y = 0.05;
-      this.setCombatFlash(`BUILD · ${id.toUpperCase()} · place ghost`, 0.45);
-      this.vfx.auraRing(place, 0x7fb0ff, 1.4, 0.5);
-      this.vfx.hexaring(() => place.clone().setY(0.4), 0x7fb0ff, 0.45);
+      const place = origin.clone().addScaledVector(fwd, 3.2);
+      place.y = 0;
+      // Map radial build tools → placeable ids
+      const toolToPlaceable: Record<string, string> = {
+        place: "claim_flag",
+        wall: "wall",
+        barracks: "barracks",
+        archery: "archery",
+        station: "miner_forge",
+        door: "gate",
+        farm_plot: "farm_plot",
+        floor: "farm_plot",
+        ramp: "watchtower",
+      };
+      if (this.campBuild?.isGhostActive) {
+        const s = this.campBuild.commitPlace();
+        if (s) {
+          this.vfx.auraRing(new THREE.Vector3(s.x, 0.05, s.z), 0x6ee7b7, 1.6, 0.55);
+          this.vfx.hexaring(() => new THREE.Vector3(s.x, 0.4, s.z), 0x6ee7b7, 0.45);
+        }
+        return;
+      }
+      const placeableId = toolToPlaceable[id] || id;
+      if (getPlaceable(placeableId)) {
+        this.campBuild?.beginPlace(placeableId);
+        this.campBuild?.updateGhost(place);
+      } else {
+        this.setCombatFlash(`BUILD · ${id.toUpperCase()} · no placeable`, 0.45);
+        this.vfx.auraRing(place, 0x7fb0ff, 1.4, 0.5);
+      }
     }
+  }
+
+  /**
+   * Camp UI / external: start placeable ghost (claim flag, barracks, wall…).
+   * Switches to build mode and exits pointer-lock responsibility to the UI host.
+   */
+  beginPlacePlaceable(placeableId: string): boolean {
+    this.setActivityMode("build");
+    const ok = this.campBuild?.beginPlace(placeableId) ?? false;
+    if (ok && this.character) {
+      const origin = this.character.root.position.clone();
+      origin.y = 0;
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      this.campBuild?.updateGhost(origin.addScaledVector(fwd, 3.2).setY(0));
+    }
+    return ok;
+  }
+
+  /** Cancel active camp placeable ghost. */
+  cancelPlacePlaceable() {
+    this.campBuild?.cancelGhost();
+  }
+
+  /** Whether a placeable ghost is following the player. */
+  isPlaceGhostActive(): boolean {
+    return this.campBuild?.isGhostActive ?? false;
+  }
+
+  /** Plant / has claim rights in sandbox (true after seed or claim_flag place). */
+  hasCampClaim(): boolean {
+    return this.campBuild?.hasClaim ?? false;
   }
 
   /** Wire keyboard skill/jump shortcuts that need engine-side actions. */
   handleKey(code: string) {
+    if (code === "Escape" && this.campBuild?.isGhostActive) {
+      this.campBuild.cancelGhost();
+      this.setCombatFlash("Place cancelled", 0.5);
+      return;
+    }
     if (code === "Escape" && this.castPlacement) {
       this.cancelCastPlacement();
+      return;
+    }
+    // Rotate placeable ghost (R in build mode when ghost active — not heavy attack)
+    if (code === "KeyR" && this.campBuild?.isGhostActive) {
+      this.campBuild.rotateGhost(Math.PI / 4);
+      this.setCombatFlash("Rotate ghost 45°", 0.35);
       return;
     }
     if (code === "Space") {

@@ -33,6 +33,10 @@ export const FLEET_CATALOGS = {
   grudge6Canonical: "grudge6-canonical.json",
   raceModelsV1: "race-models.v1.json",
   raceModels: "race-models.json",
+  /** Existing fleet class / skill catalogs (character.grudge-studio.com/skills). */
+  classes: "classes.json",
+  classRelics: "class-relic-skillTrees.json",
+  masterSkillTrees: "master-skillTrees.json",
 } as const;
 
 export type FleetCatalogKey = keyof typeof FLEET_CATALOGS;

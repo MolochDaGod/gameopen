@@ -35,6 +35,9 @@ import { Hud } from "./components/Hud";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
 import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
+import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
+import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
+import { ClassSkillBar } from "./components/ClassSkillBar";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
 import { EditorPanel } from "./components/EditorPanel";
@@ -60,6 +63,7 @@ import {
 import type { InAppEmbedSession } from "./lib/inAppLaunch";
 import { nativeModeForZone } from "./lib/inAppLaunch";
 import { assetUrl } from "./lib/fleet";
+import { bootstrapProductionMedia } from "./lib/productionMedia";
 import { gameSession } from "./game/GameSession";
 import {
   buildGenesisHeroOptions,
@@ -92,7 +96,7 @@ import { DangerClient } from "./net/DangerClient";
 import { useDevice } from "./hooks/useDevice";
 import { DockSurface, ToolMenubar, Tip, TipProvider, useDockLayout } from "./components/dock";
 import type { DockPanelDef, DockPanelMeta, ToolMenu } from "./components/dock";
-import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboard, Swords } from "lucide-react";
+import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboard, Swords, BookOpen, Flag } from "lucide-react";
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
 import { resolveHudVars } from "./hud/hudConfig";
@@ -381,6 +385,10 @@ export default function App() {
   /** Fleet game running inside Open (iframe canvas) — not a new browser page. */
   const [inAppEmbed, setInAppEmbed] = useState<InAppEmbedSession | null>(null);
   const urlBootRef = useRef(true);
+  // Production media (master-items / icons / equipment catalogs) — once at shell boot.
+  useEffect(() => {
+    bootstrapProductionMedia();
+  }, []);
   // Keep URL path in sync with mode (shareable /danger, /voxel, /brawl, …).
   // In-app embeds keep the host mode (e.g. /zones) so back returns to the catalog.
   useEffect(() => {
@@ -407,10 +415,62 @@ export default function App() {
   const [equipOpen, setEquipOpen] = useState(false);
   const equipOpenRef = useRef(false);
   equipOpenRef.current = equipOpen;
+  /** Creator mainTabBar skillbook / systems panel (Character · Class · Wpn Skills · …). */
+  const [systemsOpen, setSystemsOpen] = useState(false);
+  const systemsOpenRef = useRef(false);
+  systemsOpenRef.current = systemsOpen;
+  /** Camp claim flag hub (units / buildings / farm / tame / defensives / upgrades). */
+  const [claimFlagOpen, setClaimFlagOpen] = useState(false);
+  const claimFlagOpenRef = useRef(false);
+  claimFlagOpenRef.current = claimFlagOpen;
   // Never carry the loadout overlay across surfaces (doors/editor/play/danger).
   useEffect(() => {
     setEquipOpen(false);
+    setSystemsOpen(false);
+    setClaimFlagOpen(false);
   }, [mode]);
+
+  /** Creator-class systems / skillbook panel (K). Defined early for key handlers. */
+  const openSystems = useCallback(() => {
+    setSystemsOpen(true);
+    setEquipOpen(false);
+    setClaimFlagOpen(false);
+    document.exitPointerLock?.();
+  }, []);
+
+  const toggleSystems = useCallback(() => {
+    setSystemsOpen((v) => {
+      const next = !v;
+      if (next) {
+        setEquipOpen(false);
+        setClaimFlagOpen(false);
+        document.exitPointerLock?.();
+      }
+      return next;
+    });
+  }, []);
+
+  /** Claim flag camp hub (B) — build rights UI, not quick-craft. */
+  const openClaimFlag = useCallback(() => {
+    setClaimFlagOpen(true);
+    setEquipOpen(false);
+    setSystemsOpen(false);
+    setHarvestUiOpen(false);
+    document.exitPointerLock?.();
+  }, []);
+
+  const toggleClaimFlag = useCallback(() => {
+    setClaimFlagOpen((v) => {
+      const next = !v;
+      if (next) {
+        setEquipOpen(false);
+        setSystemsOpen(false);
+        setHarvestUiOpen(false);
+        document.exitPointerLock?.();
+      }
+      return next;
+    });
+  }, []);
   const [characterId, setCharacterId] = useState("explorer");
   // Drive avatar + equipment from signed-in fleet character (GrudaChain / Railway).
   // Production path: race kit + atlas + mesh_ids (uMMORPG main panel) — not catalog GLBs.
@@ -754,10 +814,14 @@ export default function App() {
   useEffect(() => {
     if (mode !== "danger") return;
     const onKey = (e: KeyboardEvent) => {
-      // Esc closes the loadout overlay even while its search box is focused, so
-      // handle it BEFORE the input-target guard below.
-      if (e.code === "Escape" && equipOpenRef.current) {
+      // Esc closes loadout / systems / claim hub overlays even while inputs are focused.
+      if (
+        e.code === "Escape" &&
+        (equipOpenRef.current || systemsOpenRef.current || claimFlagOpenRef.current)
+      ) {
         setEquipOpen(false);
+        setSystemsOpen(false);
+        setClaimFlagOpen(false);
         return;
       }
       const t = e.target as HTMLElement | null;
@@ -767,7 +831,23 @@ export default function App() {
         e.preventDefault();
         const next = !equipOpenRef.current;
         setEquipOpen(next);
-        if (next) document.exitPointerLock?.();
+        if (next) {
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          document.exitPointerLock?.();
+        }
+        return;
+      }
+      // K = grudge6 Creator systems / skillbook tabs
+      if (e.code === "KeyK") {
+        e.preventDefault();
+        toggleSystems();
+        return;
+      }
+      // B = camp claim flag hub (units / buildings / farm / tame / upgrades)
+      if (e.code === "KeyB") {
+        e.preventDefault();
+        toggleClaimFlag();
         return;
       }
       // P = open full harvest production UI (craft / codex / maps / skill trees)
@@ -775,7 +855,10 @@ export default function App() {
         e.preventDefault();
         setHarvestUiOpen((v) => {
           const next = !v;
-          if (next) document.exitPointerLock?.();
+          if (next) {
+            setClaimFlagOpen(false);
+            document.exitPointerLock?.();
+          }
           return next;
         });
         return;
@@ -830,16 +913,19 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, refreshAnim, toggleDangerPanel]);
+  }, [mode, refreshAnim, toggleDangerPanel, toggleSystems, toggleClaimFlag]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
   useEffect(() => {
     if (mode !== "play") return;
     const onKey = (e: KeyboardEvent) => {
-      // Esc closes the loadout overlay even while its search box is focused, so
-      // handle it BEFORE the input-target guard below.
-      if (e.code === "Escape" && equipOpenRef.current) {
+      if (
+        e.code === "Escape" &&
+        (equipOpenRef.current || systemsOpenRef.current || claimFlagOpenRef.current)
+      ) {
         setEquipOpen(false);
+        setSystemsOpen(false);
+        setClaimFlagOpen(false);
         return;
       }
       const t = e.target as HTMLElement | null;
@@ -849,14 +935,31 @@ export default function App() {
         e.preventDefault();
         const next = !equipOpenRef.current;
         setEquipOpen(next);
-        if (next) document.exitPointerLock?.();
+        if (next) {
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          document.exitPointerLock?.();
+        }
+        return;
+      }
+      if (e.code === "KeyK") {
+        e.preventDefault();
+        toggleSystems();
+        return;
+      }
+      if (e.code === "KeyB") {
+        e.preventDefault();
+        toggleClaimFlag();
         return;
       }
       if (e.code === "KeyP") {
         e.preventDefault();
         setHarvestUiOpen((v) => {
           const next = !v;
-          if (next) document.exitPointerLock?.();
+          if (next) {
+            setClaimFlagOpen(false);
+            document.exitPointerLock?.();
+          }
           return next;
         });
         return;
@@ -882,7 +985,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode]);
+  }, [mode, toggleSystems, toggleClaimFlag]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
   // joystick/look-pad own input. Re-applies whenever the breakpoint flips.
@@ -936,6 +1039,8 @@ export default function App() {
   // Open the in-play loadout overlay (release pointer-lock so the cursor is free).
   const openEquip = useCallback(() => {
     setEquipOpen(true);
+    setSystemsOpen(false);
+    setClaimFlagOpen(false);
     document.exitPointerLock?.();
   }, []);
 
@@ -1697,7 +1802,9 @@ export default function App() {
     >
       <div
         className={`canvas-mount${
-          (mode === "danger" || mode === "play") && !panelsOpen && !equipOpen ? " immersive" : ""
+          (mode === "danger" || mode === "play") && !panelsOpen && !equipOpen && !systemsOpen
+            ? " immersive"
+            : ""
         }`}
         ref={mountRef}
       />
@@ -1772,7 +1879,7 @@ export default function App() {
       {mode === "play" && (
         <>
           <Crosshair
-            visible={!panelsOpen && !equipOpen}
+            visible={!panelsOpen && !equipOpen && !systemsOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -1789,6 +1896,17 @@ export default function App() {
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
+            }}
+          />
+          <ClassSkillBar
+            characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !claimFlagOpen}
+            onCast={(slot) => {
+              studioRef.current?.fireClassSkill({
+                id: slot.id,
+                name: slot.name,
+                kind: slot.kind,
+              });
             }}
           />
           <HarvestProductionUI
@@ -1814,6 +1932,15 @@ export default function App() {
               setMode("voxel");
             }}
           />
+          <CampClaimFlagPanel
+            open={claimFlagOpen}
+            characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            onClose={() => setClaimFlagOpen(false)}
+            onBeginPlace={(id) => {
+              setClaimFlagOpen(false);
+              studioRef.current?.beginPlacePlaceable(id);
+            }}
+          />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
 
@@ -1823,6 +1950,20 @@ export default function App() {
             </span>
             <div className="topbar-actions">
               <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} variant="topbar" />
+              <button
+                className={`tab eq-open-btn ${claimFlagOpen ? "live" : ""}`}
+                onClick={openClaimFlag}
+                title="Camp claim flag (B)"
+              >
+                <Flag size={13} /> Camp
+              </button>
+              <button
+                className={`tab eq-open-btn ${systemsOpen ? "live" : ""}`}
+                onClick={openSystems}
+                title="Systems / skillbook (K)"
+              >
+                <BookOpen size={13} /> Systems
+              </button>
               <button
                 className={`tab eq-open-btn ${equipOpen ? "live" : ""}`}
                 onClick={openEquip}
@@ -1836,11 +1977,11 @@ export default function App() {
             </div>
           </div>
 
-          {!isMobile && !hud?.locked && !equipOpen && (
+          {!isMobile && !hud?.locked && !equipOpen && !systemsOpen && !claimFlagOpen && (
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                WASD move · Shift sprint · Space jump (×2) · LMB attack · Tab lock-on · Esc to release
+                WASD · LMB attack · ⇧1–5 class · B camp · I loadout · K systems · Esc
               </p>
             </div>
           )}
@@ -1858,13 +1999,22 @@ export default function App() {
               onClose={() => setEquipOpen(false)}
             />
           )}
+          {systemsOpen && (
+            <GrudgeSystemsPanel
+              characterName={hud?.character ?? characterId}
+              characterId={gameSession.snapshot.selectedCharacterId || characterId}
+              weapon={hud?.weapon ?? weaponId}
+              hud={hud}
+              onClose={() => setSystemsOpen(false)}
+            />
+          )}
         </>
       )}
 
       {mode === "danger" && (
         <>
           <Crosshair
-            visible={!panelsOpen && !equipOpen}
+            visible={!panelsOpen && !equipOpen && !systemsOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -1881,6 +2031,17 @@ export default function App() {
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
+            }}
+          />
+          <ClassSkillBar
+            characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !panelsOpen && !claimFlagOpen}
+            onCast={(slot) => {
+              studioRef.current?.fireClassSkill({
+                id: slot.id,
+                name: slot.name,
+                kind: slot.kind,
+              });
             }}
           />
           <HarvestProductionUI
@@ -1904,6 +2065,15 @@ export default function App() {
             onOpenVoxel={() => {
               setHarvestUiOpen(false);
               setMode("voxel");
+            }}
+          />
+          <CampClaimFlagPanel
+            open={claimFlagOpen}
+            characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            onClose={() => setClaimFlagOpen(false)}
+            onBeginPlace={(id) => {
+              setClaimFlagOpen(false);
+              studioRef.current?.beginPlacePlaceable(id);
             }}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
@@ -1923,6 +2093,24 @@ export default function App() {
                 right={
                   <>
                     <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} />
+                    <Tip label="Camp claim flag (B) — units, buildings, farm, tame">
+                      <button
+                        className={`tm-btn eq-open-btn ${claimFlagOpen ? "live" : ""}`}
+                        onClick={openClaimFlag}
+                      >
+                        <Flag size={14} />
+                        <span>Camp</span>
+                      </button>
+                    </Tip>
+                    <Tip label="Systems / skillbook (K) — Creator tabs">
+                      <button
+                        className={`tm-btn eq-open-btn ${systemsOpen ? "live" : ""}`}
+                        onClick={openSystems}
+                      >
+                        <BookOpen size={14} />
+                        <span>Systems</span>
+                      </button>
+                    </Tip>
                     <Tip label="Loadout (I)">
                       <button
                         className={`tm-btn eq-open-btn ${equipOpen ? "live" : ""}`}
@@ -1945,11 +2133,11 @@ export default function App() {
             <DockSurface layout={dangerLayout} controls={dangerDock} panels={dangerPanels} />
           </TipProvider>
 
-          {!isMobile && !hud?.locked && !panelsOpen && !equipOpen && (
+          {!isMobile && !hud?.locked && !panelsOpen && !equipOpen && !systemsOpen && !claimFlagOpen && (
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                WASD · Q mode (Combat/Harvest/Build) · hold Tab radial · X dodge · C parry · P production UI · F / 1–4 skills · RMB block
+                WASD · Q mode · ⇧1–5 class · B camp · I loadout · K systems · P production
               </p>
             </div>
           )}
@@ -1974,6 +2162,15 @@ export default function App() {
               onEquip={onWeapon}
               onEquipOff={onOffHand}
               onClose={() => setEquipOpen(false)}
+            />
+          )}
+          {systemsOpen && (
+            <GrudgeSystemsPanel
+              characterName={hud?.character ?? characterId}
+              characterId={gameSession.snapshot.selectedCharacterId || characterId}
+              weapon={hud?.weapon ?? weaponId}
+              hud={hud}
+              onClose={() => setSystemsOpen(false)}
             />
           )}
         </>

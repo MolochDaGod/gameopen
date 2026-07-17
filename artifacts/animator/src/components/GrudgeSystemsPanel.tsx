@@ -1,0 +1,563 @@
+/**
+ * Grudge Systems Panel — production port of grudge6.grudge-studio.com/creator
+ * mainTabBar (Character / Class / Wpn Skills / Professions / Mastery) + hotbar.
+ *
+ * Data: local GameData/StatsEngine + optional info master-weaponSkills enrich.
+ * Saves: localStorage + Railway bag `grudgeSystems` when signed in.
+ */
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { HudSnapshot, SlotBinding, WeaponId } from "../three/types";
+import {
+  CLASSES,
+  PROFESSIONS,
+  WEAPON_TYPES,
+  WEAPON_SKILLS,
+  getMasteryProgress,
+  openWeaponToSystemsType,
+  type SkillNode as WepSkillNode,
+} from "../lib/grudgeSystems/gameData";
+import { loadWeaponSkillTrees } from "../lib/grudgeSystems/weaponSkillTrees";
+import { resolveSkillNodeIconUrl } from "../lib/skillTreeIcons";
+import {
+  ATTR_KEYS,
+  ATTRIBUTES,
+  MAX_POINTS,
+  DERIVED_SECTIONS,
+  calculateDerivedStats,
+  simulateCombat,
+  type AttrKey,
+  type AttrMap,
+} from "../lib/grudgeSystems/statsEngine";
+import {
+  loadSystemsState,
+  scheduleSystemsStateSave,
+  type GrudgeSystemsState,
+} from "../lib/grudgeSystems/persist";
+import {
+  resolveSlotIconUrl,
+  type SlotIconRole,
+} from "../three/skillIcons";
+import { fetchCatalogJson } from "../lib/fleetSsot";
+import {
+  grantClassSelectionSkills,
+  loadSkillTrees,
+  type SkillTree as CatalogSkillTree,
+} from "../game/harvestCatalog";
+import { ClassSkillTreePanel } from "./hud/ClassSkillTreePanel";
+import "./grudgeSystemsPanel.css";
+import "./hud/craftpixHud.css";
+
+export type SystemsTabId =
+  | "tabCharacter"
+  | "tabClassSkills"
+  | "tabWeaponSkills"
+  | "tabProfessions"
+  | "tabMastery";
+
+const TABS: Array<{ id: SystemsTabId; label: string }> = [
+  { id: "tabCharacter", label: "Character" },
+  { id: "tabClassSkills", label: "Class" },
+  { id: "tabWeaponSkills", label: "Wpn Skills" },
+  { id: "tabProfessions", label: "Professions" },
+  { id: "tabMastery", label: "Mastery" },
+];
+
+type Props = {
+  characterName: string;
+  characterId: string;
+  weapon: WeaponId;
+  hud: HudSnapshot | null;
+  onClose: () => void;
+  /** Optional initial tab (e.g. open on Wpn Skills from combat). */
+  initialTab?: SystemsTabId;
+};
+
+function fmt(v: number): string {
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+function slotBinding(hud: HudSnapshot | null, name: string): SlotBinding | undefined {
+  return hud?.slots?.find((s) => s.slot === name);
+}
+
+export function GrudgeSystemsPanel({
+  characterName,
+  characterId,
+  weapon,
+  hud,
+  onClose,
+  initialTab = "tabCharacter",
+}: Props) {
+  const [tab, setTab] = useState<SystemsTabId>(initialTab);
+  const [state, setState] = useState<GrudgeSystemsState>(() => loadSystemsState(characterId));
+  const [selectedWep, setSelectedWep] = useState<string | null>(
+    () => openWeaponToSystemsType(weapon) || "sword",
+  );
+  const [combatLog, setCombatLog] = useState<string[]>([]);
+  const [fleetWeaponNote, setFleetWeaponNote] = useState<string | null>(null);
+  /** Canonical class + content skill trees (master-skillTrees + local skill-trees.json). */
+  const [skillTrees, setSkillTrees] = useState<CatalogSkillTree[]>([]);
+  /** Weapon trees from master-weaponSkills (original ability icons). */
+  const [weaponTrees, setWeaponTrees] = useState<
+    Record<string, { name: string; icon: string; cdnIcon?: string; skills: WepSkillNode[] }>
+  >(WEAPON_SKILLS);
+
+  // Reload when character changes
+  useEffect(() => {
+    setState(loadSystemsState(characterId));
+  }, [characterId]);
+
+  // Keep weapon tab selection in sync with equipped weapon
+  useEffect(() => {
+    const t = openWeaponToSystemsType(weapon);
+    if (t) setSelectedWep(t);
+  }, [weapon]);
+
+  const persist = useCallback(
+    (next: GrudgeSystemsState) => {
+      setState(next);
+      scheduleSystemsStateSave(characterId, next);
+    },
+    [characterId],
+  );
+
+  const totalPoints = useMemo(
+    () => ATTR_KEYS.reduce((s, k) => s + (state.attrs[k] || 0), 0),
+    [state.attrs],
+  );
+
+  const derived = useMemo(
+    () => calculateDerivedStats(state.attrs, state.level),
+    [state.attrs, state.level],
+  );
+
+  // Canonical skill trees: same sources as P production UI + character.grudge-studio.com/skills
+  useEffect(() => {
+    let cancelled = false;
+    void loadSkillTrees().then((trees) => {
+      if (!cancelled) setSkillTrees(trees);
+    });
+    void loadWeaponSkillTrees().then((trees) => {
+      if (cancelled) return;
+      setWeaponTrees(trees);
+      setFleetWeaponNote(
+        "Fleet master-weaponSkills + master-skillTrees — original catalog icons on every node.",
+      );
+    });
+    void fetchCatalogJson<Record<string, unknown>>("masterWeaponSkills").then((data) => {
+      if (cancelled) return;
+      if (!data) {
+        setFleetWeaponNote("Weapon skill catalog offline — using local pack icons.");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const preferredClassTreeId = state.classId ? `class-${state.classId}` : "class-warrior";
+
+  const setAttr = (key: AttrKey, value: number) => {
+    const next: AttrMap = { ...state.attrs, [key]: value };
+    persist({ ...state, attrs: next });
+  };
+
+  const onCombatTest = () => {
+    const dummyAttrs: AttrMap = {
+      STR: 15,
+      VIT: 15,
+      END: 15,
+      INT: 15,
+      WIS: 15,
+      DEX: 15,
+      AGI: 15,
+      TAC: 15,
+    };
+    const dummy = calculateDerivedStats(dummyAttrs, 10);
+    const result = simulateCombat(derived, dummy);
+    setCombatLog(result.log);
+  };
+
+  const hotbarSlots = useMemo(() => {
+    const roles: Array<{ role: SlotIconRole | "block" | "dodge"; key: string; fallback: string }> = [
+      { role: "primary", key: "LMB", fallback: "Attack" },
+      { role: "fskill", key: "F", fallback: "Skill" },
+      { role: "sig1", key: "1", fallback: "Sig 1" },
+      { role: "sig2", key: "2", fallback: "Sig 2" },
+      { role: "sig3", key: "3", fallback: "Sig 3" },
+      { role: "sig4", key: "4", fallback: "Sig 4" },
+    ];
+    return roles.map((r) => {
+      const bind = slotBinding(hud, r.role);
+      const iconUrl =
+        bind?.iconUrl ||
+        (r.role !== "block" && r.role !== "dodge"
+          ? resolveSlotIconUrl(r.role as SlotIconRole, weapon)
+          : undefined);
+      return {
+        key: bind?.key || r.key,
+        name:
+          bind?.label ||
+          (r.role === "fskill" && hud?.skillName ? hud.skillName : r.fallback),
+        iconUrl,
+        empty: !bind && r.role !== "primary",
+      };
+    });
+  }, [hud, weapon]);
+
+  const pointsClass =
+    totalPoints > MAX_POINTS ? "over" : totalPoints === MAX_POINTS ? "full" : "";
+
+  return (
+    <div className="gs-panel" role="dialog" aria-label="Character systems">
+      <button type="button" className="gs-backdrop" aria-label="Close systems" onClick={onClose} />
+      <div className="gs-sheet">
+        <header className="gs-header">
+          <div>
+            <p className="gs-kicker">Grudge Systems</p>
+            <h2 className="gs-title">{characterName}</h2>
+            <p className="gs-sub">
+              Level {state.level}
+              {state.classId ? ` · ${CLASSES[state.classId]?.name ?? state.classId}` : ""}
+              {" · "}Creator tabs + fleet icons
+            </p>
+          </div>
+          <button type="button" className="gs-close" onClick={onClose} title="Close (K / Esc)">
+            ×
+          </button>
+        </header>
+
+        <nav className="gs-tabbar" id="mainTabBar" aria-label="Systems tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`gs-tab${tab === t.id ? " active" : ""}`}
+              data-tab={t.id}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="gs-body">
+          {tab === "tabCharacter" && (
+            <>
+              <h3>
+                Attributes
+                <span className={`gs-points ${pointsClass}`}>
+                  {totalPoints} / {MAX_POINTS}
+                </span>
+              </h3>
+              {ATTR_KEYS.map((key) => {
+                const meta = ATTRIBUTES[key];
+                return (
+                  <div className="gs-attr-row" key={key}>
+                    <label style={{ color: meta.color }} title={meta.desc}>
+                      {meta.icon} {key}
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={80}
+                      value={state.attrs[key]}
+                      onChange={(e) => setAttr(key, Number(e.target.value))}
+                      aria-label={meta.name}
+                    />
+                    <span className="val">{state.attrs[key]}</span>
+                  </div>
+                );
+              })}
+
+              <h3 style={{ marginTop: 14 }}>Derived Stats</h3>
+              <div className="gs-stat-grid">
+                {DERIVED_SECTIONS.map((sec) => (
+                  <div key={sec.title} style={{ display: "contents" }}>
+                    <div className="gs-section-label">{sec.title}</div>
+                    {Object.entries(sec.stats).map(([k, label]) => (
+                      <div className={`gs-stat-item stat-item--${sec.css}`} key={k}>
+                        <span className="label">{label}</span>
+                        <span className="value">{fmt(derived[k] ?? 0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              <h3>Combat Test</h3>
+              <button type="button" className="gs-btn" onClick={onCombatTest}>
+                Attack Test Dummy
+              </button>
+              <div className="gs-combat-log" id="combatLog">
+                {combatLog.length === 0
+                  ? 'Click "Attack Test Dummy" to simulate…'
+                  : combatLog.map((line, i) => (
+                      <div
+                        key={i}
+                        className={
+                          line.includes("CRITICAL")
+                            ? "crit"
+                            : line.includes("BLOCK")
+                              ? "block"
+                              : undefined
+                        }
+                      >
+                        {line}
+                      </div>
+                    ))}
+              </div>
+            </>
+          )}
+
+          {tab === "tabClassSkills" && (
+            <>
+              <h3>Class</h3>
+              <p className="gs-muted">
+                Fleet <code>master-skillTrees</code> + bridge nodes (L0 select · L1 · bridges · L5
+                · L10 · L15 · L20). Same book as{" "}
+                <a
+                  href="https://character.grudge-studio.com/skills"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#6ee7b7" }}
+                >
+                  character skills
+                </a>{" "}
+                and P → Skill trees. One class from the row (Worge L0 = Bear start).
+              </p>
+              <div className="gs-attr-row" style={{ maxWidth: 280, marginBottom: 10 }}>
+                <label title="Gates path nodes by requiredLevel">Level</label>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  value={state.level}
+                  onChange={(e) =>
+                    persist({ ...state, level: Math.max(1, Math.min(20, Number(e.target.value))) })
+                  }
+                  aria-label="Character level for skill path"
+                />
+                <span className="val">{state.level}</span>
+              </div>
+              <div className="gs-class-row">
+                {Object.entries(CLASSES).map(([id, cls]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`gs-class-chip${state.classId === id ? " selected" : ""}`}
+                    style={
+                      state.classId === id
+                        ? { borderColor: cls.color, color: cls.color }
+                        : undefined
+                    }
+                    onClick={() => {
+                      // One class from the row → L0 auto skills (Worge includes Bear start)
+                      grantClassSelectionSkills(id);
+                      persist({ ...state, classId: id });
+                      // Notify upper class skill bar (Shift+1–5) immediately
+                      window.dispatchEvent(
+                        new CustomEvent("grudge:class-selected", { detail: { classId: id } }),
+                      );
+                    }}
+                  >
+                    <span>{cls.icon}</span> {cls.name}
+                  </button>
+                ))}
+              </div>
+              {state.classId && CLASSES[state.classId] && (
+                <p className="gs-muted">
+                  {CLASSES[state.classId].desc}
+                  {state.classId === "worge"
+                    ? " · L0 grants Bear Form (start)."
+                    : " · L0 granted on select."}
+                </p>
+              )}
+              {skillTrees.length ? (
+                <ClassSkillTreePanel
+                  trees={skillTrees}
+                  playerLevel={state.level}
+                  preferredTreeId={
+                    skillTrees.some((t) => t.id === preferredClassTreeId)
+                      ? preferredClassTreeId
+                      : skillTrees.find((t) => t.id.startsWith("class-"))?.id ||
+                        "weapon-combat"
+                  }
+                />
+              ) : (
+                <p className="gs-muted">Loading canonical skill trees…</p>
+              )}
+            </>
+          )}
+
+          {tab === "tabWeaponSkills" && (
+            <>
+              <h3>Weapon Type</h3>
+              {fleetWeaponNote && <p className="gs-muted">{fleetWeaponNote}</p>}
+              <div className="gs-wep-grid" id="weaponTypeGrid">
+                {Object.entries(WEAPON_TYPES).map(([id, wep]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`gs-wep-btn${selectedWep === id ? " active" : ""}`}
+                    data-wep={id}
+                    title={wep.name}
+                    onClick={() => setSelectedWep(id)}
+                  >
+                    {wep.cdnIcon ? (
+                      <img src={wep.cdnIcon} alt="" loading="lazy" />
+                    ) : (
+                      <span className="emoji">{wep.icon}</span>
+                    )}
+                    {wep.name.split(" ").pop()}
+                  </button>
+                ))}
+              </div>
+              {selectedWep && (weaponTrees[selectedWep] || WEAPON_SKILLS[selectedWep]) && (
+                <div className="gs-tree" id="weaponSkillTree">
+                  <div className="gs-tree-header">
+                    {(weaponTrees[selectedWep]?.cdnIcon || WEAPON_TYPES[selectedWep]?.cdnIcon) && (
+                      <img
+                        src={
+                          weaponTrees[selectedWep]?.cdnIcon ||
+                          WEAPON_TYPES[selectedWep]?.cdnIcon ||
+                          ""
+                        }
+                        alt=""
+                        width={22}
+                        height={22}
+                        style={{ verticalAlign: "middle", marginRight: 6, borderRadius: 4 }}
+                        loading="lazy"
+                      />
+                    )}
+                    {weaponTrees[selectedWep]?.icon || WEAPON_SKILLS[selectedWep]?.icon}{" "}
+                    {weaponTrees[selectedWep]?.name || WEAPON_SKILLS[selectedWep]?.name} Skill Tree
+                  </div>
+                  <p className="gs-muted" style={{ padding: "6px 10px 0" }}>
+                    Classes:{" "}
+                    {(WEAPON_TYPES[selectedWep]?.classes || [])
+                      .map((c) => CLASSES[c]?.name || c)
+                      .join(", ")}{" "}
+                    · {(WEAPON_TYPES[selectedWep]?.hand || "").toUpperCase()} ·{" "}
+                    <strong>catalog preview</strong> (read-only — unlock/bind later)
+                  </p>
+                  {(weaponTrees[selectedWep]?.skills || WEAPON_SKILLS[selectedWep]?.skills || []).map(
+                    (skill) => {
+                      const ico = resolveSkillNodeIconUrl({
+                        icon: skill.icon,
+                        iconUrl: skill.iconUrl,
+                        id: skill.id,
+                        treeId: `weapon-${selectedWep}`,
+                      });
+                      return (
+                        <div className="gs-skill-node" key={skill.id}>
+                          <img
+                            className="gs-skill-icon"
+                            src={ico}
+                            alt=""
+                            width={28}
+                            height={28}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                WEAPON_TYPES[selectedWep]?.cdnIcon ||
+                                "https://assets.grudge-studio.com/icons/pack/misc/Effect.png";
+                            }}
+                          />
+                          <span className="gs-skill-lvl">Lv{skill.level}</span>
+                          <span className="gs-skill-name">{skill.name}</span>
+                          <span className="gs-skill-cost" style={{ color: "#8fa3c7" }}>
+                            {skill.bonus}
+                          </span>
+                          <div className="gs-skill-desc">{skill.desc}</div>
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {tab === "tabProfessions" && (
+            <>
+              <h3>Harvesting Professions</h3>
+              <div id="professionsList">
+                {Object.entries(PROFESSIONS).map(([id, prof]) => (
+                  <div className="gs-prof-card" key={id}>
+                    <div className="gs-prof-header">
+                      <span>{prof.icon}</span>
+                      <span style={{ color: prof.color }}>{prof.name}</span>
+                      <span style={{ fontSize: "0.6rem", color: "#8fa3c7", marginLeft: "auto" }}>
+                        Bonus: {prof.attr}
+                      </span>
+                    </div>
+                    <p className="gs-muted">{prof.desc}</p>
+                    {prof.tiers.map((t) => (
+                      <div className="gs-prof-tier" key={t.level}>
+                        <span className="tier-lvl">Lv{t.level}</span>
+                        <span className="tier-name">{t.name}</span>
+                        <span className="tier-res">{t.resources.join(", ")}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {tab === "tabMastery" && (
+            <>
+              <h3>Weapon Mastery</h3>
+              <p className="gs-muted">XP earned per weapon type through combat use (saved on character bag).</p>
+              <div id="masteryList">
+                {Object.entries(WEAPON_TYPES).map(([id, wep]) => {
+                  const xp = state.masteryXp[id] ?? Math.floor(id.length * 137) % 8000;
+                  const { current, progress } = getMasteryProgress(xp);
+                  const pct = Math.floor(progress * 100);
+                  return (
+                    <div className="gs-mastery-row" key={id}>
+                      <div className="gs-mastery-icon">
+                        {wep.cdnIcon ? <img src={wep.cdnIcon} alt="" loading="lazy" /> : wep.icon}
+                      </div>
+                      <div>
+                        <div className="gs-mastery-name">{wep.name}</div>
+                        <div className="gs-mastery-tier">
+                          {current.name} — {current.bonus}
+                        </div>
+                        <div className="gs-mastery-bar">
+                          <div className="gs-mastery-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                      <span className="gs-mastery-xp">{xp} XP</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        <footer className="gs-hotbar-wrap" id="hotbarDisplay">
+          <div className="gs-hotbar-meta">
+            <span className="wep">{weapon === "none" ? "Unarmed" : weapon}</span>
+            <span style={{ color: "#8fa3c7" }}>
+              {hud?.activityMode === "harvest" ? "Harvest" : "Combat"}
+              {hud?.locked ? " · locked" : ""}
+            </span>
+            <span className="hint">K systems · I loadout · F/1–4 skills</span>
+          </div>
+          <div className="gs-hotbar">
+            {hotbarSlots.map((s) => (
+              <div key={s.key + s.name} className={`gs-hb-slot${s.empty ? " empty" : ""}`} title={s.name}>
+                {s.iconUrl ? <img src={s.iconUrl} alt="" /> : <span style={{ fontSize: 14 }}>•</span>}
+                <span className="key">{s.key}</span>
+                <span className="name">{s.name}</span>
+              </div>
+            ))}
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}

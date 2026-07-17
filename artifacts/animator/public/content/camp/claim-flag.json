@@ -1,0 +1,197 @@
+{
+  "version": "1.0.0",
+  "id": "camp-claim-flag",
+  "label": "Camp Claim Flag",
+  "description": "Plant the claim flag to establish camp territory. Grants build rights for structures, production buildings, defensives, and unit halls. Does not gate quick-craft field items (campfire, sleeping bag, torch, etc.).",
+  "claim": {
+    "buildingUuid": "BLDG-20260604172217-000005-1CD0B077",
+    "name": "Pirate Claim Flag",
+    "category": "territory",
+    "iconUrl": "https://assets.grudge-studio.com/icons/pack/misc/Naturecircle.png",
+    "radiusM": 48,
+    "grantsBuildRights": true,
+    "tags": ["building", "claim", "territory", "pirate"],
+    "mesh": {
+      "sourceFbx": "models/pirate/Decor_PirateFlag_00.fbx",
+      "productionGlb": "models/camp/claim-flag.glb",
+      "convert": "grudge-convert fbx2glb --texture-size 1024 --no-colliders",
+      "migrated": "2026-07-17"
+    },
+    "placeableId": "claim_flag",
+    "ghost": true
+  },
+  "pages": [
+    { "id": "skills", "label": "Camp Skills", "summary": "Account + camp skill trees (gather, craft, build, survival)." },
+    { "id": "farming", "label": "Farming", "summary": "Crop plots, windmill, food loop — Ultimate Fantasy RTS farm line." },
+    { "id": "taming", "label": "Taming", "summary": "Creature pens and bond tracks; professions carry into hero convert." },
+    { "id": "defensives", "label": "Defensives", "summary": "Walls, watchtowers, gates — claim-gated placeables." },
+    { "id": "units", "label": "Units", "summary": "RTS units from production buildings. Level 1–100 → convert to L1 hero." },
+    { "id": "buildings", "label": "Buildings", "summary": "Stations, storage, production halls (not quick-craft)." },
+    { "id": "upgrades", "label": "Upgrades", "summary": "Node / structure upgrade tiers (nodeUpgrades SSOT)." }
+  ],
+  "quickCraft": {
+    "note": "Always placeable without claim rights. Excluded from claim-gated build menu.",
+    "excludeFromClaimGate": [
+      { "id": "campfire", "name": "Campfire", "uuid": "BLDG-20260604172217-000008-707A9F5B", "tags": ["campfire", "utility"] },
+      { "id": "sleeping_bag", "name": "Sleeping Bag", "tags": ["rest", "bedroll"] },
+      { "id": "bedroll", "name": "Bedroll", "tags": ["rest"] },
+      { "id": "torch", "name": "Torch", "tags": ["light"] },
+      { "id": "camp_cookpot", "name": "Camp Cookpot", "tags": ["cook", "utility"] },
+      { "id": "field_tarp", "name": "Field Tarp", "tags": ["shelter"] }
+    ]
+  },
+  "unitProgression": {
+    "minLevel": 1,
+    "maxLevel": 100,
+    "heroConvertAtLevel": 100,
+    "heroStartLevel": 1,
+    "heroEquipMaxTier": 0,
+    "heroEquipNote": "Converted heroes may only equip T0 gear (t0-weapons + starter armor).",
+    "professionCarryOver": true,
+    "professionCarryNote": "Profession levels earned as a unit persist onto the hero variant.",
+    "source": "rts_production_buildings",
+    "catalogs": {
+      "units": "factionUnits.json",
+      "tiers": "nodeUpgrades.json",
+      "models": "rtsModels.json",
+      "buildings": "master-buildings.json"
+    },
+    "assetHints": [
+      "ummorpgdev / GenesisGrudge",
+      "Toon RTS race Standard Units atlases",
+      "Ultimate Fantasy RTS FBX (Barracks, Archery, Temple, Farm…)"
+    ]
+  },
+  "productionBuildings": [
+    {
+      "id": "barracks",
+      "name": "Barracks",
+      "role": "melee_infantry",
+      "producesTypes": ["melee", "heavy"],
+      "assetLine": "Barracks_FirstAge_Level{1-3} / Barracks_SecondAge_Level{1-3}",
+      "claimGated": true,
+      "maxLevel": 3
+    },
+    {
+      "id": "archery",
+      "name": "Archery Range",
+      "role": "ranged",
+      "producesTypes": ["ranged"],
+      "assetLine": "Archery_FirstAge_Level{1-3} / Archery_SecondAge_Level{1-3}",
+      "claimGated": true,
+      "maxLevel": 3
+    },
+    {
+      "id": "temple",
+      "name": "Temple",
+      "role": "magic_support",
+      "producesTypes": ["magic", "support"],
+      "assetLine": "Temple_FirstAge_Level{1-3} / Temple_SecondAge_Level{1-3}",
+      "claimGated": true,
+      "maxLevel": 3
+    },
+    {
+      "id": "stable",
+      "name": "Stable / Cavalry",
+      "role": "cavalry",
+      "producesTypes": ["cavalry"],
+      "assetLine": "Toon RTS Cavalry_customizable + horse atlases",
+      "claimGated": true,
+      "maxLevel": 3
+    },
+    {
+      "id": "town_center",
+      "name": "Town Center",
+      "role": "core",
+      "producesTypes": [],
+      "assetLine": "TownCenter_FirstAge_Level{1-3}",
+      "claimGated": true,
+      "maxLevel": 3
+    }
+  ],
+  "defensives": [
+    { "id": "wall", "name": "Wall", "assetLine": "Wall_FirstAge / Wall_SecondAge", "tier": 1 },
+    { "id": "wall_tower", "name": "Wall Tower", "assetLine": "WallTowers_FirstAge / SecondAge", "tier": 1 },
+    { "id": "gate", "name": "Gate", "assetLine": "WallTowers_Door_FirstAge", "tier": 1 },
+    { "id": "watchtower", "name": "Watch Tower", "assetLine": "WatchTower_*_Level{1-3}", "tier": 2 },
+    { "id": "tower_house", "name": "Tower House", "assetLine": "TowerHouse_FirstAge / SecondAge", "tier": 2 },
+    { "id": "wonder_wall", "name": "Wonder Wall", "assetLine": "WonderWalls_FirstAge / SecondAge", "tier": 3 }
+  ],
+  "farming": [
+    { "id": "farm_plot", "name": "Farm Plot", "assetLine": "Farm_FirstAge_Level{1-3}", "yield": "grain", "tier": 1 },
+    { "id": "farm_wheat", "name": "Wheat Field", "assetLine": "Farm_*_Wheat", "yield": "wheat", "tier": 1 },
+    { "id": "farm_dirt", "name": "Tilled Dirt", "assetLine": "Farm_Dirt_Level{1-3}", "yield": "prep", "tier": 0 },
+    { "id": "windmill", "name": "Windmill", "assetLine": "Windmill_FirstAge / SecondAge", "yield": "flour", "tier": 2 },
+    { "id": "market", "name": "Market", "assetLine": "Market_*_Level{1-3}", "yield": "trade", "tier": 2 }
+  ],
+  "taming": [
+    {
+      "id": "pen_basic",
+      "name": "Creature Pen",
+      "desc": "Hold and feed wild creatures. Bond XP feeds taming profession.",
+      "tier": 1,
+      "claimGated": true
+    },
+    {
+      "id": "stable_bond",
+      "name": "Bond Stable",
+      "desc": "Mount candidates (Toon RTS cavalry horses). Profession XP carries to hero convert.",
+      "tier": 2,
+      "claimGated": true
+    },
+    {
+      "id": "beast_yard",
+      "name": "Beast Yard",
+      "desc": "Heavy / exotic bonds. Unlocks at camp skill tier 2.",
+      "tier": 3,
+      "claimGated": true
+    }
+  ],
+  "accountCampSkills": [
+    {
+      "id": "camp_logistics",
+      "name": "Camp Logistics",
+      "desc": "Faster structure place and material refund on demolish.",
+      "maxLevel": 20,
+      "icon": "/icons/pack/misc/Flow.png",
+      "iconUrl": "/icons/pack/misc/Flow.png"
+    },
+    {
+      "id": "camp_fortify",
+      "name": "Fortify",
+      "desc": "Defensive structure HP and repair speed.",
+      "maxLevel": 20,
+      "icon": "/icons/pack/misc/Effect.png",
+      "iconUrl": "/icons/pack/misc/Effect.png"
+    },
+    {
+      "id": "camp_muster",
+      "name": "Muster",
+      "desc": "Unit training speed and roster cap at this claim.",
+      "maxLevel": 20,
+      "icon": "/icons/pack/weapons/Sword_01.png",
+      "iconUrl": "/icons/pack/weapons/Sword_01.png"
+    },
+    {
+      "id": "camp_husbandry",
+      "name": "Husbandry",
+      "desc": "Farm yield and taming bond rate.",
+      "maxLevel": 20,
+      "icon": "/icons/pack/misc/Slash_07.png",
+      "iconUrl": "/icons/pack/misc/Slash_07.png"
+    },
+    {
+      "id": "camp_drill",
+      "name": "Drill Sergeant",
+      "desc": "Unit combat XP gain toward level 100 convert threshold.",
+      "maxLevel": 20,
+      "icon": "/icons/pack/weapons/Spear_01.png",
+      "iconUrl": "/icons/pack/weapons/Spear_01.png"
+    }
+  ],
+  "stationBuildingsFromMaster": {
+    "includeCategories": ["crafting_station", "storage", "territory"],
+    "excludeTags": ["campfire", "quick_craft"],
+    "excludeNames": ["Campfire"]
+  }
+}

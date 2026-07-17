@@ -17,7 +17,6 @@ import {
   Users,
   X,
   Sparkles,
-  Check,
   Search,
 } from "lucide-react";
 import {
@@ -34,13 +33,11 @@ import {
   loadHarvestRecipes,
   loadOperations,
   loadSkillTrees,
-  loadSkillUnlocks,
   loadSystemsDoc,
   openMineLoaderCodex,
   openMineLoaderEditor,
   openMineLoaderPlay,
   prettyMatId,
-  unlockSkillNode,
   type CraftRecipe,
   type HarvestOp,
   type HarvestTabId,
@@ -67,10 +64,13 @@ import {
   matIconUrl,
   opIconUrl,
   recipeItemIconUrl,
-  treeIconName,
+  warmGameMedia,
 } from "../lib/gameMedia";
 import { Icon } from "./Icon";
+import { ClassSkillTreePanel } from "./hud/ClassSkillTreePanel";
 import { chunkBlocks } from "../game/seedWorlds";
+import { listGrudachainTestLibrary, type TestHeroCard } from "../lib/grudachainTestLibrary";
+import { portraitOnError } from "../lib/characterPortrait";
 import "./harvestProduction.css";
 
 export interface HarvestProductionUIProps {
@@ -112,7 +112,7 @@ export function HarvestProductionUI({
   const [trees, setTrees] = useState<SkillTree[]>([]);
   const [systems, setSystems] = useState<SystemsDoc | null>(null);
   const [bag, setBag] = useState<Record<string, number>>({});
-  const [unlocks, setUnlocks] = useState<string[]>([]);
+  const [testHeroes, setTestHeroes] = useState<TestHeroCard[]>([]);
   const [stationFilter, setStationFilter] = useState<string>("all");
   const [craftNotice, setCraftNotice] = useState<string | null>(null);
   const [craftingId, setCraftingId] = useState<string | null>(null);
@@ -136,8 +136,8 @@ export function HarvestProductionUI({
 
   useEffect(() => {
     if (!open) return;
+    warmGameMedia();
     setBag(ensureStarterBag());
-    setUnlocks(loadSkillUnlocks());
     void loadHarvestRecipes().then((r) => {
       setRecipes(r.recipes);
       setStations(r.stations);
@@ -145,6 +145,7 @@ export function HarvestProductionUI({
     void loadOperations().then(setOps);
     void loadSkillTrees().then(setTrees);
     void loadSystemsDoc().then(setSystems);
+    void listGrudachainTestLibrary().then((lib) => setTestHeroes(lib.cards));
   }, [open]);
 
   useEffect(() => {
@@ -957,67 +958,77 @@ export function HarvestProductionUI({
 
           {tab === "trees" && (
             <section className="hp-panel">
-              <h3>Skill trees</h3>
+              <h3>Class skill tree</h3>
               <p className="hp-lead">
-                Unlock harvest, crafting, building, survival, explorer, and{" "}
-                <b>weapon combat</b> nodes. Weapon tree gates Danger Room slots 1–4 and ties
-                equipped kit skills (anims + VFX) to progression. Local until Railway{" "}
-                <code>/api/professions</code>.
+                Craftpix Part 5 weapon / class skill book for production. Unlock harvest,
+                crafting, building, survival, explorer, and <b>weapon combat</b> nodes.
+                Weapon tree gates Danger Room slots 1–4 and ties equipped kit skills (anims +
+                VFX) to progression. Local until Railway <code>/api/professions</code>.
               </p>
-              <div className="hp-trees">
-                {trees.map((tree) => (
-                  <div key={tree.id} className="hp-tree">
-                    <h4 style={{ color: tree.color }}>
-                      <Icon name={treeIconName(tree.id)} size={16} /> {tree.name}
-                      <span className="hp-tree-count">
-                        {tree.nodes.filter((n) => unlocks.includes(n.id)).length}/{tree.nodes.length}
-                      </span>
-                    </h4>
-                    <div className="hp-tree-nodes">
-                      {tree.nodes.map((n) => {
-                        const unlocked = unlocks.includes(n.id);
-                        const reqOk = n.requires.every((r) => unlocks.includes(r));
-                        return (
-                          <button
-                            key={n.id}
-                            type="button"
-                            className={
-                              "hp-node" + (unlocked ? " is-on" : "") + (!reqOk && !unlocked ? " is-locked" : "")
-                            }
-                            disabled={unlocked || !reqOk}
-                            onClick={() => {
-                              setUnlocks(unlockSkillNode(n.id));
-                              showNotice(`Unlocked ${n.name}`);
-                            }}
-                            title={n.desc}
-                          >
-                            <span className="hp-node-name">
-                              {unlocked ? <Check size={12} /> : null} {n.name}
-                            </span>
-                            <span className="hp-node-meta">
-                              T{n.tier} · cost {n.cost}
-                              {n.requires.length ? ` · needs ${n.requires.length}` : ""}
-                            </span>
-                            <span className="hp-node-desc">{n.desc}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                {!trees.length && <p className="hp-muted">Loading skill trees…</p>}
-              </div>
+              {trees.length ? (
+                <ClassSkillTreePanel
+                  trees={trees}
+                  preferredTreeId={
+                    trees.find((t) => t.id.startsWith("class-"))?.id || "weapon-combat"
+                  }
+                  playerLevel={20}
+                  onUnlock={(nodeId) => {
+                    const node = trees.flatMap((t) => t.nodes).find((n) => n.id === nodeId);
+                    showNotice(node ? `Unlocked ${node.name}` : `Unlocked ${nodeId}`);
+                  }}
+                />
+              ) : (
+                <p className="hp-muted">Loading skill trees…</p>
+              )}
               {craftNotice && <div className="hp-toast">{craftNotice}</div>}
             </section>
           )}
 
           {tab === "characters" && (
             <section className="hp-panel">
-              <h3>Explorer &amp; user avatars</h3>
+              <h3>Explorer &amp; GRUDACHAIN heroes</h3>
               <p className="hp-lead">
-                Import fleet characters and cube heads you designed in Avatar Edit / LED Mask into
-                harvest / Explorer play. User-made avatars apply the head config, then spawn Explorer.
+                Import fleet / GRUDACHAIN production heroes (mesh_ids + catalog icons) and cube heads
+                from Avatar Edit / LED Mask into harvest / Explorer play.
               </p>
+              {testHeroes.length > 0 && (
+                <div className="hp-grid chars" style={{ marginBottom: 16 }}>
+                  {testHeroes.slice(0, 12).map((card) => (
+                    <button
+                      key={`qa-${card.id}`}
+                      type="button"
+                      className="hp-card"
+                      onClick={() => {
+                        onImportCharacter?.(card.id);
+                        showNotice(
+                          `${card.name} · score ${card.readiness.score}` +
+                            (card.readiness.ok ? " · production ready" : " · needs repair"),
+                        );
+                      }}
+                      title={card.readiness.flags.join(" · ")}
+                    >
+                      <img
+                        src={card.portrait.url}
+                        alt=""
+                        width={40}
+                        height={40}
+                        style={{ borderRadius: 8, objectFit: "cover" }}
+                        onError={(e) =>
+                          portraitOnError(e.currentTarget, card.portrait.candidates)
+                        }
+                      />
+                      <span className="hp-card-title">{card.name}</span>
+                      <span className="hp-card-blurb">
+                        {card.raceId} · {card.classId} · {card.equipment.meshIds.length} meshes
+                      </span>
+                      <span className="hp-card-meta">
+                        QA {card.readiness.score}
+                        {card.readiness.ok ? " ✓" : " · fix"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="hp-char-cols">
                 <div>
                   <h4>

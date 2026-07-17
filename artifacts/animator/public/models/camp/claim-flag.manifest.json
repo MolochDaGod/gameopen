@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "F:\\GitHub\\gameopen\\artifacts\\animator\\public\\models\\pirate\\Decor_PirateFlag_00.fbx",
+  "output": "F:\\GitHub\\gameopen\\artifacts\\animator\\public\\models\\camp\\claim-flag.glb",
+  "intermediateBackend": "fbx2gltf",
+  "warnings": [],
+  "stats": {
+    "meshes": 1,
+    "materials": 1,
+    "textures": 0,
+    "animations": 0,
+    "nodes": 1,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.32499998807907104,
+      -0.675000011920929,
+      -0.07500000298023224
+    ],
+    "max": [
+      0.32499998807907104,
+      0.6750000715255737,
+      0.07500000298023224
+    ],
+    "size": [
+      0.6499999761581421,
+      1.3500000834465027,
+      0.15000000596046448
+    ]
+  },
+  "collider": null,
+  "producedAt": "2026-07-17T05:07:50.442Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": false
+  }
+}

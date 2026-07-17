@@ -59,11 +59,12 @@ export const WEAPON_COMBAT: Record<
 > = {
   sword: { range: 2.5, style: "melee", cd: 1.1, damage: 45, pack: "sword_shield", master: "SWORD" },
   axe: { range: 2.6, style: "melee", cd: 1.2, damage: 50, pack: "sword_shield", master: "AXE" },
-  greataxe: { range: 3.0, style: "melee", cd: 1.4, damage: 65, pack: "2h_melee", master: "GREATAXE" },
-  greatsword: { range: 2.9, style: "melee", cd: 1.35, damage: 60, pack: "2h_melee", master: "GREATSWORD" },
+  greataxe: { range: 3.0, style: "melee", cd: 1.4, damage: 65, pack: "polearm", master: "GREATAXE" },
+  greatsword: { range: 2.9, style: "melee", cd: 1.35, damage: 60, pack: "polearm", master: "GREATSWORD" },
   hammer: { range: 2.7, style: "melee", cd: 1.25, damage: 55, pack: "sword_shield", master: "HAMMER" },
   mace: { range: 2.5, style: "melee", cd: 1.15, damage: 48, pack: "sword_shield", master: "MACE" },
-  spear: { range: 3.5, style: "melee", cd: 1.2, damage: 50, pack: "sword_shield", master: "SPEAR" },
+  spear: { range: 4.0, style: "melee", cd: 1.0, damage: 50, pack: "polearm", master: "SPEAR" },
+  javelin: { range: 4.0, style: "melee", cd: 1.1, damage: 48, pack: "polearm", master: "SPEAR" },
   dagger: { range: 1.9, style: "melee", cd: 0.85, damage: 35, pack: "sword_shield", master: "DAGGER" },
   bow: { range: 22, style: "ranged", cd: 1.3, damage: 40, pack: "longbow", master: "BOW" },
   crossbow: { range: 24, style: "ranged", cd: 1.6, damage: 48, pack: "longbow", master: "CROSSBOW" },
@@ -95,6 +96,7 @@ const KIND_AGGRO: Record<string, number> = {
   merchant: 0,
   guard: 0.4,
   quest_npc: 0,
+  commander: 0.55,
 };
 
 const KIND_HP: Record<string, number> = {
@@ -104,6 +106,7 @@ const KIND_HP: Record<string, number> = {
   merchant: 50,
   guard: 120,
   quest_npc: 70,
+  commander: 160,
 };
 
 function combatForWeapon(weaponId: WeaponId): PrefabCombatProfile {
@@ -134,10 +137,26 @@ export function prefabFromWarlordsRole(role: WarlordsRole): EntityPrefab {
     offHand: wep.offHand,
     combat: combatForWeapon(wep.weaponId),
     aggro: KIND_AGGRO[role.kind] ?? 0.5,
-    moveSpeed: role.kind === "hostile" ? 2.6 : 2.2,
+    moveSpeed:
+      role.kind === "hostile" ? 2.6 : role.kind === "commander" ? 2.8 : 2.2,
     maxHp: KIND_HP[role.kind] ?? 80,
     isPlayer: role.kind === "player",
   };
+}
+
+/** Prefab units for camp training (hostile RTS kits). */
+export function listUnitPrefabs(): EntityPrefab[] {
+  return WARLORDS_ROLES.filter((r) => r.kind === "hostile").map(prefabFromWarlordsRole);
+}
+
+/** Commanders — elite camp leaders (uMMORPG-style). */
+export function listCommanderPrefabs(): EntityPrefab[] {
+  return WARLORDS_ROLES.filter((r) => r.kind === "commander").map(prefabFromWarlordsRole);
+}
+
+/** Travelers — road NPCs. */
+export function listTravelerPrefabs(): EntityPrefab[] {
+  return WARLORDS_ROLES.filter((r) => r.kind === "traveler").map(prefabFromWarlordsRole);
 }
 
 export function prefabFromRoleId(id: string): EntityPrefab | null {
