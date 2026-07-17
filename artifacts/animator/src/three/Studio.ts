@@ -8570,21 +8570,23 @@ export class Studio {
         if (this.character.hasClip("jumpAway")) this.character.playClipOnce("jumpAway", 0.05);
         else if (this.character.hasClip("utilityKick")) this.character.playClipOnce("utilityKick", 0.05);
       }
-      // Wall run: hold Shift after run+jump near a wall — climb/run-up anims.
+      // Wall run / freehang: climb loco = hanging idle + freehang climb
       if (this.controller.consumeWallRunStart()) {
         this.character.setTraversalMode?.("climb");
         this.setCombatFlash("WALL RUN", 0.5);
-        // climbing-up-wall / freehang via traversal set
-        if (this.character.hasClip("climbing-up-wall")) {
-          /* traversal mode drives loco */
+        // Entry: jump-to-freehang when airborne, else stand-to-freehang
+        if (this.character.hasClip("jumpToFreehang")) {
+          this.character.playClipOnce("jumpToFreehang", 0.08);
+        } else if (this.character.hasClip("standToFreehang")) {
+          this.character.playClipOnce("standToFreehang", 0.08);
         } else if (this.character.hasClip("mantle")) {
-          this.character.playClipOnce?.("mantle", 0.08);
+          this.character.playClipOnce("mantle", 0.08);
         }
       }
       if (this.controller.consumeWallRunEnd()) {
         this.character.setTraversalMode?.("ground");
       }
-      // Keep climb mode while wall-running so forward = climbing-up-wall
+      // Keep climb mode while wall-running → freehang idle/climb loco
       if (this.controller.isWallRunning) {
         this.character.setTraversalMode?.("climb");
       }

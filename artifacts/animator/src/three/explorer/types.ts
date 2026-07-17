@@ -135,6 +135,20 @@ export type ActionKey =
   | "sideStepL"
   /** Drop / jump down off a ledge (traversal). */
   | "jumpDown"
+  /** Freehang climb stroke (wall hang forward). */
+  | "freehangClimb"
+  /** Idle while hanging on ledge/wall. */
+  | "hangingIdle"
+  /** Ground → freehang grab. */
+  | "standToFreehang"
+  /** Jump → freehang grab. */
+  | "jumpToFreehang"
+  /** Ambient wipe sweat (idle fidget). */
+  | "wipeSweat"
+  /** Death from rear headshot. */
+  | "deathBackHeadshot"
+  /** Standing melee combo v3 (generic 1H flurry). */
+  | "standingMeleeComboV3"
   /** Illegal headbutt — quick dirty close-range melee. */
   | "headbutt"
   /** Spinning hurricane kick (unarmed weapon move). */

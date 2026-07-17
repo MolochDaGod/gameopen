@@ -99,11 +99,13 @@ export const BASE_PACK_FALLBACKS: Record<string, string> = {
 
 export const UNIVERSAL_MOVEMENT = {
   dodgeF:    "animations/bow/standing-dodge-forward",
-  dodgeB:    "animations/bow/standing-dodge-backward",
+  // Documents Dodging Back.fbx
+  dodgeB:    "animations/reactions/dodging-back",
   dodgeL:    "animations/bow/standing-dodge-left",
   dodgeR:    "animations/bow/standing-dodge-right",
   dash:      "animations/bow/standing-dive-forward",
-  jumpAir:   "animations/bow/fall-a-loop",
+  // Documents Falling Idle.fbx — airborne fall loop
+  jumpAir:   "animations/reactions/falling-idle",
   land:      "animations/bow/fall-a-land-to-standing-idle-01",
   // Acrobatic UX movement blends (priority one-shots, any loadout).
   airDodge:       "animations/extra/aerial-evade",
@@ -746,8 +748,9 @@ export interface TraversalSet {
 
 export const TRAVERSAL_SETS: Record<"climb" | "swim", TraversalSet> = {
   climb: {
-    idle: "animations/climb/climbing",
-    forward: "animations/climb/climbing-up-wall",
+    // Documents pack: Hanging Idle + Freehang Climb as primary wall-hang loco
+    idle: "animations/climb/hanging-idle",
+    forward: "animations/climb/freehang-climb",
     back: "animations/climb/climbing-down-wall",
   },
   swim: {
@@ -764,11 +767,20 @@ export const TRAVERSAL_SETS: Record<"climb" | "swim", TraversalSet> = {
  */
 export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   // Traversal transitions (mode exits): root-motion drives the body in lockstep.
-  // Wall-run uses setTraversalMode("climb") → TRAVERSAL_SETS (climbing-up-wall).
+  // Wall-run / freehang uses TRAVERSAL_SETS.climb (hanging idle + freehang climb).
   mantle: "animations/climb/climbing-to-top",
+  // Documents freehang entry/exit pack
+  freehangClimb: "animations/climb/freehang-climb",
+  hangingIdle: "animations/climb/hanging-idle",
+  standToFreehang: "animations/climb/stand-to-freehang",
+  jumpToFreehang: "animations/climb/jump-to-freehang",
   // Dual Weapon Combo — fallback for kits that don't override skill.
   dualWeaponCombo: "animations/knife/dual-weapon-combo",
   swimExit: "animations/swim/swimming-to-edge",
+  // Documents Wiping Sweat.fbx — ambient idle fidget
+  wipeSweat: "animations/gestures/wiping-sweat",
+  // Documents Standing Melee Combo Attack Ver. 3.fbx
+  standingMeleeComboV3: "animations/extra/standing-melee-combo-v3",
   // Farming verbs.
   harvest: "animations/farming/dig-and-plant-seeds",
   water: "animations/farming/watering",
@@ -820,6 +832,7 @@ export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   longBackJump: "animations/extra/long-backward-jump",
   pivotR: "animations/extra/right-pivot",
   sideStepL: "animations/extra/left-side-step",
+  // Documents Jumping Down.fbx
   jumpDown: "animations/extra/jumping-down",
   headbutt: "animations/extra/illegal-headbutt",
   // Retargeted Mixamo melee combos. These are GLB assets (not FBX) and load
@@ -885,19 +898,18 @@ export const GLOBAL_REACTIONS: Partial<Record<ActionKey, string>> = {
   flyingBack:      "animations/reactions/flying-back",
   uppercutLaunch:  "animations/reactions/uppercut",
   bigBlow:         "animations/reactions/big-body-blow",
-  // knocked-out.fbx ships EMPTY (0 tracks, 0s) so it never animated — and because
-  // an empty clip still registers, the Studio KO reaction silently no-op'd instead
-  // of falling back. Repointed to the working knocked-unconscious collapse.
+  // Documents Knocked Unconscious.fbx
   knockedOut:      "animations/reactions/knocked-unconscious",
-  // Deeper KO collapse — used as the grounded landing pose of a clean knock-up.
   knockedUnconscious: "animations/reactions/knocked-unconscious",
   jumpAway:        "animations/reactions/jump-away",
-  // Clean knock-up launcher chain: the upward pop (knockedUp, or knockedUpBack
-  // when shoved clear), the airborne falling pose held after the apex
-  // (fallingIdle), then the grounded knockedUnconscious collapse (above) on landing.
+  // Documents Dodging Back.fbx also usable as jumpAway fallback
+  // Clean knock-up launcher chain
   knockedUp:       "animations/reactions/knocked-up",
   knockedUpBack:   "animations/reactions/knocked-up-and-back",
+  // Documents Falling Idle.fbx
   fallingIdle:     "animations/reactions/falling-idle",
+  // Documents Death From Back Headshot.fbx
+  deathBackHeadshot: "animations/reactions/death-from-back-headshot",
 };
 
 /** Resolve a class-independent one-shot to its clip id, if shipped. */

@@ -450,6 +450,15 @@ export class ExplorerCharacter implements Avatar {
         return a.skill();
       case "dualWeaponCombo":
         return a.playAction("dualWeaponCombo") || a.skill();
+      case "standingMeleeComboV3":
+        return a.playAction("standingMeleeComboV3");
+      case "wipeSweat":
+        return a.playAction("wipeSweat");
+      case "jumpToFreehang":
+      case "standToFreehang":
+      case "freehangClimb":
+      case "hangingIdle":
+        return a.playAction(name as import("./explorer/types").ActionKey);
       case "cast":
         return a.magic("castSpell");
       case "magicAttack":
