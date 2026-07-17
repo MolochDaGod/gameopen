@@ -65,6 +65,10 @@ export type ActionKey =
    * and 2H weapon F-skills.
    */
   | "dualWeaponCombo"
+  /** One Hand Sword Combo.fbx — sword LMB / skill alias. */
+  | "oneHandSwordCombo"
+  /** Two Hand Sword Combo.fbx — greatsword LMB / skill alias. */
+  | "twoHandSwordCombo"
   | "blockStart"
   | "blockIdle"
   // --- Full block/parry defense set (class-independent guarded-hit clips). ---

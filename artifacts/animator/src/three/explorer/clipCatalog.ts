@@ -130,7 +130,8 @@ export const ONE_HAND_MELEE_LOCO = {
   walkB: "animations/sword/sword-and-shield-run-2",
   walkL: "animations/sword/sword-and-shield-strafe",
   walkR: "animations/sword/sword-and-shield-strafe-2",
-  runF:  "animations/sword/sword-and-shield-run",
+  // Run With Sword.fbx — blade-ready combat sprint (Documents pack)
+  runF:  "animations/sword/run-with-sword",
   runB:  "animations/sword/sword-and-shield-run-2",
   runL:  "animations/sword/sword-and-shield-strafe",
   runR:  "animations/sword/sword-and-shield-strafe-2",
@@ -230,62 +231,47 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
     strafe: false,
   },
 
-  // -------------------------------------------------------------- sword + shield
+  // -------------------------------------------------------------- sword + knife
+  // Documents pack: One Hand Sword Combo, Run With Sword, Dual Weapon Combo (F).
   sword: {
     loco: {
       idle: "animations/sword/sword-and-shield-idle",
       walkF: "animations/sword/sword-and-shield-run",
-      // Dedicated guarded backpedal (RMB-back sword&shield run) so retreating with
-      // a shield reads as a real backward run, not a forward run played in reverse.
       walkB: "animations/sword/sword-and-shield-run-back",
       walkL: "animations/sword/sword-and-shield-strafe",
       walkR: "animations/sword/sword-and-shield-strafe-2",
-      runF: "animations/sword/sword-and-shield-run",
+      // Documents Run With Sword.fbx
+      runF: "animations/sword/run-with-sword",
       runB: "animations/sword/sword-and-shield-run-back",
       runL: "animations/sword/sword-and-shield-strafe",
       runR: "animations/sword/sword-and-shield-strafe-2",
     },
     actions: {
-      attack1: "animations/sword/sword-and-shield-attack-2",
-      // USER-DIRECTED: the old attack2 (sword-and-shield-attack-4) read poorly as a
-      // swing — replaced with a full single committed slash on the same rig.
+      // Documents One Hand Sword Combo.fbx — primary LMB / skill combo
+      attack1: "animations/sword/one-hand-sword-combo",
       attack2: "animations/sword/sword-and-shield-attack",
       attack3: "animations/sword/sword-and-shield-attack-3",
-      // Committed inward slash — the new sword combo FINISHER (last entry of
-      // `combo`): a full single cross-body cut that caps the 3-hit chain.
       attack4: "animations/sword/inward-slash",
-      // Extra combo finishers from the new sword batch (same rig).
       attack5: "animations/sword/sword-and-shield-attack-5",
       attack6: "animations/sword/two-hand-sword-combo",
-      // USER-DIRECTED: the LMB combo is now the 3-hit melee-combo-1 (one hit per
-      // click). These keys point at the three sliced thirds of that GLB combo
-      // (see loader GLB_SUBCLIPS). The attack1..6 sword swings above stay defined
-      // (still usable via action-slot overrides) but no longer drive the chain.
       comboHit1: "animations/combo/melee-combo-1-hit1",
       comboHit2: "animations/combo/melee-combo-1-hit2",
       comboHit3: "animations/combo/melee-combo-1-hit3",
-      // Sword + off-hand dagger kit: Dual Weapon Combo is the F / skill flourish
-      // (Documents Dual Weapon Combo.fbx → animations/knife/dual-weapon-combo).
       skill: "animations/knife/dual-weapon-combo",
-      // Shared dual-wield key (aliases skill for overrides / skill bar).
       dualWeaponCombo: "animations/knife/dual-weapon-combo",
+      oneHandSwordCombo: "animations/sword/one-hand-sword-combo",
       blockStart: "animations/sword/sword-and-shield-block",
       blockIdle: "animations/sword/sword-and-shield-block-idle",
       draw: "animations/sword/draw-sword-1",
       sheath: "animations/sword/sheath-sword-1",
       death: "animations/sword/sword-and-shield-death",
-      // Lunging dash-attack is the advancing slash (a committed forward lunge that
-      // covers ground while slashing).
       dashAttack: "animations/sword/slash-advance",
-      // Straight thrust: the knife stab clip drives the shared rig into a clean
-      // forward main-hand lunge-stab (reads as a sword thrust on this loadout).
       stab: "animations/knife/stabbing",
       turnL: "animations/sword/sword-and-shield-turn",
       turnR: "animations/sword/sword-and-shield-turn-2",
     },
-    // USER-DIRECTED: the 3-hit melee-combo-1 (one sliced hit per click) now caps
-    // with dual-weapon flurry skill on F; LMB chain still ends with inward slash.
-    combo: ["comboHit1", "comboHit2", "comboHit3", "attack4"],
+    // LMB: One Hand Sword Combo → inward slash finisher; F = Dual Weapon Combo
+    combo: ["attack1", "attack4"],
     strafe: false,
   },
 
@@ -307,12 +293,7 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       runR: "animations/greatsword/great-sword-strafe-4",
     },
     actions: {
-      // USER-DIRECTED combo: one flowing multi-swing greatsword chain delivered as
-      // a SINGLE retargeted clip. Like the Battle Axe (melee-combo-2), the combo
-      // array holds this single entry and the combo lock/recovery ride the clip's
-      // REAL duration, so the whole chain plays through per commit (see
-      // Animator.attack + Studio.doComboHit). The individual slashes below stay
-      // defined for action-slot overrides and the Dressing Room clip preview.
+      // Documents Two Hand Sword Combo.fbx → great-sword-combo (LMB opener)
       attack1: "animations/greatsword/great-sword-combo",
       // Heavy follow-up swing — a big committed two-hander cleave that caps the
       // combo chain after the flowing great-sword-combo opener (new batch clip).
@@ -320,14 +301,13 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       attack3: "animations/greatsword/great-sword-slash-3",
       attack4: "animations/greatsword/great-sword-slash-4",
       attack5: "animations/greatsword/great-sword-slash-5",
-      // 2H skill: Dual Weapon Combo flurry (shared dual-wield bake) as weapon skill.
+      // F skill: Dual Weapon Combo; quick slash = KeyZ / power poke
       skill: "animations/knife/dual-weapon-combo",
       dualWeaponCombo: "animations/knife/dual-weapon-combo",
+      twoHandSwordCombo: "animations/greatsword/great-sword-combo",
       // Lunging dash-attack covers ground (slide attack from the sword pack).
-      // USER-DIRECTED: this lunging slide ALSO opens the combo chain (see `combo`).
       dashAttack: "animations/sword/great-sword-slide-attack",
-      // Quick committed slash — a fast single cut (KeyZ), snappier than the
-      // heavy combo slashes (was the slow leaping-overhead jump-attack).
+      // Documents quiickGreat Sword Slash.fbx
       stab: "animations/greatsword/quick-slash",
       blockStart: "animations/greatsword/great-sword-blocking-2",
       blockIdle: "animations/greatsword/great-sword-blocking-2",
@@ -475,31 +455,26 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
   spear: {
     loco: { ...TWO_HAND_MELEE_LOCO },
     actions: {
-      // Real spear motions (new batch): a rising upward thrust opener and a
-      // leaping spartan lance lunge as the chain finisher (was borrowed knife /
-      // greatsword clips). attack2's sweeping cut sits between them.
+      // Documents pack:
+      //   multiUpward Thrust → upward-thrust (LMB open)
+      //   11Upward Thrust → rising-thrust (stab / power poke)
+      //   lancespartan → lance-spartan (dash / finisher)
+      //   spear1 → full spear skill flurry (F)
       attack1: "animations/spear/upward-thrust",
-      // Middle combo beat is now a committed inward cross-slash (new batch, 2nd
-      // use of the sword inward-slash) — a sweeping cut between the thrust opener
-      // and the lance finisher.
-      attack2: "animations/sword/inward-slash",
+      attack2: "animations/spear/spear1",
       attack3: "animations/spear/lance-spartan",
-      // Ground-covering lunging charge (slide attack).
-      skill: "animations/sword/great-sword-slide-attack",
-      // Dash-attack is now the leaping spartan lance lunge (new batch, 2nd use) —
-      // a real spear gap-closer instead of the borrowed slide-attack.
+      skill: "animations/spear/spear1",
       dashAttack: "animations/spear/lance-spartan",
-      // Straight thrust now uses the dedicated upward-thrust (was knife stab).
-      stab: "animations/spear/upward-thrust",
+      stab: "animations/spear/rising-thrust",
       blockStart: "animations/greatsword/great-sword-blocking-2",
       blockIdle: "animations/greatsword/great-sword-blocking-2",
       death: "animations/greatsword/two-handed-sword-death",
       hit: "animations/greatsword/great-sword-impact",
-      // New-batch launching jump — a real spear leap (was the unarmed fall-loop).
       jumpAir: "animations/extra/jump-up",
       turnL: "animations/greatsword/great-sword-turn",
       turnR: "animations/greatsword/great-sword-turn-2",
     },
+    // LMB: multi-upward → spear1 chain → spartan lance finisher
     combo: ["attack1", "attack2", "attack3"],
     strafe: false,
   },

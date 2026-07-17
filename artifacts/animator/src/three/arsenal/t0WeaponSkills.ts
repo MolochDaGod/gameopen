@@ -90,15 +90,15 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["power", "Unarmed Power", "slam", 100, "dash"],
   ]),
   sword: kit("sword", "Sword and Knife", [
-    ["combo", "Sword Combo", "slash", 70],
+    ["combo", "One Hand Sword Combo", "slash", 70],
     ["special", "Dual Weapon Combo", "slash", 85],
-    ["ranged", "Sword Throw", "bolt", 55],
+    ["ranged", "Run Slash", "slash", 55],
     ["power", "Blade Storm", "nova", 100],
   ]),
   greatsword: kit("greatsword", "Great Sword", [
-    ["combo", "Greatsword Combo", "slash", 70],
-    ["special", "Dual Weapon Combo", "slash", 85],
-    ["ranged", "Shockwave", "slam", 55],
+    ["combo", "Two Hand Sword Combo", "slash", 70],
+    ["special", "Quick GS Slash", "slash", 85],
+    ["ranged", "Slide Dash", "slash", 100, "dash"],
     ["power", "Judgement", "slam", 100, "dash"],
   ]),
   axe: kit("axe", "Battle Axe", [
@@ -113,6 +113,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Cleave Wave", "slash", 55],
     ["power", "Execute", "slam", 100, "dash"],
   ]),
+  // greataxe LMB uses Documents greataxe.fbx → great-axe-combo
   dagger: kit("dagger", "Daggers", [
     ["combo", "Dagger Combo", "slash", 70],
     ["special", "Dual Weapon Combo", "slash", 85],
@@ -121,10 +122,10 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   ]),
   // Madarame: 1_1/1_2 base · 1_5 lunge · skill2_1 speed/AoE · dragontail
   spear: kit("spear", "Spear", [
-    ["combo", "Spear Combo", "thrust", 55],
-    ["special", "Piercing Lunge", "thrust", 100, "dash"],
-    ["ranged", "Spear Rush", "nova", 70, "dash"],
-    ["power", "Dragontail Sweep", "nova", 50],
+    ["combo", "Upward Thrust", "thrust", 55],
+    ["special", "Lance Spartan", "thrust", 100, "dash"],
+    ["ranged", "Spear Flurry", "thrust", 70],
+    ["power", "Rising Thrust", "thrust", 90, "dash"],
   ]),
   hammer: kit("hammer", "War Hammer", [
     ["combo", "Hammer Combo", "slam", 70],

@@ -29,37 +29,38 @@ export const SPEAR_FINISHER_ENTRY_MM = 95;
 
 /** Master catalog skill id → polearm baked role / clip key. */
 export const SPEAR_ANIM_CLIP: Record<string, string> = {
-  // Primary tree — Madarame base / finisher
-  spear_thrust: "attack", // attack1_1
-  spear_lunge: "attack5", // attack1_5 lunging skill
-  spear_sweep: "attack2", // attack1_2
+  // Documents pack + Madarame roles
+  // upward-thrust · spear1 · lance-spartan · rising-thrust
+  spear_thrust: "attack1", // multiUpward Thrust
+  spear_lunge: "attack3", // lance-spartan dash
+  spear_sweep: "attack2", // spear1 mid chain
   // Secondary
-  spear_javelin: "skill2",
-  spear_vault: "attack4", // gap-close finisher entry
-  spear_wall: "skill3",
-  // Ability — skill2_1 speed / AoE
-  spear_impale: "attack3", // attack1_3 finisher
-  spear_cyclone: "skill2", // skill2_1 speed + aoe
+  spear_javelin: "skill",
+  spear_vault: "attack3",
+  spear_wall: "skill",
+  // Ability
+  spear_impale: "stab", // rising thrust (11Upward)
+  spear_cyclone: "skill", // spear1 flurry
   spear_dragon: "special",
-  spear_phantom: "skill2",
+  spear_phantom: "skill",
   // Ultimate
-  spear_storm: "skill4",
+  spear_storm: "skill",
   spear_dragontail: "special",
   // T0 starter
-  t0_spear_quick_thrust: "attack",
+  t0_spear_quick_thrust: "attack1",
   t0_spear_pole_guard: "idle",
-  t0_spear_reach_strike: "attack",
+  t0_spear_reach_strike: "attack1",
   t0_spear_sweeping_jab: "attack2",
   // Local aliases
-  thrust: "attack",
-  charge: "attack4",
-  skewer: "attack5",
+  thrust: "attack1",
+  charge: "attack3",
+  skewer: "attack3",
   sweep: "attack2",
-  combo: "attack",
-  special: "special",
-  power: "special",
+  combo: "attack1",
+  special: "skill",
+  power: "stab",
   finisher: "attack3",
-  speed: "skill2",
+  speed: "skill",
 };
 
 /**
