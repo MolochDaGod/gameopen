@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "source": {
+    "file": "C:/Users/nugye/Documents/projectilebomb.glb",
+    "title": "Metroid Prime Missile Launcher (projectilebomb)",
+    "r2Key": "models/vfx/projectilebomb.glb",
+    "cdn": "https://assets.grudge-studio.com/models/vfx/projectilebomb.glb",
+    "note": "Skill projectile mesh only. Witch hut swamp GLB is a separate island asset."
+  },
+  "islandSeparate": {
+    "file": "C:/Users/nugye/Documents/witch_hut_in_a_swamp.glb",
+    "r2Key": "models/worlds/witch_hut_in_a_swamp.glb",
+    "role": "legion_island_environment",
+    "doNotUseAsProjectile": true
+  },
+  "variants": {
+    "arrow": {
+      "skillKinds": ["witchArrow", "bolt"],
+      "scale": [0.1276, 2.0858, 0.1011],
+      "matAnim": "emberScroll",
+      "role": "arrow"
+    },
+    "missile": {
+      "skillKinds": ["witchMissile"],
+      "scale": [0.22, 1.4, 0.18],
+      "matAnim": "arcanePulse",
+      "role": "missile",
+      "homing": true
+    },
+    "disk": {
+      "skillKinds": ["witchDisk", "nova"],
+      "scale": [3.9617, 0.1837, 3.3952],
+      "matAnim": "swampGlow",
+      "role": "aoe_disk",
+      "spin": 8.5
+    }
+  },
+  "weaponSkillBindings": [
+    { "kit": "ranger", "skills": ["Aimed Shot", "Piercing Arrow"], "variant": "arrow" },
+    { "kit": "mage", "skills": ["Elemental Blast", "Bolt"], "variant": "missile" },
+    { "kit": "mage", "skills": ["Cataclysm", "Arcane Nova"], "variant": "disk" }
+  ]
+}

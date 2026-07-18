@@ -1,59 +1,37 @@
-# Witch Hut projectiles (arrow / missile / disk)
+# Projectiles: projectilebomb.glb (not witch hut)
 
-**Source:** `C:\Users\nugye\Documents\witch_hut_in_a_swamp.glb`  
-(User path `float_hut_in_a_swamp.glb` → same file on disk.)
+**Projectile / skill mesh:** `C:\Users\nugye\Documents\projectilebomb.glb`  
+**CDN:** `https://assets.grudge-studio.com/models/vfx/projectilebomb.glb`  
+**Code:** `three/fx/projectileBomb.ts` · `Vfx.castBombProjectile`
 
-**CDN**
-- VFX pack: `https://assets.grudge-studio.com/models/vfx/witch_hut_in_a_swamp.glb`
-- World / legion island: `https://assets.grudge-studio.com/models/worlds/witch_hut_in_a_swamp.glb`
+**Witch hut swamp** (`witch_hut_in_a_swamp.glb`) is an **island / environment only**  
+(`models/worlds/witch_hut_in_a_swamp.glb`) — do **not** use it for skill projectiles.
 
-**Code**
-- `three/fx/witchHutProjectiles.ts` — load, scale variants, material anim
-- `three/Vfx.ts` — `castWitchArrow` / `castWitchMissile` / `castWitchDisk`
-- Catalog: `content/vfx/witch-hut-projectiles.json`
+## Authored scales
 
-## Authored transforms (Unity/Blender placement)
-
-| Variant | Scale | Role |
+| Variant | Scale | Skill kinds |
 | --- | --- | --- |
-| **Arrow** | `0.1276 · 2.0858 · 0.1011` | Long thin projectile (also **legion island** stretch) |
-| **Missile** | `0.22 · 1.4 · 0.18` | Spinning spell bolt (homing) |
-| **Disk** | `3.9617 · 0.1837 · 3.3952` | Spinning AOE path disc |
+| Arrow | `0.1276 · 2.0858 · 0.1011` | `witchArrow` (+ default bolt path) |
+| Missile | `0.22 · 1.4 · 0.18` | `witchMissile` |
+| Disk AOE | `3.9617 · 0.1837 · 3.3952` | `witchDisk` |
 
-Position/rotation default to origin; flight orients `align [0,1,0]` to travel for arrow/missile.
+Position/rotation origin; arrow/missile align local +Y to travel. Disk spins on Y along path.
 
-## Material animations
+## Material + mesh animation
 
-Hut textures are kept; per-spawn materials animate:
+- Keeps `projectilebomb` textures (`MAT_0_0` / `MAT_0_1`)
+- Emissive pulse + UV scroll per variant (`emberScroll` / `arcanePulse` / `swampGlow`)
+- Plays embedded **Idle** clip when present (spinning mesh)
 
-| Anim | Effect |
-| --- | --- |
-| `emberScroll` | UV scroll + hot emissive pulse (arrow) |
-| `arcanePulse` | UV rotate + purple emissive (missile) |
-| `swampGlow` | Soft UV drift + green emissive (disk) |
+## Weapon skills
 
-## Skill kinds
-
-| SkillKind | Vfx |
-| --- | --- |
-| `witchArrow` | Scaled arrow flight + trail |
-| `witchMissile` | Homing spinning missile |
-| `witchDisk` | Ground-seeking spinning AOE + shockwave |
-
-Also: default `bolt` skills use witch arrow mesh when the pack loads.
-
-## Weapon skill wiring (selected)
-
-| Kit | Skills → |
-| --- | --- |
-| **Ranger** | Aimed Shot / Piercing Arrow → `witchArrow` |
-| **Mage** | Elemental Blast / Bolt → `witchMissile`; Cataclysm / Arcane Nova → `witchDisk` |
+| Kit | Skills | Variant |
+| --- | --- | --- |
+| Ranger | Aimed Shot, Piercing Arrow | arrow |
+| Mage | Elemental Blast, Bolt | missile |
+| Mage | Cataclysm, Arcane Nova | disk |
 
 ## D1
 
-`asset_registry` row for `models/vfx/witch_hut_in_a_swamp.glb` with `animation_packs` JSON:
-`skillKinds`, `variants`, `weaponSkillBindings`, `legionIsland` scale.
-
-## Legion island
-
-Place world mesh with scale `[0.1276, 2.0858, 0.1011]` at origin for elongated island silhouette (same transform as arrow).
+`asset_registry` key `models/vfx/projectilebomb.glb` · category `vfx` ·  
+`animation_packs` JSON: variants + `skillKinds` + weapon bindings.

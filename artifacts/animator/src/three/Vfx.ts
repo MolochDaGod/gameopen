@@ -641,10 +641,11 @@ export class Vfx {
   }
 
   /**
-   * Witch Hut pack projectile — full GLB scaled as arrow / missile / spinning AOE disk.
-   * Materials keep hut textures with animated emissive + UV scroll.
+   * projectilebomb.glb — scaled as arrow / missile / spinning AOE disk.
+   * Skill kinds keep witch* ids for bindings; mesh is projectilebomb only.
+   * (Witch hut swamp GLB is island/world only — not used here.)
    */
-  castWitchProjectile(
+  castBombProjectile(
     role: "arrow" | "missile" | "disk",
     from: THREE.Vector3,
     dir: THREE.Vector3,
@@ -654,22 +655,26 @@ export class Vfx {
       onHit?: (p: THREE.Vector3) => void;
     },
   ) {
-    void import("./fx/witchHutProjectiles").then(
+    void import("./fx/projectileBomb").then(
       async ({
-        ensureWitchHutLoaded,
-        buildWitchProjectileInstance,
-        tickWitchMaterials,
-        WITCH_PROJECTILE_VARIANTS,
+        ensureProjectileBombLoaded,
+        buildBombProjectileInstance,
+        tickBombMaterials,
+        BOMB_PROJECTILE_VARIANTS,
       }) => {
         if (this.disposed) return;
-        const variant = WITCH_PROJECTILE_VARIANTS[role];
-        const tpl = await ensureWitchHutLoaded();
+        const variant = BOMB_PROJECTILE_VARIANTS[role];
+        const { root: tpl, clips } = await ensureProjectileBombLoaded();
         const color = opts?.color ?? variant.tint;
         if (!tpl) {
-          // Fallback procedural until GLB ready
           if (role === "disk") {
             this.nova(from.clone().setY(from.y + 0.2), color);
-            this.shockwave(new THREE.Vector3(from.x, 0.05, from.z), color, variant.aoeRadius ?? 3, 0.7);
+            this.shockwave(
+              new THREE.Vector3(from.x, 0.05, from.z),
+              color,
+              variant.aoeRadius ?? 3,
+              0.7,
+            );
             opts?.onHit?.(from.clone());
           } else {
             this.bolt(from, dir, color, variant.speed, variant.range, (p) => {
@@ -679,7 +684,7 @@ export class Vfx {
           }
           return;
         }
-        const { obj, mats } = buildWitchProjectileInstance(tpl, variant);
+        const { obj, mats, mixer } = buildBombProjectileInstance(tpl, variant, clips);
         obj.position.copy(from);
         let velocity = dir.clone().normalize();
         if (opts?.aim && (variant.homing || role === "missile")) {
@@ -691,7 +696,6 @@ export class Vfx {
             velocity,
           );
         } else {
-          // Disk: sit flat-ish, spin on Y
           obj.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
         }
         if (variant.trail) this.addTrail(obj, color);
@@ -711,8 +715,9 @@ export class Vfx {
           geos: [],
           mats,
           shared: true,
+          mixer: mixer ?? undefined,
           update: (e, dt) => {
-            // Homing steer
+            mixer?.update(dt);
             if (variant.homing && aim) {
               const desired = aim.clone().sub(obj.position);
               if (desired.lengthSq() > 1e-4) {
@@ -731,14 +736,19 @@ export class Vfx {
               if (role === "disk") obj.rotateY(variant.spin * dt);
               else obj.rotateY(variant.spin * dt * 0.35);
             }
-            tickWitchMaterials(mats, e.age, dt);
+            tickBombMaterials(mats, e.age, dt);
             const t = e.age / e.life;
             const fade = t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
             for (const m of mats) m.opacity = Math.min(m.opacity, fade);
             if (e.age + dt >= e.life && hit) {
               const p = obj.position.clone();
               if (role === "disk") {
-                this.shockwave(new THREE.Vector3(p.x, 0.05, p.z), color, variant.aoeRadius ?? 3.2, 0.75);
+                this.shockwave(
+                  new THREE.Vector3(p.x, 0.05, p.z),
+                  color,
+                  variant.aoeRadius ?? 3.2,
+                  0.75,
+                );
                 this.aoeBlast(p.clone().setY(0.4), color, variant.aoeRadius ?? 3.2);
                 this.nova(p, color);
               } else {
@@ -755,7 +765,7 @@ export class Vfx {
   }
 
   castWitchArrow(from: THREE.Vector3, dir: THREE.Vector3, color?: number, onHit?: (p: THREE.Vector3) => void) {
-    this.castWitchProjectile("arrow", from, dir, { color, onHit });
+    this.castBombProjectile("arrow", from, dir, { color, onHit });
   }
 
   castWitchMissile(
@@ -765,11 +775,11 @@ export class Vfx {
     onHit?: (p: THREE.Vector3) => void,
     aim?: THREE.Vector3,
   ) {
-    this.castWitchProjectile("missile", from, dir, { color, onHit, aim });
+    this.castBombProjectile("missile", from, dir, { color, onHit, aim });
   }
 
   castWitchDisk(from: THREE.Vector3, dir: THREE.Vector3, color?: number, onHit?: (p: THREE.Vector3) => void) {
-    this.castWitchProjectile("disk", from, dir, { color, onHit });
+    this.castBombProjectile("disk", from, dir, { color, onHit });
   }
 
   /**
