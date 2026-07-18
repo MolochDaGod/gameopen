@@ -19,6 +19,7 @@ import {
   saveDungeonMap,
   type DungeonMapId,
 } from "../three/DungeonMaps";
+import { TEST_WORLD_LIST, type TestWorldId } from "../three/testWorlds";
 import { Icon } from "./Icon";
 import { EnvPreview } from "./EnvThumb";
 import { AleReviewPlayer } from "./AleReviewPlayer";
@@ -90,10 +91,13 @@ interface Props {
   duel: DuelState | null;
   onStartDuel: (teamSize: number) => void;
   onStopDuel: () => void;
-  /** Player-vs-NPC arena match (countdown → fight → result → retry/return). */
-  onStartArenaMatch: () => void;
+  /** Player-vs-NPC arena match (1v1 or 2v2 on helpers.glb set, no character). */
+  onStartArenaMatch: (mode: "1v1" | "2v2" | "ffa4") => void;
   /** The training environment the duel/session will take place in. */
   roomPreset: RoomPresetId;
+  /** Outdoor / combat test map (Danger Room · Sailtest · Forest Map). */
+  testWorldId?: TestWorldId;
+  onTestWorld?: (id: TestWorldId) => void;
   /** A.L.E. Bot state (cameras / highlights / diagnostics / report), or null. */
   ale: AleSnapshot | null;
   onDuelCamera: (mode: AleCameraMode) => void;
@@ -133,6 +137,8 @@ export function AdminPanel({
   onStopDuel,
   onStartArenaMatch,
   roomPreset,
+  testWorldId = "danger-room",
+  onTestWorld,
   ale,
   onDuelCamera,
   onToggleDiagnostics,
@@ -287,16 +293,67 @@ export function AdminPanel({
 
       <div className="panel-section">
         <h3>
+          <Icon name="world-editor" size={16} /> Test Maps
+        </h3>
+        <p className="spar-count-label">
+          <b>Danger Room</b> combat · <b>Sailtest</b> dual islands + water/wind/sky ·{" "}
+          <b>Forest Map</b> harvest. Seed UUID on each deploy.
+        </p>
+        <div className="grid3">
+          {TEST_WORLD_LIST.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              className={`opt ${testWorldId === w.id ? "active" : ""}`}
+              title={`${w.blurb}\nUUID ${w.uuid}\nseed ${w.seed}`}
+              disabled={!onTestWorld}
+              onClick={() => onTestWorld?.(w.id)}
+            >
+              {w.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <h3>
           <Icon name="anim-test" size={16} /> Arena Match
         </h3>
         <p className="spar-count-label">
-          Prefight countdown, fight until winner, then result + Retry or Return
-          to Danger Room (clears that opponent loadout). Spawn enemies first, or
-          a default sword foe is added.
+          Classic: arena3 · countdown · AI weapon skills · wipe to win.
+          FFA: Ultimate Assassination Grounds · up to 4 fighters · first to 10
+          kills · explorer AI with skills.
         </p>
-        <button className="opt" onClick={onStartArenaMatch} disabled={!!duel}>
-          Start Arena Match
-        </button>
+        <div
+          className="grid2"
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
+        >
+          <button
+            className="opt"
+            onClick={() => onStartArenaMatch("1v1")}
+            disabled={!!duel}
+            title="You vs one AI duelist with weapon skills"
+          >
+            1v1 Duel
+          </button>
+          <button
+            className="opt"
+            onClick={() => onStartArenaMatch("2v2")}
+            disabled={!!duel}
+            title="You + healer ally vs two AI foes"
+          >
+            2v2 Team
+          </button>
+          <button
+            className="opt"
+            style={{ gridColumn: "1 / -1" }}
+            onClick={() => onStartArenaMatch("ffa4")}
+            disabled={!!duel}
+            title="Assassination Grounds FFA — you + 3 AI explorers, first to 10 kills"
+          >
+            FFA ×4 · Assassination Grounds · First to 10
+          </button>
+        </div>
       </div>
 
       <div className="panel-section">

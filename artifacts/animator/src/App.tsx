@@ -1238,10 +1238,15 @@ export default function App() {
     studioRef.current?.stopDuel();
   }, []);
 
-  const onStartArenaMatch = useCallback((arenaMode: "1v1" | "2v2" = "1v1") => {
+  const onStartArenaMatch = useCallback((arenaMode: "1v1" | "2v2" | "ffa4" = "1v1") => {
     setHelpersLoad({
       visible: true,
-      label: arenaMode === "1v1" ? "ARENA 1v1" : "ARENA 2v2",
+      label:
+        arenaMode === "1v1"
+          ? "ARENA 1v1"
+          : arenaMode === "2v2"
+            ? "ARENA 2v2"
+            : "ASSASSINATION FFA",
       progress: 0.2,
     });
     const ok = studioRef.current?.startArenaMatch(arenaMode);

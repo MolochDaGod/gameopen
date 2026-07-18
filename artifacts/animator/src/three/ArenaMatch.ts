@@ -1,15 +1,16 @@
 /**
- * Player-vs-NPC arena match state machine for the Danger Room / arena.glb.
+ * Player-vs-NPC arena match state machine for the Danger Room.
  *
  * Modes:
  *   1v1 — player alone vs one AI foe (high skill usage)
  *   2v2 — player + support ally vs two AI foes
+ *   ffa4 — up to 4 fighters (player + 3 AI explorers), first to {@link KILL_GOAL} kills
  *
  * Flow:
  *   idle → countdown (3…2…1…FIGHT) → fighting → result (2s WIN/LOSE banner)
  *        → choice (Retry | Return)
  *
- * Retry restarts the same loadout on the arena map. Return unloads the match.
+ * FFA uses auto-respawn; score wins (not wipe). Classic modes end on wipe/KO.
  */
 import type { WeaponId } from "./types";
 
@@ -17,16 +18,20 @@ export type ArenaPhase = "idle" | "countdown" | "fighting" | "result" | "choice"
 
 export type ArenaOutcome = "win" | "lose" | null;
 
-/** 1v1 = solo; 2v2 = player + one ally vs two enemies. */
-export type ArenaMode = "1v1" | "2v2";
+/** 1v1 = solo; 2v2 = team; ffa4 = deathmatch first-to-N. */
+export type ArenaMode = "1v1" | "2v2" | "ffa4";
+
+/** First to this many kills wins FFA. */
+export const FFA_KILL_GOAL = 10;
+
+/** Max combatants in FFA (1 human + AI fillers). */
+export const FFA_MAX_PLAYERS = 4;
 
 /** Snapshot of one combatant to re-spawn on retry. */
 export interface ArenaOpponentSpec {
   weaponId: WeaponId;
-  /** Boss archetype when true. */
   boss?: boolean;
   scale?: number;
-  /** AI lean for spawn (host maps to bias / reaction). */
   role?: "bruiser" | "skirmisher" | "support" | "duelist";
 }
 
@@ -41,37 +46,32 @@ export interface ArenaFighterHudBar {
 export interface ArenaMatchState {
   active: boolean;
   phase: ArenaPhase;
-  /** Whole seconds left (countdown / result). 0 during fighting/choice. */
   timer: number;
-  /** Large center label for countdown / result. */
   label: string;
   outcome: ArenaOutcome;
-  /** True when Retry / Return buttons should show. */
   canChoose: boolean;
-  /** Human-readable opponent line, e.g. "Sword × 2". */
   opponentLabel: string;
-  /** Human-readable ally line (2v2), e.g. "Ally Healer". */
   allyLabel: string;
   mode: ArenaMode;
   modeLabel: string;
   round: number;
-  /** Living counts for HUD strip. */
   livingEnemies: number;
   livingAllies: number;
-  /** Optional last skill flash for UX ("SKILL · Slash"). */
   skillCue: string;
-  /** Team bars (player / allies / enemies) for arena HUD. */
   bars: ArenaFighterHudBar[];
+  /** FFA: player kill count. */
+  playerKills: number;
+  /** FFA: deaths / field kills against player (aggregate). */
+  fieldKills: number;
+  /** FFA kill goal (default 10). */
+  killGoal: number;
 }
 
 const COUNTDOWN_SEC = 3;
-const RESULT_SEC = 2;
+const RESULT_SEC = 2.4;
 
 /**
- * Arena floor priority:
- *  1. arena3.glb — Clash-style Royale level (D:\Games\Models\arena3.glb)
- *  2. helpers forge pack (character stripped)
- *  3. legacy arena.glb
+ * Arena floor priority for classic 1v1/2v2.
  */
 export const ARENA_MAP_PATH = "models/arena/arena3.glb";
 export const ARENA_MAP_PATHS = [
@@ -83,7 +83,17 @@ export const ARENA_MAP_PATHS = [
   "models/arena.glb",
 ] as const;
 
-/** Default loadouts per mode (host may override). */
+/**
+ * Ultimate Assassination Grounds — FFA battleground (R2).
+ * Local stage: artifacts/animator/public/models/maps/ (gitignored preferred).
+ */
+export const ASSASSINATION_MAP_PATHS = [
+  "models/maps/ultimate_assasination_grounds.glb",
+  "models/maps/ultimate_assassination_grounds.glb",
+  "models/ultimate_assasination_grounds.glb",
+] as const;
+
+/** Default loadouts per mode. */
 export function defaultArenaLoadout(mode: ArenaMode): {
   enemies: ArenaOpponentSpec[];
   allies: ArenaOpponentSpec[];
@@ -91,6 +101,17 @@ export function defaultArenaLoadout(mode: ArenaMode): {
   if (mode === "1v1") {
     return {
       enemies: [{ weaponId: "sword", role: "duelist" }],
+      allies: [],
+    };
+  }
+  if (mode === "ffa4") {
+    // 3 AI explorers with varied weapon skills (player is 4th)
+    return {
+      enemies: [
+        { weaponId: "sword", role: "duelist" },
+        { weaponId: "greatsword", role: "bruiser" },
+        { weaponId: "gunblade", role: "skirmisher" },
+      ],
       allies: [],
     };
   }
@@ -117,6 +138,9 @@ export class ArenaMatch {
   private livingEnemies = 0;
   private livingAllies = 0;
   private bars: ArenaFighterHudBar[] = [];
+  private playerKills = 0;
+  private fieldKills = 0;
+  private killGoal = FFA_KILL_GOAL;
 
   get isActive(): boolean {
     return this.phase !== "idle";
@@ -134,6 +158,10 @@ export class ArenaMatch {
     return this.phase === "countdown";
   }
 
+  get isFfa(): boolean {
+    return this.mode === "ffa4";
+  }
+
   get currentMode(): ArenaMode {
     return this.mode;
   }
@@ -146,29 +174,29 @@ export class ArenaMatch {
     return this.allies.map((o) => ({ ...o }));
   }
 
-  /**
-   * Begin a match. Empty enemy list uses {@link defaultArenaLoadout}.
-   */
   start(
     mode: ArenaMode,
     enemies?: ArenaOpponentSpec[],
     allies?: ArenaOpponentSpec[],
+    opts?: { killGoal?: number },
   ): void {
     this.mode = mode;
+    this.killGoal = opts?.killGoal ?? FFA_KILL_GOAL;
     const def = defaultArenaLoadout(mode);
     this.enemies = (enemies?.length ? enemies : def.enemies).map((o) => ({ ...o }));
     this.allies = (allies ?? def.allies).map((o) => ({ ...o }));
-    if (mode === "1v1") this.allies = [];
+    if (mode === "1v1" || mode === "ffa4") this.allies = [];
     if (!this.enemies.length) return;
     this.round = 0;
     this.outcome = null;
     this.skillCue = "";
     this.skillCueT = 0;
     this.bars = [];
+    this.playerKills = 0;
+    this.fieldKills = 0;
     this.beginCountdown();
   }
 
-  /** Abort completely and return to free roam (caller clears NPCs + map). */
   stop(): void {
     this.phase = "idle";
     this.timer = 0;
@@ -182,12 +210,10 @@ export class ArenaMatch {
     this.bars = [];
     this.livingEnemies = 0;
     this.livingAllies = 0;
+    this.playerKills = 0;
+    this.fieldKills = 0;
   }
 
-  /**
-   * Restart same loadout after result choice.
-   * Returns { enemies, allies } for the host to respawn.
-   */
   retry(): { enemies: ArenaOpponentSpec[]; allies: ArenaOpponentSpec[]; mode: ArenaMode } {
     if (this.phase !== "choice" && this.phase !== "result") {
       return { enemies: [], allies: [], mode: this.mode };
@@ -195,6 +221,8 @@ export class ArenaMatch {
     this.outcome = null;
     this.skillCue = "";
     this.skillCueT = 0;
+    this.playerKills = 0;
+    this.fieldKills = 0;
     this.beginCountdown();
     return {
       enemies: this.enemies.map((o) => ({ ...o })),
@@ -203,19 +231,16 @@ export class ArenaMatch {
     };
   }
 
-  /** Leave match after result — free roam. */
   returnToRoom(): void {
     this.stop();
   }
 
-  /** Flash a skill name on the arena HUD (weapon skills / heals). */
   pushSkillCue(text: string, holdSec = 1.1): void {
     if (!text) return;
     this.skillCue = text;
     this.skillCueT = holdSec;
   }
 
-  /** Host refreshes living counts + bars every frame while active. */
   setHudLive(opts: {
     livingEnemies: number;
     livingAllies: number;
@@ -224,6 +249,36 @@ export class ArenaMatch {
     this.livingEnemies = Math.max(0, opts.livingEnemies);
     this.livingAllies = Math.max(0, opts.livingAllies);
     if (opts.bars) this.bars = opts.bars;
+  }
+
+  /**
+   * FFA: player scored a kill (enemy downed).
+   * Returns true if that hit the goal.
+   */
+  recordPlayerKill(): boolean {
+    if (this.mode !== "ffa4" || this.phase !== "fighting") return false;
+    this.playerKills += 1;
+    this.pushSkillCue(`KILL ${this.playerKills}/${this.killGoal}`, 0.9);
+    if (this.playerKills >= this.killGoal) {
+      this.enterResult("win");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * FFA: player was downed (field / AI score).
+   * Returns true if field hit the goal.
+   */
+  recordPlayerDeath(): boolean {
+    if (this.mode !== "ffa4" || this.phase !== "fighting") return false;
+    this.fieldKills += 1;
+    this.pushSkillCue(`DOWN · Field ${this.fieldKills}/${this.killGoal}`, 0.9);
+    if (this.fieldKills >= this.killGoal) {
+      this.enterResult("lose");
+      return true;
+    }
+    return false;
   }
 
   private beginCountdown(): void {
@@ -235,8 +290,9 @@ export class ArenaMatch {
   }
 
   /**
-   * Advance timers. Caller reports living enemies + whether player is defeated.
-   * In 2v2, ally deaths alone do not end the match — only player KO or wipe enemies.
+   * Advance timers.
+   * Classic: playerDefeated or livingEnemies==0 ends match.
+   * FFA: score-driven; playerDefeated is ignored (host respawns + recordPlayerDeath).
    */
   update(
     dt: number,
@@ -271,8 +327,21 @@ export class ArenaMatch {
     if (this.phase === "fighting") {
       if (this.label === "FIGHT!") {
         this.timer += dt;
-        if (this.timer > 0.85) this.label = "";
+        if (this.timer > 0.85) {
+          this.label =
+            this.mode === "ffa4"
+              ? `${this.playerKills}–${this.fieldKills} · FIRST TO ${this.killGoal}`
+              : "";
+        }
+      } else if (this.mode === "ffa4") {
+        this.label = `${this.playerKills}–${this.fieldKills} · FIRST TO ${this.killGoal}`;
       }
+
+      if (this.mode === "ffa4") {
+        // Score handled via recordPlayerKill / recordPlayerDeath
+        return {};
+      }
+
       if (playerDefeated) {
         this.enterResult("lose");
         return { enteredResult: "lose" };
@@ -302,7 +371,14 @@ export class ArenaMatch {
     this.outcome = outcome;
     this.phase = "result";
     this.timer = RESULT_SEC;
-    this.label = outcome === "win" ? "VICTORY" : "DEFEAT";
+    if (this.mode === "ffa4") {
+      this.label =
+        outcome === "win"
+          ? `FIRST TO ${this.killGoal} · YOU WIN`
+          : `FIRST TO ${this.killGoal} · DEFEAT`;
+    } else {
+      this.label = outcome === "win" ? "VICTORY" : "DEFEAT";
+    }
   }
 
   state(): ArenaMatchState {
@@ -314,14 +390,22 @@ export class ArenaMatch {
       outcome: this.outcome,
       canChoose: this.phase === "choice",
       opponentLabel: formatOpponents(this.enemies),
-      allyLabel: formatAllies(this.allies),
+      allyLabel: this.mode === "ffa4" ? "FFA · no allies" : formatAllies(this.allies),
       mode: this.mode,
-      modeLabel: this.mode === "1v1" ? "1v1 DUEL" : "2v2 TEAM",
+      modeLabel:
+        this.mode === "1v1"
+          ? "1v1 DUEL"
+          : this.mode === "2v2"
+            ? "2v2 TEAM"
+            : `FFA ×${FFA_MAX_PLAYERS} · TO ${this.killGoal}`,
       round: this.round,
       livingEnemies: this.livingEnemies,
       livingAllies: this.livingAllies,
       skillCue: this.skillCue,
       bars: this.bars.slice(),
+      playerKills: this.playerKills,
+      fieldKills: this.fieldKills,
+      killGoal: this.killGoal,
     };
   }
 }

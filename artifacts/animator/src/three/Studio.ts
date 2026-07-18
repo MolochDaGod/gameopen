@@ -46,6 +46,8 @@ import { Duel } from "./Duel";
 import {
   ArenaMatch,
   ARENA_MAP_PATHS,
+  ASSASSINATION_MAP_PATHS,
+  FFA_KILL_GOAL,
   defaultArenaLoadout,
   type ArenaMode,
   type ArenaOpponentSpec,
@@ -2849,9 +2851,8 @@ export class Studio {
   }
 
   /**
-   * Start a player-vs-NPC arena match on helpers.glb (character stripped).
-   * Modes: 1v1 (solo duel) or 2v2 (player + healer ally vs two foes).
-   * Prefight countdown → fight → result banner → Retry / Return.
+   * Start a player-vs-NPC arena match.
+   * Modes: 1v1, 2v2, or ffa4 (Assassination Grounds — first to 10 kills, 4 fighters).
    */
   startArenaMatch(mode: ArenaMode = "1v1"): boolean {
     if (this.inDungeon || this.spectating) return false;
@@ -2862,7 +2863,6 @@ export class Studio {
     this.arenaSavedDifficulty = this.difficulty;
 
     const def = defaultArenaLoadout(mode);
-    // Prefer player-spawned enemies when already present and mode is 1v1 with 1 foe.
     const existing = this.targets.enemyLoadout();
     let enemies = def.enemies;
     if (mode === "1v1" && existing.length === 1) {
@@ -2875,21 +2875,45 @@ export class Studio {
     }
 
     this.targets.clear();
-    this.targets.setAutoRespawn(false);
+    // FFA needs auto-respawn so the deathmatch continues until kill goal.
+    this.targets.setAutoRespawn(mode === "ffa4");
     this.targets.setArenaSkillBoost(true);
     this.targets.setDifficulty("passive");
-    this.targets.setBounds(18);
+    this.targets.setBounds(mode === "ffa4" ? 28 : 18);
 
-    // Show load flash while map streams; fighters place after map seats if needed.
-    this.setCombatFlash("LOADING ARENA…", 1.2);
-    void this.ensureArenaMap().then((ok) => {
+    // Wire kill credit for FFA
+    if (mode === "ffa4") {
+      this.targets.onDeath = (pos) => {
+        if (!this.arenaMatch?.isFfa || !this.arenaMatch.isFighting) return;
+        // Enemy death near player combat → player kill (training attribution).
+        void pos;
+        const won = this.arenaMatch.recordPlayerKill();
+        if (won) {
+          this.targets?.setDifficulty("passive");
+          this.setCombatFlash(`FIRST TO ${FFA_KILL_GOAL} · YOU WIN`, 2);
+        }
+      };
+    }
+
+    const mapLabel =
+      mode === "ffa4" ? "ASSASSINATION GROUNDS" : "LOADING ARENA…";
+    this.setCombatFlash(mapLabel, 1.4);
+    void this.ensureArenaMap(mode === "ffa4" ? "assassination" : "classic").then((ok) => {
       if (!ok) return;
-      this.setCombatFlash("HELPERS FORGE", 0.55);
+      this.setCombatFlash(mode === "ffa4" ? "GROUNDS READY" : "ARENA READY", 0.55);
     });
 
     this.placeArenaFighters(mode, enemies, def.allies);
-    this.arenaMatch.start(mode, enemies, def.allies);
-    this.setCombatFlash(mode === "1v1" ? "ARENA 1v1" : "ARENA 2v2", 0.7);
+    this.arenaMatch.start(mode, enemies, def.allies, {
+      killGoal: FFA_KILL_GOAL,
+    });
+    const flash =
+      mode === "1v1"
+        ? "ARENA 1v1"
+        : mode === "2v2"
+          ? "ARENA 2v2"
+          : `FFA ×4 · FIRST TO ${FFA_KILL_GOAL}`;
+    this.setCombatFlash(flash, 0.85);
     return true;
   }
 
@@ -2901,9 +2925,20 @@ export class Studio {
     if (!pack.enemies.length) return;
     this.restorePlayerForArena();
     this.targets.clear();
-    this.targets.setAutoRespawn(false);
+    this.targets.setAutoRespawn(pack.mode === "ffa4");
     this.targets.setArenaSkillBoost(true);
     this.targets.setDifficulty("passive");
+    if (pack.mode === "ffa4") {
+      this.targets.onDeath = (pos) => {
+        if (!this.arenaMatch?.isFfa || !this.arenaMatch.isFighting) return;
+        void pos;
+        const won = this.arenaMatch.recordPlayerKill();
+        if (won) {
+          this.targets?.setDifficulty("passive");
+          this.setCombatFlash(`FIRST TO ${FFA_KILL_GOAL} · YOU WIN`, 2);
+        }
+      };
+    }
     this.placeArenaFighters(pack.mode, pack.enemies, pack.allies);
     this.setCombatFlash("RETRY", 0.5);
   }
@@ -2919,6 +2954,7 @@ export class Studio {
       this.targets.setAutoRespawn(true);
       this.targets.setArenaSkillBoost(false);
       this.targets.setBounds(14);
+      this.targets.onDeath = null;
     }
     this.hideArenaMap();
     this.restorePlayerForArena();
@@ -2932,34 +2968,56 @@ export class Studio {
   }
 
   /**
-   * Load / show helpers.glb as arena floor (idempotent).
-   * Strips the showcase AstroCreeper so only set dressing remains.
+   * Load arena floor: classic helpers/arena3 or Ultimate Assassination Grounds.
    */
-  private async ensureArenaMap(): Promise<boolean> {
-    if (this.arenaMapRoot) {
+  private async ensureArenaMap(
+    kind: "classic" | "assassination" = "classic",
+  ): Promise<boolean> {
+    // Swap map if kind changed
+    if (
+      this.arenaMapRoot &&
+      this.arenaMapRoot.userData.arenaKind === kind
+    ) {
       this.arenaMapRoot.visible = true;
       return true;
     }
+    if (this.arenaMapRoot) {
+      this.scene.remove(this.arenaMapRoot);
+      this.arenaMapRoot = null;
+    }
     if (this.arenaMapLoading) return this.arenaMapLoading;
+    const paths =
+      kind === "assassination"
+        ? [...ASSASSINATION_MAP_PATHS, ...ARENA_MAP_PATHS]
+        : [...ARENA_MAP_PATHS];
     this.arenaMapLoading = (async () => {
       try {
-        const { scene } = await loadGltfFirst([...ARENA_MAP_PATHS], sharedGltfLoader(), {
+        const { scene } = await loadGltfFirst(paths, sharedGltfLoader(), {
           prepMaterials: true,
         });
-        // Remove the intro character — arena is the forge set only.
-        const stripped = stripHelpersCharacter(scene);
-        fitForgeScene(scene, { maxXZ: 28 });
-        scene.name = "arena-map-helpers";
+        if (kind === "classic") {
+          const stripped = stripHelpersCharacter(scene);
+          fitForgeScene(scene, { maxXZ: 28 });
+          scene.userData.helpersForge = true;
+          scene.userData.characterStripped = stripped;
+        } else {
+          // Fit assassination grounds to a large fight volume
+          fitForgeScene(scene, { maxXZ: 42 });
+        }
+        scene.name =
+          kind === "assassination"
+            ? "arena-map-assassination-grounds"
+            : "arena-map-helpers";
         scene.userData.arenaMap = true;
-        scene.userData.helpersForge = true;
-        scene.userData.characterStripped = stripped;
+        scene.userData.arenaKind = kind;
         this.scene.add(scene);
         this.arenaMapRoot = scene;
-        // Wider bounds match fitted forge span
-        if (this.targets instanceof Targets) this.targets.setBounds(16);
+        if (this.targets instanceof Targets) {
+          this.targets.setBounds(kind === "assassination" ? 28 : 16);
+        }
         return true;
       } catch (err) {
-        console.warn("[arena] failed to load helpers forge map", ARENA_MAP_PATHS, err);
+        console.warn("[arena] failed to load map", paths, err);
         return false;
       } finally {
         this.arenaMapLoading = null;
@@ -2973,8 +3031,8 @@ export class Studio {
   }
 
   /**
-   * Position player + spawn allies/enemies for arena modes.
-   * 1v1: player west, foe east. 2v2: team west, enemies east.
+   * Position player + spawn allies/enemies.
+   * 1v1/2v2: west vs east. FFA: four pads (N/E/S/W).
    */
   private placeArenaFighters(
     mode: ArenaMode,
@@ -2984,13 +3042,40 @@ export class Studio {
     if (!(this.targets instanceof Targets)) return;
     const origin = new THREE.Vector3(0, 0, 0);
 
-    // Seat the player on the west pad.
-    if (this.character) {
-      this.character.root.position.set(origin.x - 5.5, 0, origin.z);
-      this.character.root.rotation.y = Math.PI / 2; // face east
+    if (mode === "ffa4") {
+      // Four pads around center — player on west, AI on N/E/S
+      const pads: [number, number, number][] = [
+        [-8, 0, 0], // player
+        [0, 0, -8],
+        [8, 0, 0],
+        [0, 0, 8],
+      ];
+      if (this.character) {
+        const [x, , z] = pads[0]!;
+        this.character.root.position.set(origin.x + x, 0, origin.z + z);
+        this.character.root.rotation.y = Math.PI / 2;
+      }
+      enemies.forEach((s, i) => {
+        const pad = pads[Math.min(i + 1, pads.length - 1)]!;
+        const pos = new THREE.Vector3(origin.x + pad[0], 0, origin.z + pad[2]);
+        // Face center
+        const yaw = Math.atan2(-pad[0], -pad[2]);
+        this.targets.spawnAt?.(pos, s.weaponId, "enemy", {
+          scale: s.scale,
+          arch: "grunt",
+          reactionDelay:
+            s.role === "bruiser" ? 0.07 : s.role === "skirmisher" ? 0.09 : 0.08,
+        });
+        void yaw;
+      });
+      return;
     }
 
-    // Allies (2v2) — support-healer lean via reaction delay + staff/sword
+    if (this.character) {
+      this.character.root.position.set(origin.x - 5.5, 0, origin.z);
+      this.character.root.rotation.y = Math.PI / 2;
+    }
+
     allies.forEach((s, i) => {
       const pos = new THREE.Vector3(origin.x - 5.5, 0, origin.z + (i === 0 ? 2.2 : -2.2));
       this.targets.spawnAt?.(pos, s.weaponId, "ally", {
@@ -3000,7 +3085,6 @@ export class Studio {
       });
     });
 
-    // Enemies — east side; arena skill boost makes them fire weapon skills often
     enemies.forEach((s, i) => {
       const n = Math.max(1, enemies.length);
       const zOff = n === 1 ? 0 : (i - (n - 1) / 2) * 2.4;
@@ -3008,12 +3092,9 @@ export class Studio {
       this.targets.spawnAt?.(pos, s.weaponId, "enemy", {
         scale: s.scale,
         arch: s.boss ? "boss" : "grunt",
-        // Snappy arena AI so skills/combos read well
         reactionDelay: s.role === "bruiser" ? 0.08 : s.role === "skirmisher" ? 0.1 : 0.09,
       });
     });
-
-    void mode; // mode already drove loadout
   }
 
   /** @deprecated use placeArenaFighters — kept for any external callers. */
@@ -3579,10 +3660,12 @@ export class Studio {
     p.y += 1.0;
     this.vfx.nova(p, 0xff5a6a);
     this.vfx.shockwave(new THREE.Vector3(p.x, 0.05, p.z), 0xff5a6a, 3.2, 0.7);
-    // Arena match owns death → result UI (no free-roam auto-respawn).
+    // Arena match owns death → classic ends match; FFA respawns via update tick.
     if (this.arenaMatch?.isFighting) {
       this.playPlayerReaction("knockedOut");
-      return;
+      // Classic 1v1/2v2: stay down until result. FFA: update loop restores.
+      if (!this.arenaMatch.isFfa) return;
+      return; // still skip free-roam schedule; FFA restore is in arena update
     }
     // In pvp the server owns the respawn timer (we restore on its respawn event /
     // authoritative alive flag), so skip the local auto-respawn schedule.
@@ -9225,21 +9308,49 @@ export class Studio {
         livingAllies: counts.ally,
         bars: this.buildArenaBars(counts),
       });
-      const ev = this.arenaMatch.update(dt, living, this.defeated);
+
+      // FFA: player down → score field kill + quick respawn (don't end match).
+      if (
+        this.arenaMatch.isFfa &&
+        this.arenaMatch.isFighting &&
+        this.defeated
+      ) {
+        const lost = this.arenaMatch.recordPlayerDeath();
+        this.restorePlayerForArena();
+        if (this.character) {
+          // Reseat on west pad after death
+          this.character.root.position.set(-8, 0, 0);
+          this.character.root.rotation.y = Math.PI / 2;
+        }
+        if (lost) {
+          this.targets.setDifficulty("passive");
+          this.setCombatFlash(`FIRST TO ${FFA_KILL_GOAL} · DEFEAT`, 2);
+        }
+      }
+
+      const ev = this.arenaMatch.update(
+        dt,
+        living,
+        this.arenaMatch.isFfa ? false : this.defeated,
+      );
       if (ev.releasedFight) {
-        // Arena fights default to hard so AI weapon skills fire often.
         const saved = this.arenaSavedDifficulty;
         const fightDiff =
           saved && saved !== "passive" ? (saved === "easy" ? "medium" : saved) : "hard";
         this.targets.setDifficulty(fightDiff);
         this.targets.setArenaSkillBoost(true);
-        this.setCombatFlash("FIGHT!", 0.7);
+        this.setCombatFlash(
+          this.arenaMatch.isFfa ? `FIGHT! FIRST TO ${FFA_KILL_GOAL}` : "FIGHT!",
+          0.7,
+        );
       }
       if (ev.enteredResult) {
         this.targets.setDifficulty("passive");
-        this.setCombatFlash(ev.enteredResult === "win" ? "VICTORY" : "DEFEAT", 1.8);
+        this.setCombatFlash(
+          ev.enteredResult === "win" ? "VICTORY" : "DEFEAT",
+          1.8,
+        );
       }
-      // During countdown freeze AI (already passive); still tick targets for anims.
     }
     this.targets.update(dt, this.sparCtx);
     // A.L.E. Bot polls fighter state AFTER the AI tick so it reads this frame's

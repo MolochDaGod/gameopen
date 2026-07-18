@@ -37,4 +37,5 @@ artifacts/animator/public/models/vfx/another_shape_of_data.glb
 
 # Local map chunks (upload to R2, not git)
 artifacts/animator/public/models/warlords-era/worlds/*.glb
+artifacts/animator/public/models/maps/*.glb
 

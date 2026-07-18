@@ -153,6 +153,15 @@
       "role": "kenney_road",
       "contentType": "model/gltf-binary",
       "notes": "Kenney City Kit Roads 8m tile (CC0). Full set under models/kenney/roads/"
+    },
+    {
+      "id": "map_ultimate_assassination_grounds",
+      "r2Key": "models/maps/ultimate_assasination_grounds.glb",
+      "category": "map",
+      "role": "ffa_battleground",
+      "testWorldId": "assassination-ffa",
+      "contentType": "model/gltf-binary",
+      "notes": "Danger Room FFA battleground — first to 10 kills, up to 4 fighters. Filename keeps source spelling assasination."
     }
   ]
 }
