@@ -56,6 +56,9 @@ const THEME: Record<SkillKind, number> = {
   swordVolley: 0xa8e6ff,
   soul: 0x8fffe0,
   laser: 0xff5a3c,
+  witchArrow: 0xff6a1e,
+  witchMissile: 0xb070ff,
+  witchDisk: 0x3dff9a,
 };
 
 /** Projectile/spell GLB template paths + their normalised display size. */
@@ -635,6 +638,138 @@ export class Vfx {
         onHit?.(p);
       },
     });
+  }
+
+  /**
+   * Witch Hut pack projectile — full GLB scaled as arrow / missile / spinning AOE disk.
+   * Materials keep hut textures with animated emissive + UV scroll.
+   */
+  castWitchProjectile(
+    role: "arrow" | "missile" | "disk",
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts?: {
+      color?: number;
+      aim?: THREE.Vector3;
+      onHit?: (p: THREE.Vector3) => void;
+    },
+  ) {
+    void import("./fx/witchHutProjectiles").then(
+      async ({
+        ensureWitchHutLoaded,
+        buildWitchProjectileInstance,
+        tickWitchMaterials,
+        WITCH_PROJECTILE_VARIANTS,
+      }) => {
+        if (this.disposed) return;
+        const variant = WITCH_PROJECTILE_VARIANTS[role];
+        const tpl = await ensureWitchHutLoaded();
+        const color = opts?.color ?? variant.tint;
+        if (!tpl) {
+          // Fallback procedural until GLB ready
+          if (role === "disk") {
+            this.nova(from.clone().setY(from.y + 0.2), color);
+            this.shockwave(new THREE.Vector3(from.x, 0.05, from.z), color, variant.aoeRadius ?? 3, 0.7);
+            opts?.onHit?.(from.clone());
+          } else {
+            this.bolt(from, dir, color, variant.speed, variant.range, (p) => {
+              this.burst(p, color, 20, 3.5);
+              opts?.onHit?.(p);
+            });
+          }
+          return;
+        }
+        const { obj, mats } = buildWitchProjectileInstance(tpl, variant);
+        obj.position.copy(from);
+        let velocity = dir.clone().normalize();
+        if (opts?.aim && (variant.homing || role === "missile")) {
+          velocity = opts.aim.clone().sub(from).normalize();
+        }
+        if (variant.align) {
+          obj.quaternion.setFromUnitVectors(
+            new THREE.Vector3(...variant.align).normalize(),
+            velocity,
+          );
+        } else {
+          // Disk: sit flat-ish, spin on Y
+          obj.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+        }
+        if (variant.trail) this.addTrail(obj, color);
+        if (variant.groundSeek) {
+          obj.position.y = Math.min(obj.position.y, 0.35);
+          velocity.y = 0;
+          if (velocity.lengthSq() < 1e-6) velocity.set(0, 0, 1);
+          velocity.normalize();
+        }
+        const life = variant.range / Math.max(1, variant.speed);
+        let hit = opts?.onHit;
+        const aim = opts?.aim?.clone();
+        this.add({
+          obj,
+          age: 0,
+          life,
+          geos: [],
+          mats,
+          shared: true,
+          update: (e, dt) => {
+            // Homing steer
+            if (variant.homing && aim) {
+              const desired = aim.clone().sub(obj.position);
+              if (desired.lengthSq() > 1e-4) {
+                desired.normalize();
+                velocity.lerp(desired, Math.min(1, dt * 3.2)).normalize();
+                if (variant.align) {
+                  obj.quaternion.setFromUnitVectors(
+                    new THREE.Vector3(...variant.align).normalize(),
+                    velocity,
+                  );
+                }
+              }
+            }
+            obj.position.addScaledVector(velocity, variant.speed * dt);
+            if (variant.spin) {
+              if (role === "disk") obj.rotateY(variant.spin * dt);
+              else obj.rotateY(variant.spin * dt * 0.35);
+            }
+            tickWitchMaterials(mats, e.age, dt);
+            const t = e.age / e.life;
+            const fade = t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
+            for (const m of mats) m.opacity = Math.min(m.opacity, fade);
+            if (e.age + dt >= e.life && hit) {
+              const p = obj.position.clone();
+              if (role === "disk") {
+                this.shockwave(new THREE.Vector3(p.x, 0.05, p.z), color, variant.aoeRadius ?? 3.2, 0.75);
+                this.aoeBlast(p.clone().setY(0.4), color, variant.aoeRadius ?? 3.2);
+                this.nova(p, color);
+              } else {
+                this.blastImpact(p, color, 1.15);
+                this.burst(p, color, 22, 4);
+              }
+              hit(p);
+              hit = undefined;
+            }
+          },
+        });
+      },
+    );
+  }
+
+  castWitchArrow(from: THREE.Vector3, dir: THREE.Vector3, color?: number, onHit?: (p: THREE.Vector3) => void) {
+    this.castWitchProjectile("arrow", from, dir, { color, onHit });
+  }
+
+  castWitchMissile(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    color?: number,
+    onHit?: (p: THREE.Vector3) => void,
+    aim?: THREE.Vector3,
+  ) {
+    this.castWitchProjectile("missile", from, dir, { color, onHit, aim });
+  }
+
+  castWitchDisk(from: THREE.Vector3, dir: THREE.Vector3, color?: number, onHit?: (p: THREE.Vector3) => void) {
+    this.castWitchProjectile("disk", from, dir, { color, onHit });
   }
 
   /**
@@ -4064,7 +4199,15 @@ export class Vfx {
     const slashQuat = collider ? collider.quat : quat;
     const dir3 = collider ? collider.aim : forward;
     // Spell kinds spin up a charge-up aura under the caster as a tell.
-    if (kind === "fireDragon" || kind === "meteor" || kind === "darkBlades" || kind === "swordVolley" || kind === "soul") {
+    if (
+      kind === "fireDragon" ||
+      kind === "meteor" ||
+      kind === "darkBlades" ||
+      kind === "swordVolley" ||
+      kind === "soul" ||
+      kind === "witchMissile" ||
+      kind === "witchDisk"
+    ) {
       this.castAura(origin.clone(), color);
     }
     switch (kind) {
@@ -4080,10 +4223,12 @@ export class Vfx {
         break;
       }
       case "bolt":
-        this.bolt(front, forward, color, 26, 18, (p) => {
+        // Prefer witch arrow mesh when pack is available (async); bolt still fires
+        this.castWitchArrow(collider ? slashAt : front, dir3, color, (p) => {
           this.burst(p, color, 24, 4);
           this.lightning(p, 1.1);
           this.shockwave(new THREE.Vector3(p.x, 0.05, p.z), color, 1.4, 0.4);
+          onImpact?.(p);
         });
         break;
       case "nova":
@@ -4144,6 +4289,21 @@ export class Vfx {
       case "laser":
         if (aim) this.castLaserAt(front, aim.clone().setY(aim.y + 0.8), color, onImpact);
         else this.castLaser(front, forward, color, onImpact);
+        break;
+      case "witchArrow":
+        this.castWitchArrow(collider ? slashAt : front, dir3, color, onImpact);
+        break;
+      case "witchMissile":
+        this.castWitchMissile(
+          collider ? slashAt : cast,
+          dir3,
+          color,
+          onImpact,
+          aim?.clone().setY((aim?.y ?? cast.y) + 0.8),
+        );
+        break;
+      case "witchDisk":
+        this.castWitchDisk(collider ? slashAt : front, dir3, color, onImpact);
         break;
     }
   }

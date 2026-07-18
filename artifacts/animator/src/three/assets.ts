@@ -218,15 +218,11 @@ export const CHARACTERS: CharacterDef[] = [
   {
     id: "gunslinger",
     name: "Racalvin the Pirate King",
-    // Real Meshy "King of Pirates" biped (24-bone rig) merged with its own
-    // bundled animation set into one self-contained GLB via
-    // scripts/src/merge-glb-anims.mjs. He is no longer the procedural box rig —
-    // this is the exemplar character for the trainable special-weapon system.
-    // Racalvin's art-forward already matches his heading, so no yaw offset.
-    // (Was Math.PI, which faced him 180° from travel → moonwalk.)
+    // Production GLB (self-contained clips). Not a live Meshy fetch — local/R2 only.
+    // Exemplar for special-weapon kits; art-forward matches travel heading (yaw 0).
     file: "models/racalvin.glb",
     scale: 1,
-    // Locomotion roles pinned to the Meshy clip names; autoMapClips() back-fills
+    // Locomotion roles pinned to baked clip names; autoMapClips() back-fills
     // jump/death/hurt/block by fuzzy-matching the remaining clips.
     clips: {
       idle: "idle",
@@ -673,8 +669,8 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
     loadout: ["bow", "dagger"],
     clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
     signatureSkills: [
-      { label: "Aimed Shot", clip: "bow_aim_walk_fwd", kind: "bolt" },
-      { label: "Piercing Arrow", clip: "attack", kind: "bolt" },
+      { label: "Aimed Shot", clip: "bow_aim_walk_fwd", kind: "witchArrow" },
+      { label: "Piercing Arrow", clip: "attack", kind: "witchArrow" },
       { label: "Evasive Roll", clip: "front_flip", kind: "muzzle", mode: "dash" },
       { label: "Rising Kick", clip: "unarmed_uppercut", kind: "thrust" },
     ],
@@ -684,10 +680,10 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
     loadout: ["staffFire", "staffStorm"],
     clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
     signatureSkills: [
-      { label: "Elemental Blast", clip: "attack", kind: "fireDragon" },
-      { label: "Cataclysm", clip: "attack", kind: "meteor" },
-      { label: "Arcane Nova", clip: "magic_walk_fwd", kind: "nova" },
-      { label: "Bolt", clip: "attack", kind: "bolt" },
+      { label: "Elemental Blast", clip: "attack", kind: "witchMissile" },
+      { label: "Cataclysm", clip: "attack", kind: "witchDisk" },
+      { label: "Arcane Nova", clip: "magic_walk_fwd", kind: "witchDisk" },
+      { label: "Bolt", clip: "attack", kind: "witchMissile" },
     ],
   },
 };

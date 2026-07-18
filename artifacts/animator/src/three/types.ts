@@ -61,7 +61,11 @@ export type SkillKind =
   // A slow, strongly-homing spectral "soul" projectile + a fast, near-straight
   // FTL burst-laser bolt (vfx-sandbox GLB templates).
   | "soul"
-  | "laser";
+  | "laser"
+  // Witch Hut pack (scaled GLB → arrow / missile / spinning AOE disk).
+  | "witchArrow"
+  | "witchMissile"
+  | "witchDisk";
 
 /**
  * Status effects — BinbunVFX-inspired + itch-style body auras

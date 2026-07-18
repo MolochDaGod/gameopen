@@ -393,6 +393,9 @@ const SNARE_FIELD_COOLDOWN = 9;
 
 /** Themed colors for dash skills (mirrors the Vfx THEME palette). */
 const SKILL_COLOR: Record<SkillKind, number> = {
+  witchArrow: 0xff6a1e,
+  witchMissile: 0xb070ff,
+  witchDisk: 0x3dff9a,
   slash: 0x9fe8ff,
   slam: 0xffb24d,
   bolt: 0x6fd6ff,

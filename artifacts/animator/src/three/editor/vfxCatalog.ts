@@ -26,6 +26,9 @@ export const VFX_PRESETS: VfxPreset[] = [
   { id: "turret", label: "Deploy Turret", group: "energy" },
   { id: "darkBlades", label: "Dark Blades", group: "energy" },
   { id: "swordVolley", label: "Sword Volley", group: "energy" },
+  { id: "witchArrow", label: "Witch Arrow", group: "energy" },
+  { id: "witchMissile", label: "Witch Missile", group: "energy" },
+  { id: "witchDisk", label: "Witch Disk AoE", group: "energy" },
 
   { id: "stunMark", label: "Stun Mark", group: "status" },
   { id: "shieldBreak", label: "Shield Break", group: "status" },
