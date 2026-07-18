@@ -63,7 +63,10 @@ export type SkillKind =
   | "soul"
   | "laser";
 
-/** Status effects (ported from the CC0 BinbunVFX packs). */
+/**
+ * Status effects — BinbunVFX-inspired + itch-style body auras
+ * (shell tint, swirl ribbons, bubble/absorb/sleep packs).
+ */
 export type StatusKind = "buff" | "debuff";
 export type StatusId =
   | "burning"
@@ -73,7 +76,13 @@ export type StatusId =
   | "regen"
   | "empowered"
   | "shielded"
-  | "haste";
+  | "haste"
+  | "blessed"
+  | "cursed"
+  | "sleep"
+  | "absorb"
+  | "rage"
+  | "rooted";
 
 /**
  * Elemental school of a magic staff. Each element is its own staff weapon type
@@ -150,7 +159,22 @@ export interface ArenaMatchHudState {
   /** Show Retry / Return buttons. */
   canChoose: boolean;
   opponentLabel: string;
+  /** Ally loadout line (2v2), or "Solo". */
+  allyLabel: string;
+  mode: "1v1" | "2v2";
+  modeLabel: string;
   round: number;
+  livingEnemies: number;
+  livingAllies: number;
+  /** Flash text when AI/player fires a weapon skill or heal. */
+  skillCue: string;
+  bars: Array<{
+    id: string;
+    name: string;
+    faction: "player" | "ally" | "enemy";
+    health01: number;
+    dead: boolean;
+  }>;
 }
 
 // ── A.L.E. Bot (director cameras, highlights & diagnostics) ──────────────────

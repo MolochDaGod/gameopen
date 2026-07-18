@@ -36,5 +36,5 @@ export const ELEMENT_THEME: Record<StaffElement, ElementTheme> = {
   ice: { label: "Ice", color: 0x9fdcff, status: "frozen", scope: "hostile", projectile: "darkBlades", castClip: "magicAttack" },
   storm: { label: "Storm", color: 0xb070ff, status: "shocked", scope: "hostile", projectile: "laser", castClip: "magicAttack" },
   nature: { label: "Nature", color: 0x6ee36e, status: "poisoned", scope: "hostile", projectile: "soul", castClip: "magicAttack" },
-  holy: { label: "Holy", color: 0xffe08a, status: "regen", scope: "self", projectile: "soul", castClip: "magicArea" },
+  holy: { label: "Holy", color: 0xffe08a, status: "blessed", scope: "self", projectile: "soul", castClip: "magicArea" },
 };

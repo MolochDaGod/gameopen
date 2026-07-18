@@ -42,7 +42,14 @@ import {
 } from "./Targets";
 import type { BearAttack } from "./bear/bearAttacks";
 import { Duel } from "./Duel";
-import { ArenaMatch, type ArenaOpponentSpec } from "./ArenaMatch";
+import {
+  ArenaMatch,
+  ARENA_MAP_PATHS,
+  defaultArenaLoadout,
+  type ArenaMode,
+  type ArenaOpponentSpec,
+} from "./ArenaMatch";
+import { fitForgeScene, stripHelpersCharacter } from "./helpersForge";
 import { AleBot } from "./ale/AleBot";
 import type { AleCameraMode, ReplayFrequency } from "./types";
 import { Dungeon } from "./dungeon/Dungeon";
@@ -84,7 +91,8 @@ import { MaceThrowMachine, type MaceThrowEvent } from "./mace/maceThrow";
 import type { FireFxParams } from "./fxSettings";
 import { loadSound, saveSound, type SoundSettings } from "./soundSettings";
 import { loadControls, saveControls } from "./controlsSettings";
-import { getCharacter, getWeapon, weaponCombat } from "./assets";
+import { getCharacter, getWeapon, weaponCombat, loadGltfFirst } from "./assets";
+import { sharedGltfLoader } from "./loaders/gltf";
 import { offHandEligible, getT0Skill, t0SignatureSkills, mmToMeters } from "./arsenal";
 import {
   isSpearWeapon,
@@ -118,6 +126,7 @@ import {
   ISLAND_EVENT_NODE_ANCHORS,
   mushroomWorldPos,
 } from "../game/islandLife/catalog";
+import { FabledSkyTowns } from "./fabled/FabledSkyTowns";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
   advanceBeamSession,
@@ -472,6 +481,9 @@ export class Studio {
   private arenaMatch: ArenaMatch | null = null;
   /** Difficulty restored when an arena match ends. */
   private arenaSavedDifficulty: Difficulty | null = null;
+  /** Loaded helpers-forge arena set (character stripped; hidden outside matches). */
+  private arenaMapRoot: THREE.Object3D | null = null;
+  private arenaMapLoading: Promise<boolean> | null = null;
   /** A.L.E. Bot: director cameras + highlights + diagnostics over the duel. */
   private ale = new AleBot();
   private status: StatusController;
@@ -754,6 +766,7 @@ export class Studio {
   private forestWorld: ForestWorld | null = null;
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
+  private fabledSky: FabledSkyTowns | null = null;
   private testWorldId: TestWorldId = "danger-room";
   private playerXp = 0;
   private jungleBuffId: string | null = null;
@@ -1031,6 +1044,19 @@ export class Studio {
     };
     this.campEnemies = new CampEnemySystem(this.scene, campCbs);
     this.raiderBoats = new RaiderBoatSystem(this.scene, campCbs);
+    this.fabledSky = new FabledSkyTowns(this.scene, {
+      flash: (msg, t) => this.setCombatFlash(msg, t ?? 1.2),
+      teleportPlayer: (pos, yaw) => {
+        // Outdoor sky towns need large bounds — expand then blink
+        this.controller?.setRoomBound(500);
+        if (this.controller) {
+          this.controller.blinkTo(pos);
+        } else if (this.character) {
+          this.character.root.position.copy(pos);
+        }
+        if (yaw != null && this.character) this.character.root.rotation.y = yaw;
+      },
+    });
     void this.setTestWorld(loadTestWorldId());
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
@@ -1096,6 +1122,9 @@ export class Studio {
           TURRET_BOLT_SCALE,
         );
       },
+      healPlayer: (amount) => this.sparring.healPlayer(amount),
+      playerHealth01: 1,
+      onSkillCue: (text) => this.arenaMatch?.pushSkillCue(text),
     };
     this.setupLights();
 
@@ -2795,34 +2824,47 @@ export class Studio {
   }
 
   /**
-   * Start a player-vs-NPC arena match against living enemies currently in the room.
-   * Prefight countdown → fight to last stand → 2s result banner → Retry / Return.
+   * Start a player-vs-NPC arena match on helpers.glb (character stripped).
+   * Modes: 1v1 (solo duel) or 2v2 (player + healer ally vs two foes).
+   * Prefight countdown → fight → result banner → Retry / Return.
    */
-  startArenaMatch(): boolean {
+  startArenaMatch(mode: ArenaMode = "1v1"): boolean {
     if (this.inDungeon || this.spectating) return false;
     if (!(this.targets instanceof Targets)) return false;
     if (this.arenaMatch?.isActive) return false;
-    const loadout = this.targets.enemyLoadout();
-    if (!loadout.length) {
-      // No enemies: spawn a default sword foe so "Start Arena" always works.
-      this.spawnNpc("sword", "enemy");
-    }
-    const specs: ArenaOpponentSpec[] = (
-      loadout.length ? loadout : this.targets.enemyLoadout()
-    ).map((e) => ({
-      weaponId: e.weaponId,
-      boss: e.boss,
-      scale: e.scale,
-    }));
-    if (!specs.length) return false;
 
     if (!this.arenaMatch) this.arenaMatch = new ArenaMatch();
     this.arenaSavedDifficulty = this.difficulty;
+
+    const def = defaultArenaLoadout(mode);
+    // Prefer player-spawned enemies when already present and mode is 1v1 with 1 foe.
+    const existing = this.targets.enemyLoadout();
+    let enemies = def.enemies;
+    if (mode === "1v1" && existing.length === 1) {
+      enemies = existing.map((e) => ({
+        weaponId: e.weaponId,
+        boss: e.boss,
+        scale: e.scale,
+        role: "duelist" as const,
+      }));
+    }
+
+    this.targets.clear();
     this.targets.setAutoRespawn(false);
-    // Freeze AI during countdown
+    this.targets.setArenaSkillBoost(true);
     this.targets.setDifficulty("passive");
-    this.arenaMatch.start(specs);
-    this.setCombatFlash("ARENA", 0.6);
+    this.targets.setBounds(18);
+
+    // Show load flash while map streams; fighters place after map seats if needed.
+    this.setCombatFlash("LOADING ARENA…", 1.2);
+    void this.ensureArenaMap().then((ok) => {
+      if (!ok) return;
+      this.setCombatFlash("HELPERS FORGE", 0.55);
+    });
+
+    this.placeArenaFighters(mode, enemies, def.allies);
+    this.arenaMatch.start(mode, enemies, def.allies);
+    this.setCombatFlash(mode === "1v1" ? "ARENA 1v1" : "ARENA 2v2", 0.7);
     return true;
   }
 
@@ -2830,19 +2872,19 @@ export class Studio {
   arenaRetry(): void {
     if (!this.arenaMatch?.isChoice) return;
     if (!(this.targets instanceof Targets)) return;
-    const specs = this.arenaMatch.retry();
-    if (!specs.length) return;
+    const pack = this.arenaMatch.retry();
+    if (!pack.enemies.length) return;
     this.restorePlayerForArena();
     this.targets.clear();
     this.targets.setAutoRespawn(false);
+    this.targets.setArenaSkillBoost(true);
     this.targets.setDifficulty("passive");
-    this.respawnArenaOpponents(specs);
+    this.placeArenaFighters(pack.mode, pack.enemies, pack.allies);
     this.setCombatFlash("RETRY", 0.5);
   }
 
   /**
-   * Leave the arena match: clear opponents (no more fights vs that loadout) and
-   * return to free-roam Danger Room with normal respawn rules.
+   * Leave the arena match: clear opponents, hide arena map, restore free roam.
    */
   arenaReturn(): void {
     if (!this.arenaMatch?.isActive) return;
@@ -2850,33 +2892,108 @@ export class Studio {
     if (this.targets instanceof Targets) {
       this.targets.clear();
       this.targets.setAutoRespawn(true);
+      this.targets.setArenaSkillBoost(false);
+      this.targets.setBounds(14);
     }
+    this.hideArenaMap();
     this.restorePlayerForArena();
     if (this.arenaSavedDifficulty) {
       this.setDifficulty(this.arenaSavedDifficulty);
       this.arenaSavedDifficulty = null;
     } else {
-      this.setDifficulty(this.difficulty === "passive" ? "normal" : this.difficulty);
+      this.setDifficulty(this.difficulty === "passive" ? "medium" : this.difficulty);
     }
     this.setCombatFlash("DANGER ROOM", 0.7);
   }
 
-  private respawnArenaOpponents(specs: ArenaOpponentSpec[]): void {
+  /**
+   * Load / show helpers.glb as arena floor (idempotent).
+   * Strips the showcase AstroCreeper so only set dressing remains.
+   */
+  private async ensureArenaMap(): Promise<boolean> {
+    if (this.arenaMapRoot) {
+      this.arenaMapRoot.visible = true;
+      return true;
+    }
+    if (this.arenaMapLoading) return this.arenaMapLoading;
+    this.arenaMapLoading = (async () => {
+      try {
+        const { scene } = await loadGltfFirst([...ARENA_MAP_PATHS], sharedGltfLoader(), {
+          prepMaterials: true,
+        });
+        // Remove the intro character — arena is the forge set only.
+        const stripped = stripHelpersCharacter(scene);
+        fitForgeScene(scene, { maxXZ: 28 });
+        scene.name = "arena-map-helpers";
+        scene.userData.arenaMap = true;
+        scene.userData.helpersForge = true;
+        scene.userData.characterStripped = stripped;
+        this.scene.add(scene);
+        this.arenaMapRoot = scene;
+        // Wider bounds match fitted forge span
+        if (this.targets instanceof Targets) this.targets.setBounds(16);
+        return true;
+      } catch (err) {
+        console.warn("[arena] failed to load helpers forge map", ARENA_MAP_PATHS, err);
+        return false;
+      } finally {
+        this.arenaMapLoading = null;
+      }
+    })();
+    return this.arenaMapLoading;
+  }
+
+  private hideArenaMap(): void {
+    if (this.arenaMapRoot) this.arenaMapRoot.visible = false;
+  }
+
+  /**
+   * Position player + spawn allies/enemies for arena modes.
+   * 1v1: player west, foe east. 2v2: team west, enemies east.
+   */
+  private placeArenaFighters(
+    mode: ArenaMode,
+    enemies: ArenaOpponentSpec[],
+    allies: ArenaOpponentSpec[],
+  ): void {
     if (!(this.targets instanceof Targets)) return;
-    const base = this.character?.root.position ?? new THREE.Vector3();
-    specs.forEach((s, i) => {
-      const ang = (i / Math.max(1, specs.length)) * Math.PI * 2 + 0.4;
-      const r = 6 + (i % 3) * 1.2;
-      const pos = new THREE.Vector3(
-        base.x + Math.cos(ang) * r,
-        0,
-        base.z + Math.sin(ang) * r,
-      );
+    const origin = new THREE.Vector3(0, 0, 0);
+
+    // Seat the player on the west pad.
+    if (this.character) {
+      this.character.root.position.set(origin.x - 5.5, 0, origin.z);
+      this.character.root.rotation.y = Math.PI / 2; // face east
+    }
+
+    // Allies (2v2) — support-healer lean via reaction delay + staff/sword
+    allies.forEach((s, i) => {
+      const pos = new THREE.Vector3(origin.x - 5.5, 0, origin.z + (i === 0 ? 2.2 : -2.2));
+      this.targets.spawnAt?.(pos, s.weaponId, "ally", {
+        scale: s.scale,
+        arch: "grunt",
+        reactionDelay: 0.12,
+      });
+    });
+
+    // Enemies — east side; arena skill boost makes them fire weapon skills often
+    enemies.forEach((s, i) => {
+      const n = Math.max(1, enemies.length);
+      const zOff = n === 1 ? 0 : (i - (n - 1) / 2) * 2.4;
+      const pos = new THREE.Vector3(origin.x + 5.5, 0, origin.z + zOff);
       this.targets.spawnAt?.(pos, s.weaponId, "enemy", {
         scale: s.scale,
         arch: s.boss ? "boss" : "grunt",
+        // Snappy arena AI so skills/combos read well
+        reactionDelay: s.role === "bruiser" ? 0.08 : s.role === "skirmisher" ? 0.1 : 0.09,
       });
     });
+
+    void mode; // mode already drove loadout
+  }
+
+  /** @deprecated use placeArenaFighters — kept for any external callers. */
+  private respawnArenaOpponents(specs: ArenaOpponentSpec[]): void {
+    this.placeArenaFighters("1v1", specs, []);
   }
 
   private restorePlayerForArena(): void {
@@ -2887,6 +3004,53 @@ export class Studio {
     this.sparring?.resetPlayer();
     this.health = this.maxHealth;
     this.stamina = this.maxStamina;
+  }
+
+  /** Build compact health bars for the arena HUD strip. */
+  private buildArenaBars(counts: { enemy: number; ally: number }) {
+    const bars: Array<{
+      id: string;
+      name: string;
+      faction: "player" | "ally" | "enemy";
+      health01: number;
+      dead: boolean;
+    }> = [
+      {
+        id: "player",
+        name: "You",
+        faction: "player",
+        health01: this.maxHealth > 0 ? Math.max(0, this.health / this.maxHealth) : 1,
+        dead: this.defeated,
+      },
+    ];
+    if (this.targets instanceof Targets) {
+      const views = this.targets.fighterViews();
+      let allyN = 0;
+      let enemyN = 0;
+      for (const v of views) {
+        if (v.faction === "ally") {
+          allyN += 1;
+          bars.push({
+            id: `ally-${v.id}`,
+            name: allyN === 1 ? "Ally Healer" : `Ally ${allyN}`,
+            faction: "ally",
+            health01: v.maxHealth > 0 ? v.health / v.maxHealth : 0,
+            dead: v.dead,
+          });
+        } else {
+          enemyN += 1;
+          bars.push({
+            id: `enemy-${v.id}`,
+            name: enemyN === 1 ? "Foe" : `Foe ${enemyN}`,
+            faction: "enemy",
+            health01: v.maxHealth > 0 ? v.health / v.maxHealth : 0,
+            dead: v.dead,
+          });
+        }
+      }
+    }
+    void counts;
+    return bars;
   }
 
   arenaState() {
@@ -9002,6 +9166,9 @@ export class Studio {
     // Offense-fail lockout = the player just whiffed/got blocked; opponents read
     // this as a punish window.
     this.sparCtx.playerRecovering = this.recoverLock > 0;
+    // Ally heal AI reads player HP each frame.
+    this.sparCtx.playerHealth01 =
+      this.maxHealth > 0 ? this.health / this.maxHealth : 1;
     if (this.duel?.isActive) {
       // Spectator view: the player is hidden + out of the fight, so the duelling
       // AI must never target the player. Advance the duel before the AI tick so
@@ -9011,11 +9178,21 @@ export class Studio {
     }
     // Player-vs-NPC arena match (countdown / fight / result / choice).
     if (this.arenaMatch?.isActive && this.targets instanceof Targets) {
-      const living = this.targets.factionCounts().enemy;
+      const counts = this.targets.factionCounts();
+      const living = counts.enemy;
+      this.arenaMatch.setHudLive({
+        livingEnemies: living,
+        livingAllies: counts.ally,
+        bars: this.buildArenaBars(counts),
+      });
       const ev = this.arenaMatch.update(dt, living, this.defeated);
       if (ev.releasedFight) {
-        const d = this.arenaSavedDifficulty ?? this.difficulty;
-        this.targets.setDifficulty(d === "passive" ? "normal" : d);
+        // Arena fights default to hard so AI weapon skills fire often.
+        const saved = this.arenaSavedDifficulty;
+        const fightDiff =
+          saved && saved !== "passive" ? (saved === "easy" ? "medium" : saved) : "hard";
+        this.targets.setDifficulty(fightDiff);
+        this.targets.setArenaSkillBoost(true);
         this.setCombatFlash("FIGHT!", 0.7);
       }
       if (ev.enteredResult) {
@@ -9055,6 +9232,16 @@ export class Studio {
       const base = this.character?.root.position ?? new THREE.Vector3();
       this.raiderBoats?.setBase(base);
       this.raiderBoats?.update(dt, this.character?.root.position ?? null);
+    }
+    // Fabled sky towns — portal spin + E interact / proximity teleport
+    if (this.testWorldId === "fabled-zone" && this.fabledSky?.isLoaded) {
+      const wantE = this.input.down("KeyE");
+      this.fabledSky.update(dt, this.character?.root.position ?? null, {
+        wantInteract: wantE,
+        autoTeleport: true,
+      });
+      const hint = this.fabledSky.getHint(this.character?.root.position ?? null);
+      if (hint) this.setCombatFlash(hint, 0.35);
     }
     // Player melee splash damages camp creeps
     if (this.campEnemies && this.character && this.activityMode === "combat") {
@@ -9772,9 +9959,16 @@ export class Studio {
     // ability. The orchestrator runs cast → release → impact → status synchronously
     // (no wind-up, no travel), firing the scope-routed application below — identical
     // to the previous direct call, but expressed through the shared lifecycle.
-    const def = statusAbility(id, STATUS_DEFS[id]?.kind, aoe);
+    const statusDef = STATUS_DEFS[id];
+    const def = statusAbility(id, statusDef?.kind, aoe);
     const scope = def.status?.scope ?? "self";
-    this.abilities.cast(def, { onStatus: () => this.applyStatusScoped(id, scope) });
+    // Cast flash (itch-style shell punch) then apply lasting aura
+    this.abilities.cast(def, {
+      onCast: () => {
+        if (statusDef) this.status.playCastBurst(statusDef.color, 0.4);
+      },
+      onStatus: () => this.applyStatusScoped(id, scope),
+    });
   }
 
   /**
@@ -10052,6 +10246,14 @@ export class Studio {
     } else if (def.kind !== "combat" && this.campEnemies) {
       const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
       void this.campEnemies.spawnVoxelCamp(center);
+    }
+
+    // Fabled zone: dwarf + elf sky towns on floating islands + portal web
+    if (id === "fabled-zone") {
+      this.controller?.setRoomBound(500);
+      void this.fabledSky?.load();
+    } else {
+      this.fabledSky?.clear();
     }
 
     // Atmosphere: sailtest Sky/fog applied inside SailEnvironment; else fog from def
