@@ -1,3 +1,4 @@
+# Keep Vercel uploads small — GLBs live on R2 (assets.grudge-studio.com)
 server/node_modules
 server/dist
 artifacts/api-server/node_modules
@@ -13,3 +14,22 @@ railway.json
 **/*.br
 **/*.gz
 
+# Local staged models (R2/D1 SSOT — never ship multi-GB binaries in deploy tarball)
+artifacts/animator/public/models/voxel/**
+artifacts/animator/public/models/voxel-only/**
+artifacts/animator/public/models/warlords-era/**
+artifacts/animator/public/models/worlds/**
+artifacts/animator/public/models/battle/**
+artifacts/animator/public/models/packs/**
+artifacts/animator/public/models/maps/**
+artifacts/animator/public/models/kenney/**
+**/*.glb
+**/*.fbx
+**/*.rar
+**/*.zip
+
+# Dev / reports
+reports/
+.wrangler/
+node_modules/
+**/.git/**
