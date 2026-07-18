@@ -1,38 +1,64 @@
 /**
- * Explorer Character Page — Minecraft inventory + Fantasy Scene craftpix chrome.
- * Pixel slots, paper-doll armor, 2×2 craft, 3×3 bag, Explorer 3D stage.
+ * Explorer Character Page — real assets only:
+ *  · ui.grudge-studio.com equipment-tactical (gk-equip-tactical / gk-slot)
+ *  · craftpix frames (part2/part3) for slot chrome
+ *  · inventory / skill-slot icons
+ *
+ * Layout positions come from characterPageLayout.ts (XY scripts).
  */
 
+@import url("/ui/grudge-ui/equipment-tactical.css");
+
 .ecp-root {
+  --ecp-slot: url("/ui/craftpix/part2/Action_Bar/ab1_shortcut_frame.png");
+  --ecp-slot-overlay: url("/ui/craftpix/part2/Action_Bar/spell_frame_icon_OVERLAY.png");
+  --ecp-panel-frame: url("/ui/craftpix/part3/ab2_main_frame.png");
+  --ecp-craft-frame: url("/ui/craftpix/part3/ab2_shurtcut_frame.png");
+  --ecp-empty-icon: url("/icons/skill-slot.png");
+  --ecp-inv-icon: url("/icons/inventory.png");
+
   position: fixed;
   inset: 0;
   z-index: 80;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
   background:
-    radial-gradient(80% 60% at 50% 30%, rgba(60, 40, 20, 0.45), transparent 70%),
-    rgba(4, 6, 10, 0.82);
-  backdrop-filter: blur(4px);
+    radial-gradient(70% 50% at 50% 20%, rgba(80, 50, 20, 0.35), transparent 65%),
+    rgba(4, 5, 8, 0.78);
+  backdrop-filter: blur(3px);
   font-family: Inter, system-ui, sans-serif;
-  color: #f5e6c8;
+  color: #fef3c7;
 }
 
-.ecp-panel {
-  width: min(920px, 100%);
-  max-height: min(92dvh, 820px);
+/* Panel shell — 9-slice-ish via craftpix main frame + dark fill */
+.ecp-panel.gk-equip-tactical {
+  width: min(960px, 100%);
+  max-height: min(94dvh, 860px);
   overflow: auto;
-  border: 3px solid #5a4630;
-  border-radius: 8px;
+  position: relative;
+  border-radius: 10px;
+  border: 2px solid rgba(146, 64, 14, 0.55);
   box-shadow:
-    0 0 0 2px #1a120a,
-    0 24px 64px rgba(0, 0, 0, 0.65),
-    inset 0 0 0 1px rgba(255, 220, 140, 0.12);
+    0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 20px 50px rgba(0, 0, 0, 0.65);
   background:
-    linear-gradient(180deg, rgba(40, 32, 24, 0.96), rgba(18, 14, 10, 0.98)),
-    #1c1610;
-  image-rendering: auto;
+    linear-gradient(180deg, rgba(28, 25, 23, 0.97), rgba(12, 10, 9, 0.98)),
+    #1c1917;
+}
+
+.ecp-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: var(--ecp-panel-frame);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  border-radius: inherit;
 }
 
 .ecp-head {
@@ -41,25 +67,29 @@
   align-items: center;
   gap: 10px 14px;
   padding: 12px 16px;
-  border-bottom: 2px solid #3d3020;
-  background: linear-gradient(180deg, #2a2218, #1a140e);
+  border-bottom: 1px solid rgba(180, 83, 9, 0.35);
+  background: linear-gradient(180deg, #292524, #1c1917);
+  position: relative;
+  z-index: 1;
 }
 
 .ecp-title {
   margin: 0;
   font-family: Cinzel, Georgia, serif;
-  font-size: 15px;
-  letter-spacing: 0.16em;
+  font-size: 14px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #f0d48a;
+  color: #fef3c7;
 }
 
 .ecp-sub {
   margin: 0;
-  font-size: 11px;
-  color: #a89878;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a8a29e;
   flex: 1;
-  min-width: 140px;
+  min-width: 120px;
 }
 
 .ecp-head-actions {
@@ -71,229 +101,289 @@
 
 .ecp-btn {
   appearance: none;
-  border: 2px solid #6a5438;
-  background: linear-gradient(180deg, #3a3020, #221a12);
-  color: #f0e0c0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(180, 83, 9, 0.4);
+  background: linear-gradient(180deg, #292524, #1c1917);
+  color: #d6d3d1;
   padding: 7px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  border-radius: 6px;
+  font-family: Cinzel, Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: filter 0.12s, border-color 0.12s;
 }
 
 .ecp-btn:hover {
-  border-color: #c9a050;
-  color: #fff4d0;
+  filter: brightness(1.15);
+  border-color: rgba(251, 191, 36, 0.55);
+  color: #fef3c7;
 }
 
 .ecp-btn.primary {
-  border-color: #a88430;
-  background: linear-gradient(180deg, #5a4020, #302010);
-  color: #ffe9a8;
+  border-color: rgba(251, 191, 36, 0.55);
+  background: linear-gradient(180deg, #78350f, #451a03);
+  color: #fef3c7;
 }
 
+/* 12-col board from layout script */
 .ecp-board {
   display: grid;
-  grid-template-columns: repeat(12, minmax(40px, 1fr));
-  grid-template-rows: repeat(10, minmax(44px, auto));
+  grid-template-columns: repeat(12, minmax(42px, 1fr));
+  grid-auto-rows: minmax(48px, auto);
   gap: 6px;
-  padding: 14px 16px 18px;
-  min-height: 480px;
+  padding: 14px 16px 10px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Slot chrome — Minecraft-ish inset square */
-.ecp-slot {
+/* Real craftpix slot chrome */
+.ecp-slot,
+.ecp-root .gk-slot {
   position: relative;
   min-width: 0;
-  min-height: 44px;
-  border: 2px solid #2a2014;
-  border-radius: 3px;
-  background:
-    linear-gradient(145deg, #3a3228 0%, #1e1810 55%, #14100c 100%);
-  box-shadow:
-    inset 2px 2px 0 rgba(255, 255, 255, 0.06),
-    inset -2px -2px 0 rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
   cursor: pointer;
-  user-select: none;
-  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+  background-color: rgba(12, 10, 9, 0.85);
+  background-image: var(--ecp-slot), linear-gradient(135deg, rgba(28, 25, 23, 0.9), rgba(12, 10, 9, 0.95));
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  transition: transform 0.12s, filter 0.12s;
+  color: #fef3c7;
 }
 
 .ecp-slot:hover,
-.ecp-slot.is-hover {
-  border-color: #c9a050;
-  box-shadow:
-    inset 0 0 0 1px rgba(201, 160, 80, 0.35),
-    0 0 12px rgba(201, 160, 80, 0.2);
+.ecp-slot.is-hover,
+.ecp-root .gk-slot:hover {
+  filter: brightness(1.2);
+  transform: scale(1.04);
 }
 
 .ecp-slot.is-selected {
-  border-color: #ffe08a;
-  outline: 1px solid rgba(255, 224, 138, 0.5);
+  filter: brightness(1.25);
+  outline: 1px solid rgba(251, 191, 36, 0.65);
 }
 
-.ecp-slot.is-empty .ecp-slot-label {
-  opacity: 0.35;
+.ecp-slot.is-empty::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  opacity: 0.18;
+  background-image: var(--ecp-empty-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
 }
 
 .ecp-slot-label {
   position: absolute;
-  left: 3px;
-  top: 2px;
+  left: 4px;
+  top: 3px;
   font-size: 8px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8a7a60;
+  color: #a8a29e;
   pointer-events: none;
+  z-index: 2;
 }
 
 .ecp-slot-icon {
-  width: 28px;
-  height: 28px;
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
   object-fit: contain;
   image-rendering: auto;
   pointer-events: none;
+  z-index: 1;
 }
 
 .ecp-slot-qty {
   position: absolute;
-  right: 3px;
-  bottom: 2px;
+  right: 4px;
+  bottom: 3px;
   font-size: 10px;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 1px 2px #000;
+  z-index: 2;
   pointer-events: none;
 }
 
 .ecp-slot--armor {
-  background: linear-gradient(145deg, #2a3848 0%, #141c24 100%);
+  background-image: var(--ecp-slot-overlay), var(--ecp-slot),
+    linear-gradient(135deg, rgba(30, 40, 50, 0.9), rgba(12, 14, 18, 0.95));
+  background-size: 100% 100%, 100% 100%, 100% 100%;
 }
 
 .ecp-slot--kept {
-  background: linear-gradient(145deg, #3a3028 0%, #201810 100%);
-  border-color: #4a3820;
+  background-image: var(--ecp-craft-frame),
+    linear-gradient(135deg, rgba(40, 30, 18, 0.92), rgba(14, 10, 6, 0.96));
+  background-size: 100% 100%, 100% 100%;
 }
 
 .ecp-slot--craft {
-  background: linear-gradient(145deg, #383028 0%, #1c1610 100%);
+  background-image: var(--ecp-craft-frame),
+    linear-gradient(135deg, rgba(36, 28, 18, 0.95), rgba(12, 10, 8, 0.98));
+  background-size: 100% 100%, 100% 100%;
 }
 
 .ecp-slot--craftResult {
-  background: linear-gradient(145deg, #403820 0%, #241c10 100%);
-  border-color: #a88430;
+  background-image: var(--ecp-craft-frame),
+    linear-gradient(135deg, rgba(90, 60, 20, 0.55), rgba(20, 14, 8, 0.95));
+  background-size: 100% 100%, 100% 100%;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .ecp-slot--hotbar {
-  background: linear-gradient(145deg, #2c2418 0%, #14100c 100%);
+  background-image: var(--ecp-slot),
+    linear-gradient(135deg, rgba(24, 20, 16, 0.95), rgba(10, 8, 6, 0.98));
+  background-size: 100% 100%, 100% 100%;
 }
 
 .ecp-slot--label {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  justify-content: flex-start;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  min-height: 18px;
   cursor: default;
-  min-height: 20px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #8a7a60;
+  justify-content: flex-start;
+  place-items: start;
   padding-left: 4px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a8a29e;
+  font-family: Cinzel, Georgia, serif;
 }
 
 .ecp-slot--label:hover {
-  border-color: transparent;
-  box-shadow: none;
+  filter: none;
+  transform: none;
 }
 
-/* Avatar stage */
+.ecp-slot--label::after {
+  display: none;
+}
+
+/* Avatar / Explorer stage */
 .ecp-avatar {
-  border: 2px solid #5a4630;
-  border-radius: 6px;
-  background:
-    radial-gradient(80% 70% at 50% 30%, rgba(90, 70, 40, 0.35), transparent 70%),
-    #0c0a08;
+  position: relative;
+  border: 2px solid rgba(146, 64, 14, 0.55);
+  border-radius: 12px;
   overflow: hidden;
+  min-height: 200px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 100%),
+    #0c0a08;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
+}
+
+.ecp-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 40%, rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ecp-avatar-stage {
+  flex: 1;
   min-height: 180px;
+  position: relative;
+  z-index: 0;
 }
 
 .ecp-avatar .eq-mesh-stage,
-.ecp-avatar-stage {
-  flex: 1;
-  min-height: 160px;
-  position: relative;
-}
-
 .ecp-avatar .eq-mesh-canvas {
   width: 100% !important;
   height: 100% !important;
+  min-height: 180px;
   display: block;
 }
 
 .ecp-avatar-foot {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 8px;
-  border-top: 1px solid #3d3020;
-  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 10px;
+  border-top: 1px solid rgba(180, 83, 9, 0.3);
+  background: rgba(12, 10, 9, 0.85);
   font-size: 10px;
-  color: #c0b090;
-}
-
-.ecp-avatar-name {
-  font-weight: 700;
+  color: #a8a29e;
   letter-spacing: 0.08em;
-  color: #f0d48a;
   text-transform: uppercase;
 }
 
+.ecp-avatar-name {
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.12em;
+}
+
+.ecp-craft-msg {
+  position: relative;
+  z-index: 1;
+  padding: 4px 16px 8px;
+  font-size: 12px;
+  color: #86efac;
+  min-height: 1.25em;
+}
+
 .ecp-hint {
+  position: relative;
+  z-index: 1;
   padding: 0 16px 14px;
   font-size: 11px;
-  color: #8a7a60;
-  line-height: 1.45;
+  line-height: 1.5;
+  color: #a8a29e;
 }
 
 .ecp-hint kbd {
   display: inline-block;
   padding: 1px 5px;
-  border: 1px solid #5a4630;
+  border: 1px solid rgba(180, 83, 9, 0.4);
   border-radius: 3px;
-  background: #1a140e;
-  color: #e0d0b0;
+  background: #1c1917;
+  color: #fef3c7;
   font-size: 10px;
 }
 
-.ecp-craft-msg {
-  padding: 0 16px 10px;
-  font-size: 12px;
-  color: #9dffd8;
-  min-height: 1.2em;
+.ecp-hint code {
+  font-size: 10px;
+  color: #d6d3d1;
 }
 
 @media (max-width: 720px) {
   .ecp-board {
     grid-template-columns: repeat(6, minmax(36px, 1fr));
-    grid-template-rows: auto;
   }
-  .ecp-slot {
-    min-height: 40px;
-  }
-  /* On narrow screens fall back to auto flow for overflow cells */
   .ecp-board > * {
     grid-column: auto !important;
     grid-row: auto !important;
   }
   .ecp-avatar {
     grid-column: 1 / -1 !important;
-    min-height: 200px;
+    min-height: 220px;
   }
 }

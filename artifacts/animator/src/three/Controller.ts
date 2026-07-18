@@ -37,6 +37,12 @@ export interface ControllerCameraOpts {
   camLookAtHeightRatio?: number;
   /** When false, ignore mouse wheel distance zoom (default: allow zoom). */
   enableZoom?: boolean;
+  /** Optional override for orbit distance (Minecraft harvest/build ~closer). */
+  cameraDistance?: number;
+  /** Optional override for look-at height meters. */
+  cameraHeight?: number;
+  /** Optional third-person pitch (radians, higher = more top-down). */
+  pitch?: number;
 }
 
 export interface EdgeProbeOpts {
@@ -287,6 +293,15 @@ export class Controller {
       this.camLookAtHeightRatio = THREE.MathUtils.clamp(opts.camLookAtHeightRatio, 0, 1.5);
     }
     if (opts.enableZoom != null) this.enableZoom = opts.enableZoom;
+    if (opts.cameraDistance != null && Number.isFinite(opts.cameraDistance)) {
+      this.params.cameraDistance = THREE.MathUtils.clamp(opts.cameraDistance, 2.2, 16);
+    }
+    if (opts.cameraHeight != null && Number.isFinite(opts.cameraHeight)) {
+      this.params.cameraHeight = THREE.MathUtils.clamp(opts.cameraHeight, 0.4, 3.5);
+    }
+    if (opts.pitch != null && Number.isFinite(opts.pitch)) {
+      this.pitch = THREE.MathUtils.clamp(opts.pitch, 0.06, 1.35);
+    }
     this.applyOverShoulder();
   }
 

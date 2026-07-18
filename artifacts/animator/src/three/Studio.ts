@@ -1501,28 +1501,12 @@ export class Studio {
     this.characterId = id;
     if (!this.controller) {
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
-      // three-player-controller parity: spring look-at + light over-shoulder in combat
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.06,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.12,
-        camLookAtHeightRatio: 0.92,
-        enableZoom: true,
-      });
     } else {
       // Rebind controller to the new character.
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
-      // three-player-controller parity: spring look-at + light over-shoulder in combat
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.06,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.12,
-        camLookAtHeightRatio: 0.92,
-        enableZoom: true,
-      });
     }
+    // Activity-aware TPS (combat action cam vs Minecraft harvest/build shoulder)
+    this.applyActivityCamera(this.activityMode);
     // Free-aim reticle split: mouse → crosshair offset + residual camera look.
     this.controller.onAimLook = (dx, dy) => this.splitAimLook(dx, dy);
     // Feed the controller live Danger Room obstacle circles (corner pillars,
@@ -1884,6 +1868,23 @@ export class Studio {
   /** Current off-hand slot selection (null = empty). */
   getOffHand(): WeaponId | null {
     return this.offHandId;
+  }
+
+  /**
+   * Shift+Q combat arsenal swap — main hand ↔ side arm (when both set).
+   * Uses the same applyWeapon path as the Loadout UI so skills/anims stay SSOT.
+   */
+  swapCombatArsenal() {
+    if (this.activityMode !== "combat") return;
+    const side = this.offHandId;
+    if (!side || side === "none" || side === this.weaponId) {
+      this.setCombatFlash("No side arm to swap", 0.55);
+      return;
+    }
+    const main = this.weaponId;
+    this.setWeapon(side);
+    this.setOffHand(main === "none" ? null : main);
+    this.setCombatFlash(`ARMS · ${side.toUpperCase()}`, 0.65);
   }
 
   setParams(p: Partial<EditorParams>) {
@@ -10194,9 +10195,12 @@ export class Studio {
       this.locked = false;
       this.controller?.setLockTarget(null);
       if (mode === "build") this.campBuild?.cancelGhost?.();
+      // Minecraft-like third person: over-shoulder crosshair, mid body look-at
+      this.applyActivityCamera(mode);
     } else if (mode === "combat") {
       // Restore Danger Room combat — same stack as always (no new systems).
       this.restoreDangerRoomCombatMode(prev);
+      this.applyActivityCamera("combat");
     }
 
     // Clamp free-aim into the new mode's max
@@ -10205,9 +10209,49 @@ export class Studio {
     this.aimNdcY = THREE.MathUtils.clamp(this.aimNdcY, -max, max);
     // Short centre flash; persistent mode is the top-centre ModeBanner
     this.setCombatFlash(
-      mode === "combat" ? "COMBAT · DR stack" : `${MODE_LABEL[mode]}`,
+      mode === "combat" ? "COMBAT · Q mode · 1–4 skills · RMB lock" : `${MODE_LABEL[mode]} · shoulder TPS`,
       0.7,
     );
+  }
+
+  /**
+   * Activity-specific third-person camera (Danger Room Controller SSOT).
+   * Combat = tight action over-shoulder; harvest/build = Minecraft-like
+   * crosshair-riding shoulder cam for block/tool aim.
+   */
+  private applyActivityCamera(mode: PlayerActivityMode) {
+    if (!this.controller) return;
+    // Always third for harvest/build tool aim (first-person hides tools poorly)
+    if (mode !== "combat" && this.viewMode === "first") {
+      this.viewMode = "third";
+      this.controller.setViewMode("third");
+    }
+    if (mode === "combat") {
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.055,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.14,
+        camLookAtHeightRatio: 0.9,
+        enableZoom: true,
+        cameraDistance: 4.6,
+        cameraHeight: 1.65,
+        pitch: 0.28,
+      });
+      return;
+    }
+    // Harvest / build — Minecraft-style TPS shoulder + slightly elevated look
+    this.controller.setCameraOpts({
+      enableSpringCamera: true,
+      springCameraTime: 0.08,
+      enableOverShoulderView: true,
+      camOverShoulderOffsetRatio: mode === "build" ? 0.2 : 0.18,
+      camLookAtHeightRatio: 0.72,
+      enableZoom: true,
+      cameraDistance: mode === "build" ? 5.8 : 5.2,
+      cameraHeight: 1.55,
+      pitch: mode === "build" ? 0.42 : 0.36,
+    });
   }
 
   /**
@@ -10519,8 +10563,14 @@ export class Studio {
       else this.forceFieldGuard();
     }
     else if (code === "KeyQ") {
-      // Mode swap: Combat ↔ Harvest ↔ Build (production world loop).
-      this.cycleActivityMode();
+      // Mode swap: Combat ↔ Harvest ↔ Build (SSOT — not weapon swap).
+      // Shift+Q in combat: swap main ↔ side arm when dual arsenal is loaded.
+      if (this.input.down("ShiftLeft") || this.input.down("ShiftRight")) {
+        if (this.activityMode === "combat") this.swapCombatArsenal();
+        else this.cycleActivityMode();
+      } else {
+        this.cycleActivityMode();
+      }
     }
     else if (code === "KeyX") {
       // Elden Ring–style timed dodge roll (directional roll + ~0.5s i-frames).

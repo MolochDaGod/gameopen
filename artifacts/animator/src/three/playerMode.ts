@@ -51,10 +51,10 @@ export const MODE_BANNER_FRAME = "/ui/craftpix/part3/ab2_shurtcut_frame.png";
 export const MODE_BLURB: Record<PlayerActivityMode, string> = {
   // Keys match hud/quickActions.ts SSOT. Combat = full Danger Room stack.
   combat:
-    "DR combat · soft LMB select · RMB focus lock · loco/strafe · LMB atk · X roll · C parry · E guard · F/1–4 skills",
+    "DR combat · Q mode · Shift+Q arms · soft LMB · RMB focus · X roll · C parry · E guard · F/1–4 skills",
   harvest:
-    "LMB select ore/flower/tree · RMB walk+swing · tools gather/chop/mine/skin · P production",
-  build: "Place · walls · stations · towers · traps · P production",
+    "Shoulder TPS · LMB select node · RMB walk+swing · tools gather/chop/mine/skin · P production",
+  build: "Shoulder TPS · place · walls · stations · towers · traps · P production",
 };
 
 /** Radial wedges per activity mode. */

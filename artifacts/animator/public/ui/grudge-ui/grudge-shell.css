@@ -1,0 +1,233 @@
+/* Grudge Studio — shared fleet shell for ui.grudge-studio.com */
+:root {
+  --gs-bg: #06070b;
+  --gs-surf: #0c0d12;
+  --gs-border: #1e2030;
+  --gs-text: #e2e4ef;
+  --gs-muted: #6b7088;
+  --gs-gold: #c8a84b;
+  --gs-hydra: #4ade80;
+  --gs-hydra-dim: rgba(74, 222, 128, 0.12);
+  --gs-nav-h: 46px;
+}
+
+#gs-fleet-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--gs-nav-h);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: rgba(6, 7, 11, 0.92);
+  border-bottom: 1px solid var(--gs-border);
+  backdrop-filter: blur(10px);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+}
+
+#gs-fleet-nav a {
+  color: var(--gs-muted);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+#gs-fleet-nav a:hover {
+  color: var(--gs-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#gs-fleet-nav a.is-active {
+  color: var(--gs-hydra);
+  background: var(--gs-hydra-dim);
+  border-color: rgba(74, 222, 128, 0.22);
+  font-weight: 600;
+}
+
+#gs-fleet-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#gs-fleet-nav .gs-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(200, 168, 75, 0.15);
+  color: var(--gs-gold);
+  letter-spacing: 0.04em;
+}
+
+#gs-fleet-nav .gs-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 4px;
+  padding-right: 10px;
+  border-right: 1px solid var(--gs-border);
+}
+
+#gs-fleet-nav .gs-brand strong {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  font-size: 11px;
+  color: var(--gs-gold);
+  text-transform: uppercase;
+}
+
+#gs-fleet-nav .gs-brand span {
+  font-size: 10px;
+  color: var(--gs-muted);
+  letter-spacing: 0.06em;
+}
+
+#gs-fleet-nav .gs-spacer { flex: 1; }
+
+#gs-fleet-nav .gs-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gs-hydra);
+  background: var(--gs-hydra-dim);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+
+#gs-fleet-nav .gs-pill--ai {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#gs-fleet-nav .gs-pill--ai.gs-pill--on {
+  color: var(--gs-hydra);
+  background: var(--gs-hydra-dim);
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+#gs-fleet-nav .gs-pill--ai.gs-pill--off {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+#gs-fleet-nav .gs-account-wrap {
+  position: relative;
+  margin-left: 4px;
+}
+
+#gs-fleet-nav .gs-pill-name {
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#gs-fleet-nav .gs-cloud-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+#gs-fleet-nav .gs-cloud-dot--on {
+  background: var(--gs-hydra);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.55);
+}
+
+#gs-fleet-nav .gs-cloud-dot--off {
+  background: #fbbf24;
+  box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+}
+
+#gs-fleet-nav .gs-account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 210px;
+  background: #0f1018;
+  border: 1px solid var(--gs-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  padding: 8px;
+  z-index: 10001;
+}
+
+#gs-fleet-nav .gs-account-head {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--gs-border);
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#gs-fleet-nav .gs-account-head strong {
+  color: var(--gs-text);
+  font-size: 12px;
+}
+
+#gs-fleet-nav .gs-account-head span {
+  color: var(--gs-gold);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+#gs-fleet-nav .gs-account-head em {
+  color: var(--gs-muted);
+  font-size: 10px;
+  font-style: normal;
+  margin-top: 4px;
+}
+
+#gs-fleet-nav .gs-account-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--gs-text);
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+#gs-fleet-nav .gs-account-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#gs-fleet-nav .gs-account-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#gs-fleet-nav .gs-account-item--danger {
+  color: #f87171;
+}
+
+body.gs-has-nav {
+  padding-top: var(--gs-nav-h) !important;
+}
+
+body.gs-has-nav #topbar,
+body.gs-has-nav .brand-bar {
+  top: var(--gs-nav-h);
+}
+
+@media (max-width: 900px) {
+  #gs-fleet-nav { overflow-x: auto; gap: 6px; }
+  #gs-fleet-nav .gs-brand span { display: none; }
+}

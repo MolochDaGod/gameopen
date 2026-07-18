@@ -3,7 +3,8 @@
 // hudConfig / Hud.tsx / playerMode legends.
 //
 // Keybind SSOT (Danger Room / Open combat):
-//   Q = activity mode cycle
+//   Q = activity mode cycle (combat ↔ harvest ↔ build)
+//   Shift+Q = swap main ↔ side arm (combat only)
 //   RMB = toggle hard FOCUS (face+lock) / soft lock
 //   LMB = attack/combo in FOCUS · select target in soft lock
 //   C = parry · X = roll · E = forcefield guard · R = heavy · F / 1–4 skills
@@ -129,7 +130,7 @@ export function clampQuickSlots(raw: unknown): QuickSlots {
 
 /** Short footer legend used by Hud / mode chip (always matches Studio keys). */
 export const COMBAT_KEY_LEGEND =
-  "RMB focus · LMB atk/select · X roll · C parry · E guard · R heavy · F/1–4 · Q mode · P prod";
+  "RMB toggle focus/soft-lock · LMB atk/select · X roll · C parry · E interact/guard · R heavy · F/1–4 · Q mode · P prod";
 
 export const COMBAT_KEY_CHIPS: readonly string[] = [
   "RMB: Focus",

@@ -333,7 +333,7 @@ export function ExplorerCharacterPage({
       <button
         type="button"
         key={cell.id}
-        className={`ecp-slot ecp-slot--${cell.kind} ${extraClass} ${selected === cell.id ? "is-selected" : ""} ${!item ? "is-empty" : ""}`}
+        className={`ecp-slot gk-slot ecp-slot--${cell.kind} ${extraClass} ${selected === cell.id ? "is-selected" : ""} ${!item ? "is-empty" : ""}`}
         style={cellGridStyle(cell)}
         title={item ? `${itemName(item)} ×${item.qty}` : cell.label}
         onClick={onClick}
@@ -347,11 +347,11 @@ export function ExplorerCharacterPage({
 
   return (
     <div className="ecp-root" role="dialog" aria-label="Explorer character inventory">
-      <div className="ecp-panel">
-        <header className="ecp-head">
-          <h2 className="ecp-title">Character</h2>
-          <p className="ecp-sub">
-            Explorer · Minecraft-style slots · Fantasy Scene craft grid · {characterName}
+      <div className="ecp-panel gk-equip-tactical">
+        <header className="ecp-head gk-titlebar">
+          <h2 className="ecp-title gk-title">Character</h2>
+          <p className="ecp-sub gk-muted">
+            ui.grudge-studio · craftpix slots · Explorer · {characterName}
           </p>
           <div className="ecp-head-actions">
             {onOpenAvatarEdit && (
@@ -472,7 +472,7 @@ export function ExplorerCharacterPage({
                 <button
                   type="button"
                   key={cell.id}
-                  className={`ecp-slot ecp-slot--craftResult ${!fake ? "is-empty" : ""}`}
+                  className={`ecp-slot gk-slot ecp-slot--craftResult ${!fake ? "is-empty" : ""}`}
                   style={cellGridStyle(cell)}
                   title={fake ? `Take ${craftResultPreview?.name}` : "Craft result"}
                   onClick={() => {
@@ -507,10 +507,13 @@ export function ExplorerCharacterPage({
         </div>
 
         <p className="ecp-hint">
-          <kbd>Click</kbd> pick / place · <kbd>I</kbd> / <kbd>Esc</kbd> close · Craft: wood→planks,
-          wood×2→sticks, stone×4→bricks, ore+coal→ingot · Kept loadout survives death · Avatar face
-          uses Explorer modular head from Fantasy Scene opener · Layout script:{" "}
-          <code>localStorage gw_character_page_layout_v1</code>
+          <kbd>Click</kbd> pick/place · <kbd>I</kbd>/<kbd>Esc</kbd> close · In-world:{" "}
+          <kbd>Q</kbd> combat/harvest/build · <kbd>Shift+Q</kbd> swap arms · <kbd>1–4</kbd> skills ·{" "}
+          <kbd>RMB</kbd> focus lock · harvest/build shoulder TPS · Real frames: craftpix +{" "}
+          <a href="https://ui.grudge-studio.com/" target="_blank" rel="noreferrer" style={{ color: "#fbbf24" }}>
+            ui.grudge-studio.com
+          </a>{" "}
+          · Layout script <code>gw_character_page_layout_v1</code>
         </p>
       </div>
     </div>
