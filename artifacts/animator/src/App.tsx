@@ -36,6 +36,7 @@ import type {
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { Hud } from "./components/Hud";
+import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
 import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
@@ -48,6 +49,7 @@ import {
   resolveDepositContext,
   type DepositContext,
   harvestIntoBag,
+  applyDeathBagDrop,
   DEFAULT_BAG_SLOTS,
 } from "./game/inventory";
 import { AdminPanel } from "./components/AdminPanel";
@@ -64,6 +66,7 @@ import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
 import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
+import { ThreeVoxBattle } from "./components/ThreeVoxBattle";
 import { GrudoxZones } from "./components/GrudoxZones";
 import { InAppGameCanvas } from "./components/InAppGameCanvas";
 import { MimicDungeon } from "./components/MimicDungeon";
@@ -84,6 +87,7 @@ import {
 import { resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
+import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
 import { AvatarEditMode } from "./components/AvatarEditMode";
 import { CampfireLobby } from "./components/CampfireLobby";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
@@ -439,6 +443,13 @@ export default function App() {
   const [bagOpen, setBagOpen] = useState(false);
   const bagOpenRef = useRef(false);
   bagOpenRef.current = bagOpen;
+  /**
+   * Danger start gate (sample three.js boot): overlay until ENTER → pointer lock.
+   * Resets each time the player enters danger mode.
+   */
+  const [dangerStartOpen, setDangerStartOpen] = useState(true);
+  const dangerStartOpenRef = useRef(true);
+  dangerStartOpenRef.current = dangerStartOpen;
   const [depositCtx, setDepositCtx] = useState<DepositContext>({
     zone: "none",
     canDeposit: false,
@@ -628,6 +639,12 @@ export default function App() {
   const [clips, setClips] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotBinding[]>([]);
   const [webglError, setWebglError] = useState(false);
+  /** helpers.glb intro orbit while Danger Room / arena boots. */
+  const [helpersLoad, setHelpersLoad] = useState<{
+    visible: boolean;
+    label: string;
+    progress?: number;
+  }>({ visible: false, label: "LOADING" });
   const [dockOpen, setDockOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
@@ -723,9 +740,38 @@ export default function App() {
     [dangerDock, refreshAnim],
   );
 
+  // Helpers.glb cinematic load screen when entering Danger Room.
+  useEffect(() => {
+    if (mode !== "danger") {
+      setHelpersLoad((s) => ({ ...s, visible: false }));
+      return;
+    }
+    setHelpersLoad({ visible: true, label: "ENTERING DANGER ROOM", progress: 0.12 });
+    const t1 = window.setTimeout(
+      () => setHelpersLoad({ visible: true, label: "LOADING FORGE", progress: 0.55 }),
+      700,
+    );
+    const t2 = window.setTimeout(
+      () => setHelpersLoad({ visible: true, label: "READY", progress: 0.92 }),
+      1600,
+    );
+    const t3 = window.setTimeout(
+      () => setHelpersLoad({ visible: false, label: "LOADING", progress: 1 }),
+      2400,
+    );
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [mode]);
+
   // Mount the Danger Room engine while in combat mode.
   useEffect(() => {
     if (mode !== "danger" || !mountRef.current) return;
+    // Fresh gate every danger entry (pointer lock only after ENTER)
+    setDangerStartOpen(true);
+    dangerStartOpenRef.current = true;
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
@@ -734,6 +780,9 @@ export default function App() {
         refreshAnim();
         // A networked room with a chosen map loads it once the rig is ready.
         if (roomMap) void studioRef.current?.enterArena(roomMap);
+        setHelpersLoad((s) =>
+          s.visible ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" } : s,
+        );
       };
       studio.setFireParams(loadFireFx());
       // Re-read persisted controls at every mount so engine-only mutations
@@ -758,6 +807,14 @@ export default function App() {
       };
       studioRef.current = studio;
       studio.setTouchMode(isMobile);
+      // Death: empty 3×3 carry; keep 2×2 loadout (main/side/mount/boat).
+      studio.onPlayerDefeat = () => {
+        const charId =
+          gameSession.snapshot.selectedCharacterId || characterId || "local";
+        const res = applyDeathBagDrop(charId);
+        studio?.flashMessage?.(res.message, 2.2);
+        refreshBagMeta();
+      };
       // Hand the live relay client to the engine for multiplayer rooms.
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
       // Re-apply fleet mesh_ids / weapon after Studio exists (fixes race with loadout).
@@ -800,6 +857,13 @@ export default function App() {
       studio.setTimeScale(timeScale);
       studioRef.current = studio;
       studio.setTouchMode(isMobile);
+      studio.onPlayerDefeat = () => {
+        const charId =
+          gameSession.snapshot.selectedCharacterId || characterId || "local";
+        const res = applyDeathBagDrop(charId);
+        studio?.flashMessage?.(res.message, 2.2);
+        refreshBagMeta();
+      };
       applyFleetLoadoutRef.current();
       refreshAnim();
     } catch (err) {
@@ -1169,8 +1233,26 @@ export default function App() {
     studioRef.current?.stopDuel();
   }, []);
 
-  const onStartArenaMatch = useCallback(() => {
-    studioRef.current?.startArenaMatch();
+  const onStartArenaMatch = useCallback((arenaMode: "1v1" | "2v2" = "1v1") => {
+    setHelpersLoad({
+      visible: true,
+      label: arenaMode === "1v1" ? "ARENA 1v1" : "ARENA 2v2",
+      progress: 0.2,
+    });
+    const ok = studioRef.current?.startArenaMatch(arenaMode);
+    window.setTimeout(
+      () =>
+        setHelpersLoad({
+          visible: true,
+          label: "FORGE FLOOR",
+          progress: 0.75,
+        }),
+      500,
+    );
+    window.setTimeout(
+      () => setHelpersLoad({ visible: false, label: "LOADING", progress: 1 }),
+      ok === false ? 400 : 1800,
+    );
   }, []);
 
   const onArenaRetry = useCallback(() => {
@@ -1536,7 +1618,8 @@ export default function App() {
       mode === "voxgrudge-native" ||
       mode === "account" ||
       mode === "brawl" ||
-      mode === "survival"
+      mode === "survival" ||
+      mode === "vox-battle"
     ) {
       return {
         surface: "guide",
@@ -1737,6 +1820,10 @@ export default function App() {
     return shell(<ThreeBrawler variant="brawl" onExit={() => navigate("doors")} />);
   }
 
+  if (mode === "vox-battle") {
+    return shell(<ThreeVoxBattle onExit={() => navigate("doors")} />);
+  }
+
   if (mode === "survival") {
     return shell(
       <ThreeBrawler variant="survival" onExit={() => navigate("doors")} />,
@@ -1922,6 +2009,13 @@ export default function App() {
           <p>This device or browser couldn't create a 3D context. Try a hardware-accelerated browser.</p>
         </div>
       )}
+
+      {/* helpers.glb intro: circle + orbit/zoom on character (load / arena) */}
+      <HelpersLoadScreen
+        visible={helpersLoad.visible}
+        label={helpersLoad.label}
+        progress={helpersLoad.progress}
+      />
 
       {mode === "voxel" && (
         <>
@@ -2122,12 +2216,25 @@ export default function App() {
           {equipOpen && (
             <EquipmentScreen
               characterName={hud?.character ?? characterId}
+              characterId={activeCharacterId}
               race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
               currentWeapon={hud?.weapon ?? weaponId}
               currentOffHand={offHand}
               onEquip={onWeapon}
               onEquipOff={onOffHand}
               onClose={() => setEquipOpen(false)}
+              onOpenCrafting={() => {
+                setEquipOpen(false);
+                setHarvestUiOpen(true);
+              }}
+              onOpenSkillTrees={() => {
+                setEquipOpen(false);
+                setSystemsOpen(true);
+              }}
+              onSelectHarvestTool={(tool) => {
+                studioRef.current?.selectActivityTool?.(tool);
+                setEquipOpen(false);
+              }}
             />
           )}
           {systemsOpen && (
@@ -2288,18 +2395,46 @@ export default function App() {
             <DockSurface layout={dangerLayout} controls={dangerDock} panels={dangerPanels} />
           </TipProvider>
 
-          {!isMobile && !hud?.locked && !panelsOpen && !equipOpen && !systemsOpen && !claimFlagOpen && (
-            <div className="click-hint">
-              <p>Click to enter — mouse to look</p>
-              <p className="dim">
-                Dot centre · free-aim · LMB select · RMB toggle focus · harvest LMB/RMB · X roll
-              </p>
-            </div>
+          {/* Sample-style start gate: ENTER → pointer lock (blocks canvas until ready) */}
+          {dangerStartOpen && !isMobile && (
+            <DangerStartScreen
+              characterLabel={hud?.character ?? characterId}
+              weaponLabel={hud?.weapon ?? weaponId}
+              ready={!!hud || helpersLoad.progress >= 0.85}
+              onEnter={() => {
+                setDangerStartOpen(false);
+                document.body.style.cursor = "none";
+                // Prefer canvas lock (engine InputState binds to renderer.domElement)
+                const canvas = mountRef.current?.querySelector("canvas");
+                if (canvas) {
+                  canvas.requestPointerLock?.();
+                } else {
+                  document.body.requestPointerLock?.();
+                }
+                // Engine also listens on click — nudge if lock needs a gesture
+                studioRef.current?.flashMessage?.("DANGER · AA/DD dash · RMB focus", 1.8);
+              }}
+            />
           )}
+
+          {!isMobile &&
+            !dangerStartOpen &&
+            !hud?.locked &&
+            !panelsOpen &&
+            !equipOpen &&
+            !systemsOpen &&
+            !claimFlagOpen && (
+              <div className="click-hint">
+                <p>Click canvas to re-lock · mouse look</p>
+                <p className="dim">
+                  AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
+                </p>
+              </div>
+            )}
 
           {isMobile && !panelsOpen && <TouchControls api={touchApi} />}
 
-          {!panelsOpen && (
+          {!panelsOpen && !dangerStartOpen && (
             <>
               <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
                 FX
@@ -2311,12 +2446,25 @@ export default function App() {
           {equipOpen && (
             <EquipmentScreen
               characterName={hud?.character ?? characterId}
+              characterId={activeCharacterId}
               race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
               currentWeapon={hud?.weapon ?? weaponId}
               currentOffHand={offHand}
               onEquip={onWeapon}
               onEquipOff={onOffHand}
               onClose={() => setEquipOpen(false)}
+              onOpenCrafting={() => {
+                setEquipOpen(false);
+                setHarvestUiOpen(true);
+              }}
+              onOpenSkillTrees={() => {
+                setEquipOpen(false);
+                setSystemsOpen(true);
+              }}
+              onSelectHarvestTool={(tool) => {
+                studioRef.current?.selectActivityTool?.(tool);
+                setEquipOpen(false);
+              }}
             />
           )}
           {systemsOpen && (

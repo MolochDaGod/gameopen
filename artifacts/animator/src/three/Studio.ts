@@ -861,6 +861,9 @@ export class Studio {
     // On touch devices the on-screen controls drive look, so never grab pointer
     // lock from a tap (it would hijack the look-pad / fight the joystick).
     if (this.touchMode) return;
+    // App shows DangerStartScreen first — don't steal lock under the overlay.
+    // After ENTER, canvas clicks re-acquire lock (sample three.js boot pattern).
+    if (document.querySelector("[data-testid='danger-start-screen']")) return;
     if (!this.input.locked) this.input.requestLock();
   };
   private onMouseDown = (e: MouseEvent) => {

@@ -1,0 +1,135 @@
+/* Danger Room start gate — full-screen, blocks engine pointer-lock until ENTER */
+
+.danger-start-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20, 40, 70, 0.55), transparent 70%),
+    linear-gradient(180deg, rgba(4, 8, 16, 0.92), rgba(2, 4, 10, 0.96));
+  backdrop-filter: blur(6px);
+  font-family: "Cinzel", "Inter", system-ui, sans-serif;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.danger-start-card {
+  width: min(420px, 92vw);
+  padding: 28px 28px 22px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 200, 255, 0.22);
+  background: linear-gradient(160deg, rgba(12, 20, 36, 0.95), rgba(8, 12, 22, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(40, 140, 255, 0.12);
+  text-align: center;
+}
+
+.danger-start-kicker {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  font-weight: 700;
+  color: rgba(140, 190, 255, 0.65);
+  margin-bottom: 8px;
+}
+
+.danger-start-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #e8f0ff;
+}
+
+.danger-start-title .accent {
+  color: #3ee9ff;
+  margin-left: 0.12em;
+}
+
+.danger-start-sub {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: rgba(180, 210, 240, 0.75);
+  font-family: "Inter", system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.danger-start-sub .sep {
+  margin: 0 0.45em;
+  opacity: 0.4;
+}
+
+.danger-start-keys {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 12px 14px;
+  text-align: left;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.65;
+  color: rgba(200, 220, 245, 0.88);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(100, 160, 220, 0.12);
+}
+
+.danger-start-keys kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 0 1px;
+  font-size: 10px;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-weight: 600;
+  color: #9fe8ff;
+  background: rgba(30, 60, 90, 0.65);
+  border: 1px solid rgba(100, 180, 255, 0.25);
+  border-radius: 4px;
+}
+
+.danger-start-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  font-family: "Cinzel", "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #041018;
+  background: linear-gradient(180deg, #5af0ff 0%, #2bc4e8 45%, #1a90c0 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+    0 8px 28px rgba(40, 200, 255, 0.35);
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.danger-start-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 12px 36px rgba(40, 200, 255, 0.45);
+}
+
+.danger-start-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.danger-start-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  filter: grayscale(0.3);
+}
+
+.danger-start-hint {
+  margin: 12px 0 0;
+  font-size: 10px;
+  font-family: "Inter", system-ui, sans-serif;
+  color: rgba(140, 170, 200, 0.55);
+  letter-spacing: 0.03em;
+}
