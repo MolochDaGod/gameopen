@@ -161,7 +161,7 @@ export interface ArenaMatchHudState {
   opponentLabel: string;
   /** Ally loadout line (2v2), or "Solo". */
   allyLabel: string;
-  mode: "1v1" | "2v2";
+  mode: "1v1" | "2v2" | "ffa4";
   modeLabel: string;
   round: number;
   livingEnemies: number;
@@ -175,6 +175,10 @@ export interface ArenaMatchHudState {
     health01: number;
     dead: boolean;
   }>;
+  /** FFA score (first to killGoal). */
+  playerKills?: number;
+  fieldKills?: number;
+  killGoal?: number;
 }
 
 // ── A.L.E. Bot (director cameras, highlights & diagnostics) ──────────────────
@@ -907,6 +911,18 @@ export interface Avatar {
    * it replaces the discrete {@link playRole}/{@link setLocomotionRate} loco path.
    */
   setLocomotion?(speed: number): void;
+  /** Role → clip rebinding (locomotion sets / animation director). */
+  getRoleClip?(role: AnimRole): string | undefined;
+  setRoleClip?(role: AnimRole, clipName: string): boolean;
+  clipDuration?(name: string): number;
+  playClipNamed?(
+    name: string,
+    opts?: { fade?: number; loop?: boolean; timeScale?: number; clampWhenFinished?: boolean },
+  ): number;
+  playClipOnceTimed?(
+    name: string,
+    opts?: { fade?: number; timeScale?: number; clampWhenFinished?: boolean },
+  ): number;
   /**
    * GLB `Character` only: play a clip as an upper-body additive overlay so a
    * swing layers over locomotion (a moving attack) without freezing the legs.

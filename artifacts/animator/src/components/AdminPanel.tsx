@@ -23,6 +23,9 @@ import { TEST_WORLD_LIST, type TestWorldId } from "../three/testWorlds";
 import { Icon } from "./Icon";
 import { EnvPreview } from "./EnvThumb";
 import { AleReviewPlayer } from "./AleReviewPlayer";
+import { MapCardGrid } from "./MapCard";
+import { ARENA_MAP_CARDS, type MapPreviewId } from "../lib/mapPreviews";
+import "./mapCard.css";
 
 const DIFFICULTIES: { id: Difficulty; label: string }[] = [
   { id: "passive", label: "Passive" },
@@ -317,43 +320,21 @@ export function AdminPanel({
 
       <div className="panel-section">
         <h3>
-          <Icon name="anim-test" size={16} /> Arena Match
+          <Icon name="anim-test" size={16} /> Arena · Maps
         </h3>
         <p className="spar-count-label">
-          Classic: arena3 · countdown · AI weapon skills · wipe to win.
-          FFA: Ultimate Assassination Grounds · up to 4 fighters · first to 10
-          kills · explorer AI with skills.
+          Pick a battleground. Cards show poster art + a minimap schematic of
+          spawns. Classic wipe modes or FFA first-to-10 on Assassination Grounds.
         </p>
-        <div
-          className="grid2"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}
-        >
-          <button
-            className="opt"
-            onClick={() => onStartArenaMatch("1v1")}
-            disabled={!!duel}
-            title="You vs one AI duelist with weapon skills"
-          >
-            1v1 Duel
-          </button>
-          <button
-            className="opt"
-            onClick={() => onStartArenaMatch("2v2")}
-            disabled={!!duel}
-            title="You + healer ally vs two AI foes"
-          >
-            2v2 Team
-          </button>
-          <button
-            className="opt"
-            style={{ gridColumn: "1 / -1" }}
-            onClick={() => onStartArenaMatch("ffa4")}
-            disabled={!!duel}
-            title="Assassination Grounds FFA — you + 3 AI explorers, first to 10 kills"
-          >
-            FFA ×4 · Assassination Grounds · First to 10
-          </button>
-        </div>
+        <MapCardGrid
+          items={ARENA_MAP_CARDS}
+          disabled={!!duel}
+          onPick={(id: MapPreviewId) => {
+            if (id === "arena-1v1") onStartArenaMatch("1v1");
+            else if (id === "arena-2v2") onStartArenaMatch("2v2");
+            else if (id === "arena-ffa4") onStartArenaMatch("ffa4");
+          }}
+        />
       </div>
 
       <div className="panel-section">

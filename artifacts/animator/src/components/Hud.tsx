@@ -25,6 +25,7 @@ import {
   rightWingSlots,
   type QuickActionId,
 } from "../hud/quickActions";
+import { ArenaMinimapHud } from "./ArenaMinimapHud";
 
 interface Props {
   hud: HudSnapshot | null;
@@ -586,7 +587,7 @@ function BossBar({ boss }: { boss: NonNullable<HudSnapshot["boss"]> }) {
   );
 }
 
-/** Prefight countdown + WIN/LOSE banner + Retry / Return choices. */
+/** Prefight countdown + team bars + skill cue + WIN/LOSE + Retry / Return. */
 function ArenaMatchOverlay({
   arena,
   onRetry,
@@ -603,6 +604,14 @@ function ArenaMatchOverlay({
     (arena.phase === "fighting" && !!arena.label);
   const isWin = arena.outcome === "win";
   const isLose = arena.outcome === "lose";
+  const bars = arena.bars ?? [];
+  const teamBars = bars.filter((b) => b.faction === "player" || b.faction === "ally");
+  const foeBars = bars.filter((b) => b.faction === "enemy");
+  const isFfa = arena.mode === "ffa4";
+  const killGoal = arena.killGoal ?? 10;
+
+  const barColor = (f: string) =>
+    f === "player" ? "#5ad4ff" : f === "ally" ? "#5dff9a" : "#ff6b6b";
 
   return (
     <div
@@ -623,6 +632,200 @@ function ArenaMatchOverlay({
               : "transparent",
       }}
     >
+      {/* Top mode strip — always on while arena is active */}
+      <div
+        style={{
+          position: "absolute",
+          top: 14,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          pointerEvents: "none",
+          minWidth: 280,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "6px 16px",
+            borderRadius: 999,
+            background: "rgba(6,10,20,0.78)",
+            border: "1px solid rgba(140,190,255,0.28)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.16em",
+              color: "#9fd4ff",
+            }}
+          >
+            {arena.modeLabel ?? (arena.mode === "2v2" ? "2v2 TEAM" : "1v1 DUEL")}
+          </span>
+          <span style={{ opacity: 0.35 }}>|</span>
+          <span style={{ fontSize: 11, letterSpacing: "0.12em", opacity: 0.8 }}>
+            ROUND {arena.round}
+          </span>
+          <span style={{ opacity: 0.35 }}>|</span>
+          <span style={{ fontSize: 11, opacity: 0.75 }}>
+            {arena.livingEnemies ?? 0} foe{(arena.livingEnemies ?? 0) === 1 ? "" : "s"}
+            {(arena.mode === "2v2" || (arena.livingAllies ?? 0) > 0) &&
+              ` · ${arena.livingAllies ?? 0} ally`}
+          </span>
+        </div>
+
+        {/* Team vs foe health strips */}
+        {(teamBars.length > 0 || foeBars.length > 0) && arena.phase !== "choice" && (
+          <div
+            style={{
+              display: "flex",
+              gap: 18,
+              marginTop: 4,
+              width: "min(720px, 92vw)",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+              {teamBars.map((b) => (
+                <div key={b.id} style={{ opacity: b.dead ? 0.35 : 1 }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: "0.06em",
+                      marginBottom: 2,
+                      color: barColor(b.faction),
+                    }}
+                  >
+                    {b.name}
+                  </div>
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: 3,
+                      background: "rgba(0,0,0,0.45)",
+                      overflow: "hidden",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.round(Math.max(0, Math.min(1, b.health01)) * 100)}%`,
+                        height: "100%",
+                        background: `linear-gradient(90deg, ${barColor(b.faction)}, ${barColor(b.faction)}cc)`,
+                        transition: "width 0.15s ease-out",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+              {foeBars.map((b) => (
+                <div key={b.id} style={{ opacity: b.dead ? 0.35 : 1, width: "100%" }}>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: "0.06em",
+                      marginBottom: 2,
+                      color: barColor(b.faction),
+                      textAlign: "right",
+                    }}
+                  >
+                    {b.name}
+                  </div>
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: 3,
+                      background: "rgba(0,0,0,0.45)",
+                      overflow: "hidden",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.round(Math.max(0, Math.min(1, b.health01)) * 100)}%`,
+                        height: "100%",
+                        marginLeft: "auto",
+                        background: "linear-gradient(90deg, #ff8a6b, #ff4d4d)",
+                        transition: "width 0.15s ease-out",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* FFA score container */}
+        {isFfa && arena.phase === "fighting" && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: "8px 16px",
+              borderRadius: 10,
+              background: "linear-gradient(180deg, rgba(40,16,12,0.92), rgba(12,8,10,0.95))",
+              border: "1px solid rgba(255,106,74,0.45)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              minWidth: 200,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.14em",
+                color: "#ff9a7a",
+                fontWeight: 800,
+                marginBottom: 4,
+              }}
+            >
+              ASSASSINATION · FIRST TO {killGoal}
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, alignItems: "baseline" }}>
+              <span style={{ color: "#5ad4ff", fontWeight: 900, fontSize: 22 }}>
+                {arena.playerKills ?? 0}
+              </span>
+              <span style={{ opacity: 0.5, fontSize: 12 }}>YOU</span>
+              <span style={{ opacity: 0.35 }}>—</span>
+              <span style={{ opacity: 0.5, fontSize: 12 }}>FIELD</span>
+              <span style={{ color: "#ff6b6b", fontWeight: 900, fontSize: 22 }}>
+                {arena.fieldKills ?? 0}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Weapon skill / heal cue */}
+        {!!arena.skillCue && arena.phase === "fighting" && (
+          <div
+            style={{
+              marginTop: 8,
+              padding: "4px 14px",
+              borderRadius: 6,
+              background: "rgba(20,40,70,0.85)",
+              border: "1px solid rgba(160,220,255,0.45)",
+              color: "#c8ecff",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textShadow: "0 0 12px rgba(100,180,255,0.5)",
+              animation: "combat-flash-in 0.15s ease-out",
+            }}
+          >
+            {arena.skillCue}
+          </div>
+        )}
+      </div>
+
       {showBanner && arena.label && (
         <div
           style={{
@@ -644,8 +847,14 @@ function ArenaMatchOverlay({
         </div>
       )}
       {arena.phase === "countdown" && (
-        <div style={{ marginTop: 12, fontSize: 14, opacity: 0.75, letterSpacing: "0.18em" }}>
-          ROUND {arena.round} · {arena.opponentLabel}
+        <div style={{ marginTop: 12, fontSize: 14, opacity: 0.75, letterSpacing: "0.14em", textAlign: "center" }}>
+          <div>
+            ROUND {arena.round} · {arena.modeLabel ?? arena.mode}
+          </div>
+          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.85 }}>
+            vs {arena.opponentLabel}
+            {arena.allyLabel && arena.allyLabel !== "Solo" ? ` · with ${arena.allyLabel}` : ""}
+          </div>
         </div>
       )}
       {arena.canChoose && (
@@ -659,7 +868,11 @@ function ArenaMatchOverlay({
           }}
         >
           <div style={{ fontSize: 13, opacity: 0.7, letterSpacing: "0.08em" }}>
-            {isWin ? "You defeated the opponents." : "You were defeated."}
+            {isWin
+              ? arena.mode === "2v2"
+                ? "Your team cleared the arena."
+                : "You defeated the opponent."
+              : "You were defeated."}
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <button
@@ -697,8 +910,9 @@ function ArenaMatchOverlay({
               RETURN TO DANGER ROOM
             </button>
           </div>
-          <div style={{ fontSize: 11, opacity: 0.5, maxWidth: 320, textAlign: "center" }}>
-            Retry rematches the same opponents. Return clears them so you will not fight this loadout again.
+          <div style={{ fontSize: 11, opacity: 0.5, maxWidth: 340, textAlign: "center" }}>
+            Retry rematches the same {arena.mode} loadout on the arena map. Return
+            clears fighters and returns to free roam.
           </div>
         </div>
       )}
@@ -873,11 +1087,14 @@ export function Hud({
 
       {/* Player-vs-NPC arena: countdown / result / choice */}
       {hud.arena?.active && (
-        <ArenaMatchOverlay
-          arena={hud.arena}
-          onRetry={onArenaRetry}
-          onReturn={onArenaReturn}
-        />
+        <>
+          <ArenaMinimapHud arena={hud.arena} />
+          <ArenaMatchOverlay
+            arena={hud.arena}
+            onRetry={onArenaRetry}
+            onReturn={onArenaReturn}
+          />
+        </>
       )}
 
       {/* Center-screen event flash */}
