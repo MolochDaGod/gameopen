@@ -151,7 +151,10 @@ export class GrudgeAvatar implements Avatar {
         this.actions.set(clip.name, action);
         this.roleClip.set(role as AnimRole, role);
       }
-      // Cross-fill roles for Controller
+      // Cross-fill roles for Controller / Studio mobility
+      if (!this.roleClip.has("jump") && this.actions.has("jump")) {
+        this.roleClip.set("jump", "jump");
+      }
       if (!this.roleClip.has("jump") && this.roleClip.has("attack")) {
         this.roleClip.set("jump", "attack");
       }
@@ -249,7 +252,70 @@ export class GrudgeAvatar implements Avatar {
   }
 
   hasClip(name: string): boolean {
-    return this.actions.has(name);
+    if (this.actions.has(name) || this.actions.has(name.toLowerCase())) return true;
+    // Studio hyphen/underscore dodge aliases
+    const alt = name.replace(/-/g, "_");
+    if (alt !== name && this.actions.has(alt)) return true;
+    if (name.includes("dodge") || name.includes("roll")) {
+      return (
+        this.actions.has("dodge") ||
+        this.actions.has("dodgeL") ||
+        this.actions.has("dodgeR") ||
+        this.actions.has("dodgeF")
+      );
+    }
+    if (name === "jump" || name === "jumpAway" || name === "mantle") {
+      return this.actions.has("jump") || this.actions.has("jumpAway");
+    }
+    return false;
+  }
+
+  /**
+   * Traversal mode (wall-run / climb / swim). Grudge6 uses the same mixer —
+   * climb keeps gait at walk; swim uses slower walk cycle until swim clips ship.
+   */
+  setTraversalMode(mode: "ground" | "climb" | "swim"): void {
+    this.root.userData.traversalMode = mode;
+    if (mode === "climb" || mode === "swim") {
+      if (this.hasRole("walk")) this.playRole("walk");
+      this.setLocomotionRate(mode === "swim" ? 0.55 : 0.85);
+    }
+  }
+
+  /**
+   * Directional evade for AA/DD dash (Studio.performTimedDodgeRoll).
+   */
+  rollDir(dir: "F" | "B" | "L" | "R", fade = 0.12): number {
+    const map: Record<string, string[]> = {
+      F: ["dodgeF", "standing-dodge-forward", "standing_dodge_forward", "dodge", "roll"],
+      B: ["dodgeB", "standing-dodge-backward", "standing_dodge_backward", "dodge", "roll"],
+      L: ["dodgeL", "standing-dodge-left", "standing_dodge_left", "dodge", "roll"],
+      R: ["dodgeR", "standing-dodge-right", "standing_dodge_right", "dodge", "roll"],
+    };
+    for (const n of map[dir] || map.B!) {
+      if (!this.hasClip(n)) continue;
+      const d = this.playClipOnce(n, fade);
+      if (d > 0) return d;
+    }
+    return 0;
+  }
+
+  /**
+   * Cut-animation for timing skills / dodges (GLB Character.playClipCut contract).
+   */
+  playClipCut(
+    name: string,
+    opts: { from?: number; to?: number; timeScale?: number; fade?: number } = {},
+  ): number {
+    const from = Math.min(1, Math.max(0, opts.from ?? 0));
+    const to = Math.min(1, Math.max(from + 0.05, opts.to ?? 1));
+    const scale = Math.max(0.05, opts.timeScale ?? 1);
+    const full = this.playClipOnce(name, opts.fade ?? 0.08);
+    if (full <= 0) return 0;
+    if (this.oneShot) {
+      this.oneShot.setEffectiveTimeScale(scale * this.overdrive);
+    }
+    return Math.max(0.08, (full * (to - from)) / scale);
   }
 
   playRole(role: AnimRole, fade = this.blendTime): void {

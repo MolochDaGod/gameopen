@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ANIM_PACK_CLIPS,
   BANNED_LOCOMOTION_CLIPS,
+  TRAVERSAL_CLIPS,
   isBannedLocomotionClip,
   SPRINT_CLIP,
 } from "./anims";
@@ -60,6 +61,21 @@ describe("grudge6 locomotion pack SSOT", () => {
       expect(clips.run.toLowerCase()).not.toMatch(/roll/);
       expect(clips.run).not.toMatch(/running$/i);
       expect(pack).toBeTruthy();
+    }
+  });
+
+  it("ships traversal clips for jump + AA/DD dodge for every hero", () => {
+    expect(TRAVERSAL_CLIPS.length).toBeGreaterThanOrEqual(8);
+    const roles = new Set(TRAVERSAL_CLIPS.map((t) => t.role));
+    expect(roles.has("jump")).toBe(true);
+    expect(roles.has("dodgeL")).toBe(true);
+    expect(roles.has("dodgeR")).toBe(true);
+    expect(roles.has("dodgeF")).toBe(true);
+    for (const t of TRAVERSAL_CLIPS) {
+      // Never map mobility to banned tip/roll loco paths
+      if (t.role.startsWith("dodge") || t.role.includes("jump")) {
+        expect(isBannedLocomotionClip(t.rel)).toBe(false);
+      }
     }
   });
 });

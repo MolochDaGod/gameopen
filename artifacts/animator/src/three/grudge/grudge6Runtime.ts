@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import {
   ANIM_PACK_CLIPS,
+  TRAVERSAL_CLIPS,
   SPRINT_LOCO_MULT,
   asAnimPack,
   loadBakedClip,
@@ -376,6 +377,28 @@ export async function loadGrudge6CombatRig(
         await loadRole(role, rel);
       }),
     );
+  }
+
+  // Universal traversal — dodge L/R/F, jump, climb-adjacent clips for ALL heroes
+  // so AA/DD dash, X roll, wall jump, and jump work on every race/weapon option.
+  await Promise.all(
+    TRAVERSAL_CLIPS.map(async ({ role, rel }) => {
+      if (clips.has(role)) return;
+      await loadRole(role, rel);
+    }),
+  );
+  // Alias roll → dodge cycle so Studio fallthrough lists resolve
+  if (!clips.has("roll") && clips.has("dodge")) {
+    clips.set("roll", clips.get("dodge")!);
+    roles.set("roll", "roll");
+  }
+  if (!clips.has("jumpAway") && clips.has("jump")) {
+    clips.set("jumpAway", clips.get("jump")!);
+    roles.set("jumpAway", "jumpAway");
+  }
+  if (!clips.has("mantle") && clips.has("jump")) {
+    clips.set("mantle", clips.get("jump")!);
+    roles.set("mantle", "mantle");
   }
 
   // Sprint from true run cycle only (time-scale applied by AnimationDirector /

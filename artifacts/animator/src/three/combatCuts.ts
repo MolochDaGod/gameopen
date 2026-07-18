@@ -1,10 +1,11 @@
 /**
  * Cut-animation presets — short, timing-based slices of longer clips.
  *
- * A "cut" trims the slow wind-up (fraction `from`→`to`), plays at `timeScale`,
- * and blends in quickly. Used for AAA-feel reactive skills (utility kick, etc.)
- * where the full authored clip is too slow to start.
+ * Fractions + knockback align to three/math worldMath (ASOD lattice + TIMING).
+ * A "cut" trims slow wind-up (from→to), plays at timeScale, blends in quickly.
  */
+
+import { CLIP_CUT, IMPACT, RANGE, TIMING } from "./math/worldMath";
 
 export interface ClipCutOpts {
   /** Start fraction of the parent clip [0..1]. */
@@ -22,37 +23,24 @@ export interface ClipCutOpts {
  * With vel damp ≈ exp(-6t), distance ≈ v0/6 → pushSpeed ≈ meters * 6.15.
  */
 export const SMASH_KB = {
-  /** Minimum shove on a clean unguarded hit (m). */
-  minMeters: 2.0,
-  /** Cap so combos don't rocket people across the map (m). */
-  maxMeters: 5.2,
-  /** Maps physForce*outcomeScale → metres before stack. */
+  minMeters: IMPACT.smashMinM,
+  maxMeters: IMPACT.smashMaxM,
   forceToMeters: 0.3,
-  /** Per stacked unblocked hit (combo / multi-hit projectile). */
   stackPerHit: 0.2,
   stackCap: 4,
-  /** Window to keep stacking (s). */
-  stackWindow: 1.15,
-  /** Horizontal speed = meters * this (matches damp τ≈1/6). */
+  stackWindow: TIMING.u * 3.8,
   metersToSpeed: 6.15,
-  /** Launch (rising→fallen) when shove reaches this many metres. */
-  launchAtMeters: 3.35,
-  /** Extra launch on 3+ hit stacks even if meters is lower. */
+  launchAtMeters: IMPACT.smashMinM * 1.675,
   launchAtStack: 2,
 } as const;
 
-/** Parry (KeyQ) — cut into the parry snap, 2×, stun window. */
+/** Parry (KeyQ) — lattice-aligned cut + bubble. */
 export const PARRY_CUT = {
-  from: 0.28,
-  to: 1,
-  timeScale: 2.1,
-  fade: 0.035,
-  /** Brief i-frames after the press so timing is readable. */
-  invuln: 0.22,
-  forceFieldRadius: 1.15,
-  forceFieldLife: 0.28,
-  /** Stun on the attacker when perfect parry lands (s). */
-  stunOnSuccess: 1.4,
+  ...CLIP_CUT.parry,
+  invuln: TIMING.parryPerfect * 1.85,
+  forceFieldRadius: RANGE.parryBubble * 0.55,
+  forceFieldLife: TIMING.parryWindow * 0.93,
+  stunOnSuccess: TIMING.parryWindow * 4.6,
 } as const satisfies ClipCutOpts & {
   invuln: number;
   forceFieldRadius: number;
@@ -60,17 +48,13 @@ export const PARRY_CUT = {
   stunOnSuccess: number;
 };
 
-/** KeyE forcefield guard pulse — short raised block + hex shield. */
+/** KeyE forcefield guard pulse. */
 export const FORCEFIELD_CUT = {
-  from: 0.2,
-  to: 0.85,
-  timeScale: 1.8,
-  fade: 0.04,
-  /** How long the CC block stay raised (s). */
-  holdSec: 0.38,
-  radius: 1.45,
-  life: 0.55,
-  cooldown: 0.85,
+  ...CLIP_CUT.block,
+  holdSec: TIMING.blockWindow * 0.42,
+  radius: RANGE.blockBubble * 0.55,
+  life: TIMING.u * 1.83,
+  cooldown: TIMING.u * 2.83,
   color: 0x66e0ff,
 } as const satisfies ClipCutOpts & {
   holdSec: number;
@@ -80,17 +64,13 @@ export const FORCEFIELD_CUT = {
   color: number;
 };
 
-/** Space recovery from tumble/ragdoll — cut into backflip / kip-up. */
+/** Space recovery from tumble/ragdoll. */
 export const RECOVERY_CUT = {
-  from: 0.15,
-  to: 1,
-  timeScale: 1.65,
-  fade: 0.05,
-  /** Controller.backflip duration / hop height. */
-  flipDuration: 0.62,
+  ...CLIP_CUT.recovery,
+  flipDuration: TIMING.u * 2.07,
   flipHop: 2.35,
-  invuln: 0.48,
-  cooldown: 1.05,
+  invuln: TIMING.u * 1.6,
+  cooldown: TIMING.u * 3.5,
 } as const satisfies ClipCutOpts & {
   flipDuration: number;
   flipHop: number;
@@ -98,8 +78,22 @@ export const RECOVERY_CUT = {
   cooldown: number;
 };
 
-/** Longbow standing-dodge cut — snappier phase-slide (KeyX / AA DD). */
+/** Dodge cut (i-frames use TIMING.dodgeIframe*). */
 export const DODGE_CUT = {
+  ...CLIP_CUT.dodge,
+  duration: TIMING.dodgeDuration,
+  iframeStart: TIMING.dodgeIframeStart,
+  iframeEnd: TIMING.dodgeIframeEnd,
+  distance: 2.2,
+} as const satisfies ClipCutOpts & {
+  duration: number;
+  iframeStart: number;
+  iframeEnd: number;
+  distance: number;
+};
+
+/** Longbow standing-dodge cut — snappier phase-slide (KeyX / AA DD). */
+export const LONGBOW_DODGE_CUT = {
   from: 0.12,
   to: 1,
   timeScale: 1.75,

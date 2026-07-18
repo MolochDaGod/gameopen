@@ -8910,28 +8910,27 @@ export class Studio {
       // The Controller mutates cameraDistance directly on wheel-zoom (shared
       // params object); persist it (debounced) so zoom level survives reloads.
       if (this.params.cameraDistance !== this.lastSavedCamDist) this.queueControlsSave();
-      // A/D movement SSOT (Elden Ring / Souls-like):
+      // A/D movement SSOT (Elden Ring / Souls-like + universal AA/DD dash):
       //  • Hard FOCUS (RMB lock) → pure strafe (Controller setLockTarget faces enemy)
       //  • Soft lock / free       → walk/run camera-relative (body may face move)
-      //  • X is the ONLY roll — A/D never fire dodge rolls
-      // Ice staff: AA/DD slide only when not hard-focused (focus A/D stays strafe)
-      if (this.isIceStaff() && !this.locked) {
+      //  • Double-tap A / D       → directional dodge-dash (ALL weapons / heroes)
+      //  • Ice staff: triple-tap  → extended slide; double-tap still slides
+      //  • Key X                  → timed dodge-roll (any direction held)
+      {
         const tripA = this.input.consumeTripleTap("KeyA");
         const tripD = this.input.consumeTripleTap("KeyD");
         const dblA = this.input.consumeDoubleTap("KeyA");
         const dblD = this.input.consumeDoubleTap("KeyD");
-        if (tripA) this.doIceSlideDash("L", true);
-        else if (tripD) this.doIceSlideDash("R", true);
-        else if (dblA) this.doIceSlideDash("L", false);
-        else if (dblD) this.doIceSlideDash("R", false);
-      } else {
-        // Drain A/D tap queues so leftover ice/old dodge logic can't misfire
-        this.input.consumePress("KeyA");
-        this.input.consumePress("KeyD");
-        this.input.consumeDoubleTap("KeyA");
-        this.input.consumeDoubleTap("KeyD");
-        this.input.consumeTripleTap("KeyA");
-        this.input.consumeTripleTap("KeyD");
+        if (this.isIceStaff() && !this.locked) {
+          if (tripA) this.doIceSlideDash("L", true);
+          else if (tripD) this.doIceSlideDash("R", true);
+          else if (dblA) this.doIceSlideDash("L", false);
+          else if (dblD) this.doIceSlideDash("R", false);
+        } else {
+          // Universal AA / DD directional dash-dodge for every character option
+          if (dblA || tripA) this.dodgeRoll("L");
+          else if (dblD || tripD) this.dodgeRoll("R");
+        }
       }
       if (this.controller.consumeDoubleJump()) {
         const p = this.character.root.position.clone();
@@ -10979,10 +10978,14 @@ export class Studio {
   }
 
   /**
-   * Directional dodge-roll (double-tap A = left, D = right) — shares the X-key
-   * timed roll path so i-frames, blend, and VFX stay consistent.
+   * Directional dodge-dash (double-tap A = left, D = right).
+   * Shares X-key timed dodge path for i-frames / clips / root travel.
+   * Works for every weapon and every grudge6 hero (not ice-only).
    */
   private dodgeRoll(side: "L" | "R") {
+    if (this.defeated || !this.controller || !this.character) return;
+    if (this.dodgeCd > 0) return;
+    this.setCombatFlash(side === "L" ? "DASH ◀" : "DASH ▶", 0.35);
     this.performTimedDodgeRoll(side === "L" ? "left" : "right");
   }
 
@@ -10997,8 +11000,17 @@ export class Studio {
     const ch = this.character;
     if (!this.controller || !ch || this.defeated) return;
     if (this.dodgeCd > 0) return;
-    // Allow cancel out of attack recovery into a roll (Souls-like)
-    if (this.controller.isBusy && this.sparring.getPlayerState() !== "attack") return;
+    // Allow cancel into dodge during attack recovery; block only during other
+    // hard-busy states (flip/spin). Walking/idle must always be able to AA/DD.
+    if (
+      this.controller.isBusy &&
+      this.sparring.getPlayerState() !== "attack" &&
+      !this.controller.isDashing
+    ) {
+      // Still allow if only lightly busy (locomotion dash already running)
+      const st = this.sparring.getPlayerState();
+      if (st === "stunned" || st === "downed" || st === "dead") return;
+    }
 
     // Face-relative axes: hard focus → body already faces enemy (true strafe basis)
     const fwd = this.controller.forward().clone();

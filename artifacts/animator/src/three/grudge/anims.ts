@@ -140,6 +140,33 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
   },
 };
 
+/**
+ * Shared traversal / mobility clips loaded for EVERY grudge6 hero.
+ * Role keys match Studio dodge / wall / jump clip name lists.
+ * Paths relative to /anims/baked/ (no .json).
+ */
+export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
+  { role: "jump", rel: "locomotion/jump" },
+  { role: "dodge", rel: "locomotion/dodging" },
+  { role: "dodgeF", rel: "longbow/standing dodge forward" },
+  { role: "dodgeB", rel: "locomotion/dodging" },
+  { role: "dodgeL", rel: "longbow/standing dodge left" },
+  { role: "dodgeR", rel: "longbow/standing dodge right" },
+  // Studio alias names (hyphen / underscore)
+  { role: "standing-dodge-forward", rel: "longbow/standing dodge forward" },
+  { role: "standing_dodge_forward", rel: "longbow/standing dodge forward" },
+  { role: "standing-dodge-left", rel: "longbow/standing dodge left" },
+  { role: "standing_dodge_left", rel: "longbow/standing dodge left" },
+  { role: "standing-dodge-right", rel: "longbow/standing dodge right" },
+  { role: "standing_dodge_right", rel: "longbow/standing dodge right" },
+  { role: "standing-dodge-backward", rel: "locomotion/dodging" },
+  { role: "standing_dodge_backward", rel: "locomotion/dodging" },
+  { role: "dodge_forward", rel: "longbow/standing dodge forward" },
+  { role: "dodge_left", rel: "longbow/standing dodge left" },
+  { role: "dodge_right", rel: "longbow/standing dodge right" },
+  { role: "dodge_backward", rel: "locomotion/dodging" },
+];
+
 /** Map arsenal weapon id → anim pack (overrides class default when 2H/spear). */
 export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
   const w = String(weaponId || "").toLowerCase();
