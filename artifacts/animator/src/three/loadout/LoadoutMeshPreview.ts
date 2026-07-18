@@ -36,7 +36,8 @@ const RACE_TO_CHAR: Record<LoadoutPreviewRace, string> = {
 };
 
 /** Fallback rigs with baked clips if race GLB fails. */
-const FALLBACK_CHARS = ["karate-boss", "orc", "sanji"] as const;
+/** Catalog GLB fallbacks — no karate-boss (bosses are grudge6 kits). */
+const FALLBACK_CHARS = ["orc", "sanji", "explorer"] as const;
 
 export class LoadoutMeshPreview {
   private renderer: THREE.WebGLRenderer;

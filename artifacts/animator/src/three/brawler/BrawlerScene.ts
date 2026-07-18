@@ -66,9 +66,8 @@ const DASH_COOLDOWN = 2.0;
 /** Full arsenal cycle (Danger Room weapon table). */
 const WEAPON_CYCLE: WeaponId[] = mainWeaponCycle();
 
-/** Lab GLB fallbacks when grudge6 rig fails. */
+/** Lab GLB fallbacks when grudge6 rig fails (no karate-boss — prefer race/catalog kits). */
 const AVATAR_CANDIDATES = [
-  "karate-boss",
   "orc",
   "sanji",
   "gunslinger",
@@ -138,7 +137,7 @@ export interface BrawlerSceneOptions {
   initialSpawnCount?: number;
   /**
    * Studio avatar id — prefer `grudge:race:preset` (GrudgeAvatar + baked anims)
-   * or catalog id (`karate-boss`, `grudge-western-kingdoms-knight`, …).
+   * or catalog id (`orc`, `grudge-western-kingdoms-knight`, …). Never karate-boss.
    */
   characterId?: string;
   /** Main-hand arsenal weapon (Danger Room WeaponId). */
@@ -224,8 +223,9 @@ export class BrawlerScene {
   private loadError: string | null = null;
   private characterName = "Brawler";
   private characterClass = "Fighter";
-  private preferredAvatarId = "karate-boss";
-  private characterId = "karate-boss";
+  /** Prefer grudge6 modular kits; never default to karate-boss GLB. */
+  private preferredAvatarId = "grudge:orcs:knight";
+  private characterId = "grudge:orcs:knight";
   private rosterIndex = 0;
   private skills: SkillDef[] = [];
   private contentCatalog: ContentCatalogOverlay | null = null;

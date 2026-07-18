@@ -9493,11 +9493,18 @@ export class Studio {
       }
 
       // Swap to the dungeon population (same CombatTargets surface). The pit
-      // navmesh + spawn drive the sealed end-game brute pack + Moloch Da God.
-      const enemies = new DungeonEnemies(this.scene, dungeon.nav, dungeon.spawn, {
-        nav: dungeon.pitNav,
-        spawn: dungeon.pitSpawn,
-      });
+      // navmesh + spawn drive grudge6 elite pack + map boss (cool armour / tier skills).
+      const mapId = loadDungeonMap();
+      const enemies = new DungeonEnemies(
+        this.scene,
+        dungeon.nav,
+        dungeon.spawn,
+        {
+          nav: dungeon.pitNav,
+          spawn: dungeon.pitSpawn,
+        },
+        { mapId },
+      );
       enemies.onDeath = (p) => {
         this.vfx.burst(p, 0xff7a8a, 40, 6);
         this.vfx.shockwave(new THREE.Vector3(p.x, p.y + 0.05, p.z), 0xff5a6a, 3, 0.6);
@@ -9514,7 +9521,7 @@ export class Studio {
       // Nested Warlords location (dungeon under Danger Room parent).
       this.locationBag.setLocation(
         dungeonLocation({
-          mapId: DUNGEON_MAPS[loadDungeonMap()].file,
+          mapId: DUNGEON_MAPS[mapId].file,
           parent: dangerRoomLocation({
             instanceId: this.locationBag.getLocation().instanceId,
           }),

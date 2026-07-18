@@ -24,6 +24,22 @@ import {
   type NavGrid,
   type NavWaypoint,
 } from "./navmesh";
+import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
+import {
+  type DungeonBossProfile,
+  bossProfileForMap,
+  meshIdsForBoss,
+  bossScaledDamage,
+  getDungeonBossProfile,
+  DUNGEON_BOSS_PROFILES,
+} from "./dungeonBossProfiles";
+import { listHostilePrefabs } from "../ummorpg/prefabProfile";
+
+/** Resolve a boss/elite profile by id (throws only if catalog empty). */
+function requireProfile(id: string): DungeonBossProfile {
+  if (DUNGEON_BOSS_PROFILES[id]) return DUNGEON_BOSS_PROFILES[id]!;
+  return getDungeonBossProfile(id);
+}
 
 export type EnemyKind = "melee" | "ranged" | "monster" | "boss";
 
@@ -89,15 +105,16 @@ const PROFILES: Record<EnemyKind, KindProfile> = {
     defense: 10,
   },
   boss: {
-    name: "Moloch Da God",
+    // Display fallback — real name/stats come from DungeonBossProfile + grudge6 kit
+    name: "Moloch the Warchief",
     health: 1600,
-    scale: 3.6,
+    scale: 1.15,
     color: 0x6a0d0d,
     attack: 52,
     range: 3.4,
-    windup: 0.9,
-    attackInterval: 2.3,
-    speed: 2.0,
+    windup: 0.85,
+    attackInterval: 2.1,
+    speed: 2.35,
     ranged: false,
     defense: 22,
   },
@@ -178,6 +195,17 @@ interface Enemy {
   repathT: number;
   ownGeos: THREE.BufferGeometry[];
   ownMats: THREE.Material[];
+  /** grudge6 skinned kit (boss / elite / hostiles) — no karate-boss GLB. */
+  avatar: GrudgeAvatar | null;
+  avatarReady: boolean;
+  /** Full boss/elite profile when present. */
+  bossProfile: DungeonBossProfile | null;
+  weaponId: WeaponId;
+  weaponTier: number;
+  skillCd: number;
+  skillIndex: number;
+  level: number;
+  aggroRange: number;
 }
 
 interface Projectile {
@@ -192,12 +220,11 @@ const CHEST_Y = 1.1;
 const HEAD_Y = 2.25;
 
 /**
- * The dungeon's living population: humanoid melee, ranged archers (with a
- * telegraphed shot), and a heavy monster. Each is a small procedurally-animated
- * primitive rig (no FBX skeletons — the attached dungeon FBX failed to decode),
- * driven by the shared grid navmesh + A* toward the player. Implements the
- * `CombatTargets` surface so the Studio's player-combat call sites damage these
- * enemies unchanged, and deals damage back through the `SparringContext`.
+ * The dungeon's living population.
+ * Bosses & elites = **grudge6 characters** (cool armour, weapon tier, skill tree
+ * labels, player-like attributes) — never karate-boss GLB. Surface trash may
+ * still use capsule stand-ins until prefab load finishes.
+ * Navmesh A* + CombatTargets surface for Studio combat parity.
  */
 export class DungeonEnemies implements CombatTargets {
   group = new THREE.Group();
@@ -222,6 +249,9 @@ export class DungeonEnemies implements CombatTargets {
   private outlineMat: THREE.MeshBasicMaterial;
   private projGeo: THREE.SphereGeometry;
   private projMat: THREE.MeshBasicMaterial;
+  /** Dungeon map id → boss profile selection. */
+  private mapId: string;
+  private bossProfile: DungeonBossProfile;
   /** Hook fired when a projectile/strike should spawn VFX (Studio supplies it). */
   onProjectileImpact: ((pos: THREE.Vector3) => void) | null = null;
 
@@ -230,10 +260,13 @@ export class DungeonEnemies implements CombatTargets {
     nav: NavGrid,
     playerStart: THREE.Vector3,
     pit?: { nav: NavGrid; spawn: THREE.Vector3 },
+    opts?: { mapId?: string },
   ) {
     this.scene = scene;
     this.nav = nav;
     this.playerStart = playerStart.clone();
+    this.mapId = opts?.mapId ?? "default";
+    this.bossProfile = bossProfileForMap(this.mapId);
     this.outlineMat = new THREE.MeshBasicMaterial({ color: 0xff4d5e, side: THREE.BackSide });
     this.projGeo = new THREE.SphereGeometry(0.16, 8, 8);
     this.projMat = new THREE.MeshBasicMaterial({ color: 0xffe27a });
@@ -286,20 +319,27 @@ export class DungeonEnemies implements CombatTargets {
   }
 
   /**
-   * Populate the sealed end-game pit: a dense pack of the strongest brutes plus
-   * the lone oversized boss "Moloch Da God". Pit dwellers are hardened (always
-   * resolve at the hardest tuning) and never respawn, so clearing the pit is the
-   * real climax. The boss anchors at the pit centre; brutes ring around it.
+   * Pit climax: grudge6 elite pack + map boss (cool armour, weapon tier, skills).
+   * Never karate-boss GLB — always DungeonBossProfile → GrudgeAvatar.
    */
   private spawnPit(pitNav: NavGrid, pitSpawn: THREE.Vector3) {
-    const BRUTE_COUNT = 9;
+    const BRUTE_COUNT = 6;
     const cells = this.pickSpawnCells(BRUTE_COUNT, 0, pitNav, pitSpawn, 3);
     for (const cell of cells) {
-      this.enemies.push(this.makeEnemy("monster", cell, pitNav, { hardened: true, noRespawn: true }));
+      this.enemies.push(
+        this.makeEnemy("monster", cell, pitNav, {
+          hardened: true,
+          noRespawn: true,
+          eliteProfileId: "elite-ironclad",
+        }),
+      );
     }
-    // The boss stands at the centre of the pit floor.
     this.enemies.push(
-      this.makeEnemy("boss", pitSpawn.clone(), pitNav, { hardened: true, noRespawn: true }),
+      this.makeEnemy("boss", pitSpawn.clone(), pitNav, {
+        hardened: true,
+        noRespawn: true,
+        bossProfile: this.bossProfile,
+      }),
     );
   }
 
@@ -307,26 +347,82 @@ export class DungeonEnemies implements CombatTargets {
     kind: EnemyKind,
     at: THREE.Vector3,
     nav: NavGrid,
-    opts: { hardened?: boolean; noRespawn?: boolean } = {},
+    opts: {
+      hardened?: boolean;
+      noRespawn?: boolean;
+      bossProfile?: DungeonBossProfile;
+      eliteProfileId?: string;
+    } = {},
   ): Enemy {
-    const profile = PROFILES[kind];
+    const bossProf =
+      opts.bossProfile ??
+      (kind === "boss"
+        ? this.bossProfile
+        : opts.eliteProfileId
+          ? requireProfile(opts.eliteProfileId)
+          : kind === "monster"
+            ? requireProfile("elite-ironclad")
+            : null);
+
+    const base = PROFILES[kind];
+    const profile: KindProfile = bossProf
+      ? {
+          name: bossProf.name,
+          health: bossProf.maxHp,
+          scale: bossProf.scale,
+          color: base.color,
+          attack: bossProf.attackDamage,
+          range: bossProf.fightRange,
+          windup: bossProf.windup,
+          attackInterval: bossProf.attackInterval,
+          speed: bossProf.moveSpeed,
+          ranged:
+            bossProf.style === "ranged" ||
+            bossProf.style === "magic" ||
+            bossProf.ai === "ranged_kite" ||
+            bossProf.ai === "caster_burst",
+          defense: Math.round(bossProf.attributes.endurance * 0.25),
+        }
+      : { ...base };
+
     const arch = KIND_ARCH[kind];
-    const cfg = fighterConfig(arch, { maxHealth: profile.health });
-    const cc = makeFighterCC(arch, {}, { maxHealth: profile.health });
+    const cfg = fighterConfig(arch, {
+      maxHealth: profile.health,
+      maxStamina: bossProf?.maxStamina,
+      maxPoise: bossProf?.maxPoise,
+    });
+    const cc = makeFighterCC(
+      arch,
+      {},
+      {
+        maxHealth: profile.health,
+        maxStamina: bossProf?.maxStamina,
+        maxPoise: bossProf?.maxPoise,
+      },
+    );
     const s = profile.scale;
     const group = new THREE.Group();
     const geos: THREE.BufferGeometry[] = [];
     const mats: THREE.Material[] = [];
 
-    const mat = new THREE.MeshStandardMaterial({ color: profile.color, metalness: 0.2, roughness: 0.7 });
+    // Capsule placeholder until grudge6 kit loads (or permanent for simple trash)
+    const mat = new THREE.MeshStandardMaterial({
+      color: profile.color,
+      metalness: 0.2,
+      roughness: 0.7,
+    });
     mats.push(mat);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xf0e4cf, metalness: 0.1, roughness: 0.6 });
+    const headMat = new THREE.MeshStandardMaterial({
+      color: 0xf0e4cf,
+      metalness: 0.1,
+      roughness: 0.6,
+    });
     mats.push(headMat);
 
     const bodyGeo = new THREE.CapsuleGeometry(0.34 * s, 0.9 * s, 6, 12);
     geos.push(bodyGeo);
     const body = new THREE.Mesh(bodyGeo, mat);
-    body.position.y = (1.0 + 0.0) * s;
+    body.position.y = 1.0 * s;
     body.castShadow = true;
     group.add(body);
 
@@ -351,8 +447,7 @@ export class DungeonEnemies implements CombatTargets {
     const armL = mkLimb(-0.46 * s, 1.1 * s);
     const armR = mkLimb(0.46 * s, 1.1 * s);
 
-    // A small weapon hint so kinds read apart: monster claws / archer bow stub.
-    if (kind === "ranged") {
+    if (kind === "ranged" && !bossProf) {
       const bowGeo = new THREE.TorusGeometry(0.3 * s, 0.03 * s, 6, 12, Math.PI);
       geos.push(bowGeo);
       const bowMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2a });
@@ -363,29 +458,10 @@ export class DungeonEnemies implements CombatTargets {
       group.add(bow);
     }
 
-    // Moloch reads as a distinct, oversized silhouette via a pair of
-    // forward-swept horns atop the already-large boss body.
-    if (kind === "boss") {
-      const hornGeo = new THREE.ConeGeometry(0.12 * s, 0.6 * s, 8);
-      geos.push(hornGeo);
-      const hornMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.3, roughness: 0.6 });
-      mats.push(hornMat);
-      const mkHorn = (x: number) => {
-        const h = new THREE.Mesh(hornGeo, hornMat);
-        h.position.set(x, 1.95 * s, 0.12 * s);
-        h.rotation.x = 0.5;
-        h.rotation.z = x > 0 ? -0.35 : 0.35;
-        h.castShadow = true;
-        group.add(h);
-      };
-      mkHorn(-0.16 * s);
-      mkHorn(0.16 * s);
-    }
-
     group.position.copy(at);
     this.group.add(group);
 
-    return {
+    const enemy: Enemy = {
       id: this.nextId++,
       kind,
       profile,
@@ -425,7 +501,110 @@ export class DungeonEnemies implements CombatTargets {
       repathT: Math.random() * 0.5,
       ownGeos: geos,
       ownMats: mats,
+      avatar: null,
+      avatarReady: false,
+      bossProfile: bossProf,
+      weaponId: bossProf?.weaponId ?? (kind === "ranged" ? "bow" : "sword"),
+      weaponTier: bossProf?.weaponTier ?? (kind === "boss" ? 5 : kind === "monster" ? 3 : 1),
+      skillCd: 2 + Math.random() * 2,
+      skillIndex: 0,
+      level: bossProf?.level ?? (kind === "boss" ? 20 : kind === "monster" ? 12 : 5),
+      aggroRange: bossProf?.aggroRange ?? (kind === "boss" ? 22 : 14),
     };
+
+    // Always attach grudge6 for boss/elite; surface trash uses hostiles pool async
+    if (bossProf || kind === "boss" || kind === "monster") {
+      void this.attachGrudge6Kit(enemy, bossProf ?? null, kind);
+    } else {
+      void this.attachSurfaceHostile(enemy, kind);
+    }
+
+    return enemy;
+  }
+
+  /** Load full grudge6 kit (armour preset + weapon meshes) — never karate-boss. */
+  private async attachGrudge6Kit(
+    e: Enemy,
+    profile: DungeonBossProfile | null,
+    kind: EnemyKind,
+  ): Promise<void> {
+    const prof =
+      profile ??
+      (kind === "boss" ? this.bossProfile : requireProfile("elite-ironclad"));
+    if (!prof) return;
+    try {
+      const meshIds = meshIdsForBoss(prof);
+      const avatar = new GrudgeAvatar(prof.raceId, prof.presetId, { meshIds });
+      await avatar.load();
+      if (e.dead || !this.enemies.includes(e)) {
+        avatar.dispose();
+        return;
+      }
+      e.avatar = avatar;
+      e.avatarReady = true;
+      e.body.visible = false;
+      e.head.visible = false;
+      e.legL.visible = false;
+      e.legR.visible = false;
+      e.armL.visible = false;
+      e.armR.visible = false;
+      avatar.root.scale.setScalar(prof.scale);
+      e.group.add(avatar.root);
+      avatar.playRole?.("idle", 0.15);
+      e.group.userData.bossProfile = prof.id;
+      e.group.userData.weaponTier = prof.weaponTier;
+      e.group.userData.level = prof.level;
+      e.group.userData.roleId = prof.roleId;
+      e.group.userData.skillLabels = prof.skillLabels;
+      console.info(
+        `[DungeonEnemies] grudge6 ${kind} ready name=${prof.name} race=${prof.raceId} ` +
+          `preset=${prof.presetId} tier=T${prof.weaponTier} level=${prof.level} weapon=${prof.weaponId}`,
+      );
+    } catch (err) {
+      console.warn(`[DungeonEnemies] grudge6 kit failed for ${kind}`, err);
+    }
+  }
+
+  /** Surface trash: random hostile prefab from full race roster. */
+  private async attachSurfaceHostile(e: Enemy, kind: EnemyKind): Promise<void> {
+    try {
+      const all = listHostilePrefabs();
+      if (!all.length) return;
+      const pool =
+        kind === "ranged"
+          ? all.filter((p) => p.combat.style === "ranged" || p.presetId === "ranger")
+          : all.filter((p) => p.combat.style === "melee" || p.presetId === "warrior" || p.presetId === "knight");
+      const list = pool.length ? pool : all;
+      const prefab = list[e.id % list.length]!;
+      const avatar = new GrudgeAvatar(prefab.raceId, prefab.presetId, {
+        meshIds: prefab.meshIds,
+      });
+      await avatar.load();
+      if (e.dead || !this.enemies.includes(e)) {
+        avatar.dispose();
+        return;
+      }
+      e.avatar = avatar;
+      e.avatarReady = true;
+      e.body.visible = false;
+      e.head.visible = false;
+      e.legL.visible = false;
+      e.legR.visible = false;
+      e.armL.visible = false;
+      e.armR.visible = false;
+      e.group.add(avatar.root);
+      e.weaponId = prefab.weaponId;
+      e.profile.range = prefab.combat.range;
+      e.profile.attack = prefab.combat.damage;
+      e.profile.attackInterval = prefab.combat.attackCooldown;
+      e.profile.ranged = prefab.combat.style === "ranged" || prefab.combat.style === "magic";
+      e.profile.name = prefab.label;
+      e.aggroRange = 8 + prefab.aggro * 10;
+      e.group.userData.entityPrefab = prefab.id;
+      avatar.playRole?.("idle", 0.12);
+    } catch (err) {
+      console.warn("[DungeonEnemies] surface grudge6 hostile failed — capsule remains", err);
+    }
   }
 
   // ---- CombatTargets: selection + queries ---------------------------------
@@ -564,12 +743,25 @@ export class DungeonEnemies implements CombatTargets {
 
   clear(): void {
     for (const e of this.enemies) {
+      this.disposeEnemyVisuals(e);
       this.group.remove(e.group);
       for (const g of e.ownGeos) g.dispose();
       for (const m of e.ownMats) m.dispose();
     }
     this.enemies.length = 0;
     this.setSelected(null);
+  }
+
+  private disposeEnemyVisuals(e: Enemy): void {
+    if (e.avatar) {
+      try {
+        e.avatar.dispose();
+      } catch {
+        /* */
+      }
+      e.avatar = null;
+      e.avatarReady = false;
+    }
   }
 
   factionCounts(): { enemy: number; ally: number } {
@@ -1036,7 +1228,12 @@ export class DungeonEnemies implements CombatTargets {
     }
 
     e.attackCd -= dt;
+    e.skillCd = Math.max(0, e.skillCd - dt);
     let moveSpeed = 0;
+
+    // Aggro gate: bosses only chase inside their aggro range (player-like pull).
+    const aggro = e.aggroRange > 0 ? e.aggroRange : 14;
+    const engaged = distToPlayer <= aggro || e.state === "windup" || e.state === "recover";
 
     if (e.state === "windup") {
       e.stateT -= dt;
@@ -1049,24 +1246,59 @@ export class DungeonEnemies implements CombatTargets {
     } else if (e.state === "recover") {
       e.stateT -= dt;
       if (e.stateT <= 0) e.state = "idle";
+    } else if (!engaged) {
+      // Outside aggro — hold idle (avatar locomotion settles below).
+      moveSpeed = 0;
     } else {
-      // idle/chase: decide to attack or move along the navmesh path.
+      // idle/chase: basic attack, tree skill, or path to player.
       const inRange = profile.ranged
         ? distToPlayer <= range && distToPlayer > 2.5
         : distToPlayer <= range;
-      if (inRange && e.attackCd <= 0) {
+
+      // Skill tree fire (boss/elite): cycle labels on a longer CD than auto-attack.
+      const useSkill =
+        inRange &&
+        e.skillCd <= 0 &&
+        e.bossProfile &&
+        e.bossProfile.skillLabels.length > 0 &&
+        (e.kind === "boss" || e.kind === "monster");
+
+      if (useSkill && e.bossProfile) {
+        e.state = "windup";
+        e.stateT = profile.windup * diff.windup * 1.15;
+        // Skill telegraphs use slam/nova (valid SkillKind) — heavier than slash.
+        e.windupKind = profile.ranged ? "bolt" : "slam";
+        e.skillIndex = (e.skillIndex + 1) % e.bossProfile.skillLabels.length;
+        e.skillCd = 4.5 + Math.random() * 2.5;
+        e.group.userData.activeSkill = e.bossProfile.skillLabels[e.skillIndex];
+        e.group.userData.activeSkillNode =
+          e.bossProfile.skillTreeNodes[e.skillIndex % e.bossProfile.skillTreeNodes.length];
+        if (e.avatarReady && e.avatar) {
+          e.avatar.playRoleOnce("attack", 0.1);
+        }
+        ctx.onWindup?.(this.chest(e), e.windupKind);
+      } else if (inRange && e.attackCd <= 0) {
         e.state = "windup";
         e.stateT = profile.windup * diff.windup;
         e.windupKind = profile.ranged ? "bolt" : "slash";
+        e.group.userData.activeSkill = null;
+        if (e.avatarReady && e.avatar) {
+          e.avatar.playRoleOnce("attack", 0.1);
+        }
         ctx.onWindup?.(this.chest(e), e.windupKind);
       } else {
-        // Ranged kites: back off if too close.
-        if (profile.ranged && distToPlayer < 2.5) {
+        // AI behaviour tags from boss profile (or default chase / kite).
+        const ai = e.bossProfile?.ai ?? (profile.ranged ? "ranged_kite" : "melee_pressure");
+        if ((ai === "ranged_kite" || ai === "caster_burst" || profile.ranged) && distToPlayer < 2.5) {
           moveSpeed = -profile.speed * diff.speed * e.slowMul;
           toPlayer.normalize();
           e.group.position.addScaledVector(toPlayer, moveSpeed * dt);
         } else if (!inRange) {
           moveSpeed = profile.speed * diff.speed * e.slowMul;
+          // Hybrid elites close faster when far.
+          if (ai === "hybrid_elite" && distToPlayer > range * 1.5) {
+            moveSpeed *= 1.15;
+          }
           this.followPath(e, player, moveSpeed, dt);
         }
       }
@@ -1110,10 +1342,16 @@ export class DungeonEnemies implements CombatTargets {
     ctx: SparringContext,
   ) {
     const profile = e.profile;
-    const crit = Math.random() < 0.1;
+    const isSkill = e.windupKind === "slam" || e.windupKind === "nova" || !!e.group.userData.activeSkill;
+    // Player-like damage: attributes + weapon tier + skill mul when boss profile present.
+    let base =
+      e.bossProfile != null
+        ? bossScaledDamage(e.bossProfile, isSkill)
+        : profile.attack;
+    const crit = Math.random() < 0.1 + (e.bossProfile ? e.bossProfile.attributes.luck * 0.001 : 0);
     const rawDamage = Math.max(
       0,
-      Math.round(profile.attack * diff.dmg * (crit ? 1.6 : 1) + (Math.random() - 0.5) * 4),
+      Math.round(base * diff.dmg * (crit ? 1.6 : 1) + (Math.random() - 0.5) * 4),
     );
     if (profile.ranged) {
       this.fireProjectile(e, ctx.playerPos.clone(), rawDamage);
@@ -1124,12 +1362,22 @@ export class DungeonEnemies implements CombatTargets {
       const chest = this.chest(e);
       const toPlayer = new THREE.Vector3().subVectors(ctx.playerPos, chest);
       const dist = toPlayer.length();
-      if (dist <= profile.range + 0.6) {
-        ctx.onStrike?.(ctx.playerPos.clone(), e.windupKind, 1.2, false);
-        const res = ctx.dealToPlayer(ctx.playerPos.clone(), 1.4, rawDamage, 8, chest, e.windupKind, false);
+      const reach = profile.range + (isSkill ? 1.1 : 0.6);
+      if (dist <= reach) {
+        ctx.onStrike?.(ctx.playerPos.clone(), e.windupKind, isSkill ? 1.6 : 1.2, false);
+        const res = ctx.dealToPlayer(
+          ctx.playerPos.clone(),
+          isSkill ? 1.8 : 1.4,
+          rawDamage,
+          isSkill ? 14 : 8,
+          chest,
+          e.windupKind,
+          false,
+        );
         if (res && res.attackerReaction !== "none") e.cc.applyVulnerableState(res.attackerReaction);
       }
     }
+    e.group.userData.activeSkill = null;
   }
 
   private fireProjectile(e: Enemy, target: THREE.Vector3, damage: number) {
@@ -1181,8 +1429,23 @@ export class DungeonEnemies implements CombatTargets {
     }
   }
 
-  /** Procedural limb swing + windup pose. */
+  /**
+   * grudge6 avatar locomotion / one-shots when ready; capsule limb swing otherwise.
+   */
   private animateEnemy(e: Enemy, dt: number, moveT: number) {
+    if (e.avatarReady && e.avatar) {
+      // 0..1 locomotion band (Controller contract).
+      const loco =
+        e.state === "windup" || e.state === "recover" || e.state === "stagger" || e.state === "stun"
+          ? 0
+          : Math.min(1, moveT);
+      if (!e.avatar.isOneShotActive) {
+        e.avatar.setLocomotion(loco);
+      }
+      e.avatar.update(dt);
+      return;
+    }
+
     const s = e.profile.scale;
     e.walkPhase += dt * (4 + moveT * 6);
     const swing = Math.sin(e.walkPhase) * 0.5 * (0.2 + moveT);
@@ -1198,10 +1461,7 @@ export class DungeonEnemies implements CombatTargets {
     } else {
       e.armR.rotation.x = swing * 0.7;
     }
-    // Slight bob.
-    const baseY = e.group.position.y;
     e.body.position.y = 1.0 * s + Math.abs(Math.sin(e.walkPhase)) * 0.04 * moveT;
-    void baseY;
   }
 
   dispose(): void {

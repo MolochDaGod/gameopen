@@ -35,21 +35,22 @@ Related: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · [WARLORDS_P
 | Colliders | Rapier static **trimesh** bake of every mesh (`Dungeon.collectMeshesAndColliders`) |
 | Player | Kinematic **capsule KCC** (`CollisionProvider`) |
 | Navmesh | XZ grid + downward ray for standable floors (`navmesh.ts`, cell 0.6 m) |
-| Surface enemies | 3 melee · 2 ranged · 1 monster; **respawn** ~6–10 s |
-| Pit climax | 9 hardened **Forge Brutes** + boss **Moloch Da God**; **no respawn** |
-| AI | A* on nav · chase · windup · attack · stagger; ranged keeps distance + bolts |
-| Aggro | Always hostile (no faction table yet); engage by range profile |
-| Casting | Ranged = projectile bolts only (no full scriptable skill cast AI yet) |
+| Surface enemies | 3 melee · 2 ranged · 1 monster; **respawn** ~6–10 s; grudge6 hostile prefabs when load succeeds |
+| Pit climax | 6× **elite-ironclad** grudge6 dwarves + map boss (**forge-moloch** on default); **no respawn** |
+| Boss kit | **grudge6** race + cool armour + weapon tier + skill tree + player-like attrs — **not** karate-boss GLB (see `docs/DUNGEON_BOSSES_GRUDGE6.md`) |
+| AI | A* on nav · aggro range · chase · windup · tree skills · stagger; AI tags `melee_pressure` / kite / caster / hybrid |
+| Aggro | Profile `aggroRange` (bosses ~18–24 m); engage by range profile |
+| Casting | Ranged bolts + boss skill-cycle (skillLabels / skillTreeNodes) with tier-scaled damage |
 | Clear meter | **None** — pit is always populated; surface never “unlocks” boss |
 
-Enemy profiles (`DungeonEnemies` PROFILES):
+Enemy profiles (`dungeonBossProfiles` + surface PROFILES):
 
 | Kind | Name | HP | Range | Role |
 |------|------|-----|-------|------|
-| melee | Skeleton | 60 | 1.9 m | Pack filler |
-| ranged | Archer | 45 | 11 m | Keep-away cast |
-| monster | Forge Brute | 160 | 2.6 m | Elite |
-| boss | Moloch Da God | 1600 | 3.4 m | Pit climax |
+| melee | grudge6 warrior/knight (or Skeleton capsule) | 60 | 1.9 m | Pack filler |
+| ranged | grudge6 ranger (or Archer capsule) | 45 | 11 m | Keep-away cast |
+| monster | Dwarf Ironclad (elite-ironclad) | 320 | 2.4 m | Elite T3 hammer |
+| boss | Moloch the Warchief (forge-moloch) | 1600 | 3.2 m | Orc knight greataxe T5 |
 
 ### 1.3 Voxel “dungeon” templates (editor / Realms portals)
 

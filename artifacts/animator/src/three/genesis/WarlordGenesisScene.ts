@@ -5,10 +5,10 @@
  * ResizeObserver, clock-based RAF, WASD movement, no Rapier).
  *
  * Phases: loading → select (3-D carousel) → countdown (3 s) →
- *         wave (1-3 normal) → bosswave (wave 4, karate-boss) → victory | defeat
+ *         wave (1-3 normal) → bosswave (wave 4, grudge6 orc knight) → victory | defeat
  */
 import * as THREE from "three";
-import { getBakedCharacter } from "../grudge/bakedRoster";
+import { bakedIndexFor, getBakedCharacter } from "../grudge/bakedRoster";
 import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { Vfx } from "../Vfx";
 
@@ -31,6 +31,10 @@ export interface WarlordGenesisState {
   wave: number;
   maxWaves: number;
   kills: number;
+  /** XP from lane + jungle creeps. */
+  xp: number;
+  /** Active jungle buff id if any. */
+  buffId: string | null;
   bossHp: number;
   bossMaxHp: number;
   bossName: string;
@@ -80,6 +84,9 @@ interface EnemyAgent {
   atkDamage: number;
   atkReach: number;
   dead: boolean;
+  modelKey?: string;
+  xp?: number;
+  jungle?: boolean;
 }
 
 interface WaveDef {
@@ -92,22 +99,43 @@ interface WaveDef {
 }
 
 const WAVE_DEFS: WaveDef[][] = [
-  // Wave 1 — 6 zombies
-  [{ modelKey: "zombie-1", hp: 40, speed: 2.2, atkDamage: 10, atkReach: 1.5, count: 6 }],
-  // Wave 2 — 8 mixed
+  // Wave 1 — voxel camp swarm
   [
-    { modelKey: "zombie-1", hp: 55, speed: 2.6, atkDamage: 12, atkReach: 1.5, count: 3 },
-    { modelKey: "zombie-2", hp: 60, speed: 2.6, atkDamage: 12, atkReach: 1.5, count: 2 },
-    { modelKey: "zombie-3", hp: 65, speed: 2.6, atkDamage: 14, atkReach: 1.5, count: 2 },
-    { modelKey: "orc-foe", hp: 70, speed: 2.6, atkDamage: 15, atkReach: 1.8, count: 1 },
+    { modelKey: "zombie-1", hp: 40, speed: 2.2, atkDamage: 10, atkReach: 1.5, count: 4 },
+    { modelKey: "forest_zombie", hp: 45, speed: 2.1, atkDamage: 10, atkReach: 1.5, count: 2 },
   ],
-  // Wave 3 — mixed + fixed-scale skeleton warrior
+  // Wave 2 — mixed + jungle orc
   [
-    { modelKey: "zombie-1", hp: 60, speed: 2.8, atkDamage: 14, atkReach: 1.5, count: 3 },
-    { modelKey: "zombie-2", hp: 70, speed: 2.8, atkDamage: 14, atkReach: 1.5, count: 3 },
+    { modelKey: "zombie-1", hp: 55, speed: 2.6, atkDamage: 12, atkReach: 1.5, count: 2 },
+    { modelKey: "zombie-2", hp: 60, speed: 2.6, atkDamage: 12, atkReach: 1.5, count: 2 },
+    { modelKey: "forest_skeleton", hp: 70, speed: 2.8, atkDamage: 14, atkReach: 1.7, count: 2 },
+    { modelKey: "jungle_orc", hp: 100, speed: 2.5, atkDamage: 17, atkReach: 1.8, count: 1 },
+  ],
+  // Wave 3 — forest camp + bear
+  [
     { modelKey: "zombie-3", hp: 80, speed: 2.8, atkDamage: 16, atkReach: 1.5, count: 2 },
     { modelKey: "skeleton", hp: 95, speed: 3.0, atkDamage: 18, atkReach: 2.0, count: 2 },
+    { modelKey: "forest_bear", hp: 120, speed: 2.4, atkDamage: 18, atkReach: 1.9, count: 1 },
+    { modelKey: "jungle_orc", hp: 110, speed: 2.6, atkDamage: 18, atkReach: 1.8, count: 1 },
   ],
+];
+
+/** Jungle camps between waves — XP + buff on kill (MOBA-style). */
+const JUNGLE_CAMP_SPAWNS: Array<{
+  modelKey: string;
+  hp: number;
+  speed: number;
+  atkDamage: number;
+  atkReach: number;
+  x: number;
+  z: number;
+}> = [
+  { modelKey: "forest_skeleton", hp: 70, speed: 2.6, atkDamage: 14, atkReach: 1.7, x: -10, z: 8 },
+  { modelKey: "forest_zombie", hp: 45, speed: 2.1, atkDamage: 10, atkReach: 1.5, x: -11.5, z: 9 },
+  { modelKey: "jungle_orc", hp: 100, speed: 2.5, atkDamage: 17, atkReach: 1.8, x: 10, z: 8 },
+  { modelKey: "forest_zombie", hp: 50, speed: 2.2, atkDamage: 11, atkReach: 1.5, x: 11.2, z: 7 },
+  { modelKey: "forest_bear", hp: 120, speed: 2.4, atkDamage: 18, atkReach: 1.9, x: 0, z: -12 },
+  { modelKey: "jungle_ogre", hp: 220, speed: 1.9, atkDamage: 28, atkReach: 2.2, x: 12, z: -10 },
 ];
 
 const ENEMY_MODEL_PATHS: Record<string, string> = {
@@ -117,6 +145,12 @@ const ENEMY_MODEL_PATHS: Record<string, string> = {
   "orc-foe": "models/orc.glb",
   // Prefer creatures pack (unit-normalized); fallback path kept in load()
   skeleton: "models/creatures/skeleton-warrior.glb",
+  // Forest / jungle creeps (shared with camp enemies + MOBA jungle)
+  forest_bear: "models/bear.glb",
+  forest_skeleton: "models/creatures/skeleton-warrior.glb",
+  forest_zombie: "models/enemies/voxel-zombies/voxel-zombie-1.glb",
+  jungle_orc: "models/orc.glb",
+  jungle_ogre: "models/ogre.glb",
 };
 
 const ENEMY_HEIGHT: Record<string, number> = {
@@ -125,6 +159,25 @@ const ENEMY_HEIGHT: Record<string, number> = {
   "zombie-3": 1.75,
   "orc-foe": 2.0,
   skeleton: 2.0,
+  forest_bear: 1.6,
+  forest_skeleton: 1.85,
+  forest_zombie: 1.7,
+  jungle_orc: 1.95,
+  jungle_ogre: 2.4,
+};
+
+/** XP awarded on kill (jungle/camp creeps). */
+const ENEMY_XP: Record<string, number> = {
+  "zombie-1": 18,
+  "zombie-2": 20,
+  "zombie-3": 28,
+  "orc-foe": 35,
+  skeleton: 40,
+  forest_bear: 85,
+  forest_skeleton: 40,
+  forest_zombie: 22,
+  jungle_orc: 65,
+  jungle_ogre: 180,
 };
 
 type StateCb = (s: WarlordGenesisState) => void;
@@ -185,6 +238,8 @@ export class WarlordGenesisScene {
   private countdown = 0;
   private currentWave = 0; // 1-indexed, 0 = not started
   private totalKills = 0;
+  private totalXp = 0;
+  private activeBuffId: string | null = null;
   private selectedRaceId: string | null = null;
 
   private keys = new Set<string>();
@@ -393,13 +448,18 @@ export class WarlordGenesisScene {
       this.carouselGroup.add(model);
     }
 
-    // 3. Boss template
-    const bossGlb = await this.loadGlb("models/karate-boss.glb");
-    if (this.disposed) return;
-    if (bossGlb) {
-      this.normalizeChar(bossGlb, 2.4);
-      this.bossTemplate = bossGlb;
-      this.ownedObjects.push(bossGlb);
+    // 3. Boss template — grudge6 orc knight (cool armour), never karate-boss GLB
+    try {
+      const bossIdx = bakedIndexFor("orcs", "knight");
+      const bossGlb = await getBakedCharacter(bossIdx);
+      if (this.disposed) return;
+      if (bossGlb) {
+        this.normalizeChar(bossGlb, 2.2);
+        this.bossTemplate = bossGlb;
+        this.ownedObjects.push(bossGlb);
+      }
+    } catch (err) {
+      console.warn("[WarlordGenesis] grudge6 boss kit failed — capsule fallback", err);
     }
 
     // 4. Enemy templates (per-key target height; skeleton fixed to 2.0 m)
@@ -473,6 +533,8 @@ export class WarlordGenesisScene {
     this.playerHp = PLAYER_MAX_HP;
     this.playerAtkCd = 0;
     this.totalKills = 0;
+    this.totalXp = 0;
+    this.activeBuffId = null;
     this.currentWave = 0;
     this.selectedRaceId = null;
     this.bossPhaseStage = 0;
@@ -554,10 +616,38 @@ export class WarlordGenesisScene {
           atkDamage: def.atkDamage,
           atkReach: def.atkReach,
           dead: false,
+          modelKey: def.modelKey,
+          xp: ENEMY_XP[def.modelKey] ?? 20,
+          jungle: false,
         });
       }
     }
+    // Jungle camps (buff/XP) — only first time we enter waves
+    if (waveIndex === 0) this.spawnJungleCamps();
     this.setPhase("wave");
+  }
+
+  /** Neutral forest creeps between lanes for MOBA-style jungle XP/buffs. */
+  private spawnJungleCamps() {
+    for (const j of JUNGLE_CAMP_SPAWNS) {
+      const model = this.cloneEnemy(j.modelKey);
+      model.position.set(j.x, this.groundY(j.x, j.z), j.z);
+      model.userData.jungle = true;
+      this.scene.add(model);
+      this.enemies.push({
+        model,
+        hp: j.hp,
+        maxHp: j.hp,
+        speed: j.speed * 0.85,
+        atkCd: Math.random() * 2,
+        atkDamage: j.atkDamage,
+        atkReach: j.atkReach,
+        dead: false,
+        modelKey: j.modelKey,
+        xp: ENEMY_XP[j.modelKey] ?? 30,
+        jungle: true,
+      });
+    }
   }
 
   private cloneEnemy(key: string): THREE.Group {
@@ -678,6 +768,20 @@ export class WarlordGenesisScene {
     if (e.hp <= 0) {
       e.dead = true;
       this.totalKills++;
+      const xp = e.xp ?? ENEMY_XP[e.modelKey || ""] ?? 20;
+      this.totalXp += xp;
+      // Jungle kill → temporary buff (MOBA-style)
+      if (e.jungle && e.modelKey) {
+        if (e.modelKey.includes("bear") || e.modelKey.includes("orc")) {
+          this.activeBuffId = "red_rage";
+        } else if (e.modelKey.includes("skeleton")) {
+          this.activeBuffId = "blue_haste";
+        } else if (e.modelKey.includes("ogre")) {
+          this.activeBuffId = "purple_might";
+        } else {
+          this.activeBuffId = "green_regen";
+        }
+      }
       this.scene.remove(e.model);
     }
     this.emit();
@@ -950,14 +1054,19 @@ export class WarlordGenesisScene {
       wave: this.currentWave,
       maxWaves: 4,
       kills: this.totalKills,
+      xp: this.totalXp,
+      buffId: this.activeBuffId,
       bossHp: Math.round(this.bossAgent?.hp ?? 0),
       bossMaxHp: BOSS_MAX_HP,
       bossName: "Karate Warlord",
-      hint,
+      hint:
+        this.phase === "wave"
+          ? `WASD · LMB · E cannon · Wave ${this.currentWave}/3 · XP ${this.totalXp}${this.activeBuffId ? ` · ${this.activeBuffId}` : ""} · jungle camps grant buffs`
+          : hint,
       countdown: Math.ceil(this.countdown),
     };
 
-    const sig = `${s.phase}|${s.playerHp}|${s.bossHp}|${s.wave}|${s.countdown}|${s.kills}`;
+    const sig = `${s.phase}|${s.playerHp}|${s.bossHp}|${s.wave}|${s.countdown}|${s.kills}|${s.xp}|${s.buffId}`;
     if (sig === this.lastSig) return;
     this.lastSig = sig;
     this.onState(s);

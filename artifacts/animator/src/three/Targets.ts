@@ -972,10 +972,10 @@ export class Targets implements CombatTargets {
         d.avatar = null;
       }
     }
-    // Legacy catalog path (race-matched when possible → orc → explorer)
+    // Legacy catalog path (race-matched when possible → orc → explorer). No karate-boss.
     const raceFallback =
       role.raceId === "orcs"
-        ? (["orc", "race-orc", "karate-boss"] as const)
+        ? (["orc", "race-orc", "explorer"] as const)
         : role.raceId === "high-elves"
           ? (["race-elf", "elf", "orc"] as const)
           : role.raceId === "dwarves"
