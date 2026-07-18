@@ -33,6 +33,7 @@ artifacts/animator/public/models/kenney/**/*.glb
 
 # Large VFX GLBs — R2
 artifacts/animator/public/models/vfx/another_shape_of_data.glb
+artifacts/animator/public/models/vfx/witch_hut_in_a_swamp.glb
 
 
 # Local map chunks (upload to R2, not git)
