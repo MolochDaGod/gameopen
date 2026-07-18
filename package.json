@@ -34,6 +34,13 @@
     "assets:outdoor:upload:dry": "node scripts/upload-outdoor-r2.mjs --dry-run",
     "assets:outdoor:seed-d1": "node scripts/seed-outdoor-d1.mjs",
     "assets:outdoor:seed-d1:apply": "node scripts/seed-outdoor-d1.mjs --apply",
-    "assets:outdoor:pipeline": "node scripts/upload-outdoor-r2.mjs --dry-run && node scripts/seed-outdoor-d1.mjs"
+    "assets:outdoor:pipeline": "node scripts/upload-outdoor-r2.mjs --dry-run && node scripts/seed-outdoor-d1.mjs",
+    "assets:production:upload": "node scripts/upload-production-glbs-r2.mjs",
+    "assets:production:seed-d1": "node scripts/seed-production-glbs-d1.mjs",
+    "assets:production:seed-d1:apply": "node scripts/seed-production-glbs-d1.mjs --apply",
+    "assets:production:pipeline": "node scripts/upload-production-glbs-r2.mjs && node scripts/seed-production-glbs-d1.mjs --apply"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0"
   }
 }
