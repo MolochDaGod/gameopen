@@ -17,6 +17,7 @@ import {
   type InAppEmbedSession,
 } from "../lib/inAppLaunch";
 import { DataShapeStage } from "./DataShapeStage";
+import { profileForZone, warmZoneD1Assets } from "../lib/zoneGamePlay";
 
 interface Props {
   /** Launch a native Open surface (brawl, minegrudge, account, …). */
@@ -40,6 +41,8 @@ export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
 
   /** Preferred: native engine or in-app embed. */
   const playInApp = (zoneId: string) => {
+    // Prefetch D1 asset rows for the zone (CDN/registry warm)
+    void warmZoneD1Assets(zoneId);
     const native = nativeModeForZone(zoneId);
     if (native) {
       onEnterNative(zoneId);
@@ -99,6 +102,7 @@ export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
         {GRUDOX_ZONES.map((zone) => {
           const native = nativeModeForZone(zone.id);
           const poster = zonePosterUrl(zone.id);
+          const profile = profileForZone(zone.id);
           return (
             <div
               key={zone.id}
@@ -118,12 +122,23 @@ export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
               </div>
               <h3>{zone.title}</h3>
               <p>{zone.blurb}</p>
-              <div style={{ fontSize: 11, opacity: 0.65, marginTop: 4 }}>
-                {native ? "Native Open surface" : "In-app canvas · fleet deploy"}
+              <div style={{ fontSize: 11, opacity: 0.72, marginTop: 4, lineHeight: 1.35 }}>
+                {native ? (
+                  <>
+                    <b style={{ color: zone.tone }}>Play in Open</b>
+                    {profile.controller === "danger-room" ? " · DR controller" : ""}
+                    {profile.postfx ? " · postfx" : ""}
+                    {profile.goreImpact ? " · 2D gore/impact" : ""}
+                  </>
+                ) : (
+                  <>
+                    <b style={{ color: zone.tone }}>In-app canvas</b> · fleet deploy · SSO
+                  </>
+                )}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                 <button type="button" style={btnPrimary(zone.tone)} onClick={() => playInApp(zone.id)}>
-                  {native ? "Play here" : "Play in app"}
+                  {native ? "Play in Open" : "Play in app"}
                 </button>
                 <button type="button" style={btnStyle} onClick={() => popOut(zone.id)}>
                   Pop out ↗

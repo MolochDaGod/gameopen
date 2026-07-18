@@ -94,6 +94,14 @@
       "destination": "https://ai.grudge-studio.com/:path*"
     },
     {
+      "source": "/api/asset-registry",
+      "destination": "https://api.grudge-studio.com/assets"
+    },
+    {
+      "source": "/api/asset-registry/:path*",
+      "destination": "https://api.grudge-studio.com/assets/:path*"
+    },
+    {
       "source": "/api/assets/:path*",
       "destination": "https://assets.grudge-studio.com/:path*"
     },

@@ -5,6 +5,7 @@
  *
  * Visuals: poster backdrop + soft particle curtain (CSS) while loading —
  * no Meshy / capsule placeholders; posters resolve via fleet assetUrl.
+ * D1 registry warm for zone packs; gamepad + pointer-lock permissions.
  */
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { InAppEmbedSession } from "../lib/inAppLaunch";
@@ -13,6 +14,7 @@ import {
   loadingParticleColor,
   rewriteEmbedUrlForOpen,
 } from "../lib/inAppLaunch";
+import { warmZoneD1Assets, profileForZone } from "../lib/zoneGamePlay";
 import "./inAppGameCanvas.css";
 
 export interface InAppGameCanvasProps extends InAppEmbedSession {
@@ -36,13 +38,22 @@ export function InAppGameCanvas({
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [d1Note, setD1Note] = useState<string | null>(null);
   const accent = loadingParticleColor(tone);
   const embedOk = isLikelyEmbeddable(url);
+  const profile = id ? profileForZone(id) : null;
 
   useEffect(() => {
     setLoading(true);
     setFailed(false);
     setElapsed(0);
+    setD1Note(null);
+    // Warm D1 asset_registry for this zone (CDN keys / metadata)
+    if (id) {
+      void warmZoneD1Assets(id).then((rows) => {
+        if (rows.length) setD1Note(`D1 packs · ${rows.length} assets`);
+      });
+    }
     // Host known to refuse frames → fail fast with pop-out (do not wait 8s)
     if (!embedOk) {
       setFailed(true);
@@ -53,16 +64,37 @@ export function InAppGameCanvas({
     const tick = window.setInterval(() => {
       setElapsed((performance.now() - t0) / 1000);
     }, 250);
-    // If load never fires (X-Frame-Options), surface fallback after 6s
+    // If load never fires (X-Frame-Options), surface fallback after 8s
     const failTimer = window.setTimeout(() => {
       setFailed(true);
       setLoading(false);
-    }, 6000);
+    }, 8000);
     return () => {
       window.clearInterval(tick);
       window.clearTimeout(failTimer);
     };
-  }, [url, embedOk]);
+  }, [url, embedOk, id]);
+
+  // Notify iframe of Open host focus / gamepad (best-effort; cross-origin may ignore)
+  useEffect(() => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win || loading) return;
+    try {
+      win.postMessage(
+        {
+          type: "grudge-open-host",
+          source: "open.grudge-studio.com",
+          zoneId: id,
+          controller: profile?.controller ?? "embed",
+          goreImpact: profile?.goreImpact ?? false,
+          postfx: profile?.postfx ?? false,
+        },
+        "*",
+      );
+    } catch {
+      /* cross-origin */
+    }
+  }, [loading, id, profile]);
 
   const handleLoad = useCallback(() => {
     setLoading(false);
@@ -101,10 +133,16 @@ export function InAppGameCanvas({
           <div className="iagc-title">
             <span className="iagc-dot" style={{ background: accent }} />
             <span>{title}</span>
-            <span className="iagc-sub">in-app canvas</span>
+            <span className="iagc-sub">
+              play in Open
+              {profile?.controller === "danger-room" ? " · DR controller" : ""}
+              {profile?.goreImpact ? " · gore/impact" : ""}
+              {profile?.postfx ? " · postfx" : ""}
+            </span>
           </div>
         </div>
         <div className="iagc-bar-right">
+          {d1Note && <span className="iagc-sub" style={{ marginRight: 8 }}>{d1Note}</span>}
           <button type="button" className="iagc-btn ghost" onClick={() => iframeRef.current?.contentWindow?.location.reload()}>
             Reload
           </button>
@@ -165,7 +203,7 @@ export function InAppGameCanvas({
           className="iagc-frame"
           title={title}
           src={url}
-          allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write; xr-spatial-tracking"
+          allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write; xr-spatial-tracking; pointer-lock; accelerometer; magnetometer"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
           onLoad={handleLoad}

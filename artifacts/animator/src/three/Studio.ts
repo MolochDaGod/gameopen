@@ -112,6 +112,12 @@ import {
   type TestWorldId,
 } from "./testWorlds";
 import { CampEnemySystem } from "./enemies/CampEnemySystem";
+import { RaiderBoatSystem } from "./enemies/RaiderBoatSystem";
+import {
+  RED_MUSHROOM_ANCHORS,
+  ISLAND_EVENT_NODE_ANCHORS,
+  mushroomWorldPos,
+} from "../game/islandLife/catalog";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
   advanceBeamSession,
@@ -747,6 +753,7 @@ export class Studio {
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
   private campEnemies: CampEnemySystem | null = null;
+  private raiderBoats: RaiderBoatSystem | null = null;
   private testWorldId: TestWorldId = "danger-room";
   private playerXp = 0;
   private jungleBuffId: string | null = null;
@@ -960,7 +967,8 @@ export class Studio {
     void this.djBooth.load().catch((err) => console.warn("[Studio] DJ booth load failed", err));
     this.scene.add(this.remoteRoot);
     this.scene.add(this.ale.overlay);
-    this.vfx = new Vfx(this.scene);
+    this.vfx = new Vfx(this.scene, this.camera);
+    this.vfx.setGoreCamera(this.camera);
     this.mech = new MechSystem(this.scene);
     this.mechReconciler = new MechReconciler(this.mech, {
       spectating: () => this.spectating,
@@ -998,17 +1006,17 @@ export class Studio {
     });
     // Sandbox claim so gated buildings can ghost-place without planting first
     this.campBuild.seedSandboxClaim(new THREE.Vector3(0, 0, -6));
-    // Outdoor test worlds: danger-room | sailtest | forest-map
+    // Outdoor test worlds: danger-room | sailtest | forest-map | island-life
     // NOTE: Do NOT call campBuild.loadSmallIsland() on Danger Room boot —
     // production crash was `loadSmallIsland is not a function` on stale deploys
     // that mixed old Studio (sync call) with partial CampBuild. Island meshes
-    // load only via ForestWorld + TEST_WORLDS (sailtest / forest-map).
+    // load only via ForestWorld + TEST_WORLDS (sailtest / forest-map / island-life).
     this.forestWorld = new ForestWorld(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
     });
-    this.campEnemies = new CampEnemySystem(this.scene, {
-      flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
-      onKill: (_e, xp, buffId) => {
+    const campCbs = {
+      flash: (msg: string, t?: number) => this.setCombatFlash(msg, t ?? 0.9),
+      onKill: (_e: unknown, xp: number, buffId: string | null) => {
         this.playerXp += xp;
         if (buffId) this.jungleBuffId = buffId;
         this.setCombatFlash(
@@ -1016,12 +1024,13 @@ export class Studio {
           1.0,
         );
       },
-      damagePlayer: (amount, from) => {
-        // Soft chip via existing health path if available
+      damagePlayer: (amount: number, from: THREE.Vector3) => {
         this.setCombatFlash(`CAMP HIT · −${amount}`, 0.4);
         this.vfx.burst(from.clone().setY(1), 0xff5555, 8, 1.6);
       },
-    });
+    };
+    this.campEnemies = new CampEnemySystem(this.scene, campCbs);
+    this.raiderBoats = new RaiderBoatSystem(this.scene, campCbs);
     void this.setTestWorld(loadTestWorldId());
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
@@ -2542,8 +2551,9 @@ export class Studio {
         poiseDamage: Math.round(strike.damage * dmgMul * 0.65 + fx.knockback * 2),
       };
       const result = this.targets.playerHit(center, hitRadius, payload, strike.force, this.sparCtx);
-      // Voxel/forest camp creeps share the same melee radius
+      // Voxel/forest camp creeps + island raiders share the same melee radius
       this.campEnemies?.damageInRadius(center, hitRadius, payload.damage);
+      this.raiderBoats?.damageInRadius(center, hitRadius, payload.damage);
       const landed = !result || result.outcome === "hit" || result.outcome === "crit";
       if (landed && counter) {
         this.respectWindow = 0;
@@ -3170,23 +3180,28 @@ export class Studio {
         case "crit":
           this.setCombatFlash("CRIT!", 0.9);
           this.vfx.fireAura(pos, 1.25, this.fireThemeApplied);
+          this.vfx.impact(pos, 0xff6040, 1.6);
           break;
         case "hit":
           this.vfx.fireAura(pos, 0.8, this.fireThemeApplied, { groundOnly: true });
+          this.vfx.impact(pos, 0xff8060, 1.05);
           break;
       }
     };
     this.targets.onEnemyState = (pos, state) => {
       if (state === "stagger") {
         this.vfx.burst(pos, 0xff9040, 14, 3);
+        this.vfx.impact(pos, 0xff7040, 1.1);
       } else if (state === "stunned") {
         this.setCombatFlash("STUNNED!", 1.5);
         this.vfx.burst(pos, 0xffaa40, 26, 5);
         this.vfx.shockwave(new THREE.Vector3(pos.x, 0.05, pos.z), 0xff8020, 1.8, 0.4);
+        this.vfx.impact(pos, 0xffaa40, 1.35);
       } else if (state === "fallen") {
         this.setCombatFlash("KNOCKED DOWN!", 1.5);
         this.vfx.burst(pos, 0xffd060, 32, 6);
         this.vfx.shockwave(new THREE.Vector3(pos.x, 0.05, pos.z), 0xff6000, 2.5, 0.5);
+        this.vfx.impact(pos, 0xaa2020, 1.7);
       }
     };
   }
@@ -9033,8 +9048,14 @@ export class Studio {
         this.character.root.position.z += w.z * dt;
       }
     }
-    // Camp / voxel hostiles (forest creeps)
+    // Camp / voxel hostiles (forest creeps + island tribes)
     this.campEnemies?.update(dt, this.character?.root.position ?? null);
+    // Island Life bandit boat raids
+    if (this.testWorldId === "island-life") {
+      const base = this.character?.root.position ?? new THREE.Vector3();
+      this.raiderBoats?.setBase(base);
+      this.raiderBoats?.update(dt, this.character?.root.position ?? null);
+    }
     // Player melee splash damages camp creeps
     if (this.campEnemies && this.character && this.activityMode === "combat") {
       // handled on attack connect via damageCampEnemiesNear
@@ -9050,8 +9071,11 @@ export class Studio {
       } catch {
         /* ignore */
       }
-      // Include camp enemies for tower AI
+      // Include camp enemies + raiders for tower AI
       for (const p of this.campEnemies?.livingPositions() ?? []) hostiles.push(p);
+      for (const e of this.raiderBoats?.enemies ?? []) {
+        if (!e.dead) hostiles.push(e.root.position.clone());
+      }
       this.campBuild.update(dt, this.character?.root.position, hostiles);
     }
     if (this.campBuild?.isGhostActive && this.character) {
@@ -10006,9 +10030,26 @@ export class Studio {
       if (!ok && def.kind !== "combat") return false;
     }
 
-    // Voxel / outdoor camp enemies (forest creeps)
+    // Voxel / outdoor camp enemies
     this.campEnemies?.clear();
-    if (def.kind !== "combat" && this.campEnemies) {
+    if (def.kind === "survival_island" && this.campEnemies) {
+      // Orc tribe + outlaws at red-mushroom anchors from island_life.glb materials
+      const camps = RED_MUSHROOM_ANCHORS.map((a) => {
+        const p = mushroomWorldPos(a.local);
+        return { x: p.x, y: p.y, z: p.z, tribe: a.tribe };
+      });
+      void this.campEnemies.spawnIslandMushroomTribes(camps).then(() => {
+        // Golem neutral nodes + elf raid / iron elite (Golem_Free + Elf_Free)
+        const nodes = ISLAND_EVENT_NODE_ANCHORS.map((a) => {
+          const p = mushroomWorldPos(a.local);
+          return { x: p.x, y: p.y, z: p.z, campId: a.campId };
+        });
+        // Append without clear — spawnIslandEventNodes does not clear first
+        void this.campEnemies?.spawnIslandEventNodes(nodes);
+      });
+      const base = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, 0);
+      this.raiderBoats?.setBase(base);
+    } else if (def.kind !== "combat" && this.campEnemies) {
       const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
       void this.campEnemies.spawnVoxelCamp(center);
     }

@@ -6,6 +6,7 @@ import { CHI_FIRE_COLORS, DEFAULT_FIRE_FX, type FireFxParams } from "./fxSetting
 import type { SlashFxParams } from "./slashSettings";
 import { SmokeFx } from "./SmokeFx";
 import { ringTexture, unitGroundPlane } from "./fx/fxTextures";
+import { GoreImpact2D } from "./fx/goreImpact2d";
 
 /** Which 4-stop palette the flame system currently uses. */
 export type FireTheme = "fire" | "chi";
@@ -185,11 +186,19 @@ export class Vfx {
    * one draw call, per-instance billboard mode, premultiplied additive blend.
    */
   private smoke: SmokeFx;
+  /** 2D gore/impact billboards (CDN slash sprites) for zone combat feedback. */
+  private gore: GoreImpact2D;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, camera?: THREE.Camera | null) {
     this.scene = scene;
     this.smoke = new SmokeFx(scene);
+    this.gore = new GoreImpact2D(scene, camera ?? null);
     void this.loadGlbAssets();
+  }
+
+  /** Bind camera for billboard gore (call when camera is ready). */
+  setGoreCamera(camera: THREE.Camera | null): void {
+    this.gore.setCamera(camera);
   }
 
   // ── instanced billboard particles (smoke / puffs / traces) ───────────────
@@ -3391,6 +3400,12 @@ export class Vfx {
    */
   impact(pos: THREE.Vector3, color = 0xaee6ff, scale = 2) {
     const col = new THREE.Color(color);
+    // 2D impact + blood layer (reads as melee gore on top of ground burst)
+    try {
+      this.gore.meleeHit(pos.clone().setY(pos.y + 0.15), scale > 1.4);
+    } catch {
+      /* optional */
+    }
 
     // --- Ground burst (custom shader on a flat quad). ---
     const ringGeo = new THREE.PlaneGeometry(1, 1);
@@ -4704,6 +4719,7 @@ export class Vfx {
     this.updateFireTrail(dt);
     this.updateBladeTrail(dt);
     this.smoke.update(dt);
+    this.gore.update(dt);
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const e = this.effects[i];
       e.age += dt;
@@ -4719,6 +4735,7 @@ export class Vfx {
   dispose() {
     this.disposed = true;
     this.smoke.dispose();
+    this.gore.dispose();
     for (const e of this.effects) this.free(e);
     this.effects.length = 0;
     // Free the shared GLB templates (geometry + textures) now nothing clones them.

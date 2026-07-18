@@ -26,6 +26,7 @@ import {
 } from "../ummorpg/prefabProfile";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { Vfx } from "../Vfx";
+import { createMysticalComposer, type MysticalComposer } from "../fx/postfx";
 import { loadControls } from "../controlsSettings";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
 import { GRAVITY_Y, LOCOMOTION, PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
@@ -193,6 +194,7 @@ export class BrawlerScene {
   private disposed = false;
   private ro?: ResizeObserver;
   private vfx: Vfx;
+  private postfx: MysticalComposer | null = null;
 
   /** Canonical stack — same as Danger Room / Studio. */
   private input: InputState;
@@ -326,7 +328,24 @@ export class BrawlerScene {
     this.scene.background = new THREE.Color(0x0a0c12);
     this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.015);
     this.camera = new THREE.PerspectiveCamera(this.params.fov, w / h, 0.1, 500);
-    this.vfx = new Vfx(this.scene);
+    this.vfx = new Vfx(this.scene, this.camera);
+    this.vfx.setGoreCamera(this.camera);
+    // Same postprocessing stack as Danger Room (bloom / vignette / grain / ACES)
+    try {
+      this.postfx = createMysticalComposer(this.renderer, this.scene, this.camera, {
+        bloomIntensity: 0.85,
+        bloomThreshold: 0.22,
+        bloomRadius: 0.55,
+        saturation: 0.1,
+        vignetteDarkness: 0.55,
+        chromatic: 0.0006,
+        grain: 0.04,
+      });
+      this.postfx.setSize(w, h);
+    } catch (err) {
+      console.warn("[BrawlerScene] postfx init failed", err);
+      this.postfx = null;
+    }
 
     // Canonical input layer (pointer lock + KeyW/A/S/D + mouse look)
     this.input = new InputState(canvas);
@@ -1338,6 +1357,7 @@ export class BrawlerScene {
     const p = en.pos.clone();
     p.y += 0.9;
     this.vfx.fireAura?.(p, amount > 40 ? 1.15 : 0.75);
+    this.vfx.impact(p, amount > 40 ? 0xff6040 : 0xff8060, amount > 40 ? 1.4 : 0.95);
     if (this.focusRing && en === this.focusTarget) {
       const mat = this.focusRing.material as THREE.MeshBasicMaterial;
       mat.color.setHex(0xffe080);
@@ -1372,6 +1392,12 @@ export class BrawlerScene {
     const effective = Math.max(1, amount - this.playerArmor * 0.1);
     this.playerHp = Math.max(0, this.playerHp - effective);
     this.avatar?.playRoleOnce("hurt", 0.08);
+    // 2D gore on player torso
+    if (this.controller) {
+      const p = this.controller.position.clone();
+      p.y += 1.1;
+      this.vfx.impact(p, 0xaa2028, 0.85);
+    }
     // Knockback via Controller (Danger Room parity)
     if (this.controller) {
       const away = this.controller.forward().multiplyScalar(-1);
@@ -1526,7 +1552,8 @@ export class BrawlerScene {
     }
 
     this.vfx.update(dt);
-    this.renderer.render(this.scene, this.camera);
+    if (this.postfx) this.postfx.render(dt);
+    else this.renderer.render(this.scene, this.camera);
   };
 
   private updateFocus(dt: number) {
@@ -1598,6 +1625,7 @@ export class BrawlerScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
+    this.postfx?.setSize(w, h);
   }
 
   private setPhase(p: BrawlerState["phase"]) {
@@ -1743,6 +1771,8 @@ export class BrawlerScene {
     this.physics?.dispose();
     this.physics = null;
     this.client?.dispose?.();
+    this.postfx?.dispose();
+    this.postfx = null;
     this.vfx.dispose();
     if (this.mounted) {
       unmountWeapon(this.mounted);
