@@ -35,6 +35,13 @@ const CRITICAL = [
   "models/voxels/tvs/unit-roster.json",
   // icons
   "icons/pack/weapons/Sword_01.png",
+  // outdoor / harvest terrain (R2 — not git)
+  "models/worlds/sailtest.glb",
+  "models/worlds/forest-map.glb",
+  "models/worlds/small_island.glb",
+  "models/nature/stylized/biome/nature_vegetation.glb",
+  "models/nature/stylized/harvest/ore_nodes.glb",
+  "models/nature/stylized/rocks/stylised_rocks.glb",
   // arena skinned + anims (combat)
 ];
 

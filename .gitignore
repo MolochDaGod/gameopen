@@ -16,3 +16,11 @@ client/public/**/*.br
 client/public/**/*.gz
 
 .vercel
+
+# Outdoor terrain GLBs — Cloudflare R2 only (see docs/OUTDOOR_ASSETS_D1_R2.md)
+artifacts/animator/public/models/worlds/*.glb
+artifacts/animator/public/models/worlds/**/*.glb
+
+
+reports/
+

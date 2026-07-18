@@ -29,7 +29,11 @@
     "scaffold:weapon": "node scripts/scaffold-weapon.mjs",
     "scenes:build": "node scripts/build-forge-scenes.mjs",
     "test:runtime": "npm --prefix lib/grudge-runtime test",
-    "test:physics": "npm --prefix lib/grudge-physics test"
+    "test:physics": "npm --prefix lib/grudge-physics test",
+    "assets:outdoor:upload": "node scripts/upload-outdoor-r2.mjs",
+    "assets:outdoor:upload:dry": "node scripts/upload-outdoor-r2.mjs --dry-run",
+    "assets:outdoor:seed-d1": "node scripts/seed-outdoor-d1.mjs",
+    "assets:outdoor:seed-d1:apply": "node scripts/seed-outdoor-d1.mjs --apply",
+    "assets:outdoor:pipeline": "node scripts/upload-outdoor-r2.mjs --dry-run && node scripts/seed-outdoor-d1.mjs"
   }
-
 }

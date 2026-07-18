@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "description": "Outdoor / harvest / sail terrain + nature packs — R2 keys only (not git). D1 asset_registry rows seeded by scripts/seed-outdoor-d1.mjs",
+  "cdn": "https://assets.grudge-studio.com",
+  "bucket": "grudge-assets",
+  "d1Database": "grudge-assets-db",
+  "practice": {
+    "binaries": "Cloudflare R2 only — never commit large GLB terrain to git",
+    "code": "Git: ForestWorld.ts, testWorlds.ts, loaders, this catalog",
+    "registry": "D1 asset_registry with deterministic grudgeUuid from r2Key",
+    "runtime": "loadGltfFirst → assetCandidates (same-origin optional, then assets.grudge-studio.com)"
+  },
+  "assets": [
+    {
+      "id": "world_sailtest",
+      "r2Key": "models/worlds/sailtest.glb",
+      "category": "world_terrain",
+      "role": "sailtest_dual_island",
+      "testWorldId": "sailtest",
+      "contentType": "model/gltf-binary",
+      "notes": "Dual islands near sea level — water/camp/harvest host"
+    },
+    {
+      "id": "world_small_island",
+      "r2Key": "models/worlds/small_island.glb",
+      "category": "world_terrain",
+      "role": "island_fallback",
+      "testWorldId": "sailtest",
+      "contentType": "model/gltf-binary",
+      "notes": "Fallback mesh for sailtest meshKeys chain"
+    },
+    {
+      "id": "world_breeze_island",
+      "r2Key": "models/worlds/breeze-island.glb",
+      "category": "world_terrain",
+      "role": "island_fallback",
+      "testWorldId": "sailtest",
+      "contentType": "model/gltf-binary",
+      "notes": "Large breeze island fallback (may already be on R2)"
+    },
+    {
+      "id": "world_forest_map",
+      "r2Key": "models/worlds/forest-map.glb",
+      "category": "world_terrain",
+      "role": "forest_harvest_base",
+      "testWorldId": "forest-map",
+      "contentType": "model/gltf-binary",
+      "notes": "Chicken-gun forest base — nature stripped + Warlords scatter"
+    },
+    {
+      "id": "nature_vegetation",
+      "r2Key": "models/nature/stylized/biome/nature_vegetation.glb",
+      "category": "nature",
+      "role": "trees",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_realistic_trees",
+      "r2Key": "models/nature/stylized/biome/realistic_trees.glb",
+      "category": "nature",
+      "role": "trees_alt",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_rocks",
+      "r2Key": "models/nature/stylized/rocks/stylised_rocks.glb",
+      "category": "nature",
+      "role": "rocks",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_flowers",
+      "r2Key": "models/nature/stylized/harvest/flowers_pack.glb",
+      "category": "nature",
+      "role": "flowers",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_foliage",
+      "r2Key": "models/nature/stylized/harvest/foliage_pack.glb",
+      "category": "nature",
+      "role": "foliage",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_ore",
+      "r2Key": "models/nature/stylized/harvest/ore_nodes.glb",
+      "category": "nature",
+      "role": "ore",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_minerals",
+      "r2Key": "models/nature/stylized/harvest/minerals_pack.glb",
+      "category": "nature",
+      "role": "minerals",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "creature_bear",
+      "r2Key": "models/bear.glb",
+      "category": "creature",
+      "role": "skin_harvest",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "creature_skeleton",
+      "r2Key": "models/creatures/skeleton-warrior.glb",
+      "category": "creature",
+      "role": "skin_harvest",
+      "contentType": "model/gltf-binary"
+    }
+  ]
+}
