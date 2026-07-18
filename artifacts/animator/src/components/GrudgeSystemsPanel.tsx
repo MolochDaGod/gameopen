@@ -34,6 +34,37 @@ import {
   type GrudgeSystemsState,
 } from "../lib/grudgeSystems/persist";
 import {
+  DOMAIN_LABELS,
+  SKILL_POINT_DOMAINS,
+  activateNode,
+  attrsWithSkillEffects,
+  ensureProgressSynced,
+  grantFreeNodes,
+  grantPointsForLevel,
+  grantPointsFromMasteryXp,
+  type CharacterSkillProgress,
+} from "../lib/grudgeSystems/characterSkillProgress";
+import { getMasteryTier } from "../lib/grudgeSystems/gameData";
+import { setActiveSkillProgress } from "../lib/grudgeSystems/skillProgressBridge";
+
+/** Parse weapon skill bonus strings like "+5% damage, +5% crit" into bonuses map. */
+function parseBonusString(bonus?: string): Record<string, number> {
+  if (!bonus) return {};
+  const out: Record<string, number> = {};
+  const re = /\+?(\d+(?:\.\d+)?)\s*%?\s*(damage|dmg|crit|speed|hp|health|cdr)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(bonus))) {
+    const val = Number(m[1]);
+    const key = m[2]!.toLowerCase();
+    if (key === "damage" || key === "dmg") out.damagePct = (out.damagePct || 0) + val;
+    else if (key === "crit") out.critPct = (out.critPct || 0) + val;
+    else if (key === "speed") out.moveSpeedPct = (out.moveSpeedPct || 0) + val;
+    else if (key === "hp" || key === "health") out.hp = (out.hp || 0) + val;
+    else if (key === "cdr") out.cdr = (out.cdr || 0) + val;
+  }
+  return out;
+}
+import {
   resolveSlotIconUrl,
   type SlotIconRole,
 } from "../three/skillIcons";
@@ -104,7 +135,9 @@ export function GrudgeSystemsPanel({
 
   // Reload when character changes
   useEffect(() => {
-    setState(loadSystemsState(characterId));
+    const loaded = loadSystemsState(characterId);
+    setState(loaded);
+    setActiveSkillProgress(characterId, loaded.skillProgress);
   }, [characterId]);
 
   // Keep weapon tab selection in sync with equipped weapon
@@ -115,10 +148,29 @@ export function GrudgeSystemsPanel({
 
   const persist = useCallback(
     (next: GrudgeSystemsState) => {
-      setState(next);
-      scheduleSystemsStateSave(characterId, next);
+      // Always keep flat unlocked + bridge in sync with skillProgress
+      const skillProgress = next.skillProgress;
+      const synced: GrudgeSystemsState = {
+        ...next,
+        unlocked: skillProgress.unlocked.slice(),
+        skillProgress,
+      };
+      setState(synced);
+      setActiveSkillProgress(characterId, skillProgress);
+      scheduleSystemsStateSave(characterId, synced);
     },
     [characterId],
+  );
+
+  const setSkillProgress = useCallback(
+    (skillProgress: CharacterSkillProgress) => {
+      persist({
+        ...state,
+        skillProgress,
+        unlocked: skillProgress.unlocked.slice(),
+      });
+    },
+    [persist, state],
   );
 
   const totalPoints = useMemo(
@@ -126,16 +178,55 @@ export function GrudgeSystemsPanel({
     [state.attrs],
   );
 
-  const derived = useMemo(
-    () => calculateDerivedStats(state.attrs, state.level),
-    [state.attrs, state.level],
-  );
+  // Derived stats include skill-tree attribute bonuses
+  const derived = useMemo(() => {
+    const attrs = attrsWithSkillEffects(state.attrs, state.skillProgress.effects);
+    const base = calculateDerivedStats(attrs, state.level);
+    const fx = state.skillProgress.effects;
+    if (fx.maxHp) base.maxHP = (base.maxHP || 0) + fx.maxHp;
+    if (fx.maxStamina) base.maxStamina = (base.maxStamina || 0) + fx.maxStamina;
+    if (fx.maxMana) base.maxMana = (base.maxMana || 0) + fx.maxMana;
+    if (fx.damagePct) {
+      base.meleeAttack = Math.floor((base.meleeAttack || 0) * (1 + fx.damagePct / 100));
+      base.rangedAttack = Math.floor((base.rangedAttack || 0) * (1 + fx.damagePct / 100));
+      base.spellPower = Math.floor((base.spellPower || 0) * (1 + fx.damagePct / 100));
+    }
+    if (fx.critPct) base.critChance = Math.min(75, (base.critChance || 0) + fx.critPct);
+    if (fx.moveSpeedPct) {
+      base.moveSpeed = +((base.moveSpeed || 0) * (1 + fx.moveSpeedPct / 100)).toFixed(2);
+    }
+    if (fx.harvestYieldPct) {
+      base.harvestBonus = +((base.harvestBonus || 0) + fx.harvestYieldPct).toFixed(1);
+    }
+    if (fx.craftSpeedPct) {
+      base.craftingBonus = +((base.craftingBonus || 0) + fx.craftSpeedPct).toFixed(1);
+    }
+    return base;
+  }, [state.attrs, state.level, state.skillProgress.effects]);
 
   // Canonical skill trees: same sources as P production UI + character.grudge-studio.com/skills
   useEffect(() => {
     let cancelled = false;
     void loadSkillTrees().then((trees) => {
-      if (!cancelled) setSkillTrees(trees);
+      if (cancelled) return;
+      setSkillTrees(trees);
+      // Sync free L0 nodes + recompute effects against full catalog
+      setState((prev) => {
+        let sp = ensureProgressSynced(prev.skillProgress, prev.level, trees);
+        for (const t of trees) {
+          if (t.id.startsWith("class-") && prev.classId && t.id === `class-${prev.classId}`) {
+            sp = grantFreeNodes(sp, t);
+          }
+        }
+        const next = {
+          ...prev,
+          skillProgress: sp,
+          unlocked: sp.unlocked.slice(),
+        };
+        setActiveSkillProgress(characterId, sp);
+        scheduleSystemsStateSave(characterId, next);
+        return next;
+      });
     });
     void loadWeaponSkillTrees().then((trees) => {
       if (cancelled) return;
@@ -153,7 +244,7 @@ export function GrudgeSystemsPanel({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [characterId]);
 
   const preferredClassTreeId = state.classId ? `class-${state.classId}` : "class-warrior";
 
@@ -209,30 +300,38 @@ export function GrudgeSystemsPanel({
     totalPoints > MAX_POINTS ? "over" : totalPoints === MAX_POINTS ? "full" : "";
 
   return (
-    <div className="gs-panel" role="dialog" aria-label="Character systems">
+    <div className="gs-panel cx-menu" role="dialog" aria-label="Character systems">
       <button type="button" className="gs-backdrop" aria-label="Close systems" onClick={onClose} />
-      <div className="gs-sheet">
-        <header className="gs-header">
+      <div className="gs-sheet cx-menu-sheet">
+        <header className="gs-header cx-menu-header">
           <div>
             <p className="gs-kicker">Grudge Systems</p>
             <h2 className="gs-title">{characterName}</h2>
             <p className="gs-sub">
               Level {state.level}
               {state.classId ? ` · ${CLASSES[state.classId]?.name ?? state.classId}` : ""}
-              {" · "}Creator tabs + fleet icons
+              {" · "}
+              {SKILL_POINT_DOMAINS.map((d) => `${DOMAIN_LABELS[d]} ${state.skillProgress.points[d] || 0}`).join(
+                " · ",
+              )}
             </p>
           </div>
-          <button type="button" className="gs-close" onClick={onClose} title="Close (K / Esc)">
+          <button
+            type="button"
+            className="gs-close cx-menu-close"
+            onClick={onClose}
+            title="Close (K / Esc)"
+          >
             ×
           </button>
         </header>
 
-        <nav className="gs-tabbar" id="mainTabBar" aria-label="Systems tabs">
+        <nav className="gs-tabbar cx-menu-tabs" id="mainTabBar" aria-label="Systems tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
-              className={`gs-tab${tab === t.id ? " active" : ""}`}
+              className={`gs-tab cx-menu-tab${tab === t.id ? " active" : ""}`}
               data-tab={t.id}
               onClick={() => setTab(t.id)}
             >
@@ -327,18 +426,34 @@ export function GrudgeSystemsPanel({
                 and P → Skill trees. One class from the row (Worge L0 = Bear start).
               </p>
               <div className="gs-attr-row" style={{ maxWidth: 280, marginBottom: 10 }}>
-                <label title="Gates path nodes by requiredLevel">Level</label>
+                <label title="Gates path nodes by requiredLevel; grants skill points on level-up">
+                  Level
+                </label>
                 <input
                   type="range"
                   min={1}
                   max={20}
                   value={state.level}
-                  onChange={(e) =>
-                    persist({ ...state, level: Math.max(1, Math.min(20, Number(e.target.value))) })
-                  }
+                  onChange={(e) => {
+                    const level = Math.max(1, Math.min(20, Number(e.target.value)));
+                    const skillProgress = grantPointsForLevel(state.skillProgress, level);
+                    persist({ ...state, level, skillProgress, unlocked: skillProgress.unlocked.slice() });
+                  }}
                   aria-label="Character level for skill path"
                 />
                 <span className="val">{state.level}</span>
+              </div>
+              <div className="gs-points-row" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                {SKILL_POINT_DOMAINS.map((d) => (
+                  <span
+                    key={d}
+                    className="gs-points"
+                    title={`${DOMAIN_LABELS[d]}: earned ${state.skillProgress.earned[d] || 0} · spent ${state.skillProgress.spent[d] || 0}`}
+                    style={{ fontSize: "0.72rem" }}
+                  >
+                    {DOMAIN_LABELS[d]} {state.skillProgress.points[d] || 0}
+                  </span>
+                ))}
               </div>
               <div className="gs-class-row">
                 {Object.entries(CLASSES).map(([id, cls]) => (
@@ -354,7 +469,15 @@ export function GrudgeSystemsPanel({
                     onClick={() => {
                       // One class from the row → L0 auto skills (Worge includes Bear start)
                       grantClassSelectionSkills(id);
-                      persist({ ...state, classId: id });
+                      let skillProgress = state.skillProgress;
+                      const classTree = skillTrees.find((t) => t.id === `class-${id}`);
+                      if (classTree) skillProgress = grantFreeNodes(skillProgress, classTree);
+                      persist({
+                        ...state,
+                        classId: id,
+                        skillProgress,
+                        unlocked: skillProgress.unlocked.slice(),
+                      });
                       // Notify upper class skill bar (Shift+1–5) immediately
                       window.dispatchEvent(
                         new CustomEvent("grudge:class-selected", { detail: { classId: id } }),
@@ -369,23 +492,44 @@ export function GrudgeSystemsPanel({
                 <p className="gs-muted">
                   {CLASSES[state.classId].desc}
                   {state.classId === "worge"
-                    ? " · L0 grants Bear Form (start)."
-                    : " · L0 granted on select."}
+                    ? " · L0 grants Bear Form (start, free)."
+                    : " · L0 granted free on select."}{" "}
+                  Other nodes spend Class points.
                 </p>
               )}
               {skillTrees.length ? (
                 <ClassSkillTreePanel
                   trees={skillTrees}
                   playerLevel={state.level}
+                  skillProgress={state.skillProgress}
+                  onProgressChange={setSkillProgress}
                   preferredTreeId={
                     skillTrees.some((t) => t.id === preferredClassTreeId)
                       ? preferredClassTreeId
                       : skillTrees.find((t) => t.id.startsWith("class-"))?.id ||
                         "weapon-combat"
                   }
+                  onUnlock={(nodeId, unlocks, progress) => {
+                    window.dispatchEvent(
+                      new CustomEvent("grudge:skill-activated", {
+                        detail: { nodeId, unlocks, effects: progress.effects },
+                      }),
+                    );
+                  }}
                 />
               ) : (
                 <p className="gs-muted">Loading canonical skill trees…</p>
+              )}
+              {state.skillProgress.effects.grantedSkills.length > 0 && (
+                <p className="gs-muted" style={{ marginTop: 8 }}>
+                  Active grants: {state.skillProgress.effects.grantedSkills.join(", ")}
+                  {state.skillProgress.effects.damagePct
+                    ? ` · +${state.skillProgress.effects.damagePct}% dmg`
+                    : ""}
+                  {state.skillProgress.effects.maxHp
+                    ? ` · +${state.skillProgress.effects.maxHp} HP`
+                    : ""}
+                </p>
               )}
             </>
           )}
@@ -394,6 +538,10 @@ export function GrudgeSystemsPanel({
             <>
               <h3>Weapon Type</h3>
               {fleetWeaponNote && <p className="gs-muted">{fleetWeaponNote}</p>}
+              <p className="gs-muted">
+                Weapon points: <strong>{state.skillProgress.points.weapon || 0}</strong> (from mastery
+                tiers). Click a node to activate when level + points allow.
+              </p>
               <div className="gs-wep-grid" id="weaponTypeGrid">
                 {Object.entries(WEAPON_TYPES).map(([id, wep]) => (
                   <button
@@ -402,7 +550,24 @@ export function GrudgeSystemsPanel({
                     className={`gs-wep-btn${selectedWep === id ? " active" : ""}`}
                     data-wep={id}
                     title={wep.name}
-                    onClick={() => setSelectedWep(id)}
+                    onClick={() => {
+                      setSelectedWep(id);
+                      // Ensure T0 weapon points for this family on first view
+                      const xp = state.masteryXp[id] ?? 0;
+                      const sp = grantPointsFromMasteryXp(
+                        state.skillProgress,
+                        id,
+                        xp,
+                        (x) => getMasteryTier(x).tier,
+                      );
+                      if (sp.points.weapon !== state.skillProgress.points.weapon) {
+                        persist({
+                          ...state,
+                          skillProgress: sp,
+                          unlocked: sp.unlocked.slice(),
+                        });
+                      }
+                    }}
                   >
                     {wep.cdnIcon ? (
                       <img src={wep.cdnIcon} alt="" loading="lazy" />
@@ -438,8 +603,8 @@ export function GrudgeSystemsPanel({
                     {(WEAPON_TYPES[selectedWep]?.classes || [])
                       .map((c) => CLASSES[c]?.name || c)
                       .join(", ")}{" "}
-                    · {(WEAPON_TYPES[selectedWep]?.hand || "").toUpperCase()} ·{" "}
-                    <strong>catalog preview</strong> (read-only — unlock/bind later)
+                    · {(WEAPON_TYPES[selectedWep]?.hand || "").toUpperCase()} · spend{" "}
+                    <strong>Weapon</strong> points
                   </p>
                   {(weaponTrees[selectedWep]?.skills || WEAPON_SKILLS[selectedWep]?.skills || []).map(
                     (skill) => {
@@ -449,8 +614,63 @@ export function GrudgeSystemsPanel({
                         id: skill.id,
                         treeId: `weapon-${selectedWep}`,
                       });
+                      const active = state.skillProgress.unlocked.includes(skill.id);
+                      const needLv = skill.level || 1;
+                      const canLv = state.level >= needLv;
+                      const canPts = (state.skillProgress.points.weapon || 0) >= 1;
                       return (
-                        <div className="gs-skill-node" key={skill.id}>
+                        <button
+                          type="button"
+                          className={`gs-skill-node${active ? " is-on" : ""}`}
+                          key={skill.id}
+                          disabled={active || !canLv || !canPts}
+                          title={
+                            active
+                              ? "Active"
+                              : !canLv
+                                ? `Need character level ${needLv}`
+                                : !canPts
+                                  ? "Need 1 Weapon point"
+                                  : skill.desc
+                          }
+                          onClick={() => {
+                            if (active || !canLv || !canPts) return;
+                            const result = activateNode(
+                              state.skillProgress,
+                              {
+                                id: skill.id,
+                                name: skill.name,
+                                desc: skill.desc,
+                                tier: Math.min(3, Math.floor((needLv - 1) / 5)),
+                                requires: [],
+                                cost: 1,
+                                requiredLevel: needLv,
+                                bonuses: parseBonusString(skill.bonus),
+                              },
+                              {
+                                playerLevel: state.level,
+                                treeId: `weapon-${selectedWep}`,
+                                domain: "weapon",
+                              },
+                            );
+                            if (result.ok) {
+                              persist({
+                                ...state,
+                                skillProgress: result.progress,
+                                unlocked: result.progress.unlocked.slice(),
+                              });
+                            }
+                          }}
+                          style={{
+                            cursor: active || !canLv || !canPts ? "default" : "pointer",
+                            opacity: active ? 1 : canLv && canPts ? 1 : 0.55,
+                            textAlign: "left",
+                            width: "100%",
+                            border: active ? "1px solid #4ade80" : undefined,
+                            background: "transparent",
+                            color: "inherit",
+                          }}
+                        >
                           <img
                             className="gs-skill-icon"
                             src={ico}
@@ -466,11 +686,11 @@ export function GrudgeSystemsPanel({
                           />
                           <span className="gs-skill-lvl">Lv{skill.level}</span>
                           <span className="gs-skill-name">{skill.name}</span>
-                          <span className="gs-skill-cost" style={{ color: "#8fa3c7" }}>
-                            {skill.bonus}
+                          <span className="gs-skill-cost" style={{ color: active ? "#4ade80" : "#8fa3c7" }}>
+                            {active ? "ACTIVE" : skill.bonus || "1 pt"}
                           </span>
                           <div className="gs-skill-desc">{skill.desc}</div>
-                        </div>
+                        </button>
                       );
                     },
                   )}

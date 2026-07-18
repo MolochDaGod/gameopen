@@ -9,6 +9,13 @@ import {
   pickCatalogIconFields,
   resolveTreeHeaderIconUrl,
 } from "../lib/skillTreeIcons";
+import {
+  getActiveSkillCharacterId,
+  getActiveSkillEffects,
+  getActiveSkillProgress,
+  getActiveUnlocked,
+  setActiveSkillProgress,
+} from "../lib/grudgeSystems/skillProgressBridge";
 import { MAP_TEMPLATES } from "../three/voxel/templates";
 import { gameSession } from "./GameSession";
 
@@ -1096,7 +1103,13 @@ export function ensureStarterBag(): Record<string, number> {
 
 const UNLOCK_KEY = "harvest:skillUnlocks:v1";
 
+/**
+ * Active character unlocks (skill progress bridge) with legacy global LS fallback.
+ * Prefer character systems bag via GrudgeSystemsPanel / setActiveSkillProgress.
+ */
 export function loadSkillUnlocks(): string[] {
+  const active = getActiveUnlocked();
+  if (active.length) return active;
   try {
     return JSON.parse(localStorage.getItem(UNLOCK_KEY) || "[]") as string[];
   } catch {
@@ -1104,6 +1117,10 @@ export function loadSkillUnlocks(): string[] {
   }
 }
 
+/**
+ * Legacy free unlock (no point spend). Prefer activateNode via skill progress.
+ * Still used by older call sites; merges into active character progress when set.
+ */
 export function unlockSkillNode(id: string): string[] {
   const cur = new Set(loadSkillUnlocks());
   cur.add(id);
@@ -1112,6 +1129,13 @@ export function unlockSkillNode(id: string): string[] {
     localStorage.setItem(UNLOCK_KEY, JSON.stringify(arr));
   } catch {
     /* ignore */
+  }
+  const prog = getActiveSkillProgress();
+  if (prog && !prog.unlocked.includes(id)) {
+    setActiveSkillProgress(getActiveSkillCharacterId(), {
+      ...prog,
+      unlocked: [...prog.unlocked, id],
+    });
   }
   return arr;
 }
@@ -1142,9 +1166,12 @@ export function isWeaponSkillSlotUnlocked(slotIndex: number, unlocks = loadSkill
   return unlocks.includes(gate);
 }
 
-/** CD multiplier from weapon master node. */
+/** CD multiplier from weapon master node + skill-tree effect stack. */
 export function weaponSkillCdMul(unlocks = loadSkillUnlocks()): number {
-  return unlocks.includes("w_master") ? 0.85 : 1;
+  let m = unlocks.includes("w_master") ? 0.85 : 1;
+  const fx = getActiveSkillEffects();
+  if (fx?.cdMul && fx.cdMul > 0 && fx.cdMul <= 1) m *= fx.cdMul;
+  return Math.max(0.5, Math.min(1, m));
 }
 
 /** Minecraft-like harvest yields into bag (local until Railway bag). */

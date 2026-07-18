@@ -27,7 +27,8 @@ import {
   fetchCodexBlocks,
   fetchCodexDefinitions,
   fetchMineLoaderWorlds,
-  listFleetCharacters,
+  listHeroCharacters,
+  listUnitCharacters,
   listMapLibrary,
   listUserAvatarCharacters,
   loadHarvestRecipes,
@@ -38,12 +39,18 @@ import {
   openMineLoaderEditor,
   openMineLoaderPlay,
   prettyMatId,
+  type CharacterImportRow,
   type CraftRecipe,
   type HarvestOp,
   type HarvestTabId,
   type SkillTree,
   type SystemsDoc,
 } from "../game/harvestCatalog";
+import {
+  flattenFactionUnits,
+  loadFactionUnits,
+} from "../game/campClaimCatalog";
+import { GRUDOX_MAX_SLOTS } from "../lib/grudoxRoster";
 import {
   buildPortalDungeonLaunchUrl,
   buildSeedWorldLaunchUrl,
@@ -69,8 +76,18 @@ import {
 import { Icon } from "./Icon";
 import { ClassSkillTreePanel } from "./hud/ClassSkillTreePanel";
 import { chunkBlocks } from "../game/seedWorlds";
-import { listGrudachainTestLibrary, type TestHeroCard } from "../lib/grudachainTestLibrary";
-import { portraitOnError } from "../lib/characterPortrait";
+import {
+  ENGINE_STACK,
+  engineStackSnapshot,
+  probeAiHub,
+  type AiHubHealth,
+} from "../lib/engineStack";
+import {
+  loadSystemsState,
+  scheduleSystemsStateSave,
+  type GrudgeSystemsState,
+} from "../lib/grudgeSystems/persist";
+import { gameSession } from "../game/GameSession";
 import "./harvestProduction.css";
 
 export interface HarvestProductionUIProps {
@@ -112,7 +129,8 @@ export function HarvestProductionUI({
   const [trees, setTrees] = useState<SkillTree[]>([]);
   const [systems, setSystems] = useState<SystemsDoc | null>(null);
   const [bag, setBag] = useState<Record<string, number>>({});
-  const [testHeroes, setTestHeroes] = useState<TestHeroCard[]>([]);
+  const [unitRows, setUnitRows] = useState<CharacterImportRow[]>([]);
+  const [aiHealth, setAiHealth] = useState<AiHubHealth | null>(null);
   const [stationFilter, setStationFilter] = useState<string>("all");
   const [craftNotice, setCraftNotice] = useState<string | null>(null);
   const [craftingId, setCraftingId] = useState<string | null>(null);
@@ -133,11 +151,20 @@ export function HarvestProductionUI({
   const [customSeedInput, setCustomSeedInput] = useState("");
   const [seedBusy, setSeedBusy] = useState(false);
   const maps = useMemo(() => listMapLibrary(), []);
+  const characterId =
+    gameSession.selectedCharacter()?.id ||
+    (typeof localStorage !== "undefined"
+      ? localStorage.getItem("grudge.activeCharId") || "guest"
+      : "guest");
+  const [systemsState, setSystemsState] = useState<GrudgeSystemsState>(() =>
+    loadSystemsState(characterId),
+  );
 
   useEffect(() => {
     if (!open) return;
     warmGameMedia();
     setBag(ensureStarterBag());
+    setSystemsState(loadSystemsState(characterId));
     void loadHarvestRecipes().then((r) => {
       setRecipes(r.recipes);
       setStations(r.stations);
@@ -145,8 +172,11 @@ export function HarvestProductionUI({
     void loadOperations().then(setOps);
     void loadSkillTrees().then(setTrees);
     void loadSystemsDoc().then(setSystems);
-    void listGrudachainTestLibrary().then((lib) => setTestHeroes(lib.cards));
-  }, [open]);
+    void loadFactionUnits().then((cat) => {
+      const flat = flattenFactionUnits(cat);
+      setUnitRows(listUnitCharacters(flat));
+    });
+  }, [open, characterId]);
 
   useEffect(() => {
     if (!open || tab !== "codex") return;
@@ -155,6 +185,11 @@ export function HarvestProductionUI({
       setCodex({ blocks, defs });
       setCodexLoading(false);
     });
+  }, [open, tab]);
+
+  useEffect(() => {
+    if (!open || tab !== "systems") return;
+    void probeAiHub().then(setAiHealth);
   }, [open, tab]);
 
   useEffect(() => {
@@ -214,8 +249,12 @@ export function HarvestProductionUI({
     return ops.filter((o) => o.mode === activityMode);
   }, [ops, activityMode]);
 
-  const fleetChars = useMemo(() => listFleetCharacters(), [open]);
+  const heroChars = useMemo(() => listHeroCharacters(GRUDOX_MAX_SLOTS), [open]);
   const avatarChars = useMemo(() => listUserAvatarCharacters(), [open]);
+  const units = useMemo(
+    () => (unitRows.length ? unitRows : listUnitCharacters()),
+    [unitRows],
+  );
 
   const filteredBlocks = useMemo(() => {
     if (!codex?.blocks.sample) return [];
@@ -971,10 +1010,20 @@ export function HarvestProductionUI({
                   preferredTreeId={
                     trees.find((t) => t.id.startsWith("class-"))?.id || "weapon-combat"
                   }
-                  playerLevel={20}
+                  playerLevel={systemsState.level}
+                  skillProgress={systemsState.skillProgress}
+                  onProgressChange={(skillProgress) => {
+                    const next: GrudgeSystemsState = {
+                      ...systemsState,
+                      skillProgress,
+                      unlocked: skillProgress.unlocked.slice(),
+                    };
+                    setSystemsState(next);
+                    scheduleSystemsStateSave(characterId, next);
+                  }}
                   onUnlock={(nodeId) => {
                     const node = trees.flatMap((t) => t.nodes).find((n) => n.id === nodeId);
-                    showNotice(node ? `Unlocked ${node.name}` : `Unlocked ${nodeId}`);
+                    showNotice(node ? `Activated ${node.name}` : `Activated ${nodeId}`);
                   }}
                 />
               ) : (
@@ -986,99 +1035,77 @@ export function HarvestProductionUI({
 
           {tab === "characters" && (
             <section className="hp-panel">
-              <h3>Explorer &amp; GRUDACHAIN heroes</h3>
+              <h3>Heroes &amp; units</h3>
               <p className="hp-lead">
-                Import fleet / GRUDACHAIN production heroes (mesh_ids + catalog icons) and cube heads
-                from Avatar Edit / LED Mask into harvest / Explorer play.
+                <b>Heroes</b> = your Warlords campfire roster (max {GRUDOX_MAX_SLOTS} user characters
+                from Railway / GRUDOX). <b>Units</b> = explorers and faction troops — same catalog
+                role for RTS, harvest, and combat labs. GRUDACHAIN QA library removed for production.
               </p>
-              {testHeroes.length > 0 && (
-                <div className="hp-grid chars" style={{ marginBottom: 16 }}>
-                  {testHeroes.slice(0, 12).map((card) => (
-                    <button
-                      key={`qa-${card.id}`}
-                      type="button"
-                      className="hp-card"
-                      onClick={() => {
-                        onImportCharacter?.(card.id);
-                        showNotice(
-                          `${card.name} · score ${card.readiness.score}` +
-                            (card.readiness.ok ? " · production ready" : " · needs repair"),
-                        );
-                      }}
-                      title={card.readiness.flags.join(" · ")}
-                    >
-                      <img
-                        src={card.portrait.url}
-                        alt=""
-                        width={40}
-                        height={40}
-                        style={{ borderRadius: 8, objectFit: "cover" }}
-                        onError={(e) =>
-                          portraitOnError(e.currentTarget, card.portrait.candidates)
-                        }
-                      />
-                      <span className="hp-card-title">{card.name}</span>
-                      <span className="hp-card-blurb">
-                        {card.raceId} · {card.classId} · {card.equipment.meshIds.length} meshes
-                      </span>
-                      <span className="hp-card-meta">
-                        QA {card.readiness.score}
-                        {card.readiness.ok ? " ✓" : " · fix"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
               <div className="hp-char-cols">
                 <div>
                   <h4>
-                    <User size={14} /> Fleet / Explorer
+                    <Users size={14} /> Heroes · {GRUDOX_MAX_SLOTS}-slot scene
                   </h4>
                   <div className="hp-grid chars">
-                    {fleetChars.length === 0 && (
+                    {heroChars.length === 0 && (
                       <p className="hp-muted">
-                        Sign in to load fleet characters, or use Explorer default below.
+                        Sign in with Grudge ID and create heroes on Account, or fill campfire seats
+                        in Characters GRUDOX.
                       </p>
                     )}
-                    {fleetChars.map((c) => (
+                    {heroChars.map((c) => (
                       <button
                         key={c.id}
                         type="button"
                         className="hp-card"
                         onClick={() => {
                           onImportCharacter?.(c.id);
-                          showNotice(`Importing ${c.name}`);
+                          showNotice(`Hero ${c.name}`);
                         }}
                       >
                         <span className="hp-card-title">{c.name}</span>
                         <span className="hp-card-blurb">{c.blurb}</span>
-                        <span className="hp-card-meta">{c.source}</span>
+                        <span className="hp-card-meta">hero</span>
                       </button>
                     ))}
-                    <button
-                      type="button"
-                      className="hp-card"
-                      onClick={() => {
-                        onImportCharacter?.("explorer");
-                        showNotice("Explorer selected");
-                      }}
-                    >
-                      <span className="hp-card-glyph">🧭</span>
-                      <span className="hp-card-title">Explorer (default)</span>
-                      <span className="hp-card-blurb">
-                        In-game explorer rig · uses saved avatar head if set
-                      </span>
-                    </button>
                   </div>
                 </div>
                 <div>
                   <h4>
-                    <Sparkles size={14} /> User-made avatars
+                    <User size={14} /> Units · explorers &amp; troops
+                  </h4>
+                  <div className="hp-grid chars">
+                    {units.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="hp-card"
+                        onClick={() => {
+                          onImportCharacter?.(c.id === "explorer" ? "explorer" : c.id);
+                          showNotice(`Unit ${c.name}`);
+                        }}
+                      >
+                        <span className="hp-card-glyph">
+                          {c.id === "explorer" ? "🧭" : "⚔"}
+                        </span>
+                        <span className="hp-card-title">{c.name}</span>
+                        <span className="hp-card-blurb">{c.blurb}</span>
+                        <span className="hp-card-meta">
+                          unit{c.unitType ? ` · ${c.unitType}` : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4>
+                    <Sparkles size={14} /> Avatar heads → explorer unit
                   </h4>
                   <div className="hp-grid chars">
                     {avatarChars.length === 0 && (
                       <p className="hp-muted">
-                        Design a head in Avatar Edit or LED Mask → Design, then Save to character.
+                        Design a head in Avatar Edit or LED Mask → Design, then Save. Applies to the
+                        Explorer unit, not hero slots.
                       </p>
                     )}
                     {avatarChars.map((c) => (
@@ -1090,7 +1117,7 @@ export function HarvestProductionUI({
                       >
                         <span className="hp-card-title">{c.name}</span>
                         <span className="hp-card-blurb">{c.blurb}</span>
-                        <span className="hp-card-meta">Import head → Explorer</span>
+                        <span className="hp-card-meta">Import head → unit</span>
                       </button>
                     ))}
                   </div>
@@ -1105,8 +1132,37 @@ export function HarvestProductionUI({
               <h3>Voxel game systems</h3>
               <p className="hp-lead">
                 Inclusive design map for harvest, craft, build, codex, maps, skill trees, and avatar
-                import — how the production loop fits together.
+                import — how the production loop fits together. Engine stack SSOT: Three{" "}
+                {ENGINE_STACK.three} · Rapier {ENGINE_STACK.rapier} · {ENGINE_STACK.vfxPrimary} ·
+                HUD {ENGINE_STACK.hud2dPrimary}.
               </p>
+              <div className="hp-grid chars" style={{ marginBottom: 16 }}>
+                {Object.entries(engineStackSnapshot().hosts).map(([k, v]) => (
+                  <div key={k} className="hp-card static">
+                    <span className="hp-card-title">{k}</span>
+                    <span className="hp-card-blurb" style={{ wordBreak: "break-all" }}>
+                      {v}
+                    </span>
+                  </div>
+                ))}
+                <div className="hp-card static">
+                  <span className="hp-card-title">AI hub</span>
+                  <span className="hp-card-blurb">
+                    {aiHealth == null
+                      ? "Probing…"
+                      : aiHealth.ok
+                        ? `${aiHealth.service} v${aiHealth.version} · ${aiHealth.status}`
+                        : `offline · ${aiHealth.error || "error"}`}
+                  </span>
+                  <span className="hp-card-meta">
+                    {aiHealth?.providers
+                      ? Object.entries(aiHealth.providers)
+                          .map(([k, v]) => `${k}:${v}`)
+                          .join(" · ")
+                      : "grudge-ai-hub"}
+                  </span>
+                </div>
+              </div>
               <div className="hp-grid systems">
                 {(systems?.pillars ?? []).map((p) => (
                   <div key={p.id} className="hp-card static">

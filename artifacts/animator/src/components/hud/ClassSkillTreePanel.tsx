@@ -3,16 +3,24 @@
  * Book list · Talent grid · Path (milestone 0/1/5/10/15/20 + bridge nodes).
  *
  * Data: fleet master-skillTrees + additive class-skill-bridges (not a class rewrite).
+ * Activation spends per-domain skill points from CharacterSkillProgress.
  */
 import { useEffect, useMemo, useState } from "react";
 import type { SkillNode, SkillTree } from "../../game/harvestCatalog";
 import {
   CLASS_SKILL_MILESTONES,
-  grantAutoNodesFromTree,
-  loadSkillUnlocks,
   skillBandLabel,
-  unlockSkillNode,
 } from "../../game/harvestCatalog";
+import {
+  type CharacterSkillProgress,
+  type SkillPointDomain,
+  DOMAIN_LABELS,
+  activateNode,
+  canActivateNode,
+  domainForTreeId,
+  grantFreeNodes,
+  nodePointCost,
+} from "../../lib/grudgeSystems/characterSkillProgress";
 import { treeIconName } from "../../lib/gameMedia";
 import {
   resolveSkillNodeIconUrl,
@@ -65,7 +73,11 @@ export interface ClassSkillTreePanelProps {
   preferredTreeId?: string;
   /** Character level for path gates (sandbox default 20). */
   playerLevel?: number;
-  onUnlock?: (nodeId: string, unlocks: string[]) => void;
+  /** Account character skill progress (points + unlocked + effects). */
+  skillProgress: CharacterSkillProgress;
+  /** Persist progress after free grants / activation. */
+  onProgressChange: (next: CharacterSkillProgress) => void;
+  onUnlock?: (nodeId: string, unlocks: string[], progress: CharacterSkillProgress) => void;
 }
 
 function ribbonClass(unlocked: boolean, reqOk: boolean, tier: number): string {
@@ -85,19 +97,6 @@ function kindLabel(n: SkillNode): string {
   if (n.kind === "passive" || n.passive) return "PAS";
   if (n.kind === "bridge") return "BR";
   return n.kind?.toUpperCase().slice(0, 4) || "SK";
-}
-
-function canUnlockNode(
-  n: SkillNode,
-  unlocks: string[],
-  playerLevel: number,
-): { ok: boolean; reason?: string } {
-  const needLv = n.requiredLevel ?? 0;
-  if (needLv > playerLevel) return { ok: false, reason: `Need level ${needLv}` };
-  if (n.auto || needLv === 0) return { ok: true };
-  const reqOk = (n.requires || []).every((r) => unlocks.includes(r));
-  if (!reqOk) return { ok: false, reason: "Requires prior nodes" };
-  return { ok: true };
 }
 
 /** Group nodes into path columns: L0, L1, bridges 2-4, L5, bridges 6-9, … */
@@ -121,6 +120,8 @@ export function ClassSkillTreePanel({
   trees,
   preferredTreeId = "weapon-combat",
   playerLevel = 20,
+  skillProgress,
+  onProgressChange,
   onUnlock,
 }: ClassSkillTreePanelProps) {
   const ordered = useMemo(() => {
@@ -138,8 +139,11 @@ export function ClassSkillTreePanel({
   }, [trees, preferredTreeId]);
 
   const [treeId, setTreeId] = useState(ordered[0]?.id ?? preferredTreeId);
-  const [unlocks, setUnlocks] = useState(() => loadSkillUnlocks());
   const [view, setView] = useState<"path" | "list" | "talent">("path");
+  const [flash, setFlash] = useState<string | null>(null);
+
+  const unlocks = skillProgress.unlocked;
+  const allNodes = useMemo(() => trees.flatMap((t) => t.nodes), [trees]);
 
   // Keep preferred tree in sync when class chip changes
   useEffect(() => {
@@ -149,12 +153,18 @@ export function ClassSkillTreePanel({
   }, [preferredTreeId, ordered]);
 
   const tree = ordered.find((t) => t.id === treeId) ?? ordered[0];
+  const domain: SkillPointDomain = tree ? domainForTreeId(tree.id) : "class";
+  const pool = skillProgress.points[domain] || 0;
 
-  // Auto-grant L0 / auto nodes when viewing a class tree
+  // Auto-grant L0 / auto nodes when viewing a class tree (free, no point cost)
   useEffect(() => {
     if (!tree?.id.startsWith("class-")) return;
-    const next = grantAutoNodesFromTree(tree);
-    setUnlocks(next);
+    const next = grantFreeNodes(skillProgress, tree);
+    if (next.unlocked.length !== skillProgress.unlocked.length) {
+      onProgressChange(next);
+    }
+    // only when tree id changes or unlock count lags
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: grant when tree switches
   }, [tree?.id]);
 
   const columns = useMemo(() => (tree ? pathColumns(tree.nodes) : []), [tree]);
@@ -171,16 +181,29 @@ export function ClassSkillTreePanel({
   }
 
   const tryUnlock = (n: SkillNode) => {
-    const gate = canUnlockNode(n, unlocks, playerLevel);
-    if (!gate.ok || unlocks.includes(n.id)) return;
-    if (n.auto || n.requiredLevel === 0) return; // already granted
-    const next = unlockSkillNode(n.id);
-    setUnlocks(next);
-    onUnlock?.(n.id, next);
+    if (unlocks.includes(n.id)) return;
+    if (n.auto || n.requiredLevel === 0) return; // free — granted by grantFreeNodes
+    const result = activateNode(skillProgress, n, {
+      playerLevel,
+      treeId: tree.id,
+      domain,
+      allNodes,
+    });
+    if (!result.ok) {
+      setFlash(result.reason);
+      window.setTimeout(() => setFlash(null), 2200);
+      return;
+    }
+    setFlash(null);
+    onProgressChange(result.progress);
+    onUnlock?.(n.id, result.progress.unlocked, result.progress);
   };
 
+  const gateFor = (n: SkillNode) =>
+    canActivateNode(skillProgress, n, { playerLevel, treeId: tree.id, domain });
+
   return (
-    <div className="cx-skill-panel" data-tree={tree.id}>
+    <div className="cx-skill-panel" data-tree={tree.id} data-domain={domain}>
       <header className="cx-skill-head">
         <div className="cx-skill-head-icon">
           {tree.iconUrl || tree.icon ? (
@@ -201,15 +224,16 @@ export function ClassSkillTreePanel({
         <div>
           <h3>Class · {tree.name}</h3>
           <p>
-            One class selected · L0 at pick · milestones L1 / L5 / L10 / L15 / L20 · bridge nodes
-            (passives, procs, health) between. Character level {playerLevel}.
+            Spend <strong>{DOMAIN_LABELS[domain]}</strong> points · L0 free at pick · milestones L1 /
+            L5 / L10 / L15 / L20 · level {playerLevel}.
+            {flash ? ` · ${flash}` : ""}
           </p>
         </div>
         <div
           className="cx-skill-points"
-          title="Sandbox unlock count (not a spend budget yet — unlocks are free locally)"
+          title={`${DOMAIN_LABELS[domain]} points available for this tree domain`}
         >
-          {unlocks.length} unlocks
+          {pool} {DOMAIN_LABELS[domain].toLowerCase()} pts · {unlocks.length} active
         </div>
       </header>
 
@@ -267,8 +291,9 @@ export function ClassSkillTreePanel({
                   <div className="cx-path-nodes">
                     {col.nodes.map((n) => {
                       const unlocked = unlocks.includes(n.id);
-                      const gate = canUnlockNode(n, unlocks, playerLevel);
+                      const gate = gateFor(n);
                       const locked = !unlocked && !gate.ok;
+                      const cost = nodePointCost(n);
                       return (
                         <button
                           key={n.id}
@@ -283,7 +308,7 @@ export function ClassSkillTreePanel({
                           title={
                             locked
                               ? `${n.name}: ${gate.reason || "Locked"} — ${n.desc}`
-                              : `${n.name}: ${n.desc}`
+                              : `${n.name}: ${n.desc}${cost ? ` (${cost} ${DOMAIN_LABELS[domain]} pt)` : " (free)"}`
                           }
                           onClick={() => tryUnlock(n)}
                         >
@@ -297,7 +322,9 @@ export function ClassSkillTreePanel({
                                 : "OWN"
                               : locked
                                 ? "LOCK"
-                                : `${n.cost}p`}
+                                : cost === 0
+                                  ? "FREE"
+                                  : `${cost}p`}
                           </span>
                         </button>
                       );
@@ -318,7 +345,8 @@ export function ClassSkillTreePanel({
         {view === "list" &&
           tree.nodes.map((n) => {
             const unlocked = unlocks.includes(n.id);
-            const gate = canUnlockNode(n, unlocks, playerLevel);
+            const gate = gateFor(n);
+            const cost = nodePointCost(n);
             const ribbon = ribbonClass(unlocked, gate.ok, n.tier);
             return (
               <button
@@ -354,7 +382,9 @@ export function ClassSkillTreePanel({
                         ? "AUTO"
                         : "OWN"
                       : gate.ok
-                        ? `${n.cost}p`
+                        ? cost === 0
+                          ? "FREE"
+                          : `${cost}p`
                         : "LOCK"}
                   </span>
                 </div>
@@ -366,7 +396,8 @@ export function ClassSkillTreePanel({
           <div className="cx-talent-grid">
             {tree.nodes.map((n) => {
               const unlocked = unlocks.includes(n.id);
-              const gate = canUnlockNode(n, unlocks, playerLevel);
+              const gate = gateFor(n);
+              const cost = nodePointCost(n);
               return (
                 <button
                   key={n.id}
@@ -380,7 +411,7 @@ export function ClassSkillTreePanel({
                     <SkillNodeIcon node={n} treeId={tree.id} size={26} />
                   </span>
                   <span className="cx-talent-rank">
-                    {unlocked ? "✓" : n.requiredLevel === 0 ? "0" : n.cost}
+                    {unlocked ? "✓" : n.requiredLevel === 0 ? "0" : cost}
                   </span>
                   <span className="cx-talent-lab">{n.name}</span>
                 </button>
