@@ -39,7 +39,8 @@ import { Hud } from "./components/Hud";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
-import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
+import { loadoutRaceFromFleet } from "./components/EquipmentScreen";
+import { ExplorerCharacterPage } from "./components/characterPage";
 import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
@@ -2214,7 +2215,7 @@ export default function App() {
           {isMobile && <TouchControls api={touchApi} />}
 
           {equipOpen && (
-            <EquipmentScreen
+            <ExplorerCharacterPage
               characterName={hud?.character ?? characterId}
               characterId={activeCharacterId}
               race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
@@ -2223,17 +2224,13 @@ export default function App() {
               onEquip={onWeapon}
               onEquipOff={onOffHand}
               onClose={() => setEquipOpen(false)}
+              onOpenAvatarEdit={() => {
+                setEquipOpen(false);
+                navigate("avatar");
+              }}
               onOpenCrafting={() => {
                 setEquipOpen(false);
                 setHarvestUiOpen(true);
-              }}
-              onOpenSkillTrees={() => {
-                setEquipOpen(false);
-                setSystemsOpen(true);
-              }}
-              onSelectHarvestTool={(tool) => {
-                studioRef.current?.selectActivityTool?.(tool);
-                setEquipOpen(false);
               }}
             />
           )}
@@ -2444,7 +2441,7 @@ export default function App() {
           )}
 
           {equipOpen && (
-            <EquipmentScreen
+            <ExplorerCharacterPage
               characterName={hud?.character ?? characterId}
               characterId={activeCharacterId}
               race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
@@ -2453,17 +2450,13 @@ export default function App() {
               onEquip={onWeapon}
               onEquipOff={onOffHand}
               onClose={() => setEquipOpen(false)}
+              onOpenAvatarEdit={() => {
+                setEquipOpen(false);
+                navigate("avatar");
+              }}
               onOpenCrafting={() => {
                 setEquipOpen(false);
                 setHarvestUiOpen(true);
-              }}
-              onOpenSkillTrees={() => {
-                setEquipOpen(false);
-                setSystemsOpen(true);
-              }}
-              onSelectHarvestTool={(tool) => {
-                studioRef.current?.selectActivityTool?.(tool);
-                setEquipOpen(false);
               }}
             />
           )}
