@@ -24,3 +24,7 @@ artifacts/animator/public/models/worlds/**/*.glb
 
 reports/
 
+
+# Road pack binary — R2 only
+artifacts/animator/public/models/packs/*.glb
+

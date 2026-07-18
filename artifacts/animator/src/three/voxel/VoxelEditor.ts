@@ -28,6 +28,10 @@ import {
 } from "./types";
 import { ensureBlockTypes, nearestTerrainType } from "@workspace/voxel-canonical";
 import { loadPropTemplate } from "./props";
+import {
+  buildBiomeRoadBlocks,
+  scatterRoadPackAccents,
+} from "./roadPack";
 
 /**
  * Distinct Explorer colourways so placed NPCs read apart at a glance. The editor
@@ -452,6 +456,55 @@ export class VoxelEditor {
     for (const b of normalized.blocks ?? []) this.addBlock(b);
     for (const d of normalized.deployables ?? []) this.addDeployable(d);
     this.emitStats();
+  }
+
+  /**
+   * Apply Road Pack–derived biome + road layout for `/world` lab:
+   *  - voxel blocks: spokes, rings, biome wedges, tree pillars
+   *  - optional GLB accents from `models/packs/road_pack.glb` (R2)
+   * Kenney 8m modular roads stay on full VoxGrudge world CDN.
+   */
+  async applyBiomeRoadLayout(opts?: {
+    half?: number;
+    scatterGlb?: boolean;
+  }): Promise<{ blocks: number; accents: number }> {
+    const half = opts?.half ?? 20;
+    const blocks = buildBiomeRoadBlocks({ half });
+    const startZ = -Math.min(half - 2, 16);
+    this.load({
+      version: VOXEL_MAP_VERSION,
+      dungeon: false,
+      blocks,
+      deployables: [
+        {
+          id: "start",
+          kind: "start",
+          x: 0,
+          y: 0,
+          z: startZ,
+          rotation: 0,
+        },
+      ],
+    });
+
+    // Clear previous road-pack accents
+    const old = this.scene.getObjectByName("roadPackAccents");
+    if (old) this.scene.remove(old);
+
+    let accents = 0;
+    if (opts?.scatterGlb !== false) {
+      const group = new THREE.Group();
+      group.name = "roadPackAccents";
+      accents = await scatterRoadPackAccents(group, {
+        spokeCount: 8,
+        ringRadii: [6, 12],
+      });
+      // Center accents on grid origin (editor cells are +0.5 offset for blocks)
+      group.position.set(0.5, 0, 0.5);
+      this.scene.add(group);
+    }
+    this.emitStats();
+    return { blocks: blocks.length, accents };
   }
 
   // ── Placement ────────────────────────────────────────────────────────────────

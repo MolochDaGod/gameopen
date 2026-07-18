@@ -8,6 +8,7 @@ import type {
 import { VOXEL_MAP_VERSION, colorForBlockType } from "./types";
 import type { WeaponId } from "../types";
 import type { BlockTypeId } from "@workspace/voxel-canonical";
+import { buildBiomeRoadBlocks } from "./roadPack";
 
 /**
  * Code-defined starting-map templates for the Voxel Editor (`/voxel`).
@@ -302,8 +303,34 @@ export interface MapTemplate {
   build: () => VoxelMap;
 }
 
+/** Road pack → spokes/rings/biome wedges for /world lab (see roadPack.ts). */
+function biomeRoadLab(): VoxelMap {
+  const blocks = buildBiomeRoadBlocks({ half: 18 });
+  return {
+    version: VOXEL_MAP_VERSION,
+    dungeon: false,
+    blocks,
+    deployables: [
+      {
+        id: "start",
+        kind: "start",
+        x: 0,
+        y: 0,
+        z: -16,
+        rotation: 0,
+      },
+    ],
+  };
+}
+
 /** Selectable templates, in picker order. */
 export const MAP_TEMPLATES: MapTemplate[] = [
+  {
+    id: "biomeRoadLab",
+    label: "Biome Roads Lab",
+    desc: "Road pack breakdown — spokes, rings, biome wedges, tree accents",
+    build: biomeRoadLab,
+  },
   { id: "boxingRing", label: "Boxing Ring", desc: "Roped canvas + corner posts, 1-on-1", build: boxingRing },
   { id: "arena1", label: "Arena 1", desc: "Walled pit with light cover · 2 foes", build: arena1 },
   { id: "arena2", label: "Arena 2", desc: "Pillars + raised platforms · 3 foes", build: arena2 },

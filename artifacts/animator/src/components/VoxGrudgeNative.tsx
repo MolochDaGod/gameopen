@@ -44,6 +44,8 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
   const [wsStatus, setWsStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [peers, setPeers]       = useState<PresenceState[]>([]);
+  const [layoutBusy, setLayoutBusy] = useState(false);
+  const [layoutNote, setLayoutNote] = useState<string | null>(null);
 
   // Remove stale peers after 8 s of silence.
   const peerMapRef = useRef<Map<string, PresenceState>>(new Map());
@@ -54,17 +56,40 @@ export function VoxGrudgeNative({ onExit }: Props) {
     const container = containerRef.current;
     if (!container) return;
     let editor: VoxelEditor | null = null;
+    let cancelled = false;
     try {
       editor = new VoxelEditor(container);
       editorRef.current = editor;
+      // Seed biome + road connectors from road_pack breakdown (blocks always; GLB if on R2)
+      void editor.applyBiomeRoadLayout({ scatterGlb: true }).then((r) => {
+        if (cancelled) return;
+        setLayoutNote(
+          `Biome roads · ${r.blocks} cells · ${r.accents} pack accents (roads/trees/biomes)`,
+        );
+      });
     } catch (err) {
       console.warn("[VoxGrudgeNative] VoxelEditor init failed", err);
     }
     return () => {
+      cancelled = true;
       editor?.dispose();
       editorRef.current = null;
     };
   }, []);
+
+  const reapplyBiomeRoads = () => {
+    const editor = editorRef.current;
+    if (!editor || layoutBusy) return;
+    setLayoutBusy(true);
+    void editor
+      .applyBiomeRoadLayout({ scatterGlb: true })
+      .then((r) => {
+        setLayoutNote(
+          `Re-applied · ${r.blocks} cells · ${r.accents} accents · road_pack + Kenney CDN for full world`,
+        );
+      })
+      .finally(() => setLayoutBusy(false));
+  };
 
   // ── WebSocket presence ───────────────────────────────────────────────────────
 
@@ -173,6 +198,16 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
         <button
           type="button"
+          style={biomeBtn}
+          disabled={layoutBusy}
+          title="Apply road_pack breakdown: spokes, rings, biome wedges, trees"
+          onClick={reapplyBiomeRoads}
+        >
+          {layoutBusy ? "Applying…" : "Biome roads"}
+        </button>
+
+        <button
+          type="button"
           style={fullWorldBtn}
           onClick={() => {
             const url = voxgrudgeWorldUrl({
@@ -193,8 +228,10 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
       {/* ── bottom hint bar ── */}
       <div style={hintBar}>
-        This is the Open <b>lab</b> (local editor). Full VoxGrudge world:{" "}
-        <b>voxgrudge.vercel.app</b> · RMB orbit · LMB build · Full World opens the real open world
+        Lab uses <b>road_pack</b> for biomes/paths/trees + block spokes/rings. Modular{" "}
+        <b>Kenney 8m roads</b> on full world CDN.{" "}
+        {layoutNote ? <span style={{ color: "#9fe8ff" }}>{layoutNote}</span> : null}
+        {" · "}RMB orbit · LMB build · Full World → voxgrudge.vercel.app
       </div>
     </div>
   );
@@ -264,6 +301,18 @@ const brandTag: CSSProperties = {
   opacity: 0.7,
   alignSelf: "center",
   marginLeft: 2,
+};
+
+const biomeBtn: CSSProperties = {
+  marginLeft: "auto",
+  padding: "6px 12px",
+  borderRadius: 8,
+  border: "1px solid rgba(126,224,160,0.45)",
+  background: "rgba(30,80,50,0.55)",
+  color: "#9fe8b8",
+  fontWeight: 700,
+  fontSize: 12,
+  cursor: "pointer",
 };
 
 const statusBlock: CSSProperties = {
