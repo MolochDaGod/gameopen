@@ -82,6 +82,18 @@
       "destination": "https://info.grudge-studio.com/api/:path*"
     },
     {
+      "source": "/api/ai/health",
+      "destination": "https://ai.grudge-studio.com/health"
+    },
+    {
+      "source": "/api/ai/v1/:path*",
+      "destination": "https://ai.grudge-studio.com/v1/:path*"
+    },
+    {
+      "source": "/api/ai/:path*",
+      "destination": "https://ai.grudge-studio.com/:path*"
+    },
+    {
       "source": "/api/assets/:path*",
       "destination": "https://assets.grudge-studio.com/:path*"
     },
@@ -135,15 +147,15 @@
     },
     {
       "source": "/models/grudge/:path*",
-      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/grudge/:path*"
+      "destination": "https://assets.grudge-studio.com/models/grudge/:path*"
     },
     {
       "source": "/models/weapons/:path*",
-      "destination": "https://threejs-rapier-react-three-controll.vercel.app/models/weapons/:path*"
+      "destination": "https://assets.grudge-studio.com/models/weapons/:path*"
     },
     {
       "source": "/anim/:path*",
-      "destination": "https://threejs-rapier-react-three-controll.vercel.app/anim/:path*"
+      "destination": "https://assets.grudge-studio.com/anim/:path*"
     },
     {
       "source": "/api/space",
@@ -214,7 +226,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; frame-ancestors 'self' https://id.grudge-studio.com https://open.grudge-studio.com https://*.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site; frame-src 'self' blob: data: https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://*.vercel.live https://grudgewarlords.com https://*.grudgewarlords.com https://id.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://js.puter.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://vercel.live https://*.vercel.live; img-src 'self' data: blob: https://assets.grudge-studio.com https://*.grudge-studio.com https://*.vercel.app https://img.clerk.com; media-src 'self' blob: data: https://assets.grudge-studio.com https://*.grudge-studio.com; worker-src 'self' blob:; child-src 'self' blob:; connect-src 'self' blob: data: https://*.grudge-studio.com https://*.vercel.app https://*.up.railway.app https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://vercel.live wss://*.grudge-studio.com wss://*.up.railway.app wss://*.vercel.app https://js.puter.com https://api.puter.com https://fonts.googleapis.com https://fonts.gstatic.com; object-src 'none'; base-uri 'self'"
+          "value": "default-src 'self'; frame-ancestors 'self' https://id.grudge-studio.com https://open.grudge-studio.com https://*.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site; frame-src 'self' blob: data: https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://*.vercel.live https://grudgewarlords.com https://*.grudgewarlords.com https://id.grudge-studio.com https://puter.com https://*.puter.com https://*.puter.site https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://*.grudge-studio.com https://*.vercel.app https://vercel.live https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://js.puter.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://vercel.live https://*.vercel.live; img-src 'self' data: blob: https://assets.grudge-studio.com https://*.grudge-studio.com https://*.vercel.app https://img.clerk.com; media-src 'self' blob: data: https://assets.grudge-studio.com https://*.grudge-studio.com; worker-src 'self' blob:; child-src 'self' blob:; connect-src 'self' blob: data: https://*.grudge-studio.com https://*.vercel.app https://*.up.railway.app https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://vercel.live wss://*.grudge-studio.com wss://*.up.railway.app wss://*.vercel.app https://js.puter.com https://api.puter.com https://fonts.googleapis.com https://fonts.gstatic.com https://static.cloudflareinsights.com https://cloudflareinsights.com; object-src 'none'; base-uri 'self'"
         },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }

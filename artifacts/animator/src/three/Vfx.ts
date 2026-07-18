@@ -458,7 +458,8 @@ export class Vfx {
       return {
         path: MODEL_VFX.turretGameReady[0],
         size: MODEL_VFX.turretGameReady[1],
-        alts: [],
+        // Classic pack is same-origin + R2-friendly fallback when game-ready 404s on CDN.
+        alts: [MODEL_VFX.turret[0]],
       };
     }
     return {

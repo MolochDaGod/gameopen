@@ -591,6 +591,11 @@ export class Studio {
   /** Fired after a character GLB finishes loading and is committed. */
   onCharacterLoaded: ((id: string) => void) | null = null;
   /**
+   * Character bag death drop (3×3 carry empties; 2×2 loadout kept).
+   * Wired from App → applyDeathBagDrop(characterId).
+   */
+  onPlayerDefeat: (() => void) | null = null;
+  /**
    * Fired when the room's environment preset changes because of a host broadcast
    * (not a local user action). Lets the host-agnostic React UI keep its menubar
    * selection in sync with the arena every joiner is now in.
@@ -994,6 +999,10 @@ export class Studio {
     // Sandbox claim so gated buildings can ghost-place without planting first
     this.campBuild.seedSandboxClaim(new THREE.Vector3(0, 0, -6));
     // Outdoor test worlds: danger-room | sailtest | forest-map
+    // NOTE: Do NOT call campBuild.loadSmallIsland() on Danger Room boot —
+    // production crash was `loadSmallIsland is not a function` on stale deploys
+    // that mixed old Studio (sync call) with partial CampBuild. Island meshes
+    // load only via ForestWorld + TEST_WORLDS (sailtest / forest-map).
     this.forestWorld = new ForestWorld(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
     });
@@ -3350,6 +3359,12 @@ export class Studio {
     if (this.defeated) return;
     this.defeated = true;
     this.blocking = false;
+    // Carry bag drops resources/items; kept loadout (main/side/mount/boat) stays.
+    try {
+      this.onPlayerDefeat?.();
+    } catch {
+      /* bag hook optional */
+    }
     // Death drops any in-flight mace throw (restore the held weapon for respawn).
     this.cancelMaceThrow();
     // Drop any RMB lock stance so a desynced mouse state can't leave the camera
