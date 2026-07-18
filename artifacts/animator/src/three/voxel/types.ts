@@ -15,10 +15,23 @@ export type PieceShape = "block" | "slab" | "wall" | "pillar" | "ramp";
 export type DeployableKind = "npc" | "heavyBag" | "physicsBag" | "prop" | "start";
 
 /** Palette grouping for deployable GLB props. */
-export type PropCategory = "bench" | "build";
+export type PropCategory = "bench" | "build" | "farm" | "camp" | "road";
 
-/** The set of GLB props that can be deployed (crafting benches + build helpers). */
-export type PropId = "brewingStand" | "alchemistsChest" | "modularFortress" | "torch";
+/**
+ * Deployable GLB props — benches, build, farm/camp packs, Kenney roads.
+ * Pack-backed props use whole GLB for now (mesh isolation via farmPack/amidaFields APIs).
+ */
+export type PropId =
+  | "brewingStand"
+  | "alchemistsChest"
+  | "modularFortress"
+  | "torch"
+  | "farmBarn"
+  | "farmPumpkin"
+  | "farmHay"
+  | "kenneyStraight"
+  | "kenneyCrossroad"
+  | "kenneyBend";
 
 /** Static metadata for a deployable GLB prop. */
 export interface PropDef {
@@ -31,7 +44,7 @@ export interface PropDef {
   /** Models are normalized at load time to fit this world height (metres). */
   targetHeight: number;
   /**
-   * Horizontal half-extent (metres Γëê grid cells) of the prop AFTER it is
+   * Horizontal half-extent (metres ≈ grid cells) of the prop AFTER it is
    * normalized to {@link targetHeight}. Authored from the model's measured,
    * normalized X/Z size (the larger axis, so it's rotation-invariant) and used by
    * the Voxel Editor to compute the prop's placement footprint deterministically
@@ -47,7 +60,7 @@ export const PROPS: Record<PropId, PropDef> = {
   brewingStand: {
     id: "brewingStand",
     label: "Brewing Stand",
-    glyph: "ΓÜù",
+    glyph: "⚗",
     category: "bench",
     file: "models/props/brewing-stand.glb",
     targetHeight: 1.5,
@@ -57,7 +70,7 @@ export const PROPS: Record<PropId, PropDef> = {
   alchemistsChest: {
     id: "alchemistsChest",
     label: "Alchemist's Chest",
-    glyph: "Γ¼Ü",
+    glyph: "⬚",
     category: "bench",
     file: "models/props/alchemists-chest.glb",
     targetHeight: 1.2,
@@ -67,7 +80,7 @@ export const PROPS: Record<PropId, PropDef> = {
   modularFortress: {
     id: "modularFortress",
     label: "Fortress Piece",
-    glyph: "Γ¢½",
+    glyph: "🏰",
     category: "build",
     file: "models/props/modular-fortress.glb",
     targetHeight: 3,
@@ -77,12 +90,72 @@ export const PROPS: Record<PropId, PropDef> = {
   torch: {
     id: "torch",
     label: "Torch",
-    glyph: "≡ƒöÑ",
-    category: "build",
+    glyph: "🔥",
+    category: "camp",
     file: "models/props/dying-torch.glb",
     targetHeight: 1.9,
     footprintRadius: 0.3,
     collide: false,
+  },
+  farmBarn: {
+    id: "farmBarn",
+    label: "Farm Barn (pack)",
+    glyph: "🏚️",
+    category: "farm",
+    file: "models/packs/low_poly_farm.glb",
+    targetHeight: 3.5,
+    footprintRadius: 3.5,
+    collide: true,
+  },
+  farmPumpkin: {
+    id: "farmPumpkin",
+    label: "Farm Pumpkins",
+    glyph: "🎃",
+    category: "farm",
+    file: "models/packs/low_poly_farm.glb",
+    targetHeight: 1.2,
+    footprintRadius: 1.2,
+    collide: false,
+  },
+  farmHay: {
+    id: "farmHay",
+    label: "Farm Hay",
+    glyph: "🌾",
+    category: "farm",
+    file: "models/packs/low_poly_farm.glb",
+    targetHeight: 1.5,
+    footprintRadius: 1.4,
+    collide: true,
+  },
+  kenneyStraight: {
+    id: "kenneyStraight",
+    label: "Road Straight 8m",
+    glyph: "═",
+    category: "road",
+    file: "models/kenney/roads/road_straight.glb",
+    targetHeight: 0.4,
+    footprintRadius: 4,
+    collide: true,
+  },
+  kenneyCrossroad: {
+    id: "kenneyCrossroad",
+    label: "Road Cross 8m",
+    glyph: "╬",
+    category: "road",
+    file: "models/kenney/roads/road_crossroad.glb",
+    targetHeight: 0.4,
+    footprintRadius: 4,
+    collide: true,
+  },
+  kenneyBend: {
+    id: "kenneyBend",
+    label: "Road Bend 8m",
+    glyph: "╗",
+    category: "road",
+    file: "models/kenney/roads/road_bend.glb",
+    targetHeight: 0.4,
+    footprintRadius: 4,
+    collide: true,
   },
 };
 

@@ -27,6 +27,8 @@ reports/
 
 # Road pack binary — R2 only
 artifacts/animator/public/models/packs/*.glb
+# Kenney road tiles staged for upload only (R2 SSOT)
+artifacts/animator/public/models/kenney/**/*.glb
 
 
 # Large VFX GLBs — R2

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": {
+    "file": "C:/Users/nugye/Desktop/grudgeproduction/voxgrudge/low_poly_farm.glb",
+    "title": "Low Poly Farm",
+    "license": "Sketchfab / check model page",
+    "r2Key": "models/packs/low_poly_farm.glb",
+    "cdn": "https://assets.grudge-studio.com/models/packs/low_poly_farm.glb"
+  },
+  "notes": "28 named meshes (grass/dirt/barn/pumpkin/metal). Better prop isolation than Mineways atlas packs. Use with Amida farm layout + codex terrain.",
+  "pieces": [
+    { "meshIndex": 0, "name": "Ground_grass 2_0", "role": "grass_a", "group": "field", "codexTerrain": "grass" },
+    { "meshIndex": 1, "name": "Ground_Grass_0", "role": "grass_b", "group": "field", "codexTerrain": "grass" },
+    { "meshIndex": 2, "name": "Ground_05 - Default_0", "role": "ground_misc_a", "group": "field", "codexTerrain": "dirt" },
+    { "meshIndex": 3, "name": "Ground_Dirt2_0", "role": "dirt_a", "group": "farm", "codexTerrain": "dirt" },
+    { "meshIndex": 4, "name": "Ground_Dirt_0", "role": "dirt_b", "group": "farm", "codexTerrain": "dirt" },
+    { "meshIndex": 5, "name": "Ground_Dirt4_0", "role": "dirt_c", "group": "farm", "codexTerrain": "dirt" },
+    { "meshIndex": 6, "name": "Ground_grass 3_0", "role": "grass_c", "group": "field", "codexTerrain": "grass" },
+    { "meshIndex": 7, "name": "Ground_grass 3_0", "role": "grass_d", "group": "field", "codexTerrain": "grass" },
+    { "meshIndex": 8, "name": "Ground_grass 3_0", "role": "grass_e", "group": "field", "codexTerrain": "grass" },
+    { "meshIndex": 9, "name": "Ground_barn 2_0", "role": "barn_a", "group": "structure", "codexTerrain": "woodPlanks" },
+    { "meshIndex": 10, "name": "Ground_03 - Default_0", "role": "structure_a", "group": "structure", "codexTerrain": "woodPlanks" },
+    { "meshIndex": 11, "name": "Ground_11 - Default_0", "role": "structure_b", "group": "structure", "codexTerrain": "log" },
+    { "meshIndex": 12, "name": "Ground_barn_0", "role": "barn_b", "group": "structure", "codexTerrain": "brickRed" },
+    { "meshIndex": 13, "name": "Ground_08 - Default_0", "role": "structure_c", "group": "structure", "codexTerrain": "woodPlanks" },
+    { "meshIndex": 14, "name": "Ground_metal_0", "role": "metal_a", "group": "prop", "codexTerrain": "brickGrey" },
+    { "meshIndex": 15, "name": "Ground_23 - Default_0", "role": "prop_a", "group": "prop", "codexTerrain": "blockSquare" },
+    { "meshIndex": 16, "name": "Ground_14 - Default_0", "role": "prop_b", "group": "prop", "codexTerrain": "blockSquare" },
+    { "meshIndex": 17, "name": "Ground_Material #4640_0", "role": "prop_c", "group": "prop", "codexTerrain": "blockBlank" },
+    { "meshIndex": 18, "name": "Ground_yellow 2_0", "role": "hay_a", "group": "farm", "codexTerrain": "brickYellow" },
+    { "meshIndex": 19, "name": "Ground_04 - Default_0", "role": "prop_d", "group": "prop", "codexTerrain": "woodPlanks" },
+    { "meshIndex": 20, "name": "Ground_22 - Default_0", "role": "prop_e", "group": "prop", "codexTerrain": "log" },
+    { "meshIndex": 21, "name": "Ground_Pumpkin_0", "role": "pumpkin_a", "group": "farm", "codexTerrain": "leaves" },
+    { "meshIndex": 22, "name": "Ground_Pumpkin_0", "role": "pumpkin_b", "group": "farm", "codexTerrain": "leaves" },
+    { "meshIndex": 23, "name": "Ground_Pumpkin_0", "role": "pumpkin_c", "group": "farm", "codexTerrain": "leaves" },
+    { "meshIndex": 24, "name": "Ground_Pumpkin_0", "role": "pumpkin_d", "group": "farm", "codexTerrain": "leaves" },
+    { "meshIndex": 25, "name": "Ground_metal 2_0", "role": "metal_b", "group": "prop", "codexTerrain": "brickGrey" },
+    { "meshIndex": 26, "name": "Object001_metal_0", "role": "metal_prop_a", "group": "prop", "codexTerrain": "brickGrey" },
+    { "meshIndex": 27, "name": "Object002_metal_0", "role": "metal_prop_b", "group": "prop", "codexTerrain": "brickGrey" }
+  ]
+}

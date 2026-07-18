@@ -77,8 +77,21 @@
     }
   },
   "kenneyRoads": {
-    "note": "Modular 8m connectors for real open-world zones",
-    "cdnBase": "https://assets.grudge-studio.com/voxgrudge/models/kenney/roads/",
-    "tileM": 8
+    "note": "Modular 8m connectors for real open-world zones (Kenney City Kit Roads 1.1 CC0)",
+    "cdnBase": "https://assets.grudge-studio.com/models/kenney/roads/",
+    "r2Prefix": "models/kenney/roads/",
+    "tileM": 8,
+    "coreTiles": [
+      "road_straight",
+      "road_bend",
+      "road_intersection",
+      "road_crossroad",
+      "road_end",
+      "road_roundabout",
+      "road_curve",
+      "road_crossing",
+      "road_bridge",
+      "road_split"
+    ]
   }
 }

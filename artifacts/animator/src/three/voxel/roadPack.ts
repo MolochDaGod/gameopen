@@ -374,15 +374,136 @@ export async function scatterRoadPackAccents(
   return n;
 }
 
-/** Kenney modular road CDN (full world connectors) — separate from road_pack.glb */
+/**
+ * Kenney modular road CDN (full world connectors) — separate from road_pack.glb.
+ * R2 keys: models/kenney/roads/road_straight.glb (Kenney underscores, not hyphens).
+ * Tile size: 8 m (City Kit Roads 1.1, CC0).
+ */
 export const KENNEY_ROADS_CDN =
-  "https://assets.grudge-studio.com/voxgrudge/models/kenney/roads/";
+  "https://assets.grudge-studio.com/models/kenney/roads/";
 
+export const KENNEY_ROADS_R2_PREFIX = "models/kenney/roads/";
+
+/** Core connector tiles for spokes/rings (filenames without .glb). */
 export const KENNEY_ROAD_TILES = [
-  "road-straight",
-  "road-bend",
-  "road-intersection",
-  "road-crossroad",
-  "road-end",
-  "road-roundabout",
+  "road_straight",
+  "road_bend",
+  "road_intersection",
+  "road_crossroad",
+  "road_end",
+  "road_roundabout",
+  "road_curve",
+  "road_crossing",
+  "road_bridge",
+  "road_split",
 ] as const;
+
+export type KenneyRoadTile = (typeof KENNEY_ROAD_TILES)[number];
+
+export function kenneyRoadUrl(tile: string): string {
+  const name = tile.replace(/-/g, "_").replace(/\.glb$/i, "");
+  return `${KENNEY_ROADS_CDN}${name}.glb`;
+}
+
+export function kenneyRoadR2Key(tile: string): string {
+  const name = tile.replace(/-/g, "_").replace(/\.glb$/i, "");
+  return `${KENNEY_ROADS_R2_PREFIX}${name}.glb`;
+}
+
+/** Load one Kenney road tile (cached). */
+const kenneyCache = new Map<string, Promise<THREE.Group | null>>();
+
+export async function loadKenneyRoadTile(
+  tile: string,
+  targetSize = 8,
+): Promise<THREE.Group | null> {
+  const key = tile.replace(/-/g, "_");
+  let pending = kenneyCache.get(key);
+  if (!pending) {
+    pending = (async () => {
+      const { scene } = await loadGltfFirst(
+        [kenneyRoadR2Key(key), kenneyRoadUrl(key)],
+        sharedGltfLoader(),
+        { prepMaterials: true },
+      );
+      const wrap = new THREE.Group();
+      wrap.add(scene.clone(true));
+      wrap.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(wrap);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const maxXZ = Math.max(size.x, size.z, 0.001);
+      wrap.scale.setScalar(targetSize / maxXZ);
+      wrap.updateMatrixWorld(true);
+      const box2 = new THREE.Box3().setFromObject(wrap);
+      const c = box2.getCenter(new THREE.Vector3());
+      wrap.position.x -= c.x;
+      wrap.position.z -= c.z;
+      wrap.position.y -= box2.min.y;
+      wrap.name = `kenney:${key}`;
+      wrap.userData.kenneyRoad = { tile: key, tileM: targetSize };
+      return wrap;
+    })().catch((err) => {
+      kenneyCache.delete(key);
+      console.warn(`[roadPack] Kenney tile failed: ${key}`, err);
+      return null;
+    });
+    kenneyCache.set(key, pending);
+  }
+  const tpl = await pending;
+  return tpl ? (tpl.clone(true) as THREE.Group) : null;
+}
+
+/**
+ * Place Kenney 8m tiles along spokes for full-world style connectors.
+ * Complements voxel road_pack material accents.
+ */
+export async function scatterKenneyRoadSpokes(
+  parent: THREE.Object3D,
+  opts?: { spokeCount?: number; radii?: number[]; tileM?: number },
+): Promise<number> {
+  const spokes = opts?.spokeCount ?? 8;
+  const radii = opts?.radii ?? [8, 16];
+  const tileM = opts?.tileM ?? 8;
+  let n = 0;
+
+  for (let s = 0; s < spokes; s++) {
+    const ang = (s / spokes) * Math.PI * 2;
+    for (const R of radii) {
+      const tile =
+        R === radii[radii.length - 1]
+          ? "road_end"
+          : s % 2 === 0
+            ? "road_straight"
+            : "road_crossing";
+      const inst = await loadKenneyRoadTile(tile, tileM);
+      if (!inst) continue;
+      inst.position.set(Math.cos(ang) * R, 0, Math.sin(ang) * R);
+      inst.rotation.y = -ang + Math.PI / 2;
+      parent.add(inst);
+      n++;
+    }
+  }
+
+  // Hub crossroad
+  const hub = await loadKenneyRoadTile("road_crossroad", tileM);
+  if (hub) {
+    hub.position.set(0, 0, 0);
+    parent.add(hub);
+    n++;
+  }
+
+  // Ring bends at mid radius
+  const mid = radii[0] ?? 8;
+  for (let s = 0; s < spokes; s++) {
+    const ang = (s / spokes) * Math.PI * 2 + Math.PI / spokes;
+    const bend = await loadKenneyRoadTile("road_bend", tileM);
+    if (!bend) continue;
+    bend.position.set(Math.cos(ang) * mid, 0, Math.sin(ang) * mid);
+    bend.rotation.y = -ang;
+    parent.add(bend);
+    n++;
+  }
+
+  return n;
+}

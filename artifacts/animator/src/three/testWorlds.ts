@@ -12,9 +12,21 @@
  * scripts/seed-outdoor-d1.mjs · docs/OUTDOOR_ASSETS_D1_R2.md
  */
 
-export type TestWorldId = "danger-room" | "sailtest" | "forest-map";
+export type TestWorldId =
+  | "danger-room"
+  | "sailtest"
+  | "forest-map"
+  | "island-life"
+  | "fabled-zone"
+  | "bridge-town-docks";
 
-export type TestWorldKind = "combat" | "camp_sail" | "harvest_forest";
+export type TestWorldKind =
+  | "combat"
+  | "camp_sail"
+  | "harvest_forest"
+  | "survival_island"
+  | "faction_town"
+  | "dock_kit";
 
 export type TestWorldDef = {
   id: TestWorldId;
@@ -87,12 +99,64 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
     defaultMode: "harvest",
     fog: { color: 0x1a2818, near: 12, far: 55, background: 0x0c140e },
   },
+  "island-life": {
+    id: "island-life",
+    name: "Island Life",
+    blurb:
+      "Survival RPG island (island_life.glb) — Minecraft-like build/mine, orc tribes + outlaws at red mushrooms, bandit boat raids, trailer ore blocks. Voxel wildlife only.",
+    kind: "survival_island",
+    uuid: "d4e5f6a7-b8c9-4d03-be24-islandlife0004",
+    seed: "island-life-survival-01",
+    meshKeys: [
+      "models/worlds/island_life.glb",
+      "models/worlds/sailtest.glb",
+      "models/worlds/small_island.glb",
+      "models/worlds/breeze-island.glb",
+    ],
+    harvestScatter: true,
+    campSandbox: true,
+    sailing: true,
+    defaultMode: "build",
+    fog: { color: 0x8ec8e8, near: 24, far: 140, background: 0x6eb8d8 },
+  },
+  "fabled-zone": {
+    id: "fabled-zone",
+    name: "Fabled Main Town",
+    blurb:
+      "Fabled faction capital (fabledzone.glb) — Starfall Archipelago sector e. Main town map + harbor dock seeds (Bridge Town kit).",
+    kind: "faction_town",
+    uuid: "e5f6a7b8-c9d0-4e14-af35-fabledzone0005",
+    seed: "fabled-main-town-01",
+    meshKeys: ["models/worlds/fabled-zone.glb", "models/worlds/fabledzone.glb"],
+    harvestScatter: false,
+    campSandbox: true,
+    sailing: true,
+    defaultMode: "combat",
+    fog: { color: 0xb8a0d8, near: 40, far: 220, background: 0x6a5090 },
+  },
+  "bridge-town-docks": {
+    id: "bridge-town-docks",
+    name: "Bridge Town Dock Kit",
+    blurb:
+      "Modular Bridge Town kit (bridge_town.glb) — seed NPC docks on islands (stilts, piers, lamps, barrels) + fisher/merchant/guard slots.",
+    kind: "dock_kit",
+    uuid: "f6a7b8c9-d0e1-4f25-b046-bridgetown0006",
+    seed: "bridge-town-docks-01",
+    meshKeys: ["models/towns/bridge-town-kit.glb", "models/worlds/bridge_town.glb"],
+    campSandbox: true,
+    sailing: true,
+    defaultMode: "build",
+    fog: { color: 0x7eb8d0, near: 20, far: 120, background: 0x5a9ab8 },
+  },
 };
 
 export const TEST_WORLD_LIST: TestWorldDef[] = [
   TEST_WORLDS["danger-room"],
   TEST_WORLDS.sailtest,
   TEST_WORLDS["forest-map"],
+  TEST_WORLDS["island-life"],
+  TEST_WORLDS["fabled-zone"],
+  TEST_WORLDS["bridge-town-docks"],
 ];
 
 const STORAGE_KEY = "open:testWorld:v1";
@@ -129,8 +193,15 @@ export const WARLORDS_NATURE = {
   foliage: "models/nature/stylized/harvest/foliage_pack.glb",
   ore: "models/nature/stylized/harvest/ore_nodes.glb",
   minerals: "models/nature/stylized/harvest/minerals_pack.glb",
-  /** Local wildlife stand-ins for skin harvest tests. */
-  animals: ["models/bear.glb", "models/creatures/skeleton-warrior.glb"],
+  /** Voxel / Blockbench wildlife only — never COTW photoreal animals. */
+  animals: [
+    "models/battle/animals/wolf.glb",
+    "models/battle/animals/bear.glb",
+    "models/battle/animals/deer.glb",
+    "models/battle/animals/buffalo.glb",
+  ],
+  /** Trailer-style ores for mine / place palette */
+  trailerOres: "models/blocks/minecrafts_trailer_style_ores.glb",
 } as const;
 
 /** Mesh-name heuristics to strip from chicken-gun forest base (replaced by Warlords). */

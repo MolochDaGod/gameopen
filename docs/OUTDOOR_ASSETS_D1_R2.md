@@ -28,17 +28,36 @@ Related: skill `grudge-d1-r2` · `grudge-warlords-assets` · [DANGER_ROOM_COMBAT
 # 0. Bake GLBs offline (grudge-asset-convert / local tools)
 #    Place temporary copies under artifacts/animator/public/models/worlds/ for upload only
 
-# 1. Upload to R2 (idempotent; needs R2_* env)
-node scripts/upload-outdoor-r2.mjs --dry-run   # list local → keys
-node scripts/upload-outdoor-r2.mjs             # real put
+# 1. Upload to R2
+#    A) S3 API (needs R2_* env):
+node scripts/upload-outdoor-r2.mjs --dry-run
+node scripts/upload-outdoor-r2.mjs
+#    B) Wrangler OAuth (no S3 keys) — packs / kenney / single keys:
+node scripts/upload-local-glbs-wrangler.mjs models/kenney/roads
+node scripts/upload-local-glbs-wrangler.mjs models/packs/low_poly_farm.glb
+node scripts/upload-local-glbs-wrangler.mjs models/worlds/island_life.glb
 
-# 2. Seed D1 registry (deterministic UUID per r2Key)
-node scripts/seed-outdoor-d1.mjs               # writes reports/outdoor-d1-seed.sql
-node scripts/seed-outdoor-d1.mjs --apply       # wrangler d1 execute --remote
+# 2. Seed D1 (LIVE schema — preferred)
+node scripts/seed-packs-d1.mjs --apply
+# Legacy outdoor seed SQL may use old columns; prefer seed-packs-d1 / seed-production-glbs-d1
 
-# 3. Verify CDN (magic/HTML check)
+# 3. Full outdoor pipeline (upload + D1 apply)
+npm run assets:outdoor:pipeline
+npm run assets:outdoor:pipeline:dry   # dry-run both steps
+
+# 4. Verify CDN (magic/HTML check)
 node scripts/verify-fleet-assets.mjs --cdn-only
 ```
+
+### Packs (git catalogs, R2 binaries)
+
+| Pack | r2Key | Code |
+| --- | --- | --- |
+| Amida fields | `models/packs/fields_near_the_city_of_amida.glb` | `amidaFields.ts` |
+| Road pack | `models/packs/road_pack.glb` | `roadPack.ts` |
+| Low poly farm | `models/packs/low_poly_farm.glb` | `farmPack.ts` |
+| Kenney roads | `models/kenney/roads/*.glb` | `roadPack.ts` Kenney helpers |
+| Island life | `models/worlds/island_life.glb` | `islandLife/catalog.ts` (+ sailtest fallbacks) |
 
 Env for upload:
 

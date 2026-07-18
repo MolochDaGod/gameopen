@@ -31,6 +31,7 @@ import { loadPropTemplate } from "./props";
 import {
   buildBiomeRoadBlocks,
   scatterRoadPackAccents,
+  scatterKenneyRoadSpokes,
 } from "./roadPack";
 import {
   buildAmidaFarmBlocks,
@@ -38,6 +39,7 @@ import {
   resolveAmidaCodexBindings,
   type AmidaCodexBinding,
 } from "./amidaFields";
+import { scatterFarmPackProps } from "./farmPack";
 
 /**
  * Distinct Explorer colourways so placed NPCs read apart at a glance. The editor
@@ -505,6 +507,11 @@ export class VoxelEditor {
         spokeCount: 8,
         ringRadii: [6, 12],
       });
+      // Kenney 8m modular connectors (CDN) — full-world style
+      accents += await scatterKenneyRoadSpokes(group, {
+        spokeCount: 8,
+        radii: [8, 16],
+      });
       // Center accents on grid origin (editor cells are +0.5 offset for blocks)
       group.position.set(0.5, 0, 0.5);
       this.scene.add(group);
@@ -560,12 +567,35 @@ export class VoxelEditor {
     if (opts?.scatterGlb !== false) {
       const group = new THREE.Group();
       group.name = "amidaFieldsAccents";
-      accents = await scatterAmidaCampProps(group, { half: Math.min(half - 2, 14) });
+      accents += await scatterAmidaCampProps(group, { half: Math.min(half - 2, 14) });
+      accents += await scatterFarmPackProps(group);
       group.position.set(0.5, 0, 0.5);
       this.scene.add(group);
     }
     this.emitStats();
     return { blocks: blocks.length, accents, codexBound };
+  }
+
+  /**
+   * Scatter Kenney 8m modular road tiles (CDN) for full-world style connectors.
+   * Does not replace voxel layout — layers on top of current map.
+   */
+  async scatterKenneyRoads(opts?: {
+    spokeCount?: number;
+    radii?: number[];
+  }): Promise<number> {
+    const old = this.scene.getObjectByName("kenneyRoadSpokes");
+    if (old) this.scene.remove(old);
+    const group = new THREE.Group();
+    group.name = "kenneyRoadSpokes";
+    const n = await scatterKenneyRoadSpokes(group, {
+      spokeCount: opts?.spokeCount ?? 8,
+      radii: opts?.radii ?? [8, 16],
+    });
+    group.position.set(0.5, 0, 0.5);
+    this.scene.add(group);
+    this.emitStats();
+    return n;
   }
 
   // ── Placement ────────────────────────────────────────────────────────────────

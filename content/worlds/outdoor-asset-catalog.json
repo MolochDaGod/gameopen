@@ -118,6 +118,41 @@
       "testWorldId": "amida-farm",
       "contentType": "model/gltf-binary",
       "notes": "Fields near Amida - farm/camp voxel pack (CC-BY). Isolate meshIndex props; codex via amidaFields.ts"
+    },
+    {
+      "id": "pack_road",
+      "r2Key": "models/packs/road_pack.glb",
+      "category": "world_pack",
+      "role": "biome_roads",
+      "testWorldId": "biome-roads",
+      "contentType": "model/gltf-binary",
+      "notes": "Mineways material clusters for biome roads lab (roadPack.ts)"
+    },
+    {
+      "id": "pack_low_poly_farm",
+      "r2Key": "models/packs/low_poly_farm.glb",
+      "category": "world_pack",
+      "role": "farm_props",
+      "testWorldId": "amida-farm",
+      "contentType": "model/gltf-binary",
+      "notes": "Low Poly Farm — barn/dirt/grass/pumpkin pieces; farmPack.ts isolate"
+    },
+    {
+      "id": "world_island_life",
+      "r2Key": "models/worlds/island_life.glb",
+      "category": "world_terrain",
+      "role": "island_life_map",
+      "testWorldId": "island-life",
+      "contentType": "model/gltf-binary",
+      "notes": "Large Mineways island (~451MB). Load only when ready; fallbacks if missing."
+    },
+    {
+      "id": "kenney_road_straight",
+      "r2Key": "models/kenney/roads/road_straight.glb",
+      "category": "road_tile",
+      "role": "kenney_road",
+      "contentType": "model/gltf-binary",
+      "notes": "Kenney City Kit Roads 8m tile (CC0). Full set under models/kenney/roads/"
     }
   ]
 }
