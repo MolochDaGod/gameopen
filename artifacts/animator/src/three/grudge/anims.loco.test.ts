@@ -45,10 +45,21 @@ describe("grudge6 locomotion pack SSOT", () => {
     // Generic locomotion/walking tips Arena GLB kits; packs use forward cycles.
     for (const clips of Object.values(ANIM_PACK_CLIPS)) {
       expect(clips.walk).not.toBe("locomotion/walking");
+      expect(isBannedLocomotionClip(clips.walk)).toBe(false);
     }
   });
 
   it("banned list documents known bad files", () => {
     expect(BANNED_LOCOMOTION_CLIPS).toContain("locomotion/running");
+    expect(BANNED_LOCOMOTION_CLIPS).toContain("locomotion/walking");
+    expect(isBannedLocomotionClip("locomotion/walking")).toBe(true);
+  });
+
+  it("no pack run is a roll transition path", () => {
+    for (const [pack, clips] of Object.entries(ANIM_PACK_CLIPS)) {
+      expect(clips.run.toLowerCase()).not.toMatch(/roll/);
+      expect(clips.run).not.toMatch(/running$/i);
+      expect(pack).toBeTruthy();
+    }
   });
 });

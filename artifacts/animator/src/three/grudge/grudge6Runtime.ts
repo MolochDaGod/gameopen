@@ -13,6 +13,7 @@ import {
   SPRINT_LOCO_MULT,
   asAnimPack,
   loadBakedClip,
+  isNonLoopingLocoClip,
   type AnimPack,
 } from "./anims";
 // re-export for Studio weapon→pack swaps
@@ -304,21 +305,51 @@ export async function loadGrudge6CombatRig(
   const clips = new Map<string, THREE.AnimationClip>();
   const roles = new Map<string, string>();
 
+  const SAFE_LOCO_FALLBACK: Record<string, string> = {
+    walk: "magic/Standing Walk Forward",
+    run: "uploads_2026_06/locomotion/torch run forward",
+    sprint: "uploads_2026_06/locomotion/torch run forward",
+  };
+
   const loadRole = async (role: string, rel: string) => {
-    try {
-      let clip = await loadBakedClip(rel);
+    const tryLoad = async (path: string) => {
+      let clip = await loadBakedClip(path);
+      if (isNonLoopingLocoClip(clip, path) && (role === "walk" || role === "run" || role === "sprint")) {
+        throw new Error(`rejected non-looping ${path} for ${role}`);
+      }
       clip = rematchClipToSkeleton(model, clip);
+      return clip;
+    };
+    try {
+      const clip = await tryLoad(rel);
       clips.set(role, clip);
       roles.set(role, role);
       return clip;
     } catch (e1) {
       try {
         let clip = await loadBakedClip(rel, ARENA_ORIGIN);
+        if (isNonLoopingLocoClip(clip, rel) && (role === "walk" || role === "run" || role === "sprint")) {
+          throw new Error(`rejected non-looping arena ${rel}`);
+        }
         clip = rematchClipToSkeleton(model, clip);
         clips.set(role, clip);
         roles.set(role, role);
         return clip;
       } catch (e2) {
+        // Last resort: known-good standing walk / torch run (never roll / tip-walk)
+        const fb = SAFE_LOCO_FALLBACK[role];
+        if (fb && fb !== rel) {
+          try {
+            const clip = await tryLoad(fb);
+            console.warn(`[grudge6Runtime] ${role} fell back to ${fb} (was ${rel})`, e1, e2);
+            clips.set(role, clip);
+            roles.set(role, role);
+            return clip;
+          } catch (e3) {
+            console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2, e3);
+            return null;
+          }
+        }
         console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2);
         return null;
       }
@@ -349,11 +380,11 @@ export async function loadGrudge6CombatRig(
 
   // Sprint from true run cycle only (time-scale applied by AnimationDirector /
   // GrudgeAvatar setLocomotionRate when speed band is high).
-  if (clips.has("run")) {
+  // NEVER load locomotion/running — that is run-to-roll.
+  if (clips.has("run") && !isNonLoopingLocoClip(clips.get("run")!)) {
     const runClip = clips.get("run")!;
     const sprintClip = runClip.clone();
     sprintClip.name = "sprint";
-    // Slightly faster cycle so sprint reads distinct without a separate bake.
     clips.set("sprint", sprintClip);
     roles.set("sprint", "sprint");
     sprintClip.userData = {
@@ -361,6 +392,50 @@ export async function loadGrudge6CombatRig(
       locoMult: SPRINT_LOCO_MULT,
       source: "clone:run",
     };
+  } else if (clips.has("run") && isNonLoopingLocoClip(clips.get("run")!)) {
+    console.error("[grudge6Runtime] RUN CLIP IS NON-LOOPING (roll) — stripping; torch run fallback");
+    clips.delete("run");
+    roles.delete("run");
+    await loadRole("run", SAFE_LOCO_FALLBACK.run);
+    if (clips.has("run")) {
+      const sprintClip = clips.get("run")!.clone();
+      sprintClip.name = "sprint";
+      clips.set("sprint", sprintClip);
+      roles.set("sprint", "sprint");
+      sprintClip.userData = { locoMult: SPRINT_LOCO_MULT, source: "clone:run-fallback" };
+    }
+  }
+
+  // Re-ground feet AFTER idle pose evaluation so animated bind doesn't sink soles.
+  // Bind-pose fit alone leaves feet underground once hips rotate in walk/run.
+  if (clips.has("idle")) {
+    try {
+      const tmpMixer = new THREE.AnimationMixer(model);
+      const act = tmpMixer.clipAction(clips.get("idle")!);
+      act.play();
+      tmpMixer.update(0);
+      model.updateMatrixWorld(true);
+      const box = new THREE.Box3();
+      let n = 0;
+      model.traverse((o) => {
+        const sk = o as THREE.SkinnedMesh;
+        if (sk.isSkinnedMesh && sk.visible) {
+          box.expandByObject(sk);
+          n++;
+        }
+      });
+      if (n > 0 && Number.isFinite(box.min.y) && Math.abs(box.min.y) > 1e-4) {
+        model.position.y -= box.min.y;
+        model.updateMatrixWorld(true);
+        console.info(
+          `[grudge6Runtime] post-idle re-ground dy=${(-box.min.y).toFixed(4)} race=${raceId}`,
+        );
+      }
+      tmpMixer.stopAllAction();
+      tmpMixer.uncacheRoot(model);
+    } catch (e) {
+      console.warn("[grudge6Runtime] post-idle re-ground failed", e);
+    }
   }
 
   // Role aliases for T0 weapon skills / Studio multiPart names

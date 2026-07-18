@@ -35,6 +35,8 @@ export const BANNED_LOCOMOTION_CLIPS = [
   "uploads_2026_06/locomotion/running",
   "uploads/locomotion/Quick_Roll_To_Run",
   "boxanimations/locomotion/Quick Roll To Run (1)",
+  /** Tips / lean on Arena Bip001 kits — never map walk here */
+  "locomotion/walking",
 ] as const;
 
 export function isBannedLocomotionClip(rel: string): boolean {
@@ -43,8 +45,38 @@ export function isBannedLocomotionClip(rel: string): boolean {
     .replace(/\\/g, "/")
     .replace(/\.json$/i, "");
   return (BANNED_LOCOMOTION_CLIPS as readonly string[]).some(
-    (b) => n === b || n.endsWith(`/${b}`) || n.includes("Quick_Roll_To_Run") || n.includes("Quick Roll To Run"),
+    (b) =>
+      n === b ||
+      n.endsWith(`/${b}`) ||
+      n.includes("Quick_Roll_To_Run") ||
+      n.includes("Quick Roll To Run"),
   );
+}
+
+/**
+ * Pelvis first≈last sum-abs error for rotation tracks. Run-to-roll ≈ 0.9;
+ * good cycles ≈ 0.0. Used to reject renamed roll clips at load time.
+ */
+export function pelvisLoopError(clip: THREE.AnimationClip): number {
+  const pelvis = clip.tracks.find(
+    (t) => /pelvis|hips/i.test(t.name) && t.name.endsWith(".quaternion"),
+  );
+  if (!pelvis || pelvis.times.length < 2) return 0;
+  const n = pelvis.times.length;
+  const dim = pelvis.values.length / n;
+  let err = 0;
+  for (let i = 0; i < dim; i++) {
+    err += Math.abs(pelvis.values[i]! - pelvis.values[(n - 1) * dim + i]!);
+  }
+  return err;
+}
+
+/** True if clip looks like a non-looping transition (run-to-roll class). */
+export function isNonLoopingLocoClip(clip: THREE.AnimationClip, rel = ""): boolean {
+  if (isBannedLocomotionClip(rel)) return true;
+  // Long duration + open pelvis loop = classic roll transition
+  if (clip.duration > 1.8 && pelvisLoopError(clip) > 0.25) return true;
+  return false;
 }
 
 // Paths are relative to `/anims/baked/`, WITHOUT the `.json` extension.
@@ -159,10 +191,18 @@ export function bakedClipUrl(rel: string, baseOverride?: string): string {
 export function bakedClipCandidates(rel: string, baseOverride?: string): string[] {
   const path = `anims/baked/${rel}.json`;
   const urls: string[] = [];
+  // Same-origin first (Open ships remade loco packs under public/anims/baked/).
+  if (typeof window !== "undefined" && window.location?.origin) {
+    urls.push(`${window.location.origin}/${path}`);
+    // Vite base / relative
+    urls.push(`/${path}`);
+  } else {
+    urls.push(`/${path}`);
+  }
   if (baseOverride) {
     urls.push(`${baseOverride.replace(/\/+$/, "")}/${path}`);
   }
-  // Arena is the live SSOT for baked Bip001 packs (R2 root often 404s).
+  // Arena CDN (historical SSOT) then fleet hosts
   urls.push(`${FLEET_ASSET_HOSTS.arena}/${path}`);
   urls.push(...resolveGrudgeAssetCandidates(path));
   return [...new Set(urls)];
@@ -182,7 +222,7 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
     throw assetLoadError(
       `anims/baked/${rel}.json`,
       new Error(
-        `banned locomotion clip (run-to-roll / bad sprint): ${rel} — use pack run cycle instead`,
+        `banned locomotion clip (run-to-roll / tipping walk): ${rel} — use pack standing walk/run cycles`,
       ),
     );
   }
@@ -200,7 +240,14 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
         continue;
       }
       const json = (await res.json()) as THREE.AnimationClipJSON;
-      return toRotationOnlyClip(THREE.AnimationClip.parse(json));
+      const clip = toRotationOnlyClip(THREE.AnimationClip.parse(json));
+      if (isNonLoopingLocoClip(clip, rel)) {
+        lastErr = new Error(
+          `non-looping loco (roll/transition) ${rel} dur=${clip.duration.toFixed(2)} pelvisErr=${pelvisLoopError(clip).toFixed(3)}`,
+        );
+        continue;
+      }
+      return clip;
     } catch (err) {
       lastErr = err;
     }
