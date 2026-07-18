@@ -79,8 +79,23 @@ export default defineConfig({
         "node_modules/@tanstack/react-query",
       ),
       zod: path.resolve(import.meta.dirname, "node_modules/zod"),
+      // grudge-physics / grudge-runtime import these from lib/* source paths —
+      // pin to animator node_modules so Vercel rollup can resolve them.
+      "@dimforge/rapier3d-compat": path.resolve(
+        import.meta.dirname,
+        "node_modules/@dimforge/rapier3d-compat",
+      ),
+      "@dimforge/rapier3d": path.resolve(
+        import.meta.dirname,
+        "node_modules/@dimforge/rapier3d",
+      ),
+      three: path.resolve(import.meta.dirname, "node_modules/three"),
+      "three-mesh-bvh": path.resolve(
+        import.meta.dirname,
+        "node_modules/three-mesh-bvh",
+      ),
     },
-    dedupe: ["react", "react-dom", "three"],
+    dedupe: ["react", "react-dom", "three", "@dimforge/rapier3d-compat"],
   },
   root: path.resolve(import.meta.dirname),
   build: {

@@ -28,10 +28,16 @@ run("node", ["scripts/merge-gameopen-assets.mjs"]);
 run("node", ["scripts/fix-asset-aliases.mjs"]);
 run("node", ["scripts/generate-asset-manifest.mjs"]);
 
-// 2. Install animator deps
+// 2. Install animator deps (includes rapier for @workspace/grudge-physics source alias)
 run("npm", ["install", "--no-fund", "--no-audit", "--legacy-peer-deps"], {
   cwd: anim,
 });
+// Fail fast if fleet physics dep missing (avoids opaque rollup resolve errors on Vercel)
+const rapier = path.join(anim, "node_modules/@dimforge/rapier3d-compat/package.json");
+if (!fs.existsSync(rapier)) {
+  console.error("[vercel-build] missing @dimforge/rapier3d-compat after npm install");
+  process.exit(1);
+}
 
 // 3. Polish index.html meta for production
 const indexPath = path.join(anim, "index.html");
