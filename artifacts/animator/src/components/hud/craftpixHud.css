@@ -1,147 +1,231 @@
-/* Craftpix RPG UI (pack 896711) — Part 3 harvest HUD + Part 5 skill tree
- * Assets under public/ui/craftpix/
+/* Craftpix 896711 — Part 3 harvest HUD + Part 5 skill tree
+ * SSOT asset sizes from Sliced Images (full res, not 50%):
+ *   ab2_shurtcut_frame / mab_shortcut = 50×50 (slot frame)
+ *   ab2_shurtcut_frame_small / ab3_shortcut = 42×42/43
+ *   ab3_main_bar = 1408×326
+ *   spell_row_icon_bg / talents_spell_frame = 180×189
+ *   spell_row_icon_overlay / talents_spell_overlay = 65×65
+ *   spell_row_background = 1011×246
+ *
+ * Rules: slot buttons use native frame size; icons fill the frame's
+ * inner hole only (same position + size as the PSD icon plate).
  */
 
 .cx-hud {
+  /* Native frame metrics (px) */
+  --cx-slot: 50px;
+  --cx-slot-sm: 42px;
+  --cx-slot-icon-pad: 8px; /* ornament border → 34×34 icon plate */
+  --cx-slot-icon: calc(var(--cx-slot) - var(--cx-slot-icon-pad) * 2);
+  --cx-talent: 90px; /* half of 180 — crisp 2× of overlay */
+  --cx-talent-icon: 32px; /* ~65/180 of 90 */
+  --cx-spell-row-h: 64px;
+  --cx-spell-icon-box: 64px;
+  --cx-spell-icon: 36px; /* ~65/180 of 64 */
   --cx-gold: #e8c96a;
   --cx-gold-dim: #a8843a;
   --cx-hp: #c43a3a;
   --cx-sp: #3a8ec4;
-  --cx-panel: rgba(8, 10, 16, 0.55);
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 12;
   font-family: "Cinzel", Georgia, "Times New Roman", serif;
   color: #f0e6c8;
+  image-rendering: auto;
 }
 
 /* ─── Part 3: harvest/build bottom bar ───────────────────────────── */
 .cx-harvest-bar {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 10px;
   transform: translateX(-50%);
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
   pointer-events: auto;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.55));
 }
 
+/* Main bar keeps native 1408:326 aspect — no arbitrary stretch height */
 .cx-ab3 {
   position: relative;
-  display: flex;
-  align-items: center;
-  min-width: min(780px, 98vw);
-  height: 104px;
-  padding: 0 18px 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 8px 12px;
+  width: min(920px, 98vw);
+  /* height from aspect of ab3_main_bar */
+  aspect-ratio: 1408 / 326;
+  max-height: 200px;
+  padding: 0 10px 6px;
+  box-sizing: border-box;
   background:
-    url("/ui/craftpix/part3/ab3/ab3_main_bar.png") center / 100% 100% no-repeat;
+    url("/ui/craftpix/part3/ab3/ab3_main_bar.png") center bottom / 100% 100% no-repeat;
 }
 
 .cx-ab3-left,
 .cx-ab3-right {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 4px;
-  width: 168px;
-  flex-shrink: 0;
+  padding-bottom: 10%;
+  z-index: 2;
 }
 
-/* Left rail: large HP + stamina frames (part_3) */
-.cx-ab3-left .cx-stat {
-  height: 28px;
+/* Far-right bag button — deposit pulse when inside claim/camp/boat */
+.cx-tool-bag {
+  position: relative;
 }
-.cx-ab3-left .cx-stat-label {
-  font-size: 11px;
+.cx-tool-bag.is-deposit-lit {
+  box-shadow: 0 0 12px #7ee7a8, 0 0 4px #e8c96a;
+  animation: cx-bag-pulse 1.5s ease-in-out infinite;
+}
+@keyframes cx-bag-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}
+.cx-bag-badge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: #c43a3a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* HP/SP: use craftpix vertical stat plates at true proportion */
+.cx-ab3-left {
+  width: 72px;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 4px;
+  padding-left: 4px;
 }
 
 .cx-stat {
   position: relative;
-  height: 22px;
+  width: 34px;
+  height: 112px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0 10px;
+  justify-content: flex-end;
+  padding: 0 0 6px;
+  box-sizing: border-box;
 }
 .cx-stat-hp {
-  background: url("/ui/craftpix/part3/ab3/ab3_stat_overlay_left.png") left center / contain no-repeat;
+  background: url("/ui/craftpix/part3/ab3/ab3_stat_overlay_left.png") center / 100% 100% no-repeat;
 }
 .cx-stat-sp {
-  background: url("/ui/craftpix/part3/ab3/ab3_stat_overlay_right.png") right center / contain no-repeat;
+  background: url("/ui/craftpix/part3/ab3/ab3_stat_overlay_right.png") center / 100% 100% no-repeat;
 }
 .cx-stat-track {
   position: absolute;
-  inset: 4px 12px;
+  left: 22%;
+  right: 22%;
+  top: 12%;
+  bottom: 18%;
   overflow: hidden;
   border-radius: 2px;
+  display: flex;
+  flex-direction: column-reverse;
 }
 .cx-stat-fill {
-  height: 100%;
-  transition: width 120ms linear;
+  width: 100%;
+  /* Vertical plates fill by height (PSD ab3_stat_fill) */
+  transition: height 120ms linear;
+  min-height: 0;
 }
 .cx-stat-fill.hp {
-  background: linear-gradient(180deg, #ff6b5a, #a01818);
+  background: linear-gradient(0deg, #a01818, #ff6b5a);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 .cx-stat-fill.sp {
-  background: linear-gradient(180deg, #6ec8ff, #185a9a);
+  background: linear-gradient(0deg, #185a9a, #6ec8ff);
 }
 .cx-stat-label {
   position: relative;
   z-index: 1;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-shadow: 0 1px 2px #000;
-  width: 100%;
+  writing-mode: horizontal-tb;
   text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  padding: 0 1px;
 }
 
 .cx-ab3-center {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 2px;
   min-width: 0;
+  padding-bottom: 4%;
+  z-index: 2;
 }
 
+/* Avatar: mis_avatar_overlay is 158×158 — display at 79 (½) or 72 */
 .cx-avatar-block {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: -36px;
+  gap: 8px;
+  margin-top: -28%;
+  margin-bottom: 2px;
 }
 
 .cx-avatar-ring {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  padding: 4px;
+  padding: 0;
   background:
-    url("/ui/craftpix/part3/moba/mis_avatar_overlay.png") center / cover no-repeat,
-    radial-gradient(circle at 40% 30%, #2a2418, #0a0806);
-  box-shadow: 0 0 0 2px #6e4c1c, 0 4px 12px rgba(0, 0, 0, 0.6);
+    url("/ui/craftpix/part3/moba/mis_avatar_overlay.png") center / 100% 100% no-repeat;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
+}
+.cx-avatar-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(110, 76, 28, 0.65);
+  pointer-events: none;
 }
 .cx-avatar-ring img {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  /* Face sits in the open circle of the overlay (~inner 70%) */
+  inset: 12%;
+  width: 76%;
+  height: 76%;
   object-fit: cover;
-  /* Face framing: drop crop so eyes/face sit lower in the ring */
-  object-position: center 28%;
-  transform: scale(1.12) translateY(6%);
+  object-position: center 22%;
   border-radius: 50%;
   display: block;
 }
 .cx-avatar-letter {
+  position: absolute;
+  inset: 12%;
   display: grid;
   place-items: center;
-  width: 100%;
-  height: 100%;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--cx-gold);
 }
@@ -149,152 +233,230 @@
 .cx-meta {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 120px;
+  gap: 2px;
+  min-width: 100px;
+  max-width: 160px;
 }
 .cx-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--cx-gold);
   text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cx-mode {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #9ad0b0;
 }
 .cx-gold-row {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--cx-gold);
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(232, 201, 106, 0.35);
   border-radius: 999px;
-  padding: 2px 8px 2px 4px;
+  padding: 1px 8px 1px 3px;
   width: fit-content;
 }
+/* coin_icon is 36×36 */
 .cx-gold-row img {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
 }
 
 .cx-prof-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 .cx-prof {
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.04em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #c8b88a;
 }
 .cx-prof b {
   color: var(--cx-gold);
-  margin-left: 3px;
+  margin-left: 2px;
 }
 
-/* Tool slots: 1 = equipped (largest), 2–5 large, 6 overflow */
+/* ─── Tool slots: EXACT frame size; icon = frame hole ─────────────── */
 .cx-tool-slots {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 6px;
-  padding: 0 4px 2px;
+  gap: 4px;
+  padding: 0 2px;
+  /* Sit on the carved band of ab3_main_bar */
+  margin-bottom: 2%;
 }
 
 .cx-tool {
   position: relative;
-  /* slots 2–5 default large */
-  width: 54px;
-  height: 54px;
+  box-sizing: border-box;
+  width: var(--cx-slot);
+  height: var(--cx-slot);
+  min-width: var(--cx-slot);
+  min-height: var(--cx-slot);
+  max-width: var(--cx-slot);
+  max-height: var(--cx-slot);
   border: none;
   padding: 0;
+  margin: 0;
   cursor: pointer;
   pointer-events: auto;
-  background:
-    url("/ui/craftpix/part3/ab2_shurtcut_frame.png") center / 100% 100% no-repeat;
+  background-color: transparent;
+  /* Native 50×50 shortcut frame — never stretch */
+  background-image: url("/ui/craftpix/part3/ab2_shurtcut_frame.png");
+  background-size: var(--cx-slot) var(--cx-slot);
+  background-position: center;
+  background-repeat: no-repeat;
   image-rendering: auto;
-  transition: transform 0.12s ease;
+  transition: transform 0.1s ease, filter 0.1s ease;
+  flex: 0 0 var(--cx-slot);
 }
 .cx-tool:hover {
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
 }
-/* Slot 1 — equipped harvest/build tool */
+
+/* Slot 1 equipped — same 50×50 frame + gold highlight (NOT full mab_frame) */
 .cx-tool.is-equipped {
-  width: 64px;
-  height: 64px;
-  background:
-    url("/ui/craftpix/part3/moba/mab_frame.png") center / 100% 100% no-repeat;
-  box-shadow: 0 0 14px rgba(232, 201, 106, 0.35);
+  width: var(--cx-slot);
+  height: var(--cx-slot);
+  background-image:
+    url("/ui/craftpix/part3/moba/mab_shortcut.png");
+  background-size: var(--cx-slot) var(--cx-slot);
+  filter: drop-shadow(0 0 8px rgba(232, 201, 106, 0.55));
+  transform: translateY(-3px) scale(1.08);
+  transform-origin: bottom center;
+  z-index: 2;
 }
-/* Slot 6 compact overflow */
+.cx-tool.is-equipped:hover {
+  transform: translateY(-4px) scale(1.1);
+}
+
+/* Slot 6 uses small frame 42×42 */
 .cx-tool.is-slot-6 {
-  width: 42px;
-  height: 42px;
+  width: var(--cx-slot-sm);
+  height: var(--cx-slot-sm);
+  min-width: var(--cx-slot-sm);
+  min-height: var(--cx-slot-sm);
+  max-width: var(--cx-slot-sm);
+  max-height: var(--cx-slot-sm);
+  flex-basis: var(--cx-slot-sm);
+  background-image: url("/ui/craftpix/part3/ab2_shurtcut_frame_small.png");
+  background-size: var(--cx-slot-sm) var(--cx-slot-sm);
+  --cx-slot-icon-pad: 6px;
+  --cx-slot-icon: calc(var(--cx-slot-sm) - 12px);
 }
-.cx-tool.is-on {
-  outline: 1px solid rgba(232, 201, 106, 0.7);
-  outline-offset: 1px;
+.cx-tool.is-on:not(.is-equipped) {
+  outline: 1px solid rgba(232, 201, 106, 0.65);
+  outline-offset: 0;
 }
-.cx-tool img.cx-tool-icon {
+
+/* Icon plate = exact inner hole of the frame */
+.cx-tool .cx-tool-icon {
   position: absolute;
-  inset: 18%;
-  width: 64%;
-  height: 64%;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  transform: translate(-50%, -50%);
   object-fit: contain;
-  margin: auto;
+  object-position: center;
   pointer-events: none;
+  display: block;
+  /* Hide emoji glyph when image loads */
+  z-index: 1;
 }
 .cx-tool .cx-tool-glyph {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: calc(var(--cx-slot-icon) * 0.72);
+  line-height: 1;
   pointer-events: none;
+  z-index: 0;
+}
+/* When icon present, hide glyph via sibling class set from JS or CSS :has */
+.cx-tool:has(.cx-tool-icon:not([data-broken])) .cx-tool-glyph {
+  opacity: 0;
 }
 .cx-tool .cx-tool-key {
   position: absolute;
-  left: 3px;
-  top: 2px;
+  left: 2px;
+  top: 1px;
+  z-index: 2;
   font-size: 9px;
   font-weight: 800;
   font-family: ui-monospace, monospace;
   color: #fff;
   text-shadow: 0 1px 2px #000;
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
   padding: 0 3px;
+  line-height: 1.2;
 }
 .cx-tool.is-equipped .cx-tool-key {
-  font-size: 10px;
-  background: rgba(180, 120, 30, 0.75);
+  background: rgba(180, 120, 30, 0.8);
+}
+
+/* Production P button — same slot size as tools */
+.cx-tool.cx-tool-prod {
+  width: var(--cx-slot);
+  height: var(--cx-slot);
 }
 
 .cx-xp {
   position: relative;
-  width: min(280px, 50vw);
-  height: 12px;
-  margin-top: 2px;
+  width: min(320px, 55vw);
+  height: 14px;
+  margin-top: 1px;
   background: url("/ui/craftpix/part3/ab3/ab3_xp_bar_empty.png") center / 100% 100% no-repeat;
 }
 .cx-xp-fill {
   position: absolute;
   left: 2%;
-  top: 20%;
-  bottom: 20%;
+  top: 28%;
+  bottom: 28%;
   max-width: 96%;
   background: linear-gradient(90deg, #c9a227, #f0d878);
   border-radius: 2px;
+}
+
+.cx-ab3-right {
+  width: auto;
+  min-width: 56px;
+  align-items: flex-end;
+  padding-right: 4px;
+  gap: 4px;
+}
+.cx-ab3-hint {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  color: #a89880;
+  text-align: right;
+  max-width: 100px;
+  line-height: 1.25;
 }
 
 /* ─── Part 5: class skill tree panel ─────────────────────────────── */
@@ -307,6 +469,7 @@
   border-radius: 8px;
   overflow: hidden;
   background:
+    url("/ui/craftpix/windows/c_full.png") center / cover no-repeat,
     linear-gradient(180deg, rgba(24, 18, 12, 0.96), rgba(10, 8, 6, 0.98));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(232, 201, 106, 0.15);
   color: #f0e6c8;
@@ -317,22 +480,29 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  background:
-    linear-gradient(90deg, #2a1e12, #1a140c 50%, #2a1e12);
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #2a1e12, #1a140c 50%, #2a1e12);
   border-bottom: 2px solid var(--cx-gold-dim);
 }
+/* c_header_icon_border = 151×138 */
 .cx-skill-head-icon {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 44px;
   background: url("/ui/craftpix/part5/talents/c_header_icon_border.png") center / contain no-repeat;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+}
+.cx-skill-head-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 .cx-skill-head h3 {
   margin: 0;
-  font-size: 15px;
-  letter-spacing: 0.12em;
+  font-size: 14px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--cx-gold);
 }
@@ -342,11 +512,13 @@
   color: #a89880;
   font-family: "Rajdhani", system-ui, sans-serif;
 }
+/* talents_points_frame = 50×32 */
 .cx-skill-points {
   margin-left: auto;
-  padding: 4px 12px;
-  min-width: 64px;
-  text-align: center;
+  width: 64px;
+  height: 36px;
+  display: grid;
+  place-items: center;
   background: url("/ui/craftpix/part5/talents/talents_points_frame.png") center / 100% 100% no-repeat;
   font-size: 12px;
   font-weight: 800;
@@ -384,31 +556,33 @@
 .cx-skill-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* Spell row: background 1011×246 — height fixed; icon box = native ratio */
 .cx-spell-row {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0;
-  min-height: 64px;
+  height: var(--cx-spell-row-h);
+  min-height: var(--cx-spell-row-h);
+  max-height: var(--cx-spell-row-h);
   background: url("/ui/craftpix/part5/spells/spell_row_background.png") left center / 100% 100% no-repeat;
-  border: 1px solid rgba(110, 76, 28, 0.4);
-  border-radius: 4px;
+  border: none;
+  border-radius: 2px;
   overflow: hidden;
   cursor: pointer;
   text-align: left;
   width: 100%;
-  padding: 0;
+  padding: 0 4px 0 0;
   color: inherit;
   font-family: inherit;
-  transition: border-color 0.12s, filter 0.12s;
+  box-sizing: border-box;
 }
 .cx-spell-row:hover:not(:disabled) {
-  border-color: var(--cx-gold);
   filter: brightness(1.08);
 }
 .cx-spell-row:disabled {
@@ -416,39 +590,51 @@
   cursor: not-allowed;
 }
 .cx-spell-row.is-unlocked {
-  border-color: rgba(90, 180, 100, 0.45);
+  filter: drop-shadow(0 0 4px rgba(90, 180, 100, 0.35));
 }
 .cx-spell-row.is-locked {
-  filter: grayscale(0.4);
+  filter: grayscale(0.45);
 }
 
+/* Icon plate: 180×189 frame scaled to spell-row height */
 .cx-spell-icon-wrap {
   position: relative;
-  width: 64px;
-  flex-shrink: 0;
+  width: var(--cx-spell-icon-box);
+  height: var(--cx-spell-icon-box);
+  flex: 0 0 var(--cx-spell-icon-box);
   display: grid;
   place-items: center;
-  background: url("/ui/craftpix/part5/spells/spell_row_icon_bg.png") center / cover no-repeat;
+  background: url("/ui/craftpix/part5/spells/spell_row_icon_bg.png") center / contain no-repeat;
+  margin: 0 2px;
 }
-.cx-spell-icon-wrap img,
-.cx-spell-icon-wrap .cx-spell-glyph {
-  width: 36px;
-  height: 36px;
+.cx-spell-icon-wrap .cx-node-icon,
+.cx-spell-icon-wrap img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-spell-icon);
+  height: var(--cx-spell-icon);
+  transform: translate(-50%, -50%);
   object-fit: contain;
-  font-size: 22px;
-  display: grid;
-  place-items: center;
+  z-index: 1;
+  display: block;
 }
+/* overlay 65×65 relative to 180 frame → same center as icon hole */
 .cx-spell-icon-overlay {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cx-spell-icon-box) * 65 / 180);
+  height: calc(var(--cx-spell-icon-box) * 65 / 180);
+  transform: translate(-50%, -50%);
   background: url("/ui/craftpix/part5/spells/spell_row_icon_overlay.png") center / contain no-repeat;
   pointer-events: none;
+  z-index: 2;
 }
 
 .cx-spell-main {
   flex: 1;
-  padding: 8px 10px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -465,21 +651,23 @@
   font-size: 11px;
   color: #a89880;
   font-family: "Rajdhani", system-ui, sans-serif;
-  line-height: 1.3;
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Ribbons 64×103 — display height matches row */
 .cx-spell-ribbon {
-  width: 56px;
-  flex-shrink: 0;
+  width: 48px;
+  height: calc(var(--cx-spell-row-h) - 8px);
+  flex: 0 0 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -487,6 +675,7 @@
   background-position: center;
   background-repeat: no-repeat;
   color: #1a1208;
+  margin-right: 4px;
 }
 .cx-spell-ribbon.green {
   background-image: url("/ui/craftpix/part5/spells/spell_row_ribbon_GREEN.png");
@@ -502,22 +691,25 @@
   color: #ddd;
 }
 
+/* Talent grid: frame 180×189, overlay 65×65 */
 .cx-talent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 10px;
-  padding: 8px 4px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--cx-talent), 1fr));
+  gap: 18px 10px;
+  padding: 8px 4px 20px;
+  justify-items: center;
 }
 .cx-talent-node {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1;
+  width: var(--cx-talent);
+  height: calc(var(--cx-talent) * 189 / 180);
   border: none;
   padding: 0;
   cursor: pointer;
-  background: url("/ui/craftpix/part5/talents/talents_spell_frame.png") center / contain no-repeat;
+  background: url("/ui/craftpix/part5/talents/talents_spell_frame.png") center / 100% 100% no-repeat;
   color: #f0e6c8;
   font-family: inherit;
+  flex-shrink: 0;
 }
 .cx-talent-node:disabled {
   opacity: 0.45;
@@ -528,15 +720,40 @@
 }
 .cx-talent-node .cx-talent-ico {
   position: absolute;
-  inset: 18%;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-talent-icon);
+  height: var(--cx-talent-icon);
+  transform: translate(-50%, -52%);
   display: grid;
   place-items: center;
-  font-size: 20px;
+  z-index: 1;
+}
+.cx-talent-node .cx-talent-ico .cx-node-icon,
+.cx-talent-node .cx-talent-ico img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+/* overlay matches PSD hole */
+.cx-talent-node::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cx-talent) * 65 / 180);
+  height: calc(var(--cx-talent) * 65 / 180);
+  transform: translate(-50%, -52%);
+  background: url("/ui/craftpix/part5/talents/talents_spell_overlay.png") center / contain no-repeat;
+  pointer-events: none;
+  z-index: 2;
 }
 .cx-talent-node .cx-talent-rank {
   position: absolute;
-  right: 6px;
-  bottom: 4px;
+  right: 8px;
+  bottom: 10px;
+  z-index: 3;
   font-size: 10px;
   font-weight: 800;
   text-shadow: 0 1px 2px #000;
@@ -545,7 +762,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -16px;
+  bottom: -14px;
   font-size: 9px;
   text-align: center;
   color: #c8b88a;
@@ -554,25 +771,7 @@
   text-overflow: ellipsis;
 }
 
-@media (max-width: 720px) {
-  .cx-ab3 {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 92px;
-    padding-bottom: 12px;
-  }
-  .cx-ab3-left,
-  .cx-ab3-right {
-    width: 100%;
-    flex-direction: row;
-    gap: 8px;
-  }
-  .cx-avatar-block {
-    margin-top: -12px;
-  }
-}
-
-/* ─── Path view: milestone rail + bridge nodes ───────────────────── */
+/* Path view nodes — same 50px slot language for icons */
 .cx-path-scroll {
   overflow-x: auto;
   overflow-y: auto;
@@ -624,9 +823,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  align-items: stretch;
-  text-align: left;
-  padding: 7px 8px;
+  align-items: center;
+  text-align: center;
+  padding: 6px;
   border-radius: 6px;
   border: 1px solid rgba(110, 76, 28, 0.65);
   background: rgba(20, 14, 10, 0.85);
@@ -634,32 +833,32 @@
   cursor: pointer;
   font-family: inherit;
 }
+/* Path icons use the same 50×50 slot frame as HUD tools */
 .cx-path-ico,
-.cx-node-icon {
-  width: 32px;
-  height: 32px;
+.cx-path-node .cx-node-icon {
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
   object-fit: contain;
-  image-rendering: auto;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(232, 201, 106, 0.25);
+  display: block;
+  margin: 0 auto 2px;
+  position: relative;
+  z-index: 1;
+}
+.cx-path-slot {
+  position: relative;
+  width: var(--cx-slot);
+  height: var(--cx-slot);
+  background: url("/ui/craftpix/part3/ab2_shurtcut_frame.png") center / var(--cx-slot) var(--cx-slot) no-repeat;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
-  align-self: center;
-  margin-bottom: 2px;
+  margin: 0 auto 4px;
 }
-.cx-talent-ico .cx-node-icon {
-  width: 26px;
-  height: 26px;
-}
-.cx-spell-icon-wrap .cx-node-icon {
-  width: 32px;
-  height: 32px;
-}
-.cx-skill-head-icon img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  border-radius: 6px;
+.cx-path-slot .cx-node-icon,
+.cx-path-slot .cx-path-ico {
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  margin: 0;
 }
 .cx-path-node:hover:not(:disabled) {
   border-color: #e8c96a;
@@ -717,4 +916,669 @@
   color: #a8843a;
   font-weight: 600;
   margin-left: 4px;
+}
+
+@media (max-width: 720px) {
+  .cx-ab3 {
+    grid-template-columns: 1fr;
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 160px;
+    padding-bottom: 12px;
+  }
+  .cx-ab3-left {
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    padding-bottom: 0;
+  }
+  .cx-stat {
+    width: 100%;
+    height: 22px;
+    flex-direction: row;
+  }
+  .cx-stat-track {
+    left: 8%;
+    right: 8%;
+    top: 20%;
+    bottom: 20%;
+    flex-direction: row;
+  }
+  .cx-stat-fill {
+    height: 100% !important;
+    width: auto;
+  }
+  .cx-avatar-block {
+    margin-top: -8px;
+  }
+  .cx-combat-bar {
+    gap: 4px;
+    transform: translateX(-50%) scale(0.88);
+    transform-origin: bottom center;
+  }
+  .cx-globe {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Part 2 — Combat action bar (two rows, native 50×50 slots)
+ * ab1_shortcut_frame 50×50 · ab1_bonus_slot 120×122 · globes 361×343
+ * Icons share the exact center + size of the frame's inner plate.
+ * ═══════════════════════════════════════════════════════════════════ */
+/* Bind wrapper keeps HUD-editor drag target without old cluster chrome */
+.cx-combat-bind {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  pointer-events: none;
+  z-index: 12;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+}
+.cx-combat-poise-float {
+  position: absolute;
+  left: 50%;
+  bottom: 148px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(280px, 70vw);
+  pointer-events: none;
+  z-index: 13;
+}
+
+.cx-combat-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+  z-index: 12;
+}
+
+/* Globes — Part_2 empty + fill; fill height = % resource */
+.cx-globe {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: url("/ui/craftpix/part2/Action_Bar/ab1_globe_empty_left.png") center / cover no-repeat;
+  box-shadow: 0 0 0 2px rgba(40, 28, 12, 0.8);
+}
+.cx-globe-sp {
+  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_globe_empty_right.png");
+}
+.cx-globe-fill {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 12%;
+  max-height: 76%;
+  border-radius: 0 0 50% 50% / 0 0 40% 40%;
+  transition: height 120ms linear;
+  z-index: 0;
+}
+.cx-globe-fill.hp {
+  background:
+    url("/ui/craftpix/part2/Action_Bar/ab1_globe_fill_ORANGE.png") center bottom / cover no-repeat,
+    linear-gradient(0deg, #8a1810, #e84830);
+}
+.cx-globe-fill.sp {
+  background:
+    url("/ui/craftpix/part2/Action_Bar/ab1_globe_fill_TOXIC-GREEN.png") center bottom / cover no-repeat,
+    linear-gradient(0deg, #186040, #48d080);
+}
+.cx-globe-overlay {
+  position: absolute;
+  inset: 0;
+  background: url("/ui/craftpix/part2/Action_Bar/ab1_globe_border_overlay.png") center / cover no-repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+.cx-globe-label {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff8e8;
+  text-shadow: 0 1px 3px #000, 0 0 6px rgba(0, 0, 0, 0.8);
+  line-height: 1.05;
+  pointer-events: none;
+}
+.cx-globe-label small {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+  font-weight: 700;
+}
+
+.cx-combat-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  /* Part_2 main frame as outer chrome behind rows */
+  padding: 10px 18px 8px;
+  background:
+    url("/ui/craftpix/part2/Action_Bar/ab1_main_frame.png") center bottom / 100% 58% no-repeat;
+  border-radius: 4px;
+}
+
+.cx-combat-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  align-self: stretch;
+  justify-content: center;
+}
+.cx-combat-avatar {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+.cx-combat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.cx-combat-meta .cx-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cx-gold);
+  letter-spacing: 0.04em;
+}
+.cx-combat-meta .cx-mode {
+  font-size: 10px;
+  color: #c8b88a;
+  font-family: "Rajdhani", system-ui, sans-serif;
+}
+.cx-combat-lv {
+  font-size: 9px;
+  font-weight: 800;
+  color: #a8843a;
+  letter-spacing: 0.08em;
+  font-family: ui-monospace, monospace;
+}
+
+/* Two equal rows — each slot = frame size; gap matches carved ab1 pads */
+.cx-combat-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.cx-combat-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+}
+
+/*
+ * Combat slot = Part_2 ab1_shortcut_frame (50×50).
+ * Icon plate is centered on the SAME XY as the frame hole.
+ * Never stretch the frame; never size icon independently of the frame.
+ */
+.cx-cslot {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--cx-slot);
+  height: var(--cx-slot);
+  min-width: var(--cx-slot);
+  min-height: var(--cx-slot);
+  max-width: var(--cx-slot);
+  max-height: var(--cx-slot);
+  flex: 0 0 var(--cx-slot);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_shortcut_frame.png");
+  background-size: var(--cx-slot) var(--cx-slot);
+  background-position: center;
+  background-repeat: no-repeat;
+  image-rendering: auto;
+  transition: transform 0.1s ease, filter 0.1s ease;
+  color: #f0e6c8;
+  font-family: inherit;
+}
+.cx-cslot:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+.cx-cslot:disabled,
+.cx-cslot.is-empty {
+  opacity: 0.38;
+  cursor: default;
+}
+.cx-cslot.is-ready:not(.is-empty) {
+  filter: drop-shadow(0 0 4px rgba(232, 201, 106, 0.25));
+}
+.cx-cslot.is-accent:not(.is-empty) {
+  filter: drop-shadow(0 0 6px rgba(155, 140, 255, 0.4));
+}
+.cx-cslot.is-cd {
+  filter: grayscale(0.35) brightness(0.85);
+}
+
+/* Large = ab1_bonus_slot scaled 60×60 (native 120×122, half) */
+.cx-cslot.is-large {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  max-width: 60px;
+  max-height: 60px;
+  flex-basis: 60px;
+  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_bonus_slot.png");
+  background-size: 60px 60px;
+  --cx-slot-icon-pad: 8px;
+  --cx-slot-icon: 44px;
+  z-index: 2;
+  transform: translateY(-2px);
+}
+.cx-cslot.is-large:hover:not(:disabled) {
+  transform: translateY(-4px);
+}
+
+/* Icon: absolute center of frame = frame hole center (same XY) */
+.cx-cslot-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  display: block;
+  z-index: 1;
+}
+.cx-cslot-glyph {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 0;
+  font-size: calc(var(--cx-slot-icon) * 0.7);
+  line-height: 1;
+}
+/* Prefer real icon when loaded; hide glyph */
+.cx-cslot:has(.cx-cslot-icon:not([data-broken])) .cx-cslot-glyph {
+  opacity: 0;
+}
+.cx-cslot-key {
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  z-index: 3;
+  font-size: 8px;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  padding: 0 2px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.cx-cslot.is-large .cx-cslot-key {
+  background: rgba(120, 70, 20, 0.85);
+  font-size: 9px;
+}
+.cx-cslot-sweep {
+  position: absolute;
+  /* Cover icon plate only (same pad as icon) so CD matches icon XY */
+  left: var(--cx-slot-icon-pad);
+  top: var(--cx-slot-icon-pad);
+  width: var(--cx-slot-icon);
+  height: var(--cx-slot-icon);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+.cx-cslot.is-large .cx-cslot-sweep {
+  left: 8px;
+  top: 8px;
+  width: 44px;
+  height: 44px;
+}
+.cx-cslot-cd {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  z-index: 3;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  color: #fbbf24;
+  text-shadow: 0 1px 2px #000;
+}
+/* Hover effect layer — same box as frame (Part_2 spell_frame_hover) */
+.cx-cslot-hover {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: url("/ui/craftpix/part2/Action_Bar/spell_frame_hover_effect.png") center / contain no-repeat;
+  transition: opacity 0.1s ease;
+  z-index: 2;
+}
+.cx-cslot:hover:not(:disabled) .cx-cslot-hover {
+  opacity: 0.85;
+}
+.cx-cslot-prod {
+  margin-left: 4px;
+}
+
+.cx-combat-xp {
+  position: relative;
+  width: min(340px, 70vw);
+  height: 12px;
+  margin-top: 2px;
+  background: url("/ui/craftpix/part2/Action_Bar/ab1_xp_bar_empty.png") center / 100% 100% no-repeat;
+}
+.cx-combat-xp-fill {
+  position: absolute;
+  left: 1.5%;
+  top: 22%;
+  bottom: 22%;
+  max-width: 97%;
+  background:
+    url("/ui/craftpix/part2/Action_Bar/ab1_xp_bar_fill_green.png") left center / auto 100% no-repeat,
+    linear-gradient(90deg, #2a8a40, #6ee7a0);
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Part 7 — Tooltips + improved item-style slots
+ * not_container / window_clean + cw_item_slot geometry
+ * ═══════════════════════════════════════════════════════════════════ */
+.cx-tip {
+  position: fixed;
+  z-index: 95;
+  transform: translate(-50%, -100%);
+  max-width: min(280px, 88vw);
+  min-width: 140px;
+  padding: 14px 16px 12px;
+  pointer-events: none;
+  text-align: left;
+  color: #f0e6c8;
+  font-family: "Cinzel", Georgia, serif;
+}
+.cx-tip-part7 {
+  background:
+    url("/ui/craftpix/part7/Notification_Window/window_clean_container.png") center / 100% 100% no-repeat,
+    linear-gradient(165deg, rgba(28, 20, 12, 0.96), rgba(10, 8, 6, 0.98));
+  border: 1px solid rgba(168, 132, 58, 0.45);
+  border-radius: 6px;
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 240, 200, 0.08);
+}
+.cx-tip-head {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--cx-gold);
+  margin-bottom: 4px;
+  text-shadow: 0 1px 2px #000;
+}
+.cx-tip-body {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #d8cbb0;
+  font-family: "Rajdhani", system-ui, sans-serif;
+}
+.cx-tip-sub {
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(168, 132, 58, 0.35);
+  font-size: 10px;
+  color: #a8843a;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.03em;
+}
+
+/* Part_7 inventory-style slot (191×191 → 56 display) */
+.cx-item-slot {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  background: url("/ui/craftpix/part7/Character_Window/cw_item_slot.png") center / 100% 100% no-repeat;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cx-item-slot .cx-item-ico,
+.cx-item-slot img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+}
+.cx-item-slot.is-sm {
+  width: 40px;
+  height: 42px;
+  background-image: url("/ui/craftpix/part7/Character_Window/cw_item_slot_small.png");
+}
+.cx-item-slot.is-sm .cx-item-ico,
+.cx-item-slot.is-sm img {
+  width: 24px;
+  height: 24px;
+}
+.cx-item-border {
+  position: absolute;
+  inset: 12%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.cx-item-border.blue {
+  background-image: url("/ui/craftpix/part7/Character_Window/cw_item_border_blue.png");
+}
+.cx-item-border.green {
+  background-image: url("/ui/craftpix/part7/Character_Window/cw_item_border_green.png");
+}
+.cx-item-border.purple {
+  background-image: url("/ui/craftpix/part7/Character_Window/cw_item_border_purple.png");
+}
+.cx-item-border.gray {
+  background-image: url("/ui/craftpix/part7/Character_Window/cw_item_border_gray.png");
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Part 4 — Menus, settings, tabs (systems panel chrome)
+ * Side menu, container header, action buttons, form elements
+ * ═══════════════════════════════════════════════════════════════════ */
+.cx-menu-sheet {
+  background:
+    url("/ui/craftpix/part4/Side_Menu/c_sidemenu_background.png") center / cover no-repeat,
+    linear-gradient(180deg, #1a140c 0%, #0e0a06 100%) !important;
+  border-left: 2px solid #6e4c1c !important;
+  box-shadow: -16px 0 48px rgba(0, 0, 0, 0.6) !important;
+  color: #f0e6c8 !important;
+  font-family: "Cinzel", Georgia, serif !important;
+}
+
+.cx-menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px !important;
+  background:
+    linear-gradient(180deg, rgba(60, 42, 18, 0.55), rgba(20, 14, 8, 0.2));
+  border-bottom: 1px solid rgba(168, 132, 58, 0.4) !important;
+}
+.cx-menu-header .gs-kicker {
+  color: #e8c96a !important;
+}
+.cx-menu-header .gs-title {
+  color: #f0d878 !important;
+}
+.cx-menu-header .gs-sub {
+  color: #a89880 !important;
+}
+
+.cx-menu-close {
+  width: 36px !important;
+  height: 36px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: url("/ui/craftpix/part4/container/c_header_close.png") center / contain no-repeat !important;
+  color: transparent !important;
+  text-indent: -9999px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cx-menu-close:hover {
+  background-image: url("/ui/craftpix/part4/container/c_header_close-HOVER.png") !important;
+}
+.cx-menu-close:active {
+  background-image: url("/ui/craftpix/part4/container/c_header_close-PUSH.png") !important;
+}
+
+/* Tabs = Part_4 side-menu items */
+.cx-menu-tabs {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px !important;
+  padding: 8px 8px 6px !important;
+  border-bottom: 1px solid rgba(110, 76, 28, 0.55) !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+}
+.cx-menu-tab {
+  flex: 1 1 auto;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 8px 6px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background:
+    url("/ui/craftpix/part4/Side_Menu/c_sidemanu_item_hover.png") center / 100% 100% no-repeat,
+    rgba(20, 14, 8, 0.5) !important;
+  color: #c8b88a !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  cursor: pointer;
+  font-family: inherit !important;
+  transition: filter 0.1s ease, color 0.1s ease;
+}
+.cx-menu-tab:hover {
+  color: #f0e6c8 !important;
+  filter: brightness(1.12);
+  background-image: url("/ui/craftpix/part4/Side_Menu/c_sidemanu_item_hover.png") !important;
+}
+.cx-menu-tab.active,
+.cx-menu-tab.is-on {
+  color: #1a1208 !important;
+  background:
+    url("/ui/craftpix/part4/Side_Menu/c_sidemanu_item_ACTIVE.png") center / 100% 100% no-repeat !important;
+  filter: none;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.25);
+}
+
+/* Action buttons — Part_4 Actions Bar */
+.cx-menu-btn,
+.gs-panel.cx-menu .gs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 18px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: url("/ui/craftpix/part4/Actions_Bar/button_green.png") center / 100% 100% no-repeat !important;
+  color: #1a1208 !important;
+  font-weight: 800 !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  font-family: inherit !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.cx-menu-btn:hover,
+.gs-panel.cx-menu .gs-btn:hover {
+  background-image: url("/ui/craftpix/part4/Actions_Bar/button_green-HOVER.png") !important;
+}
+.cx-menu-btn:active,
+.gs-panel.cx-menu .gs-btn:active {
+  background-image: url("/ui/craftpix/part4/Actions_Bar/button_green-PUSH.png") !important;
+}
+.cx-menu-btn.is-orange,
+.gs-panel.cx-menu .gs-btn.is-orange {
+  background-image: url("/ui/craftpix/part4/Actions_Bar/button_orange.png") !important;
+}
+.cx-menu-btn.is-gray,
+.gs-panel.cx-menu .gs-btn.is-gray {
+  background-image: url("/ui/craftpix/part4/Actions_Bar/button_gray.png") !important;
+}
+
+/* Paper content body */
+.gs-panel.cx-menu .gs-body {
+  background:
+    linear-gradient(180deg, rgba(18, 12, 8, 0.5), rgba(8, 6, 4, 0.75)),
+    url("/ui/craftpix/part4/Text_Container_1/papper_container.png") center top / 120% auto no-repeat;
+  color: #e8dcc0;
+}
+.gs-panel.cx-menu .gs-body h3 {
+  color: #e8c96a;
+  border-bottom: 1px solid rgba(168, 132, 58, 0.3);
+  padding-bottom: 4px;
+}
+.gs-panel.cx-menu .gs-muted {
+  color: #a89880;
+}
+.gs-panel.cx-menu .gs-hotbar-wrap {
+  background:
+    url("/ui/craftpix/part4/Actions_Bar/container_actions_bar_frame.png") center / 100% 100% no-repeat,
+    rgba(12, 8, 4, 0.9);
+  border-top: 1px solid rgba(110, 76, 28, 0.5);
+  padding: 10px 12px 12px;
+}
+
+/* Range / form scale using Part_4 Scales */
+.gs-panel.cx-menu input[type="range"] {
+  accent-color: #c43a3a;
+  height: 10px;
+}
+.gs-panel.cx-menu .gs-attr-row label {
+  color: #d8cbb0;
 }

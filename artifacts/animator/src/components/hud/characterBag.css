@@ -1,0 +1,221 @@
+/* Character bag 3×3 panel (harvest / build production HUD) */
+
+.cbag-root {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  font-family: "Cinzel", Georgia, serif;
+  color: #f0e6c8;
+}
+
+.cbag-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.cbag-panel {
+  --cbag-slot: 56px;
+  position: absolute;
+  left: 50%;
+  bottom: 210px;
+  transform: translateX(-50%);
+  width: min(320px, 94vw);
+  padding: 12px 14px 14px;
+  pointer-events: auto;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(28, 22, 16, 0.96), rgba(12, 10, 8, 0.98));
+  border: 1px solid rgba(232, 201, 106, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+}
+
+.cbag-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cbag-head h2 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: #e8c96a;
+}
+.cbag-head p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  opacity: 0.75;
+}
+.cbag-close {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f0e6c8;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cbag-close:hover {
+  background: rgba(255, 80, 80, 0.25);
+}
+
+.cbag-grid {
+  display: grid;
+  gap: 6px;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.cbag-slot {
+  position: relative;
+  width: var(--cbag-slot);
+  height: var(--cbag-slot);
+  border-radius: 6px;
+  background:
+    url("/ui/craftpix/part3/ab2_shurtcut_frame.png") center / 100% 100% no-repeat,
+    rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  cursor: default;
+}
+.cbag-slot.has-item {
+  cursor: grab;
+}
+.cbag-slot.is-drag {
+  opacity: 0.55;
+}
+.cbag-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
+}
+.cbag-qty {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+  color: #fff;
+}
+
+.cbag-hotkeys {
+  margin-bottom: 10px;
+}
+.cbag-hotkeys-label {
+  display: block;
+  font-size: 10px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.cbag-hotkey-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.cbag-hotkey {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 6px;
+  background:
+    url("/ui/craftpix/part3/ab2_shurtcut_frame_small.png") center / 100% 100% no-repeat,
+    rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  color: #f0e6c8;
+}
+.cbag-hotkey img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.cbag-hotkey-key {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+.cbag-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cbag-deposit {
+  border: 1px solid rgba(232, 201, 106, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  color: #1a140c;
+  background: linear-gradient(180deg, #e8c96a, #a8843a);
+}
+.cbag-deposit.is-dim {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.cbag-deposit.is-lit {
+  animation: cbag-pulse 1.6s ease-in-out infinite;
+}
+@keyframes cbag-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+.cbag-deposit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cbag-hint {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.65;
+}
+
+.cbag-menu {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  min-width: 160px;
+  border-radius: 6px;
+  background: #1a1610;
+  border: 1px solid rgba(232, 201, 106, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+.cbag-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #f0e6c8;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.cbag-menu button:hover {
+  background: rgba(232, 201, 106, 0.15);
+  color: #e8c96a;
+}

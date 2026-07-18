@@ -1238,6 +1238,31 @@ export class Studio {
     return this.scripts;
   }
 
+  /**
+   * Account quick-deposit zone: claim radius, camp structures, boat/sail maps.
+   * Used by harvest HUD bag button illumination.
+   */
+  getDepositProbe(): {
+    insideClaim: boolean;
+    nearCamp: boolean;
+    onBoat: boolean;
+  } {
+    const pos = this.character?.root.position;
+    const insideClaim = !!(
+      pos &&
+      this.campBuild &&
+      this.campBuild.hasClaim &&
+      this.campBuild.isInsideClaim(pos)
+    );
+    const nearCamp = !!(this.campBuild?.hasClaim || (this.campBuild?.structures.length ?? 0) > 0);
+    const roomKind = (this as { room?: { kind?: string } }).room?.kind ?? "";
+    const onBoat =
+      roomKind === "sail" ||
+      roomKind === "sailing" ||
+      /sail|boat/i.test(String(roomKind));
+    return { insideClaim, nearCamp, onBoat };
+  }
+
   /** Load content/runtime script pack when present (same shape for all scenes). */
   private async loadRuntimeScripts() {
     try {
@@ -3655,6 +3680,11 @@ export class Studio {
   }
 
   /** Show a brief center-screen combat flash label. */
+  /** Public flash for HUD / bag / production UI. */
+  flashMessage(text: string, duration = 1.4) {
+    this.setCombatFlash(text, duration);
+  }
+
   private setCombatFlash(text: string, duration = 1.4) {
     this.combatFlash = text;
     this.combatFlashTimer = duration;
@@ -9992,8 +10022,14 @@ export class Studio {
       const nodeId = this.harvestSelectNodeId;
       const node = nodeId ? this.forestWorld?.harvestNode(nodeId) : null;
       const tool = node?.tool || id;
-      applyHarvestYield(tool);
-      // Tool swing animation (attack role = chop/mine/gather feel)
+      // Character bag (3×3) — prefer fleet window id, else Studio characterId
+      const bagChar =
+        (typeof window !== "undefined" &&
+          (window as unknown as { __grudgeCharId?: string }).__grudgeCharId) ||
+        this.characterId ||
+        "explorer";
+      applyHarvestYield(tool, undefined, undefined, bagChar);
+      // Harvest / farm / build swing (attack role = chop/mine/gather feel)
       const played =
         this.character?.playRoleOnce?.("attack", 0.08) ??
         this.character?.playClipOnce?.("attack", 0.1);

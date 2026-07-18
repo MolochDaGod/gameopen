@@ -3,28 +3,23 @@
  * Self-contained (no @workspace/fleet-client import — Vercel/Rollup safe).
  */
 
-import type { InventorySlot, ItemId } from "../three/lobbyWorld/types";
 import { apiUrl, readFleetToken } from "./fleetCore";
+import { MATERIAL_TEMPLATES } from "../game/inventory/catalog";
 
 export type ResourceMap = Record<string, number>;
+export type ItemId = string;
+export interface InventorySlot {
+  id: ItemId;
+  qty: number;
+}
 
 /** Island materials that belong on the shared account bag. */
 const BAG_ITEMS: ItemId[] = [
-  "wood",
-  "stone",
-  "fiber",
-  "ore",
-  "meat",
-  "hide",
-  "planks",
-  "sticks",
-  "stone_brick",
-  "iron_ingot",
-  "coin",
+  ...Object.keys(MATERIAL_TEMPLATES),
 ];
 
 export function isBagItem(id: ItemId): boolean {
-  return BAG_ITEMS.includes(id);
+  return BAG_ITEMS.includes(id) || id in MATERIAL_TEMPLATES;
 }
 
 export async function fetchAccountResources(token?: string | null): Promise<ResourceMap> {

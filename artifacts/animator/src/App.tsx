@@ -20,6 +20,10 @@ import {
 import { loadFireFx, saveFireFx, type FireFxParams } from "./three/fxSettings";
 import { loadControls } from "./three/controlsSettings";
 import { ROOM_PRESETS, ROOM_PRESET_LIST, asRoomPresetId, loadRoomPreset, saveRoomPreset, type RoomPresetId } from "./three/RoomPresets";
+import {
+  loadTestWorldId,
+  type TestWorldId,
+} from "./three/testWorlds";
 import { loadSound, type SoundSettings } from "./three/soundSettings";
 import { SoundMixer, type SoundChannel } from "./components/SoundMixer";
 import type {
@@ -37,7 +41,15 @@ import { MechHud } from "./components/MechHud";
 import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
+import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
 import { ClassSkillBar } from "./components/ClassSkillBar";
+import {
+  loadCharacterBag,
+  resolveDepositContext,
+  type DepositContext,
+  harvestIntoBag,
+  DEFAULT_BAG_SLOTS,
+} from "./game/inventory";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
 import { EditorPanel } from "./components/EditorPanel";
@@ -423,11 +435,22 @@ export default function App() {
   const [claimFlagOpen, setClaimFlagOpen] = useState(false);
   const claimFlagOpenRef = useRef(false);
   claimFlagOpenRef.current = claimFlagOpen;
+  /** Character 3×3 bag (harvest HUD far-right · Key I in harvest/build). */
+  const [bagOpen, setBagOpen] = useState(false);
+  const bagOpenRef = useRef(false);
+  bagOpenRef.current = bagOpen;
+  const [depositCtx, setDepositCtx] = useState<DepositContext>({
+    zone: "none",
+    canDeposit: false,
+    label: "Deposit (need claim / camp / boat)",
+  });
+  const [bagOccupied, setBagOccupied] = useState(0);
   // Never carry the loadout overlay across surfaces (doors/editor/play/danger).
   useEffect(() => {
     setEquipOpen(false);
     setSystemsOpen(false);
     setClaimFlagOpen(false);
+    setBagOpen(false);
   }, [mode]);
 
   /** Creator-class systems / skillbook panel (K). Defined early for key handlers. */
@@ -472,7 +495,38 @@ export default function App() {
     });
   }, []);
   const [characterId, setCharacterId] = useState("explorer");
-  // Drive avatar + equipment from signed-in fleet character (GrudaChain / Railway).
+  const activeCharacterId =
+    gameSession.snapshot.selectedCharacterId || characterId || "local";
+
+  const refreshBagMeta = useCallback(() => {
+    const b = loadCharacterBag(activeCharacterId);
+    setBagOccupied(b.slots.filter((s) => s.item).length);
+  }, [activeCharacterId]);
+
+  const refreshDeposit = useCallback(() => {
+    const probe = studioRef.current?.getDepositProbe?.() ?? {
+      insideClaim: false,
+      nearCamp: false,
+      onBoat: false,
+    };
+    setDepositCtx(resolveDepositContext(probe));
+  }, []);
+
+  useEffect(() => {
+    try {
+      (window as unknown as { __grudgeCharId?: string }).__grudgeCharId = activeCharacterId;
+    } catch {
+      /* ignore */
+    }
+    refreshBagMeta();
+    const t = window.setInterval(() => {
+      refreshDeposit();
+      refreshBagMeta();
+    }, 800);
+    return () => window.clearInterval(t);
+  }, [refreshBagMeta, refreshDeposit, mode, activeCharacterId]);
+
+  // Drive avatar + equipment from signed-in Warlords hero (Railway / campfire roster).
   // Production path: race kit + atlas + mesh_ids (uMMORPG main panel) — not catalog GLBs.
   // IMPORTANT: re-apply when Studio mounts (danger/play) — loadout often resolves
   // before studioRef exists; that race caused wrong mesh/scale/equip.
@@ -577,6 +631,7 @@ export default function App() {
   const [dockOpen, setDockOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
+  const [testWorldId, setTestWorldId] = useState<TestWorldId>(() => loadTestWorldId());
   const [hudEditing, setHudEditing] = useState(false);
   const hudEditor = useHudEditor();
   // The api passed to the HUD: applies persisted layout always, drag/select only while editing.
@@ -814,14 +869,20 @@ export default function App() {
   useEffect(() => {
     if (mode !== "danger") return;
     const onKey = (e: KeyboardEvent) => {
-      // Esc closes loadout / systems / claim hub overlays even while inputs are focused.
+      // Esc closes loadout / systems / claim / bag overlays even while inputs are focused.
       if (
         e.code === "Escape" &&
-        (equipOpenRef.current || systemsOpenRef.current || claimFlagOpenRef.current)
+        (equipOpenRef.current ||
+          systemsOpenRef.current ||
+          claimFlagOpenRef.current ||
+          bagOpenRef.current ||
+          harvestUiOpenRef.current)
       ) {
         setEquipOpen(false);
         setSystemsOpen(false);
         setClaimFlagOpen(false);
+        setBagOpen(false);
+        setHarvestUiOpen(false);
         return;
       }
       const t = e.target as HTMLElement | null;
@@ -829,12 +890,29 @@ export default function App() {
       if (e.repeat) return;
       if (e.code === "KeyI") {
         e.preventDefault();
-        const next = !equipOpenRef.current;
-        setEquipOpen(next);
-        if (next) {
-          setSystemsOpen(false);
-          setClaimFlagOpen(false);
-          document.exitPointerLock?.();
+        // Harvest/build: character bag · Combat: full equipment paperdoll
+        const harvestMode =
+          hud?.activityMode === "harvest" || hud?.activityMode === "build";
+        if (harvestMode || bagOpenRef.current) {
+          const next = !bagOpenRef.current;
+          setBagOpen(next);
+          if (next) {
+            setEquipOpen(false);
+            setSystemsOpen(false);
+            setClaimFlagOpen(false);
+            document.exitPointerLock?.();
+            refreshDeposit();
+            refreshBagMeta();
+          }
+        } else {
+          const next = !equipOpenRef.current;
+          setEquipOpen(next);
+          if (next) {
+            setSystemsOpen(false);
+            setClaimFlagOpen(false);
+            setBagOpen(false);
+            document.exitPointerLock?.();
+          }
         }
         return;
       }
@@ -913,7 +991,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, refreshAnim, toggleDangerPanel, toggleSystems, toggleClaimFlag]);
+  }, [mode, refreshAnim, toggleDangerPanel, toggleSystems, toggleClaimFlag, hud?.activityMode, refreshDeposit, refreshBagMeta]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
   useEffect(() => {
@@ -921,11 +999,17 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (
         e.code === "Escape" &&
-        (equipOpenRef.current || systemsOpenRef.current || claimFlagOpenRef.current)
+        (equipOpenRef.current ||
+          systemsOpenRef.current ||
+          claimFlagOpenRef.current ||
+          bagOpenRef.current ||
+          harvestUiOpenRef.current)
       ) {
         setEquipOpen(false);
         setSystemsOpen(false);
         setClaimFlagOpen(false);
+        setBagOpen(false);
+        setHarvestUiOpen(false);
         return;
       }
       const t = e.target as HTMLElement | null;
@@ -933,12 +1017,28 @@ export default function App() {
       if (e.repeat) return;
       if (e.code === "KeyI") {
         e.preventDefault();
-        const next = !equipOpenRef.current;
-        setEquipOpen(next);
-        if (next) {
-          setSystemsOpen(false);
-          setClaimFlagOpen(false);
-          document.exitPointerLock?.();
+        const harvestMode =
+          hud?.activityMode === "harvest" || hud?.activityMode === "build";
+        if (harvestMode || bagOpenRef.current) {
+          const next = !bagOpenRef.current;
+          setBagOpen(next);
+          if (next) {
+            setEquipOpen(false);
+            setSystemsOpen(false);
+            setClaimFlagOpen(false);
+            document.exitPointerLock?.();
+            refreshDeposit();
+            refreshBagMeta();
+          }
+        } else {
+          const next = !equipOpenRef.current;
+          setEquipOpen(next);
+          if (next) {
+            setSystemsOpen(false);
+            setClaimFlagOpen(false);
+            setBagOpen(false);
+            document.exitPointerLock?.();
+          }
         }
         return;
       }
@@ -1156,6 +1256,11 @@ export default function App() {
       }),
     [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId],
   );
+
+  const onTestWorld = useCallback((id: TestWorldId) => {
+    setTestWorldId(id);
+    void studioRef.current?.setTestWorld(id);
+  }, []);
 
   const onRoomPreset = useCallback((id: RoomPresetId) => {
     setRoomPreset(id);
@@ -1681,6 +1786,8 @@ export default function App() {
             onStopDuel={onStopDuel}
             onStartArenaMatch={onStartArenaMatch}
             roomPreset={roomPreset}
+            testWorldId={testWorldId}
+            onTestWorld={onTestWorld}
             ale={hud?.ale ?? null}
             onDuelCamera={onDuelCamera}
             onToggleDiagnostics={onToggleDiagnostics}
@@ -1900,10 +2007,31 @@ export default function App() {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
             }}
+            onOpenBag={() => {
+              setBagOpen(true);
+              setEquipOpen(false);
+              document.exitPointerLock?.();
+              refreshDeposit();
+              refreshBagMeta();
+            }}
+            canDeposit={depositCtx.canDeposit}
+            bagOccupied={bagOccupied}
+            bagCapacity={DEFAULT_BAG_SLOTS}
+          />
+          <CharacterBagPanel
+            open={bagOpen}
+            characterId={activeCharacterId}
+            deposit={depositCtx}
+            onClose={() => setBagOpen(false)}
+            onBagChange={() => refreshBagMeta()}
+            onFlash={(msg) => studioRef.current?.flashMessage?.(msg, 1.6)}
+            onConsume={(heal, stamina, name) => {
+              studioRef.current?.flashMessage?.(`${name} · +${heal}HP +${stamina}SP`, 1.4);
+            }}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
-            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !claimFlagOpen}
+            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !claimFlagOpen && !bagOpen}
             onCast={(slot) => {
               studioRef.current?.fireClassSkill({
                 id: slot.id,
@@ -1984,7 +2112,7 @@ export default function App() {
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                Centre dot · free-aim crosshair · LMB select · RMB snap+focus · X roll
+                Centre dot · free-aim · LMB select · RMB toggle focus/soft-lock · X roll
               </p>
             </div>
           )}
@@ -2038,10 +2166,31 @@ export default function App() {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
             }}
+            onOpenBag={() => {
+              setBagOpen(true);
+              setEquipOpen(false);
+              document.exitPointerLock?.();
+              refreshDeposit();
+              refreshBagMeta();
+            }}
+            canDeposit={depositCtx.canDeposit}
+            bagOccupied={bagOccupied}
+            bagCapacity={DEFAULT_BAG_SLOTS}
+          />
+          <CharacterBagPanel
+            open={bagOpen}
+            characterId={activeCharacterId}
+            deposit={depositCtx}
+            onClose={() => setBagOpen(false)}
+            onBagChange={() => refreshBagMeta()}
+            onFlash={(msg) => studioRef.current?.flashMessage?.(msg, 1.6)}
+            onConsume={(heal, stamina, name) => {
+              studioRef.current?.flashMessage?.(`${name} · +${heal}HP +${stamina}SP`, 1.4);
+            }}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
-            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !panelsOpen && !claimFlagOpen}
+            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !panelsOpen && !claimFlagOpen && !bagOpen}
             onCast={(slot) => {
               studioRef.current?.fireClassSkill({
                 id: slot.id,
@@ -2143,7 +2292,7 @@ export default function App() {
             <div className="click-hint">
               <p>Click to enter — mouse to look</p>
               <p className="dim">
-                Dot centre · free-aim · LMB select · RMB snap+focus · harvest LMB/RMB · X roll
+                Dot centre · free-aim · LMB select · RMB toggle focus · harvest LMB/RMB · X roll
               </p>
             </div>
           )}

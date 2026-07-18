@@ -20,6 +20,12 @@ export interface CraftpixHarvestHudProps {
   mode: PlayerActivityMode;
   onSelectTool?: (id: string) => void;
   onOpenProduction?: () => void;
+  /** Open character 3×3 bag (far-right button). */
+  onOpenBag?: () => void;
+  /** Illuminate bag / deposit when in claim, camp, boat. */
+  canDeposit?: boolean;
+  bagOccupied?: number;
+  bagCapacity?: number;
 }
 
 /** Profession level from unlock counts (local trees until Railway professions). */
@@ -43,6 +49,10 @@ export function CraftpixHarvestHud({
   mode,
   onSelectTool,
   onOpenProduction,
+  onOpenBag,
+  canDeposit = false,
+  bagOccupied = 0,
+  bagCapacity = 9,
 }: CraftpixHarvestHudProps) {
   const tools = RADIAL_BY_MODE[mode] ?? RADIAL_BY_MODE.harvest;
   const equippedId = hud.activityTool || tools[0]?.id || "gather";
@@ -68,7 +78,7 @@ export function CraftpixHarvestHud({
           <div className="cx-ab3-left">
             <div className="cx-stat cx-stat-hp" title="Health">
               <div className="cx-stat-track">
-                <div className="cx-stat-fill hp" style={{ width: `${hpPct}%` }} />
+                <div className="cx-stat-fill hp" style={{ height: `${hpPct}%` }} />
               </div>
               <span className="cx-stat-label">
                 HP {Math.round(hud.health)}/{hud.maxHealth}
@@ -76,7 +86,7 @@ export function CraftpixHarvestHud({
             </div>
             <div className="cx-stat cx-stat-sp" title="Stamina">
               <div className="cx-stat-track">
-                <div className="cx-stat-fill sp" style={{ width: `${spPct}%` }} />
+                <div className="cx-stat-fill sp" style={{ height: `${spPct}%` }} />
               </div>
               <span className="cx-stat-label">
                 SP {Math.round(hud.stamina)}/{hud.maxStamina}
@@ -146,6 +156,7 @@ export function CraftpixHarvestHud({
                       src={opIconUrl(tool.id)}
                       alt=""
                       onError={(e) => {
+                        e.currentTarget.dataset.broken = "1";
                         e.currentTarget.style.display = "none";
                       }}
                     />
@@ -162,31 +173,52 @@ export function CraftpixHarvestHud({
             </div>
           </div>
 
-          {/* Right: open production + mode hint */}
-          <div className="cx-ab3-right" style={{ alignItems: "flex-end", gap: 6 }}>
+          {/* Right: production · bag (far right) */}
+          <div className="cx-ab3-right">
             {onOpenProduction && (
               <button
                 type="button"
-                className="cx-tool is-equipped"
-                style={{ width: 52, height: 52 }}
-                title="Production shell (P)"
+                className="cx-tool cx-tool-prod is-equipped"
+                title="Production shell (P) — craft, trees, maps"
                 onClick={onOpenProduction}
               >
                 <span className="cx-tool-key">P</span>
                 <span className="cx-tool-glyph">⛏</span>
               </button>
             )}
-            <span
-              style={{
-                fontSize: 9,
-                letterSpacing: "0.06em",
-                color: "#a89880",
-                textAlign: "right",
-                maxWidth: 120,
-              }}
-            >
-              Q mode · 1–6 tools · hold Tab
-            </span>
+            {onOpenBag && (
+              <button
+                type="button"
+                className={
+                  "cx-tool cx-tool-bag" +
+                  (canDeposit ? " is-deposit-lit" : "") +
+                  (bagOccupied > 0 ? " is-equipped" : "")
+                }
+                title={
+                  canDeposit
+                    ? `Character bag (I) · ${bagOccupied}/${bagCapacity} · Quick deposit ready`
+                    : `Character bag (I) · ${bagOccupied}/${bagCapacity} · 3×3 carry`
+                }
+                onClick={onOpenBag}
+              >
+                <span className="cx-tool-key">I</span>
+                <img
+                  className="cx-tool-icon"
+                  src="/icons/inventory.png"
+                  alt=""
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <span className="cx-tool-glyph" aria-hidden>
+                  🎒
+                </span>
+                {bagOccupied > 0 && (
+                  <span className="cx-bag-badge">{bagOccupied}</span>
+                )}
+              </button>
+            )}
+            <span className="cx-ab3-hint">Q mode · 1–6 tools · I bag · P prod</span>
           </div>
         </div>
       </div>

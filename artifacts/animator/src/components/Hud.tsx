@@ -15,6 +15,7 @@ import {
 } from "../three/playerMode";
 import { UnitFrame } from "./hud/UnitFrame";
 import { CraftpixHarvestHud } from "./hud/CraftpixHarvestHud";
+import { CraftpixCombatHud } from "./hud/CraftpixCombatHud";
 import { portraitOnError } from "../lib/characterPortrait";
 import {
   COMBAT_KEY_LEGEND,
@@ -38,6 +39,11 @@ interface Props {
   onRadialCancel?: () => void;
   /** Open full harvest production shell (craft / codex / maps / trees). */
   onOpenProduction?: () => void;
+  /** Open character 3×3 bag. */
+  onOpenBag?: () => void;
+  canDeposit?: boolean;
+  bagOccupied?: number;
+  bagCapacity?: number;
 }
 
 /** Merge a panel's edit binding onto its base className + inline style. */
@@ -802,6 +808,10 @@ export function Hud({
   onRadialSelect,
   onRadialCancel,
   onOpenProduction,
+  onOpenBag,
+  canDeposit,
+  bagOccupied,
+  bagCapacity,
 }: Props) {
   if (!hud) return null;
 
@@ -875,7 +885,7 @@ export function Hud({
 
       {/*
         Mode-switched player chrome:
-          combat  → threejs-rapier cluster (6 skill + UnitFrame + 6 utility)
+          combat  → Craftpix Part_2 two-row bar (slots = icon XY) + Part_7 tips
           harvest/build → Craftpix Part_3 bar (HP/SP, avatar, gold, professions, 6 tools)
       */}
       {isHarvestBuild ? (
@@ -884,105 +894,18 @@ export function Hud({
           mode={mode}
           onSelectTool={(id) => onRadialSelect?.(id)}
           onOpenProduction={onOpenProduction}
+          onOpenBag={onOpenBag}
+          canDeposit={canDeposit}
+          bagOccupied={bagOccupied}
+          bagCapacity={bagCapacity}
         />
       ) : (
-        <div {...applyBind(bindOf(edit, "vitals"), "rpg-combat-cluster uf-panel uf-panel-player")}>
-          {/* LEFT wing — quickActions SSOT (skills) */}
-          <div className="rpg-slot-wing rpg-slot-wing-left" aria-label="Combat skills">
-            {hud.mech ? (
-              <>
-                <SkillSlot compact keyLabel="LMB" name="Power Smash" icon="attack" cd={0} cdMax={0} />
-                {hud.mech.abilities.map((a) => (
-                  <SkillSlot
-                    compact
-                    key={a.key}
-                    keyLabel={a.key}
-                    name={a.name}
-                    icon={a.icon}
-                    cd={a.cd}
-                    cdMax={a.cdMax}
-                    accent
-                  />
-                ))}
-                {Array.from({ length: Math.max(0, 5 - hud.mech.abilities.length) }).map((_, i) => (
-                  <div key={`pad-m-${i}`} className="act-slot act-compact act-empty" />
-                ))}
-              </>
-            ) : (
-              leftWingSlots(defaultQuickSlots()).map((id, i) => {
-                if (!id) return <div key={`L${i}`} className="act-slot act-compact act-empty" />;
-                const pres = wingPresentation(id, hud, slotByName);
-                const { cd, cdMax } = wingCooldown(id, hud);
-                return (
-                  <SkillSlot
-                    compact
-                    key={`L-${id}`}
-                    keyLabel={pres.key}
-                    name={pres.name}
-                    icon={pres.icon}
-                    iconUrl={pres.iconUrl}
-                    cd={cd}
-                    cdMax={cdMax}
-                  />
-                );
-              })
-            )}
-          </div>
-
-          {/* CENTER: UnitFrame portrait (threejs-rapier style) */}
-          <div className="rpg-unitframe-wrap">
-            <UnitFrame
-              side="left"
-              variant="player"
-              name={hud.character}
-              sub={hud.weaponLabel}
-              hp={{ value: hud.health, max: hud.maxHealth }}
-              energy={{ value: hud.stamina, max: hud.maxStamina }}
-              badge={<span title={`Lv ${hud.level ?? 1}`}>{hud.level ?? 1}</span>}
-              portrait={
-                hud.portraitUrl ? (
-                  <img
-                    className="uf-portrait-img"
-                    src={hud.portraitUrl}
-                    alt={hud.character}
-                    draggable={false}
-                    onError={(e) =>
-                      portraitOnError(e.currentTarget, hud.portraitCandidates ?? [])
-                    }
-                  />
-                ) : (
-                  <span className="uf-portrait-letter">
-                    {(hud.character || "?").slice(0, 1).toUpperCase()}
-                  </span>
-                )
-              }
-            />
-            <div className="rpg-poise-under">
-              <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
-              <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
-            </div>
-          </div>
-
-          {/* RIGHT wing — utility (quickActions SSOT) */}
-          <div className="rpg-slot-wing rpg-slot-wing-right" aria-label="Utility options">
-            {rightWingSlots(defaultQuickSlots()).map((id, i) => {
-              if (!id) return <div key={`R${i}`} className="act-slot act-compact act-empty" />;
-              const pres = wingPresentation(id, hud, slotByName);
-              const { cd, cdMax } = wingCooldown(id, hud);
-              return (
-                <SkillSlot
-                  compact
-                  key={`R-${id}`}
-                  keyLabel={pres.key}
-                  name={pres.name}
-                  icon={pres.icon}
-                  iconUrl={pres.iconUrl}
-                  cd={cd}
-                  cdMax={cdMax}
-                  accent={id === "dodge" || id === "parry"}
-                />
-              );
-            })}
+        <div {...applyBind(bindOf(edit, "vitals"), "cx-combat-bind")}>
+          <CraftpixCombatHud hud={hud} onOpenProduction={onOpenProduction} />
+          {/* Poise / combat-state chip sits above the Part_2 bar */}
+          <div className="cx-combat-poise-float">
+            <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
+            <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
           </div>
         </div>
       )}

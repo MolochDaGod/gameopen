@@ -34,7 +34,12 @@ export const HARVEST_TABS: {
   { id: "codex", label: "Codex", blurb: "Mine-Loader blocks & defs", glyph: "📘" },
   { id: "maps", label: "Maps", blurb: "World & arena library", glyph: "🗺" },
   { id: "trees", label: "Skill trees", blurb: "Harvest · craft · build", glyph: "🌳" },
-  { id: "characters", label: "Characters", blurb: "Explorer & user avatars", glyph: "👤" },
+  {
+    id: "characters",
+    label: "Characters",
+    blurb: "Heroes (4-slot) · units / explorers",
+    glyph: "👤",
+  },
   { id: "systems", label: "Systems", blurb: "Voxel game design", glyph: "🧩" },
 ];
 
@@ -150,10 +155,18 @@ export interface MapAsset {
 export interface CharacterImportRow {
   id: string;
   name: string;
-  source: "fleet" | "avatar" | "explorer";
+  /**
+   * hero  — user campfire roster (max 4)
+   * unit  — RTS / faction troops (explorers are units)
+   * fleet — legacy alias for hero from Railway
+   * avatar / explorer — head/rig import helpers
+   */
+  source: "hero" | "unit" | "fleet" | "avatar" | "explorer";
   raceId?: string;
   blurb: string;
   avatarConfig?: unknown;
+  unitType?: string;
+  factionId?: string;
 }
 
 export interface DesignPillar {
@@ -933,17 +946,66 @@ export function listUserAvatarCharacters(): CharacterImportRow[] {
   return rows;
 }
 
-/** Fleet / explorer characters from GameSession. */
-export function listFleetCharacters(): CharacterImportRow[] {
+/**
+ * User heroes for the 4-slot campfire scene.
+ * SSOT: GameSession merge (grudox slots → local drafts → Railway warlords roster).
+ * Explorers are NOT heroes — use {@link listUnitCharacters}.
+ */
+export function listHeroCharacters(maxSlots = 4): CharacterImportRow[] {
   const snap = gameSession.snapshot;
-  const list = snap.characters ?? [];
-  return list.map((c) => ({
+  const list = (snap.characters ?? []).filter(
+    (c) => c?.id && !String(c.id).includes("explorer") && !String(c.id).startsWith("unit-"),
+  );
+  return list.slice(0, maxSlots).map((c) => ({
     id: c.id,
     name: c.name || c.id,
-    source: c.id.includes("explorer") ? "explorer" : "fleet",
+    source: "hero" as const,
     raceId: c.raceId,
-    blurb: c.raceId ? `Race ${c.raceId}` : "Fleet character",
+    blurb: c.raceId
+      ? `Hero · ${c.raceId}${c.classId ? ` · ${c.classId}` : ""}`
+      : "Campfire hero",
   }));
+}
+
+/** @deprecated Prefer listHeroCharacters — fleet rows are heroes, not explorers. */
+export function listFleetCharacters(): CharacterImportRow[] {
+  return listHeroCharacters(4).map((c) => ({ ...c, source: c.source === "hero" ? "fleet" : c.source }));
+}
+
+/**
+ * Units catalog for Production / RTS / Explorer play.
+ * Explorer rig is a **unit** (same as faction troops), not a user hero.
+ */
+export function listUnitCharacters(
+  factionUnits: Array<{
+    id: string;
+    name: string;
+    type?: string;
+    factionId?: string;
+    factionName?: string;
+    description?: string;
+  }> = [],
+): CharacterImportRow[] {
+  const units: CharacterImportRow[] = [
+    {
+      id: "explorer",
+      name: "Explorer",
+      source: "unit",
+      blurb: "Playable unit rig · cube body + avatar head · same catalog role as troops",
+      unitType: "explorer",
+    },
+  ];
+  for (const u of factionUnits) {
+    units.push({
+      id: u.id.startsWith("unit-") ? u.id : `unit-${u.id}`,
+      name: u.name,
+      source: "unit",
+      blurb: u.description || `${u.factionName || u.factionId || "faction"} · ${u.type || "troop"}`,
+      unitType: u.type,
+      factionId: u.factionId,
+    });
+  }
+  return units;
 }
 
 export function openMineLoaderCodex(): string {
@@ -1086,10 +1148,36 @@ export function weaponSkillCdMul(unlocks = loadSkillUnlocks()): number {
 }
 
 /** Minecraft-like harvest yields into bag (local until Railway bag). */
+/**
+ * Map production mat_* ids → character bag resource ids (stack ≤100).
+ * Character bag holds harvest until quick-deposit to account inventory.
+ */
+const MAT_TO_CHAR_BAG: Record<string, string> = {
+  mat_log: "wood",
+  mat_stick: "sticks",
+  mat_stone: "stone",
+  mat_coal: "coal",
+  mat_iron_ore: "ore",
+  mat_raw_meat: "meat",
+  mat_leather: "hide",
+  mat_fiber: "fiber",
+  mat_clay: "clay",
+  mat_dirt: "clay",
+  mat_sand: "stone",
+  mat_herb: "fiber",
+  mat_berry: "fiber",
+  mat_mushroom: "fiber",
+  mat_resin: "wood",
+  mat_fish: "meat",
+  mat_cloth: "fiber",
+};
+
 export function applyHarvestYield(
   opId: string,
   bag: Record<string, number> = loadBag(),
   yields?: string[],
+  /** Active character id — writes into 3×3 character bag as well as craft bag. */
+  characterId?: string,
 ): Record<string, number> {
   const next = { ...(Object.keys(bag).length ? bag : loadBag()) };
   const list =
@@ -1110,9 +1198,26 @@ export function applyHarvestYield(
                   : opId === "farm"
                     ? ["mat_fiber", "mat_berry"]
                     : ["mat_stick"];
+  const charAdds: Record<string, number> = {};
   for (const id of list) {
-    next[id] = (next[id] ?? 0) + 1 + (Math.random() < 0.25 ? 1 : 0);
+    const amt = 1 + (Math.random() < 0.25 ? 1 : 0);
+    next[id] = (next[id] ?? 0) + amt;
+    const bagId = MAT_TO_CHAR_BAG[id] || id.replace(/^mat_/, "");
+    charAdds[bagId] = (charAdds[bagId] || 0) + amt;
   }
   saveBag(next);
+  // Character 3×3 bag (not account vault until deposit)
+  if (characterId) {
+    try {
+      // Dynamic to avoid circular import at module load
+      void import("./inventory/store").then(({ harvestIntoBag }) => {
+        for (const [id, qty] of Object.entries(charAdds)) {
+          harvestIntoBag(characterId, id, qty);
+        }
+      });
+    } catch {
+      /* ignore */
+    }
+  }
   return next;
 }
