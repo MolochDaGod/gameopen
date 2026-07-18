@@ -70,6 +70,7 @@ function walkGlbs(dir, base) {
 function categoryOf(r2Key) {
   if (r2Key.includes("/worlds/")) return "world_terrain";
   if (r2Key.includes("/nature/")) return "nature";
+  if (r2Key.includes("/packs/")) return "world_pack";
   if (r2Key.includes("/grudge6/")) return "character_kit";
   if (r2Key.includes("/grudge/")) return "character";
   if (r2Key.includes("/weapons/")) return "weapon";

@@ -46,6 +46,7 @@ export function VoxGrudgeNative({ onExit }: Props) {
   const [peers, setPeers]       = useState<PresenceState[]>([]);
   const [layoutBusy, setLayoutBusy] = useState(false);
   const [layoutNote, setLayoutNote] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState<"amida" | "roads">("amida");
 
   // Remove stale peers after 8 s of silence.
   const peerMapRef = useRef<Map<string, PresenceState>>(new Map());
@@ -60,11 +61,12 @@ export function VoxGrudgeNative({ onExit }: Props) {
     try {
       editor = new VoxelEditor(container);
       editorRef.current = editor;
-      // Seed biome + road connectors from road_pack breakdown (blocks always; GLB if on R2)
-      void editor.applyBiomeRoadLayout({ scatterGlb: true }).then((r) => {
+      // Default: Amida farm/camp (fields + fence + camp) with codex-mapped terrain
+      void editor.applyAmidaFarmLayout({ scatterGlb: true, resolveCodex: true }).then((r) => {
         if (cancelled) return;
+        setLayoutMode("amida");
         setLayoutNote(
-          `Biome roads · ${r.blocks} cells · ${r.accents} pack accents (roads/trees/biomes)`,
+          `Amida farm camp · ${r.blocks} cells · ${r.accents} pack accents · codex ${r.codexBound} roles`,
         );
       });
     } catch (err) {
@@ -81,11 +83,27 @@ export function VoxGrudgeNative({ onExit }: Props) {
     const editor = editorRef.current;
     if (!editor || layoutBusy) return;
     setLayoutBusy(true);
+    setLayoutMode("roads");
     void editor
       .applyBiomeRoadLayout({ scatterGlb: true })
       .then((r) => {
         setLayoutNote(
-          `Re-applied · ${r.blocks} cells · ${r.accents} accents · road_pack + Kenney CDN for full world`,
+          `Biome roads · ${r.blocks} cells · ${r.accents} accents · road_pack + Kenney CDN for full world`,
+        );
+      })
+      .finally(() => setLayoutBusy(false));
+  };
+
+  const reapplyAmidaFarm = () => {
+    const editor = editorRef.current;
+    if (!editor || layoutBusy) return;
+    setLayoutBusy(true);
+    setLayoutMode("amida");
+    void editor
+      .applyAmidaFarmLayout({ scatterGlb: true, resolveCodex: true })
+      .then((r) => {
+        setLayoutNote(
+          `Amida farm · ${r.blocks} cells · ${r.accents} accents · codex-bound ${r.codexBound} · fields_near_the_city_of_amida`,
         );
       })
       .finally(() => setLayoutBusy(false));
@@ -198,12 +216,26 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
         <button
           type="button"
-          style={biomeBtn}
+          style={
+            layoutMode === "amida"
+              ? biomeBtnActive
+              : { ...biomeBtn, marginLeft: "auto" }
+          }
+          disabled={layoutBusy}
+          title="Amida fields: farm plots, fence, camp pad, crop rows + GLB accents (codex-mapped)"
+          onClick={reapplyAmidaFarm}
+        >
+          {layoutBusy && layoutMode === "amida" ? "Applying…" : "Amida farm"}
+        </button>
+
+        <button
+          type="button"
+          style={layoutMode === "roads" ? biomeBtnActive : biomeBtn}
           disabled={layoutBusy}
           title="Apply road_pack breakdown: spokes, rings, biome wedges, trees"
           onClick={reapplyBiomeRoads}
         >
-          {layoutBusy ? "Applying…" : "Biome roads"}
+          {layoutBusy && layoutMode === "roads" ? "Applying…" : "Biome roads"}
         </button>
 
         <button
@@ -228,7 +260,7 @@ export function VoxGrudgeNative({ onExit }: Props) {
 
       {/* ── bottom hint bar ── */}
       <div style={hintBar}>
-        Lab uses <b>road_pack</b> for biomes/paths/trees + block spokes/rings. Modular{" "}
+        Lab: <b>Amida farm</b> (fields/camp/crops · codex) + <b>road_pack</b> biomes. Modular{" "}
         <b>Kenney 8m roads</b> on full world CDN.{" "}
         {layoutNote ? <span style={{ color: "#9fe8ff" }}>{layoutNote}</span> : null}
         {" · "}RMB orbit · LMB build · Full World → voxgrudge.vercel.app
@@ -304,7 +336,7 @@ const brandTag: CSSProperties = {
 };
 
 const biomeBtn: CSSProperties = {
-  marginLeft: "auto",
+  marginLeft: 0,
   padding: "6px 12px",
   borderRadius: 8,
   border: "1px solid rgba(126,224,160,0.45)",
@@ -313,6 +345,15 @@ const biomeBtn: CSSProperties = {
   fontWeight: 700,
   fontSize: 12,
   cursor: "pointer",
+};
+
+const biomeBtnActive: CSSProperties = {
+  ...biomeBtn,
+  marginLeft: "auto",
+  border: "1px solid rgba(95,224,255,0.65)",
+  background: "rgba(20,70,90,0.7)",
+  color: "#9fe8ff",
+  boxShadow: "0 0 12px rgba(95,224,255,0.25)",
 };
 
 const statusBlock: CSSProperties = {

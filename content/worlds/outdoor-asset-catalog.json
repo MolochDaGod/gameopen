@@ -109,6 +109,15 @@
       "category": "creature",
       "role": "skin_harvest",
       "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "pack_amida_fields",
+      "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
+      "category": "world_pack",
+      "role": "farm_camp_fields",
+      "testWorldId": "amida-farm",
+      "contentType": "model/gltf-binary",
+      "notes": "Fields near Amida - farm/camp voxel pack (CC-BY). Isolate meshIndex props; codex via amidaFields.ts"
     }
   ]
 }

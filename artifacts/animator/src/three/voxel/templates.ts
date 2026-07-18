@@ -9,6 +9,7 @@ import { VOXEL_MAP_VERSION, colorForBlockType } from "./types";
 import type { WeaponId } from "../types";
 import type { BlockTypeId } from "@workspace/voxel-canonical";
 import { buildBiomeRoadBlocks } from "./roadPack";
+import { buildAmidaFarmBlocks } from "./amidaFields";
 
 /**
  * Code-defined starting-map templates for the Voxel Editor (`/voxel`).
@@ -323,8 +324,34 @@ function biomeRoadLab(): VoxelMap {
   };
 }
 
+/** Amida fields → farm plots, fence, camp pad, crops (see amidaFields.ts). */
+function amidaFarmCampLab(): VoxelMap {
+  const blocks = buildAmidaFarmBlocks({ half: 18 });
+  return {
+    version: VOXEL_MAP_VERSION,
+    dungeon: false,
+    blocks,
+    deployables: [
+      {
+        id: "start",
+        kind: "start",
+        x: 0,
+        y: 0,
+        z: -16,
+        rotation: 0,
+      },
+    ],
+  };
+}
+
 /** Selectable templates, in picker order. */
 export const MAP_TEMPLATES: MapTemplate[] = [
+  {
+    id: "amidaFarmCamp",
+    label: "Amida Farm Camp",
+    desc: "Fields near Amida — farm plots, fence, camp pad, crop rows (codex-mapped)",
+    build: amidaFarmCampLab,
+  },
   {
     id: "biomeRoadLab",
     label: "Biome Roads Lab",

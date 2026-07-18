@@ -32,6 +32,12 @@ import {
   buildBiomeRoadBlocks,
   scatterRoadPackAccents,
 } from "./roadPack";
+import {
+  buildAmidaFarmBlocks,
+  scatterAmidaCampProps,
+  resolveAmidaCodexBindings,
+  type AmidaCodexBinding,
+} from "./amidaFields";
 
 /**
  * Distinct Explorer colourways so placed NPCs read apart at a glance. The editor
@@ -505,6 +511,61 @@ export class VoxelEditor {
     }
     this.emitStats();
     return { blocks: blocks.length, accents };
+  }
+
+  /**
+   * Apply Amida Fields farm/camp layout for `/world` lab:
+   *  - voxel blocks: grass fields, dirt plots, fence, camp pad, crops, paths
+   *  - optional GLB accents from `models/packs/fields_near_the_city_of_amida.glb` (R2)
+   *  - codex bindings via Mine-Loader `/api/blocks` when reachable
+   */
+  async applyAmidaFarmLayout(opts?: {
+    half?: number;
+    scatterGlb?: boolean;
+    resolveCodex?: boolean;
+  }): Promise<{ blocks: number; accents: number; codexBound: number }> {
+    const half = opts?.half ?? 18;
+    let bindings: AmidaCodexBinding[] | undefined;
+    let codexBound = 0;
+    if (opts?.resolveCodex !== false) {
+      try {
+        bindings = await resolveAmidaCodexBindings();
+        codexBound = bindings.filter((b) => b.catalogType).length;
+      } catch {
+        bindings = undefined;
+      }
+    }
+    const blocks = buildAmidaFarmBlocks({ half, bindings });
+    const startZ = -Math.min(half - 2, 16);
+    this.load({
+      version: VOXEL_MAP_VERSION,
+      dungeon: false,
+      blocks,
+      deployables: [
+        {
+          id: "start",
+          kind: "start",
+          x: 0,
+          y: 0,
+          z: startZ,
+          rotation: 0,
+        },
+      ],
+    });
+
+    const old = this.scene.getObjectByName("amidaFieldsAccents");
+    if (old) this.scene.remove(old);
+
+    let accents = 0;
+    if (opts?.scatterGlb !== false) {
+      const group = new THREE.Group();
+      group.name = "amidaFieldsAccents";
+      accents = await scatterAmidaCampProps(group, { half: Math.min(half - 2, 14) });
+      group.position.set(0.5, 0, 0.5);
+      this.scene.add(group);
+    }
+    this.emitStats();
+    return { blocks: blocks.length, accents, codexBound };
   }
 
   // ── Placement ────────────────────────────────────────────────────────────────
