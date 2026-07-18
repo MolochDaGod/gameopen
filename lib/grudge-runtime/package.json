@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/grudge-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Warlords-era SSOT: grudge UUIDs, world location, declarative scripting, shared asset URLs, scene-host contract — uniform across islands, zones, instances, dungeons, Danger Room.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "~5.9.2",
+    "vite": "^6.3.5",
+    "vitest": "^4.1.8"
+  }
+}

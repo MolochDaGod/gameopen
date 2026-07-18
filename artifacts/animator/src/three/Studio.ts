@@ -55,6 +55,17 @@ import {
   createScenePhysics,
   type CharacterCapsuleKcc,
 } from "./PhysicsSystem";
+import {
+  LocationBag,
+  ScriptRunner,
+  dangerRoomLocation,
+  dungeonLocation,
+  createSceneMeta,
+  physicsDefaultsFor,
+  type WorldLocation,
+  type ScriptDoc,
+  isScriptDoc,
+} from "@workspace/grudge-runtime";
 import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
 import {
   aoeFalloff,
@@ -100,6 +111,7 @@ import {
   TEST_WORLDS,
   type TestWorldId,
 } from "./testWorlds";
+import { CampEnemySystem } from "./enemies/CampEnemySystem";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
   advanceBeamSession,
@@ -504,6 +516,13 @@ export class Studio {
    * collision; living NPCs stay on circle obstacles + keepRoomBounds.
    */
   private playerKcc: CharacterCapsuleKcc | null = null;
+  /**
+   * Uniform Warlords location + declarative scripts
+   * (`@workspace/grudge-runtime`). Same bag shape for island/zone/dungeon hosts.
+   */
+  private locationBag = new LocationBag(dangerRoomLocation());
+  private scripts = new ScriptRunner();
+  readonly sceneMeta = createSceneMeta("danger-room", "Danger Room", "/danger");
   /** Shared pmndrs post-processing composer over the main scene (null = direct render). */
   private postfx: MysticalComposer | null = null;
   private input: InputState;
@@ -722,7 +741,10 @@ export class Studio {
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
+  private campEnemies: CampEnemySystem | null = null;
   private testWorldId: TestWorldId = "danger-room";
+  private playerXp = 0;
+  private jungleBuffId: string | null = null;
   /** Cooldown gating the kiter backstep's i-frame dodge so rapid fire can't chain
    *  the invuln window into continuous immunity (dodge re-arms every 0.6s). */
   private pistolDodgeCd = 0;
@@ -975,6 +997,22 @@ export class Studio {
     this.forestWorld = new ForestWorld(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
     });
+    this.campEnemies = new CampEnemySystem(this.scene, {
+      flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
+      onKill: (_e, xp, buffId) => {
+        this.playerXp += xp;
+        if (buffId) this.jungleBuffId = buffId;
+        this.setCombatFlash(
+          `CAMP KILL · +${xp} XP${buffId ? ` · ${buffId}` : ""} · total ${this.playerXp}`,
+          1.0,
+        );
+      },
+      damagePlayer: (amount, from) => {
+        // Soft chip via existing health path if available
+        this.setCombatFlash(`CAMP HIT · −${amount}`, 0.4);
+        this.vfx.burst(from.clone().setY(1), 0xff5555, 8, 1.6);
+      },
+    });
     void this.setTestWorld(loadTestWorldId());
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
@@ -1164,11 +1202,13 @@ export class Studio {
    */
   private async initPhysics() {
     try {
+      const phys = physicsDefaultsFor("danger-room");
       const { physics, playerKcc } = await createScenePhysics({
         kind: "danger-room",
-        ground: true,
+        ground: phys.ground,
         player: { x: 0, y: 0, z: 0 },
-        meshBvh: true,
+        meshBvh: phys.meshBvh,
+        gravityY: phys.gravityY,
       });
       if (this.disposed || !physics.world) {
         physics.dispose();
@@ -1177,9 +1217,52 @@ export class Studio {
       this.physics = physics;
       this.playerKcc = playerKcc;
       this.applyDangerRoomCollision();
+      this.locationBag.setLocation(dangerRoomLocation());
+      void this.loadRuntimeScripts();
     } catch (err) {
       console.error("[Studio] physics init failed", err);
     }
+  }
+
+  /** Current Warlords WorldLocation (for HUD / multiplayer / AI tools). */
+  getWorldLocation(): WorldLocation {
+    const pos = this.character?.root.position;
+    if (pos) {
+      this.locationBag.patchPose({ x: pos.x, y: pos.y, z: pos.z });
+    }
+    return this.locationBag.getLocation();
+  }
+
+  /** Declarative script runner (JSON actions only — no eval). */
+  getScriptRunner(): ScriptRunner {
+    return this.scripts;
+  }
+
+  /** Load content/runtime script pack when present (same shape for all scenes). */
+  private async loadRuntimeScripts() {
+    try {
+      const res = await fetch("/content/runtime/example-danger-scripts.json");
+      if (!res.ok) return;
+      const pack = (await res.json()) as { scripts?: unknown[] };
+      const docs = (pack.scripts ?? []).filter(isScriptDoc) as ScriptDoc[];
+      this.scripts.clear();
+      this.scripts.register("message", (a) => {
+        const text = String(a.payload?.text ?? "");
+        if (text) this.setCombatFlash(text, 2.2);
+      });
+      this.scripts.register("load-instance", () => {
+        // Door already owns enterDungeon; portal scripts can share this handler later.
+        this.tryEnterDungeonFromScript();
+      });
+      this.scripts.load(docs);
+    } catch {
+      // Optional content pack — missing file is fine in slim deploys.
+    }
+  }
+
+  /** Hook for portal script → dungeon (same as door proximity enter). */
+  private tryEnterDungeonFromScript() {
+    if (!this.inDungeon && !this.enteringDungeon) void this.enterDungeon();
   }
 
   /**
@@ -2425,6 +2508,8 @@ export class Studio {
         poiseDamage: Math.round(strike.damage * dmgMul * 0.65 + fx.knockback * 2),
       };
       const result = this.targets.playerHit(center, hitRadius, payload, strike.force, this.sparCtx);
+      // Voxel/forest camp creeps share the same melee radius
+      this.campEnemies?.damageInRadius(center, hitRadius, payload.damage);
       const landed = !result || result.outcome === "hit" || result.outcome === "crit";
       if (landed && counter) {
         this.respectWindow = 0;
@@ -8903,6 +8988,12 @@ export class Studio {
         this.character.root.position.z += w.z * dt;
       }
     }
+    // Camp / voxel hostiles (forest creeps)
+    this.campEnemies?.update(dt, this.character?.root.position ?? null);
+    // Player melee splash damages camp creeps
+    if (this.campEnemies && this.character && this.activityMode === "combat") {
+      // handled on attack connect via damageCampEnemiesNear
+    }
     // Camp placeables: animation mixers, towers, traps + ghost follow
     if (this.campBuild) {
       const hostiles: THREE.Vector3[] = [];
@@ -8914,6 +9005,8 @@ export class Studio {
       } catch {
         /* ignore */
       }
+      // Include camp enemies for tower AI
+      for (const p of this.campEnemies?.livingPositions() ?? []) hostiles.push(p);
       this.campBuild.update(dt, this.character?.root.position, hostiles);
     }
     if (this.campBuild?.isGhostActive && this.character) {
@@ -9388,6 +9481,20 @@ export class Studio {
       this.inDungeon = true;
       this.locked = false;
       this.controller?.setLockTarget(null);
+      // Nested Warlords location (dungeon under Danger Room parent).
+      this.locationBag.setLocation(
+        dungeonLocation({
+          mapId: DUNGEON_MAPS[loadDungeonMap()].file,
+          parent: dangerRoomLocation({
+            instanceId: this.locationBag.getLocation().instanceId,
+          }),
+          position: {
+            x: dungeon.spawn.x,
+            y: dungeon.spawn.y,
+            z: dungeon.spawn.z,
+          },
+        }),
+      );
 
       // The dungeon keeps its own dark dry tone regardless of the room preset, so
       // reset the fog baseline (the water-band fx lerps from this) to the base.
@@ -9463,6 +9570,11 @@ export class Studio {
     const home = new THREE.Vector3(0, 0, 4);
     this.character?.root.position.copy(home);
     this.applyDangerRoomCollision(home);
+    this.locationBag.setLocation(
+      dangerRoomLocation({
+        position: { x: home.x, y: home.y, z: home.z },
+      }),
+    );
     this.health = this.maxHealth;
     this.stamina = this.maxStamina;
     this.defeated = false;
@@ -9792,6 +9904,13 @@ export class Studio {
     if (this.forestWorld) {
       const ok = await this.forestWorld.load(def);
       if (!ok && def.kind !== "combat") return false;
+    }
+
+    // Voxel / outdoor camp enemies (forest creeps)
+    this.campEnemies?.clear();
+    if (def.kind !== "combat" && this.campEnemies) {
+      const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
+      void this.campEnemies.spawnVoxelCamp(center);
     }
 
     // Atmosphere: sailtest Sky/fog applied inside SailEnvironment; else fog from def

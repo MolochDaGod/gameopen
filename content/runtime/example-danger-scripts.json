@@ -1,0 +1,43 @@
+{
+  "format": "grudge.script-pack.v1",
+  "contract": "1.0.0",
+  "sceneKind": "danger-room",
+  "scripts": [
+    {
+      "id": "scr_danger_door_hint",
+      "name": "Door proximity hint",
+      "mode": "repeat",
+      "tags": ["tutorial", "danger"],
+      "trigger": {
+        "kind": "enter-radius",
+        "radius": 2.5,
+        "position": { "x": 0, "y": 0, "z": -12 }
+      },
+      "actions": [
+        {
+          "kind": "message",
+          "payload": { "text": "Press E near the door to enter the dungeon." }
+        }
+      ]
+    },
+    {
+      "id": "scr_danger_enter_dungeon",
+      "name": "Enter dungeon portal",
+      "mode": "repeat",
+      "tags": ["portal"],
+      "trigger": {
+        "kind": "portal",
+        "targetId": "danger-door"
+      },
+      "actions": [
+        {
+          "kind": "load-instance",
+          "location": {
+            "kind": "dungeon",
+            "mapId": "minecraft-kit"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -61,6 +61,14 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/grudge-physics/src/index.ts",
       ),
+      "@workspace/grudge-runtime": path.resolve(
+        import.meta.dirname,
+        "../../lib/grudge-runtime/src/index.ts",
+      ),
+      "@workspace/grudge-warlords": path.resolve(
+        import.meta.dirname,
+        "../../lib/grudge-warlords/src/index.ts",
+      ),
       // The @workspace/* libs above are aliased to their TS SOURCE, so their
       // bare external imports (e.g. @tanstack/react-query in the generated
       // api-client) must resolve to THIS app's installed copies regardless of

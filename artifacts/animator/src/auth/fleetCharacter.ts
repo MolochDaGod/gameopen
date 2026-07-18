@@ -9,6 +9,10 @@
 
 import type { WeaponId } from "../three/types";
 import {
+  encodeWirePlayerName as encodeWireParts,
+  decodeWirePlayerName as decodeWireParts,
+} from "@workspace/grudge-runtime";
+import {
   FLEET,
   apiUrl,
   captureSsoFromUrl,
@@ -329,28 +333,20 @@ export function guestLoadout(): FleetPlayerLoadout {
 
 /** Wire name for multiplayer: display + animator id + fleet uuid (unit-separator). */
 export function encodeWirePlayerName(loadout: FleetPlayerLoadout): string {
-  return `${loadout.displayName}\u001f${loadout.characterId}\u001f${loadout.fleetId || "local"}`;
+  return encodeWireParts(
+    loadout.displayName,
+    loadout.characterId,
+    loadout.fleetId || "local",
+  );
 }
 
+/** Decode multiplayer wire name — fleet SSOT `@workspace/grudge-runtime`. */
 export function decodeWirePlayerName(wire: string): {
   displayName: string;
   characterId: string | null;
   fleetId: string | null;
 } {
-  const parts = wire.split("\u001f");
-  if (parts.length >= 2) {
-    return {
-      displayName: parts[0] || "Player",
-      characterId: parts[1] || null,
-      fleetId: parts[2] || null,
-    };
-  }
-  // Fallback: "Name|grudge-race-class"
-  const pipe = wire.split("|");
-  if (pipe.length >= 2 && pipe[1].startsWith("grudge-")) {
-    return { displayName: pipe[0], characterId: pipe[1], fleetId: null };
-  }
-  return { displayName: wire || "Player", characterId: null, fleetId: null };
+  return decodeWireParts(wire);
 }
 
 function parseCharactersPayload(raw: unknown): FleetCharacter[] {
