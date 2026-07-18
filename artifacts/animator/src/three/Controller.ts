@@ -7,11 +7,47 @@ import {
   sinkClampVertical,
   type WaterBand,
 } from "./dungeon/water";
+import {
+  PlayerAnimationDirector,
+  type LocomotionSetMap,
+  type PlayAnimationOpts,
+  type RegisterAnimationOpts,
+} from "./PlayerAnimationDirector";
 
 export interface ControllerState {
   grounded: boolean;
   jumpsLeft: number;
   speed: number;
+  /** True when an edge/cliff probe blocked forward motion this frame. */
+  edgeBlocked?: boolean;
+}
+
+/**
+ * Optional third-person camera + locomotion polish (three-player-controller parity).
+ * All fields optional; defaults preserve existing Danger Room / dungeon feel.
+ */
+export interface ControllerCameraOpts {
+  /** Over-the-shoulder horizontal view offset ratio (0..0.45). */
+  enableOverShoulderView?: boolean;
+  camOverShoulderOffsetRatio?: number;
+  /** Spring-damped look-at follow (GameCamera-style critically damped spring). */
+  enableSpringCamera?: boolean;
+  springCameraTime?: number;
+  /** Look-at height as ratio of cameraHeight (0 = feet, 1 = params.cameraHeight). */
+  camLookAtHeightRatio?: number;
+  /** When false, ignore mouse wheel distance zoom (default: allow zoom). */
+  enableZoom?: boolean;
+}
+
+export interface EdgeProbeOpts {
+  /** Stop walking toward unsupported drops (default true). */
+  enableEdgeStop?: boolean;
+  /** How far ahead (m) to sample ground for edges. */
+  probeDistance?: number;
+  /** Max allowed drop (m) before the edge is treated as a cliff. */
+  maxDrop?: number;
+  /** Optional height sampler; return null when no ground (void). */
+  groundHeightAt?: (x: number, z: number) => number | null;
 }
 
 /**
@@ -104,6 +140,38 @@ export class Controller {
   /** Scratch ray reused by aimRay() so screen-centre aim allocates nothing. */
   private aimRayCache = new THREE.Ray();
 
+  // --- three-player-controller parity: events, edge, camera polish, anim API ---
+  /** Animation director (register/play/locomotion sets). Lazy-created on first use. */
+  private animDirector: PlayerAnimationDirector | null = null;
+  /** Fired when grounded flag flips. */
+  onGroundChange?: (onGround: boolean) => void;
+  /** Fired just before first/third person switch. */
+  onBeforeViewChange?: (isFirstPerson: boolean) => void;
+  /** Fired after first/third person switch. */
+  onViewChange?: (isFirstPerson: boolean) => void;
+  /** Fired when look/move intent updates (dx, dy mouse deltas + planar speed). */
+  onTowardChange?: (dx: number, dy: number, speed: number) => void;
+  /** Forwarded from PlayerAnimationDirector when the active clip changes. */
+  onAnimationChange?: (name: string, action: THREE.AnimationAction | null) => void;
+
+  private enableOverShoulderView = false;
+  private camOverShoulderOffsetRatio = 0.2;
+  private enableSpringCamera = false;
+  private springCameraTime = 0.05;
+  private camLookAtHeightRatio = 1;
+  private enableZoom = true;
+  private springLookAt = new THREE.Vector3();
+  private springVel = new THREE.Vector3();
+  private springInited = false;
+  private overShoulderApplied = false;
+
+  private enableEdgeStop = true;
+  private edgeProbeDistance = 0.55;
+  private edgeMaxDrop = 0.9;
+  private groundHeightAt: ((x: number, z: number) => number | null) | null = null;
+  private edgeBlocked = false;
+  private prevGrounded = true;
+
   // Lunge state (signature / kick attacks): an eased "spline" body translation
   // that drives in toward a strike point then springs back, kept in sync with
   // the animation clip so the joint motion and the root motion read as one move.
@@ -144,6 +212,15 @@ export class Controller {
   private hoverHeight = 0;
   private hoverEnd = false;
   private hoverWasActive = false;
+  /**
+   * Skill short-flight (hh-hang three-player-controller fly mode, timed).
+   * Free 3D cam-relative motion for leap/gap-closer skills — not full toggle-fly.
+   */
+  private skillFlightActive = false;
+  private skillFlightElapsed = 0;
+  private skillFlightDuration = 0;
+  private skillFlightSpeed = 9;
+  private skillFlightEnd = false;
   private justRollLanding = false;
   // Aerial spin: rise + spin the body fast, then report the end so the Studio can
   // fire the flame-slash projectile.
@@ -187,7 +264,84 @@ export class Controller {
   }
 
   get state(): ControllerState {
-    return { grounded: this.grounded, jumpsLeft: this.jumpsLeft, speed: this.smoothedSpeed };
+    return {
+      grounded: this.grounded,
+      jumpsLeft: this.jumpsLeft,
+      speed: this.smoothedSpeed,
+      edgeBlocked: this.edgeBlocked,
+    };
+  }
+
+  /**
+   * Camera polish options (over-shoulder, spring follow, look-at height, zoom).
+   * Safe to call any time; applies on next {@link updateCamera}.
+   */
+  setCameraOpts(opts: ControllerCameraOpts) {
+    if (opts.enableOverShoulderView != null) this.enableOverShoulderView = opts.enableOverShoulderView;
+    if (opts.camOverShoulderOffsetRatio != null) {
+      this.camOverShoulderOffsetRatio = THREE.MathUtils.clamp(opts.camOverShoulderOffsetRatio, 0, 0.45);
+    }
+    if (opts.enableSpringCamera != null) this.enableSpringCamera = opts.enableSpringCamera;
+    if (opts.springCameraTime != null) this.springCameraTime = Math.max(0.0001, opts.springCameraTime);
+    if (opts.camLookAtHeightRatio != null) {
+      this.camLookAtHeightRatio = THREE.MathUtils.clamp(opts.camLookAtHeightRatio, 0, 1.5);
+    }
+    if (opts.enableZoom != null) this.enableZoom = opts.enableZoom;
+    this.applyOverShoulder();
+  }
+
+  /** Cliff/ledge edge-stop options + optional ground height sampler for mesh worlds. */
+  setEdgeProbeOpts(opts: EdgeProbeOpts) {
+    if (opts.enableEdgeStop != null) this.enableEdgeStop = opts.enableEdgeStop;
+    if (opts.probeDistance != null) this.edgeProbeDistance = Math.max(0.1, opts.probeDistance);
+    if (opts.maxDrop != null) this.edgeMaxDrop = Math.max(0.05, opts.maxDrop);
+    if (opts.groundHeightAt !== undefined) this.groundHeightAt = opts.groundHeightAt;
+  }
+
+  /** True when this frame's move was cut short by an unsupported edge. */
+  get isEdgeBlocked(): boolean {
+    return this.edgeBlocked;
+  }
+
+  /**
+   * Lazily attach a {@link PlayerAnimationDirector} for register/play/locomotion-set APIs.
+   * Character must already be loaded (clips present) for register calls to succeed.
+   */
+  getAnimationDirector(): PlayerAnimationDirector {
+    if (!this.animDirector) {
+      // Character is the concrete GLB avatar; cast is safe when Studio uses Character.
+      this.animDirector = new PlayerAnimationDirector(
+        this.character as import("./Character").Character,
+      );
+      this.animDirector.onAnimationChange = (name, action) => this.onAnimationChange?.(name, action);
+      this.animDirector.captureBaseline();
+    }
+    return this.animDirector;
+  }
+
+  /** @see PlayerAnimationDirector.playPlayerAnimationByName */
+  playPlayerAnimationByName(name: string, fade?: number): boolean {
+    return this.getAnimationDirector().playPlayerAnimationByName(name, fade);
+  }
+
+  /** @see PlayerAnimationDirector.registerAnimation */
+  registerAnimation(key: string, clipName: string, opts?: RegisterAnimationOpts): boolean {
+    return this.getAnimationDirector().registerAnimation(key, clipName, opts);
+  }
+
+  /** @see PlayerAnimationDirector.playAnimation */
+  playAnimation(key: string, opts?: PlayAnimationOpts): number {
+    return this.getAnimationDirector().playAnimation(key, opts);
+  }
+
+  /** @see PlayerAnimationDirector.registerLocomotionSet */
+  registerLocomotionSet(setName: string, map: LocomotionSetMap): void {
+    this.getAnimationDirector().registerLocomotionSet(setName, map);
+  }
+
+  /** @see PlayerAnimationDirector.switchLocomotionSet */
+  switchLocomotionSet(setName: string, fade?: number): boolean {
+    return this.getAnimationDirector().switchLocomotionSet(setName, fade);
   }
 
   /** Returns true if a double jump fired this frame (for VFX hooks). */
@@ -246,9 +400,64 @@ export class Controller {
    */
   setViewMode(mode: "third" | "first") {
     if (mode === this.viewMode) return;
+    this.onBeforeViewChange?.(this.viewMode === "first");
     this.viewMode = mode;
     this.character.root.visible = mode !== "first";
-    if (mode === "first") this.fpPitch = 0;
+    if (mode === "first") {
+      this.fpPitch = 0;
+      this.clearOverShoulder();
+    } else {
+      this.applyOverShoulder();
+    }
+    this.onViewChange?.(mode === "first");
+  }
+
+  private applyOverShoulder() {
+    if (!this.enableOverShoulderView || this.viewMode === "first") {
+      this.clearOverShoulder();
+      return;
+    }
+    const w = typeof window !== "undefined" ? window.innerWidth : 1;
+    const h = typeof window !== "undefined" ? window.innerHeight : 1;
+    if (w < 2 || h < 2) return;
+    this.camera.setViewOffset(w, h, w * this.camOverShoulderOffsetRatio, 0, w, h);
+    this.overShoulderApplied = true;
+  }
+
+  private clearOverShoulder() {
+    if (this.overShoulderApplied) {
+      this.camera.clearViewOffset();
+      this.overShoulderApplied = false;
+    }
+  }
+
+  /**
+   * Sample ground height under (x,z). Custom sampler when set; otherwise flat
+   * y=0 (Danger Room). Return null for void so edge-stop can block the step.
+   */
+  private sampleGroundY(x: number, z: number): number | null {
+    if (this.groundHeightAt) return this.groundHeightAt(x, z);
+    return 0;
+  }
+
+  /**
+   * True when moving in `dir` (XZ unit) would step off an unsupported drop.
+   * three-player-controller relies on capsule+mesh; we add an explicit cliff probe
+   * so open edges do not walk the player into the void. Only active when a
+   * custom groundHeightAt sampler is provided (mesh/heightmap worlds).
+   */
+  private isEdgeInDirection(dirX: number, dirZ: number, from: THREE.Vector3): boolean {
+    if (!this.enableEdgeStop || !this.grounded || !this.groundHeightAt) return false;
+    const len = Math.hypot(dirX, dirZ);
+    if (len < 1e-4) return false;
+    const nx = dirX / len;
+    const nz = dirZ / len;
+    const ax = from.x + nx * this.edgeProbeDistance;
+    const az = from.z + nz * this.edgeProbeDistance;
+    const feetY = from.y;
+    const groundY = this.sampleGroundY(ax, az);
+    if (groundY == null) return true;
+    return feetY - groundY > this.edgeMaxDrop;
   }
 
   /** Toggle between first- and third-person framing. */
@@ -882,7 +1091,13 @@ export class Controller {
 
   /** True while any body-owning procedural special is running. */
   get isBusy(): boolean {
-    return this.dashActive || this.flipActive || this.rollActive || this.spinActive;
+    return (
+      this.dashActive ||
+      this.flipActive ||
+      this.rollActive ||
+      this.spinActive ||
+      this.skillFlightActive
+    );
   }
 
   /** True while the aerial spin is active (for per-frame flame trails). */
@@ -901,6 +1116,7 @@ export class Controller {
    * A jump() call during hover exits it (the vertical impulse overrides the lock).
    */
   startHover(height: number, duration: number) {
+    this.skillFlightActive = false;
     this.hoverActive = true;
     this.hoverElapsed = 0;
     this.hoverDuration = Math.max(0.1, duration);
@@ -919,6 +1135,54 @@ export class Controller {
   /** Cancel the hover early (e.g. character took damage). */
   endHover() {
     this.hoverActive = false;
+  }
+
+  /**
+   * Skill short-flight — timed free-flight inspired by
+   * [hh-hang/three-player-controller](https://github.com/hh-hang/three-player-controller)
+   * `isFlying` mode, but for combat skills (gap-closers, leap slams), not full fly toggle.
+   *
+   * - Camera-relative 3D move (WASD + Space/Ctrl for up/down while active)
+   * - Gravity off for `duration` seconds
+   * - Ends → normal gravity / land
+   */
+  startSkillFlight(opts?: {
+    duration?: number;
+    speed?: number;
+    /** Optional initial impulse along camera flat forward */
+    launch?: number;
+  }) {
+    this.hoverActive = false;
+    this.skillFlightActive = true;
+    this.skillFlightElapsed = 0;
+    this.skillFlightDuration = Math.max(0.12, opts?.duration ?? 0.42);
+    this.skillFlightSpeed = Math.max(2, opts?.speed ?? 9);
+    this.skillFlightEnd = false;
+    this.grounded = false;
+    this.vertical = 0;
+    this.slamActive = false;
+    const launch = opts?.launch ?? 4;
+    if (launch > 0) {
+      const f = this.forward();
+      this.velocity.set(f.x * launch, 0, f.z * launch);
+    }
+    // Prefer fly / jump roles for visual
+    if (this.character.hasRole("jump")) this.character.playRoleOnce("jump", 0.06);
+  }
+
+  endSkillFlight() {
+    this.skillFlightActive = false;
+  }
+
+  get isSkillFlying(): boolean {
+    return this.skillFlightActive;
+  }
+
+  /** True once when skill short-flight timer expires. */
+  consumeSkillFlightEnd(): boolean {
+    const v = this.skillFlightEnd;
+    this.skillFlightEnd = false;
+    return v;
   }
 
   /** Set a transient horizontal move-speed multiplier (1 = normal). */
@@ -985,16 +1249,21 @@ export class Controller {
         // the orbit never drops the camera under the floor.
         this.pitch = THREE.MathUtils.clamp(this.pitch + lookDy * sens * invert, 0.06, 1.3);
       }
+      if (lookDx !== 0 || lookDy !== 0) {
+        this.onTowardChange?.(lookDx, lookDy, this.smoothedSpeed);
+      }
     }
     // Wheel zooms the third-person orbit distance; in first person there is no
     // orbit, so the wheel is ignored (FOV zoom is owned by the consumer).
-    if (mouse.wheel !== 0 && this.viewMode !== "first") {
+    if (this.enableZoom && mouse.wheel !== 0 && this.viewMode !== "first") {
       this.params.cameraDistance = THREE.MathUtils.clamp(
         this.params.cameraDistance + mouse.wheel * 0.005,
         2.5,
         10,
       );
     }
+    this.edgeBlocked = false;
+    this.prevGrounded = this.grounded;
 
     // Lock-on: drive the camera yaw so the player sits between the camera and the
     // target (enemy framed ahead). lockYaw also forces the body facing below so
@@ -1078,6 +1347,33 @@ export class Controller {
       pos.z = THREE.MathUtils.clamp(pos.z + this.rollDir.z * rollSpeed * dt, -this.bound, this.bound);
       this.velocity.set(0, 0, 0);
       moving = false;
+    } else if (this.skillFlightActive) {
+      // Timed free-flight (skill short hop) — cam-relative 3D like three-player-controller fly.
+      this.skillFlightElapsed += dt;
+      if (this.skillFlightElapsed >= this.skillFlightDuration) {
+        this.skillFlightActive = false;
+        this.skillFlightEnd = true;
+        this.vertical = -2;
+      } else {
+        let up = 0;
+        if (this.input.down("Space")) up += 1;
+        if (this.input.down("ControlLeft") || this.input.down("ControlRight")) {
+          up -= 1;
+        }
+        if (moving) {
+          move.normalize();
+          this.velocity.copy(move).multiplyScalar(this.skillFlightSpeed);
+          this.wantFacing = Math.atan2(move.x, move.z);
+        } else {
+          this.velocity.x *= 0.88;
+          this.velocity.z *= 0.88;
+        }
+        // Vertical integrated in the specials Y branch below
+        this.vertical = up * this.skillFlightSpeed * 0.65;
+        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
+        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
+        moving = true;
+      }
     } else if (this.hoverActive) {
       // Float: keyboard/stick still steer (slower); the back-hop velocity decays.
       if (moving) {
@@ -1099,10 +1395,17 @@ export class Controller {
         moving = true; // keep loco blend "running"
       } else if (moving) {
         move.normalize();
-        this.velocity.copy(move).multiplyScalar(speed * intensity);
-        this.wantFacing = Math.atan2(move.x, move.z);
-        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
-        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
+        // Edge / cliff probe: cancel planar velocity that would walk off a drop.
+        if (this.isEdgeInDirection(move.x, move.z, pos)) {
+          this.edgeBlocked = true;
+          this.velocity.set(0, 0, 0);
+          moving = false;
+        } else {
+          this.velocity.copy(move).multiplyScalar(speed * intensity);
+          this.wantFacing = Math.atan2(move.x, move.z);
+          pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
+          pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
+        }
       } else {
         this.velocity.multiplyScalar(0.001);
         pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
@@ -1228,6 +1531,10 @@ export class Controller {
         this.hoverActive = false;
         this.hoverEnd = true;
       }
+    } else if (this.skillFlightActive) {
+      // Free-flight Y (no gravity) — Space up / Ctrl down already in this.vertical
+      pos.y = Math.max(0.08, pos.y + this.vertical * dt);
+      this.grounded = false;
     } else if (this.wallRunActive) {
       // Gravity suspended while wall-running (climb handled in updateWallRun).
       this.vertical = 0;
@@ -1346,7 +1653,13 @@ export class Controller {
           : 0.5
       : 0;
     this.smoothedSpeed += (targetSpeed - this.smoothedSpeed) * Math.min(1, 10 * dt);
-    if (!this.character.isOneShotActive && this.grounded && !this.isBusy && !this.hoverActive) {
+    if (
+      !this.character.isOneShotActive &&
+      this.grounded &&
+      !this.isBusy &&
+      !this.hoverActive &&
+      !(this.animDirector?.isOverridePlaying)
+    ) {
       if (this.character.setLocomotion) {
         // Weight-blended path (GLB Character): one continuous speed eases the
         // idle/walk/run weights — no discrete role swap or rate hack needed.
@@ -1363,6 +1676,12 @@ export class Controller {
       }
     }
 
+    // Ground-state event (three-player-controller onGroundChange parity).
+    if (this.grounded !== this.prevGrounded) {
+      this.onGroundChange?.(this.grounded);
+    }
+    this.animDirector?.update(dt);
+
     this.updateCamera(dt);
   }
 
@@ -1377,8 +1696,25 @@ export class Controller {
       this.applyCameraShake();
       return;
     }
-    const target = this.character.root.position.clone();
-    target.y += this.params.cameraHeight;
+    const feet = this.character.root.position;
+    const target = new THREE.Vector3(
+      feet.x,
+      feet.y + this.params.cameraHeight * this.camLookAtHeightRatio,
+      feet.z,
+    );
+    // Spring look-at (GameCamera critically-damped style from three-player-controller).
+    let lookAt = target;
+    if (this.enableSpringCamera) {
+      if (!this.springInited) {
+        this.springLookAt.copy(target);
+        this.springVel.set(0, 0, 0);
+        this.springInited = true;
+      }
+      lookAt = this.springToward(this.springLookAt, this.springVel, target, dt, this.springCameraTime);
+      this.springLookAt.copy(lookAt);
+    } else {
+      this.springInited = false;
+    }
     const dist = this.params.cameraDistance;
     // Spherical orbit BEHIND the character: the horizontal ring (x/z) sits on
     // -forward via -dist and shrinks with pitch (cos), while the vertical rises
@@ -1390,7 +1726,7 @@ export class Controller {
       Math.sin(this.pitch) * dist,
       Math.cos(this.yaw) * Math.cos(this.pitch) * -dist,
     );
-    const desired = target.clone().add(offset);
+    const desired = lookAt.clone().add(offset);
     if (!this.collision) {
       // Danger Room: hard floor clamp + keep the camera inside the room walls so
       // a wall can never end up between the camera and the character.
@@ -1401,23 +1737,53 @@ export class Controller {
     } else if (this.occluders.length) {
       // Dungeon: pull the camera in front of any wall/prop between it and the
       // player so the view never clips into geometry indoors.
-      const dir = new THREE.Vector3().subVectors(desired, target);
+      const dir = new THREE.Vector3().subVectors(desired, lookAt);
       const len = dir.length();
       if (len > 1e-3) {
         dir.divideScalar(len);
-        this.camRay.set(target, dir);
+        this.camRay.set(lookAt, dir);
         this.camRay.far = len;
         const hits = this.camRay.intersectObjects(this.occluders, false);
         if (hits.length > 0) {
           const d = Math.max(0.5, hits[0].distance - 0.3);
-          desired.copy(target).addScaledVector(dir, d);
+          desired.copy(lookAt).addScaledVector(dir, d);
         }
       }
     }
     this.camera.position.lerp(desired, Math.min(1, 12 * dt));
-    this.camera.lookAt(target);
+    this.camera.lookAt(lookAt);
     this.applyFov();
     this.applyCameraShake();
+  }
+
+  /**
+   * Critically-damped spring (Game Camera / SmoothDamp style) toward `dest`.
+   * Ported from three-player-controller CameraSystem.springTarget.
+   */
+  private springToward(
+    cur: THREE.Vector3,
+    vel: THREE.Vector3,
+    dest: THREE.Vector3,
+    delta: number,
+    smoothTime: number,
+  ): THREE.Vector3 {
+    const out = new THREE.Vector3();
+    const st = Math.max(0.0001, smoothTime);
+    const omega = 2 / st;
+    const x = omega * delta;
+    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+    for (const a of ["x", "y", "z"] as const) {
+      const change = cur[a] - dest[a];
+      const temp = (vel[a] + omega * change) * delta;
+      vel[a] = (vel[a] - omega * temp) * exp;
+      let o = dest[a] + (change + temp) * exp;
+      if (dest[a] - cur[a] > 0 === o > dest[a]) {
+        o = dest[a];
+        vel[a] = 0;
+      }
+      out[a] = o;
+    }
+    return out;
   }
 
   /**

@@ -1501,9 +1501,27 @@ export class Studio {
     this.characterId = id;
     if (!this.controller) {
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
+      // three-player-controller parity: spring look-at + light over-shoulder in combat
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.06,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.12,
+        camLookAtHeightRatio: 0.92,
+        enableZoom: true,
+      });
     } else {
       // Rebind controller to the new character.
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
+      // three-player-controller parity: spring look-at + light over-shoulder in combat
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.06,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.12,
+        camLookAtHeightRatio: 0.92,
+        enableZoom: true,
+      });
     }
     // Free-aim reticle split: mouse → crosshair offset + residual camera look.
     this.controller.onAimLook = (dx, dy) => this.splitAimLook(dx, dy);
@@ -4388,7 +4406,22 @@ export class Studio {
     if (part.dash && part.dash !== 0) {
       const d = dir.clone();
       if (part.dash < 0) d.negate();
-      this.controller.dash(d, Math.abs(part.dash), 0.22, 0.05, 0.45);
+      const absDash = Math.abs(part.dash);
+      // Short free-flight for big leaps (three-player-controller fly mode, timed)
+      const airish =
+        absDash >= 2.8 ||
+        this.combatCtx.airborne ||
+        this.combatCtx.hovering ||
+        /leap|fly|soar|sky|hover|dive|air/i.test(clip ?? "");
+      if (airish) {
+        this.controller.startSkillFlight({
+          duration: Math.min(0.7, 0.28 + absDash * 0.055),
+          speed: 7 + absDash * 0.75,
+          launch: absDash * 0.9,
+        });
+      } else {
+        this.controller.dash(d, absDash, 0.22, 0.05, 0.45);
+      }
     }
     if (part.hop) this.controller.hop(part.hop);
 
