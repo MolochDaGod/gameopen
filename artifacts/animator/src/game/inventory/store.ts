@@ -5,8 +5,8 @@
  */
 
 import type { AccountInventoryState, CharacterBagState, ItemInstance } from "./types";
-import { newAccountInventory, newCharacterBag } from "./types";
-import { ensureBagSize } from "./characterBag";
+import { emptyKeptLoadout, newAccountInventory, newCharacterBag } from "./types";
+import { ensureBagSize, ensureKeptLoadout, dropCarryOnDeath } from "./characterBag";
 import {
   depositInstances,
   hydrateAccountInventory,
@@ -20,26 +20,61 @@ import {
 import { readFleetToken } from "../../auth/fleetCore";
 
 const bagKey = (characterId: string) =>
+  `grudge:char-bag:v2:${characterId || "local"}`;
+/** Legacy key — migrated on first load. */
+const bagKeyV1 = (characterId: string) =>
   `grudge:char-bag:v1:${characterId || "local"}`;
 const accountKey = (accountId: string) =>
   `grudge:account-inv:v1:${accountId || "local"}`;
 
 export function loadCharacterBag(characterId: string): CharacterBagState {
   try {
-    const raw = localStorage.getItem(bagKey(characterId));
+    let raw = localStorage.getItem(bagKey(characterId));
+    if (!raw) {
+      raw = localStorage.getItem(bagKeyV1(characterId));
+    }
     if (!raw) return newCharacterBag(characterId);
     const parsed = JSON.parse(raw) as CharacterBagState;
     if (!parsed?.slots?.length) return newCharacterBag(characterId);
-    return ensureBagSize({
-      ...parsed,
-      characterId: characterId || parsed.characterId || "local",
-      consumableHotkeys: parsed.consumableHotkeys?.length
-        ? parsed.consumableHotkeys
-        : [null, null, null, null],
-    });
+    const migrated = ensureBagSize(
+      ensureKeptLoadout({
+        ...parsed,
+        characterId: characterId || parsed.characterId || "local",
+        kept: parsed.kept || emptyKeptLoadout(),
+        consumableHotkeys: parsed.consumableHotkeys?.length
+          ? parsed.consumableHotkeys
+          : [null, null, null, null],
+      }),
+    );
+    // Persist migration to v2
+    saveCharacterBag(migrated);
+    return migrated;
   } catch {
     return newCharacterBag(characterId);
   }
+}
+
+/**
+ * Death rule: 3×3 carry empties (resources/items drop).
+ * Kept 2×2 loadout (mount, boat, main hand, side arm) is held.
+ */
+export function applyDeathBagDrop(characterId: string): {
+  bag: CharacterBagState;
+  dropped: ItemInstance[];
+  message: string;
+} {
+  const bag = loadCharacterBag(characterId);
+  const { bag: next, dropped } = dropCarryOnDeath(bag);
+  saveCharacterBag(next);
+  const n = dropped.reduce((s, i) => s + i.qty, 0);
+  return {
+    bag: next,
+    dropped,
+    message:
+      n > 0
+        ? `Death · lost ${n} carry items (loadout kept)`
+        : "Death · carry empty (loadout kept)",
+  };
 }
 
 export function saveCharacterBag(bag: CharacterBagState): void {

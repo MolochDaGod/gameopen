@@ -1,9 +1,13 @@
 /**
  * Production inventory SSOT — character bag vs account inventory.
  *
- * Character bag (3×3 default): temporary carry — harvest, drops, equip, consume.
- * Account inventory: single shared vault across islands, modes, instances, characters.
+ * Layout:
+ *   · Kept loadout 2×2 (does NOT drop on death; swappable with bag):
+ *       [ mount ] [ boat ]
+ *       [ main  ] [ side arm / off (weapon · shield · relic · tome · staff) ]
+ *   · Carry bag 3×3 (resources / items) — DROPS on death (slots empty).
  *
+ * Account inventory: single shared vault across islands, modes, instances, characters.
  * Materials stack to 100 in the bag before deposit. Equipment is unique instances.
  */
 
@@ -17,6 +21,33 @@ export const DEFAULT_BAG_SLOTS = DEFAULT_BAG_COLS * DEFAULT_BAG_ROWS;
 /** Stack cap for harvested materials / stackable loot in the character bag. */
 export const MATERIAL_STACK_MAX = 100;
 
+/**
+ * Kept loadout (2×2 above the 3×3). Survives death; drag-swappable with bag.
+ * Display order: mount, boat on top row; mainHand, sideArm bottom row.
+ */
+export type KeptLoadoutSlotId = "mount" | "boat" | "mainHand" | "sideArm";
+
+export const KEPT_LOADOUT_ORDER: readonly KeptLoadoutSlotId[] = [
+  "mount",
+  "boat",
+  "mainHand",
+  "sideArm",
+] as const;
+
+export const KEPT_LOADOUT_LABELS: Record<KeptLoadoutSlotId, string> = {
+  mount: "Mount",
+  boat: "Boat",
+  mainHand: "Main hand",
+  sideArm: "Side arm",
+};
+
+export const KEPT_LOADOUT_BLURBS: Record<KeptLoadoutSlotId, string> = {
+  mount: "Mount · kept on death",
+  boat: "Boat / ship · kept on death",
+  mainHand: "Primary weapon (melee or ranged)",
+  sideArm: "2nd weapon or off-hand (shield · relic · tome · staff)",
+};
+
 export type ItemKind =
   | "material"
   | "consumable"
@@ -24,11 +55,16 @@ export type ItemKind =
   | "weapon"
   | "mission"
   | "tool"
-  | "relic";
+  | "relic"
+  | "mount"
+  | "boat";
 
 export type EquipSlot =
   | "mainHand"
   | "offHand"
+  | "sideArm"
+  | "mount"
+  | "boat"
   | "head"
   | "chest"
   | "legs"
@@ -74,6 +110,8 @@ export interface ItemInstance {
   tier?: number;
 }
 
+export type CharacterKeptLoadout = Record<KeptLoadoutSlotId, ItemInstance | null>;
+
 export interface BagSlot {
   /** 0-based index into the bag grid. */
   index: number;
@@ -84,7 +122,13 @@ export interface CharacterBagState {
   characterId: string;
   cols: number;
   rows: number;
+  /** 3×3 carry grid — emptied on death. */
   slots: BagSlot[];
+  /**
+   * 2×2 kept loadout (mount · boat · main · side arm).
+   * Never dropped on death; swappable with bag / account equip.
+   */
+  kept: CharacterKeptLoadout;
   /** Hotkey consumable bars (1–4 drag targets outside combat bar). */
   consumableHotkeys: (ItemInstance | null)[];
   updatedAt: number;
@@ -136,12 +180,22 @@ export function newItemInstance(
   };
 }
 
+export function emptyKeptLoadout(): CharacterKeptLoadout {
+  return {
+    mount: null,
+    boat: null,
+    mainHand: null,
+    sideArm: null,
+  };
+}
+
 export function newCharacterBag(characterId: string): CharacterBagState {
   return {
     characterId: characterId || "local",
     cols: DEFAULT_BAG_COLS,
     rows: DEFAULT_BAG_ROWS,
     slots: emptyBagSlots(DEFAULT_BAG_SLOTS),
+    kept: emptyKeptLoadout(),
     consumableHotkeys: [null, null, null, null],
     updatedAt: Date.now(),
   };

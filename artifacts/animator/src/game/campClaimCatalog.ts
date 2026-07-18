@@ -82,6 +82,8 @@ export type CampAccountSkill = {
   maxLevel: number;
   icon?: string;
   iconUrl?: string;
+  /** Craftpix / achievement header badge (optional secondary art). */
+  achievementBadge?: string;
 };
 
 export type QuickCraftItem = {

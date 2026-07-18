@@ -14,7 +14,10 @@ export type GameModeId =
   | "dungeon-crawl"
   | "pirate-siege"
   | "warlord-genesis"
-  | "agama-survival";
+  | "agama-survival"
+  | "voxgrudge-battle-singles"
+  | "voxgrudge-battle-duos"
+  | "island-life";
 
 export type FactionRole = "player" | "ally" | "enemy" | "boss" | "neutral";
 
@@ -189,6 +192,45 @@ export const GAME_MODES: readonly GameModeDef[] = [
     allyStrategy: "tank-guard",
     bossStrategy: "boss-phased",
     mapKey: "agama-map",
+    multiplayer: false,
+  },
+  {
+    id: "voxgrudge-battle-singles",
+    title: "VoxGrudge Battle — Singles",
+    blurb:
+      "Hunger Games Arena BR · 16 max · last fighter standing · bots with strategy brains · weapon + sidearm pre-select · minimap M.",
+    icon: "/icons/pvp.png",
+    spawn: { maxEnemies: 15, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 5 },
+    enemyStrategy: "aggressive-rusher",
+    allyStrategy: "support-healer",
+    bossStrategy: "boss-phased",
+    mapKey: "hunger-games-arena",
+    multiplayer: true,
+  },
+  {
+    id: "voxgrudge-battle-duos",
+    title: "VoxGrudge Battle — Duos",
+    blurb:
+      "Teams of 2 on Hunger Games Arena · play until one team remains · ally AI + Danger Room skills.",
+    icon: "/icons/rally.png",
+    spawn: { maxEnemies: 14, maxAllies: 1, bosses: 0, waves: 0, introGraceSec: 5 },
+    enemyStrategy: "flanker",
+    allyStrategy: "support-healer",
+    bossStrategy: "boss-phased",
+    mapKey: "hunger-games-arena",
+    multiplayer: true,
+  },
+  {
+    id: "island-life",
+    title: "Island Life",
+    blurb:
+      "Survival RPG island — red-mushroom orc/outlaw camps, bandit boat raids, trailer ore blocks, voxel wildlife.",
+    icon: "/icons/world-editor.png",
+    spawn: { maxEnemies: 12, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 4 },
+    enemyStrategy: "aggressive-rusher",
+    allyStrategy: "tank-guard",
+    bossStrategy: "boss-phased",
+    mapKey: "island-life",
     multiplayer: false,
   },
 ] as const;

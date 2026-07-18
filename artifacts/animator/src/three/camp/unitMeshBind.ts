@@ -84,6 +84,13 @@ const UNIT_ROLE_MAP: Record<string, string> = {
   legion_greatsword_skeleton: "hostile-ud-warrior",
   legion_elite_orc: "hostile-orc-warchief",
   legion_orc_rider: "hostile-orc-warrior",
+  // Forest / jungle creeps (voxel camp + MOBA jungle)
+  forest_bear: "hostile-brb-brawler",
+  forest_skeleton: "hostile-ud-warrior",
+  forest_zombie: "hostile-ud-shade",
+  forest_zombie_brute: "hostile-ud-dk",
+  jungle_orc: "hostile-orc-warrior",
+  jungle_ogre: "hostile-orc-warchief",
 };
 
 export type UnitMeshBind = {

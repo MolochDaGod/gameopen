@@ -91,19 +91,20 @@ export const STRATEGY_PROFILES: Record<StrategyProfileId, StrategyProfile> = {
   "support-healer": {
     id: "support-healer",
     label: "Support / Ally",
-    bias: { aggression: 0.5, caution: 1.0, skillFrequency: 0.2 },
-    reactionLatency: 0.16,
+    // Low aggression so SupportHealGoal outranks Attack when an ally is hurt.
+    bias: { aggression: 0.42, caution: 1.05, skillFrequency: 0.35 },
+    reactionLatency: 0.14,
     preferLunge: false,
     preferRanged: true,
-    supportRadius: 8,
+    supportRadius: 9,
     weights: {
       engage: 0.5,
-      attack: 0.6,
+      attack: 0.55,
       defend: 1.1,
       retreat: 0.5,
-      cast: 0.8,
-      deploy: 0.6,
-      support: 1.6,
+      cast: 0.85,
+      deploy: 0.5,
+      support: 1.75,
     },
   },
   "tank-guard": {

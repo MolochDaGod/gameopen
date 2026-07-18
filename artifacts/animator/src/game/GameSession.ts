@@ -41,14 +41,20 @@ function loadLocalCharacters(): GrudgeCharacter[] {
   }
 }
 
+/**
+ * Hero roster SSOT for Warlords-era client.
+ * Order: charactersgrudox 4-slot campfire → local drafts → Railway fleet (era=warlords).
+ * Explorers / faction troops are units (see harvestCatalog.listUnitCharacters), not heroes.
+ */
 function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
-  // charactersgrudox 4-slot campfire roster first (source of truth for hub heroes)
   const grudox = loadGrudoxCharacters();
   const local = loadLocalCharacters();
   const seen = new Set<string>();
   const out: GrudgeCharacter[] = [];
   for (const c of [...grudox, ...local, ...fleet]) {
     if (!c?.id || seen.has(c.id)) continue;
+    // Never treat procedural explorer ids as campfire heroes
+    if (c.id === "explorer" || c.id.startsWith("unit-")) continue;
     seen.add(c.id);
     out.push(c);
   }

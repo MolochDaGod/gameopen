@@ -64,9 +64,81 @@ export const CONSUMABLE_TEMPLATES: Record<string, ItemTemplate> = {
   },
 };
 
+/** Sample gear for loadout slots (main / side / mount / boat). */
+export const LOADOUT_TEMPLATES: Record<string, ItemTemplate> = {
+  wpn_sword_01: {
+    id: "wpn_sword_01",
+    kind: "weapon",
+    name: "Iron Sword",
+    rarity: "common",
+    maxStack: 1,
+    icon: "/icons/pack/weapons/Sword_01.png",
+    equipSlot: "mainHand",
+    tags: ["weapon", "melee"],
+    weaponFamily: "sword",
+    weaponTier: 0,
+  },
+  wpn_bow_01: {
+    id: "wpn_bow_01",
+    kind: "weapon",
+    name: "Hunting Bow",
+    rarity: "common",
+    maxStack: 1,
+    icon: "/icons/pack/weapons/Bow_01.png",
+    equipSlot: "sideArm",
+    tags: ["weapon", "ranged", "sidearm"],
+    weaponFamily: "bow",
+    weaponTier: 0,
+  },
+  wpn_flintlock_t0: {
+    id: "wpn_flintlock_t0",
+    kind: "weapon",
+    name: "Flintlock (T0)",
+    description: "Stylized flintlock sidearm — Danger Room / GUN class SSOT.",
+    rarity: "uncommon",
+    maxStack: 1,
+    icon: "/icons/pack/weapons/Gun_01.png",
+    equipSlot: "mainHand",
+    tags: ["weapon", "ranged", "gun", "pistol", "flintlock"],
+    weaponFamily: "pistol",
+    weaponTier: 0,
+  },
+  arm_shield_01: {
+    id: "arm_shield_01",
+    kind: "equipment",
+    name: "Round Shield",
+    rarity: "common",
+    maxStack: 1,
+    icon: "/icons/pack/misc/Effect.png",
+    equipSlot: "offHand",
+    tags: ["shield", "offhand"],
+  },
+  itm_mount_horse_01: {
+    id: "itm_mount_horse_01",
+    kind: "mount",
+    name: "Warhorse",
+    rarity: "uncommon",
+    maxStack: 1,
+    icon: "/icons/pack/misc/Effect.png",
+    equipSlot: "mount",
+    tags: ["mount"],
+  },
+  itm_boat_skiff_01: {
+    id: "itm_boat_skiff_01",
+    kind: "boat",
+    name: "Coastal Skiff",
+    rarity: "uncommon",
+    maxStack: 1,
+    icon: "/icons/pack/misc/Effect.png",
+    equipSlot: "boat",
+    tags: ["boat", "ship"],
+  },
+};
+
 const CACHE: Record<string, ItemTemplate> = {
   ...MATERIAL_TEMPLATES,
   ...CONSUMABLE_TEMPLATES,
+  ...LOADOUT_TEMPLATES,
 };
 
 export function getItemTemplate(templateId: string): ItemTemplate {

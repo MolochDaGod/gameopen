@@ -55,6 +55,34 @@ export const MAPS = {
   dungeon: { label: "Dungeon", glb: "models/dungeon.glb" },
   "pirate-black-tide": { label: "Black Tide", glb: "models/pirate/black-tide.glb" },
   "haunting-door": { label: "Haunting Door", glb: "models/haunting-door.glb" },
+  "hunger-games-arena": {
+    label: "VoxGrudge Battle — Hunger Games Arena",
+    glb: "models/battle/the_hunger_games_arena.glb",
+  },
+  "practice-15-arenas": {
+    label: "Practice 15 Arenas biome kit",
+    glb: "models/battle/practice_15_arenas.glb",
+  },
+  "island-life": {
+    label: "Island Life survival",
+    glb: "models/worlds/island_life.glb",
+  },
+  "trailer-ores": {
+    label: "Minecraft trailer-style ores",
+    glb: "models/blocks/minecrafts_trailer_style_ores.glb",
+  },
+  "fabled-zone": {
+    label: "Fabled Main Town zone",
+    glb: "models/worlds/fabled-zone.glb",
+  },
+  "bridge-town-kit": {
+    label: "Bridge Town dock kit",
+    glb: "models/towns/bridge-town-kit.glb",
+  },
+  "dwarf-main-city": {
+    label: "Dwarf Main City (stage after convert)",
+    glb: "models/worlds/dwarf-main-city.glb",
+  },
 } as const;
 
 export function modelUrl(rel: string): string {

@@ -5,3 +5,4 @@ export * from "./accountInventory";
 export * from "./depositZones";
 export * from "./trees";
 export * from "./store";
+export * from "./harvestTools";

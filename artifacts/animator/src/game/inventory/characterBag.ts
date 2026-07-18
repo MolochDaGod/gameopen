@@ -1,15 +1,19 @@
 /**
- * Character bag — default 3×3 grid for heroes without a larger bag item.
- * Holds gear, harvest stacks (≤100), mission items, consumables.
+ * Character bag — 2×2 kept loadout + 3×3 carry grid.
+ * Carry (3×3) drops on death; kept loadout (mount/boat/main/side) does not.
  */
 
 import { getItemTemplate, maxStackFor } from "./catalog";
 import {
   type BagSlot,
   type CharacterBagState,
+  type CharacterKeptLoadout,
   type ItemInstance,
+  type KeptLoadoutSlotId,
   DEFAULT_BAG_SLOTS,
   emptyBagSlots,
+  emptyKeptLoadout,
+  KEPT_LOADOUT_ORDER,
   newCharacterBag,
   newItemInstance,
 } from "./types";
@@ -18,6 +22,19 @@ export type AddResult =
   | { ok: true; bag: CharacterBagState; leftover: number }
   | { ok: false; bag: CharacterBagState; leftover: number; reason: string };
 
+function cloneItem(item: ItemInstance | null): ItemInstance | null {
+  return item ? { ...item } : null;
+}
+
+function cloneKept(kept: CharacterKeptLoadout | undefined): CharacterKeptLoadout {
+  const base = emptyKeptLoadout();
+  if (!kept) return base;
+  for (const id of KEPT_LOADOUT_ORDER) {
+    base[id] = cloneItem(kept[id] ?? null);
+  }
+  return base;
+}
+
 function cloneBag(bag: CharacterBagState): CharacterBagState {
   return {
     ...bag,
@@ -25,9 +42,70 @@ function cloneBag(bag: CharacterBagState): CharacterBagState {
       index: s.index,
       item: s.item ? { ...s.item } : null,
     })),
+    kept: cloneKept(bag.kept),
     consumableHotkeys: bag.consumableHotkeys.map((h) => (h ? { ...h } : null)),
     updatedAt: Date.now(),
   };
+}
+
+/** Ensure kept loadout exists (migrate old saves). */
+export function ensureKeptLoadout(bag: CharacterBagState): CharacterBagState {
+  if (bag.kept && typeof bag.kept === "object") {
+    const next = cloneBag(bag);
+    next.kept = cloneKept(bag.kept);
+    return next;
+  }
+  return { ...cloneBag(bag), kept: emptyKeptLoadout() };
+}
+
+/**
+ * Can this template go in a kept loadout slot?
+ * sideArm accepts 2nd weapon OR off-hand (shield / relic / tome / staff).
+ */
+export function canEquipInKeptSlot(
+  slot: KeptLoadoutSlotId,
+  templateId: string,
+): boolean {
+  const tpl = getItemTemplate(templateId);
+  const tags = (tpl.tags || []).map((t) => t.toLowerCase());
+  const equip = tpl.equipSlot;
+  if (slot === "mainHand") {
+    return (
+      tpl.kind === "weapon" ||
+      equip === "mainHand" ||
+      tags.includes("weapon") ||
+      tags.includes("melee") ||
+      tags.includes("ranged")
+    );
+  }
+  if (slot === "sideArm") {
+    return (
+      tpl.kind === "weapon" ||
+      tpl.kind === "relic" ||
+      equip === "sideArm" ||
+      equip === "offHand" ||
+      tags.includes("weapon") ||
+      tags.includes("sidearm") ||
+      tags.includes("shield") ||
+      tags.includes("tome") ||
+      tags.includes("staff") ||
+      tags.includes("relic") ||
+      tags.includes("offhand")
+    );
+  }
+  if (slot === "mount") {
+    return tpl.kind === "mount" || equip === "mount" || tags.includes("mount");
+  }
+  if (slot === "boat") {
+    return (
+      tpl.kind === "boat" ||
+      equip === "boat" ||
+      tags.includes("boat") ||
+      tags.includes("ship") ||
+      tags.includes("vessel")
+    );
+  }
+  return false;
 }
 
 /** Count free slots. */
@@ -208,12 +286,143 @@ export function clearDepositable(bag: CharacterBagState): CharacterBagState {
 }
 
 export function ensureBagSize(bag: CharacterBagState, slots = DEFAULT_BAG_SLOTS): CharacterBagState {
-  if (bag.slots.length >= slots) return bag;
-  const next = cloneBag(bag);
+  let next = ensureKeptLoadout(bag);
+  if (next.slots.length >= slots) return next;
+  next = cloneBag(next);
   while (next.slots.length < slots) {
     next.slots.push({ index: next.slots.length, item: null });
   }
   return next;
 }
 
-export { newCharacterBag, emptyBagSlots };
+/**
+ * On death: empty 3×3 carry slots (resources + items).
+ * Kept loadout (mount / boat / main / side arm) is retained.
+ */
+export function dropCarryOnDeath(bag: CharacterBagState): {
+  bag: CharacterBagState;
+  dropped: ItemInstance[];
+} {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  const dropped: ItemInstance[] = [];
+  for (const s of next.slots) {
+    if (s.item) {
+      dropped.push({ ...s.item });
+      s.item = null;
+    }
+  }
+  next.updatedAt = Date.now();
+  return { bag: next, dropped };
+}
+
+/** Set a kept loadout slot (does not validate — use equipToKept for rules). */
+export function setKeptSlot(
+  bag: CharacterBagState,
+  slot: KeptLoadoutSlotId,
+  item: ItemInstance | null,
+): CharacterBagState {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  next.kept[slot] = item ? { ...item } : null;
+  next.updatedAt = Date.now();
+  return next;
+}
+
+/**
+ * Equip bag item → kept slot. Swaps with existing kept item into that bag index.
+ */
+export function equipBagToKept(
+  bag: CharacterBagState,
+  bagIndex: number,
+  slot: KeptLoadoutSlotId,
+): { bag: CharacterBagState; ok: boolean; reason?: string } {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  const carry = next.slots[bagIndex]?.item;
+  if (!carry) return { bag: next, ok: false, reason: "Empty bag slot" };
+  if (!canEquipInKeptSlot(slot, carry.templateId)) {
+    return { bag: next, ok: false, reason: `Cannot equip in ${slot}` };
+  }
+  const prev = next.kept[slot];
+  next.kept[slot] = { ...carry };
+  next.slots[bagIndex] = { index: bagIndex, item: prev ? { ...prev } : null };
+  next.updatedAt = Date.now();
+  return { bag: next, ok: true };
+}
+
+/** Unequip kept → first free bag slot (or swap if bag full fails). */
+export function unequipKeptToBag(
+  bag: CharacterBagState,
+  slot: KeptLoadoutSlotId,
+  preferBagIndex?: number,
+): { bag: CharacterBagState; ok: boolean; reason?: string } {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  const item = next.kept[slot];
+  if (!item) return { bag: next, ok: false, reason: "Empty loadout slot" };
+
+  if (
+    preferBagIndex != null &&
+    preferBagIndex >= 0 &&
+    preferBagIndex < next.slots.length
+  ) {
+    const dest = next.slots[preferBagIndex]!;
+    if (!dest.item) {
+      dest.item = { ...item };
+      next.kept[slot] = null;
+      next.updatedAt = Date.now();
+      return { bag: next, ok: true };
+    }
+    // Swap into occupied bag slot
+    next.kept[slot] = dest.item ? { ...dest.item } : null;
+    dest.item = { ...item };
+    next.updatedAt = Date.now();
+    return { bag: next, ok: true };
+  }
+
+  const empty = next.slots.find((s) => !s.item);
+  if (!empty) return { bag: next, ok: false, reason: "Bag full" };
+  empty.item = { ...item };
+  next.kept[slot] = null;
+  next.updatedAt = Date.now();
+  return { bag: next, ok: true };
+}
+
+/** Swap two kept slots (e.g. main ↔ side arm weapon swap). */
+export function swapKeptSlots(
+  bag: CharacterBagState,
+  a: KeptLoadoutSlotId,
+  b: KeptLoadoutSlotId,
+): CharacterBagState {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  const ia = next.kept[a];
+  const ib = next.kept[b];
+  // Only swap if both empty or both would remain valid after swap
+  if (ia && !canEquipInKeptSlot(b, ia.templateId)) return next;
+  if (ib && !canEquipInKeptSlot(a, ib.templateId)) return next;
+  next.kept[a] = ib ? { ...ib } : null;
+  next.kept[b] = ia ? { ...ia } : null;
+  next.updatedAt = Date.now();
+  return next;
+}
+
+/** Drag: bag index ↔ kept slot. */
+export function swapBagAndKept(
+  bag: CharacterBagState,
+  bagIndex: number,
+  slot: KeptLoadoutSlotId,
+): { bag: CharacterBagState; ok: boolean; reason?: string } {
+  const next = ensureKeptLoadout(cloneBag(bag));
+  if (bagIndex < 0 || bagIndex >= next.slots.length) {
+    return { bag: next, ok: false, reason: "Bad bag index" };
+  }
+  const carry = next.slots[bagIndex]!.item;
+  const kept = next.kept[slot];
+  if (carry && !canEquipInKeptSlot(slot, carry.templateId)) {
+    return { bag: next, ok: false, reason: `Cannot place in ${slot}` };
+  }
+  // Putting kept into bag always allowed (bag is free-form)
+  next.slots[bagIndex] = { index: bagIndex, item: kept ? { ...kept } : null };
+  next.kept[slot] = carry ? { ...carry } : null;
+  next.updatedAt = Date.now();
+  return { bag: next, ok: true };
+}
+
+export { newCharacterBag, emptyBagSlots, emptyKeptLoadout };
