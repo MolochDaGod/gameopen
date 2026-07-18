@@ -1,0 +1,1042 @@
+{
+  "format": "grudge.voxel-map-chunk.deployments.v1",
+  "version": 1,
+  "updated": "2026-07-18",
+  "label": "Voxel map-chunk deployments (last-30 + D1/CDN)",
+  "notes": "Purge old prop-scale map uses. Every entry is forceMap / MAP_CHUNKS. 1 block = 1 m. Codex blocks/defs from voxel-last30-catalog. CDN = assets.grudge-studio.com.",
+  "policy": {
+    "era": "voxel / Open Realms (NOT Warlords hero era)",
+    "cdnPrefix": "models/voxel/",
+    "r2Bucket": "grudge-assets",
+    "d1": "grudge-assets-db / asset_registry",
+    "blockScale": "1 unit = 1 voxel block = 1 m (mapAssetScale / MAP_CHUNKS)",
+    "codex": {
+      "blocks": "/api/blocks",
+      "definitions": "/api/definitions",
+      "live": "https://mine-loader.vercel.app",
+      "openProxy": "open.grudge-studio.com same-origin /api/blocks|/api/definitions"
+    }
+  },
+  "codex": {
+    "blocks": "/api/blocks",
+    "definitions": "/api/definitions",
+    "live": "https://mine-loader.vercel.app",
+    "openProxy": "open.grudge-studio.com same-origin /api/blocks|/api/definitions"
+  },
+  "cdnHost": "https://assets.grudge-studio.com",
+  "animals": [
+    {
+      "id": "brute_minion_p2",
+      "r2Key": "models/voxel/animals/brute_minion_p2.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/brute_minion_p2.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [],
+        "defs": [
+          "minion",
+          "brute",
+          "dungeon_mob"
+        ],
+        "hint": "Brute minion phase 2 — dungeon creep (not grudge6 hero)"
+      }
+    },
+    {
+      "id": "chaotic_marine_life",
+      "r2Key": "models/voxel/animals/chaotic_marine_life.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/chaotic_marine_life.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "water",
+          "kelp",
+          "sand"
+        ],
+        "defs": [
+          "fish",
+          "marine",
+          "water_fauna"
+        ],
+        "hint": "Marine life pack for shores / fishing"
+      }
+    },
+    {
+      "id": "hanu_animated",
+      "r2Key": "models/voxel/animals/hanu_animated.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/hanu_animated.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "grass",
+          "leaves"
+        ],
+        "defs": [
+          "hanu",
+          "primate",
+          "forest_fauna"
+        ],
+        "hint": "Hanu animated creature"
+      }
+    },
+    {
+      "id": "dragon_three_loops",
+      "r2Key": "models/voxel/animals/dragon_three_loops.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/dragon_three_loops.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "obsidian",
+          "lava"
+        ],
+        "defs": [
+          "dragon",
+          "boss",
+          "flying_mount"
+        ],
+        "hint": "Dragon three motion loops"
+      }
+    },
+    {
+      "id": "dragon_run_loop",
+      "r2Key": "models/voxel/animals/dragon_run_loop.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/dragon_run_loop.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "obsidian",
+          "lava"
+        ],
+        "defs": [
+          "dragon",
+          "run_cycle"
+        ],
+        "hint": "Dragon run slow-motion loop"
+      }
+    },
+    {
+      "id": "wing_animated",
+      "r2Key": "models/voxel/animals/wing_animated.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/wing_animated.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [],
+        "defs": [
+          "wing",
+          "flight_part"
+        ],
+        "hint": "Animated wing mesh (attach / VFX hybrid)"
+      }
+    },
+    {
+      "id": "crystal_pangolin",
+      "r2Key": "models/voxel/animals/crystal_pangolin.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/animals/crystal_pangolin.glb",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "crystal",
+          "stone"
+        ],
+        "defs": [
+          "pangolin",
+          "crystal_beast"
+        ],
+        "hint": "Crystal pangolin low-poly"
+      }
+    }
+  ],
+  "vfx": [
+    {
+      "id": "vfx_tornado",
+      "r2Key": "models/voxel/vfx/tornado_vortex.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/tornado_vortex.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": [
+          "tornado",
+          "wind_skill",
+          "aoe_vortex"
+        ],
+        "hint": "Tornado vortex VFX → wind skills"
+      }
+    },
+    {
+      "id": "vfx_energy_stream",
+      "r2Key": "models/voxel/vfx/energy_particle_stream.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/energy_particle_stream.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": [
+          "energy_stream",
+          "channel",
+          "beam"
+        ],
+        "hint": "Energy particle stream channel VFX"
+      }
+    },
+    {
+      "id": "vfx_rasenshuriken",
+      "r2Key": "models/voxel/vfx/wind_rasenshuriken.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/wind_rasenshuriken.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": [
+          "rasenshuriken",
+          "wind_projectile",
+          "charged_shot"
+        ],
+        "hint": "Wind-style rasenshuriken projectile VFX"
+      }
+    },
+    {
+      "id": "vfx_kaens_spike",
+      "r2Key": "models/voxel/vfx/kaens_spike.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/kaens_spike.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": [
+          "spike",
+          "earth_skill",
+          "ground_rise"
+        ],
+        "hint": "Kaen's spike ground-rise VFX"
+      }
+    },
+    {
+      "id": "vfx_fire_hurricane",
+      "r2Key": "models/voxel/vfx/fire_hurricane.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/fire_hurricane.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [
+          "fire",
+          "magma"
+        ],
+        "defs": [
+          "fire_hurricane",
+          "fire_aoe",
+          "anime_vfx"
+        ],
+        "hint": "Anime fire hurricane AOE VFX"
+      }
+    },
+    {
+      "id": "vfx_antimatter",
+      "r2Key": "models/voxel/vfx/unstable_antimatter.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/vfx/unstable_antimatter.glb",
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": [
+          "antimatter",
+          "void_burst",
+          "ultimate"
+        ],
+        "hint": "Unstable antimatter ultimate VFX"
+      }
+    }
+  ],
+  "content": [
+    {
+      "id": "queen_annes_revenge",
+      "r2Key": "models/voxel/content/queen_annes_revenge.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/queen_annes_revenge.glb",
+      "role": "structure",
+      "codex": {
+        "kind": "terrain",
+        "blocks": [
+          "wood_plank",
+          "barrel",
+          "rope",
+          "cannon",
+          "sail"
+        ],
+        "defs": [
+          "ship",
+          "pirate_flagship"
+        ],
+        "hint": "Pirate flagship structure / naval map piece"
+      }
+    },
+    {
+      "id": "phantom_seal_altar",
+      "r2Key": "models/voxel/content/phantom_seal_altar.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/phantom_seal_altar.glb",
+      "role": "structure",
+      "codex": {
+        "kind": "station",
+        "blocks": [
+          "obsidian",
+          "end_stone",
+          "soul_sand"
+        ],
+        "defs": [
+          "altar",
+          "seal_shrine",
+          "ritual"
+        ],
+        "hint": "Seal altar structure for dungeon events"
+      }
+    },
+    {
+      "id": "anvil_station",
+      "r2Key": "models/voxel/content/anvil.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/anvil.glb",
+      "role": "prop",
+      "codex": {
+        "kind": "station",
+        "blocks": [
+          "anvil",
+          "iron_block"
+        ],
+        "defs": [
+          "anvil",
+          "smithing",
+          "repair"
+        ],
+        "hint": "Craft station mesh → forge / repair ops"
+      }
+    },
+    {
+      "id": "desert_portal",
+      "r2Key": "models/voxel/content/desert_portal.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/desert_portal.glb",
+      "role": "prop",
+      "codex": {
+        "kind": "station",
+        "blocks": [
+          "portal_frame",
+          "sandstone",
+          "obsidian"
+        ],
+        "defs": [
+          "portal",
+          "dimension_gate"
+        ],
+        "hint": "Portal prop for seed handoff / Realms door"
+      }
+    },
+    {
+      "id": "brick_modular_kit",
+      "r2Key": "models/voxel/content/brick_modular_kit.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/brick_modular_kit.glb",
+      "role": "kit_module",
+      "codex": {
+        "kind": "kit",
+        "blocks": [
+          "brick",
+          "stone_brick",
+          "mortar"
+        ],
+        "defs": [
+          "build_kit",
+          "modular_wall"
+        ],
+        "hint": "1 block = 1 m modular brick kit"
+      }
+    },
+    {
+      "id": "xyz_buildings_draft",
+      "r2Key": "models/voxel/content/xyz_buildings_draft.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/xyz_buildings_draft.glb",
+      "role": "kit_module",
+      "codex": {
+        "kind": "kit",
+        "blocks": [
+          "wood_plank",
+          "stone_brick",
+          "glass",
+          "roof_tile"
+        ],
+        "defs": [
+          "building_kit",
+          "town_detail"
+        ],
+        "hint": "Low-poly building detailing draft kit"
+      }
+    },
+    {
+      "id": "warning_bell",
+      "r2Key": "models/voxel/content/warning_bell.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/warning_bell.glb",
+      "role": "prop",
+      "codex": {
+        "kind": "station",
+        "blocks": [
+          "bell",
+          "iron_block"
+        ],
+        "defs": [
+          "alarm",
+          "town_bell"
+        ],
+        "hint": "Town warning bell prop"
+      }
+    },
+    {
+      "id": "balloons",
+      "r2Key": "models/voxel/content/balloons.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/balloons.glb",
+      "role": "prop",
+      "codex": {
+        "kind": "creature",
+        "blocks": [
+          "wool",
+          "string"
+        ],
+        "defs": [
+          "balloon",
+          "festival"
+        ],
+        "hint": "Balloon props for lobby / festival"
+      }
+    },
+    {
+      "id": "t0_crossbow",
+      "r2Key": "models/voxel/content/t0_crossbow.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/content/t0_crossbow.glb",
+      "role": "prop",
+      "codex": {
+        "kind": "weapon",
+        "blocks": [
+          "crossbow",
+          "string",
+          "iron_ingot"
+        ],
+        "defs": [
+          "crossbow",
+          "ranged_t0"
+        ],
+        "hint": "T0 crossbow + bolt mesh for codex gear"
+      }
+    }
+  ],
+  "deployments": [
+    {
+      "id": "mapchunk-grotto-cavern-cave",
+      "name": "Grotto Cavern Cave",
+      "blurb": "Grotto / cavern map chunk — stone+ore palette",
+      "seed": "mapchunk-grotto_cavern_cave",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "grotto_cavern_cave",
+      "mesh": "models/voxel/maps/grotto_cavern_cave.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/grotto_cavern_cave.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone",
+        "cobble",
+        "dirt",
+        "gravel",
+        "water",
+        "iron_ore"
+      ],
+      "codexDefs": [
+        "cave",
+        "dungeon_entrance"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 58.33,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "crypt",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-dragon-head-cave",
+      "name": "Dragon Head Cave",
+      "blurb": "Dragon-head cavern arena chunk",
+      "seed": "mapchunk-dragon_head_cave",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "dragon_head_cave",
+      "mesh": "models/voxel/maps/dragon_head_cave.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/dragon_head_cave.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone",
+        "obsidian",
+        "lava",
+        "netherrack",
+        "gold_ore"
+      ],
+      "codexDefs": [
+        "boss_lair",
+        "dragon_den"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 57.21,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "crypt",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-geonosis-arena",
+      "name": "Geonosis Arena",
+      "blurb": "Arena floor for PvP / spar",
+      "seed": "mapchunk-geonosis_arena",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "geonosis_arena",
+      "mesh": "models/voxel/maps/geonosis_arena.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/geonosis_arena.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "sand",
+        "sandstone",
+        "stone",
+        "red_sand"
+      ],
+      "codexDefs": [
+        "arena",
+        "pvp_ring"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 21.82,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-floating-islands-dwarves-haven",
+      "name": "Floating Islands Dwarves Haven",
+      "blurb": "Floating island map — sky Realms seed",
+      "seed": "mapchunk-floating_islands_dwarves_haven",
+      "chunkIdx": 5,
+      "biome": "mountains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "floating_islands_dwarves_haven",
+      "mesh": "models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "grass",
+        "dirt",
+        "stone",
+        "wood_plank",
+        "cloud"
+      ],
+      "codexDefs": [
+        "sky_island",
+        "dwarf_haven"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 38.3,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-glowstone-mountain-oriental",
+      "name": "Glowstone Mountain Oriental",
+      "blurb": "Glowstone mountain themed chunk",
+      "seed": "mapchunk-glowstone_mountain_oriental",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "glowstone_mountain_oriental",
+      "mesh": "models/voxel/maps/glowstone_mountain_oriental.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/glowstone_mountain_oriental.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "glowstone",
+        "stone",
+        "dirt",
+        "grass",
+        "lantern"
+      ],
+      "codexDefs": [
+        "glow_mountain",
+        "oriental_theme"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 20.51,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-glowstone-mountain",
+      "name": "Glowstone Mountain",
+      "blurb": "Glowstone mountain base variant",
+      "seed": "mapchunk-glowstone_mountain",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "glowstone_mountain",
+      "mesh": "models/voxel/maps/glowstone_mountain.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/glowstone_mountain.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "glowstone",
+        "stone",
+        "dirt"
+      ],
+      "codexDefs": [
+        "glow_mountain"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 20.41,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-tower-koth",
+      "name": "Tower Koth",
+      "blurb": "King-of-the-hill tower map",
+      "seed": "mapchunk-tower_koth",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "tower_koth",
+      "mesh": "models/voxel/maps/tower_koth.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/tower_koth.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone_brick",
+        "wood_plank",
+        "ladder",
+        "torch"
+      ],
+      "codexDefs": [
+        "koth",
+        "control_point"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 20.39,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-pirat-bay",
+      "name": "Pirat Bay",
+      "blurb": "Pirate bay coastal map chunk",
+      "seed": "mapchunk-pirat_bay",
+      "chunkIdx": 5,
+      "biome": "coast",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "pirat_bay",
+      "mesh": "models/voxel/maps/pirat_bay.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/pirat_bay.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "sand",
+        "water",
+        "wood_plank",
+        "barrel",
+        "palm_log"
+      ],
+      "codexDefs": [
+        "pirate_bay",
+        "harbor"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 24.93,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-low-poly-canyon",
+      "name": "Low Poly Canyon",
+      "blurb": "Canyon terrain seed",
+      "seed": "mapchunk-low_poly_canyon",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "low_poly_canyon",
+      "mesh": "models/voxel/maps/low_poly_canyon.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/low_poly_canyon.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "sandstone",
+        "sand",
+        "stone",
+        "cactus"
+      ],
+      "codexDefs": [
+        "canyon",
+        "desert_biome"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 12.63,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-animal-company-lobby",
+      "name": "Animal Company Lobby",
+      "blurb": "Animal Company lobby spawn v3",
+      "seed": "mapchunk-animal_company_lobby",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "animal_company_lobby",
+      "mesh": "models/voxel/maps/animal_company_lobby.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/animal_company_lobby.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "grass",
+        "wood_plank",
+        "stone",
+        "fence"
+      ],
+      "codexDefs": [
+        "lobby",
+        "spawn_hub"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 57.65,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-koth-bundle",
+      "name": "Koth Bundle",
+      "blurb": "KOTH multi-map bundle",
+      "seed": "mapchunk-koth_bundle",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "koth_bundle",
+      "mesh": "models/voxel/maps/koth_bundle.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/koth_bundle.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone_brick",
+        "grass",
+        "wood_plank"
+      ],
+      "codexDefs": [
+        "koth",
+        "multi_arena"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 63.24,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-castle-eltz",
+      "name": "Castle Eltz",
+      "blurb": "Castle Eltz map chunk — scale 1 (metres already)",
+      "seed": "mapchunk-castle_eltz",
+      "chunkIdx": 6,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "castle_eltz",
+      "mesh": "models/warlords-era/worlds/castle_eltz.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/warlords-era/worlds/castle_eltz.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone_brick",
+        "cobble",
+        "wood_plank",
+        "glass",
+        "roof_tile"
+      ],
+      "codexDefs": [
+        "castle",
+        "stronghold",
+        "seed_world"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 155.87,
+      "uploadPolicy": "staged_local",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-dalaran-fantasy-island",
+      "name": "Dalaran Fantasy Island",
+      "blurb": "Dalaran-style fantasy island challenge",
+      "seed": "mapchunk-dalaran_fantasy_island",
+      "chunkIdx": 6,
+      "biome": "mountains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "dalaran_fantasy_island",
+      "mesh": "models/voxel/maps/dalaran_fantasy_island.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/dalaran_fantasy_island.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone_brick",
+        "grass",
+        "water",
+        "wood_plank",
+        "crystal"
+      ],
+      "codexDefs": [
+        "fantasy_island",
+        "challenge_map"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 127.66,
+      "uploadPolicy": "multipart",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-island-life",
+      "name": "Island Life",
+      "blurb": "Mineways island_life full world (multipart R2)",
+      "seed": "mapchunk-island_life",
+      "chunkIdx": 7,
+      "biome": "coast",
+      "featured": true,
+      "deploy": "open-playtest",
+      "mapChunkId": "island_life",
+      "mesh": "models/worlds/island_life.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/worlds/island_life.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "grass",
+        "dirt",
+        "sand",
+        "water",
+        "log",
+        "leaves",
+        "ore_iron"
+      ],
+      "codexDefs": [
+        "overworld",
+        "island_life"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 429.86,
+      "uploadPolicy": "multipart",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-faction-spawn-castle-town",
+      "name": "Faction Spawn Castle Town",
+      "blurb": "Faction spawn castle + town mega map",
+      "seed": "mapchunk-faction_spawn_castle_town",
+      "chunkIdx": 7,
+      "biome": "plains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "faction_spawn_castle_town",
+      "mesh": "models/voxel/maps/faction_spawn_castle_town.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/faction_spawn_castle_town.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "stone_brick",
+        "wood_plank",
+        "cobble",
+        "grass",
+        "roof_tile"
+      ],
+      "codexDefs": [
+        "faction_spawn",
+        "castle_town"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 441.24,
+      "uploadPolicy": "multipart",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-awesome-realm-world",
+      "name": "Awesome Realm World",
+      "blurb": "Awesome Realm full world mesh",
+      "seed": "mapchunk-awesome_realm_world",
+      "chunkIdx": 7,
+      "biome": "plains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "awesome_realm_world",
+      "mesh": "models/voxel/maps/awesome_realm_world.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/awesome_realm_world.glb",
+      "forceMap": true,
+      "codexBlocks": [
+        "grass",
+        "stone",
+        "dirt",
+        "water",
+        "wood_plank"
+      ],
+      "codexDefs": [
+        "realm_world",
+        "overworld"
+      ],
+      "d1Category": "voxel_map",
+      "mb": 343.07,
+      "uploadPolicy": "multipart",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    }
+  ]
+}

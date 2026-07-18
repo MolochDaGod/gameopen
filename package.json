@@ -40,7 +40,14 @@
     "assets:production:upload": "node scripts/upload-production-glbs-r2.mjs",
     "assets:production:seed-d1": "node scripts/seed-production-glbs-d1.mjs",
     "assets:production:seed-d1:apply": "node scripts/seed-production-glbs-d1.mjs --apply",
-    "assets:production:pipeline": "node scripts/upload-production-glbs-r2.mjs && node scripts/seed-production-glbs-d1.mjs --apply"
+    "assets:production:pipeline": "node scripts/upload-production-glbs-r2.mjs && node scripts/seed-production-glbs-d1.mjs --apply",
+    "assets:voxel-last30:stage": "node scripts/stage-voxel-last30.mjs",
+    "assets:voxel-last30:seed-d1": "node scripts/seed-voxel-last30-d1.mjs",
+    "assets:voxel-last30:seed-d1:apply": "node scripts/seed-voxel-last30-d1.mjs --apply",
+    "assets:voxel-last30:upload": "node scripts/upload-local-glbs-wrangler.mjs models/voxel",
+    "assets:voxel-last30:pipeline": "node scripts/stage-voxel-last30.mjs && node scripts/upload-local-glbs-wrangler.mjs models/voxel && node scripts/seed-voxel-last30-d1.mjs --apply",
+    "assets:voxel-last30:deployments": "node scripts/update-voxel-deployments.mjs",
+    "assets:voxel-last30:deployments:dry": "node scripts/update-voxel-deployments.mjs --dry-run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0"

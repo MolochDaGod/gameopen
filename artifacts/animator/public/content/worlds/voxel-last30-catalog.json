@@ -1,0 +1,632 @@
+{
+  "id": "voxel-last30-downloads",
+  "version": 1,
+  "updated": "2026-07-18",
+  "label": "Last ~30 downloads — voxel maps, animals, content, VFX",
+  "sourceRoot": "C:\\Users\\nugye\\Documents",
+  "policy": {
+    "era": "voxel / Open Realms (NOT Warlords hero era)",
+    "cdnPrefix": "models/voxel/",
+    "r2Bucket": "grudge-assets",
+    "d1": "grudge-assets-db / asset_registry",
+    "blockScale": "1 unit = 1 voxel block = 1 m (mapAssetScale / MAP_CHUNKS)",
+    "codex": {
+      "blocks": "/api/blocks",
+      "definitions": "/api/definitions",
+      "live": "https://mine-loader.vercel.app",
+      "openProxy": "open.grudge-studio.com same-origin /api/blocks|/api/definitions"
+    }
+  },
+  "codexLinkLegend": {
+    "terrain": "Mine-Loader block ids used as palette / place hints when importing map chunks",
+    "station": "Craft stations tied to definitions + harvest ops",
+    "creature": "Wildlife / mount entities (not grudge6 heroes)",
+    "vfx": "Skill / ability VFX — definitions + skill tree overlays",
+    "kit": "Modular build pieces at 1 block = 1 m",
+    "weapon": "Gear mesh for codex item rows / inventory preview"
+  },
+  "assets": [
+    {
+      "id": "grotto_cavern_cave",
+      "src": "grotto_cavern_cave.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/grotto_cavern_cave.glb",
+      "mb": 58.33,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone", "cobble", "dirt", "gravel", "water", "iron_ore"],
+        "defs": ["cave", "dungeon_entrance"],
+        "hint": "Grotto / cavern map chunk — stone+ore palette"
+      },
+      "notes": "Full cave scene; never prop height-fit"
+    },
+    {
+      "id": "dragon_head_cave",
+      "src": "dragon_head_cave.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/dragon_head_cave.glb",
+      "mb": 57.21,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone", "obsidian", "lava", "netherrack", "gold_ore"],
+        "defs": ["boss_lair", "dragon_den"],
+        "hint": "Dragon-head cavern arena chunk"
+      }
+    },
+    {
+      "id": "geonosis_arena",
+      "src": "geonosis_arena.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/geonosis_arena.glb",
+      "mb": 21.82,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["sand", "sandstone", "stone", "red_sand"],
+        "defs": ["arena", "pvp_ring"],
+        "hint": "Arena floor for PvP / spar"
+      }
+    },
+    {
+      "id": "floating_islands_dwarves_haven",
+      "src": "floating_islands_of_the_west_dwarves_haven.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "mb": 38.3,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["grass", "dirt", "stone", "wood_plank", "cloud"],
+        "defs": ["sky_island", "dwarf_haven"],
+        "hint": "Floating island map — sky Realms seed"
+      }
+    },
+    {
+      "id": "glowstone_mountain_oriental",
+      "src": "glowstone_mountain__oriental_theme.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/glowstone_mountain_oriental.glb",
+      "mb": 20.51,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["glowstone", "stone", "dirt", "grass", "lantern"],
+        "defs": ["glow_mountain", "oriental_theme"],
+        "hint": "Glowstone mountain themed chunk"
+      }
+    },
+    {
+      "id": "glowstone_mountain",
+      "src": "glowstone_mountain.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/glowstone_mountain.glb",
+      "mb": 20.41,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["glowstone", "stone", "dirt"],
+        "defs": ["glow_mountain"],
+        "hint": "Glowstone mountain base variant"
+      }
+    },
+    {
+      "id": "tower_koth",
+      "src": "tower_koth.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/tower_koth.glb",
+      "mb": 20.39,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone_brick", "wood_plank", "ladder", "torch"],
+        "defs": ["koth", "control_point"],
+        "hint": "King-of-the-hill tower map"
+      }
+    },
+    {
+      "id": "pirat_bay",
+      "src": "pirat_bay.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/pirat_bay.glb",
+      "mb": 24.93,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["sand", "water", "wood_plank", "barrel", "palm_log"],
+        "defs": ["pirate_bay", "harbor"],
+        "hint": "Pirate bay coastal map chunk"
+      }
+    },
+    {
+      "id": "low_poly_canyon",
+      "src": "low_poly_canyon_free.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/low_poly_canyon.glb",
+      "mb": 12.63,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["sandstone", "sand", "stone", "cactus"],
+        "defs": ["canyon", "desert_biome"],
+        "hint": "Canyon terrain seed"
+      }
+    },
+    {
+      "id": "animal_company_lobby",
+      "src": "animal_company_-_lobby_spawn_v3.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/animal_company_lobby.glb",
+      "mb": 57.65,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["grass", "wood_plank", "stone", "fence"],
+        "defs": ["lobby", "spawn_hub"],
+        "hint": "Animal Company lobby spawn v3"
+      }
+    },
+    {
+      "id": "koth_bundle",
+      "src": "koth_bundle.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/koth_bundle.glb",
+      "mb": 63.24,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone_brick", "grass", "wood_plank"],
+        "defs": ["koth", "multi_arena"],
+        "hint": "KOTH multi-map bundle"
+      }
+    },
+    {
+      "id": "castle_eltz",
+      "src": "castle_eltz.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/warlords-era/worlds/castle_eltz.glb",
+      "mb": 155.87,
+      "upload": "staged_local",
+      "forceMap": true,
+      "nativeBounds": { "x": 408.228, "y": 350, "z": 136 },
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone_brick", "cobble", "wood_plank", "glass", "roof_tile"],
+        "defs": ["castle", "stronghold", "seed_world"],
+        "hint": "Castle Eltz map chunk — scale 1 (metres already)"
+      },
+      "notes": "Already under public warlords-era/worlds; use mapAssetScale scale=1"
+    },
+    {
+      "id": "dalaran_fantasy_island",
+      "src": "dalaran_fantasyislandchallenge.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/dalaran_fantasy_island.glb",
+      "mb": 127.66,
+      "upload": "multipart",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone_brick", "grass", "water", "wood_plank", "crystal"],
+        "defs": ["fantasy_island", "challenge_map"],
+        "hint": "Dalaran-style fantasy island challenge"
+      }
+    },
+    {
+      "id": "island_life",
+      "src": "island_life.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/worlds/island_life.glb",
+      "mb": 429.86,
+      "upload": "multipart",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["grass", "dirt", "sand", "water", "log", "leaves", "ore_iron"],
+        "defs": ["overworld", "island_life"],
+        "hint": "Mineways island_life full world (multipart R2)"
+      },
+      "notes": "Local public copy may exist; wrangler CLI max ~300 MiB"
+    },
+    {
+      "id": "faction_spawn_castle_town",
+      "src": "faction_spawn_castle_with_town.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/faction_spawn_castle_town.glb",
+      "mb": 441.24,
+      "upload": "multipart",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone_brick", "wood_plank", "cobble", "grass", "roof_tile"],
+        "defs": ["faction_spawn", "castle_town"],
+        "hint": "Faction spawn castle + town mega map"
+      }
+    },
+    {
+      "id": "awesome_realm_world",
+      "src": "awesome_realm_world.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/awesome_realm_world.glb",
+      "mb": 343.07,
+      "upload": "multipart",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["grass", "stone", "dirt", "water", "wood_plank"],
+        "defs": ["realm_world", "overworld"],
+        "hint": "Awesome Realm full world mesh"
+      }
+    },
+    {
+      "id": "queen_annes_revenge",
+      "src": "queen_annes_revenge.glb",
+      "role": "structure",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/queen_annes_revenge.glb",
+      "mb": 51.41,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["wood_plank", "barrel", "rope", "cannon", "sail"],
+        "defs": ["ship", "pirate_flagship"],
+        "hint": "Pirate flagship structure / naval map piece"
+      }
+    },
+    {
+      "id": "phantom_seal_altar",
+      "src": "phantom_in_seal_altar.glb",
+      "role": "structure",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/phantom_seal_altar.glb",
+      "mb": 19.65,
+      "upload": "stage",
+      "codex": {
+        "kind": "station",
+        "blocks": ["obsidian", "end_stone", "soul_sand"],
+        "defs": ["altar", "seal_shrine", "ritual"],
+        "hint": "Seal altar structure for dungeon events"
+      }
+    },
+    {
+      "id": "anvil_station",
+      "src": "anvil.glb",
+      "role": "prop",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/anvil.glb",
+      "mb": 16.24,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "station",
+        "blocks": ["anvil", "iron_block"],
+        "defs": ["anvil", "smithing", "repair"],
+        "hint": "Craft station mesh → forge / repair ops"
+      }
+    },
+    {
+      "id": "desert_portal",
+      "src": "desert_portal.glb",
+      "role": "prop",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/desert_portal.glb",
+      "mb": 0.67,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "station",
+        "blocks": ["portal_frame", "sandstone", "obsidian"],
+        "defs": ["portal", "dimension_gate"],
+        "hint": "Portal prop for seed handoff / Realms door"
+      }
+    },
+    {
+      "id": "brick_modular_kit",
+      "src": "low_poly_simple_brick_modular_structures.glb",
+      "role": "kit_module",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/brick_modular_kit.glb",
+      "mb": 0.19,
+      "upload": "stage",
+      "codex": {
+        "kind": "kit",
+        "blocks": ["brick", "stone_brick", "mortar"],
+        "defs": ["build_kit", "modular_wall"],
+        "hint": "1 block = 1 m modular brick kit"
+      }
+    },
+    {
+      "id": "xyz_buildings_draft",
+      "src": "xyz_detailing_low_poly_buildings_draft.glb",
+      "role": "kit_module",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/xyz_buildings_draft.glb",
+      "mb": 1.95,
+      "upload": "stage",
+      "codex": {
+        "kind": "kit",
+        "blocks": ["wood_plank", "stone_brick", "glass", "roof_tile"],
+        "defs": ["building_kit", "town_detail"],
+        "hint": "Low-poly building detailing draft kit"
+      }
+    },
+    {
+      "id": "warning_bell",
+      "src": "warningbell.glb",
+      "role": "prop",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/warning_bell.glb",
+      "mb": 4.44,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "station",
+        "blocks": ["bell", "iron_block"],
+        "defs": ["alarm", "town_bell"],
+        "hint": "Town warning bell prop"
+      }
+    },
+    {
+      "id": "balloons",
+      "src": "baloons.glb",
+      "role": "prop",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/balloons.glb",
+      "mb": 5.85,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "creature",
+        "blocks": ["wool", "string"],
+        "defs": ["balloon", "festival"],
+        "hint": "Balloon props for lobby / festival"
+      }
+    },
+    {
+      "id": "t0_crossbow",
+      "src": "T0crossbow_with_bolt.glb",
+      "role": "prop",
+      "category": "voxel_content",
+      "r2Key": "models/voxel/content/t0_crossbow.glb",
+      "mb": 12.83,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "weapon",
+        "blocks": ["crossbow", "string", "iron_ingot"],
+        "defs": ["crossbow", "ranged_t0"],
+        "hint": "T0 crossbow + bolt mesh for codex gear"
+      }
+    },
+    {
+      "id": "brute_minion_p2",
+      "src": "brute_minion_phase_2.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/brute_minion_p2.glb",
+      "mb": 6.47,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": [],
+        "defs": ["minion", "brute", "dungeon_mob"],
+        "hint": "Brute minion phase 2 — dungeon creep (not grudge6 hero)"
+      }
+    },
+    {
+      "id": "chaotic_marine_life",
+      "src": "chaotic_marine_life.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/chaotic_marine_life.glb",
+      "mb": 2.8,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": ["water", "kelp", "sand"],
+        "defs": ["fish", "marine", "water_fauna"],
+        "hint": "Marine life pack for shores / fishing"
+      }
+    },
+    {
+      "id": "hanu_animated",
+      "src": "hanu_animated.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/hanu_animated.glb",
+      "mb": 67.09,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": ["grass", "leaves"],
+        "defs": ["hanu", "primate", "forest_fauna"],
+        "hint": "Hanu animated creature"
+      }
+    },
+    {
+      "id": "dragon_three_loops",
+      "src": "animated_dragon_three_motion_loops.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/dragon_three_loops.glb",
+      "mb": 16.68,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": ["obsidian", "lava"],
+        "defs": ["dragon", "boss", "flying_mount"],
+        "hint": "Dragon three motion loops"
+      }
+    },
+    {
+      "id": "dragon_run_loop",
+      "src": "animated_dragon_runs_slow_motion_loop.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/dragon_run_loop.glb",
+      "mb": 16.35,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": ["obsidian", "lava"],
+        "defs": ["dragon", "run_cycle"],
+        "hint": "Dragon run slow-motion loop"
+      }
+    },
+    {
+      "id": "wing_animated",
+      "src": "wing_animated.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/wing_animated.glb",
+      "mb": 1.31,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": [],
+        "defs": ["wing", "flight_part"],
+        "hint": "Animated wing mesh (attach / VFX hybrid)"
+      }
+    },
+    {
+      "id": "crystal_pangolin",
+      "src": "low_poly_crystal_pangolin.glb",
+      "role": "creature",
+      "category": "voxel_animal",
+      "r2Key": "models/voxel/animals/crystal_pangolin.glb",
+      "mb": 1.03,
+      "upload": "stage",
+      "codex": {
+        "kind": "creature",
+        "blocks": ["crystal", "stone"],
+        "defs": ["pangolin", "crystal_beast"],
+        "hint": "Crystal pangolin low-poly"
+      }
+    },
+    {
+      "id": "vfx_tornado",
+      "src": "tornado__low_poly_stylized_vortex.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/tornado_vortex.glb",
+      "mb": 0.17,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": ["tornado", "wind_skill", "aoe_vortex"],
+        "hint": "Tornado vortex VFX → wind skills"
+      }
+    },
+    {
+      "id": "vfx_energy_stream",
+      "src": "energy_particle_stream.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/energy_particle_stream.glb",
+      "mb": 0.06,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": ["energy_stream", "channel", "beam"],
+        "hint": "Energy particle stream channel VFX"
+      }
+    },
+    {
+      "id": "vfx_rasenshuriken",
+      "src": "wind_style_rasenshuriken.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/wind_rasenshuriken.glb",
+      "mb": 3.88,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": ["rasenshuriken", "wind_projectile", "charged_shot"],
+        "hint": "Wind-style rasenshuriken projectile VFX"
+      }
+    },
+    {
+      "id": "vfx_kaens_spike",
+      "src": "kaens_spike.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/kaens_spike.glb",
+      "mb": 6.91,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": ["spike", "earth_skill", "ground_rise"],
+        "hint": "Kaen's spike ground-rise VFX"
+      }
+    },
+    {
+      "id": "vfx_fire_hurricane",
+      "src": "vfx_anime_fire_hurricane_vfx.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/fire_hurricane.glb",
+      "mb": 0.96,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": ["fire", "magma"],
+        "defs": ["fire_hurricane", "fire_aoe", "anime_vfx"],
+        "hint": "Anime fire hurricane AOE VFX"
+      }
+    },
+    {
+      "id": "vfx_antimatter",
+      "src": "unstable_antimatter.glb",
+      "role": "vfx",
+      "category": "voxel_vfx",
+      "r2Key": "models/voxel/vfx/unstable_antimatter.glb",
+      "mb": 5.53,
+      "upload": "stage",
+      "forceProp": true,
+      "codex": {
+        "kind": "vfx",
+        "blocks": [],
+        "defs": ["antimatter", "void_burst", "ultimate"],
+        "hint": "Unstable antimatter ultimate VFX"
+      }
+    }
+  ]
+}

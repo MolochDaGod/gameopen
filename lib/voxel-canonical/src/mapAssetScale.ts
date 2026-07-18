@@ -49,7 +49,7 @@ export type AssetEvalResult = {
 
 /** Names that almost always mean full map / chunk / scene, not a hand prop. */
 const MAP_NAME_RE =
-  /castle|fortress|citadel|keep|palace|town|city|village|island|overworld|realm|world|map|chunk|level|dungeon|temple|cathedral|smeltery|skycastle|eltz|retreat|biome|landscape|terrain|stronghold|siege/i;
+  /castle|fortress|citadel|keep|palace|town|city|village|island|overworld|realm|world|map|chunk|level|dungeon|temple|cathedral|smeltery|skycastle|eltz|retreat|biome|landscape|terrain|stronghold|siege|grotto|cavern|canyon|koth|arena|bay|harbor|harbour|mountain|geonosis|dalaran|faction.?spawn|lobby.?spawn|awesome.?realm|dragon.?head|glowstone|pirat/i;
 
 /** Names that are small props even if large files (textures/atlases). */
 const PROP_NAME_RE =
@@ -242,7 +242,7 @@ export const MAP_CHUNKS: Record<string, MapChunkDef> = {
     role: "map_chunk",
     nativeBounds: { x: 408.228, y: 350, z: 136 },
     fileBytes: 163_443_404,
-    tags: ["map", "castle", "chunk", "warlords"],
+    tags: ["map", "castle", "chunk", "warlords", "voxel-last30"],
     blurb: "Full castle map chunk — scale so 1 unit = 1 voxel block (not prop height).",
   },
   castle: {
@@ -276,6 +276,139 @@ export const MAP_CHUNKS: Record<string, MapChunkDef> = {
     sourceBlockPitch: 0.008,
     tags: ["map", "island", "rascals", "seed"],
     blurb: "Voxelize pitch 0.008 → scale = 125 so cells match 1 m blocks.",
+  },
+  // --- voxel last-30 map chunks (D1 sourceSet voxel-last30-downloads) ---
+  grotto_cavern_cave: {
+    id: "grotto_cavern_cave",
+    label: "Grotto Cavern",
+    file: "models/voxel/maps/grotto_cavern_cave.glb",
+    role: "map_chunk",
+    fileBytes: 61_148_000,
+    tags: ["map", "cave", "voxel-last30", "codex:stone"],
+    blurb: "Cavern map chunk — stone/ore codex palette.",
+  },
+  dragon_head_cave: {
+    id: "dragon_head_cave",
+    label: "Dragon Head Cave",
+    file: "models/voxel/maps/dragon_head_cave.glb",
+    role: "map_chunk",
+    fileBytes: 59_990_000,
+    tags: ["map", "cave", "boss", "voxel-last30"],
+    blurb: "Dragon-head cavern arena.",
+  },
+  geonosis_arena: {
+    id: "geonosis_arena",
+    label: "Geonosis Arena",
+    file: "models/voxel/maps/geonosis_arena.glb",
+    role: "map_chunk",
+    fileBytes: 22_870_000,
+    tags: ["map", "arena", "pvp", "voxel-last30"],
+  },
+  floating_islands_dwarves_haven: {
+    id: "floating_islands_dwarves_haven",
+    label: "Dwarves Haven Floating Islands",
+    file: "models/voxel/maps/floating_islands_dwarves_haven.glb",
+    role: "map_chunk",
+    fileBytes: 40_160_000,
+    tags: ["map", "sky", "island", "voxel-last30"],
+  },
+  glowstone_mountain: {
+    id: "glowstone_mountain",
+    label: "Glowstone Mountain",
+    file: "models/voxel/maps/glowstone_mountain.glb",
+    role: "map_chunk",
+    fileBytes: 21_400_000,
+    tags: ["map", "glowstone", "voxel-last30", "codex:glowstone"],
+  },
+  glowstone_mountain_oriental: {
+    id: "glowstone_mountain_oriental",
+    label: "Glowstone Mountain (Oriental)",
+    file: "models/voxel/maps/glowstone_mountain_oriental.glb",
+    role: "map_chunk",
+    fileBytes: 21_500_000,
+    tags: ["map", "glowstone", "voxel-last30"],
+  },
+  tower_koth: {
+    id: "tower_koth",
+    label: "Tower KOTH",
+    file: "models/voxel/maps/tower_koth.glb",
+    role: "map_chunk",
+    fileBytes: 21_380_000,
+    tags: ["map", "koth", "voxel-last30"],
+  },
+  pirat_bay: {
+    id: "pirat_bay",
+    label: "Pirate Bay",
+    file: "models/voxel/maps/pirat_bay.glb",
+    role: "map_chunk",
+    fileBytes: 26_140_000,
+    tags: ["map", "pirate", "coast", "voxel-last30"],
+  },
+  low_poly_canyon: {
+    id: "low_poly_canyon",
+    label: "Low Poly Canyon",
+    file: "models/voxel/maps/low_poly_canyon.glb",
+    role: "map_chunk",
+    fileBytes: 13_240_000,
+    tags: ["map", "canyon", "desert", "voxel-last30"],
+  },
+  animal_company_lobby: {
+    id: "animal_company_lobby",
+    label: "Animal Company Lobby",
+    file: "models/voxel/maps/animal_company_lobby.glb",
+    role: "map_chunk",
+    fileBytes: 60_450_000,
+    tags: ["map", "lobby", "spawn", "voxel-last30"],
+  },
+  koth_bundle: {
+    id: "koth_bundle",
+    label: "KOTH Bundle",
+    file: "models/voxel/maps/koth_bundle.glb",
+    role: "map_chunk",
+    fileBytes: 66_300_000,
+    tags: ["map", "koth", "voxel-last30"],
+  },
+  island_life: {
+    id: "island_life",
+    label: "Island Life",
+    file: "models/worlds/island_life.glb",
+    role: "map_chunk",
+    fileBytes: 450_700_000,
+    tags: ["map", "overworld", "mineways", "voxel-last30"],
+    blurb: "Full island_life world — multipart R2; scale via evaluateAssetRole.",
+  },
+  dalaran_fantasy_island: {
+    id: "dalaran_fantasy_island",
+    label: "Dalaran Fantasy Island",
+    file: "models/voxel/maps/dalaran_fantasy_island.glb",
+    role: "map_chunk",
+    fileBytes: 133_900_000,
+    tags: ["map", "fantasy", "island", "voxel-last30"],
+  },
+  faction_spawn_castle_town: {
+    id: "faction_spawn_castle_town",
+    label: "Faction Spawn Castle Town",
+    file: "models/voxel/maps/faction_spawn_castle_town.glb",
+    role: "map_chunk",
+    fileBytes: 462_700_000,
+    tags: ["map", "faction", "castle", "voxel-last30"],
+  },
+  awesome_realm_world: {
+    id: "awesome_realm_world",
+    label: "Awesome Realm World",
+    file: "models/voxel/maps/awesome_realm_world.glb",
+    role: "map_chunk",
+    fileBytes: 359_700_000,
+    tags: ["map", "realm", "overworld", "voxel-last30"],
+  },
+  queen_annes_revenge: {
+    id: "queen_annes_revenge",
+    label: "Queen Anne's Revenge",
+    file: "models/voxel/content/queen_annes_revenge.glb",
+    role: "map_chunk",
+    fileBytes: 53_900_000,
+    tags: ["map", "ship", "pirate", "voxel-last30"],
+    blurb: "Flagship structure — treat as map/structure, not prop height-fit.",
   },
 };
 

@@ -17,6 +17,7 @@ import {
   setActiveSkillProgress,
 } from "../lib/grudgeSystems/skillProgressBridge";
 import { MAP_TEMPLATES } from "../three/voxel/templates";
+import { listMapChunks } from "../three/voxel/mapChunks";
 import { gameSession } from "./GameSession";
 
 export type HarvestTabId =
@@ -155,8 +156,16 @@ export interface MapAsset {
   id: string;
   name: string;
   path: string;
-  kind: "arena" | "dungeon" | "scene" | "island" | "voxel";
+  kind: "arena" | "dungeon" | "scene" | "island" | "voxel" | "map_chunk";
   blurb: string;
+  /** Mine-Loader codex block ids (terrain palette hints). */
+  codexBlocks?: string[];
+  /** Mine-Loader definition ids. */
+  codexDefs?: string[];
+  /** D1 / CDN r2 key when registered. */
+  r2Key?: string;
+  /** asset_registry category */
+  category?: string;
 }
 
 export interface CharacterImportRow {
@@ -377,10 +386,331 @@ export const MAP_LIBRARY: MapAsset[] = [
     path: "mine-loader:#/play",
     kind: "island",
     blurb: "Live voxel world (Mine-Loader authority).",
+    codexBlocks: ["grass", "dirt", "stone", "water"],
+    codexDefs: ["overworld"],
+  },
+  // --- last-30 voxel map chunks (see content/worlds/voxel-last30-catalog.json) ---
+  {
+    id: "castle_eltz",
+    name: "Castle Eltz",
+    path: "models/warlords-era/worlds/castle_eltz.glb",
+    kind: "map_chunk",
+    blurb: "Map chunk · scale 1 block = 1 m · codex stone_brick castle.",
+    r2Key: "models/warlords-era/worlds/castle_eltz.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone_brick", "cobble", "wood_plank", "glass", "roof_tile"],
+    codexDefs: ["castle", "stronghold", "seed_world"],
+  },
+  {
+    id: "grotto_cavern_cave",
+    name: "Grotto Cavern",
+    path: "models/voxel/maps/grotto_cavern_cave.glb",
+    kind: "map_chunk",
+    blurb: "Cave chunk · stone/ore palette via Codex /api/blocks.",
+    r2Key: "models/voxel/maps/grotto_cavern_cave.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone", "cobble", "dirt", "gravel", "water", "iron_ore"],
+    codexDefs: ["cave", "dungeon_entrance"],
+  },
+  {
+    id: "dragon_head_cave",
+    name: "Dragon Head Cave",
+    path: "models/voxel/maps/dragon_head_cave.glb",
+    kind: "map_chunk",
+    blurb: "Boss lair cavern · lava/obsidian codex.",
+    r2Key: "models/voxel/maps/dragon_head_cave.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone", "obsidian", "lava", "netherrack", "gold_ore"],
+    codexDefs: ["boss_lair", "dragon_den"],
+  },
+  {
+    id: "geonosis_arena",
+    name: "Geonosis Arena",
+    path: "models/voxel/maps/geonosis_arena.glb",
+    kind: "map_chunk",
+    blurb: "PvP arena floor · sand/sandstone codex.",
+    r2Key: "models/voxel/maps/geonosis_arena.glb",
+    category: "voxel_map",
+    codexBlocks: ["sand", "sandstone", "stone", "red_sand"],
+    codexDefs: ["arena", "pvp_ring"],
+  },
+  {
+    id: "floating_islands_dwarves_haven",
+    name: "Dwarves Haven Floating Islands",
+    path: "models/voxel/maps/floating_islands_dwarves_haven.glb",
+    kind: "map_chunk",
+    blurb: "Sky island Realms seed.",
+    r2Key: "models/voxel/maps/floating_islands_dwarves_haven.glb",
+    category: "voxel_map",
+    codexBlocks: ["grass", "dirt", "stone", "wood_plank", "cloud"],
+    codexDefs: ["sky_island", "dwarf_haven"],
+  },
+  {
+    id: "glowstone_mountain",
+    name: "Glowstone Mountain",
+    path: "models/voxel/maps/glowstone_mountain.glb",
+    kind: "map_chunk",
+    blurb: "Glowstone mountain · codex glowstone block.",
+    r2Key: "models/voxel/maps/glowstone_mountain.glb",
+    category: "voxel_map",
+    codexBlocks: ["glowstone", "stone", "dirt"],
+    codexDefs: ["glow_mountain"],
+  },
+  {
+    id: "glowstone_mountain_oriental",
+    name: "Glowstone Mountain (Oriental)",
+    path: "models/voxel/maps/glowstone_mountain_oriental.glb",
+    kind: "map_chunk",
+    blurb: "Oriental glowstone mountain variant.",
+    r2Key: "models/voxel/maps/glowstone_mountain_oriental.glb",
+    category: "voxel_map",
+    codexBlocks: ["glowstone", "stone", "dirt", "grass", "lantern"],
+    codexDefs: ["glow_mountain", "oriental_theme"],
+  },
+  {
+    id: "tower_koth",
+    name: "Tower KOTH",
+    path: "models/voxel/maps/tower_koth.glb",
+    kind: "map_chunk",
+    blurb: "King-of-the-hill tower · control point def.",
+    r2Key: "models/voxel/maps/tower_koth.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone_brick", "wood_plank", "ladder", "torch"],
+    codexDefs: ["koth", "control_point"],
+  },
+  {
+    id: "pirat_bay",
+    name: "Pirate Bay",
+    path: "models/voxel/maps/pirat_bay.glb",
+    kind: "map_chunk",
+    blurb: "Coastal pirate bay · sand/water/wood codex.",
+    r2Key: "models/voxel/maps/pirat_bay.glb",
+    category: "voxel_map",
+    codexBlocks: ["sand", "water", "wood_plank", "barrel", "palm_log"],
+    codexDefs: ["pirate_bay", "harbor"],
+  },
+  {
+    id: "low_poly_canyon",
+    name: "Low Poly Canyon",
+    path: "models/voxel/maps/low_poly_canyon.glb",
+    kind: "map_chunk",
+    blurb: "Canyon desert seed.",
+    r2Key: "models/voxel/maps/low_poly_canyon.glb",
+    category: "voxel_map",
+    codexBlocks: ["sandstone", "sand", "stone", "cactus"],
+    codexDefs: ["canyon", "desert_biome"],
+  },
+  {
+    id: "animal_company_lobby",
+    name: "Animal Company Lobby",
+    path: "models/voxel/maps/animal_company_lobby.glb",
+    kind: "map_chunk",
+    blurb: "Lobby spawn hub v3.",
+    r2Key: "models/voxel/maps/animal_company_lobby.glb",
+    category: "voxel_map",
+    codexBlocks: ["grass", "wood_plank", "stone", "fence"],
+    codexDefs: ["lobby", "spawn_hub"],
+  },
+  {
+    id: "koth_bundle",
+    name: "KOTH Bundle",
+    path: "models/voxel/maps/koth_bundle.glb",
+    kind: "map_chunk",
+    blurb: "Multi-arena KOTH pack.",
+    r2Key: "models/voxel/maps/koth_bundle.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone_brick", "grass", "wood_plank"],
+    codexDefs: ["koth", "multi_arena"],
+  },
+  {
+    id: "island_life",
+    name: "Island Life",
+    path: "models/worlds/island_life.glb",
+    kind: "map_chunk",
+    blurb: "Mineways full island · multipart CDN · overworld codex.",
+    r2Key: "models/worlds/island_life.glb",
+    category: "voxel_map",
+    codexBlocks: ["grass", "dirt", "sand", "water", "log", "leaves", "ore_iron"],
+    codexDefs: ["overworld", "island_life"],
+  },
+  {
+    id: "dalaran_fantasy_island",
+    name: "Dalaran Fantasy Island",
+    path: "models/voxel/maps/dalaran_fantasy_island.glb",
+    kind: "map_chunk",
+    blurb: "Fantasy island challenge map.",
+    r2Key: "models/voxel/maps/dalaran_fantasy_island.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone_brick", "grass", "water", "wood_plank", "crystal"],
+    codexDefs: ["fantasy_island", "challenge_map"],
+  },
+  {
+    id: "queen_annes_revenge",
+    name: "Queen Anne's Revenge",
+    path: "models/voxel/content/queen_annes_revenge.glb",
+    kind: "map_chunk",
+    blurb: "Pirate flagship structure (map-scale, not prop).",
+    r2Key: "models/voxel/content/queen_annes_revenge.glb",
+    category: "voxel_content",
+    codexBlocks: ["wood_plank", "barrel", "rope", "cannon", "sail"],
+    codexDefs: ["ship", "pirate_flagship"],
   },
 ];
 
-/** Voxel editor templates + static maps for the Maps tab. */
+/** Codex-linked content props / animals / VFX from last-30 catalog (D1 registered). */
+export const VOXEL_CODEX_ASSETS: MapAsset[] = [
+  {
+    id: "anvil_station",
+    name: "Anvil (smith station)",
+    path: "models/voxel/content/anvil.glb",
+    kind: "scene",
+    blurb: "Forge station · defs anvil/smithing · Codex craft.",
+    r2Key: "models/voxel/content/anvil.glb",
+    category: "voxel_content",
+    codexBlocks: ["anvil", "iron_block"],
+    codexDefs: ["anvil", "smithing", "repair"],
+  },
+  {
+    id: "desert_portal",
+    name: "Desert Portal",
+    path: "models/voxel/content/desert_portal.glb",
+    kind: "scene",
+    blurb: "Portal prop · Realms door / dimension gate.",
+    r2Key: "models/voxel/content/desert_portal.glb",
+    category: "voxel_content",
+    codexBlocks: ["portal_frame", "sandstone", "obsidian"],
+    codexDefs: ["portal", "dimension_gate"],
+  },
+  {
+    id: "brick_modular_kit",
+    name: "Brick modular kit",
+    path: "models/voxel/content/brick_modular_kit.glb",
+    kind: "voxel",
+    blurb: "1 block = 1 m modular brick · build kit.",
+    r2Key: "models/voxel/content/brick_modular_kit.glb",
+    category: "voxel_content",
+    codexBlocks: ["brick", "stone_brick", "mortar"],
+    codexDefs: ["build_kit", "modular_wall"],
+  },
+  {
+    id: "t0_crossbow",
+    name: "T0 Crossbow",
+    path: "models/voxel/content/t0_crossbow.glb",
+    kind: "scene",
+    blurb: "Gear mesh · codex ranged_t0.",
+    r2Key: "models/voxel/content/t0_crossbow.glb",
+    category: "voxel_content",
+    codexBlocks: ["crossbow", "string", "iron_ingot"],
+    codexDefs: ["crossbow", "ranged_t0"],
+  },
+  {
+    id: "chaotic_marine_life",
+    name: "Chaotic Marine Life",
+    path: "models/voxel/animals/chaotic_marine_life.glb",
+    kind: "scene",
+    blurb: "Water fauna pack · fishing / shores.",
+    r2Key: "models/voxel/animals/chaotic_marine_life.glb",
+    category: "voxel_animal",
+    codexBlocks: ["water", "kelp", "sand"],
+    codexDefs: ["fish", "marine", "water_fauna"],
+  },
+  {
+    id: "hanu_animated",
+    name: "Hanu (animated)",
+    path: "models/voxel/animals/hanu_animated.glb",
+    kind: "scene",
+    blurb: "Forest creature · not grudge6 hero.",
+    r2Key: "models/voxel/animals/hanu_animated.glb",
+    category: "voxel_animal",
+    codexBlocks: ["grass", "leaves"],
+    codexDefs: ["hanu", "primate", "forest_fauna"],
+  },
+  {
+    id: "dragon_three_loops",
+    name: "Dragon (3 motion loops)",
+    path: "models/voxel/animals/dragon_three_loops.glb",
+    kind: "scene",
+    blurb: "Dragon boss / flying mount animations.",
+    r2Key: "models/voxel/animals/dragon_three_loops.glb",
+    category: "voxel_animal",
+    codexBlocks: ["obsidian", "lava"],
+    codexDefs: ["dragon", "boss", "flying_mount"],
+  },
+  {
+    id: "crystal_pangolin",
+    name: "Crystal Pangolin",
+    path: "models/voxel/animals/crystal_pangolin.glb",
+    kind: "scene",
+    blurb: "Crystal beast creature.",
+    r2Key: "models/voxel/animals/crystal_pangolin.glb",
+    category: "voxel_animal",
+    codexBlocks: ["crystal", "stone"],
+    codexDefs: ["pangolin", "crystal_beast"],
+  },
+  {
+    id: "vfx_tornado",
+    name: "VFX Tornado Vortex",
+    path: "models/voxel/vfx/tornado_vortex.glb",
+    kind: "scene",
+    blurb: "Wind skill AOE · /api/definitions wind.",
+    r2Key: "models/voxel/vfx/tornado_vortex.glb",
+    category: "voxel_vfx",
+    codexDefs: ["tornado", "wind_skill", "aoe_vortex"],
+  },
+  {
+    id: "vfx_energy_stream",
+    name: "VFX Energy Stream",
+    path: "models/voxel/vfx/energy_particle_stream.glb",
+    kind: "scene",
+    blurb: "Channel / beam skill VFX.",
+    r2Key: "models/voxel/vfx/energy_particle_stream.glb",
+    category: "voxel_vfx",
+    codexDefs: ["energy_stream", "channel", "beam"],
+  },
+  {
+    id: "vfx_rasenshuriken",
+    name: "VFX Wind Rasenshuriken",
+    path: "models/voxel/vfx/wind_rasenshuriken.glb",
+    kind: "scene",
+    blurb: "Charged wind projectile VFX.",
+    r2Key: "models/voxel/vfx/wind_rasenshuriken.glb",
+    category: "voxel_vfx",
+    codexDefs: ["rasenshuriken", "wind_projectile", "charged_shot"],
+  },
+  {
+    id: "vfx_kaens_spike",
+    name: "VFX Kaen's Spike",
+    path: "models/voxel/vfx/kaens_spike.glb",
+    kind: "scene",
+    blurb: "Earth ground-rise skill VFX.",
+    r2Key: "models/voxel/vfx/kaens_spike.glb",
+    category: "voxel_vfx",
+    codexDefs: ["spike", "earth_skill", "ground_rise"],
+  },
+  {
+    id: "vfx_fire_hurricane",
+    name: "VFX Fire Hurricane",
+    path: "models/voxel/vfx/fire_hurricane.glb",
+    kind: "scene",
+    blurb: "Fire AOE anime VFX.",
+    r2Key: "models/voxel/vfx/fire_hurricane.glb",
+    category: "voxel_vfx",
+    codexBlocks: ["fire", "magma"],
+    codexDefs: ["fire_hurricane", "fire_aoe", "anime_vfx"],
+  },
+  {
+    id: "vfx_antimatter",
+    name: "VFX Unstable Antimatter",
+    path: "models/voxel/vfx/unstable_antimatter.glb",
+    kind: "scene",
+    blurb: "Ultimate void burst VFX.",
+    r2Key: "models/voxel/vfx/unstable_antimatter.glb",
+    category: "voxel_vfx",
+    codexDefs: ["antimatter", "void_burst", "ultimate"],
+  },
+];
+
+/** Voxel editor templates + static maps + map chunks for the Maps tab. */
 export function listMapLibrary(): MapAsset[] {
   const voxels: MapAsset[] = MAP_TEMPLATES.map((t) => ({
     id: `voxel-${t.id}`,
@@ -389,7 +719,43 @@ export function listMapLibrary(): MapAsset[] {
     kind: "voxel" as const,
     blurb: t.desc,
   }));
-  return [...voxels, ...MAP_LIBRARY];
+  const chunks: MapAsset[] = listMapChunks().map((c) => ({
+    id: `chunk-${c.id}`,
+    name: c.label,
+    path: c.file,
+    kind: "map_chunk" as const,
+    blurb: c.blurb || `Map chunk · 1 block = 1 m · tags: ${(c.tags || []).join(", ")}`,
+    r2Key: c.file,
+    category: "voxel_map",
+  }));
+  // Dedupe by id (MAP_LIBRARY already lists many last-30 ids)
+  const seen = new Set<string>();
+  const out: MapAsset[] = [];
+  for (const m of [...voxels, ...MAP_LIBRARY, ...VOXEL_CODEX_ASSETS, ...chunks]) {
+    if (seen.has(m.id)) continue;
+    seen.add(m.id);
+    out.push(m);
+  }
+  return out;
+}
+
+/**
+ * Resolve Mine-Loader Codex URLs for a library row (blocks + defs).
+ * Used by production Maps/Codex panels to deep-link.
+ */
+export function codexLinksForMap(asset: MapAsset): {
+  blocksUrl: string;
+  defsUrl: string;
+  blockIds: string[];
+  defIds: string[];
+} {
+  const base = MINE_LOADER_LIVE.replace(/\/+$/, "");
+  return {
+    blocksUrl: `${base}/api/blocks`,
+    defsUrl: `${base}/api/definitions`,
+    blockIds: asset.codexBlocks || [],
+    defIds: asset.codexDefs || [],
+  };
 }
 
 async function tryJson<T>(urls: string[]): Promise<T | null> {

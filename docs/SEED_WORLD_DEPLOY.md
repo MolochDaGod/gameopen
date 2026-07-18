@@ -52,6 +52,23 @@ import { evaluateAssetRole, scaleForMapChunkId, MAP_CHUNKS } from "@workspace/vo
 **Staging:** `models/warlords-era/worlds/castle_eltz.glb`  
 **API:** `lib/voxel-canonical/src/mapAssetScale.ts` · `artifacts/animator/src/three/voxel/mapChunks.ts`
 
+### v4 catalog purge (2026-07-18)
+
+| Action | What |
+|--------|------|
+| **Purged featured** | All Rascals rows + swamp/mega demoted (`featured: false`) |
+| **Kept featured seeds** | Grudge Plains, Frost Coast, Ember Peaks, Desert Sun |
+| **Added featured map chunks** | castle_eltz, pirat_bay, island_life, animal_company_lobby, grotto, tower_koth, floating islands, geonosis |
+| **SSOT catalogs** | `seed-deployments.json` v4 · `voxel-map-chunk-deployments.json` · `voxel-last30-catalog.json` |
+| **D1** | `asset_registry` categories `voxel_map\|animal\|content\|vfx` · sourceSet `voxel-last30-downloads` |
+| **CDN** | `https://assets.grudge-studio.com/models/voxel/**` |
+| **Codex** | Each map-chunk deploy carries `codexBlocks` / `codexDefs` → Mine-Loader `/api/blocks` + `/api/definitions` |
+
+```bash
+npm run assets:voxel-last30:deployments      # rebuild + mirror public/
+npm run assets:voxel-last30:seed-d1:apply    # D1 registry
+```
+
 ---
 
 ## Goal

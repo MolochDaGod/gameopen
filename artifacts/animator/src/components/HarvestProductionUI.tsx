@@ -819,15 +819,34 @@ export function HarvestProductionUI({
                         }
                       }}
                     >
-                      <span className="hp-card-glyph">🌱</span>
+                      <span className="hp-card-glyph">
+                        {dep.world.mapChunkId ? "🗺" : "🌱"}
+                      </span>
                       <span className="hp-card-title">{dep.world.name}</span>
                       <span className="hp-card-blurb">{dep.world.blurb}</span>
                       <span className="hp-card-meta">
                         seed {String(dep.world.seed)} · #{dep.world.seedNumber} · chunk{" "}
                         {dep.world.chunkIdx} ({chunkBlocks(dep.world.chunkIdx)}²) · {dep.world.biome}
+                        {dep.world.mapChunkId ? ` · mapChunk ${dep.world.mapChunkId}` : ""}
                       </span>
+                      {dep.world.codexBlocks?.length || dep.world.codexDefs?.length ? (
+                        <span className="hp-card-meta" title="Mine-Loader Codex">
+                          📘{" "}
+                          {dep.world.codexBlocks?.length
+                            ? `blocks: ${dep.world.codexBlocks.slice(0, 4).join(", ")}`
+                            : ""}
+                          {dep.world.codexBlocks?.length && dep.world.codexDefs?.length
+                            ? " · "
+                            : ""}
+                          {dep.world.codexDefs?.length
+                            ? `defs: ${dep.world.codexDefs.slice(0, 3).join(", ")}`
+                            : ""}
+                        </span>
+                      ) : null}
                       <span className="hp-badge soft">
-                        {dep.portals.length} portals → dungeons · chunk gen
+                        {dep.portals.length} portals → dungeons
+                        {dep.world.mapChunkId ? " · map shell" : " · chunk gen"}
+                        {dep.world.featured ? " · featured" : ""}
                       </span>
                     </div>
                   );
@@ -957,12 +976,31 @@ export function HarvestProductionUI({
                             ? "🕳"
                             : m.kind === "voxel"
                               ? "🧊"
-                              : "📐"}
+                              : m.kind === "map_chunk"
+                                ? "🗺"
+                                : "📐"}
                     </span>
                     <span className="hp-card-title">{m.name}</span>
                     <span className="hp-card-blurb">{m.blurb}</span>
                     <span className="hp-card-meta">{m.path}</span>
                     <span className="hp-badge soft">{m.kind}</span>
+                    {m.category && (
+                      <span className="hp-badge soft" title="D1 category">
+                        {m.category}
+                      </span>
+                    )}
+                    {(m.codexBlocks?.length || m.codexDefs?.length) ? (
+                      <span className="hp-card-meta" title="Mine-Loader Codex links">
+                        📘{" "}
+                        {m.codexBlocks?.length
+                          ? `blocks: ${m.codexBlocks.slice(0, 5).join(", ")}${m.codexBlocks.length > 5 ? "…" : ""}`
+                          : ""}
+                        {m.codexBlocks?.length && m.codexDefs?.length ? " · " : ""}
+                        {m.codexDefs?.length
+                          ? `defs: ${m.codexDefs.slice(0, 4).join(", ")}${m.codexDefs.length > 4 ? "…" : ""}`
+                          : ""}
+                      </span>
+                    ) : null}
                     {m.kind === "island" && (
                       <button
                         type="button"
@@ -974,6 +1012,16 @@ export function HarvestProductionUI({
                         }
                       >
                         Enter Realms
+                      </button>
+                    )}
+                    {(m.kind === "map_chunk" || m.codexBlocks?.length || m.codexDefs?.length) && (
+                      <button
+                        type="button"
+                        className="hp-btn ghost"
+                        title="Open Mine-Loader Codex (blocks API)"
+                        onClick={() => window.open(openMineLoaderCodex(), "_blank", "noopener,noreferrer")}
+                      >
+                        Open Codex
                       </button>
                     )}
                     {m.kind === "voxel" && (
@@ -1002,7 +1050,7 @@ export function HarvestProductionUI({
                 Craftpix Part 5 weapon / class skill book for production. Unlock harvest,
                 crafting, building, survival, explorer, and <b>weapon combat</b> nodes.
                 Weapon tree gates Danger Room slots 1–4 and ties equipped kit skills (anims +
-                VFX) to progression. Local until Railway <code>/api/professions</code>.
+                VFX) to progression. Progress saves to character bag when signed in; otherwise local.
               </p>
               {trees.length ? (
                 <ClassSkillTreePanel
@@ -1039,7 +1087,7 @@ export function HarvestProductionUI({
               <p className="hp-lead">
                 <b>Heroes</b> = your Warlords campfire roster (max {GRUDOX_MAX_SLOTS} user characters
                 from Railway / GRUDOX). <b>Units</b> = explorers and faction troops — same catalog
-                role for RTS, harvest, and combat labs. GRUDACHAIN QA library removed for production.
+                role for RTS, harvest, and combat labs.
               </p>
               <div className="hp-char-cols">
                 <div>
@@ -1134,7 +1182,10 @@ export function HarvestProductionUI({
                 Inclusive design map for harvest, craft, build, codex, maps, skill trees, and avatar
                 import — how the production loop fits together. Engine stack SSOT: Three{" "}
                 {ENGINE_STACK.three} · Rapier {ENGINE_STACK.rapier} · {ENGINE_STACK.vfxPrimary} ·
-                HUD {ENGINE_STACK.hud2dPrimary}.
+                HUD {ENGINE_STACK.hud2dPrimary}.{" "}
+                <a href={`${import.meta.env.BASE_URL}docs/fleet-spider.html`} target="_blank" rel="noreferrer">
+                  Fleet spider map ↗
+                </a>
               </p>
               <div className="hp-grid chars" style={{ marginBottom: 16 }}>
                 {Object.entries(engineStackSnapshot().hosts).map(([k, v]) => (

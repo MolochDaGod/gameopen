@@ -1,9 +1,18 @@
 {
   "format": "grudge.seed-world.catalog.v1",
-  "version": 2,
-  "label": "Minecraft-like seed world deployments",
-  "notes": "Same seed ⇒ same open world base + portal positions. chunkIdx MUST be 0..7 (Mine-Loader CHUNK_SIZES: 16,32,64,96,128,256,512,1024). Dungeons are reached only via portals. Multiplayer authority = Mine-Loader Railway (seed + scene + block edits).",
-  "chunkSizes": [16, 32, 64, 96, 128, 256, 512, 1024],
+  "version": 4,
+  "label": "Minecraft-like seed + voxel map-chunk deployments",
+  "notes": "v4: purged old rascals/swamp featured flags. Featured = core procedural seeds + last-30 map chunks (castle_eltz, pirate bay, island_life, lobby, grotto, koth, floating islands, geonosis). Map chunks use MAP_CHUNKS scale (1 block=1m). Codex: /api/blocks + /api/definitions. Full map list: content/worlds/voxel-map-chunk-deployments.json · D1 sourceSet voxel-last30-downloads.",
+  "chunkSizes": [
+    16,
+    32,
+    64,
+    96,
+    128,
+    256,
+    512,
+    1024
+  ],
   "api": {
     "blocks": "https://mine-loader-api-production.up.railway.app/api/blocks",
     "worlds": "https://mine-loader-api-production.up.railway.app/api/worlds",
@@ -20,6 +29,289 @@
   ],
   "deployments": [
     {
+      "id": "mapchunk-grotto-cavern-cave",
+      "name": "Grotto Cavern Cave",
+      "blurb": "Grotto / cavern map chunk — stone+ore palette · mapChunk=grotto_cavern_cave · codex blocks linked",
+      "seed": "mapchunk-grotto_cavern_cave",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "grotto_cavern_cave",
+      "mesh": "models/voxel/maps/grotto_cavern_cave.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/grotto_cavern_cave.glb",
+      "codexBlocks": [
+        "stone",
+        "cobble",
+        "dirt",
+        "gravel",
+        "water",
+        "iron_ore"
+      ],
+      "codexDefs": [
+        "cave",
+        "dungeon_entrance"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "crypt",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-geonosis-arena",
+      "name": "Geonosis Arena",
+      "blurb": "Arena floor for PvP / spar · mapChunk=geonosis_arena · codex blocks linked",
+      "seed": "mapchunk-geonosis_arena",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "geonosis_arena",
+      "mesh": "models/voxel/maps/geonosis_arena.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/geonosis_arena.glb",
+      "codexBlocks": [
+        "sand",
+        "sandstone",
+        "stone",
+        "red_sand"
+      ],
+      "codexDefs": [
+        "arena",
+        "pvp_ring"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-floating-islands-dwarves-haven",
+      "name": "Floating Islands Dwarves Haven",
+      "blurb": "Floating island map — sky Realms seed · mapChunk=floating_islands_dwarves_haven · codex blocks linked",
+      "seed": "mapchunk-floating_islands_dwarves_haven",
+      "chunkIdx": 5,
+      "biome": "mountains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "floating_islands_dwarves_haven",
+      "mesh": "models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "codexBlocks": [
+        "grass",
+        "dirt",
+        "stone",
+        "wood_plank",
+        "cloud"
+      ],
+      "codexDefs": [
+        "sky_island",
+        "dwarf_haven"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-tower-koth",
+      "name": "Tower Koth",
+      "blurb": "King-of-the-hill tower map · mapChunk=tower_koth · codex blocks linked",
+      "seed": "mapchunk-tower_koth",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "tower_koth",
+      "mesh": "models/voxel/maps/tower_koth.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/tower_koth.glb",
+      "codexBlocks": [
+        "stone_brick",
+        "wood_plank",
+        "ladder",
+        "torch"
+      ],
+      "codexDefs": [
+        "koth",
+        "control_point"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-pirat-bay",
+      "name": "Pirat Bay",
+      "blurb": "Pirate bay coastal map chunk · mapChunk=pirat_bay · codex blocks linked",
+      "seed": "mapchunk-pirat_bay",
+      "chunkIdx": 5,
+      "biome": "coast",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "pirat_bay",
+      "mesh": "models/voxel/maps/pirat_bay.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/pirat_bay.glb",
+      "codexBlocks": [
+        "sand",
+        "water",
+        "wood_plank",
+        "barrel",
+        "palm_log"
+      ],
+      "codexDefs": [
+        "pirate_bay",
+        "harbor"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-animal-company-lobby",
+      "name": "Animal Company Lobby",
+      "blurb": "Animal Company lobby spawn v3 · mapChunk=animal_company_lobby · codex blocks linked",
+      "seed": "mapchunk-animal_company_lobby",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "animal_company_lobby",
+      "mesh": "models/voxel/maps/animal_company_lobby.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/animal_company_lobby.glb",
+      "codexBlocks": [
+        "grass",
+        "wood_plank",
+        "stone",
+        "fence"
+      ],
+      "codexDefs": [
+        "lobby",
+        "spawn_hub"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-castle-eltz",
+      "name": "Castle Eltz",
+      "blurb": "Castle Eltz map chunk — scale 1 (metres already) · mapChunk=castle_eltz · codex blocks linked",
+      "seed": "mapchunk-castle_eltz",
+      "chunkIdx": 6,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "castle_eltz",
+      "mesh": "models/warlords-era/worlds/castle_eltz.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/warlords-era/worlds/castle_eltz.glb",
+      "codexBlocks": [
+        "stone_brick",
+        "cobble",
+        "wood_plank",
+        "glass",
+        "roof_tile"
+      ],
+      "codexDefs": [
+        "castle",
+        "stronghold",
+        "seed_world"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-island-life",
+      "name": "Island Life",
+      "blurb": "Mineways island_life full world (multipart R2) · mapChunk=island_life · codex blocks linked",
+      "seed": "mapchunk-island_life",
+      "chunkIdx": 7,
+      "biome": "coast",
+      "featured": true,
+      "deploy": "open-playtest",
+      "mapChunkId": "island_life",
+      "mesh": "models/worlds/island_life.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/worlds/island_life.glb",
+      "codexBlocks": [
+        "grass",
+        "dirt",
+        "sand",
+        "water",
+        "log",
+        "leaves",
+        "ore_iron"
+      ],
+      "codexDefs": [
+        "overworld",
+        "island_life"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
       "id": "seed-grudge-plains",
       "name": "Grudge Plains",
       "blurb": "Starter overworld seed (256²) — four themed portals to dungeons.",
@@ -33,7 +325,12 @@
         "radiusMin": 28,
         "radiusMax": 88,
         "surfaceY": 2,
-        "themes": ["ruins", "crypt", "mine", "temple"]
+        "themes": [
+          "ruins",
+          "crypt",
+          "mine",
+          "temple"
+        ]
       }
     },
     {
@@ -50,7 +347,11 @@
         "radiusMin": 32,
         "radiusMax": 110,
         "surfaceY": 2,
-        "themes": ["temple", "mine", "crypt"]
+        "themes": [
+          "temple",
+          "mine",
+          "crypt"
+        ]
       }
     },
     {
@@ -67,7 +368,13 @@
         "radiusMin": 40,
         "radiusMax": 140,
         "surfaceY": 4,
-        "themes": ["mine", "ruins", "temple", "crypt", "mine"]
+        "themes": [
+          "mine",
+          "ruins",
+          "temple",
+          "crypt",
+          "mine"
+        ]
       }
     },
     {
@@ -84,7 +391,11 @@
         "radiusMin": 20,
         "radiusMax": 70,
         "surfaceY": 1,
-        "themes": ["crypt", "ruins", "crypt"]
+        "themes": [
+          "crypt",
+          "ruins",
+          "crypt"
+        ]
       }
     },
     {
@@ -94,14 +405,19 @@
       "seed": "desert-sun-42",
       "chunkIdx": 5,
       "biome": "desert",
-      "featured": false,
+      "featured": true,
       "deploy": "both",
       "portalPlan": {
         "portalCount": 4,
         "radiusMin": 36,
         "radiusMax": 100,
         "surfaceY": 2,
-        "themes": ["temple", "mine", "ruins", "temple"]
+        "themes": [
+          "temple",
+          "mine",
+          "ruins",
+          "temple"
+        ]
       }
     },
     {
@@ -118,8 +434,432 @@
         "radiusMin": 48,
         "radiusMax": 180,
         "surfaceY": 2,
-        "themes": ["ruins", "crypt", "mine", "temple", "ruins", "mine"]
+        "themes": [
+          "ruins",
+          "crypt",
+          "mine",
+          "temple",
+          "ruins",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "seed-rascals-retreat-plains-0000",
+      "name": "Rascals plains #0",
+      "blurb": "Seed from Rascals Retreat material kit · Rascals Hub Island · 4 portals",
+      "seed": "rascals-retreat-plains-0000",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": false,
+      "deploy": "both",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 107,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "seed-rascals-retreat-mountains-0002",
+      "name": "Rascals mountains #2",
+      "blurb": "Seed from Rascals Retreat material kit · Industrial Bay · 5 portals",
+      "seed": "rascals-retreat-mountains-0002",
+      "chunkIdx": 6,
+      "biome": "mountains",
+      "featured": false,
+      "deploy": "mine-loader",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 5,
+        "radiusMin": 38,
+        "radiusMax": 84,
+        "surfaceY": 4,
+        "themes": [
+          "mine",
+          "temple",
+          "ruins"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "seed-rascals-retreat-coast-0006",
+      "name": "Rascals coast #6",
+      "blurb": "Seed from Rascals Retreat material kit · Lit Cave Veins · 5 portals",
+      "seed": "rascals-retreat-coast-0006",
+      "chunkIdx": 6,
+      "biome": "coast",
+      "featured": false,
+      "deploy": "mine-loader",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 5,
+        "radiusMin": 33,
+        "radiusMax": 110,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "temple",
+          "ruins"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "seed-rascals-retreat-cave-0007",
+      "name": "Rascals cave #7",
+      "blurb": "Seed from Rascals Retreat material kit · Industrial Bay · 3 portals",
+      "seed": "rascals-retreat-cave-0007",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "both",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 39,
+        "radiusMax": 102,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "crypt",
+          "ruins"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "seed-rascals-retreat-volcanic-0008",
+      "name": "Rascals volcanic #8",
+      "blurb": "Seed from Rascals Retreat material kit · Purpur Overlook · 3 portals",
+      "seed": "rascals-retreat-volcanic-0008",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "mine-loader",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 29,
+        "radiusMax": 120,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "seed-rascals-retreat-industrial-0009",
+      "name": "Rascals industrial #9",
+      "blurb": "Seed from Rascals Retreat material kit · Glass Atrium Interior · 3 portals",
+      "seed": "rascals-retreat-industrial-0009",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "mine-loader",
+      "sourceCollection": "rascals_retreat_collection",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 29,
+        "radiusMax": 105,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "ruins",
+          "temple"
+        ]
+      },
+      "purgedFeatured": true
+    },
+    {
+      "id": "mapchunk-dragon-head-cave",
+      "name": "Dragon Head Cave",
+      "blurb": "Dragon-head cavern arena chunk · mapChunk=dragon_head_cave",
+      "seed": "mapchunk-dragon_head_cave",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "dragon_head_cave",
+      "mesh": "models/voxel/maps/dragon_head_cave.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/dragon_head_cave.glb",
+      "codexBlocks": [
+        "stone",
+        "obsidian",
+        "lava",
+        "netherrack",
+        "gold_ore"
+      ],
+      "codexDefs": [
+        "boss_lair",
+        "dragon_den"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "mine",
+          "crypt",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-glowstone-mountain-oriental",
+      "name": "Glowstone Mountain Oriental",
+      "blurb": "Glowstone mountain themed chunk · mapChunk=glowstone_mountain_oriental",
+      "seed": "mapchunk-glowstone_mountain_oriental",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "glowstone_mountain_oriental",
+      "mesh": "models/voxel/maps/glowstone_mountain_oriental.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/glowstone_mountain_oriental.glb",
+      "codexBlocks": [
+        "glowstone",
+        "stone",
+        "dirt",
+        "grass",
+        "lantern"
+      ],
+      "codexDefs": [
+        "glow_mountain",
+        "oriental_theme"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-glowstone-mountain",
+      "name": "Glowstone Mountain",
+      "blurb": "Glowstone mountain base variant · mapChunk=glowstone_mountain",
+      "seed": "mapchunk-glowstone_mountain",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "glowstone_mountain",
+      "mesh": "models/voxel/maps/glowstone_mountain.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/glowstone_mountain.glb",
+      "codexBlocks": [
+        "glowstone",
+        "stone",
+        "dirt"
+      ],
+      "codexDefs": [
+        "glow_mountain"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-low-poly-canyon",
+      "name": "Low Poly Canyon",
+      "blurb": "Canyon terrain seed · mapChunk=low_poly_canyon",
+      "seed": "mapchunk-low_poly_canyon",
+      "chunkIdx": 5,
+      "biome": "desert",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "low_poly_canyon",
+      "mesh": "models/voxel/maps/low_poly_canyon.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/low_poly_canyon.glb",
+      "codexBlocks": [
+        "sandstone",
+        "sand",
+        "stone",
+        "cactus"
+      ],
+      "codexDefs": [
+        "canyon",
+        "desert_biome"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "temple",
+          "mine",
+          "ruins"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-koth-bundle",
+      "name": "Koth Bundle",
+      "blurb": "KOTH multi-map bundle · mapChunk=koth_bundle",
+      "seed": "mapchunk-koth_bundle",
+      "chunkIdx": 5,
+      "biome": "mixed",
+      "featured": false,
+      "deploy": "both",
+      "mapChunkId": "koth_bundle",
+      "mesh": "models/voxel/maps/koth_bundle.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/koth_bundle.glb",
+      "codexBlocks": [
+        "stone_brick",
+        "grass",
+        "wood_plank"
+      ],
+      "codexDefs": [
+        "koth",
+        "multi_arena"
+      ],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "temple"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-dalaran-fantasy-island",
+      "name": "Dalaran Fantasy Island",
+      "blurb": "Dalaran-style fantasy island challenge · mapChunk=dalaran_fantasy_island",
+      "seed": "mapchunk-dalaran_fantasy_island",
+      "chunkIdx": 6,
+      "biome": "mountains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "dalaran_fantasy_island",
+      "mesh": "models/voxel/maps/dalaran_fantasy_island.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/dalaran_fantasy_island.glb",
+      "codexBlocks": [
+        "stone_brick",
+        "grass",
+        "water",
+        "wood_plank",
+        "crystal"
+      ],
+      "codexDefs": [
+        "fantasy_island",
+        "challenge_map"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-faction-spawn-castle-town",
+      "name": "Faction Spawn Castle Town",
+      "blurb": "Faction spawn castle + town mega map · mapChunk=faction_spawn_castle_town",
+      "seed": "mapchunk-faction_spawn_castle_town",
+      "chunkIdx": 7,
+      "biome": "plains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "faction_spawn_castle_town",
+      "mesh": "models/voxel/maps/faction_spawn_castle_town.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/faction_spawn_castle_town.glb",
+      "codexBlocks": [
+        "stone_brick",
+        "wood_plank",
+        "cobble",
+        "grass",
+        "roof_tile"
+      ],
+      "codexDefs": [
+        "faction_spawn",
+        "castle_town"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "crypt",
+          "temple",
+          "mine"
+        ]
+      }
+    },
+    {
+      "id": "mapchunk-awesome-realm-world",
+      "name": "Awesome Realm World",
+      "blurb": "Awesome Realm full world mesh · mapChunk=awesome_realm_world",
+      "seed": "mapchunk-awesome_realm_world",
+      "chunkIdx": 7,
+      "biome": "plains",
+      "featured": false,
+      "deploy": "open-playtest",
+      "mapChunkId": "awesome_realm_world",
+      "mesh": "models/voxel/maps/awesome_realm_world.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/awesome_realm_world.glb",
+      "codexBlocks": [
+        "grass",
+        "stone",
+        "dirt",
+        "water",
+        "wood_plank"
+      ],
+      "codexDefs": [
+        "realm_world",
+        "overworld"
+      ],
+      "portalPlan": {
+        "portalCount": 4,
+        "radiusMin": 28,
+        "radiusMax": 100,
+        "surfaceY": 2,
+        "themes": [
+          "ruins",
+          "mine",
+          "temple",
+          "crypt"
+        ]
       }
     }
-  ]
+  ],
+  "updated": "2026-07-18",
+  "mapChunkCatalog": "content/worlds/voxel-map-chunk-deployments.json",
+  "last30Catalog": "content/worlds/voxel-last30-catalog.json"
 }

@@ -37,6 +37,17 @@ export interface SeedCatalogEntry {
   deploy: "mine-loader" | "open-playtest" | "both";
   portalPlan?: Partial<SeedPortalPlan>;
   portals?: SeedPortal[];
+  /** MAP_CHUNKS id — load mesh via loadMapChunk (1 block = 1 m). */
+  mapChunkId?: string;
+  /** Public / R2 mesh path */
+  mesh?: string;
+  /** assets.grudge-studio.com URL when registered */
+  cdnUrl?: string;
+  /** Mine-Loader codex block ids (palette hints) */
+  codexBlocks?: string[];
+  /** Mine-Loader definition ids */
+  codexDefs?: string[];
+  sourceCollection?: string;
 }
 
 export interface SeedCatalog {
@@ -46,6 +57,9 @@ export interface SeedCatalog {
   notes: string;
   journey: string[];
   deployments: SeedCatalogEntry[];
+  mapChunkCatalog?: string;
+  last30Catalog?: string;
+  updated?: string;
 }
 
 const FALLBACK_CATALOG: SeedCatalog = {
@@ -125,6 +139,11 @@ export function catalogEntryToDeployment(entry: SeedCatalogEntry): SeedWorldDepl
     deploy: entry.deploy,
     portalPlan: entry.portalPlan,
     portals: entry.portals,
+    mapChunkId: entry.mapChunkId,
+    mesh: entry.mesh,
+    cdnUrl: entry.cdnUrl,
+    codexBlocks: entry.codexBlocks,
+    codexDefs: entry.codexDefs,
   });
 }
 

@@ -149,6 +149,16 @@ export interface SeedWorldMeta {
   featured?: boolean;
   /** Deploy surface. */
   deploy: "mine-loader" | "open-playtest" | "both";
+  /** MAP_CHUNKS id — mesh uses mapAssetScale (1 block = 1 m). */
+  mapChunkId?: string;
+  /** Public / R2 mesh path for the map shell. */
+  mesh?: string;
+  /** CDN URL when registered on assets.grudge-studio.com. */
+  cdnUrl?: string;
+  /** Mine-Loader codex block ids (palette hints). */
+  codexBlocks?: string[];
+  /** Mine-Loader definition ids. */
+  codexDefs?: string[];
 }
 
 /**
@@ -265,6 +275,11 @@ export function buildSeedDeployment(opts: {
   deploy?: SeedWorldMeta["deploy"];
   worldId?: string;
   featured?: boolean;
+  mapChunkId?: string;
+  mesh?: string;
+  cdnUrl?: string;
+  codexBlocks?: string[];
+  codexDefs?: string[];
   /** Fixed portals override auto-placement (still dungeon seeds mix from world). */
   portals?: SeedPortal[];
   sceneOverlay?: Partial<VoxelRealmsScene> | null;
@@ -296,6 +311,11 @@ export function buildSeedDeployment(opts: {
       worldId: opts.worldId,
       featured: opts.featured,
       deploy: opts.deploy ?? "both",
+      mapChunkId: opts.mapChunkId,
+      mesh: opts.mesh,
+      cdnUrl: opts.cdnUrl,
+      codexBlocks: opts.codexBlocks,
+      codexDefs: opts.codexDefs,
     },
     portals,
     sceneOverlay: opts.sceneOverlay ?? null,

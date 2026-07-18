@@ -1,0 +1,123 @@
+{
+  "format": "grudge.island-life.deployments.v1",
+  "version": 2,
+  "label": "Island Life survival RPG island",
+  "notes": "Map + wildlife from voxel-last30 (D1/CDN). Wildlife = last30 animals only (no COTW). Orcs/bandits polyart paths retained for raids.",
+  "open": {
+    "testWorldId": "island-life",
+    "modeId": "island-life",
+    "path": "/danger?testWorld=island-life"
+  },
+  "source": {
+    "map": "D:/Games/Models/island_life.glb",
+    "ores": "D:/Games/Models/minecrafts_trailer_style_ores.glb",
+    "orcZip": "D:/Games/Models/Orc_Free.zip",
+    "banditZip": "D:/Games/Models/Bandits_Free.zip"
+  },
+  "public": {
+    "map": "models/worlds/island_life.glb",
+    "ores": "models/blocks/minecrafts_trailer_style_ores.glb",
+    "orcs": [
+      "models/enemies/polyart/orcs/ash-walker.glb",
+      "models/enemies/polyart/orcs/bone-whittler.glb",
+      "models/enemies/polyart/orcs/ironbound-marauder.glb"
+    ],
+    "bandits": [
+      "models/enemies/polyart/bandits/poacher.glb",
+      "models/enemies/polyart/bandits/scavenger.glb",
+      "models/enemies/polyart/bandits/thug.glb"
+    ],
+    "wildlifeVoxel": [
+      "models/voxel/animals/brute_minion_p2.glb",
+      "models/voxel/animals/chaotic_marine_life.glb",
+      "models/voxel/animals/hanu_animated.glb",
+      "models/voxel/animals/dragon_three_loops.glb",
+      "models/voxel/animals/dragon_run_loop.glb",
+      "models/voxel/animals/wing_animated.glb",
+      "models/voxel/animals/crystal_pangolin.glb"
+    ],
+    "mapCdn": "https://assets.grudge-studio.com/models/worlds/island_life.glb",
+    "wildlifeCdn": [
+      "https://assets.grudge-studio.com/models/voxel/animals/brute_minion_p2.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/chaotic_marine_life.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/hanu_animated.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/dragon_three_loops.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/dragon_run_loop.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/wing_animated.glb",
+      "https://assets.grudge-studio.com/models/voxel/animals/crystal_pangolin.glb"
+    ]
+  },
+  "gameplay": {
+    "mushroomTribes": [
+      {
+        "material": "Red_Mushroom",
+        "tribe": "orc_tribe",
+        "units": [
+          "orc_ash_walker",
+          "orc_bone_whittler",
+          "orc_ironbound"
+        ]
+      },
+      {
+        "material": "Red_Mushroom_Block",
+        "tribe": "outlaw_camp",
+        "units": [
+          "bandit_thug",
+          "bandit_poacher",
+          "bandit_scavenger"
+        ]
+      }
+    ],
+    "raids": {
+      "boat": "procedural voxel boat",
+      "intervalSec": 180,
+      "firstDelaySec": 90,
+      "raiders": "3-5 bandits"
+    },
+    "blocks": {
+      "editableFromIsland": [
+        "Dirt",
+        "Grass_Block",
+        "Cobblestone",
+        "Coal_Ore",
+        "Iron_Ore",
+        "Gold_Ore",
+        "Diamond_Ore",
+        "Emerald_Ore",
+        "Lapis_Lazuli_Ore",
+        "Redstone_Ore",
+        "Oak_Log",
+        "Crafting_Table",
+        "Chest",
+        "Furnace"
+      ],
+      "trailerOrePack": "models/blocks/minecrafts_trailer_style_ores.glb"
+    }
+  },
+  "convert": {
+    "script": "artifacts/animator/scripts/convert-fbx-to-glb.mjs --batch-orcs-bandits",
+    "extracted": "D:/Games/Models/_extracted/Orc_Free and Bandits_Free"
+  },
+  "updated": "2026-07-18",
+  "codex": {
+    "blocks": [
+      "grass",
+      "dirt",
+      "sand",
+      "water",
+      "log",
+      "leaves",
+      "ore_iron"
+    ],
+    "defs": [
+      "overworld",
+      "island_life"
+    ],
+    "apis": {
+      "blocks": "/api/blocks",
+      "definitions": "/api/definitions",
+      "live": "https://mine-loader.vercel.app",
+      "openProxy": "open.grudge-studio.com same-origin /api/blocks|/api/definitions"
+    }
+  }
+}

@@ -38,5 +38,10 @@ artifacts/animator/public/models/vfx/witch_hut_in_a_swamp.glb
 
 # Local map chunks (upload to R2, not git)
 artifacts/animator/public/models/warlords-era/worlds/*.glb
+artifacts/animator/public/models/warlords-era/**/*.glb
 artifacts/animator/public/models/maps/*.glb
+# Voxel last-30 + packs — R2/D1 only (never git LFS for multi-100MB maps)
+artifacts/animator/public/models/voxel/**/*.glb
+artifacts/animator/public/models/voxel-only/**/*
+artifacts/animator/public/models/battle/**/*.glb
 
