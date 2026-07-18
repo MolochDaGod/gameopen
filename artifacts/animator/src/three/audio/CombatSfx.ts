@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { musicStation } from "./musicStation";
 
 // Combat SFX library (self-hosted .wav one-shots). The engine forbids
 // `@workspace/*` imports; these `@assets/*` URLs resolve to bundled audio files.
@@ -286,7 +287,9 @@ export class CombatSfx {
     if (this.disposed) return;
     this.ready = true;
     this.startAmbient();
-    this.startMusic();
+    // Prefer app-wide CPT RAC / radio (real MP3s). Generative synth only if
+    // the station has no playlist yet.
+    if (!musicStation.isActive()) this.startMusic();
   }
 
   /** Resume the audio context (call from a user-gesture handler). */
@@ -435,6 +438,11 @@ export class CombatSfx {
    * `null` when the bed isn't running yet. See {@link MusicPulse}.
    */
   getMusicPulse(): MusicPulse | null {
+    // Live DJ / radio station pulse when real tracks are playing.
+    if (musicStation.isActive()) {
+      const p = musicStation.getPulse();
+      if (p) return p;
+    }
     const m = this.music;
     if (!m) return null;
     const dur = m.noteDur > 1e-4 ? m.noteDur : MUSIC_NOTE_DUR;

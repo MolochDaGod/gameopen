@@ -30,6 +30,7 @@ import { deployAbility, getAbility, kitAbility, statusAbility, vfxSkill } from "
 import { dispatchStatusRouting, routeStatusScope } from "./abilities/statusScopeRouting";
 import type { AbilityDef, StatusScope } from "./abilities/abilityTypes";
 import { CombatSfx } from "./audio/CombatSfx";
+import { musicStation } from "./audio/musicStation";
 import { MechSystem } from "./mech/MechSystem";
 import { MechReconciler } from "./mech/mechReconcile";
 import {
@@ -2057,6 +2058,7 @@ export class Studio {
   setMuted(muted: boolean): void {
     this.sound.muted = muted;
     this.sfx?.setMuted(muted);
+    musicStation.setMuted(muted);
     saveSound(this.sound);
   }
 
@@ -2073,6 +2075,7 @@ export class Studio {
     const v = Math.max(0, Math.min(1, value));
     this.sound[channel] = v;
     this.sfx?.setLevels({ [channel]: v });
+    musicStation.setLevel(this.sound.music, this.sound.master);
     saveSound(this.sound);
   }
 
@@ -8913,6 +8916,7 @@ export class Studio {
     }
 
     this.room.update(t);
+    // Prefer live CPT RAC / radio pulse so the booth dances to real tracks.
     this.djBooth?.update(dt, this.sfx?.getMusicPulse() ?? null);
     // Door portal prompt: lit only in the Danger Room while standing at the arch.
     this.doorPrompt =

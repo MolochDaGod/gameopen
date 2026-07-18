@@ -1,39 +1,77 @@
-import { DJ_STATION_NAME, djStationUrls, djStationTitles } from "./djPlaylist";
+import {
+  DJ_STATION_NAME,
+  djStationUrls,
+  djStationTitles,
+  localPlaylistUrls,
+  localPlaylistTitles,
+  type LocalPlaylistId,
+} from "./djPlaylist";
 import { musicStation } from "./musicStation";
 
 /**
- * The selectable music stations. "cpt-rac" is the local CPT RAC Station
- * (Racalvin's bundled set); every other station streams free, legal music from
- * Audius (a free music platform with an open, CORS-enabled API — no key needed),
- * filtered to one genre so each reads as its own radio station. Instrumental
- * styles (lo-fi / ambient / classical / jazz) cover "music to build to".
+ * Selectable music stations for the whole Open app.
+ *
+ * Local (bundled MP3 under public/audio/dj/):
+ *  - cpt-rac — full CPT RAC / Racalvin set (default, app-wide)
+ *  - rac-anthems / warlords / remixes — curated subsets of the same library
+ *
+ * Streamed (Audius, free/legal, no key):
+ *  - lo-fi / ambient / classical / jazz / electronic / hip-hop / rock
  */
 export interface RadioStationDef {
   id: string;
   name: string;
-  /** Audius genre filter, or null for the local bundled playlist. */
+  /** Audius genre filter, or null for a local bundled playlist. */
   genre: string | null;
+  /** Local playlist key when genre is null. */
+  local?: LocalPlaylistId;
   /** Short user-facing description (tooltip). */
   hint: string;
 }
 
 export const RADIO_STATIONS: readonly RadioStationDef[] = [
-  { id: "cpt-rac", name: DJ_STATION_NAME, genre: null, hint: "Racalvin's own set — pirate trap anthems" },
-  { id: "lofi", name: "Lo-Fi Beats", genre: "Lo-Fi", hint: "Chill instrumental lo-fi — streamed free from Audius" },
-  { id: "ambient", name: "Ambient Drift", genre: "Ambient", hint: "Atmospheric instrumentals — streamed free from Audius" },
-  { id: "classical", name: "Classical & Score", genre: "Classical", hint: "Orchestral & piano instrumentals — streamed free from Audius" },
-  { id: "jazz", name: "Jazz Lounge", genre: "Jazz", hint: "Jazz — streamed free from Audius" },
-  { id: "electronic", name: "Electronic", genre: "Electronic", hint: "Electronic — streamed free from Audius" },
-  { id: "hiphop", name: "Hip-Hop", genre: "Hip-Hop/Rap", hint: "Hip-hop & rap — streamed free from Audius" },
-  { id: "rock", name: "Rock", genre: "Rock", hint: "Rock — streamed free from Audius" },
+  {
+    id: "cpt-rac",
+    name: DJ_STATION_NAME,
+    genre: null,
+    local: "full",
+    hint: "Racalvin's full set — pirate trap anthems (default app music)",
+  },
+  {
+    id: "rac-anthems",
+    name: "RAC Anthems",
+    genre: null,
+    local: "anthems",
+    hint: "Rac / pirate title tracks only",
+  },
+  {
+    id: "warlords-set",
+    name: "Warlords Set",
+    genre: null,
+    local: "warlords",
+    hint: "Horns, ironworks, siege energy",
+  },
+  {
+    id: "remixes",
+    name: "RAC Remixes",
+    genre: null,
+    local: "remixes",
+    hint: "Remix + experimental cuts",
+  },
+  { id: "lofi", name: "Lo-Fi Beats", genre: "Lo-Fi", hint: "Chill instrumental — free from Audius" },
+  { id: "ambient", name: "Ambient Drift", genre: "Ambient", hint: "Atmospheric — free from Audius" },
+  { id: "classical", name: "Classical & Score", genre: "Classical", hint: "Orchestral & piano — free from Audius" },
+  { id: "jazz", name: "Jazz Lounge", genre: "Jazz", hint: "Jazz — free from Audius" },
+  { id: "electronic", name: "Electronic", genre: "Electronic", hint: "Electronic — free from Audius" },
+  { id: "hiphop", name: "Hip-Hop", genre: "Hip-Hop/Rap", hint: "Hip-hop & rap — free from Audius" },
+  { id: "rock", name: "Rock", genre: "Rock", hint: "Rock — free from Audius" },
 ] as const;
 
 const STATION_KEY = "dangerroom:radiostation";
 const APP_NAME = "grudge-animator";
-/** How many trending tracks each Audius station carries. */
 const STATION_SIZE = 20;
 
-/** Load the persisted station choice (defaults to the local CPT RAC set). */
+/** Load the persisted station choice (defaults to full CPT RAC). */
 export function loadStationId(): string {
   try {
     const id = localStorage.getItem(STATION_KEY);
@@ -44,7 +82,6 @@ export function loadStationId(): string {
   return "cpt-rac";
 }
 
-/** Persist the station choice (best-effort). */
 export function saveStationId(id: string): void {
   try {
     localStorage.setItem(STATION_KEY, id);
@@ -58,11 +95,6 @@ export interface StationPlaylist {
   titles: string[];
 }
 
-/**
- * Per-station playlist cache. Audius fetches are cached for the session so a
- * mode switch (Studio rebuild) can re-assert the SAME url list — musicStation's
- * idempotent setPlaylist then leaves playback untouched.
- */
 const cache = new Map<string, StationPlaylist>();
 
 interface AudiusTrack {
@@ -73,7 +105,6 @@ interface AudiusTrack {
   user?: { name?: string };
 }
 
-/** Resolve a live Audius API host (their root endpoint lists healthy hosts). */
 async function audiusHost(): Promise<string> {
   const res = await fetch("https://api.audius.co");
   if (!res.ok) throw new Error(`audius host lookup failed: ${res.status}`);
@@ -83,7 +114,6 @@ async function audiusHost(): Promise<string> {
   return host;
 }
 
-/** Fetch a genre's trending tracks from Audius as a ready-to-play playlist. */
 async function fetchAudiusPlaylist(genre: string): Promise<StationPlaylist> {
   const host = await audiusHost();
   const url = `${host}/v1/tracks/trending?genre=${encodeURIComponent(genre)}&time=week&app_name=${APP_NAME}`;
@@ -106,13 +136,17 @@ async function fetchAudiusPlaylist(genre: string): Promise<StationPlaylist> {
   };
 }
 
+function localList(def: RadioStationDef): StationPlaylist {
+  const key = def.local ?? "full";
+  return { urls: localPlaylistUrls(key), titles: localPlaylistTitles(key) };
+}
+
 /**
- * Resolve a station's playlist (local list instantly; Audius via a cached
- * fetch). Throws on network/API failure for Audius stations.
+ * Resolve a station's playlist (local instantly; Audius via cache/fetch).
  */
 export async function stationPlaylist(id: string): Promise<StationPlaylist> {
-  const def = RADIO_STATIONS.find((s) => s.id === id) ?? RADIO_STATIONS[0];
-  if (!def.genre) return { urls: djStationUrls(), titles: djStationTitles() };
+  const def = RADIO_STATIONS.find((s) => s.id === id) ?? RADIO_STATIONS[0]!;
+  if (!def.genre) return localList(def);
   const hit = cache.get(def.id);
   if (hit) return hit;
   const list = await fetchAudiusPlaylist(def.genre);
@@ -121,18 +155,15 @@ export async function stationPlaylist(id: string): Promise<StationPlaylist> {
 }
 
 /**
- * Re-assert the CURRENTLY SELECTED station's playlist through `apply` (e.g. a
- * freshly-built Studio's CombatSfx). Local station applies synchronously;
- * Audius stations apply from cache when available, else fetch then apply —
- * falling back to the local set if the stream source is unreachable, so a dead
- * network never leaves the room silent. Always safe to call: an unchanged
- * playlist is a no-op inside musicStation.
+ * Apply the currently selected station to musicStation (or any sink).
+ * Local stations are sync; Audius fetches async with CPT RAC fallback.
  */
 export function assertStation(apply: (urls: string[], titles: string[]) => void): void {
-  const def = RADIO_STATIONS.find((s) => s.id === loadStationId()) ?? RADIO_STATIONS[0];
+  const def = RADIO_STATIONS.find((s) => s.id === loadStationId()) ?? RADIO_STATIONS[0]!;
   musicStation.setStationName(def.name);
   if (!def.genre) {
-    apply(djStationUrls(), djStationTitles());
+    const list = localList(def);
+    apply(list.urls, list.titles);
     return;
   }
   const hit = cache.get(def.id);
@@ -146,4 +177,9 @@ export function assertStation(apply: (urls: string[], titles: string[]) => void)
       musicStation.setStationName(DJ_STATION_NAME);
       apply(djStationUrls(), djStationTitles());
     });
+}
+
+/** Boot default CPT RAC (or last-saved station) into the global musicStation. */
+export function bootAppMusic(): void {
+  assertStation((urls, titles) => musicStation.setPlaylist(urls, titles));
 }

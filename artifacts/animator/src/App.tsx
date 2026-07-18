@@ -26,6 +26,8 @@ import {
 } from "./three/testWorlds";
 import { loadSound, type SoundSettings } from "./three/soundSettings";
 import { SoundMixer, type SoundChannel } from "./components/SoundMixer";
+import { DjStationPanel } from "./components/DjStationPanel";
+import { useAppMusic } from "./hooks/useAppMusic";
 import type {
   BrushState,
   DeployableNode,
@@ -648,6 +650,8 @@ export default function App() {
   }>({ visible: false, label: "LOADING" });
   const [dockOpen, setDockOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
+  /** CPT RAC + radio stations — app-wide music (replaces generative bed). */
+  const { panelProps: djPanelProps } = useAppMusic(sound);
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
   const [testWorldId, setTestWorldId] = useState<TestWorldId>(() => loadTestWorldId());
   const [hudEditing, setHudEditing] = useState(false);
@@ -2176,6 +2180,7 @@ export default function App() {
             </span>
             <div className="topbar-actions">
               <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} variant="topbar" />
+              <DjStationPanel variant="topbar" {...djPanelProps} />
               <button
                 className={`tab eq-open-btn ${claimFlagOpen ? "live" : ""}`}
                 onClick={openClaimFlag}
@@ -2352,6 +2357,7 @@ export default function App() {
                 right={
                   <>
                     <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} />
+                    <DjStationPanel variant="menubar" {...djPanelProps} />
                     <Tip label="Camp claim flag (B) — units, buildings, farm, tame">
                       <button
                         className={`tm-btn eq-open-btn ${claimFlagOpen ? "live" : ""}`}
