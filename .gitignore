@@ -28,3 +28,7 @@ reports/
 # Road pack binary — R2 only
 artifacts/animator/public/models/packs/*.glb
 
+
+# Large VFX GLBs — R2
+artifacts/animator/public/models/vfx/another_shape_of_data.glb
+

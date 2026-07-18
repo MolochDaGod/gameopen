@@ -49,8 +49,15 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
   switch (zoneId) {
     case "brawler":
       return "brawl";
+    case "danger":
+      return "danger";
+    case "survival":
+      return "survival";
+    case "genesis":
+      return "genesis";
+    case "voxgrudge":
     case "voxgrudge-lab":
-      // Thin Open lab only — full world embeds production SPA
+      // Open lab (/world) first — Full World button opens production SPA
       return "voxgrudge-native";
     case "characters":
       return "account";
@@ -58,7 +65,6 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
     case "mine-loader-live":
       // Collection surface: open.grudge-studio.com/realms
       return "realms";
-    case "voxgrudge":
     case "lobby-island":
     case "water-island":
     case "dcq":
@@ -67,8 +73,16 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
     case "z-brawl":
       // Production fleet SPAs → in-app canvas (SSO handoff), not new tabs
       return null;
-    default:
+    default: {
+      const z = GRUDOX_ZONES.find((x) => x.id === zoneId);
+      if (z?.native && z.nativeMode) {
+        // Map zone nativeMode strings onto AppMode
+        const m = z.nativeMode;
+        if (m === "minegrudge") return "realms";
+        return m as AppMode;
+      }
       return null;
+    }
   }
 }
 

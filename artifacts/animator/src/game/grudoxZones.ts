@@ -40,8 +40,19 @@ export interface GrudoxZone {
    * false → always open GRUDOX arcade (e.g. Voxel Velocity).
    */
   native?: boolean;
-  /** Native AppMode when `native` (optional hint for Open). */
-  nativeMode?: "brawl" | "voxgrudge-native" | "danger" | "minegrudge" | "account";
+  /**
+   * Native AppMode when `native` (optional hint for Open).
+   * Prefer resolving via {@link nativeModeForZone} in inAppLaunch.
+   */
+  nativeMode?:
+    | "brawl"
+    | "voxgrudge-native"
+    | "danger"
+    | "minegrudge"
+    | "account"
+    | "survival"
+    | "genesis"
+    | "realms";
   /** Optional production URL when the cabinet is hosted off-GRUDOX SPA (racer). */
   productionUrl?: string;
   /**
@@ -105,9 +116,34 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     nativeMode: "brawl",
   },
   {
+    id: "danger",
+    title: "Danger Room",
+    blurb: "Full combat stack — soft lock, RMB focus, arsenal skills (native Open).",
+    tone: "#ff5a6a",
+    native: true,
+    nativeMode: "danger",
+  },
+  {
+    id: "survival",
+    title: "Agama Survival",
+    blurb: "Wave survival on Agama map — native Open Brawler variant.",
+    tone: "#e8a040",
+    native: true,
+    nativeMode: "survival",
+  },
+  {
+    id: "genesis",
+    title: "Warlord Genesis",
+    blurb: "3-lane MOBA/RTS — native Open surface or warlord-genesis canvas.",
+    tone: "#ffd24d",
+    native: true,
+    nativeMode: "genesis",
+    productionUrl: "https://warlord-genesis.vercel.app/",
+  },
+  {
     id: "racer",
     title: "Voxel Velocity",
-    blurb: "Production strip racer — GRUDOX arcade or drive.grudge-studio.com.",
+    blurb: "Production strip racer — prefer in-app canvas via /arcade/play/racer proxy.",
     tone: "#ffd24d",
     native: false,
     productionUrl: "https://drive.grudge-studio.com/",
@@ -115,29 +151,32 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "zombie",
     title: "Voxel Undead: Sword Master",
-    blurb: "Sword survival — GRUDOX Voxel Arcade cabinet.",
+    blurb: "Sword survival — in-app GRUDOX arcade canvas (not a new tab by default).",
     tone: "#7ee0a0",
     native: false,
   },
   {
     id: "z-brawl",
     title: "Z-Brawl",
-    blurb: "Protocol Extinction arena — GRUDOX Voxel Arcade cabinet.",
+    blurb: "Protocol Extinction arena — in-app GRUDOX arcade canvas.",
     tone: "#9d8bff",
     native: false,
   },
   {
     id: "voxgrudge",
     title: "VoxGrudge Full World",
-    blurb: "Full open-world voxel survival — voxgrudge.vercel.app in-app canvas (lab stays under Library → World).",
+    blurb: "Full open-world — in-app canvas; Open /world is the local road/biome lab.",
     tone: "#5fe0ff",
+    // Prefer lab native first for wiring; full world still embeddable
+    native: true,
+    nativeMode: "voxgrudge-native",
     productionUrl: "https://voxgrudge.vercel.app/",
     externalPath: "https://voxgrudge.vercel.app/",
   },
   {
     id: "water-island",
     title: "Warlords Home Island",
-    blurb: "water.grudge-studio.com/island — harvest, grudge6, nature packs.",
+    blurb: "water.grudge-studio.com/island — harvest, grudge6, nature packs (in-app canvas).",
     tone: "#4fc3c8",
     externalPath: "https://water.grudge-studio.com/island",
   },

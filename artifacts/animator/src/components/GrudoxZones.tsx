@@ -16,6 +16,7 @@ import {
   zonePosterUrl,
   type InAppEmbedSession,
 } from "../lib/inAppLaunch";
+import { DataShapeStage } from "./DataShapeStage";
 
 interface Props {
   /** Launch a native Open surface (brawl, minegrudge, account, …). */
@@ -61,8 +62,8 @@ export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
           GRUDOX<span className="brand-accent">ZONES</span>
         </span>
         <p className="doors-sub">
-          Play fleet games <b>inside Open</b> — native engines or in-app canvas. Your Grudge
-          character rides along via SSO handoff.
+          Play fleet games <b>inside Open</b> — native engines first, then in-app canvas. SSO
+          carries your Grudge character. Graph stage: spline VFX + data shape.
         </p>
         <p style={identStyle}>
           {snap.account ? (
@@ -85,6 +86,13 @@ export function GrudoxZones({ onEnterNative, onOpenInApp, onExit }: Props) {
             "Guest — sign in with Grudge ID to carry your character across zones."
           )}
         </p>
+        <div style={{ marginTop: 12, marginBottom: 4 }}>
+          <DataShapeStage height={200} />
+          <p style={{ fontSize: 11, opacity: 0.65, marginTop: 6, color: "#9fe8ff" }}>
+            Spline graph + Another shape of data · Catmull–Rom streams · postprocessing stack in
+            combat
+          </p>
+        </div>
       </div>
 
       <div className="doors-row" style={{ flexWrap: "wrap" }}>
