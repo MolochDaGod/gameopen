@@ -9907,22 +9907,70 @@ export class Studio {
     this.setActivityMode(next);
   }
 
+  /**
+   * Activity mode switch. **Combat** re-enables the Danger Room combat stack
+   * (same Controller loco, soft lock, RMB focus, arsenal anims) — never a
+   * parallel character combat runtime. Harvest/build only rebind tools.
+   */
   setActivityMode(mode: PlayerActivityMode) {
+    const prev = this.activityMode;
     this.activityMode = mode;
     this.activityTool = defaultToolForMode(mode);
     this.radialOpen = false;
     this.harvestMoveActive = false;
-    // Harvest always soft-locks (wide free-aim, LMB select, RMB go-harvest)
-    if (mode === "harvest") {
+    this.tabHoldArmed = false;
+    this.radialHoldT = 0;
+
+    if (mode === "harvest" || mode === "build") {
+      // Leave combat focus stance; tools use free-aim soft select
       this.locked = false;
       this.controller?.setLockTarget(null);
+      if (mode === "build") this.campBuild?.cancelGhost?.();
+    } else if (mode === "combat") {
+      // Restore Danger Room combat — same stack as always (no new systems).
+      this.restoreDangerRoomCombatMode(prev);
     }
+
     // Clamp free-aim into the new mode's max
     const max = this.aimMaxNdc();
     this.aimNdcX = THREE.MathUtils.clamp(this.aimNdcX, -max, max);
     this.aimNdcY = THREE.MathUtils.clamp(this.aimNdcY, -max, max);
     // Short centre flash; persistent mode is the top-centre ModeBanner
-    this.setCombatFlash(`${MODE_LABEL[mode]}`, 0.7);
+    this.setCombatFlash(
+      mode === "combat" ? "COMBAT · DR stack" : `${MODE_LABEL[mode]}`,
+      0.7,
+    );
+  }
+
+  /**
+   * Re-enter Danger Room combat after harvest/build (or explicit combat set).
+   * Clears harvest approach state; keeps soft-lock selection if still valid;
+   * does not invent alternate loco/anim/targeting — Controller + Targets +
+   * Character/GrudgeAvatar remain the only combat path.
+   */
+  private restoreDangerRoomCombatMode(from: PlayerActivityMode) {
+    // Drop harvest walk-to-node / soft harvest pick state
+    this.harvestMoveActive = false;
+    this.harvestSelectPos = null;
+    this.harvestSelectNodeId = null;
+    // Soft lock by default when leaving tools (RMB re-toggles hard FOCUS)
+    // Keep existing selection outline if targets still have a selected id.
+    if (this.locked) {
+      const lp = this.targets.lockPoint();
+      if (lp) this.controller?.setLockTarget(lp);
+      else {
+        this.locked = false;
+        this.controller?.setLockTarget(null);
+      }
+    } else {
+      this.controller?.setLockTarget(null);
+    }
+    // Resume combat aim range (hard max when focused, soft free-aim otherwise)
+    if (from !== "combat") {
+      this.snapAimToCenter();
+    }
+    // View/loco stay on Controller — no mode-specific character controller swap.
+    this.controller?.setViewMode(this.viewMode);
   }
 
   /**

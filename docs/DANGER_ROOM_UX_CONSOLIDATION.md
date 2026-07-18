@@ -3,6 +3,8 @@
 **Canonical play surface:** https://open.grudge-studio.com/danger  
 **Engine:** one `Studio` instance · one combat HUD · one grudge6 equipment path  
 
+**Combat mode = this stack** (soft lock, RMB focus, Controller loco, arsenal anims) — not a second character combat system. See [DANGER_ROOM_COMBAT_STACK.md](./DANGER_ROOM_COMBAT_STACK.md).
+
 Related: [SYSTEMS_HUD_UX_CONSOLIDATION.md](./SYSTEMS_HUD_UX_CONSOLIDATION.md) · [UMMORPG_ENGINE_PRACTICES.md](./UMMORPG_ENGINE_PRACTICES.md) · [CHARACTER_MESH_DELIVERY.md](./CHARACTER_MESH_DELIVERY.md) · [GAMEPLAY_LOAD_STACK.md](./GAMEPLAY_LOAD_STACK.md)
 
 ---

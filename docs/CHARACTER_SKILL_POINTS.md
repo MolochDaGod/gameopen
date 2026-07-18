@@ -4,6 +4,9 @@
 **Persist:** `GrudgeSystemsState.skillProgress` in bag `grudgeSystems` (local + Railway per character)  
 **Bridge:** `skillProgressBridge.ts` — active character unlocks for combat/HUD
 
+> **Not a combat runtime.** Skill points / trees only unlock nodes and feed stat/effect bonuses.  
+> **Combat mode** (loco, soft lock, RMB focus, attack anims) is the **Danger Room stack** — see [DANGER_ROOM_COMBAT_STACK.md](./DANGER_ROOM_COMBAT_STACK.md).
+
 ## Domains (separate point pools)
 
 | Domain | Trees | Spent on |

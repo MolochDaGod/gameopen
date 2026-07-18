@@ -1,6 +1,12 @@
 /**
  * Player activity modes — Combat vs Harvest vs Build.
  *
+ * **Combat mode is NOT a separate character system.** It is the Danger Room
+ * combat stack already on {@link Studio}: Controller locomotion, soft lock,
+ * RMB sticky focus (`setLockTarget`), arsenal skills, grudge6/Character anims
+ * (`setLocomotion` + `playRoleOnce`), Targets AI, VFX/SFX. Harvest/build only
+ * rebind LMB/RMB tools; they must not fork combat.
+ *
  * **Q** cycles mode. **X** is always dodge (combat i-frames).
  * Radial wheel (hold Tab) offers mode-specific options.
  */
@@ -43,10 +49,12 @@ export const MODE_ICON: Record<PlayerActivityMode, string> = {
 export const MODE_BANNER_FRAME = "/ui/craftpix/part3/ab2_shurtcut_frame.png";
 
 export const MODE_BLURB: Record<PlayerActivityMode, string> = {
-  // Keys match hud/quickActions.ts SSOT.
-  combat: "RMB focus · LMB atk · soft LMB select · X roll · C parry · E guard",
-  harvest: "LMB select node · RMB go harvest · soft aim · P production",
-  build: "Place · walls · stations · demolish · P production",
+  // Keys match hud/quickActions.ts SSOT. Combat = full Danger Room stack.
+  combat:
+    "DR combat · soft LMB select · RMB focus lock · loco/strafe · LMB atk · X roll · C parry · E guard · F/1–4 skills",
+  harvest:
+    "LMB select ore/flower/tree · RMB walk+swing · tools gather/chop/mine/skin · P production",
+  build: "Place · walls · stations · towers · traps · P production",
 };
 
 /** Radial wedges per activity mode. */
@@ -76,7 +84,11 @@ export const RADIAL_BY_MODE: Record<PlayerActivityMode, RadialOption[]> = {
     { id: "wall", label: "Wall", glyph: "▤", color: "#88a0d0" },
     { id: "barracks", label: "Barracks", glyph: "⚔", color: "#8899bb" },
     { id: "archery", label: "Archery", glyph: "🏹", color: "#6a9a70" },
-    { id: "door", label: "Gate", glyph: "⌂", color: "#c0d0ff" },
+    { id: "door", label: "Door", glyph: "⌂", color: "#c0d0ff" },
+    { id: "gate", label: "Gate", glyph: "⛩", color: "#a0b8e0" },
+    { id: "tower", label: "Tower", glyph: "🗼", color: "#708090" },
+    { id: "trap", label: "Trap", glyph: "⚠", color: "#e07070" },
+    { id: "bench", label: "Bench", glyph: "🪑", color: "#c4a060" },
     { id: "station", label: "Forge", glyph: "🏭", color: "#ffd28a" },
     { id: "farm_plot", label: "Farm", glyph: "🌾", color: "#6a8a40" },
     { id: "demolish", label: "Demolish", glyph: "🗑", hint: "RMB", color: "#ff7a7a" },
