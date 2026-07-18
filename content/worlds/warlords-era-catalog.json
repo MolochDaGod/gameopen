@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "updated": "2026-07-18",
+  "label": "Warlords-era asset library (post last-100 review)",
+  "policy": {
+    "warlords": "Stylized low-poly + high-quality medieval/fantasy nature, animals, buildings, enemies. NOT voxel block kits.",
+    "voxelOnly": "Voxel Buildings / Medieval Voxel Assets — Open voxel / Mine-Loader only, never Warlords hero era.",
+    "heroes": "Player heroes stay grudge6 modular races only.",
+    "cdnPrefix": "models/warlords-era/",
+    "r2Bucket": "grudge-assets"
+  },
+  "roots": {
+    "genesis": "warlord-genesis/models/warlords-era/",
+    "genesisPublic": "warlord-genesis/public/models/warlords-era/",
+    "open": "gameopen/artifacts/animator/public/models/warlords-era/",
+    "voxelOnly": "*/models/voxel-only/"
+  },
+  "categories": {
+    "animals/land": {
+      "era": "warlords",
+      "use": ["island wildlife", "forest creeps", "hunt/harvest", "RTS neutrals"],
+      "items": ["bear", "bear_baby", "wolf", "wolf_baby", "fox", "fox_baby", "deer", "deer_baby", "doe", "boar", "horse", "kangaroo_baby"]
+    },
+    "animals/water": {
+      "era": "warlords",
+      "use": ["sailtest sea", "island shores", "fishing events", "underwater dungeon"],
+      "items": ["shark", "sea_turtle", "cavern_turtle", "turtle_event"]
+    },
+    "animals/flying": {
+      "era": "warlords",
+      "use": ["sky fauna", "harpy enemy", "ambient birds"],
+      "items": ["eagle", "eagle_baby", "owl", "crow", "crow_baby", "harpia"]
+    },
+    "buildings": {
+      "era": "warlords",
+      "use": ["RTS towers", "camp", "forge smeltery", "fishing hut", "fort entrance", "sky castle"],
+      "items": ["archertower_modular", "entrance_to_fort", "skycastle", "medieval_camp", "smeltery", "anglers_house", "pirate_tavern", "castle"]
+    },
+    "nature": {
+      "era": "warlords",
+      "use": ["home-island scatter", "forest-map", "rock/tree packs isolate meshes"],
+      "items": ["stylized_rocks_70", "stylised_rocks_pack", "stylized_nature_vol1", "redwood_lod", "autumn_forest", "plants", "grass", "ivy", "thunderstorm", "cloud_ring"]
+    },
+    "worlds": {
+      "era": "warlords",
+      "use": ["Realms islands", "ice biome lab", "pirate island", "map chunks (block scale)"],
+      "items": ["pirate_island_pack", "low_poly_island", "tropical_island_small", "ice_world", "medieval_camp", "castle_eltz"],
+      "scaleNote": "Map chunks use evaluateAssetRole/mapAssetScale — 1 unit = 1 voxel block. Never prop targetHeight fit."
+    },
+    "vehicles": {
+      "era": "warlords-optional",
+      "use": ["airship fantasy", "minecart dungeon"],
+      "items": ["steampunk_airship", "minecarts"]
+    },
+    "enemies": {
+      "era": "warlords",
+      "use": ["boss events", "dungeon"],
+      "items": ["abyss_demon", "baphomet_ancient"]
+    },
+    "units": {
+      "era": "warlords",
+      "use": ["Genesis NPC units", "forest hostiles", "arena sparring props"],
+      "items": ["knight_01", "knight_02", "knight_03", "skeleton", "skeleton_archer"],
+      "cdn": "models/warlords-era/units/",
+      "notes": "Converted 2026-07-18 from Knight_Free + Skeletons_Free FBX via Blender 4.2 GLB export + atlas Texture.png"
+    },
+    "units_zips": {
+      "era": "warlords-source",
+      "use": ["source FBX archives kept under units/_knight _skel"],
+      "items": ["Knight_Free.zip", "Skeletons_Free.zip", "LowPoly_Fantasy_Weapons_Lite.zip"]
+    },
+    "voxel-only": {
+      "era": "NOT_warlords",
+      "use": ["Open voxel editor", "Mine-Loader block kits only"],
+      "items": ["Voxel_Buildings.zip", "Medieval_Voxel_Assets.rar", "BonesAsset (deferred)"]
+    }
+  },
+  "gamesWiring": {
+    "warlord-genesis": {
+      "wildlife": "models/warlords-era/animals/**",
+      "towers": "buildings/archertower_modular.glb",
+      "fort": "buildings/entrance_to_fort.glb",
+      "camp": "buildings/medieval_camp.glb"
+    },
+    "gameopen": {
+      "islandScatter": "models/warlords-era/nature/** + animals/**",
+      "sailtestSea": "animals/water/*",
+      "harvest": "existing jade tools + farm pack",
+      "voxel": "models/voxel-only/** only"
+    }
+  },
+  "excludedFromWarlords": [
+    "Voxel Buildings.zip",
+    "Medieval Voxel Assets (3).rar",
+    "BonesAsset (1).zip",
+    "2D Gore UI (2).zip",
+    "casinovoxel.zip",
+    "alien_plants_kit.glb (optional sci-fi only)"
+  ]
+}

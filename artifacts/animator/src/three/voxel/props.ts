@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { evaluateAssetRole } from "@workspace/voxel-canonical";
 import { loadGltfFirst } from "../assets";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { attachTorchFlame } from "../fx/torchFlame";
@@ -46,10 +47,26 @@ async function buildTemplate(id: PropId): Promise<THREE.Group> {
   const { scene: model, url } = await loadGltfFirst(paths, sharedGltfLoader());
   if (import.meta.env.DEV) console.info(`[props] ${id} from`, url);
 
-  // Fit to the target world height.
+  // Fit scale: props use targetHeight; map/structure assets must NOT be crushed
+  // (1 block = 1 m — see mapAssetScale / evaluateAssetRole).
   model.updateWorldMatrix(true, true);
   const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
-  model.scale.setScalar(def.targetHeight / (size.y || 1));
+  const bounds = { x: size.x, y: size.y, z: size.z };
+  const evaled = evaluateAssetRole({
+    name: def.file,
+    bounds,
+    tags: [def.category, def.id],
+  });
+  let scale: number;
+  if (evaled.forbidPropHeightFit) {
+    scale = evaled.scale;
+    console.warn(
+      `[props] "${id}" looks like ${evaled.role} (${evaled.reason}) — using map scale ${scale.toFixed(4)} instead of targetHeight=${def.targetHeight}. Prefer loadMapChunk().`,
+    );
+  } else {
+    scale = def.targetHeight / (size.y || 1);
+  }
+  model.scale.setScalar(scale);
 
   // Recentre on X/Z and drop the base to Y=0 (after scaling).
   model.updateWorldMatrix(true, true);

@@ -5,6 +5,55 @@
 
 ---
 
+## Rascals Retreat (Mineways collection)
+
+**Source GLB:** `D:\Games\Models\rascals_retreat_collection.glb`  
+**Catalog / seeds:** Mine-Loader `scripts/catalog-rascals-retreat.mjs` → `rascals-seed-deployments.json` (**2048** seeds)  
+**Voxel islands:** Mine-Loader `scripts/voxelize-rascals-retreat.mjs` → ~900k cells, ~268 islands, **4096** env designs (`rascals-env-*`)  
+**Skill:** Mine-Loader `.agents/skills/rascals-retreat-voxel`  
+**API expand:** `GET /api/worlds/rascals/expand?seed=…` on Mine-Loader  
+**Open:** `content/worlds/rascals-seed-deployments.json` + `rascals-retreat-voxels.json` + featured rows in `seed-deployments.json`
+
+Material batches (Concrete, Magma, Cave_Vines, Brewing_Stand, …) map to terrain + `cat:` Codex ids for craft/builds. Spatial islands are recovered by grid quantization (pitch 0.008) + connected components (hub / cave / industrial / glass atrium / prop clusters).
+
+---
+
+## Map chunks vs props (scale SSOT)
+
+**1 voxel block = 1 world metre** (Mine-Loader kit + Open voxel editor).
+
+| Role | Examples | Scale rule |
+|------|----------|------------|
+| **prop** | torch, chest, hay, fence | `targetHeight / meshHeight` (hand-held / furniture) |
+| **kit_module** | `kit_wall`, 3×3 modules | Already authored at 1 unit = 1 block → **scale 1** |
+| **map_chunk** | `castle_eltz`, skycastle, rascals retreat, full fort | **Never** prop height-fit. Use `evaluateAssetRole` / `scaleMapToBlockGrid` |
+
+### Why maps looked like “little assets”
+
+Prop loaders used `scale = targetHeight / size.y` (e.g. height 3 m).  
+Castle Eltz native AABB ≈ **408 × 350 × 136** → `3/350 ≈ 0.0086` → continent crushed to a figurine.
+
+### Correct map scale
+
+```ts
+import { evaluateAssetRole, scaleForMapChunkId, MAP_CHUNKS } from "@workspace/voxel-canonical";
+// or: loadMapChunk("castle_eltz") in three/voxel/mapChunks.ts
+
+// Castle Eltz (metres already): scale = 1
+// Rascals Mineways pitch 0.008: scale = 1/0.008 = 125
+```
+
+| Asset | Native size (approx) | Scale | Footprint (blocks) |
+|-------|----------------------|-------|--------------------|
+| `castle_eltz.glb` | 408×350×136 | **1** | ~408×136 |
+| Rascals collection voxels | pitch 0.008 | **125** | seed islands |
+| Torch prop | ~1 m tall | height-fit ~1.5 | 1 cell |
+
+**Staging:** `models/warlords-era/worlds/castle_eltz.glb`  
+**API:** `lib/voxel-canonical/src/mapAssetScale.ts` · `artifacts/animator/src/three/voxel/mapChunks.ts`
+
+---
+
 ## Goal
 
 Ship **Minecraft-like game maps**:
