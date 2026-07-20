@@ -36,6 +36,70 @@
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.55);
 }
 
+.gs-sheet--main {
+  width: min(440px, 100vw);
+}
+
+.gs-tabbar--scroll {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gs-tabbar--scroll .gs-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+}
+
+.gs-rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gs-btn-pve {
+  border-color: #6ee7b7 !important;
+  color: #6ee7b7 !important;
+}
+
+.gs-btn-pvp {
+  border-color: #f87171 !important;
+  color: #fca5a5 !important;
+}
+
+.gs-btn-ghost {
+  background: transparent !important;
+  opacity: 0.95;
+}
+
+.gs-guild-card {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #2a3a5c;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.gs-settings-list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: #8fa3c7;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.gs-settings-list kbd,
+.gs-body kbd {
+  font-size: 0.7rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid #2a3a5c;
+  background: rgba(0, 0, 0, 0.35);
+  color: #d4a400;
+}
+
 .gs-header {
   flex-shrink: 0;
   display: flex;

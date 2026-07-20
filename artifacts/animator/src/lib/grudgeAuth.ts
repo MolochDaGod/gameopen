@@ -596,6 +596,69 @@ export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
   return [];
 }
 
+/**
+ * Silent guest session via Railway `POST /api/auth/guest`.
+ * Stores JWT so `/api/characters?era=warlords` can succeed for temp accounts.
+ * Prefer real SSO when a token already exists.
+ */
+export async function ensureGuestSession(): Promise<GrudgeAccount | null> {
+  const existing = getStoredToken();
+  if (existing && !isTokenExpired(existing)) {
+    return fetchFleetAccount(false);
+  }
+
+  const urls = [
+    apiUrl("/api/auth/guest"),
+    `${FLEET.gameData}/api/auth/guest`,
+    `${FLEET.auth}/api/auth/guest`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: "{}",
+        credentials: "include",
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!r.ok) continue;
+      const data = (await r.json()) as Record<string, unknown>;
+      const token = String(
+        data.token || data.sessionToken || data.access_token || data.sso_token || "",
+      );
+      if (!token) continue;
+      setStoredToken(token, true);
+      const user = (data.user as Record<string, unknown> | undefined) || data;
+      const grudgeId = String(
+        data.grudgeId || data.grudge_id || user.grudgeId || user.id || "",
+      );
+      const displayName = String(
+        data.displayName || data.username || user.displayName || user.username || "Guest",
+      );
+      if (grudgeId) {
+        try {
+          localStorage.setItem("grudge_id", grudgeId);
+          localStorage.setItem("grudge_account_id", grudgeId);
+          localStorage.setItem("grudge_username", displayName);
+        } catch {
+          /* */
+        }
+        const account: GrudgeAccount = {
+          grudgeId,
+          displayName,
+          source: "guest",
+        };
+        setStoredAccount(account);
+        return account;
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
 /** Boot hook — call once from App root. */
 export async function initFleetAuth(): Promise<{
   account: GrudgeAccount | null;
@@ -632,12 +695,32 @@ export async function initFleetAuth(): Promise<{
   if (!account && getStoredToken()) {
     account = await fetchFleetAccount(true);
   }
-  const characters = account || getStoredToken() ? await fetchCharacters() : [];
+
+  // No SSO / no token → silent Railway guest so character APIs work for play.
+  // Skip auto-guest when URL forced full login (?force_login=1).
+  const forceLogin =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("force_login") === "1";
+  if (!account && !getStoredToken() && !forceLogin) {
+    account = await ensureGuestSession();
+  }
+
+  // Always try characters when we have any token (guest or full).
+  let characters: GrudgeCharacter[] = [];
+  if (account || getStoredToken()) {
+    characters = await fetchCharacters();
+    // One retry after force revalidate (token may have just been written).
+    if (!characters.length && getStoredToken()) {
+      account = (await fetchFleetAccount(true)) || account;
+      characters = await fetchCharacters();
+    }
+  }
 
   // AUTO-PROVISION WALLET: every logged-in account gets a Crossmint custodial
   // Solana wallet scoped to its grudgeId. Runs in background so it never
   // blocks the UI. Canonical truth = Railway Postgres `wallets` table.
-  if (account) {
+  // Guests skip wallet (no Crossmint for temp ids).
+  if (account && account.source !== "guest") {
     // Dynamic import keeps walletService out of the critical-path bundle.
     void import("./walletService").then(({ ensureWallet }) => {
       void ensureWallet();

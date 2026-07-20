@@ -197,6 +197,19 @@ class GameSession {
     if (!this.selectedCharacterId && this.characters[0]) {
       this.selectedCharacterId = this.characters[0].id;
     }
+    // No fleet/local heroes yet — seed a Warlords guest draft so choose-survivor
+    // and Danger Room always have a selectable character.
+    if (!this.characters.length) {
+      const draft: GrudgeCharacter = {
+        id: `local_guest_${Date.now().toString(36)}`,
+        name: account?.displayName || "Guest Adventurer",
+        raceId: "western-kingdoms",
+        classId: "warrior",
+        level: 1,
+        config: { source: "open-guest-boot", catalogId: "race-western-kingdoms" },
+      };
+      this.upsertLocalCharacter(draft);
+    }
     storeSelectedCharacterId(this.selectedCharacterId);
     this.ready = true;
     this.emit();

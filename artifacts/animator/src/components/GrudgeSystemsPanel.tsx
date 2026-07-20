@@ -79,16 +79,29 @@ import "./grudgeSystemsPanel.css";
 import "./hud/craftpixHud.css";
 
 export type SystemsTabId =
+  | "tabEquipment"
+  | "tabInventory"
   | "tabCharacter"
   | "tabClassSkills"
   | "tabWeaponSkills"
+  | "tabCrafting"
+  | "tabGuild"
+  | "tabRooms"
+  | "tabSettings"
   | "tabProfessions"
   | "tabMastery";
 
+/** Right-side main panel tabs (production Open shell). */
 const TABS: Array<{ id: SystemsTabId; label: string }> = [
-  { id: "tabCharacter", label: "Character" },
-  { id: "tabClassSkills", label: "Class" },
+  { id: "tabEquipment", label: "Equipment" },
+  { id: "tabInventory", label: "Inventory" },
+  { id: "tabClassSkills", label: "Skills" },
   { id: "tabWeaponSkills", label: "Wpn Skills" },
+  { id: "tabCrafting", label: "Crafting" },
+  { id: "tabRooms", label: "Rooms" },
+  { id: "tabGuild", label: "Guild" },
+  { id: "tabSettings", label: "Settings" },
+  { id: "tabCharacter", label: "Stats" },
   { id: "tabProfessions", label: "Professions" },
   { id: "tabMastery", label: "Mastery" },
 ];
@@ -101,6 +114,16 @@ type Props = {
   onClose: () => void;
   /** Optional initial tab (e.g. open on Wpn Skills from combat). */
   initialTab?: SystemsTabId;
+  /** Open full equipment / paperdoll page */
+  onOpenEquipment?: () => void;
+  /** Open production craft UI (P) */
+  onOpenCrafting?: () => void;
+  /** Solo PvE Danger Room (no lobby) */
+  onPlayPve?: () => void;
+  /** Open multiplayer lobby for PvP/coop rooms */
+  onOpenLobby?: () => void;
+  /** Launch external fleet PvP surfaces */
+  onLaunchFleet?: (id: "carrier" | "grudox" | "warlords") => void;
 };
 
 function fmt(v: number): string {
@@ -117,7 +140,12 @@ export function GrudgeSystemsPanel({
   weapon,
   hud,
   onClose,
-  initialTab = "tabCharacter",
+  initialTab = "tabEquipment",
+  onOpenEquipment,
+  onOpenCrafting,
+  onPlayPve,
+  onOpenLobby,
+  onLaunchFleet,
 }: Props) {
   const [tab, setTab] = useState<SystemsTabId>(initialTab);
   const [state, setState] = useState<GrudgeSystemsState>(() => loadSystemsState(characterId));
@@ -300,12 +328,12 @@ export function GrudgeSystemsPanel({
     totalPoints > MAX_POINTS ? "over" : totalPoints === MAX_POINTS ? "full" : "";
 
   return (
-    <div className="gs-panel cx-menu" role="dialog" aria-label="Character systems">
-      <button type="button" className="gs-backdrop" aria-label="Close systems" onClick={onClose} />
-      <div className="gs-sheet cx-menu-sheet">
+    <div className="gs-panel cx-menu" role="dialog" aria-label="Main panel">
+      <button type="button" className="gs-backdrop" aria-label="Close main panel" onClick={onClose} />
+      <div className="gs-sheet cx-menu-sheet gs-sheet--main">
         <header className="gs-header cx-menu-header">
           <div>
-            <p className="gs-kicker">Grudge Systems</p>
+            <p className="gs-kicker">Main Panel</p>
             <h2 className="gs-title">{characterName}</h2>
             <p className="gs-sub">
               Level {state.level}
@@ -326,7 +354,7 @@ export function GrudgeSystemsPanel({
           </button>
         </header>
 
-        <nav className="gs-tabbar cx-menu-tabs" id="mainTabBar" aria-label="Systems tabs">
+        <nav className="gs-tabbar cx-menu-tabs gs-tabbar--scroll" id="mainTabBar" aria-label="Main panel tabs">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -341,6 +369,178 @@ export function GrudgeSystemsPanel({
         </nav>
 
         <div className="gs-body">
+          {tab === "tabEquipment" && (
+            <>
+              <h3>Equipment</h3>
+              <p className="gs-muted">
+                Paperdoll, kept loadout, and mesh stage. Opens the full explorer equip UI
+                (same as key <kbd>I</kbd>).
+              </p>
+              <div className="gs-hotbar" style={{ marginBottom: 12 }}>
+                {hotbarSlots.map((s) => (
+                  <div key={s.key} className={`gs-hot-slot${s.empty ? " empty" : ""}`} title={s.name}>
+                    {s.iconUrl ? (
+                      <img src={s.iconUrl} alt="" className="gs-hot-icon" />
+                    ) : (
+                      <span className="gs-hot-fallback">{s.name.slice(0, 3)}</span>
+                    )}
+                    <span className="gs-hot-key">{s.key}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="gs-btn" onClick={() => onOpenEquipment?.()}>
+                Open full equipment · inventory
+              </button>
+              <p className="gs-muted" style={{ marginTop: 10 }}>
+                Weapon: <strong>{weapon}</strong>
+                {hud?.offHand ? ` · Off: ${hud.offHand}` : ""}
+              </p>
+            </>
+          )}
+
+          {tab === "tabInventory" && (
+            <>
+              <h3>Inventory</h3>
+              <p className="gs-muted">
+                3×3 bag + kept slots live on the character page. Use equipment for drag-drop
+                craft grid and bag management.
+              </p>
+              <button type="button" className="gs-btn" onClick={() => onOpenEquipment?.()}>
+                Open inventory (I)
+              </button>
+              <p className="gs-muted" style={{ marginTop: 8 }}>
+                Production harvest bag will sync to Railway inventory when signed in.
+              </p>
+            </>
+          )}
+
+          {tab === "tabCrafting" && (
+            <>
+              <h3>Crafting</h3>
+              <p className="gs-muted">
+                WCS recipes, stations, and production loops (Open Production UI).
+              </p>
+              <button
+                type="button"
+                className="gs-btn"
+                onClick={() => {
+                  onOpenCrafting?.();
+                  onClose();
+                }}
+              >
+                Open Production · Craft (P)
+              </button>
+              <button
+                type="button"
+                className="gs-btn gs-btn-ghost"
+                style={{ marginTop: 8 }}
+                onClick={() => onOpenEquipment?.()}
+              >
+                2×2 craft grid on character page
+              </button>
+            </>
+          )}
+
+          {tab === "tabRooms" && (
+            <>
+              <h3>Rooms · PvE · PvP</h3>
+              <p className="gs-muted">
+                Play Danger Room solo (PvE) or open the multiplayer lobby for coop/PvP rooms.
+                Fleet arcade (Carrier / GRUDOX) uses live WebSocket rooms.
+              </p>
+              <div className="gs-rooms">
+                <button type="button" className="gs-btn gs-btn-pve" onClick={() => onPlayPve?.()}>
+                  ▶ Solo PvE · Danger Room
+                </button>
+                <button type="button" className="gs-btn gs-btn-pvp" onClick={() => onOpenLobby?.()}>
+                  ⚔ Multiplayer lobby · create / join room
+                </button>
+                <button
+                  type="button"
+                  className="gs-btn gs-btn-ghost"
+                  onClick={() => onLaunchFleet?.("carrier")}
+                >
+                  Carrier PvP sector
+                </button>
+                <button
+                  type="button"
+                  className="gs-btn gs-btn-ghost"
+                  onClick={() => onLaunchFleet?.("grudox")}
+                >
+                  GRUDOX arcade hub
+                </button>
+                <button
+                  type="button"
+                  className="gs-btn gs-btn-ghost"
+                  onClick={() => onLaunchFleet?.("warlords")}
+                >
+                  Grudge Warlords world
+                </button>
+              </div>
+              <p className="gs-muted" style={{ marginTop: 10 }}>
+                Tip: touch pad Sprint / Crouch / Harvest above left stick · skill stick N/E/S/W ·
+                center press = focus.
+              </p>
+            </>
+          )}
+
+          {tab === "tabGuild" && (
+            <>
+              <h3>Guild</h3>
+              <p className="gs-muted">
+                Guild roster and war banners ship with Railway social APIs. Create or join from
+                Account when available.
+              </p>
+              <div className="gs-guild-card">
+                <p>
+                  <strong>No guild selected</strong>
+                </p>
+                <p className="gs-muted">Invite code · roster · shared storage coming on account bag.</p>
+                <button type="button" className="gs-btn" disabled title="Guild API pending">
+                  Create guild (soon)
+                </button>
+              </div>
+            </>
+          )}
+
+          {tab === "tabSettings" && (
+            <>
+              <h3>Settings</h3>
+              <p className="gs-muted">Session and accessibility. Combat keys stay Danger Room SSOT.</p>
+              <ul className="gs-settings-list">
+                <li>
+                  <strong>Q</strong> — cycle Combat / Harvest / Build
+                </li>
+                <li>
+                  <strong>RMB</strong> — sticky focus · skill stick center on mobile
+                </li>
+                <li>
+                  <strong>C</strong> parry · <strong>E</strong> guard · <strong>X</strong> dodge
+                </li>
+                <li>
+                  <strong>K</strong> — this main panel · <strong>I</strong> equipment
+                </li>
+                <li>
+                  <strong>P</strong> — production craft
+                </li>
+              </ul>
+              <button
+                type="button"
+                className="gs-btn gs-btn-ghost"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("grudge.open.hudLayout");
+                  } catch {
+                    /* */
+                  }
+                  window.location.reload();
+                }}
+              >
+                Reset HUD layout
+              </button>
+            </>
+          )}
+
           {tab === "tabCharacter" && (
             <>
               <h3>

@@ -2268,6 +2268,28 @@ export default function App() {
               weapon={hud?.weapon ?? weaponId}
               hud={hud}
               onClose={() => setSystemsOpen(false)}
+              onOpenEquipment={() => {
+                setSystemsOpen(false);
+                setEquipOpen(true);
+              }}
+              onOpenCrafting={() => {
+                setSystemsOpen(false);
+                setHarvestUiOpen(true);
+              }}
+              onPlayPve={() => {
+                setSystemsOpen(false);
+                navigate("danger");
+              }}
+              onOpenLobby={() => {
+                setSystemsOpen(false);
+                navigate("lobby");
+              }}
+              onLaunchFleet={(id) => {
+                setSystemsOpen(false);
+                if (id === "carrier") window.open("https://carrier.grudge-studio.com/", "_blank", "noopener");
+                else if (id === "grudox") window.open("https://grudox.grudge-studio.com/", "_blank", "noopener");
+                else window.open("https://grudgewarlords.com/", "_blank", "noopener");
+              }}
             />
           )}
         </>
@@ -2501,6 +2523,28 @@ export default function App() {
               weapon={hud?.weapon ?? weaponId}
               hud={hud}
               onClose={() => setSystemsOpen(false)}
+              onOpenEquipment={() => {
+                setSystemsOpen(false);
+                setEquipOpen(true);
+              }}
+              onOpenCrafting={() => {
+                setSystemsOpen(false);
+                setHarvestUiOpen(true);
+              }}
+              onPlayPve={() => {
+                setSystemsOpen(false);
+                /* already in danger — just close panel for solo PvE */
+              }}
+              onOpenLobby={() => {
+                setSystemsOpen(false);
+                navigate("lobby");
+              }}
+              onLaunchFleet={(id) => {
+                setSystemsOpen(false);
+                if (id === "carrier") window.open("https://carrier.grudge-studio.com/", "_blank", "noopener");
+                else if (id === "grudox") window.open("https://grudox.grudge-studio.com/", "_blank", "noopener");
+                else window.open("https://grudgewarlords.com/", "_blank", "noopener");
+              }}
             />
           )}
         </>
