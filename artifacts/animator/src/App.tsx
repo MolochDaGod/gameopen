@@ -4,6 +4,7 @@ import { AppShell } from "./components/AppShell";
 import type { AssistantConfig } from "./ai/AssistantSurface";
 import { appGuideSystemPrompt } from "./ai/companionPrompt";
 import { buildDangerTools, dangerSystemPrompt } from "./ai/dangerTools";
+import { buildVoxelAiTools, voxelWorldbuilderSystemPrompt } from "./ai/voxelAiTools";
 import { VoxelEditor } from "./three/voxel/VoxelEditor";
 import {
   type ActionSlot,
@@ -1617,10 +1618,30 @@ export default function App() {
     }
   }, []);
 
+  // Worldbuilder Forge AI — tools bound to live VoxelEditor + brush state.
+  const voxelAiTools = useMemo(
+    () =>
+      buildVoxelAiTools({
+        getEditor: () => voxelRef.current,
+        getBrush: () => brush,
+        setBrush: onBrush,
+        getSelectedId: () => veSel,
+        getTree: () => veTree,
+        getStats: () => veStats,
+        select: onVeSelect,
+        clearMap: onClearMap,
+        playMap: onTestMap,
+        focusSelected: onVeFocusSelected,
+        deleteSelected: onVeDeleteSelected,
+      }),
+    // brush / tree / stats re-bind tools each change so the model sees fresh state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [brush, veSel, veTree, veStats],
+  );
+
   // Per-surface config for the ONE global AI dock the shell hosts. Danger/play
-  // get the Danger Room master (live tools); the calm "guide" companion covers
-  // doors/voxel/lobby; the Dressing Room registers its own config via context
-  // (it owns the engine), and LED Mask runs its own embedded face chat.
+  // get the Danger Room master (live tools); Worldbuilder gets Forge AI tools;
+  // calm "guide" covers doors/lobby; Dressing Room registers via context.
   const shellAssistant: AssistantConfig | null = useMemo(() => {
     if (mode === "danger" || mode === "play") {
       return {
@@ -1631,9 +1652,22 @@ export default function App() {
         placeholder: "Fix combat feel, preview anim, dash forward, audit icons…",
       };
     }
+    if (mode === "voxel") {
+      return {
+        surface: "worldbuilder",
+        title: "Worldbuilder Forge",
+        tools: voxelAiTools,
+        getSystemPrompt: () =>
+          voxelWorldbuilderSystemPrompt({
+            brush,
+            stats: veStats,
+            selectedId: veSel,
+          }),
+        placeholder: "Set stone walls, assign NPC patrol AI, list props…",
+      };
+    }
     if (
       mode === "doors" ||
-      mode === "voxel" ||
       mode === "lobby" ||
       mode === "zones" ||
       mode === "genesis" ||
@@ -1652,7 +1686,18 @@ export default function App() {
       };
     }
     return null;
-  }, [mode, dangerAiTools, characterId, weaponId, difficulty, params]);
+  }, [
+    mode,
+    dangerAiTools,
+    voxelAiTools,
+    characterId,
+    weaponId,
+    difficulty,
+    params,
+    brush,
+    veStats,
+    veSel,
+  ]);
 
   // Wrap any mode's content in the persistent shell (launcher + global AI dock).
   const shell = (content: React.ReactNode) => (
