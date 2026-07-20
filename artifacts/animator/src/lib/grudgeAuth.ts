@@ -714,6 +714,42 @@ export async function initFleetAuth(): Promise<{
       account = (await fetchFleetAccount(true)) || account;
       characters = await fetchCharacters();
     }
+    // Auto-create first Warlords hero so choose-survivor / rooms aren't empty.
+    if (!characters.length && getStoredToken()) {
+      try {
+        const { createFleetCharacter } = await import("./accountShared");
+        const name = account?.displayName || "Guest Adventurer";
+        const created = await createFleetCharacter({
+          name,
+          raceId: "western-kingdoms",
+          classId: "warrior",
+          catalogId: "race-western-kingdoms",
+          gameEra: "warlords",
+        });
+        if (created.ok) {
+          characters = await fetchCharacters();
+          if (!characters.length) {
+            characters = [
+              {
+                id: created.id,
+                name,
+                raceId: "western-kingdoms",
+                classId: "warrior",
+                level: 1,
+              },
+            ];
+          }
+          try {
+            sessionStorage.setItem("grudge.open.selectedCharacterId", created.id);
+            localStorage.setItem("grudge.open.selectedCharacterId", created.id);
+          } catch {
+            /* */
+          }
+        }
+      } catch (err) {
+        console.warn("[gameopen] auto-create Warlords character failed", err);
+      }
+    }
   }
 
   // AUTO-PROVISION WALLET: every logged-in account gets a Crossmint custodial
