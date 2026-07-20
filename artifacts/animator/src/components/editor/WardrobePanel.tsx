@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Shirt, Upload, UserPlus, Sparkles, X } from "lucide-react";
+import { Shirt, Upload, UserPlus, Sparkles, X, UserCheck, Check } from "lucide-react";
 import type { EditorScene } from "../../three/editor/EditorScene";
 import type { EditorObjectSnapshot, EditorSnapshot } from "../../three/editor/types";
 import type { VoxelPart } from "../../three/explorer/rig";
@@ -7,6 +7,9 @@ import { CHARACTERS } from "../../three/assets";
 import { RACE_ASSETS, RACE_IDS, PRESET_IDS } from "../../three/grudge";
 import type { RaceId, PresetId } from "../../three/grudge";
 import { SHELLS, type ShellId } from "../../three/LedMaskShells";
+import { lookToVoxelAvatar, saveVoxelAvatar } from "../../three/explorer/voxelAvatarSave";
+import { gameSession } from "../../game/GameSession";
+import { scheduleCharacterLoadoutSave } from "../../lib/characterLoadout";
 
 interface Props {
   engine: EditorScene;
@@ -43,8 +46,58 @@ function VoxelCharacterSection({
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   // "none" = no LED mask (skin face); otherwise the worn housing shell id.
   const [ledShell, setLedShell] = useState<ShellId | "none">("none");
+
+  // Sync colour pickers from the live rig when it already has a saved look applied.
+  useEffect(() => {
+    const parts = engine.captureVoxelAvatarParts();
+    if (!parts) return;
+    setColors((c) => ({
+      ...c,
+      skin: parts.skin,
+      shirt: parts.shirt,
+      pants: parts.pants,
+      boot: parts.boot,
+      eye: parts.eye,
+      hat: parts.hat,
+    }));
+  }, [engine]);
+
+  const saveToCharacter = () => {
+    const live = engine.captureVoxelAvatarParts();
+    const skin = live?.skin ?? colors.skin;
+    const shirt = live?.shirt ?? colors.shirt;
+    const pants = live?.pants ?? colors.pants;
+    const boot = live?.boot ?? colors.boot;
+    const eye = live?.eye ?? colors.eye;
+    const hatColor = live?.hat ?? colors.hat;
+    const charId = gameSession.snapshot.selectedCharacterId || undefined;
+    const blob = lookToVoxelAvatar(
+      {
+        skin,
+        shirt,
+        pants,
+        boot,
+        eye,
+        hat: ledShell === "none" ? "none" : "ledMask",
+        hatColor,
+        cape: false,
+        ledShell: ledShell === "none" ? undefined : ledShell,
+      },
+      charId,
+    );
+    saveVoxelAvatar(blob);
+    if (charId) {
+      const ch = gameSession.selectedCharacter();
+      scheduleCharacterLoadoutSave(charId, ch, { voxelLook: blob as unknown as Record<string, unknown> }, (saveData) => {
+        gameSession.patchCharacter(charId, { saveData });
+      });
+    }
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 2200);
+  };
 
   const onGenerate = async () => {
     if (!generatePattern || !prompt.trim() || busy) return;
@@ -149,6 +202,29 @@ function VoxelCharacterSection({
             </option>
           ))}
         </select>
+      </div>
+
+      <button
+        className="ed-btn"
+        style={{
+          marginTop: 14,
+          width: "100%",
+          background: saved ? "rgba(94,224,160,0.18)" : "rgba(95,224,255,0.12)",
+          borderColor: saved ? "#5ee0a0" : "#5fe0ff",
+        }}
+        onClick={saveToCharacter}
+        title="Save this voxel look for Play / Danger Room / campfire on open.grudge-studio.com"
+      >
+        {saved ? (
+          <Check size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />
+        ) : (
+          <UserCheck size={14} style={{ marginRight: 6, verticalAlign: "-2px" }} />
+        )}
+        {saved ? "Avatar saved" : "Save avatar to character"}
+      </button>
+      <div className="ed-empty" style={{ padding: "6px 0 0", fontSize: 11, opacity: 0.75 }}>
+        Colours + LED shell persist locally and to your selected character when signed in.
+        Play and campfire seats load this look automatically.
       </div>
     </>
   );

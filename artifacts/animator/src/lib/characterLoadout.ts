@@ -27,6 +27,11 @@ export type OpenCharacterLoadout = {
   slotIcons?: Record<string, string>;
   /** Last mode played */
   lastMode?: string;
+  /**
+   * Saved procedural voxel / Explorer look (Dressing Room → Play).
+   * Also mirrored in localStorage (`avatarEdit:voxelLook:v1`).
+   */
+  voxelLook?: Record<string, unknown>;
   /** Opaque per-mode bags (danger progress, etc.) */
   bags?: Record<string, unknown>;
   updatedAt?: number;
@@ -85,6 +90,10 @@ export function loadoutFromCharacter(ch: GrudgeCharacter | null | undefined): Op
         ? (b.slotIcons as Record<string, string>)
         : undefined,
     lastMode: typeof b.lastMode === "string" ? b.lastMode : undefined,
+    voxelLook:
+      b.voxelLook && typeof b.voxelLook === "object"
+        ? (b.voxelLook as Record<string, unknown>)
+        : undefined,
     bags: (b.bags as Record<string, unknown>) || undefined,
     updatedAt: typeof b.updatedAt === "number" ? b.updatedAt : undefined,
   };
@@ -101,6 +110,7 @@ export function mergeOpenSaveData(
     ...patch,
     weaponId: patch.weaponId || prev.weaponId,
     offHand: patch.offHand !== undefined ? patch.offHand : prev.offHand,
+    voxelLook: patch.voxelLook !== undefined ? patch.voxelLook : prev.voxelLook,
     bags: { ...(prev.bags || {}), ...(patch.bags || {}) },
     updatedAt: Date.now(),
   };

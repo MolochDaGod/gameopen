@@ -314,10 +314,26 @@ export class ExplorerCharacter implements Avatar {
 
   async load(): Promise<void> {
     // Explorer uses Avatar Edit modular head (play-shell parity) unless look overrides.
-    const look =
+    // Prefer Dressing Room "Save avatar" (local / fleet voxelLook) over catalog defaults.
+    let look =
       this.def.id === "explorer"
         ? { ...this.def.look, avatarHead: true }
         : this.def.look;
+    let partOverrides: Partial<Record<VoxelPart, string>> | null = null;
+    if (this.def.procedural || this.def.id === "explorer") {
+      try {
+        const { loadVoxelAvatar, voxelAvatarToLook, partOverridesFromSave } = await import(
+          "./explorer/voxelAvatarSave"
+        );
+        const saved = loadVoxelAvatar();
+        if (saved) {
+          look = { ...look, ...voxelAvatarToLook(saved) };
+          partOverrides = partOverridesFromSave(saved);
+        }
+      } catch {
+        /* keep catalog look */
+      }
+    }
     const animator = await createAnimatedCharacter({
       height: CHARACTER_HEIGHT_M,
       weapon: this.weaponClass,
@@ -328,6 +344,11 @@ export class ExplorerCharacter implements Avatar {
       return;
     }
     this.animator = animator;
+    if (partOverrides) {
+      for (const [part, hex] of Object.entries(partOverrides)) {
+        if (hex) animator.character.setPartColor(part as VoxelPart, hex);
+      }
+    }
     this.inner = animator.root;
     this.inner.rotation.y = this.modelYaw;
     this.inner.traverse((o) => {
@@ -695,6 +716,11 @@ export class ExplorerCharacter implements Avatar {
   // ---- voxel-rig appearance (procedural box rig only) ----
 
   /** Recolour one body part of the procedural box rig (skin/shirt/pants/boot/hat/eye). */
+  /** Snapshot part colours for Dressing Room save. */
+  captureAvatarParts(): ReturnType<import("./explorer/rig").VoxelCharacter["captureAvatarParts"]> | null {
+    return this.animator?.character.captureAvatarParts() ?? null;
+  }
+
   setPartColor(part: VoxelPart, color: THREE.ColorRepresentation): void {
     this.animator?.character.setPartColor(part, color);
   }

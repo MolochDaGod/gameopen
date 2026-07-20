@@ -121,6 +121,25 @@ export class VoxelCharacter {
     m.needsUpdate = true;
   }
 
+  /** Current part colour as `#rrggbb` (for avatar save / wardrobe UI). */
+  getPartColorHex(part: VoxelPart): string {
+    const m = this.mats[part];
+    if (!m) return "#000000";
+    return `#${m.color.getHexString()}`;
+  }
+
+  /** Snapshot look + part colours for persistence (patterns not included). */
+  captureAvatarParts(): { skin: string; shirt: string; pants: string; boot: string; eye: string; hat: string } {
+    return {
+      skin: this.getPartColorHex("skin"),
+      shirt: this.getPartColorHex("shirt"),
+      pants: this.getPartColorHex("pants"),
+      boot: this.getPartColorHex("boot"),
+      eye: this.getPartColorHex("eye"),
+      hat: this.getPartColorHex("hat"),
+    };
+  }
+
   /**
    * Apply (or clear, with `null`) a tiling pattern texture on a single body-part
    * material. When a map is applied the base colour is reset to white so the

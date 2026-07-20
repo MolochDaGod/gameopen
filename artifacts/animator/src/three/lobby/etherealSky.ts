@@ -159,62 +159,99 @@ export class EtherealSky {
           vec3 d = normalize(vDir);
           float t = uTime * 0.014;
 
-          // Nebula bands: two drifting fbm fields on the sphere direction —
-          // periodic by construction, so the sky wraps seamlessly.
+          // Nebula bands: richer multi-scale fbm for a deeper cosmic wash.
           float n1 = fbm(d * 3.1 + vec3(t, t * 0.4, -t * 0.6));
           float n2 = fbm(d * 6.4 - vec3(t * 0.7, t * 0.2, t));
-          float neb = smoothstep(0.35, 0.85, n1 * 0.65 + n2 * 0.45);
+          float n3 = fbm(d * 11.0 + vec3(t * 0.3, -t * 0.5, t * 0.2));
+          float neb = smoothstep(0.28, 0.88, n1 * 0.55 + n2 * 0.4 + n3 * 0.25);
 
-          // Galactic swirl ring high over the falls (screen-forward, -Z).
-          // The whole spiral visibly ROTATES: the arm angle is offset by time
-          // and the spiral pitch drags the arms around the axis.
+          // Primary galactic swirl over the falls (-Z).
           vec3 axis = normalize(vec3(0.0, 0.55, -1.0));
           float ca = dot(d, axis);
           vec3 ortho = normalize(d - axis * ca);
           vec3 u1 = normalize(cross(axis, vec3(0.0, 1.0, 0.001)));
           vec3 u2 = cross(axis, u1);
-          float ang = atan(dot(ortho, u2), dot(ortho, u1)) + uTime * 0.045;
+          float ang = atan(dot(ortho, u2), dot(ortho, u1)) + uTime * 0.055;
           float rad = acos(clamp(ca, -1.0, 1.0));
-          float arm = fbm(vec3(ang * 1.6 + rad * 5.0 - uTime * 0.18, rad * 7.0, 1.7));
-          float arm2 = fbm(vec3(ang * 3.2 - rad * 8.0 + uTime * 0.12, rad * 5.0, 7.9));
-          float ring = fadeOut(0.0, 0.55, abs(rad - 0.42 - (arm - 0.5) * 0.14)) * step(0.0, ca);
-          ring *= 0.45 + 0.4 * arm + 0.25 * arm2;
+          float arm = fbm(vec3(ang * 1.6 + rad * 5.0 - uTime * 0.22, rad * 7.0, 1.7));
+          float arm2 = fbm(vec3(ang * 3.2 - rad * 8.0 + uTime * 0.15, rad * 5.0, 7.9));
+          float ring = fadeOut(0.0, 0.58, abs(rad - 0.40 - (arm - 0.5) * 0.16)) * step(0.0, ca);
+          ring *= 0.5 + 0.45 * arm + 0.3 * arm2;
 
-          // Aurora curtains (northern lights) rippling above the horizon —
-          // the hue slides green -> teal -> violet along the sky and in time.
-          float aur = fbm(vec3(d.x * 2.6 + t * 4.0, d.y * 7.5 - uTime * 0.09, d.z * 2.6 - t * 2.0));
-          float band = smoothstep(0.42, 0.9, aur)
-                     * smoothstep(-0.06, 0.22, d.y) * fadeOut(0.3, 0.8, d.y);
-          vec3 aurCol = mix(vec3(0.1, 0.7, 0.45), vec3(0.3, 0.4, 0.9),
-                            0.5 + 0.5 * sin(d.x * 4.0 + uTime * 0.35));
-          aurCol = mix(aurCol, vec3(0.6, 0.25, 0.85), smoothstep(0.55, 0.95, aur));
+          // Second tilted galaxy — distant cosmic sibling.
+          vec3 axis2 = normalize(vec3(0.55, 0.35, 0.75));
+          float ca2 = dot(d, axis2);
+          vec3 ortho2 = normalize(d - axis2 * ca2);
+          vec3 v1 = normalize(cross(axis2, vec3(0.0, 1.0, 0.001)));
+          vec3 v2 = cross(axis2, v1);
+          float ang2 = atan(dot(ortho2, v2), dot(ortho2, v1)) - uTime * 0.03;
+          float rad2 = acos(clamp(ca2, -1.0, 1.0));
+          float armB = fbm(vec3(ang2 * 2.0 + rad2 * 6.0 + uTime * 0.1, rad2 * 8.0, 3.3));
+          float ring2 = fadeOut(0.0, 0.42, abs(rad2 - 0.35 - (armB - 0.5) * 0.1)) * step(0.0, ca2);
+          ring2 *= 0.35 + 0.4 * armB;
 
-          // Palette: near-black void -> deep purple -> violet, cool swirl core.
-          // Kept intentionally dark: the nebula reads as stained blacks and
-          // purples rather than a bright wash.
-          vec3 col = vec3(0.004, 0.004, 0.014);
-          col = mix(col, vec3(0.05, 0.03, 0.16), neb * 0.85);
-          col = mix(col, vec3(0.22, 0.08, 0.38), smoothstep(0.55, 1.0, neb) * 0.85);
-          col = mix(col, vec3(0.5, 0.2, 0.65), smoothstep(0.82, 1.05, neb + ring * 0.3) * 0.55);
-          col += vec3(0.25, 0.35, 0.8) * ring * 0.65;
-          col += vec3(0.3, 0.7, 0.6) * ring * arm2 * 0.4;
-          col += vec3(0.7, 0.55, 0.9) * fadeOut(0.2, 0.85, rad) * ring * 0.3;
-          col += aurCol * band * 0.45;
+          // Aurora curtains — brighter, more violet-heavy cosmic ribbons.
+          float aur = fbm(vec3(d.x * 2.6 + t * 4.0, d.y * 7.5 - uTime * 0.11, d.z * 2.6 - t * 2.0));
+          float band = smoothstep(0.38, 0.92, aur)
+                     * smoothstep(-0.08, 0.28, d.y) * fadeOut(0.28, 0.85, d.y);
+          vec3 aurCol = mix(vec3(0.08, 0.85, 0.55), vec3(0.35, 0.35, 1.0),
+                            0.5 + 0.5 * sin(d.x * 4.0 + uTime * 0.4));
+          aurCol = mix(aurCol, vec3(0.75, 0.2, 1.0), smoothstep(0.5, 0.95, aur));
 
-          // Star field: three layers of round jittered-point stars —
-          // dense faint dust, mid twinkles, and a few big glowing beacons.
-          float dust = starLayer(d, 260.0, 0.90, 0.22, uTime * 0.7);
-          float mid = starLayer(d + 11.3, 130.0, 0.94, 0.26, uTime);
-          float big = starLayer(d + 5.7, 55.0, 0.975, 0.3, uTime * 0.6);
-          float bigHue = hash(floor((d + 5.7) * 55.0) + 13.1);
-          vec3 bigCol = mix(vec3(0.75, 0.9, 1.0), vec3(1.0, 0.85, 0.7), step(0.7, bigHue));
-          bigCol = mix(bigCol, vec3(0.7, 1.0, 0.85), step(0.85, bigHue));
-          col += vec3(0.8, 0.85, 1.0) * dust * 0.35;
-          col += vec3(0.9, 0.95, 1.0) * mid * (0.55 + neb * 0.5);
-          col += bigCol * big * 1.1;
+          // Cosmic ray streaks (thin bright lines sweeping across the dome).
+          float rayAng = atan(d.x, d.z) + uTime * 0.02;
+          float ray = pow(max(0.0, sin(rayAng * 9.0 + d.y * 14.0 - uTime * 0.6)), 48.0)
+                    * smoothstep(0.05, 0.55, d.y) * fadeOut(0.55, 0.95, d.y);
+          ray *= 0.35 + 0.65 * hash(floor(vec3(rayAng * 4.0, d.y * 8.0, 1.0)));
 
-          // Blue-noise-ish dither kills the gradient banding on the dark sky.
-          col += (hash(d * 337.7) - 0.5) * 0.012;
+          // Shooting-star streaks (rare, bright).
+          float shoot = 0.0;
+          for (int k = 0; k < 3; k++) {
+            float kt = uTime * (0.35 + float(k) * 0.12) + float(k) * 17.0;
+            float phase = fract(kt * 0.08);
+            vec3 sdir = normalize(vec3(
+              sin(float(k) * 2.1 + 1.0),
+              0.35 + 0.2 * float(k),
+              -cos(float(k) * 1.7)
+            ));
+            float along = dot(d, sdir);
+            float trail = smoothstep(0.92, 0.998, along) * fadeOut(0.15, 0.85, phase) * smoothstep(0.0, 0.12, phase);
+            shoot += trail * (1.0 - abs(phase - 0.4) * 2.0);
+          }
+          shoot = clamp(shoot, 0.0, 1.5);
+
+          // Palette: void → magenta nebula → violet core, more luminous.
+          vec3 col = vec3(0.003, 0.002, 0.012);
+          col = mix(col, vec3(0.07, 0.02, 0.2), neb * 0.95);
+          col = mix(col, vec3(0.28, 0.06, 0.45), smoothstep(0.5, 1.0, neb) * 0.95);
+          col = mix(col, vec3(0.55, 0.15, 0.75), smoothstep(0.78, 1.1, neb + ring * 0.35) * 0.65);
+          col += vec3(0.3, 0.4, 0.95) * ring * 0.85;
+          col += vec3(0.25, 0.85, 0.7) * ring * arm2 * 0.55;
+          col += vec3(0.85, 0.55, 1.0) * fadeOut(0.15, 0.8, rad) * ring * 0.4;
+          col += vec3(0.4, 0.25, 0.9) * ring2 * 0.55;
+          col += vec3(0.2, 0.6, 0.9) * ring2 * armB * 0.35;
+          col += aurCol * band * 0.62;
+          col += vec3(0.7, 0.85, 1.0) * ray * 0.55;
+          col += vec3(1.0, 0.92, 0.85) * shoot * 1.4;
+
+          // Star field denser + more luminous beacons.
+          float dust = starLayer(d, 300.0, 0.88, 0.2, uTime * 0.7);
+          float mid = starLayer(d + 11.3, 150.0, 0.93, 0.24, uTime);
+          float big = starLayer(d + 5.7, 48.0, 0.97, 0.32, uTime * 0.6);
+          float huge = starLayer(d + 19.0, 22.0, 0.985, 0.38, uTime * 0.4);
+          float bigHue = hash(floor((d + 5.7) * 48.0) + 13.1);
+          vec3 bigCol = mix(vec3(0.75, 0.9, 1.0), vec3(1.0, 0.8, 0.65), step(0.65, bigHue));
+          bigCol = mix(bigCol, vec3(0.75, 0.55, 1.0), step(0.88, bigHue));
+          col += vec3(0.85, 0.9, 1.0) * dust * 0.42;
+          col += vec3(0.92, 0.96, 1.0) * mid * (0.6 + neb * 0.55);
+          col += bigCol * big * 1.35;
+          col += vec3(0.9, 0.75, 1.0) * huge * 1.6;
+
+          // Soft purple haze toward zenith (void glow).
+          col += vec3(0.12, 0.05, 0.22) * smoothstep(0.2, 0.95, d.y) * 0.25;
+
+          // Blue-noise dither against banding.
+          col += (hash(d * 337.7) - 0.5) * 0.014;
 
           gl_FragColor = vec4(col, 1.0);
         }
@@ -300,25 +337,25 @@ export class EtherealSky {
   private buildFalls(): void {
     // Main curtain: lifts off the world's edge behind the woods and flows
     // UP past the treeline into the vortex overhead (screen-forward, -Z).
-    // The plane extends FAR below the horizon (bottom ~-58) so its lower end
-    // is always hidden behind the ground/treeline — the falls read as coming
-    // from beyond the world's edge, never visibly "ending" mid-sky.
-    const main = new THREE.PlaneGeometry(20, 95);
+    // Wider + taller for a more cosmic scale read from the camp overlook.
+    const main = new THREE.PlaneGeometry(28, 110);
     this.geometries.push(main);
-    const mainMesh = new THREE.Mesh(main, this.makeFallMat(1.0));
-    mainMesh.position.set(0, -10, -78);
+    const mainMesh = new THREE.Mesh(main, this.makeFallMat(1.2));
+    mainMesh.position.set(0, -8, -78);
     mainMesh.renderOrder = -90;
     this.group.add(mainMesh);
 
     // Side falls off neighbouring shards — same trick, bottoms sunk well
     // below the horizon line.
-    const side = new THREE.PlaneGeometry(7, 62);
+    const side = new THREE.PlaneGeometry(9, 72);
     this.geometries.push(side);
-    for (const [x, y, z, rot] of [
-      [-30, -6, -86, 0.22],
-      [26, -3, -90, -0.18],
+    for (const [x, y, z, rot, boost] of [
+      [-32, -5, -86, 0.22, 0.9],
+      [28, -2, -90, -0.18, 0.85],
+      [-18, 2, -100, 0.12, 0.55],
+      [16, 4, -102, -0.1, 0.5],
     ] as const) {
-      const m = new THREE.Mesh(side, this.makeFallMat(0.75));
+      const m = new THREE.Mesh(side, this.makeFallMat(boost));
       m.position.set(x, y, z);
       m.rotation.y = rot;
       m.renderOrder = -90;
@@ -328,7 +365,7 @@ export class EtherealSky {
     // Cosmic vortex at the TOP of the falls: the spinning mouth of the
     // universe the upward-flowing water pours into. Additive swirl disc
     // facing the camera, spun in update().
-    const disc = new THREE.CircleGeometry(15, 40);
+    const disc = new THREE.CircleGeometry(20, 48);
     this.geometries.push(disc);
     const vortexMat = new THREE.ShaderMaterial({
       transparent: true,
@@ -351,15 +388,20 @@ export class EtherealSky {
           float ang = atan(vUv.y, vUv.x);
           // Spiral arms wound tighter and spun harder — water winds INTO the
           // core, so the swirl phase pulls inward over time.
-          float swirl = fbm(vec3(ang * 3.0 + r * 7.5 - uTime * 0.9, r * 5.0 + uTime * 0.35, 4.7));
-          float swirl2 = fbm(vec3(ang * 1.7 - r * 5.0 + uTime * 0.5, r * 3.0 - uTime * 0.2, 9.3));
-          float body = fadeOut(0.12, 1.0, r) * (0.3 + 0.5 * swirl + 0.35 * swirl2);
-          float core = fadeOut(0.0, 0.45, r);
-          // Darker cosmic palette: pale core, teal arms, deep violet rim.
-          vec3 col = mix(vec3(0.12, 0.65, 0.5), vec3(0.75, 0.8, 0.9), core + swirl * 0.3);
-          col = mix(col, vec3(0.2, 0.5, 0.8), swirl2 * fadeOut(0.2, 0.8, r) * 0.7);
-          col += vec3(0.45, 0.2, 0.8) * smoothstep(0.5, 0.95, r) * swirl * 0.8;
-          gl_FragColor = vec4(col, body * 0.9);
+          float swirl = fbm(vec3(ang * 3.0 + r * 7.5 - uTime * 1.1, r * 5.0 + uTime * 0.4, 4.7));
+          float swirl2 = fbm(vec3(ang * 1.7 - r * 5.0 + uTime * 0.6, r * 3.0 - uTime * 0.25, 9.3));
+          float swirl3 = fbm(vec3(ang * 5.0 + r * 12.0 - uTime * 1.4, r * 8.0, 2.1));
+          float body = fadeOut(0.08, 1.0, r) * (0.28 + 0.48 * swirl + 0.35 * swirl2 + 0.22 * swirl3);
+          float core = fadeOut(0.0, 0.4, r);
+          // Hotter cosmic core: white-magenta heart, teal arms, violet accretion rim.
+          vec3 col = mix(vec3(0.1, 0.75, 0.55), vec3(0.95, 0.85, 1.0), core + swirl * 0.35);
+          col = mix(col, vec3(0.25, 0.55, 0.95), swirl2 * fadeOut(0.15, 0.75, r) * 0.75);
+          col += vec3(0.65, 0.2, 0.95) * smoothstep(0.45, 0.98, r) * swirl * 0.95;
+          col += vec3(1.0, 0.7, 0.9) * core * core * 0.8;
+          // Accretion sparks.
+          float spark = smoothstep(0.992, 1.0, hash(floor(vec3(ang * 20.0, r * 30.0 - uTime * 2.0, 4.0))));
+          col += vec3(1.0) * spark * fadeOut(0.2, 0.9, r);
+          gl_FragColor = vec4(col, body * 0.95);
         }
       `,
     });
@@ -367,10 +409,50 @@ export class EtherealSky {
     this.timed.push(vortexMat);
     const vortex = new THREE.Mesh(disc, vortexMat);
     vortex.rotation.x = 0.3; // top tipped away, facing down at the lobby
-    vortex.position.set(0, 36, -84);
+    vortex.position.set(0, 38, -84);
     vortex.renderOrder = -95;
     this.vortex = vortex;
     this.group.add(vortex);
+
+    // Outer accretion halo (slower, larger, more violet).
+    const halo = new THREE.CircleGeometry(28, 48);
+    this.geometries.push(halo);
+    const haloMesh = new THREE.Mesh(
+      halo,
+      new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms: { uTime: { value: 0 } },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv * 2.0 - 1.0;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          varying vec2 vUv;
+          ${EtherealSky.NOISE}
+          void main() {
+            float r = length(vUv);
+            float ang = atan(vUv.y, vUv.x);
+            float band = fadeOut(0.55, 1.0, r) * smoothstep(0.35, 0.7, r);
+            float n = fbm(vec3(ang * 2.0 - uTime * 0.2, r * 4.0, 5.0));
+            float a = band * (0.25 + 0.55 * n);
+            vec3 col = mix(vec3(0.2, 0.4, 0.9), vec3(0.7, 0.25, 0.95), n);
+            gl_FragColor = vec4(col, a * 0.55);
+          }
+        `,
+      }),
+    );
+    this.materials.push(haloMesh.material as THREE.Material);
+    this.timed.push(haloMesh.material as THREE.ShaderMaterial);
+    haloMesh.rotation.x = 0.32;
+    haloMesh.position.set(0, 38, -84.5);
+    haloMesh.renderOrder = -96;
+    this.group.add(haloMesh);
   }
 
   // ------------------------------------------------------------------ mist

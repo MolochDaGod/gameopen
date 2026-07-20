@@ -3075,6 +3075,26 @@ export class EditorScene {
   }
 
   /**
+   * Capture the live voxel rig's colours for "Save avatar".
+   * Returns null when no procedural rig is loaded.
+   */
+  captureVoxelAvatarParts(): {
+    skin: string;
+    shirt: string;
+    pants: string;
+    boot: string;
+    eye: string;
+    hat: string;
+  } | null {
+    return this.rig?.captureAvatarParts() ?? null;
+  }
+
+  /** True when a procedural Explorer-style voxel rig is the dressed character. */
+  hasVoxelRig(): boolean {
+    return this.rig !== null;
+  }
+
+  /**
    * Load a data-URL pattern image and apply it as a tiling texture on one part of
    * the procedural voxel character. Unlike {@link applySkin} (which textures the
    * WHOLE subtree uniformly), this targets a single body part. Box-rig faces use
