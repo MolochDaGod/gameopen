@@ -7,6 +7,7 @@
  */
 import { useMemo, useState, type CSSProperties } from "react";
 import {
+  ERA_CATEGORIES,
   GAME_LIBRARY,
   MINE_LOADER,
   featuredGames,
@@ -45,17 +46,11 @@ export type LibraryNavigateMode =
 
 type FilterId = "all" | "featured" | GameCategory;
 
+/** Era-first filters — Voxel / Warlords / Nexus / Armada (+ Account). */
 const FILTERS: { id: FilterId; label: string }[] = [
   { id: "all", label: "All Games" },
   { id: "featured", label: "Featured" },
-  { id: "open-world", label: "Worlds" },
-  { id: "combat", label: "Combat" },
-  { id: "rts", label: "RTS" },
-  { id: "survival", label: "Survival" },
-  { id: "editor", label: "Create" },
-  { id: "social", label: "Social" },
-  { id: "arcade", label: "Arcade" },
-  { id: "account", label: "Account" },
+  ...ERA_CATEGORIES.map((e) => ({ id: e.id as FilterId, label: e.label })),
 ];
 
 interface Props {

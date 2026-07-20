@@ -47,6 +47,8 @@ export const FLEET_WORLD_HOSTS = {
   carrier: "https://carrier.grudge-studio.com/",
   /** Mech */
   mech: "https://mech-playground.vercel.app/",
+  /** Armada era */
+  grimArmada: "https://grim-armada-web.vercel.app/",
   /** Open self */
   open: "https://open.grudge-studio.com/",
   gameopen: "https://gameopen.vercel.app/",

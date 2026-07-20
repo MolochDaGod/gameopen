@@ -2,10 +2,21 @@
  * Grudge Open — Steam / Roblox–style game library catalog.
  *
  * open.grudge-studio.com is the launcher + deployer shell.
- * World authority for voxel Realms = Mine-Loader (local + fleet deploy).
  *
- * Inventory consolidated from D:/GitHub, F:/GitHub, Desktop, Documents, D:/Games
- * and the fleet skill map — only titles we actively launch or migrate here.
+ * ## Era categories (SSOT for import / deploy — do not invent parallel games)
+ *  - **voxel**    — VoxGrudge production, Mine-Loader Realms, DCQ, Z-Brawl, Worldbuilder
+ *  - **warlords** — Fantasy / grudge6 / Warlords client, Genesis, islands, combat labs
+ *  - **nexus**    — Sci-fi / mech / metaverse / space-adjacent fleet
+ *  - **armada**   — Naval / Grim Armada / sail maps
+ *  - **account**  — Platform hub only (SSO, rooms shell) — not a game era
+ *
+ * ## Hard rules (agents + humans)
+ * 1. Prefer the **live production URL** (probed 200). Never list Desktop HTML forks
+ *    (index.html, live.html, grudge-warlords-vox.html, …) as separate games.
+ * 2. Desktop `grudgeproduction/voxgrudge` is an **asset + source kit** for the
+ *    single production open world at voxgrudge.vercel.app — not N launchers.
+ * 3. No duplicates, no “worse” or legacy stacks beside the production entry.
+ * 4. New era content ships under its era category only (import path = era).
  */
 
 import { assetUrl } from "../lib/fleet";
@@ -25,15 +36,55 @@ export type LaunchKind =
   | "mine-loader" // Mine-Loader world SPA (Vercel + Railway + CF)
   | "editor"; // editor surface (voxel / dressing / mine world tools)
 
+/**
+ * Library filter categories = production eras (+ account platform).
+ * Use these when importing/deploying so eras never collide.
+ */
 export type GameCategory =
-  | "combat"
-  | "open-world"
-  | "rts"
-  | "survival"
-  | "editor"
-  | "social"
-  | "arcade"
+  | "voxel"
+  | "warlords"
+  | "nexus"
+  | "armada"
   | "account";
+
+/** Ordered era chips for the library UI. */
+export const ERA_CATEGORIES: readonly {
+  id: GameCategory;
+  label: string;
+  blurb: string;
+  tone: string;
+}[] = [
+  {
+    id: "voxel",
+    label: "Voxel",
+    blurb: "VoxGrudge · Realms · DCQ · arenas · Worldbuilder",
+    tone: "#5fe0ff",
+  },
+  {
+    id: "warlords",
+    label: "Warlords",
+    blurb: "Fantasy flagship · Genesis · islands · combat sandbox",
+    tone: "#e86a1a",
+  },
+  {
+    id: "nexus",
+    label: "Nexus",
+    blurb: "Sci-fi · mech · metaverse · carrier",
+    tone: "#9d8bff",
+  },
+  {
+    id: "armada",
+    label: "Armada",
+    blurb: "Naval · Grim Armada · sail maps",
+    tone: "#4fc3c8",
+  },
+  {
+    id: "account",
+    label: "Account",
+    blurb: "SSO · characters · lobby shell",
+    tone: "#4fc3ff",
+  },
+] as const;
 
 export type EngineTag =
   | "mine-loader"
@@ -121,12 +172,23 @@ export const MINE_LOADER = {
   ],
 } as const;
 
-/** Full open world (not Open's thin /world voxel editor). */
+/**
+ * Full open world (production only).
+ * Desktop kit: C:\Users\nugye\Desktop\grudgeproduction\voxgrudge
+ * (canonical entry grudge-warlords-openworld.html → Vercel voxgrudge).
+ * Do NOT register index.html / live.html / grudge-warlords-vox.html as games.
+ */
 export const VOXGRUDGE_WORLD = {
   clientUrl: FLEET_WORLD_HOSTS.voxgrudge,
   grudoxPath: FLEET_WORLD_HOSTS.grudoxVoxgrudge,
   launchUrl: voxgrudgeWorldUrl,
-  sources: ["D:\\GitHub\\voxgrudge", "F:\\GitHub\\voxgrudge"],
+  sources: [
+    "C:\\Users\\nugye\\Desktop\\grudgeproduction\\voxgrudge",
+    "D:\\GitHub\\voxgrudge",
+    "F:\\GitHub\\voxgrudge",
+  ],
+  /** Production HTML entry on the Vercel deploy (not local forks). */
+  productionEntry: "grudge-warlords-openworld.html",
 } as const;
 
 /** Dungeon Crawler Quest. */
@@ -166,7 +228,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Authoritative voxel worlds",
     blurb:
       "Networked Minecraft-like Realms — build, combat, parties. World server = Mine-Loader (Railway Postgres, 1 replica). Launcher deploys & opens this stack.",
-    category: "open-world",
+    category: "voxel",
     tags: ["Worlds", "Multiplayer", "Deploy"],
     tone: "#7ee0a0",
     posterKey: "library-mine",
@@ -191,7 +253,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Danger Room",
     short: "Combat sandbox",
     blurb: "Live combat sandbox — weapons, skills, sparring, fleet characters, A.L.E. review.",
-    category: "combat",
+    category: "warlords",
     tags: ["PvE", "Training", "AI", "Map:Danger"],
     tone: "#ff7a7a",
     posterKey: "library-danger",
@@ -210,7 +272,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "BR · singles & duos",
     blurb:
       "Hunger Games Arena last-standing battleground — 16 players, bot brains, Danger Room weapon skills + sidearm pre-select, minimap M. Biomes/walls/boats from practice 15 arenas kit + wildlife (gator, fox, wolf, buffalo, bear).",
-    category: "combat",
+    category: "voxel",
     tags: ["BR", "Bots", "Map:Hunger", "Singles", "Duos"],
     tone: "#f0c14b",
     posterKey: "library-danger",
@@ -233,7 +295,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Harvest forest",
     blurb:
       "Dark forest harvest test — Warlords trees/rocks/leaves + flowers, ore, animals. LMB select · RMB harvest. Seed forest-map-harvest-01.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Harvest", "Production", "Map:Forest"],
     tone: "#3d7a4a",
     posterKey: "library-mine",
@@ -252,7 +314,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Survival RPG island",
     blurb:
       "Minecraft-like survival island — build/mine with trailer ores, orc tribes + outlaws at red mushrooms, bandit voxel-boat raids (3–5). Stage island_life.glb to models/worlds/. Voxel/Blockbench wildlife only (no COTW).",
-    category: "survival",
+    category: "voxel",
     tags: ["Survival", "RPG", "Raids", "Map:IslandLife", "Orcs", "Bandits"],
     tone: "#5ec8a0",
     posterKey: "library-mine",
@@ -276,7 +338,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Fabled capital + sky cities",
     blurb:
       "fabledzone.glb great tree island + floating dwarf main city & elf sky town (Three.js), portals between ground and sky. Stage fabled-zone.glb; sky assets under models/worlds/sky/.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Fabled", "Town", "Sky", "Portals", "Dwarf", "Elf", "Map:FabledZone"],
     tone: "#b48cff",
     posterKey: "library-mine",
@@ -300,7 +362,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "NPC dock seed kit",
     blurb:
       "bridge_town.glb modular kit — seed fisher/merchant/guard docks on island shores (stilts, piers, lamps, barrels).",
-    category: "open-world",
+    category: "warlords",
     tags: ["Docks", "NPCs", "Islands", "BridgeTown"],
     tone: "#5a9ec8",
     posterKey: "library-mine",
@@ -319,7 +381,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Dwarf capital (NPCs ready)",
     blurb:
       "City NPCs use grudge6 dwarf + uMMORPG-style spawn tables. City mesh: convert licensed ummorpgdev/modularcitybuilder offline → models/worlds/dwarf-main-city.glb (no raw Unity in browser).",
-    category: "open-world",
+    category: "warlords",
     tags: ["Dwarf", "Town", "uMMORPG", "grudge6"],
     tone: "#c4a574",
     posterKey: "library-mine",
@@ -338,7 +400,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Dual islands + sail",
     blurb:
       "SAILTEST dual islands near sea level — water, wind, sand, sky, camp, harvest, Grudge HUD/characters. Seed sailtest-island-01.",
-    category: "open-world",
+    category: "armada",
     tags: ["Camp", "Sail", "Build", "Map:Sailtest"],
     tone: "#5a9ec8",
     posterKey: "library-mine",
@@ -356,7 +418,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Ruins Brawler",
     short: "Twin-stick co-op",
     blurb: "3D twin-stick co-op survival in the shared GRUDOX ruins arena.",
-    category: "combat",
+    category: "voxel",
     tags: ["Co-op", "Live"],
     tone: "#ff9a7a",
     posterKey: "library-brawl",
@@ -372,10 +434,10 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   {
     id: "voxgrudge",
     title: "VoxGrudge Full World",
-    short: "Full voxel open world",
+    short: "Production voxel open world",
     blurb:
-      "Production open world at voxgrudge.vercel.app — classes, craft, build, GRUDOX room API. (Open /world is a thin local editor only.)",
-    category: "open-world",
+      "THE voxel open-world deploy (voxgrudge.vercel.app · GRUDOX /voxgrudge). Source kit: Desktop grudgeproduction/voxgrudge (entry grudge-warlords-openworld.html). Not index/live HTML forks.",
+    category: "voxel",
     tags: ["Voxel", "Survival", "Full World"],
     tone: "#5fe0ff",
     posterKey: "library-voxworld",
@@ -394,7 +456,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "In-Open voxel editor + presence",
     blurb:
       "Lightweight Open surface for map tinkering + WS presence. For the full world, launch VoxGrudge Full World.",
-    category: "editor",
+    category: "voxel",
     tags: ["Lab", "Voxel"],
     tone: "#3a8a9a",
     posterKey: "library-voxworld",
@@ -412,7 +474,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "3-lane RTS · 9-sector seas",
     blurb:
       "Warlords-era: your 4 campfire heroes + grudge6 units (explorers are units). Three lanes, buildings, turrets, sailing sectors (3×3). In-app canvas with SSO + characterId; product SPA warlord-genesis.vercel.app.",
-    category: "rts",
+    category: "warlords",
     tags: ["MOBA", "RTS", "Fleet", "Sectors", "In-app"],
     tone: "#ffd24d",
     posterKey: "library-genesis",
@@ -424,7 +486,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     url: "https://warlord-genesis.vercel.app/lobby",
     deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
     sources: ["F:\\GitHub\\warlord-genesis", "D:\\GitHub\\gameopen"],
-    featured: true,
+    
     status: "live",
   },
   {
@@ -433,7 +495,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Largest map editor · Play = Danger Room",
     blurb:
       "Open’s largest in-launcher map editor — blocks, deployables, dungeons. Hit Play for the exact Danger Room player UX (camera, loco, weapons, skills, FX, anims) with no admin tools.",
-    category: "editor",
+    category: "voxel",
     tags: ["Create", "Maps", "Worldbuilder", "Play"],
     tone: "#7ee0a0",
     posterKey: "worldbuilder",
@@ -451,7 +513,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Dressing Room",
     short: "Equip & preview",
     blurb: "Avatar editor — race GLBs, weapons, animations, VFX. charactersgrudox + grudge6 kits.",
-    category: "editor",
+    category: "warlords",
     tags: ["Avatar", "Gear"],
     tone: "#ffb24d",
     posterKey: "dressing",
@@ -468,7 +530,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "GRUDOX Island",
     short: "Persistent play shell island",
     blurb: "Harvest, craft, build, PvP as your Warlords character. Account bag on Railway.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Island", "PvP"],
     tone: "#5fd48a",
     posterKey: "lobby",
@@ -486,7 +548,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudge Warlords",
     short: "Main Warlords client",
     blurb: "Primary Warlords game client — characters, islands, Colyseus lobbies.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Flagship", "Colyseus"],
     tone: "#e86a1a",
     posterKey: "zones",
@@ -503,7 +565,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Voxel RTS / Command",
     short: "Toon RTS + Forge",
     blurb: "R3F + Rapier RTS / Hero Command. Forge map editor at forge.grudge-studio.com.",
-    category: "rts",
+    category: "warlords",
     tags: ["RTS", "Forge"],
     tone: "#9d8bff",
     posterKey: "library-rts",
@@ -526,7 +588,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     short: "Voxel dungeon RPG",
     blurb:
       "Full DCQ — Three.js + voxel + Rapier dungeon RPG. Live at dcq.grudge-studio.com (fallback dungeon-crawler-quest.vercel.app).",
-    category: "survival",
+    category: "voxel",
     tags: ["Dungeon", "RPG", "Voxel"],
     tone: "#c9a0ff",
     posterKey: "mimic",
@@ -544,7 +606,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Warlords Home Island",
     short: "Production island",
     blurb: "water.grudge-studio.com/island — grudge6 captain, harvest, stylized nature.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Island", "Warlords"],
     tone: "#4fc3c8",
     posterKey: "lobby",
@@ -562,7 +624,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Tactical Infinity",
     short: "Islands + equipment",
     blurb: "Full TI client — islands, equipment, Warlords-era systems.",
-    category: "open-world",
+    category: "warlords",
     tags: ["Island", "Equipment"],
     tone: "#5a9fd4",
     posterKey: "library-mine",
@@ -580,7 +642,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Angel Island",
     short: "Voxel island demo",
     blurb: "Angel Island voxel sandbox (D:\\Games\\angel_island pack).",
-    category: "open-world",
+    category: "voxel",
     tags: ["Island", "Voxel"],
     tone: "#e8c06a",
     posterKey: "lobby",
@@ -597,7 +659,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "GRUDOX Games Hub",
     short: "Arcade + cabinets",
     blurb: "Racer, zombie, z-brawl, waters, voxgrudge path — grudox.grudge-studio.com/games",
-    category: "arcade",
+    category: "voxel",
     tags: ["Arcade", "Hub"],
     tone: "#7a9cff",
     posterKey: "zones",
@@ -615,7 +677,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudges Survival",
     short: "Survival R3F",
     blurb: "Open survival on grudges.grudge-studio.com — Railway survival-api.",
-    category: "survival",
+    category: "voxel",
     tags: ["Survival"],
     tone: "#88cc88",
     posterKey: "voxgrudge",
@@ -632,7 +694,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Z-Brawl",
     short: "Voxel fight arena",
     blurb: "Protocol Extinction arena combat — GRUDOX arcade handoff.",
-    category: "arcade",
+    category: "voxel",
     tags: ["Arena", "Voxel"],
     tone: "#9d8bff",
     posterKey: "brawl",
@@ -649,7 +711,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Test Dungeon · Mimic",
     short: "Encounter lab",
     blurb: "Vol scene — open a barrel, fight the Mimic (melee + acid AoE).",
-    category: "combat",
+    category: "warlords",
     tags: ["Boss", "Test"],
     tone: "#9cff5a",
     posterKey: "mimic",
@@ -666,7 +728,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "The Lobby",
     short: "Rooms & community",
     blurb: "Join multiplayer rooms or browse community maps & scenes.",
-    category: "social",
+    category: "account",
     tags: ["Rooms", "UGC"],
     tone: "#9d8bff",
     posterKey: "lobby",
@@ -683,7 +745,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudge Metaverse",
     short: "Lobby → play heroes",
     blurb: "Grudge ID → Warlords characters → grudge6 GLB play world.",
-    category: "social",
+    category: "nexus",
     tags: ["Metaverse"],
     tone: "#6ea8ff",
     posterKey: "lobby",
@@ -700,7 +762,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Mech Forge",
     short: "Mech builder PvP",
     blurb: "R3F mech playground — pair with Railway pvp-server.",
-    category: "combat",
+    category: "nexus",
     tags: ["Mech", "PvP"],
     tone: "#ff8844",
     posterKey: "danger",
@@ -717,7 +779,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Studio Forge",
     short: "Map & model editor",
     blurb: "Fleet map editor — forge.grudge-studio.com (RTS-Grudge studio).",
-    category: "editor",
+    category: "warlords",
     tags: ["Forge", "Maps"],
     tone: "#c9a227",
     posterKey: "voxel",
@@ -728,6 +790,80 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     deploy: { client: "vercel", edge: "cloudflare-worker" },
     sources: ["F:\\GitHub\\Grudge-Studio-Forge"],
     status: "live",
+  },
+  {
+    id: "grim-armada",
+    title: "Grim Armada",
+    short: "Naval armada era",
+    blurb:
+      "Production Armada-era fleet title — ships, naval combat. Live grim-armada-web.vercel.app. Import new Armada content under this era only.",
+    category: "armada",
+    tags: ["Naval", "Armada", "Fleet"],
+    tone: "#4fc3c8",
+    posterKey: "lobby",
+    icon: "rally",
+    engines: ["three"],
+    launch: "external",
+    url: "https://grim-armada-web.vercel.app/",
+    deploy: { client: "vercel" },
+    sources: ["F:\\GitHub\\grim-armada-web", "GrimArmada"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "nexus-carrier",
+    title: "Carrier · Nexus",
+    short: "Fleet room / WS nexus",
+    blurb:
+      "Nexus-era live room relay (carrier.grudge-studio.com). Use for multiplayer presence handoff — not a second open world.",
+    category: "nexus",
+    tags: ["Nexus", "Multiplayer", "WS"],
+    tone: "#9d8bff",
+    posterKey: "zones",
+    icon: "rally",
+    engines: ["socketio"],
+    launch: "external",
+    url: "https://carrier.grudge-studio.com/",
+    deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
+    sources: ["gameopen carrier", "voxgrudge-grudox-room"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "nexus-slot",
+    title: "Nexus Import Bay",
+    short: "Era scaffold · sci-fi",
+    blurb:
+      "Reserved Nexus-era shelf for production imports (drive, space RTS, cyber packs). Do not dump Warlords or Voxel HTML here — wire a live Vercel URL first.",
+    category: "nexus",
+    tags: ["Nexus", "Import", "Scaffold"],
+    tone: "#7a6cff",
+    posterKey: "zones",
+    icon: "explore",
+    engines: ["three"],
+    launch: "external",
+    url: "https://grudox.grudge-studio.com/games",
+    deploy: { client: "vercel" },
+    sources: ["era:nexus"],
+    status: "migrating",
+  },
+  {
+    id: "armada-slot",
+    title: "Armada Import Bay",
+    short: "Era scaffold · naval",
+    blurb:
+      "Reserved Armada-era shelf for sail/fleet imports beyond Grim Armada + Sailtest. Production URL required before featured.",
+    category: "armada",
+    tags: ["Armada", "Import", "Scaffold"],
+    tone: "#3aa8b0",
+    posterKey: "lobby",
+    icon: "explore",
+    engines: ["three"],
+    launch: "external",
+    url: "https://grim-armada-web.vercel.app/",
+    deploy: { client: "vercel" },
+    sources: ["era:armada"],
+    status: "migrating",
   },
 ] as const;
 
@@ -742,6 +878,22 @@ export function iconUrl(name: string): string {
 export function libraryByCategory(cat: GameCategory | "all"): GameEntry[] {
   if (cat === "all") return [...GAME_LIBRARY];
   return GAME_LIBRARY.filter((g) => g.category === cat);
+}
+
+/** Eras are the library categories (voxel / warlords / nexus / armada). */
+export function libraryByEra(era: GameCategory | "all"): GameEntry[] {
+  return libraryByCategory(era);
+}
+
+/** Live production voxel titles (excludes lab + import scaffolds). */
+export function productionVoxelGames(): GameEntry[] {
+  return GAME_LIBRARY.filter(
+    (g) =>
+      g.category === "voxel" &&
+      g.status === "live" &&
+      g.id !== "voxgrudge-lab" &&
+      !g.id.endsWith("-slot"),
+  );
 }
 
 export function featuredGames(): GameEntry[] {
@@ -817,15 +969,13 @@ export function gameLaunchUrl(
 
 export type LibraryFilter = "all" | "featured" | GameCategory;
 
+/** Library chip row — era-first (import/deploy without confusion). */
 export const LIBRARY_FILTERS: { id: LibraryFilter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "featured", label: "Featured" },
-  { id: "open-world", label: "Worlds" },
-  { id: "combat", label: "Combat" },
-  { id: "rts", label: "RTS" },
-  { id: "survival", label: "Survival" },
-  { id: "editor", label: "Create" },
-  { id: "social", label: "Social" },
-  { id: "arcade", label: "Arcade" },
+  { id: "voxel", label: "Voxel" },
+  { id: "warlords", label: "Warlords" },
+  { id: "nexus", label: "Nexus" },
+  { id: "armada", label: "Armada" },
   { id: "account", label: "Account" },
 ];
