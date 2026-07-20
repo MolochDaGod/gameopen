@@ -3382,9 +3382,59 @@ export class Studio {
     // Do NOT clear hard focus — focus is independent of guard
   }
 
-  /** Touch: tap to toggle focus (was hold-block). */
+  /**
+   * Touch hold-block (shield / guard). Distinct from focus (RMB) and parry (C).
+   * Legacy name kept; prefer {@link touchGuard}.
+   */
   touchBlock(on: boolean) {
-    if (on) this.toggleFocusMode();
+    this.touchGuard(on);
+  }
+
+  /** Touch: hold for pure guard (E forcefield / sparring block). */
+  touchGuard(on: boolean) {
+    if (on) this.startBlock();
+    else this.endBlock();
+  }
+
+  /** Touch: tap for combat parry window (KeyC). */
+  touchParry() {
+    if (this.activityMode === "combat") this.doParry();
+  }
+
+  /** Touch: sticky hard-focus / soft-lock toggle (RMB). */
+  touchFocus() {
+    this.toggleFocusMode();
+  }
+
+  /** Touch: hold crouch/sneak when the active character supports it. */
+  setTouchCrouch(on: boolean) {
+    const anyChar = this.character as { animator?: { setCrouch?: (v: boolean) => void } } | null;
+    anyChar?.animator?.setCrouch?.(on);
+    // Also latch as a move-speed hint via sprint flag inverted when crouching
+    // (Controller reads touchSprint; crouch is animation-side only today).
+    if (on) this.input.touchSprint = false;
+  }
+
+  /** Touch: set activity mode (combat / harvest / build). */
+  touchSetActivityMode(mode: import("./playerMode").PlayerActivityMode) {
+    this.setActivityMode(mode);
+  }
+
+  /** Touch: cycle combat → harvest → build. */
+  touchCycleActivityMode() {
+    this.cycleActivityMode();
+  }
+
+  /** Touch: harvest tool id (axe/pick/sickle/…) or combat skill index. */
+  touchActivityTool(toolId: string) {
+    if (this.activityMode === "harvest" || this.activityMode === "build") {
+      this.runActivityTool(toolId);
+    }
+  }
+
+  /** Touch: dodge roll (KeyX). */
+  touchDodge() {
+    this.performTimedDodgeRoll();
   }
 
   /**
@@ -10092,10 +10142,19 @@ export class Studio {
   }
   /** F-skill when index is omitted, else signature skill 0-3. */
   touchSkill(index?: number) {
+    if (this.activityMode === "harvest") {
+      // In harvest, skill stick cardinals map to tools via touchActivityTool.
+      return;
+    }
     this.useSkill(index);
   }
   touchSkyfall() {
     this.skyfall();
+  }
+
+  /** Current activity mode for HUD / touch chrome. */
+  getActivityMode(): import("./playerMode").PlayerActivityMode {
+    return this.activityMode;
   }
 
   /**

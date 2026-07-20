@@ -1659,7 +1659,8 @@ export default function App() {
   const panelsOpen =
     dangerDock.isVisible("admin") || dangerDock.isVisible("editor") || dangerDock.isVisible("anim");
 
-  // Stable touch API bridging the on-screen controls to the live engine.
+  // Stable touch API bridging the on-screen controls to the live engine
+  // (mobile dual-stick + harvest/combat pad on open.grudge-studio.com).
   const touchApi = useRef({
     touchMoveInput: (x: number, y: number) => studioRef.current?.touchMoveInput(x, y),
     touchLook: (dx: number, dy: number) => studioRef.current?.touchLook(dx, dy),
@@ -1669,6 +1670,16 @@ export default function App() {
     touchAttack: () => studioRef.current?.touchAttack(),
     touchSkill: (i?: number) => studioRef.current?.touchSkill(i),
     touchSkyfall: () => studioRef.current?.touchSkyfall(),
+    touchGuard: (on: boolean) => studioRef.current?.touchGuard(on),
+    touchParry: () => studioRef.current?.touchParry(),
+    touchFocus: () => studioRef.current?.touchFocus(),
+    setTouchCrouch: (on: boolean) => studioRef.current?.setTouchCrouch(on),
+    touchSetActivityMode: (m: "combat" | "harvest" | "build") =>
+      studioRef.current?.touchSetActivityMode(m),
+    touchCycleActivityMode: () => studioRef.current?.touchCycleActivityMode(),
+    touchActivityTool: (id: string) => studioRef.current?.touchActivityTool(id),
+    touchDodge: () => studioRef.current?.touchDodge(),
+    getActivityMode: () => studioRef.current?.getActivityMode?.() ?? "combat",
   }).current;
 
   const onApplyStatus = useCallback((id: StatusId, aoe?: boolean) => {
@@ -2222,7 +2233,13 @@ export default function App() {
             </div>
           )}
 
-          {isMobile && <TouchControls api={touchApi} />}
+          {isMobile && (
+            <TouchControls
+              api={touchApi}
+              onOpenBag={() => setEquipOpen(true)}
+              onOpenSystems={() => setSystemsOpen(true)}
+            />
+          )}
 
           {equipOpen && (
             <ExplorerCharacterPage
@@ -2440,7 +2457,13 @@ export default function App() {
               </div>
             )}
 
-          {isMobile && !panelsOpen && <TouchControls api={touchApi} />}
+          {isMobile && !panelsOpen && (
+            <TouchControls
+              api={touchApi}
+              onOpenBag={() => setEquipOpen(true)}
+              onOpenSystems={() => setSystemsOpen(true)}
+            />
+          )}
 
           {!panelsOpen && !dangerStartOpen && (
             <>
