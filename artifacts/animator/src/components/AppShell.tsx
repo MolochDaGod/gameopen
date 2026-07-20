@@ -6,11 +6,12 @@
  * doors round-trip, and so the AI companion is reachable from everywhere.
  *
  * The shell renders as an overlay fragment (it does not box the mode content —
- * each mode keeps its own fixed/absolute full-screen layout), contributing two
- * things above the scene:
+ * each mode keeps its own fixed/absolute full-screen layout), contributing:
  *   1. a persistent top launcher + nav (bottom sheet on phones, dropdown on
- *      pointer devices), safe-area aware with touch-sized targets, and
- *   2. ONE global {@link AiAssistant} dock driven by the active surface's config.
+ *      pointer devices), safe-area aware with touch-sized targets,
+ *   2. the Toolbox pill (tools grid + music station) — same as the controll lab,
+ *      available from the moment the app opens on every surface, and
+ *   3. ONE global {@link AiAssistant} dock driven by the active surface's config.
  *
  * Modes that own a live engine (the Dressing Room) register their assistant via
  * {@link useRegisterAssistant}; the shell prefers that child-registered config
@@ -24,7 +25,10 @@ import { AssistantSurfaceContext, type AssistantConfig } from "../ai/AssistantSu
 import { useDevice } from "../hooks/useDevice";
 import { assetUrl } from "../lib/fleet";
 import { InstallAppButton } from "./InstallAppButton";
+import { ToolboxOverlay } from "./toolbox/ToolboxOverlay";
+import type { ToolDef } from "./toolbox/tools";
 import "./appShell.css";
+import "./toolbox/toolbox.css";
 
 /** Tiny themed game icon from public/icons/. Falls back to a tinted square. */
 function GameIcon({ name, tone, size = 20 }: { name: string; tone: string; size?: number }) {
@@ -100,13 +104,29 @@ interface Props {
   assistant: AssistantConfig | null;
   /** Suppress the global dock (e.g. LED Mask runs its own embedded face chat). */
   hideAssistant?: boolean;
+  /**
+   * Toolbox tool click — host routes mode switches / dock panels / HUD edit /
+   * loadout. Required for a working toolbox (same as controll lab).
+   */
+  onToolLaunch?: (tool: ToolDef) => void;
+  /** Music tab content (CPT RAC Station + volume mixer). */
+  music?: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ mode, onNavigate, assistant, hideAssistant, children }: Props) {
+export function AppShell({
+  mode,
+  onNavigate,
+  assistant,
+  hideAssistant,
+  onToolLaunch,
+  music,
+  children,
+}: Props) {
   const { deviceClass } = useDevice();
   const phone = deviceClass === "phone";
   const [navOpen, setNavOpen] = useState(false);
+  const [toolboxOpen, setToolboxOpen] = useState(false);
   // A mode that owns its engine can override the host-provided config.
   const [override, setOverride] = useState<AssistantConfig | null>(null);
 
@@ -114,10 +134,12 @@ export function AppShell({ mode, onNavigate, assistant, hideAssistant, children 
   const current = activeNav(mode);
   const config = override ?? assistant;
   // Hub already has full Steam library chrome — hide floating launcher there.
+  // Toolbox still shows on library so music/tools work from first open.
   const hideLauncher = mode === "doors";
 
   const go = (next: ShellMode) => {
     setNavOpen(false);
+    setToolboxOpen(false);
     if (next !== mode) onNavigate(next);
   };
 
@@ -132,16 +154,42 @@ export function AppShell({ mode, onNavigate, assistant, hideAssistant, children 
     return order.filter((g) => map.has(g)).map((g) => ({ group: g, items: map.get(g)! }));
   }, []);
 
+  const toolboxBtn = (
+    <button
+      type="button"
+      className={`shell-toolbox ${toolboxOpen ? "on" : ""}`}
+      onClick={() => {
+        setNavOpen(false);
+        setToolboxOpen((v) => !v);
+      }}
+      aria-haspopup="dialog"
+      aria-expanded={toolboxOpen}
+      data-tip="Toolbox — tools, music & settings"
+      title="Toolbox — tools, music & settings"
+    >
+      <img className="shell-toolbox-art" src="/emblem.png" alt="" draggable={false} />
+      <span className="shell-toolbox-label">Toolbox</span>
+    </button>
+  );
+
   return (
     <AssistantSurfaceContext.Provider value={surfaceApi}>
       {children}
 
-      {!hideLauncher && (
+      {/* Toolbox always reachable — library hub + every surface (parity with controll). */}
+      {hideLauncher ? (
+        <div className="shell-toolbox-float" role="banner">
+          {toolboxBtn}
+        </div>
+      ) : (
         <>
           <div className="shell-steam-bar" role="banner">
             <button
               className="shell-launcher"
-              onClick={() => setNavOpen((v) => !v)}
+              onClick={() => {
+                setToolboxOpen(false);
+                setNavOpen((v) => !v);
+              }}
               aria-haspopup="menu"
               aria-expanded={navOpen}
               title="Switch system"
@@ -152,6 +200,7 @@ export function AppShell({ mode, onNavigate, assistant, hideAssistant, children 
               <span className="shell-launcher-label">{current.label}</span>
               <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
             </button>
+            {toolboxBtn}
             <div className="shell-steam-actions">
               <InstallAppButton variant="pill" />
               <button
@@ -224,6 +273,19 @@ export function AppShell({ mode, onNavigate, assistant, hideAssistant, children 
           </AnimatePresence>
         </>
       )}
+
+      <AnimatePresence>
+        {toolboxOpen && onToolLaunch && (
+          <ToolboxOverlay
+            music={music}
+            onClose={() => setToolboxOpen(false)}
+            onLaunch={(tool) => {
+              setToolboxOpen(false);
+              onToolLaunch(tool);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {config && !hideAssistant && (
         <AiAssistant

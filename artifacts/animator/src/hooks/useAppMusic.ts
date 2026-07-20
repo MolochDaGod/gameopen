@@ -51,16 +51,23 @@ export function useAppMusic(sound: SoundSettings) {
       setStationName(info.name);
     }
 
-    // Resume + play on first user gesture (browser autoplay policy)
+    // Resume + play on first user gesture (browser autoplay policy).
+    // Keep re-asserting resume on later gestures so tab sleep / interrupted
+    // contexts start again without a full reload (controll parity).
     const unlock = () => {
       musicStation.resume();
       if (!musicStation.isPaused()) musicStation.play();
     };
+    const keepAlive = () => musicStation.resume();
     window.addEventListener("pointerdown", unlock, { once: true, capture: true });
     window.addEventListener("keydown", unlock, { once: true, capture: true });
+    window.addEventListener("pointerdown", keepAlive, { capture: true });
+    window.addEventListener("keydown", keepAlive, { capture: true });
     return () => {
       window.removeEventListener("pointerdown", unlock, true);
       window.removeEventListener("keydown", unlock, true);
+      window.removeEventListener("pointerdown", keepAlive, true);
+      window.removeEventListener("keydown", keepAlive, true);
       musicStation.setOnTrack(null);
     };
   }, []);

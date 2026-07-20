@@ -27,8 +27,12 @@ import {
 } from "./three/testWorlds";
 import { loadSound, type SoundSettings } from "./three/soundSettings";
 import { SoundMixer, type SoundChannel } from "./components/SoundMixer";
-import { DjStationPanel } from "./components/DjStationPanel";
+import { DjStationBody, DjStationPanel } from "./components/DjStationPanel";
 import { useAppMusic } from "./hooks/useAppMusic";
+import {
+  requestDressingPanel,
+  type ToolDef,
+} from "./components/toolbox/tools";
 import type {
   BrushState,
   DeployableNode,
@@ -651,7 +655,7 @@ export default function App() {
   }>({ visible: false, label: "LOADING" });
   const [dockOpen, setDockOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
-  /** CPT RAC + radio stations — app-wide music (replaces generative bed). */
+  /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
   const [testWorldId, setTestWorldId] = useState<TestWorldId>(() => loadTestWorldId());
@@ -1639,6 +1643,87 @@ export default function App() {
     [brush, veSel, veTree, veStats],
   );
 
+  /** Toolbox grid launcher — same actions as controll lab (mode / dock / HUD / equip). */
+  const onToolLaunch = useCallback(
+    (tool: ToolDef) => {
+      const { action } = tool;
+      switch (action.kind) {
+        case "mode": {
+          const m = action.mode;
+          if (m === "avatar") {
+            navigate("avatar" as Mode);
+          } else {
+            navigate(m as Mode);
+          }
+          break;
+        }
+        case "danger-panel":
+          navigate("danger");
+          // Open after mode mounts (dock layout is danger-local).
+          queueMicrotask(() => {
+            const id = action.id === "animdbg" ? "anim" : action.id;
+            dangerDock.showPanel(id);
+          });
+          break;
+        case "danger-equip":
+          navigate("danger");
+          void Promise.resolve().then(() => setEquipOpen(true));
+          break;
+        case "hud-edit":
+          navigate("danger");
+          void Promise.resolve().then(() => setHudEditing(true));
+          break;
+        case "dressing-panel":
+          navigate("editor");
+          requestDressingPanel(action.id);
+          break;
+        default:
+          break;
+      }
+    },
+    [navigate, dangerDock],
+  );
+
+  const toolboxMusic = useMemo(
+    () => (
+      <>
+        <div className="toolbox-music-title">CPT RAC Station</div>
+        <DjStationBody {...djPanelProps} />
+        <div className="toolbox-music-title">Volume mixer</div>
+        <div className="toolbox-music-mixer">
+          {(["master", "music", "combat", "ambient", "klaxon"] as SoundChannel[]).map((id) => {
+            const labels: Record<SoundChannel, string> = {
+              master: "Master volume",
+              music: "Music",
+              combat: "Combat hits",
+              ambient: "Ambient bed",
+              klaxon: "Warning klaxon",
+            };
+            const pct = Math.round(sound[id] * 100);
+            return (
+              <label className="slider sound-slider" key={id}>
+                <span className="slider-label">
+                  {labels[id]}
+                  <em>{sound.muted ? "muted" : `${pct}%`}</em>
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={pct}
+                  disabled={sound.muted}
+                  onChange={(e) => onSoundLevel(id, Number(e.target.value) / 100)}
+                />
+              </label>
+            );
+          })}
+        </div>
+      </>
+    ),
+    [djPanelProps, sound, onSoundLevel],
+  );
+
   // Per-surface config for the ONE global AI dock the shell hosts. Danger/play
   // get the Danger Room master (live tools); Worldbuilder gets Forge AI tools;
   // calm "guide" covers doors/lobby; Dressing Room registers via context.
@@ -1699,13 +1784,15 @@ export default function App() {
     veSel,
   ]);
 
-  // Wrap any mode's content in the persistent shell (launcher + global AI dock).
+  // Wrap any mode's content in the persistent shell (launcher + toolbox + AI).
   const shell = (content: React.ReactNode) => (
     <AppShell
       mode={mode}
       onNavigate={navigate}
       assistant={shellAssistant}
       hideAssistant={mode === "ledmask"}
+      onToolLaunch={onToolLaunch}
+      music={toolboxMusic}
     >
       {/* Library hub owns its own Steam chrome + account strip */}
       {mode !== "doors" && <FleetBar />}

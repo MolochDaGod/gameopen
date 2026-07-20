@@ -298,6 +298,8 @@ export class CombatSfx {
     if (this.ctx.state === "suspended" || (this.ctx.state as string) === "interrupted") {
       void this.ctx.resume();
     }
+    // Keep the persistent station alive across mode rebuilds / gesture gates.
+    musicStation.resume();
   }
 
   setMuted(muted: boolean): void {
@@ -307,6 +309,7 @@ export class CombatSfx {
     if (this.ambient) this.ambient.master.gain.value = muted ? 0 : 1;
     // The music bed respects the same mute control.
     if (this.music) this.music.master.gain.value = muted ? 0 : 1;
+    musicStation.setMuted(muted);
     // The klaxon respects the same mute control.
     this.applyKlaxonGain();
   }
@@ -325,6 +328,8 @@ export class CombatSfx {
     if (levels.music != null) this.levels.music = clamp(levels.music);
     this.applyAmbientLevel();
     this.applyMusicLevel();
+    // Keep the app-level station in lock-step with the mixer.
+    musicStation.setLevel(this.levels.music, this.levels.master);
     // Klaxon level folds into the intensity envelope.
     this.applyKlaxonIntensity();
   }
@@ -435,7 +440,8 @@ export class CombatSfx {
 
   /**
    * Snapshot the live music bed for diegetic actors (the DJ) to sync to, or
-   * `null` when the bed isn't running yet. See {@link MusicPulse}.
+   * `null` when the bed isn't running yet. Prefers the app-level CPT RAC Station
+   * pulse when that station is active (same as controll lab).
    */
   getMusicPulse(): MusicPulse | null {
     // Live DJ / radio station pulse when real tracks are playing.

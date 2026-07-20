@@ -17,6 +17,7 @@ import {
   type DjTransition,
 } from "../three/djStationSettings";
 import { RADIO_STATIONS } from "../three/audio/radioStations";
+import "./djStation.css";
 
 export interface DjNowPlaying {
   title: string;

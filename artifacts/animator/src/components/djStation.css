@@ -1,0 +1,221 @@
+/* CPT RAC Station / radio controls (DjStationPanel) — parity with controll lab */
+
+.dj-trigger {
+  max-width: 190px;
+}
+.dj-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+.dj-spin {
+  animation: dj-spin 3.2s linear infinite;
+  flex: none;
+}
+@keyframes dj-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.dj-popover {
+  min-width: 264px;
+  max-width: 300px;
+}
+.dj-now {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: linear-gradient(120deg, rgba(120, 90, 220, 0.18), rgba(80, 160, 220, 0.12));
+  border: 1px solid var(--dk-line, rgba(120, 160, 220, 0.25));
+}
+.dj-now-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #eaf1ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dj-now-sub {
+  font-size: 10.5px;
+  color: var(--dk-faint, #7e9cc0);
+  margin-top: 2px;
+}
+.dj-transport {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.dj-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  min-width: 34px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid var(--dk-line, rgba(120, 160, 220, 0.25));
+  background: rgba(255, 255, 255, 0.05);
+  color: #dbe6ff;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.dj-btn:hover {
+  background: rgba(120, 160, 220, 0.2);
+  border-color: rgba(120, 160, 220, 0.5);
+}
+.dj-btn-wide {
+  flex: 1;
+}
+.dj-btn.on {
+  background: rgba(138, 123, 255, 0.22);
+  border-color: rgba(138, 123, 255, 0.55);
+  color: #eaf1ff;
+}
+.dj-stations {
+  margin-bottom: 12px;
+}
+.dj-stations-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dk-faint, #7e9cc0);
+  margin-bottom: 6px;
+}
+.dj-stations-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.dj-station {
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dk-line, rgba(120, 160, 220, 0.25));
+  background: rgba(255, 255, 255, 0.04);
+  color: #cdd9ee;
+  font-size: 11px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.dj-station:hover:not(:disabled) {
+  background: rgba(120, 160, 220, 0.18);
+  border-color: rgba(120, 160, 220, 0.5);
+}
+.dj-station.on {
+  background: rgba(138, 123, 255, 0.22);
+  border-color: rgba(138, 123, 255, 0.6);
+  color: #eaf1ff;
+}
+.dj-station:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.dj-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  color: #cdd9ee;
+  margin-bottom: 9px;
+}
+.dj-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dj-toggle input[type="checkbox"] {
+  accent-color: #8a7bff;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+.dj-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dj-field-label {
+  font-size: 11.5px;
+  color: #cdd9ee;
+}
+.dj-field select {
+  flex: 1;
+  max-width: 150px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--dk-line, rgba(120, 160, 220, 0.25));
+  background: rgba(10, 16, 28, 0.9);
+  color: #eaf1ff;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.dj-popover .dj-slider {
+  margin-bottom: 10px;
+}
+.dj-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.dj-tracklist {
+  margin-top: 6px;
+  max-height: 178px;
+  overflow-y: auto;
+  border-top: 1px solid var(--dk-line, rgba(120, 160, 220, 0.18));
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dj-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #b9c6de;
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.dj-track:hover {
+  background: rgba(120, 160, 220, 0.14);
+  color: #eaf1ff;
+}
+.dj-track.on {
+  background: linear-gradient(120deg, rgba(138, 123, 255, 0.28), rgba(80, 160, 220, 0.16));
+  color: #fff;
+}
+.dj-track-num {
+  flex: none;
+  width: 18px;
+  text-align: right;
+  color: var(--dk-faint, #7e9cc0);
+  font-variant-numeric: tabular-nums;
+}
+.dj-track.on .dj-track-num {
+  color: #c7bcff;
+}
+.dj-track-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

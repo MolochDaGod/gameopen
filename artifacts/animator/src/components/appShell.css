@@ -17,6 +17,24 @@
   pointer-events: none;
 }
 
+/* Library hub: toolbox alone, top-left (launcher chrome is owned by GameLibrary). */
+.shell-toolbox-float {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  z-index: 710;
+  pointer-events: none;
+}
+.shell-toolbox-float > * {
+  pointer-events: auto;
+}
+
+.shell-toolbox.on {
+  border-color: rgba(232, 200, 119, 0.85);
+  background: rgba(40, 32, 14, 0.95);
+  box-shadow: 0 0 0 1px rgba(232, 200, 119, 0.25), 0 8px 26px rgba(0, 0, 0, 0.45);
+}
+
 .shell-steam-bar > * {
   pointer-events: auto;
 }
