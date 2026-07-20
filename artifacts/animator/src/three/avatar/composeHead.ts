@@ -89,14 +89,14 @@ function paintSkinBase(faces: Record<FaceName, Grid>, cfg: AvatarConfig): void {
     const g = faces[name];
     const vertical = name !== "top" && name !== "bottom";
     for (let y = 0; y < FACE; y++) {
-      // Vertical light gradient: brighter crown, darker jaw — reads as a lit
-      // form instead of a flat sticker (skipped on top/bottom caps).
-      const grad = vertical ? 1.06 - (y / (FACE - 1)) * 0.14 : 1.0;
+      // Cleaner gradient: softer crown→jaw falloff for a modern pixel look.
+      const grad = vertical ? 1.04 - (y / (FACE - 1)) * 0.1 : 1.0;
       for (let x = 0; x < FACE; x++) {
-        // Subtle deterministic mottle so big flats don't read as one flat fill.
+        // Lighter mottle — big flats stay readable, less noisy sticker.
         const n = hash01(x, y, name.length * 7 + 13);
-        let c = shade(n > 0.86 ? soft : skin, grad);
-        if (x === 0 || x === FACE - 1 || y === 0 || y === FACE - 1) c = shade(c, 0.9);
+        let c = shade(n > 0.93 ? soft : skin, grad);
+        // Crisp 1px rim outline (cleaner than heavy edge darken).
+        if (x === 0 || x === FACE - 1 || y === 0 || y === FACE - 1) c = shade(c, 0.88);
         px(g, x, y, c);
       }
     }

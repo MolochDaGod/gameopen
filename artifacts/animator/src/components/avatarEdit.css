@@ -139,6 +139,76 @@
   text-transform: uppercase;
   color: #7fb0ff;
 }
+.ae-sec-hint {
+  margin: -4px 0 8px;
+  font-size: 11px;
+  color: #6a758c;
+  letter-spacing: 0.03em;
+}
+
+/* Race hat inventory grid — clean pixel thumbs */
+.ae-hat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.ae-hat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(127, 176, 255, 0.16);
+  background: rgba(14, 18, 28, 0.85);
+  color: #c5d0e4;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.12s;
+}
+.ae-hat-chip:hover {
+  border-color: rgba(255, 210, 138, 0.45);
+  transform: translateY(-1px);
+}
+.ae-hat-chip.on {
+  border-color: #ffd28a;
+  background: rgba(255, 210, 138, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 210, 138, 0.2);
+}
+.ae-hat-ico {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #0a0c12;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+}
+.ae-hat-none {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: #0a0c12;
+  border: 1px dashed rgba(127, 176, 255, 0.25);
+  color: #5a6780;
+  font-size: 18px;
+}
+.ae-hat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .ae-races {
   display: grid;

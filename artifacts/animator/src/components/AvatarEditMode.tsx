@@ -32,8 +32,8 @@ import {
   GEAR_COLORS,
   HAIR_COLORS,
   HAIR_STYLES,
-  HAT_STYLES,
-  HEADGEAR_STYLES,
+  hatStylesFor,
+  headgearStylesFor,
   MOUTH_STYLES,
   PAINT_COLORS,
   RACES,
@@ -45,8 +45,11 @@ import {
   sanitizeConfig,
   surpriseConfig,
   type AvatarConfig,
+  type HatId,
   type RaceId,
 } from "../three/avatar/catalog";
+import { hatIconUrl, warmHatTemplates } from "../three/avatar/hats";
+import { asset } from "../three/assets";
 import { loadPlayerHeadConfig, savePlayerHeadConfig } from "../three/avatar/playerHead";
 import { cssHex } from "../three/avatar/pixels";
 import "./avatarEdit.css";
@@ -167,6 +170,20 @@ export function AvatarEditMode({ onExit }: Props) {
   }, []);
 
   const race = useMemo(() => raceDef(cfg.race), [cfg.race]);
+  const raceHats = useMemo(() => hatStylesFor(cfg.race), [cfg.race]);
+  const raceHeadgear = useMemo(() => headgearStylesFor(cfg.race), [cfg.race]);
+
+  // Prefetch race hat GLBs / procedurals so switching chips is snappy.
+  useEffect(() => {
+    warmHatTemplates(raceHats.map((h) => h.id));
+  }, [raceHats]);
+
+  // If current hat isn't in this race kit, snap to none (cleaner UX).
+  useEffect(() => {
+    if (!raceHats.some((h) => h.id === cfg.hat)) {
+      setCfg((c) => (c.hat === "none" ? c : { ...c, hat: "none" }));
+    }
+  }, [cfg.race, cfg.hat, raceHats]);
 
   // --- placement (per-part offset / scale / hide) ---
   const activeSlots = useMemo(() => {
@@ -411,8 +428,8 @@ export function AvatarEditMode({ onExit }: Props) {
           )}
 
           <section className="ae-sec">
-            <h3>Headgear</h3>
-            <Chips items={HEADGEAR_STYLES} value={cfg.headgear} onPick={(headgear) => patch({ headgear })} />
+            <h3>Headgear · {race.label}</h3>
+            <Chips items={raceHeadgear} value={cfg.headgear} onPick={(headgear) => patch({ headgear })} />
             {cfg.headgear !== "none" && (
               <div className="ae-swatches">
                 {GEAR_COLORS.map((c) => (
@@ -423,8 +440,9 @@ export function AvatarEditMode({ onExit }: Props) {
           </section>
 
           <section className="ae-sec">
-            <h3>Hat</h3>
-            <Chips items={HAT_STYLES} value={cfg.hat} onPick={(hat) => patch({ hat })} />
+            <h3>Hat · {race.label}</h3>
+            <p className="ae-sec-hint">Race kit · 3D crown load with clean pixel icons</p>
+            <HatChips items={raceHats} value={cfg.hat} onPick={(hat) => patch({ hat })} />
           </section>
 
           <section className="ae-sec">
@@ -634,6 +652,50 @@ function Chips<T extends string>({
           {s.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** Hat picker with inventory-style thumbnails (falls back to label if icon 404). */
+function HatChips({
+  items,
+  value,
+  onPick,
+}: {
+  items: { id: HatId; label: string }[];
+  value: HatId;
+  onPick: (v: HatId) => void;
+}) {
+  return (
+    <div className="ae-hat-grid">
+      {items.map((s) => {
+        const icon = hatIconUrl(s.id);
+        return (
+          <button
+            key={s.id}
+            type="button"
+            className={`ae-hat-chip ${value === s.id ? "on" : ""}`}
+            onClick={() => onPick(s.id)}
+            title={s.label}
+          >
+            {icon ? (
+              <img
+                className="ae-hat-ico"
+                src={asset(icon)}
+                alt=""
+                draggable={false}
+                loading="lazy"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <span className="ae-hat-none">∅</span>
+            )}
+            <span className="ae-hat-label">{s.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

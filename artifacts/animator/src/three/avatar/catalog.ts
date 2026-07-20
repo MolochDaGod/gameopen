@@ -56,7 +56,11 @@ export type HatId =
   | "tophat"
   | "princess"
   | "horns"
-  | "hood";
+  | "hood"
+  | "crown"
+  | "circlet3d"
+  | "warhelm"
+  | "leafCrown";
 export type ExpressionId = "normal" | "happy" | "talking" | "angry" | "sad" | "hurt";
 
 /** Adjustable part slots — every accessory that can be nudged/scaled/hidden. */
@@ -498,7 +502,8 @@ export const HEADGEAR_STYLES: { id: HeadgearStyle; label: string }[] = [
 export const HAT_COVERED_SLOTS: Partial<Record<HatId, readonly AdjustSlot[]>> = {
   // Full hood covers hair / ears / painted bands so they don't poke through.
   hood: ["hair", "ears", "headgear", "facialHair"],
-  // Horns only occupy the crown — leave hair free under them.
+  warhelm: ["hair", "ears", "headgear"],
+  // Horns / leaf / circlet only occupy the crown — leave hair free under them.
 };
 
 /** Slots whose protrusion boxes the current hat swallows (empty when none). */
@@ -519,7 +524,65 @@ export const HAT_STYLES: { id: HatId; label: string }[] = [
   { id: "princess", label: "Princess" },
   { id: "horns", label: "Horns" },
   { id: "hood", label: "Adventurer Hood" },
+  { id: "crown", label: "Golden Crown" },
+  { id: "circlet3d", label: "Royal Circlet" },
+  { id: "warhelm", label: "War Helm" },
+  { id: "leafCrown", label: "Leaf Crown" },
 ];
+
+/**
+ * Race-specific 3D hats (fantasy kit filter). Always starts with None.
+ * Used by Avatar Edit so barbarians don't drown in princess hats.
+ */
+export function hatStylesFor(race: RaceId): { id: HatId; label: string }[] {
+  const allow = new Set(hatsForRaceIds(race));
+  return HAT_STYLES.filter((h) => allow.has(h.id));
+}
+
+function hatsForRaceIds(race: RaceId): HatId[] {
+  switch (race) {
+    case "human":
+      return ["none", "pirateVoxel", "pirate", "cowboy", "tophat", "hood", "crown", "circlet3d"];
+    case "barbarian":
+      return ["none", "horns", "warhelm", "hood", "pirateVoxel", "crown"];
+    case "orc":
+      return ["none", "horns", "warhelm", "hood", "pirate", "crown"];
+    case "undead":
+      return ["none", "hood", "witch", "tophat", "warhelm", "crown"];
+    case "dwarf":
+      return ["none", "hood", "crown", "warhelm", "cowboy", "tophat"];
+    case "elf":
+      return ["none", "leafCrown", "circlet3d", "princess", "hood", "crown", "witch"];
+    default:
+      return ["none", "hood", "crown"];
+  }
+}
+
+/** Race-specific headgear (painted + 3D horns). */
+export function headgearStylesFor(race: RaceId): { id: HeadgearStyle; label: string }[] {
+  if (race === "elf") {
+    return [
+      { id: "none", label: "None" },
+      { id: "circlet", label: "Circlet" },
+      { id: "headband", label: "Headband" },
+    ];
+  }
+  if (race === "barbarian" || race === "orc") {
+    return [
+      { id: "none", label: "None" },
+      { id: "horns", label: "Horns (3D)" },
+      { id: "headband", label: "Headband" },
+    ];
+  }
+  if (race === "undead") {
+    return [
+      { id: "none", label: "None" },
+      { id: "headband", label: "Rags" },
+      { id: "circlet", label: "Bone circlet" },
+    ];
+  }
+  return HEADGEAR_STYLES;
+}
 
 export const EXPRESSIONS: { id: ExpressionId; label: string }[] = [
   { id: "normal", label: "Normal" },
@@ -562,10 +625,10 @@ export function randomConfig(race: RaceId, rng: () => number = Math.random): Ava
       race === "orc"
         ? pick(rng, TUSK_STYLES.slice(1)).id // orcs always roll real tusks
         : pick(rng, tuskStylesFor(race)).id,
-    headgear: pick(rng, HEADGEAR_STYLES).id,
+    headgear: pick(rng, headgearStylesFor(race)).id,
     headgearColor: pick(rng, GEAR_COLORS),
-    // Hats are loud — roll one only half the time so random builds stay varied.
-    hat: rng() < 0.5 ? "none" : pick(rng, HAT_STYLES.slice(1)).id,
+    // Hats are loud — roll race kit only half the time so random builds stay varied.
+    hat: rng() < 0.5 ? "none" : pick(rng, hatStylesFor(race).slice(1)).id,
     expression: pick(rng, EXPRESSIONS).id,
     extra: pick(rng, EXTRA_STYLES).id,
     extraColor: pick(rng, PAINT_COLORS),
@@ -637,8 +700,9 @@ export function sanitizeConfig(raw: unknown): AvatarConfig | null {
     facialHairColor: num(c.facialHairColor, base.facialHairColor),
     ears: has(earStylesFor(def.id), c.ears) ? c.ears : base.ears,
     tusks: has(tuskStylesFor(def.id), c.tusks) ? c.tusks : base.tusks,
-    headgear: has(HEADGEAR_STYLES, c.headgear) ? c.headgear : base.headgear,
+    headgear: has(headgearStylesFor(def.id), c.headgear) ? c.headgear : base.headgear,
     headgearColor: num(c.headgearColor, base.headgearColor),
+    // Keep any known hat id (including cross-race saved builds); fall back if unknown.
     hat: has(HAT_STYLES, c.hat) ? c.hat : base.hat,
     expression: has(EXPRESSIONS, c.expression) ? c.expression : base.expression,
     extra: has(EXTRA_STYLES, c.extra) ? c.extra : base.extra,
