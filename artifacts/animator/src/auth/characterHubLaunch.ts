@@ -134,8 +134,8 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "voxel-editor",
-    label: "Quick Voxel Editor",
-    blurb: "Lightweight map authoring in this shell",
+    label: "Worldbuilder",
+    blurb: "Largest map editor · Play = Danger Room combat UX",
     group: "edit",
     localMode: "voxel",
   },

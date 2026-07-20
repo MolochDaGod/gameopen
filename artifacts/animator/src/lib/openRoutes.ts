@@ -32,6 +32,7 @@ export type AppMode =
   | "realms"
   | "brawl"
   | "survival"
+  | "vox-battle"
   | "zones"
   | "mimic"
   | "genesis"
@@ -152,6 +153,25 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     accent: "#e8a040",
   },
   {
+    mode: "vox-battle",
+    slug: "vox-battle",
+    aliases: [
+      "voxgrudge-battle",
+      "battle-royale",
+      "hunger-games",
+      "br",
+      "voxbattle",
+    ],
+    cabinets: ["vox-battle", "voxgrudge-battle", "battle"],
+    title: "VoxGrudge Battle",
+    blurb:
+      "Hunger Games Arena BR — singles/duos, 16 max, bots, weapon skills + sidearm, minimap M.",
+    group: "combat",
+    poster: "brawl",
+    tags: ["BR", "Bots"],
+    accent: "#f0c14b",
+  },
+  {
     mode: "mimic",
     slug: "mimic",
     aliases: ["dungeon", "test-dungeon", "encounter"],
@@ -166,13 +186,13 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "voxel",
     slug: "voxel",
-    aliases: ["voxel-editor", "build", "map-editor"],
-    cabinets: ["voxel", "voxel-editor"],
-    title: "Voxel Editor",
-    blurb: "Author maps — blocks, deployables, dungeon layout.",
+    aliases: ["voxel-editor", "build", "map-editor", "worldbuilder"],
+    cabinets: ["voxel", "voxel-editor", "worldbuilder"],
+    title: "Worldbuilder",
+    blurb: "Largest map editor — Play = Danger Room player UX (no admin tools).",
     group: "create",
-    poster: "voxel",
-    tags: ["Build", "Create"],
+    poster: "worldbuilder",
+    tags: ["Build", "Create", "Worldbuilder"],
     accent: "#7ee0a0",
   },
   {

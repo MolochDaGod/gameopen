@@ -109,7 +109,7 @@ export function VoxelEditorUI({
     <>
       <div className="ve-topbar">
         <span className="brand">
-          VOXEL<span className="brand-accent">EDITOR</span>
+          WORLD<span className="brand-accent">BUILDER</span>
         </span>
         <label className={`ve-dungeon ${dungeon ? "on" : ""}`}>
           <input type="checkbox" checked={dungeon} onChange={(e) => onDungeon(e.target.checked)} />
@@ -136,9 +136,13 @@ export function VoxelEditorUI({
             className="ve-btn ve-play"
             onClick={onTest}
             disabled={!canTest}
-            title={canTest ? "Play this map in the Danger Room" : "Place a Player Start first"}
+            title={
+              canTest
+                ? "Play — same Danger Room camera, loco, weapons, skills, FX & anims (no admin tools)"
+                : "Place a Player Start first"
+            }
           >
-            ▶ Test
+            ▶ Play
           </button>
           <button className="ve-btn" onClick={onExit}>
             ⬑ Doors

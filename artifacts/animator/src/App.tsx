@@ -745,13 +745,14 @@ export default function App() {
     [dangerDock, refreshAnim],
   );
 
-  // Helpers.glb cinematic load screen when entering Danger Room.
+  // Helpers.glb cinematic load screen when entering Danger Room or Worldbuilder Play.
   useEffect(() => {
-    if (mode !== "danger") {
+    if (mode !== "danger" && mode !== "play") {
       setHelpersLoad((s) => ({ ...s, visible: false }));
       return;
     }
-    setHelpersLoad({ visible: true, label: "ENTERING DANGER ROOM", progress: 0.12 });
+    const enterLabel = mode === "play" ? "ENTERING MAP PLAY" : "ENTERING DANGER ROOM";
+    setHelpersLoad({ visible: true, label: enterLabel, progress: 0.12 });
     const t1 = window.setTimeout(
       () => setHelpersLoad({ visible: true, label: "LOADING FORGE", progress: 0.55 }),
       700,
@@ -836,7 +837,8 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  // Mount a fresh Danger Room and load the authored map into it (play/test mode).
+  // Worldbuilder Play: same Studio as Danger Room (camera/loco/weapons/skills/FX/anims).
+  // No admin/editor docks — pure player combat UX on the authored map.
   useEffect(() => {
     if (mode !== "play" || !mountRef.current) return;
     const map = playMapRef.current;
@@ -844,12 +846,22 @@ export default function App() {
       setMode("voxel");
       return;
     }
+    // Same ENTER gate + pointer-lock flow as Danger Room.
+    // Force-close any leftover Danger admin/editor/anim docks — Play is player-only.
+    dangerDock.hidePanel("admin");
+    dangerDock.hidePanel("editor");
+    dangerDock.hidePanel("anim");
+    setDangerStartOpen(true);
+    dangerStartOpenRef.current = true;
     let studio: Studio | null = null;
     try {
       studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
       studio.onCharacterLoaded = () => {
         refreshAnim();
         void studioRef.current?.enterArena(map);
+        setHelpersLoad((s) =>
+          s.visible ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" } : s,
+        );
       };
       studio.setFireParams(loadFireFx());
       // Re-read persisted controls at every mount so engine-only mutations
@@ -2098,10 +2110,11 @@ export default function App() {
         </>
       )}
 
+      {/* Worldbuilder Play = Danger Room player UX only (camera/loco/skills/FX/anims). No admin/editor docks. */}
       {mode === "play" && (
         <>
           <Crosshair
-            visible={!panelsOpen && !equipOpen && !systemsOpen}
+            visible={!equipOpen && !systemsOpen && !dangerStartOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -2146,7 +2159,14 @@ export default function App() {
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
-            visible={!equipOpen && !systemsOpen && !harvestUiOpen && !claimFlagOpen && !bagOpen}
+            visible={
+              !equipOpen &&
+              !systemsOpen &&
+              !harvestUiOpen &&
+              !claimFlagOpen &&
+              !bagOpen &&
+              !dangerStartOpen
+            }
             onCast={(slot) => {
               studioRef.current?.fireClassSkill({
                 id: slot.id,
@@ -2190,55 +2210,93 @@ export default function App() {
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
 
-          <div className="topbar">
-            <span className="brand">
-              TEST<span className="brand-accent">PLAY</span>
-            </span>
-            <div className="topbar-actions">
-              <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} variant="topbar" />
-              <DjStationPanel variant="topbar" {...djPanelProps} />
-              <button
-                className={`tab eq-open-btn ${claimFlagOpen ? "live" : ""}`}
-                onClick={openClaimFlag}
-                title="Camp claim flag (B)"
-              >
-                <Flag size={13} /> Camp
-              </button>
-              <button
-                className={`tab eq-open-btn ${systemsOpen ? "live" : ""}`}
-                onClick={openSystems}
-                title="Systems / skillbook (K)"
-              >
-                <BookOpen size={13} /> Systems
-              </button>
-              <button
-                className={`tab eq-open-btn ${equipOpen ? "live" : ""}`}
-                onClick={openEquip}
-                title="Loadout (I)"
-              >
-                <Swords size={13} /> Loadout
-              </button>
-              <button className="tab" onClick={onExitPlay}>
-                ⬑ Editor
-              </button>
+          {/* Combat chrome only — same feel as Danger Room, no Admin/Editor/Clips docks */}
+          <TipProvider>
+            <div className="ed-menubar-wrap">
+              <ToolMenubar
+                brand={
+                  <span className="brand">
+                    MAP<span className="brand-accent">PLAY</span>
+                  </span>
+                }
+                menus={[]}
+                right={
+                  <>
+                    <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} />
+                    <DjStationPanel variant="menubar" {...djPanelProps} />
+                    <Tip label="Loadout (I) — weapons for combat">
+                      <button
+                        className={`tm-btn eq-open-btn ${equipOpen ? "live" : ""}`}
+                        onClick={openEquip}
+                      >
+                        <Swords size={14} />
+                        <span>Loadout</span>
+                      </button>
+                    </Tip>
+                    <Tip label="Back to Worldbuilder editor">
+                      <button className="tm-btn" onClick={onExitPlay}>
+                        <DoorOpen size={14} />
+                        <span>Editor</span>
+                      </button>
+                    </Tip>
+                  </>
+                }
+              />
             </div>
-          </div>
+          </TipProvider>
 
-          {!isMobile && !hud?.locked && !equipOpen && !systemsOpen && !claimFlagOpen && (
-            <div className="click-hint">
-              <p>Click to enter — mouse to look</p>
-              <p className="dim">
-                Centre dot · free-aim · LMB select · RMB toggle focus/soft-lock · X roll
-              </p>
-            </div>
+          {/* Same ENTER → pointer-lock gate as Danger Room */}
+          {dangerStartOpen && !isMobile && (
+            <DangerStartScreen
+              characterLabel={hud?.character ?? characterId}
+              weaponLabel={hud?.weapon ?? weaponId}
+              ready={!!hud || helpersLoad.progress >= 0.85}
+              onEnter={() => {
+                setDangerStartOpen(false);
+                document.body.style.cursor = "none";
+                const canvas = mountRef.current?.querySelector("canvas");
+                if (canvas) {
+                  canvas.requestPointerLock?.();
+                } else {
+                  document.body.requestPointerLock?.();
+                }
+                studioRef.current?.flashMessage?.(
+                  "MAP PLAY · same controls as Danger Room · no admin tools",
+                  2.0,
+                );
+              }}
+            />
           )}
 
-          {isMobile && (
+          {!isMobile &&
+            !dangerStartOpen &&
+            !hud?.locked &&
+            !equipOpen &&
+            !systemsOpen &&
+            !claimFlagOpen && (
+              <div className="click-hint">
+                <p>Click canvas to re-lock · mouse look</p>
+                <p className="dim">
+                  AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
+                </p>
+              </div>
+            )}
+
+          {isMobile && !dangerStartOpen && (
             <TouchControls
               api={touchApi}
               onOpenBag={() => setEquipOpen(true)}
               onOpenSystems={() => setSystemsOpen(true)}
             />
+          )}
+
+          {!dangerStartOpen && (
+            <>
+              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
+                FX
+              </button>
+              {dockOpen && <StatusDock onApply={onApplyStatus} />}
+            </>
           )}
 
           {equipOpen && (
@@ -2258,37 +2316,6 @@ export default function App() {
               onOpenCrafting={() => {
                 setEquipOpen(false);
                 setHarvestUiOpen(true);
-              }}
-            />
-          )}
-          {systemsOpen && (
-            <GrudgeSystemsPanel
-              characterName={hud?.character ?? characterId}
-              characterId={gameSession.snapshot.selectedCharacterId || characterId}
-              weapon={hud?.weapon ?? weaponId}
-              hud={hud}
-              onClose={() => setSystemsOpen(false)}
-              onOpenEquipment={() => {
-                setSystemsOpen(false);
-                setEquipOpen(true);
-              }}
-              onOpenCrafting={() => {
-                setSystemsOpen(false);
-                setHarvestUiOpen(true);
-              }}
-              onPlayPve={() => {
-                setSystemsOpen(false);
-                navigate("danger");
-              }}
-              onOpenLobby={() => {
-                setSystemsOpen(false);
-                navigate("lobby");
-              }}
-              onLaunchFleet={(id) => {
-                setSystemsOpen(false);
-                if (id === "carrier") window.open("https://carrier.grudge-studio.com/", "_blank", "noopener");
-                else if (id === "grudox") window.open("https://grudox.grudge-studio.com/", "_blank", "noopener");
-                else window.open("https://grudgewarlords.com/", "_blank", "noopener");
               }}
             />
           )}

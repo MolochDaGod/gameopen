@@ -55,7 +55,7 @@ export function appGuideSystemPrompt(): string {
     "The toolkit's systems (the user can switch between them from the launcher):",
     "- Danger Room: a live third-person combat sandbox — fight training targets",
     "  with every weapon and skill, spawn NPCs, set difficulty, run AI duels.",
-    "- Voxel Editor: build a custom voxel map with blocks, deployable NPCs/bags,",
+    "- Worldbuilder (Voxel Editor): build a custom voxel map with blocks, deployable NPCs/bags,",
     "  and dungeon authoring, then test-play it.",
     "- Dressing Room: dress up a character — swap models & skins, attach weapons &",
     "  gear, preview animations and effects.",

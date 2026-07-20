@@ -2,7 +2,7 @@
  * Unified, phone-first app chrome — Steam-inspired top launcher.
  *
  * Wraps every mode's content in one persistent shell so the user can hop between
- * systems (Danger Room, Voxel Editor, Dressing Room, Lobby, LED Mask) WITHOUT a
+ * systems (Danger Room, Worldbuilder, Dressing Room, Lobby, LED Mask) WITHOUT a
  * doors round-trip, and so the AI companion is reachable from everywhere.
  *
  * The shell renders as an overlay fragment (it does not box the mode content —
@@ -76,7 +76,7 @@ const NAV: NavItem[] = [
   { mode: "brawl",            label: "Ruins Brawler",   hint: "Live co-op survival",  icon: <GameIcon name="attack"          tone="#ff7a7a" />,          tone: "#ff9a7a", group: "Play" },
   { mode: "survival",         label: "Agama Survival",  hint: "Waves on Agama map",   icon: <GameIcon name="ambush"          tone="#e8a040" />,          tone: "#e8a040", group: "Play" },
   { mode: "mimic",            label: "Test Dungeon",    hint: "Mimic encounter",      icon: <GameIcon name="ambush"          tone="#9cff5a" />,          tone: "#9cff5a", group: "Play" },
-  { mode: "voxel",            label: "Voxel Editor",    hint: "Build & test maps",    icon: <GameIcon name="world-editor"    tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
+  { mode: "voxel",            label: "Worldbuilder",    hint: "Map editor · Danger Play", icon: <GameIcon name="worldbuilder" tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
   { mode: "voxgrudge-native", label: "VoxGrudge",       hint: "Open voxel world",     icon: <GameIcon name="explore"         tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Play" },
   { mode: "editor",           label: "Dressing Room",   hint: "Equip & preview",      icon: <GameIcon name="equip"           tone="#ffb24d" />,          tone: "#ffb24d", group: "Create" },
   { mode: "lobby",            label: "Lobby",           hint: "Rooms & community",    icon: <GameIcon name="inventory"       tone="#9d8bff" />,          tone: "#9d8bff", group: "Community" },
