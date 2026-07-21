@@ -34,6 +34,18 @@ export {
   type HitZone,
 } from "./aimRay";
 export {
+  AIM_SOFT_MAX,
+  AIM_HARD_MAX,
+  AIM_FREE_MAX,
+  Recoil,
+  fovKick,
+  applySpread,
+  damageMultiplier,
+  raycastSceneFromCamera,
+  lookAlongNormal,
+} from "./aim/AimSystem";
+export * from "./controls";
+export {
   installMeshBvh,
   accelerateMesh,
   accelerateObject3D,

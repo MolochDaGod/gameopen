@@ -47,7 +47,7 @@ import {
   setFreeMouseSticky,
   setPlayPointerCtx,
   setPointerLayer,
-} from "./three/pointerPresence";
+} from "@workspace/grudge-physics";
 import { Hud } from "./components/Hud";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";

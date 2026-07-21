@@ -1,15 +1,17 @@
 /**
  * Device-local persistence for the controller / camera / mouse "feel" settings
- * (the `EditorParams` block surfaced in the Editor panel). Stored in
- * localStorage, schema-versioned, and clamped on load so a stale or corrupt
- * blob can never feed NaN into the camera/physics. This mirrors the
- * `fxSettings` / `soundSettings` modules so every settings group in the studio
- * persists the same way — previously these reset to defaults on every reload,
- * the lone group that didn't stick.
+ * (the `EditorParams` block surfaced in the Editor panel).
  *
- * This is the animator artifact, so NOTHING here may import `@workspace/*`.
+ * **Fleet SSOT storage keys** live in `@workspace/grudge-physics`
+ * (`grudge:controls`). All Open native modes (Danger, Play, Brawler, …) share
+ * the same blob so updating sensitivity on one surface updates the rest.
  */
 
+import {
+  CONTROLS_SCHEMA,
+  readControlsRaw,
+  writeControlsRaw,
+} from "@workspace/grudge-physics";
 import { DEFAULT_EDITOR, type EditorParams } from "./types";
 
 /**
@@ -35,9 +37,6 @@ export const CONTROL_RANGES: Record<string, readonly [number, number]> = {
   attackSteer: [0, 1.5],
 };
 
-const KEY = "dangerroom:controls";
-const SCHEMA = 1;
-
 const clampNum = (v: unknown, [min, max]: readonly [number, number], d: number): number =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : d;
 
@@ -52,10 +51,10 @@ const bool = (v: unknown, d: boolean): boolean => (typeof v === "boolean" ? v : 
 export function loadControls(): EditorParams {
   const d = DEFAULT_EDITOR;
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = readControlsRaw();
     if (!raw) return { ...d };
     const o = JSON.parse(raw) as Partial<EditorParams> & { schema?: number };
-    if (o.schema !== SCHEMA) return { ...d };
+    if (o.schema !== CONTROLS_SCHEMA) return { ...d };
     return {
       moveSpeed: clampNum(o.moveSpeed, CONTROL_RANGES.moveSpeed, d.moveSpeed),
       sprintMultiplier: clampNum(o.sprintMultiplier, CONTROL_RANGES.sprintMultiplier, d.sprintMultiplier),
@@ -83,7 +82,7 @@ export function loadControls(): EditorParams {
 
 export function saveControls(p: EditorParams): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ ...p, modelYaw: undefined, schema: SCHEMA }));
+    writeControlsRaw(JSON.stringify({ ...p, modelYaw: undefined, schema: CONTROLS_SCHEMA }));
   } catch {
     /* storage unavailable — keep in-memory only */
   }

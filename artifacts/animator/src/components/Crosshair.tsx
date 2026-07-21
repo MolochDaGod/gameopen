@@ -1,4 +1,4 @@
-import type { ReticleShape } from "../three/aim/reticleProfiles";
+import type { ReticleShape } from "@workspace/grudge-physics";
 
 interface Props {
   visible: boolean;

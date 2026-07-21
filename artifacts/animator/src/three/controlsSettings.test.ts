@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_EDITOR } from "./types";
 import { loadControls, loadMouseFeel, saveControls } from "./controlsSettings";
 
-const KEY = "dangerroom:controls";
+import { CONTROLS_STORAGE_KEY, CONTROLS_STORAGE_KEY_LEGACY } from "@workspace/grudge-physics";
+
+const KEY = CONTROLS_STORAGE_KEY;
+const LEGACY_KEY = CONTROLS_STORAGE_KEY_LEGACY;
 const SCHEMA = 1;
 
 // The vitest env is `node` (no DOM), so install a minimal in-memory localStorage
@@ -94,6 +97,22 @@ describe("saveControls / loadControls round-trip", () => {
     };
     saveControls(custom);
     expect(loadControls()).toEqual({ ...custom, modelYaw: DEFAULT_EDITOR.modelYaw });
+    // Canonical fleet key only
+    expect(localStorage.getItem(KEY)).toBeTruthy();
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+  });
+
+  it("migrates legacy dangerroom:controls into grudge:controls on save", () => {
+    localStorage.setItem(
+      LEGACY_KEY,
+      JSON.stringify({ schema: SCHEMA, mouseSensitivity: 2.2, invertY: true }),
+    );
+    const loaded = loadControls();
+    expect(loaded.mouseSensitivity).toBe(2.2);
+    expect(loaded.invertY).toBe(true);
+    saveControls(loaded);
+    expect(localStorage.getItem(KEY)).toBeTruthy();
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
   });
 });
 

@@ -158,14 +158,14 @@ import {
 import { XBOW, isCrossbowWeapon } from "./crossbowCombat";
 import {
   aoeReticleScale,
-  reticleProfileForWeapon,
-} from "./aim/reticleProfiles";
-import {
   applyIntensity,
+  cameraProfileOpts,
   rangedFireLock,
   rangedPrimaryTune,
   rangedReleaseDelay,
-} from "./aim/rangedPrimary";
+  resolveCameraProfileKey,
+  reticleProfileForWeapon,
+} from "@workspace/grudge-physics";
 import {
   beginCastPlacement,
   clampAim,
@@ -6866,7 +6866,7 @@ export class Studio {
     if (this.comboLock > 0) return;
 
     const wid = this.weaponId;
-    const tune = applyIntensity(rangedPrimaryTune(wid), wid);
+    const tune = applyIntensity(rangedPrimaryTune(wid), weaponCombat(wid).intensity);
     const combat = weaponCombat(wid);
     const target = this.pickCrosshairTarget(combat);
     let dir = this.controller.forward().clone();
@@ -6936,7 +6936,7 @@ export class Studio {
       const range = softTarget || t
         ? THREE.MathUtils.clamp(di + 1.5, 4, tune.range + 4)
         : tune.range;
-      this.recoil.kick(tune.recoil.pitch, tune.recoil.yaw);
+      this.recoil.kickPitchYaw(tune.recoil.pitch, tune.recoil.yaw);
       this.vfx.muzzle(origin, d, tune.color);
       const onHit = (p: THREE.Vector3) => {
         this.vfx.impact(p, tune.color, tune.kind === "arrow" ? 1.05 : 1.2);
@@ -7941,7 +7941,10 @@ export class Studio {
   private doStaffBolt() {
     if (!this.character || !this.controller) return;
     if (this.staffBoltCd > 0) return;
-    const tune = applyIntensity(rangedPrimaryTune(this.weaponId), this.weaponId);
+    const tune = applyIntensity(
+      rangedPrimaryTune(this.weaponId),
+      weaponCombat(this.weaponId).intensity,
+    );
     this.staffBoltCd = Math.max(STAFF_BOLT_CD, tune.fireLock * 0.9);
     const color = this.staffColor() || tune.color;
     const grounded = this.controller.state.grounded;
@@ -7987,7 +7990,7 @@ export class Studio {
         this.sparringBlast(p, 1.2, tune.damage, this.params.skillForce * 0.5);
       };
       this.vfx.splineStrike(from, to, color, onHit);
-      this.recoil.kick(tune.recoil.pitch, tune.recoil.yaw);
+      this.recoil.kickPitchYaw(tune.recoil.pitch, tune.recoil.yaw);
       this.reticleAoeScale = 1;
     });
     this.stamina = Math.max(0, this.stamina - 4);
@@ -10574,117 +10577,17 @@ export class Studio {
       this.controller.setViewMode("third");
     }
 
-    const swim = this.controller.isInWater();
-    const climb = this.controller.isWallRunning;
-    const hard = mode === "combat" && this.locked;
-    const fp = this.viewMode === "first";
-
-    let key: string;
-    if (fp) key = "fp";
-    else if (swim) key = "swim";
-    else if (climb) key = "climb";
-    else if (mode === "harvest") key = "harvest";
-    else if (mode === "build") key = "build";
-    else if (hard) key = "combat-hard";
-    else key = "combat-soft";
+    const key = resolveCameraProfileKey({
+      firstPerson: this.viewMode === "first",
+      swimming: this.controller.isInWater(),
+      climbing: this.controller.isWallRunning,
+      activity: mode,
+      hardFocus: mode === "combat" && this.locked,
+    });
 
     if (key === this.lastCamProfile) return;
     this.lastCamProfile = key;
-
-    if (key === "fp") {
-      // First-person: distance ignored; keep spring mild for look-at height only
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.04,
-        enableOverShoulderView: false,
-        enableZoom: false,
-        camLookAtHeightRatio: 1,
-      });
-      return;
-    }
-    if (key === "swim") {
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.1,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.1,
-        camLookAtHeightRatio: 0.55,
-        enableZoom: true,
-        cameraDistance: 5.4,
-        cameraHeight: 1.2,
-        pitch: 0.22,
-      });
-      return;
-    }
-    if (key === "climb") {
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.07,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.08,
-        camLookAtHeightRatio: 0.85,
-        enableZoom: true,
-        cameraDistance: 4.0,
-        cameraHeight: 1.7,
-        pitch: 0.18,
-      });
-      return;
-    }
-    if (key === "harvest") {
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.08,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.18,
-        camLookAtHeightRatio: 0.72,
-        enableZoom: true,
-        cameraDistance: 5.2,
-        cameraHeight: 1.55,
-        pitch: 0.36,
-      });
-      return;
-    }
-    if (key === "build") {
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.08,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.2,
-        camLookAtHeightRatio: 0.72,
-        enableZoom: true,
-        cameraDistance: 5.8,
-        cameraHeight: 1.55,
-        pitch: 0.42,
-      });
-      return;
-    }
-    if (key === "combat-hard") {
-      // Soft-lock hard focus: slightly tighter + more shoulder for aim clarity
-      this.controller.setCameraOpts({
-        enableSpringCamera: true,
-        springCameraTime: 0.045,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.16,
-        camLookAtHeightRatio: 0.94,
-        enableZoom: true,
-        cameraDistance: 4.1,
-        cameraHeight: 1.68,
-        pitch: 0.26,
-      });
-      return;
-    }
-    // combat-soft (default Danger Room)
-    this.controller.setCameraOpts({
-      enableSpringCamera: true,
-      springCameraTime: 0.055,
-      enableOverShoulderView: true,
-      camOverShoulderOffsetRatio: 0.14,
-      camLookAtHeightRatio: 0.9,
-      enableZoom: true,
-      cameraDistance: 4.6,
-      cameraHeight: 1.65,
-      pitch: 0.28,
-    });
+    this.controller.setCameraOpts(cameraProfileOpts(key));
   }
 
   /**

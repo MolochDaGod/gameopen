@@ -21,6 +21,8 @@ import {
 import { gameSession } from "../game/GameSession";
 import { resolveSlotIconUrl } from "../three/skillIcons";
 import type { WeaponId } from "../three/types";
+import { Crosshair } from "./Crosshair";
+import { reticleProfileForWeapon } from "@workspace/grudge-physics";
 
 export type BrawlerVariant = "brawl" | "survival";
 
@@ -339,20 +341,13 @@ export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
         </div>
       )}
 
-      {/* Crosshair */}
+      {/* Fleet SSOT crosshair (same module as Danger Room) */}
       {locked && state.phase === "playing" && (
-        <div
-          style={{
-            ...crosshairStyle,
-            borderColor: state.focusLocked
-              ? state.hasTarget
-                ? "rgba(255,106,74,0.95)"
-                : "rgba(255,200,80,0.85)"
-              : "rgba(207,224,250,0.55)",
-            boxShadow: state.focusLocked
-              ? "0 0 12px rgba(255,106,74,0.55)"
-              : "none",
-          }}
+        <Crosshair
+          visible
+          shape={reticleProfileForWeapon(state.weaponId ?? "sword").shape}
+          focusLocked={state.focusLocked}
+          rangeState={state.hasTarget ? "optimal" : "none"}
         />
       )}
 
@@ -673,20 +668,6 @@ const skillCdNumStyle: CSSProperties = {
   fontSize: 10,
   fontWeight: 700,
   color: "#9cf",
-};
-
-const crosshairStyle: CSSProperties = {
-  position: "absolute",
-  left: "50%",
-  top: "50%",
-  width: 14,
-  height: 14,
-  marginLeft: -7,
-  marginTop: -7,
-  border: "2px solid",
-  borderRadius: "50%",
-  pointerEvents: "none",
-  zIndex: 3,
 };
 
 const focusBadgeStyle: CSSProperties = {

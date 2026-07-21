@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Warlords-era SSOT: Rapier world, character KCC, probes, aim rays, swept capsules — shared by Danger Room, dungeons, islands, zones, instances.",
+  "description": "Warlords-era SSOT: Rapier KCC, aim rays, pointer/reticle/camera/ranged controls — shared by Danger Room, Brawler, Play, dungeons, islands, zones.",
   "exports": {
     ".": "./src/index.ts"
   },

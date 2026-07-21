@@ -17,7 +17,7 @@ import {
   setPlayPointerCtx,
   subscribePointerPresence,
   type PlayPointerCtx,
-} from "../three/pointerPresence";
+} from "@workspace/grudge-physics";
 
 // ── legacy aliases (mesh ray-cast helpers) ───────────────────────────────────
 
