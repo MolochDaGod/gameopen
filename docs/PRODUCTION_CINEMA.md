@@ -70,6 +70,8 @@ Library (`doors`) keeps ambient `intro_doors` under Steam UI.
 
 ## Related
 
+- [PRODUCTION_SYSTEMS_PATTERN.md](./PRODUCTION_SYSTEMS_PATTERN.md) — CF / Vercel / Railway / REST / load timing  
 - [PRODUCTION_WORLD.md](./PRODUCTION_WORLD.md)  
 - [VOLCANO_WORLD_BOSS.md](./VOLCANO_WORLD_BOSS.md)  
 - Skill: `grudge-production-cinema`  
+
