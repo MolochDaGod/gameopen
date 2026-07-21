@@ -75,6 +75,7 @@ import { StatusBar } from "./components/StatusBar";
 import { StatusDock } from "./components/StatusDock";
 import { DoorSelect } from "./components/DoorSelect";
 import { IntroCinematic } from "./components/IntroCinematic";
+import { CinemaFlowGate } from "./components/CinemaFlowGate";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 import { FleetBar } from "./components/FleetBar";
@@ -1991,8 +1992,20 @@ export default function App() {
   }
 
   if (mode === "landing") {
-    // Front door: Grudge ID (no shell chrome). Enter → library hub.
-    return <LandingPage onEnter={() => navigate("doors")} />;
+    // Front door: Grudge ID (no shell chrome).
+    // Enter → production cinema handoff → character select (campfire create/select).
+    return (
+      <LandingPage
+        onEnter={() => {
+          try {
+            sessionStorage.setItem("grudge.cinema.play", "intro_to_characters");
+          } catch {
+            /* ignore */
+          }
+          navigate("characters");
+        }}
+      />
+    );
   }
 
   if (mode === "account") {
@@ -2043,9 +2056,21 @@ export default function App() {
   }
 
   if (mode === "characters") {
-    // Ethereal Falls campfire — 4-slot GRUDOX heroes + Explorer Avatar Edit system
+    // Production cinema → Ethereal Falls campfire (character select / create).
+    // Landing may request intro_to_characters once; otherwise short establish.
+    let gateId = "char_select_establish";
+    try {
+      const play = sessionStorage.getItem("grudge.cinema.play");
+      if (play === "intro_to_characters") {
+        gateId = "intro_to_characters";
+        sessionStorage.removeItem("grudge.cinema.play");
+      }
+    } catch {
+      /* ignore */
+    }
     return shell(
       withScreenTheme(
+        <CinemaFlowGate cinemaId={gateId} force={gateId === "intro_to_characters"}>
         <CampfireLobby
           onExit={() => setMode("doors")}
           onNavigate={(m) => {
@@ -2070,7 +2095,8 @@ export default function App() {
             );
             navigate("danger");
           }}
-        />,
+        />
+        </CinemaFlowGate>,
       ),
     );
   }
@@ -2098,14 +2124,16 @@ export default function App() {
   if (mode === "lobby") {
     return shell(
       withScreenTheme(
-      <Lobby
-        onLoad={onLoadPost}
-        onPlay={onPlayPost}
-        onLoadScene={onLoadScenePost}
-        onExit={() => setMode("doors")}
-        net={getNet()}
-        onEnterRoom={onEnterRoom}
-      />,
+        <CinemaFlowGate cinemaId="lobby_establish">
+          <Lobby
+            onLoad={onLoadPost}
+            onPlay={onPlayPost}
+            onLoadScene={onLoadScenePost}
+            onExit={() => setMode("doors")}
+            net={getNet()}
+            onEnterRoom={onEnterRoom}
+          />
+        </CinemaFlowGate>,
       ),
     );
   }

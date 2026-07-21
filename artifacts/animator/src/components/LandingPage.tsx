@@ -19,7 +19,10 @@ import "./landing.css";
 const emblemArt = `${import.meta.env.BASE_URL}emblem.png`;
 
 interface Props {
-  /** Proceed into the facility (doors / library hub). */
+  /**
+   * Proceed into the facility.
+   * Production path: cinema handoff → character select/create (campfire).
+   */
   onEnter: () => void;
 }
 
