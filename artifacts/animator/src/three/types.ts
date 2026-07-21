@@ -1020,6 +1020,13 @@ export interface HudSnapshot {
    * wider free-aim. Hard: LMB attacks, tight free-aim around centre.
    */
   focusLocked?: boolean;
+  /**
+   * Sticky free-mouse play mode (F8 / \): OS cursor visible, no pointer-lock grab.
+   * HUD reticle dims; UI panels force free mouse regardless of this flag.
+   */
+  freeMouse?: boolean;
+  /** Locomotion cam hint for reticle skin: swim | climb | ground. */
+  locoCam?: "ground" | "swim" | "climb";
   /** True while the first-person camera is active (KeyB toggles it). */
   firstPerson: boolean;
   /** Crosshair spread in px (grows with movement + recoil bloom). */

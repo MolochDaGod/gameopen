@@ -1,115 +1,137 @@
 /**
- * CursorManager — global context-aware cursor system.
+ * CursorManager — global context-aware cursor system for Open / Danger / fleet.
  *
- * Three cursor contexts:
+ * Presence layers (see `pointerPresence.ts`):
+ *   play-locked → OS cursor hidden; Crosshair owns aim
+ *   play-free   → custom free-aim / soft lock cursor (no pointer lock)
+ *   ui / shell  → UI arrow + hover hand on [data-cursor="interact"]
  *
- *  "combat"   — pointer lock active (3D aim): system cursor hidden, our
- *               Crosshair component owns the reticle. Body gets
- *               `cursor: none` so the OS arrow never bleeds through.
- *
- *  "interact" — mouse over a clickable element (button, door, crafting
- *               slot, NPC, portal). Cyan pixel-art pointer hand.
- *
- *  "default"  — everything else; mouse over non-interactable 3D scene,
- *               empty HUD areas. White pixel-art arrow cursor.
- *
- * The component mounts a single invisible <div> over the whole viewport
- * that delegates interaction to elements below (pointer-events: none).
- * Cursor switching is driven by two mechanisms:
- *
- *  1. CSS attribute selectors on [data-cursor] — any element in the tree
- *     can declare its cursor type: <button data-cursor="interact"> etc.
- *     This is the primary path for static UI.
- *
- *  2. `useCursorContext` hook — lets Three.js scenes push a cursor
- *     context programmatically (e.g. when a ray-cast hits a door mesh).
+ * Mount once near the app root. Three.js scenes can call setPlayPointerCtx /
+ * setCursorCtx for mesh hovers (doors, nodes, NPCs).
  */
 import { useEffect, type ReactNode } from "react";
+import {
+  applyPointerBodyClass,
+  getPointerPresence,
+  setHoverInteract,
+  setPlayPointerCtx,
+  subscribePointerPresence,
+  type PlayPointerCtx,
+} from "../three/pointerPresence";
 
-// ── cursor context store (module-level, no React overhead) ────────────────────
+// ── legacy aliases (mesh ray-cast helpers) ───────────────────────────────────
 
-export type CursorCtx = "default" | "interact" | "combat" | "harvest";
+export type CursorCtx =
+  | "default"
+  | "interact"
+  | "combat"
+  | "harvest"
+  | "tool"
+  | "swim"
+  | "climb";
 
-let _ctx: CursorCtx = "default";
-const _listeners = new Set<() => void>();
-
-/** Push a new cursor context (called by 3D scene ray-casts). */
+/** Map mesh hover tags → play pointer context. */
 export function setCursorCtx(ctx: CursorCtx): void {
-  if (_ctx === ctx) return;
-  _ctx = ctx;
-  for (const fn of _listeners) fn();
+  const map: Record<CursorCtx, PlayPointerCtx> = {
+    default: "default",
+    interact: "interact",
+    combat: "combat-soft",
+    harvest: "harvest",
+    tool: "tool",
+    swim: "swim",
+    climb: "climb",
+  };
+  setPlayPointerCtx(map[ctx] ?? "default");
 }
 
-/** Read the current context. */
 export function getCursorCtx(): CursorCtx {
-  return _ctx;
-}
-
-// ── cursor class resolver ─────────────────────────────────────────────────────
-
-function bodyClass(ctx: CursorCtx): string {
-  switch (ctx) {
-    case "combat":   return "cursor-combat";
-    case "interact": return "cursor-interact";
-    case "harvest":  return "cursor-harvest";
-    default:         return "cursor-default";
+  const p = getPointerPresence();
+  if (p.layer === "play-locked") return "combat";
+  switch (p.playCtx) {
+    case "interact":
+      return "interact";
+    case "harvest":
+      return "harvest";
+    case "build":
+    case "tool":
+      return "tool";
+    case "swim":
+      return "swim";
+    case "climb":
+      return "climb";
+    case "combat-soft":
+    case "combat-hard":
+      return "combat";
+    default:
+      return "default";
   }
 }
-
-// ── provider ──────────────────────────────────────────────────────────────────
 
 interface Props {
   children?: ReactNode;
 }
 
 /**
- * Mount once near the root. Keeps `document.body`’s cursor class in sync
- * with the active context. Fully self-contained:
- *   • Detects pointer-lock changes via DOM event (combat mode).
- *   • Routes hover over [data-cursor] elements to the store.
- *   • Falls back to "default" when leaving interactable elements.
+ * Mount once near the root. Keeps body classes + data attributes in sync.
  */
 export function CursorManager({ children }: Props) {
-  // Keep body class in sync with context store
   useEffect(() => {
-    const apply = () => {
-      const b = document.body;
-      b.classList.remove("cursor-default", "cursor-interact", "cursor-combat", "cursor-harvest");
-      b.classList.add(bodyClass(_ctx));
-    };
-    apply();
-    _listeners.add(apply);
-    return () => { _listeners.delete(apply); };
+    const sync = () => applyPointerBodyClass(getPointerPresence());
+    sync();
+    return subscribePointerPresence(sync);
   }, []);
 
-  // Auto-detect pointer lock → combat / release → default
-  useEffect(() => {
-    const onChange = () => {
-      if (document.pointerLockElement) {
-        setCursorCtx("combat");
-      } else if (_ctx === "combat") {
-        setCursorCtx("default");
-      }
-    };
-    document.addEventListener("pointerlockchange", onChange);
-    return () => document.removeEventListener("pointerlockchange", onChange);
-  }, []);
-
-  // Delegate mouseover on [data-cursor] elements to the store
+  // Hover over [data-cursor] — UI hand vs default UI arrow
   useEffect(() => {
     const onOver = (e: MouseEvent) => {
-      // Walk up to the nearest element with an explicit cursor declaration
       const el = (e.target as Element | null)?.closest("[data-cursor]");
       if (el) {
-        const want = (el.getAttribute("data-cursor") as CursorCtx | null) ?? "default";
-        setCursorCtx(want);
+        const want = el.getAttribute("data-cursor");
+        setHoverInteract(want === "interact" || want === "harvest" || want === "tool");
+        if (want === "harvest") setPlayPointerCtx("harvest");
+        else if (want === "tool" || want === "build") setPlayPointerCtx("tool");
+        else if (want === "interact") setPlayPointerCtx("interact");
       } else {
-        // Hovering bare canvas/scene/background → reset to default
-        if (_ctx === "interact") setCursorCtx("default");
+        setHoverInteract(false);
       }
     };
     document.addEventListener("mouseover", onOver, { passive: true });
     return () => document.removeEventListener("mouseover", onOver);
+  }, []);
+
+  // Buttons / links get interact affordance without every author tagging them
+  useEffect(() => {
+    const onOver = (e: MouseEvent) => {
+      const t = e.target as Element | null;
+      if (!t) return;
+      if (t.closest("[data-cursor]")) return; // explicit wins
+      const clickable = t.closest(
+        "button, a, [role='button'], .tab, .opt, input, select, textarea, label, .dock-item, .eq-open-btn",
+      );
+      if (clickable && getPointerPresence().layer !== "play-locked") {
+        setHoverInteract(true);
+      }
+    };
+    const onOut = (e: MouseEvent) => {
+      const t = e.target as Element | null;
+      if (!t?.closest("button, a, [role='button'], .tab, .opt")) return;
+      // mouseover on next element will re-set; clear if leaving to non-clickable
+      const related = e.relatedTarget as Element | null;
+      if (
+        related?.closest?.(
+          "button, a, [role='button'], .tab, .opt, input, select, textarea, label, [data-cursor]",
+        )
+      ) {
+        return;
+      }
+      setHoverInteract(false);
+    };
+    document.addEventListener("mouseover", onOver, { passive: true });
+    document.addEventListener("mouseout", onOut, { passive: true });
+    return () => {
+      document.removeEventListener("mouseover", onOver);
+      document.removeEventListener("mouseout", onOut);
+    };
   }, []);
 
   return <>{children}</>;

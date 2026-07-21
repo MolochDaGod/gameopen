@@ -22,6 +22,13 @@ interface Props {
   aimNdcY?: number;
   /** Soft vs hard focus — soft shows a slightly larger reticle. */
   focusLocked?: boolean;
+  /**
+   * Activity / loco variant for best-UX reticle colours:
+   * combat | harvest | build | swim | climb | free
+   */
+  variant?: "combat" | "harvest" | "build" | "swim" | "climb" | "free";
+  /** Free-mouse play: dim the fixed centre dot (OS cursor is the aim). */
+  freeMouse?: boolean;
   /** Optional HUD-editor binding (layout vars + drag/select when editing). */
   editBind?: {
     "data-hud-panel": string;
@@ -34,9 +41,9 @@ interface Props {
 
 /**
  * Dual reticle:
- *  - Fixed **centre dot** at screen middle (always — body/camera reference).
- *  - Free-aim **crosshair** (ticks) that tracks aimNdc offset; attacks + select
- *    use the ray through this crosshair. RMB snaps offset to 0 (crosshair on dot).
+ *  - Fixed **centre dot** at screen middle (body/camera reference) — dimmed in free-mouse.
+ *  - Free-aim **crosshair** (ticks) that tracks aimNdc; attacks + select use this ray.
+ *  - Variant colours for combat soft/hard, tools, swim, climb.
  */
 export function Crosshair({
   visible,
@@ -47,6 +54,8 @@ export function Crosshair({
   aimNdcX = 0,
   aimNdcY = 0,
   focusLocked = false,
+  variant = "combat",
+  freeMouse = false,
   editBind,
 }: Props) {
   // `visible` stays authoritative for normal play; only force the reticle on
@@ -64,16 +73,34 @@ export function Crosshair({
     ...editBind?.style,
   } as React.CSSProperties;
 
+  const variantClass =
+    variant === "harvest"
+      ? "crosshair-harvest"
+      : variant === "build"
+        ? "crosshair-build"
+        : variant === "swim"
+          ? "crosshair-swim"
+          : variant === "climb"
+            ? "crosshair-climb"
+            : variant === "free"
+              ? "crosshair-free"
+              : "";
+
   return (
     <>
-      {/* Fixed centre reference — simple dot, never moves with free-aim */}
-      <div className="aim-center-dot" aria-hidden />
+      {/* Fixed centre reference — simple dot; softer when free-mouse owns the aim look */}
+      <div
+        className={`aim-center-dot${freeMouse ? " aim-center-dot-free" : ""}`}
+        aria-hidden
+      />
       <div
         data-hud-panel={editBind?.["data-hud-panel"]}
         className={[
           "crosshair",
           firstPerson ? "crosshair-fp" : "",
           focusLocked ? "crosshair-focus" : "crosshair-soft",
+          freeMouse ? "crosshair-freemouse" : "",
+          variantClass,
           editBind ? editBind.className : "",
         ]
           .filter(Boolean)

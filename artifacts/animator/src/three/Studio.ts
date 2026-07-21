@@ -866,12 +866,14 @@ export class Studio {
   private netTmp = new THREE.Vector3();
 
   /**
-   * Free-mouse mode (` key): OS cursor visible, pointer lock off.
-   * Click must NOT re-grab lock until `' restores crosshair mode.
+   * Free-mouse mode (F8 / \): OS cursor visible, pointer lock off.
+   * Click must NOT re-grab lock until F9 / ' restores crosshair mode.
    */
   private freeMouseMode = false;
+  /** Last applied dynamic camera profile key (avoid thrashing setCameraOpts). */
+  private lastCamProfile: string | null = null;
 
-  /** Toggle free OS mouse vs pointer-lock crosshair (App hotkeys ` / '). */
+  /** Toggle free OS mouse vs pointer-lock crosshair (App hotkeys F8/F9 or \ / '). */
   setFreeMouseMode(on: boolean) {
     this.freeMouseMode = on;
     if (on) {
@@ -9127,6 +9129,8 @@ export class Studio {
       this.controller.setFovKick(this.fovKickCur);
       this.aimSpread = 5 + Math.min(spd, 8) * 1.5 + this.recoil.bloom * 200;
       this.controller.update(dt);
+      // Dynamic TPS: combat soft/hard, tools, swim, climb — one profile at a time
+      this.tickDynamicCamera();
       // Harvest RMB path: approach selected node then swing
       this.updateHarvestMove();
       // The Controller mutates cameraDistance directly on wheel-zoom (shared
@@ -9821,6 +9825,12 @@ export class Studio {
       locked: this.input.locked,
       /** Hard FOCUS (combat) vs soft lock — drives reticle freedom + LMB semantics. */
       focusLocked: this.locked,
+      freeMouse: this.freeMouseMode,
+      locoCam: this.controller?.isInWater()
+        ? "swim"
+        : this.controller?.isWallRunning
+          ? "climb"
+          : "ground",
       firstPerson: this.viewMode === "first",
       aimSpread: this.aimSpread,
       /** Free-aim crosshair NDC offset (0 = over centre dot). */
@@ -10441,39 +10451,135 @@ export class Studio {
    * Activity-specific third-person camera (Danger Room Controller SSOT).
    * Combat = tight action over-shoulder; harvest/build = Minecraft-like
    * crosshair-riding shoulder cam for block/tool aim.
+   * Swim / climb / hard-focus refine via {@link tickDynamicCamera}.
    */
   private applyActivityCamera(mode: PlayerActivityMode) {
+    this.lastCamProfile = null; // force re-apply on next tick
+    this.tickDynamicCamera(mode);
+  }
+
+  /**
+   * Modern dynamic TPS camera profiles — combat soft/hard, tools, swim, climb.
+   * Shares one Controller orbit; only setCameraOpts when the profile key changes.
+   */
+  private tickDynamicCamera(mode: PlayerActivityMode = this.activityMode) {
     if (!this.controller) return;
     // Always third for harvest/build tool aim (first-person hides tools poorly)
     if (mode !== "combat" && this.viewMode === "first") {
       this.viewMode = "third";
       this.controller.setViewMode("third");
     }
-    if (mode === "combat") {
+
+    const swim = this.controller.isInWater();
+    const climb = this.controller.isWallRunning;
+    const hard = mode === "combat" && this.locked;
+    const fp = this.viewMode === "first";
+
+    let key: string;
+    if (fp) key = "fp";
+    else if (swim) key = "swim";
+    else if (climb) key = "climb";
+    else if (mode === "harvest") key = "harvest";
+    else if (mode === "build") key = "build";
+    else if (hard) key = "combat-hard";
+    else key = "combat-soft";
+
+    if (key === this.lastCamProfile) return;
+    this.lastCamProfile = key;
+
+    if (key === "fp") {
+      // First-person: distance ignored; keep spring mild for look-at height only
       this.controller.setCameraOpts({
         enableSpringCamera: true,
-        springCameraTime: 0.055,
-        enableOverShoulderView: true,
-        camOverShoulderOffsetRatio: 0.14,
-        camLookAtHeightRatio: 0.9,
-        enableZoom: true,
-        cameraDistance: 4.6,
-        cameraHeight: 1.65,
-        pitch: 0.28,
+        springCameraTime: 0.04,
+        enableOverShoulderView: false,
+        enableZoom: false,
+        camLookAtHeightRatio: 1,
       });
       return;
     }
-    // Harvest / build — Minecraft-style TPS shoulder + slightly elevated look
+    if (key === "swim") {
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.1,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.1,
+        camLookAtHeightRatio: 0.55,
+        enableZoom: true,
+        cameraDistance: 5.4,
+        cameraHeight: 1.2,
+        pitch: 0.22,
+      });
+      return;
+    }
+    if (key === "climb") {
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.07,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.08,
+        camLookAtHeightRatio: 0.85,
+        enableZoom: true,
+        cameraDistance: 4.0,
+        cameraHeight: 1.7,
+        pitch: 0.18,
+      });
+      return;
+    }
+    if (key === "harvest") {
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.08,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.18,
+        camLookAtHeightRatio: 0.72,
+        enableZoom: true,
+        cameraDistance: 5.2,
+        cameraHeight: 1.55,
+        pitch: 0.36,
+      });
+      return;
+    }
+    if (key === "build") {
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.08,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.2,
+        camLookAtHeightRatio: 0.72,
+        enableZoom: true,
+        cameraDistance: 5.8,
+        cameraHeight: 1.55,
+        pitch: 0.42,
+      });
+      return;
+    }
+    if (key === "combat-hard") {
+      // Soft-lock hard focus: slightly tighter + more shoulder for aim clarity
+      this.controller.setCameraOpts({
+        enableSpringCamera: true,
+        springCameraTime: 0.045,
+        enableOverShoulderView: true,
+        camOverShoulderOffsetRatio: 0.16,
+        camLookAtHeightRatio: 0.94,
+        enableZoom: true,
+        cameraDistance: 4.1,
+        cameraHeight: 1.68,
+        pitch: 0.26,
+      });
+      return;
+    }
+    // combat-soft (default Danger Room)
     this.controller.setCameraOpts({
       enableSpringCamera: true,
-      springCameraTime: 0.08,
+      springCameraTime: 0.055,
       enableOverShoulderView: true,
-      camOverShoulderOffsetRatio: mode === "build" ? 0.2 : 0.18,
-      camLookAtHeightRatio: 0.72,
+      camOverShoulderOffsetRatio: 0.14,
+      camLookAtHeightRatio: 0.9,
       enableZoom: true,
-      cameraDistance: mode === "build" ? 5.8 : 5.2,
-      cameraHeight: 1.55,
-      pitch: mode === "build" ? 0.42 : 0.36,
+      cameraDistance: 4.6,
+      cameraHeight: 1.65,
+      pitch: 0.28,
     });
   }
 

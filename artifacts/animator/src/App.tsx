@@ -42,6 +42,12 @@ import type {
 } from "./three/voxel/types";
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
+import { CursorManager } from "./components/CursorManager";
+import {
+  setFreeMouseSticky,
+  setPlayPointerCtx,
+  setPointerLayer,
+} from "./three/pointerPresence";
 import { Hud } from "./components/Hud";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
@@ -458,6 +464,13 @@ export default function App() {
   const [dangerStartOpen, setDangerStartOpen] = useState(true);
   const dangerStartOpenRef = useRef(true);
   dangerStartOpenRef.current = dangerStartOpen;
+  /**
+   * Sticky free-mouse (F8 / \): OS cursor in world, no auto pointer-lock.
+   * F9 / ' re-locks aim. Panels force free mouse until closed.
+   */
+  const [freeMouse, setFreeMouse] = useState(false);
+  const freeMouseRef = useRef(false);
+  freeMouseRef.current = freeMouse;
   const [depositCtx, setDepositCtx] = useState<DepositContext>({
     zone: "none",
     canDeposit: false,
@@ -743,12 +756,29 @@ export default function App() {
     (id: DangerPanelId) => {
       if (!dangerDock.isVisible(id)) {
         document.exitPointerLock?.();
+        studioRef.current?.setFreeMouseMode(true);
         if (id === "anim") refreshAnim();
       }
       dangerDock.togglePanel(id);
     },
     [dangerDock, refreshAnim],
   );
+
+  /** Enter free-mouse (UI / inspect) or re-lock aim for combat. */
+  const applyFreeMouse = useCallback((on: boolean) => {
+    setFreeMouse(on);
+    freeMouseRef.current = on;
+    setFreeMouseSticky(on);
+    studioRef.current?.setFreeMouseMode(on);
+    if (on) {
+      document.exitPointerLock?.();
+      setPointerLayer("play-free");
+    } else {
+      setPointerLayer("play-locked");
+      const canvas = mountRef.current?.querySelector("canvas");
+      canvas?.requestPointerLock?.();
+    }
+  }, []);
 
   // Helpers.glb cinematic load screen when entering Danger Room or Worldbuilder Play.
   useEffect(() => {
@@ -1042,6 +1072,31 @@ export default function App() {
         toggleDangerPanel("admin");
         return;
       }
+      // Free mouse vs locked aim (does not steal admin Backquote)
+      if (e.code === "F8" || e.code === "Backslash") {
+        e.preventDefault();
+        applyFreeMouse(true);
+        studioRef.current?.flashMessage?.("FREE MOUSE · F9 / ' re-lock aim", 1.4);
+        return;
+      }
+      if (e.code === "F9" || e.code === "Quote") {
+        e.preventDefault();
+        const uiBlock =
+          dangerDock.isVisible("admin") ||
+          dangerDock.isVisible("editor") ||
+          dangerDock.isVisible("anim") ||
+          equipOpenRef.current ||
+          systemsOpenRef.current ||
+          bagOpenRef.current ||
+          harvestUiOpenRef.current;
+        if (uiBlock) {
+          studioRef.current?.flashMessage?.("Close panels first (Esc)", 1.2);
+          return;
+        }
+        applyFreeMouse(false);
+        studioRef.current?.flashMessage?.("AIM LOCK · crosshair on", 1.2);
+        return;
+      }
       if (e.code === "KeyE") {
         // The door portal claims E first when standing at an interactable.
         if (studioRef.current?.tryEnterDoor()) {
@@ -1077,7 +1132,18 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, refreshAnim, toggleDangerPanel, toggleSystems, toggleClaimFlag, hud?.activityMode, refreshDeposit, refreshBagMeta]);
+  }, [
+    mode,
+    refreshAnim,
+    toggleDangerPanel,
+    toggleSystems,
+    toggleClaimFlag,
+    hud?.activityMode,
+    refreshDeposit,
+    refreshBagMeta,
+    applyFreeMouse,
+    dangerDock,
+  ]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
   useEffect(() => {
@@ -1158,6 +1224,27 @@ export default function App() {
         }
         // Fall through → hold Tab radial / release cycle (studio).
       }
+      if (e.code === "F8" || e.code === "Backslash") {
+        e.preventDefault();
+        applyFreeMouse(true);
+        studioRef.current?.flashMessage?.("FREE MOUSE · F9 / ' re-lock aim", 1.4);
+        return;
+      }
+      if (e.code === "F9" || e.code === "Quote") {
+        e.preventDefault();
+        if (
+          equipOpenRef.current ||
+          systemsOpenRef.current ||
+          bagOpenRef.current ||
+          harvestUiOpenRef.current
+        ) {
+          studioRef.current?.flashMessage?.("Close panels first (Esc)", 1.2);
+          return;
+        }
+        applyFreeMouse(false);
+        studioRef.current?.flashMessage?.("AIM LOCK · crosshair on", 1.2);
+        return;
+      }
       studioRef.current?.handleKey(e.code);
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -1171,7 +1258,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, toggleSystems, toggleClaimFlag]);
+  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
   // joystick/look-pad own input. Re-applies whenever the breakpoint flips.
@@ -1803,6 +1890,68 @@ export default function App() {
   const panelsOpen =
     dangerDock.isVisible("admin") || dangerDock.isVisible("editor") || dangerDock.isVisible("anim");
 
+  const uiOverlayOpen =
+    panelsOpen ||
+    equipOpen ||
+    systemsOpen ||
+    bagOpen ||
+    harvestUiOpen ||
+    claimFlagOpen ||
+    dangerStartOpen;
+
+  // Pointer presence: UI panels vs play locked vs free-mouse sticky
+  useEffect(() => {
+    if (mode !== "danger" && mode !== "play") {
+      setPointerLayer("shell");
+      setPlayPointerCtx("default");
+      return;
+    }
+    if (uiOverlayOpen) {
+      setPointerLayer("ui");
+      document.exitPointerLock?.();
+      studioRef.current?.setFreeMouseMode(true);
+    } else if (freeMouse) {
+      setPointerLayer("play-free");
+      studioRef.current?.setFreeMouseMode(true);
+    } else {
+      setPointerLayer("play-locked");
+      studioRef.current?.setFreeMouseMode(false);
+      // After closing panels, restore aim lock if user wasn't free-mouse sticky
+      if (
+        !dangerStartOpen &&
+        (mode === "danger" || mode === "play") &&
+        !document.pointerLockElement
+      ) {
+        const canvas = mountRef.current?.querySelector("canvas");
+        // Defer one frame so overlay unmount doesn't steal the gesture
+        requestAnimationFrame(() => canvas?.requestPointerLock?.());
+      }
+    }
+    // Play context from HUD (activity + loco + soft/hard focus)
+    if (hud?.locoCam === "swim") setPlayPointerCtx("swim");
+    else if (hud?.locoCam === "climb") setPlayPointerCtx("climb");
+    else if (hud?.activityMode === "harvest") setPlayPointerCtx("harvest");
+    else if (hud?.activityMode === "build") setPlayPointerCtx("build");
+    else if (hud?.focusLocked) setPlayPointerCtx("combat-hard");
+    else setPlayPointerCtx("combat-soft");
+  }, [
+    mode,
+    uiOverlayOpen,
+    freeMouse,
+    hud?.activityMode,
+    hud?.focusLocked,
+    hud?.locoCam,
+  ]);
+
+  const crosshairVariant = ((): "combat" | "harvest" | "build" | "swim" | "climb" | "free" => {
+    if (freeMouse) return "free";
+    if (hud?.locoCam === "swim") return "swim";
+    if (hud?.locoCam === "climb") return "climb";
+    if (hud?.activityMode === "harvest") return "harvest";
+    if (hud?.activityMode === "build") return "build";
+    return "combat";
+  })();
+
   // Stable touch API bridging the on-screen controls to the live engine
   // (mobile dual-stick + harvest/combat pad on open.grudge-studio.com).
   const touchApi = useRef({
@@ -2153,6 +2302,7 @@ export default function App() {
   ];
 
   return shell(
+    <CursorManager>
     <div
       className={`studio ${isMobile ? "touch" : ""}${
         hudEditor.config.theme !== "default" ? " hud-themed" : ""
@@ -2163,6 +2313,10 @@ export default function App() {
         className={`canvas-mount${
           (mode === "danger" || mode === "play") && !panelsOpen && !equipOpen && !systemsOpen
             ? " immersive"
+            : ""
+        }${
+          (mode === "danger" || mode === "play") && (freeMouse || uiOverlayOpen)
+            ? " free-mouse"
             : ""
         }`}
         ref={mountRef}
@@ -2246,7 +2400,7 @@ export default function App() {
       {mode === "play" && (
         <>
           <Crosshair
-            visible={!equipOpen && !systemsOpen && !dangerStartOpen}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -2254,6 +2408,8 @@ export default function App() {
             aimNdcX={hud?.aimNdcX ?? 0}
             aimNdcY={hud?.aimNdcY ?? 0}
             focusLocked={hud?.focusLocked ?? false}
+            variant={crosshairVariant}
+            freeMouse={freeMouse}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
@@ -2266,11 +2422,13 @@ export default function App() {
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode(true);
             }}
             onOpenBag={() => {
               setBagOpen(true);
               setEquipOpen(false);
               document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode(true);
               refreshDeposit();
               refreshBagMeta();
             }}
@@ -2385,7 +2543,15 @@ export default function App() {
               ready={!!hud || helpersLoad.progress >= 0.85}
               onEnter={() => {
                 setDangerStartOpen(false);
-                document.body.style.cursor = "none";
+                if (freeMouseRef.current) {
+                  applyFreeMouse(true);
+                  studioRef.current?.flashMessage?.(
+                    "MAP PLAY · FREE MOUSE · F9 lock aim",
+                    2.0,
+                  );
+                  return;
+                }
+                applyFreeMouse(false);
                 const canvas = mountRef.current?.querySelector("canvas");
                 if (canvas) {
                   canvas.requestPointerLock?.();
@@ -2393,7 +2559,7 @@ export default function App() {
                   document.body.requestPointerLock?.();
                 }
                 studioRef.current?.flashMessage?.(
-                  "MAP PLAY · same controls as Danger Room · no admin tools",
+                  "MAP PLAY · F8 free mouse · same combat stack · no admin",
                   2.0,
                 );
               }}
@@ -2403,11 +2569,12 @@ export default function App() {
           {!isMobile &&
             !dangerStartOpen &&
             !hud?.locked &&
+            !freeMouse &&
             !equipOpen &&
             !systemsOpen &&
             !claimFlagOpen && (
               <div className="click-hint">
-                <p>Click canvas to re-lock · mouse look</p>
+                <p>Click canvas to re-lock · or F8 free mouse</p>
                 <p className="dim">
                   AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
                 </p>
@@ -2457,7 +2624,7 @@ export default function App() {
       {mode === "danger" && (
         <>
           <Crosshair
-            visible={!panelsOpen && !equipOpen && !systemsOpen}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -2465,6 +2632,8 @@ export default function App() {
             aimNdcX={hud?.aimNdcX ?? 0}
             aimNdcY={hud?.aimNdcY ?? 0}
             focusLocked={hud?.focusLocked ?? false}
+            variant={crosshairVariant}
+            freeMouse={freeMouse}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
@@ -2477,11 +2646,13 @@ export default function App() {
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode(true);
             }}
             onOpenBag={() => {
               setBagOpen(true);
               setEquipOpen(false);
               document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode(true);
               refreshDeposit();
               refreshBagMeta();
             }}
@@ -2609,7 +2780,15 @@ export default function App() {
               ready={!!hud || helpersLoad.progress >= 0.85}
               onEnter={() => {
                 setDangerStartOpen(false);
-                document.body.style.cursor = "none";
+                if (freeMouseRef.current) {
+                  applyFreeMouse(true);
+                  studioRef.current?.flashMessage?.(
+                    "FREE MOUSE · F9 lock aim · RMB focus",
+                    1.8,
+                  );
+                  return;
+                }
+                applyFreeMouse(false);
                 // Prefer canvas lock (engine InputState binds to renderer.domElement)
                 const canvas = mountRef.current?.querySelector("canvas");
                 if (canvas) {
@@ -2617,8 +2796,10 @@ export default function App() {
                 } else {
                   document.body.requestPointerLock?.();
                 }
-                // Engine also listens on click — nudge if lock needs a gesture
-                studioRef.current?.flashMessage?.("DANGER · AA/DD dash · RMB focus", 1.8);
+                studioRef.current?.flashMessage?.(
+                  "DANGER · F8 free mouse · RMB focus · soft lock",
+                  1.8,
+                );
               }}
             />
           )}
@@ -2626,12 +2807,13 @@ export default function App() {
           {!isMobile &&
             !dangerStartOpen &&
             !hud?.locked &&
+            !freeMouse &&
             !panelsOpen &&
             !equipOpen &&
             !systemsOpen &&
             !claimFlagOpen && (
               <div className="click-hint">
-                <p>Click canvas to re-lock · mouse look</p>
+                <p>Click canvas to re-lock · or F8 free mouse</p>
                 <p className="dim">
                   AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
                 </p>
@@ -2709,5 +2891,6 @@ export default function App() {
         </>
       )}
     </div>
+    </CursorManager>
   );
 }
