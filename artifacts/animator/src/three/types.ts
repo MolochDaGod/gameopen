@@ -1038,6 +1038,18 @@ export interface HudSnapshot {
   aimNdcX?: number;
   aimNdcY?: number;
   /**
+   * Weapon reticle shape: melee dot · bow X · gun cross · staff ring.
+   * @see aim/reticleProfiles.ts
+   */
+  reticleShape?: "dot" | "x" | "cross" | "ring";
+  /** Staff ring pulse phase 0–1 (breathe). */
+  reticlePulse?: number;
+  /**
+   * Staff AoE expand scale (1 idle; >1 while casting AoE / placement).
+   * Screen ring becomes the ability radius indicator.
+   */
+  reticleAoeScale?: number;
+  /**
    * Where the focused enemy sits relative to the player's Optimal Weapon Range:
    * "optimal" (green ring) = in the sweet spot, "close" (red) = inside the inner
    * edge (crowded), "far" (yellow) = past the outer edge, "none" = no enemy near.

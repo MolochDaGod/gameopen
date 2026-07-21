@@ -157,6 +157,16 @@ import {
 } from "./gunCombat";
 import { XBOW, isCrossbowWeapon } from "./crossbowCombat";
 import {
+  aoeReticleScale,
+  reticleProfileForWeapon,
+} from "./aim/reticleProfiles";
+import {
+  applyIntensity,
+  rangedFireLock,
+  rangedPrimaryTune,
+  rangedReleaseDelay,
+} from "./aim/rangedPrimary";
+import {
   beginCastPlacement,
   clampAim,
   groundFromRay,
@@ -790,6 +800,13 @@ export class Studio {
   private fovKickCur = 0;
   /** Crosshair spread in px (HUD), from movement + recoil bloom. */
   private aimSpread = 5;
+  /** Staff reticle pulse phase 0–1 (breathe). */
+  private reticlePulseT = 0;
+  /**
+   * Staff AoE HUD ring scale while casting placement / nova / scatter
+   * (1 = idle breathe; >1 = ability radius indicator).
+   */
+  private reticleAoeScale = 1;
   /** Last computed OWR range band of the nearest enemy (drives the reticle ring). */
   private owrRangeState: "close" | "optimal" | "far" | "none" = "none";
   /** Lazily-created WebAudio context for the OWR edge "beep" cue. */
@@ -6839,28 +6856,26 @@ export class Studio {
   }
 
   /**
-   * Primary ranged fire for bows and guns (LMB + skill slot 1).
-   * Fires a weapon-typed projectile (arrow / bullet) along the aim line and
-   * applies hit damage on impact. Independent of the melee 3-hit combo path.
+   * Primary ranged fire for bows (and non-gun ranged fallbacks).
+   * Anim first → release at intensity peak → projectile along free-aim ray.
+   * Timing SSOT: {@link rangedPrimaryTune} / {@link applyIntensity}.
    */
   private doRangedPrimaryShot() {
     if (!this.character || !this.controller || this.defeated) return;
     if (this.recoverLock > 0) return;
-    // Gate spam with comboLock so fire rate is readable.
     if (this.comboLock > 0) return;
 
     const wid = this.weaponId;
-    const kind = this.rangedProjectileKind(wid);
+    const tune = applyIntensity(rangedPrimaryTune(wid), wid);
     const combat = weaponCombat(wid);
     const target = this.pickCrosshairTarget(combat);
     let dir = this.controller.forward().clone();
-    let dist = 24;
+    let dist = tune.range;
     if (target) {
       const planar = this.toTargetPlanar(target);
       dir = planar.dir.clone();
       dist = planar.dist;
     } else {
-      // Use camera aim when no soft-lock target.
       const ray = this.crosshairRay();
       dir.copy(ray.direction);
       dir.y = 0;
@@ -6869,39 +6884,84 @@ export class Studio {
     }
     this.controller.faceToward(dir, 0.28);
 
-    // Fire pose: prefer attack role / bow aim clip
-    if (this.character.hasClip("chargedShot")) this.character.playClipOnce("chargedShot", 0.08);
-    else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.08);
-    else if (this.character.hasClip("attack1")) this.character.playClipOnce("attack1", 0.08);
-
-    const origin = this.muzzleOrigin(dir);
-    const isArrow = kind === "arrow";
-    const color = isArrow ? 0xffe2a0 : 0xfff2a8;
-    const speed = isArrow ? 38 : 52;
-    const range = target ? THREE.MathUtils.clamp(dist + 1.5, 4, 32) : 28;
-    const damage = isArrow ? 14 : 12;
-
-    this.recoil.kick(isArrow ? 0.018 : 0.028, isArrow ? 0.012 : 0.022);
-    this.vfx.muzzle(origin, dir, color);
-    if (isArrow) {
-      // Longer thin projectile for arrows
-      this.vfx.bolt(origin, dir, color, speed, range, (p) => {
-        this.vfx.impact(p, color, 1.1);
-        this.targets.blast(p, 0.85, damage, this.params.skillForce * 0.45);
-        if (target) this.triggerHitstop(0.04, 0.1);
-      }, 0.85);
-    } else {
-      this.vfx.bolt(origin, dir, color, speed, range, (p) => {
-        this.vfx.impact(p, color, 1.25);
-        this.targets.blast(p, 0.75, damage, this.params.skillForce * 0.5);
-        if (target) this.triggerHitstop(0.05, 0.12);
-      }, 1.05);
+    // Play shoot anim; measure duration for release + fire-lock alignment
+    let clipDur = 0;
+    for (const name of tune.clips) {
+      if (name === "attack" && this.character.hasRole("attack")) {
+        clipDur = this.character.playRoleOnce("attack", 0.08);
+        if (clipDur > 0) break;
+      }
+      if (!this.character.hasClip(name)) continue;
+      // Prefer cut into the attack portion for snappy bow/gun feel
+      if (this.character.playClipCut && (name === "shooting-arrow" || name === "chargedShot")) {
+        clipDur = this.character.playClipCut(name, {
+          from: Math.min(0.12, tune.releaseLead * 0.4),
+          to: 1,
+          timeScale: tune.kind === "arrow" ? 1.15 : 1.4,
+          fade: 0.06,
+        });
+        if (clipDur > 0) break;
+      }
+      clipDur = this.character.playClipOnce(name, 0.08);
+      if (clipDur > 0) break;
     }
-    this.sfx?.play(isArrow ? "whooshLight" : "whooshHeavy", origin, { volume: 0.55 });
 
-    // Fire rate lock (~4–5 shots/s bows slightly slower)
-    this.comboLock = isArrow ? 0.28 : 0.18;
-    this.comboTimer = this.comboLock + 0.05;
+    const releaseAt = rangedReleaseDelay(tune, clipDur);
+    const fireLock = rangedFireLock(tune, clipDur);
+    this.comboLock = fireLock;
+    this.comboTimer = fireLock + 0.06;
+
+    const token = this.weaponToken;
+    const aimDir = dir.clone();
+    const softTarget = target;
+    this.schedule(releaseAt, () => {
+      if (this.disposed || token !== this.weaponToken || !this.character || !this.controller) return;
+      // Re-sample aim at release so strafing mid-draw still lands
+      let d = aimDir.clone();
+      let di = dist;
+      const t = this.pickCrosshairTarget(combat);
+      if (t) {
+        const p = this.toTargetPlanar(t);
+        d = p.dir.clone();
+        di = p.dist;
+        this.controller.faceToward(d, 0.18);
+      } else {
+        const ray = this.crosshairRay();
+        d.copy(ray.direction);
+        d.y = 0;
+        if (d.lengthSq() < 1e-6) d.copy(this.controller.forward());
+        d.normalize();
+      }
+      const origin = this.muzzleOrigin(d);
+      const range = softTarget || t
+        ? THREE.MathUtils.clamp(di + 1.5, 4, tune.range + 4)
+        : tune.range;
+      this.recoil.kick(tune.recoil.pitch, tune.recoil.yaw);
+      this.vfx.muzzle(origin, d, tune.color);
+      const onHit = (p: THREE.Vector3) => {
+        this.vfx.impact(p, tune.color, tune.kind === "arrow" ? 1.05 : 1.2);
+        this.targets.blast(
+          p,
+          tune.kind === "arrow" ? 0.9 : 0.8,
+          tune.damage,
+          this.params.skillForce * (tune.kind === "arrow" ? 0.48 : 0.52),
+        );
+        if (t || softTarget) this.triggerHitstop(0.04, 0.1);
+      };
+      if (tune.visual === "arrow") {
+        // Mesh arrow (projectilebomb pack) with bolt fallback inside castWitchArrow
+        this.vfx.castWitchArrow(origin, d, tune.color, onHit);
+      } else if (tune.visual === "slug") {
+        this.vfx.chargedBolt(origin, d, tune.color, tune.speed, range, onHit, tune.scale);
+      } else {
+        this.vfx.bolt(origin, d, tune.color, tune.speed, range, onHit, tune.scale);
+      }
+      this.sfx?.play(
+        tune.kind === "arrow" ? "whooshLight" : "whooshHeavy",
+        origin,
+        { volume: 0.58, rate: tune.kind === "arrow" ? 1.05 : 1.2 },
+      );
+    });
     this.bumpMusicHeat(0.08);
   }
 
@@ -7881,11 +7941,11 @@ export class Studio {
   private doStaffBolt() {
     if (!this.character || !this.controller) return;
     if (this.staffBoltCd > 0) return;
-    this.staffBoltCd = STAFF_BOLT_CD;
-    const color = this.staffColor();
+    const tune = applyIntensity(rangedPrimaryTune(this.weaponId), this.weaponId);
+    this.staffBoltCd = Math.max(STAFF_BOLT_CD, tune.fireLock * 0.9);
+    const color = this.staffColor() || tune.color;
     const grounded = this.controller.state.grounded;
 
-    // Face + aim at the crosshair target (soft-aim cone from the staff combat).
     const combat = weaponCombat(this.weaponId);
     const origin = this.character.root.position.clone();
     const target = this.pickCrosshairTarget(combat);
@@ -7897,23 +7957,39 @@ export class Studio {
     }
     this.controller.faceToward(aimDir, 0.2);
 
-    // Grounded: kite back a short hop away from the foe. Airborne: cast in place.
     if (grounded) {
       const back = aimDir.clone().multiplyScalar(-1);
       this.controller.dash(back, 1.4, 0.26, 0, 0.5);
     }
 
-    if (this.character.hasClip("magicAttack")) this.character.playClipOnce("magicAttack", 0.1);
-    this.sfx?.play("whooshLight", this.staffMuzzle(), { volume: 0.6 });
+    let clipDur = 0;
+    for (const name of tune.clips) {
+      if (!this.character.hasClip(name)) continue;
+      clipDur = this.character.playClipOnce(name, 0.1);
+      if (clipDur > 0) break;
+    }
+    this.sfx?.play("whooshLight", this.staffMuzzle(), { volume: 0.55 });
+    // Pulse ring slightly larger while casting primary bolt
+    this.reticleAoeScale = Math.max(this.reticleAoeScale, 1.15);
 
-    const from = this.staffMuzzle();
-    const to = target ? target.position.clone() : origin.clone().addScaledVector(fwd, 16).setY(from.y);
-    const onHit = (p: THREE.Vector3) => {
-      if (this.disposed) return;
-      this.vfx.aoeBlast(p, color, 1.2);
-      this.sparringBlast(p, 1.2, 16, this.params.skillForce * 0.5);
-    };
-    this.vfx.splineStrike(from, to, color, onHit);
+    const releaseAt = rangedReleaseDelay(tune, clipDur);
+    const token = this.weaponToken;
+    this.schedule(releaseAt, () => {
+      if (this.disposed || token !== this.weaponToken || !this.character) return;
+      const from = this.staffMuzzle();
+      const live = this.pickCrosshairTarget(combat);
+      const to = live
+        ? live.position.clone()
+        : origin.clone().addScaledVector(this.controller?.forward() ?? fwd, tune.range * 0.75).setY(from.y);
+      const onHit = (p: THREE.Vector3) => {
+        if (this.disposed) return;
+        this.vfx.aoeBlast(p, color, 1.2);
+        this.sparringBlast(p, 1.2, tune.damage, this.params.skillForce * 0.5);
+      };
+      this.vfx.splineStrike(from, to, color, onHit);
+      this.recoil.kick(tune.recoil.pitch, tune.recoil.yaw);
+      this.reticleAoeScale = 1;
+    });
     this.stamina = Math.max(0, this.stamina - 4);
   }
 
@@ -7935,6 +8011,8 @@ export class Studio {
 
     const BOLTS = 6;
     const SCATTER = 2.6;
+    // Staff reticle expands into scatter AoE radius indicator
+    this.reticleAoeScale = aoeReticleScale(SCATTER);
     const token = this.weaponToken;
     for (let i = 0; i < BOLTS; i++) {
       const ang = (i / BOLTS) * Math.PI * 2 + Math.random() * 0.6;
@@ -7952,6 +8030,9 @@ export class Studio {
         this.vfx.splineStrike(this.staffMuzzle(), to, color, onHit);
       });
     }
+    this.schedule(0.55, () => {
+      if (token === this.weaponToken) this.reticleAoeScale = 1;
+    });
     this.armSigSlot(1, 2.6, 24);
     return true;
   }
@@ -7968,9 +8049,13 @@ export class Studio {
     const center = this.character.root.position.clone();
     const RADIUS = this.params.aoeRadius * 1.2;
     if (this.character.hasClip("magicArea")) this.character.playClipOnce("magicArea", 0.12);
+    this.reticleAoeScale = aoeReticleScale(RADIUS);
     this.vfx.aoeBlast(center, color, RADIUS);
     this.sparringBlast(center, RADIUS, 22, this.params.skillForce * 1.6);
     this.markStun(center, RADIUS);
+    this.schedule(0.45, () => {
+      this.reticleAoeScale = 1;
+    });
     this.armSigSlot(2, 3.2, 28);
     return true;
   }
@@ -9127,7 +9212,23 @@ export class Studio {
       const sprinting = spd > this.params.moveSpeed * 1.1 && this.controller.state.grounded;
       this.fovKickCur = fovKick(this.fovKickCur, 0, 8, sprinting, dt);
       this.controller.setFovKick(this.fovKickCur);
-      this.aimSpread = 5 + Math.min(spd, 8) * 1.5 + this.recoil.bloom * 200;
+      // Weapon-aware base gap (melee 0, gun 3–8, bow 4) + motion/recoil bloom
+      const retProf = reticleProfileForWeapon(this.weaponId);
+      this.aimSpread =
+        retProf.baseGap + Math.min(spd, 8) * 1.5 + this.recoil.bloom * 200;
+      // Staff ring breathe
+      if (retProf.shape === "ring") {
+        this.reticlePulseT = (this.reticlePulseT + dt * retProf.pulseHz) % 1;
+      }
+      // Cast placement → HUD ring tracks world AoE radius
+      if (this.castPlacement) {
+        const r = this.castPlacement.radius ?? this.params.aoeRadius;
+        this.reticleAoeScale = aoeReticleScale(r);
+      } else if (this.reticleAoeScale > 1 && !this.castPlacement) {
+        // Ease back when placement ends (skills set their own reset schedules)
+        this.reticleAoeScale = THREE.MathUtils.lerp(this.reticleAoeScale, 1, Math.min(1, 4 * dt));
+        if (this.reticleAoeScale < 1.02) this.reticleAoeScale = 1;
+      }
       this.controller.update(dt);
       // Dynamic TPS: combat soft/hard, tools, swim, climb — one profile at a time
       this.tickDynamicCamera();
@@ -9836,6 +9937,9 @@ export class Studio {
       /** Free-aim crosshair NDC offset (0 = over centre dot). */
       aimNdcX: this.aimNdcX,
       aimNdcY: this.aimNdcY,
+      reticleShape: reticleProfileForWeapon(this.weaponId).shape,
+      reticlePulse: this.reticlePulseT,
+      reticleAoeScale: this.reticleAoeScale,
       owrRange: this.owrRangeState,
       hitMarker: this.hitMarkerCount,
       grounded: cs?.grounded ?? true,

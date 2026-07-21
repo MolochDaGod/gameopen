@@ -1,3 +1,5 @@
+import type { ReticleShape } from "../three/aim/reticleProfiles";
+
 interface Props {
   visible: boolean;
   /**
@@ -29,6 +31,21 @@ interface Props {
   variant?: "combat" | "harvest" | "build" | "swim" | "climb" | "free";
   /** Free-mouse play: dim the fixed centre dot (OS cursor is the aim). */
   freeMouse?: boolean;
+  /**
+   * Weapon-specific shape:
+   *   dot   — swords / melee
+   *   x     — bows
+   *   cross — guns / crossbows
+   *   ring  — staffs (pulses; expands for AoE)
+   */
+  shape?: ReticleShape;
+  /** Staff ring pulse 0–1 phase (host drives with time). */
+  pulse?: number;
+  /**
+   * AoE cast expand scale (1 = idle ring; >1 = ability radius indicator).
+   * Only applies to `ring` shape.
+   */
+  aoeScale?: number;
   /** Optional HUD-editor binding (layout vars + drag/select when editing). */
   editBind?: {
     "data-hud-panel": string;
@@ -40,10 +57,11 @@ interface Props {
 }
 
 /**
- * Dual reticle:
- *  - Fixed **centre dot** at screen middle (body/camera reference) — dimmed in free-mouse.
- *  - Free-aim **crosshair** (ticks) that tracks aimNdc; attacks + select use this ray.
- *  - Variant colours for combat soft/hard, tools, swim, climb.
+ * Weapon-aware dual reticle:
+ *  - Melee: fixed centre **dot**
+ *  - Bow: **X** free-aim mark
+ *  - Gun: classic **+** ticks + centre pip
+ *  - Staff: breathing **ring** that becomes the AoE telegraph when casting
  */
 export function Crosshair({
   visible,
@@ -56,18 +74,26 @@ export function Crosshair({
   focusLocked = false,
   variant = "combat",
   freeMouse = false,
+  shape = "cross",
+  pulse = 0,
+  aoeScale = 1,
   editBind,
 }: Props) {
-  // `visible` stays authoritative for normal play; only force the reticle on
-  // while actively editing the HUD (so it can be arranged even with panels open).
   const editing = !!editBind && editBind.className.includes("hud-editable");
   if (!visible && !editing) return null;
-  const gap = Math.max(0, Math.min(28, spread));
-  // Map NDC offset → % of viewport (0.5 NDC ≈ 25% of half-screen from centre)
+
+  const gap = Math.max(0, Math.min(32, spread));
   const leftPct = 50 + aimNdcX * 50;
   const topPct = 50 - aimNdcY * 50;
+
+  // Staff breathe: 1 ± amp * sin(phase)
+  const pulseScale =
+    shape === "ring" ? 1 + 0.14 * Math.sin(pulse * Math.PI * 2) : 1;
+  const ringScale = Math.max(0.5, aoeScale) * pulseScale;
+
   const chStyle = {
     ["--ch-gap" as string]: `${gap}px`,
+    ["--ch-ring-scale" as string]: String(ringScale),
     left: `${leftPct}%`,
     top: `${topPct}%`,
     ...editBind?.style,
@@ -86,20 +112,65 @@ export function Crosshair({
               ? "crosshair-free"
               : "";
 
+  const shapeClass = `crosshair-shape-${shape}`;
+  const aoeLive = shape === "ring" && aoeScale > 1.08;
+
+  // Melee: only the centre dot (no free-aim ticks)
+  if (shape === "dot") {
+    return (
+      <>
+        <div
+          data-hud-panel={editBind?.["data-hud-panel"]}
+          className={[
+            "aim-center-dot",
+            "aim-center-dot-melee",
+            freeMouse ? "aim-center-dot-free" : "",
+            focusLocked ? "aim-dot-focus" : "",
+            editBind ? editBind.className : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={{
+            left: `${leftPct}%`,
+            top: `${topPct}%`,
+            ...editBind?.style,
+          }}
+          onPointerDown={editBind?.onPointerDown}
+          onContextMenu={editBind?.onContextMenu}
+          aria-hidden
+        />
+        {hitMarker > 0 && (
+          <div className="crosshair crosshair-hit-only" style={chStyle} aria-hidden>
+            <span key={hitMarker} className="ch-hit">
+              <span className="ch-hit-line ch-hit-tl" />
+              <span className="ch-hit-line ch-hit-tr" />
+              <span className="ch-hit-line ch-hit-bl" />
+              <span className="ch-hit-line ch-hit-br" />
+            </span>
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
-      {/* Fixed centre reference — simple dot; softer when free-mouse owns the aim look */}
-      <div
-        className={`aim-center-dot${freeMouse ? " aim-center-dot-free" : ""}`}
-        aria-hidden
-      />
+      {/* Fixed centre reference — hidden for bow X (the X is the aim) */}
+      {shape !== "x" && (
+        <div
+          className={`aim-center-dot${freeMouse ? " aim-center-dot-free" : ""}`}
+          aria-hidden
+        />
+      )}
       <div
         data-hud-panel={editBind?.["data-hud-panel"]}
         className={[
           "crosshair",
+          shapeClass,
           firstPerson ? "crosshair-fp" : "",
           focusLocked ? "crosshair-focus" : "crosshair-soft",
           freeMouse ? "crosshair-freemouse" : "",
+          aoeLive ? "crosshair-aoe-live" : "",
           variantClass,
           editBind ? editBind.className : "",
         ]
@@ -110,12 +181,38 @@ export function Crosshair({
         onContextMenu={editBind?.onContextMenu}
         aria-hidden
       >
-        {rangeState !== "none" && <span className={`ch-range ch-range-${rangeState}`} />}
-        <span className="ch-dot" />
-        <span className="ch-line ch-top" />
-        <span className="ch-line ch-bottom" />
-        <span className="ch-line ch-left" />
-        <span className="ch-line ch-right" />
+        {rangeState !== "none" && shape !== "ring" && (
+          <span className={`ch-range ch-range-${rangeState}`} />
+        )}
+
+        {/* ── shape bodies ─────────────────────────────────────────── */}
+        {shape === "cross" && (
+          <>
+            <span className="ch-dot" />
+            <span className="ch-line ch-top" />
+            <span className="ch-line ch-bottom" />
+            <span className="ch-line ch-left" />
+            <span className="ch-line ch-right" />
+          </>
+        )}
+
+        {shape === "x" && (
+          <>
+            <span className="ch-x ch-x-a" />
+            <span className="ch-x ch-x-b" />
+            <span className="ch-x-gap" />
+          </>
+        )}
+
+        {shape === "ring" && (
+          <>
+            <span className="ch-ring ch-ring-outer" />
+            <span className="ch-ring ch-ring-inner" />
+            <span className="ch-dot ch-ring-pip" />
+            {aoeLive && <span className="ch-aoe-label">AoE</span>}
+          </>
+        )}
+
         {hitMarker > 0 && (
           <span key={hitMarker} className="ch-hit">
             <span className="ch-hit-line ch-hit-tl" />

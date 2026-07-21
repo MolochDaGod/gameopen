@@ -557,6 +557,132 @@ body.ptr-ui .opt:hover {
   width: 3px;
   height: 3px;
 }
+
+/* ── Weapon reticle shapes ────────────────────────────────────────────────── */
+/* Melee sword/axe: free-aim follows a fat combat dot */
+.aim-center-dot-melee {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 248, 230, 0.95);
+  box-shadow: 0 0 8px rgba(255, 210, 140, 0.9), 0 0 2px #fff;
+  pointer-events: none;
+  z-index: 7;
+}
+.aim-dot-focus {
+  background: #ffd080;
+  box-shadow: 0 0 10px #ffc060, 0 0 2px #fff;
+  width: 7px;
+  height: 7px;
+}
+.crosshair-hit-only {
+  width: 0;
+  height: 0;
+  border: none;
+  background: none;
+}
+
+/* Bow: X mark (archer) */
+.crosshair-shape-x {
+  --ch-color: #ffd090;
+  width: 28px;
+  height: 28px;
+}
+.ch-x {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: var(--ch-color);
+  box-shadow: 0 0 5px var(--ch-color);
+  border-radius: 1px;
+}
+.ch-x-a {
+  transform: translate(-50%, -50%) rotate(45deg)
+    scaleX(calc(1 + var(--ch-gap) * 0.04));
+}
+.ch-x-b {
+  transform: translate(-50%, -50%) rotate(-45deg)
+    scaleX(calc(1 + var(--ch-gap) * 0.04));
+}
+.ch-x-gap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(5, 8, 14, 0.55);
+  box-shadow: inset 0 0 0 1px var(--ch-color);
+}
+
+/* Gun: classic + (default ch-line styles) */
+.crosshair-shape-cross { --ch-color: #9fe8ff; }
+
+/* Staff: breathing ring → expands into AoE indicator */
+.crosshair-shape-ring {
+  --ch-color: #c8a0ff;
+  width: 36px;
+  height: 36px;
+}
+.ch-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 1.6px solid var(--ch-color);
+  box-shadow: 0 0 8px var(--ch-color), inset 0 0 6px rgba(180, 140, 255, 0.25);
+  transform: translate(-50%, -50%) scale(var(--ch-ring-scale, 1));
+  transition: transform 0.08s linear, border-color 0.12s ease, opacity 0.12s ease;
+  pointer-events: none;
+}
+.ch-ring-outer {
+  width: 28px;
+  height: 28px;
+  opacity: 0.9;
+}
+.ch-ring-inner {
+  width: 14px;
+  height: 14px;
+  opacity: 0.55;
+  border-width: 1px;
+}
+.ch-ring-pip {
+  width: 3px;
+  height: 3px;
+}
+.crosshair-aoe-live {
+  --ch-color: #e0b0ff;
+}
+.crosshair-aoe-live .ch-ring-outer {
+  border-width: 2px;
+  opacity: 1;
+  box-shadow:
+    0 0 14px var(--ch-color),
+    0 0 28px rgba(180, 100, 255, 0.35),
+    inset 0 0 10px rgba(200, 160, 255, 0.2);
+}
+.crosshair-aoe-live .ch-ring-inner {
+  opacity: 0.75;
+}
+.ch-aoe-label {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 22px * var(--ch-ring-scale, 1));
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ch-color);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  opacity: 0.85;
+  pointer-events: none;
+  white-space: nowrap;
+}
 .ch-dot {
   position: absolute; top: 50%; left: 50%;
   width: 3px; height: 3px; border-radius: 50%;

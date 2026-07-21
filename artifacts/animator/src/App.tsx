@@ -2410,6 +2410,9 @@ export default function App() {
             focusLocked={hud?.focusLocked ?? false}
             variant={crosshairVariant}
             freeMouse={freeMouse}
+            shape={hud?.reticleShape ?? "cross"}
+            pulse={hud?.reticlePulse ?? 0}
+            aoeScale={hud?.reticleAoeScale ?? 1}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
@@ -2634,6 +2637,9 @@ export default function App() {
             focusLocked={hud?.focusLocked ?? false}
             variant={crosshairVariant}
             freeMouse={freeMouse}
+            shape={hud?.reticleShape ?? "cross"}
+            pulse={hud?.reticlePulse ?? 0}
+            aoeScale={hud?.reticleAoeScale ?? 1}
             editBind={hudEdit.bind("reticle")}
           />
           <Hud
