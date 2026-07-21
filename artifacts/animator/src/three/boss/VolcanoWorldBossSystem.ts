@@ -25,6 +25,7 @@ export type VolcanoBossContext = {
 export type VolcanoBossSystemCbs = {
   flash?: (msg: string, t?: number) => void;
   damagePlayer?: (amount: number, from: THREE.Vector3) => void;
+  knockbackPlayer?: (dir: THREE.Vector3, speed: number, hop?: number) => void;
   onBossDeath?: () => void;
 };
 
@@ -69,6 +70,7 @@ export class VolcanoWorldBossSystem {
     this.boss = new ShadowFlameMantisBoss(this.scene, this.vfx, {
       flash: this.cbs.flash,
       damagePlayer: this.cbs.damagePlayer,
+      knockbackPlayer: this.cbs.knockbackPlayer,
       onBossDeath: this.cbs.onBossDeath,
     });
     const ok = await this.boss.load(x, y, z);

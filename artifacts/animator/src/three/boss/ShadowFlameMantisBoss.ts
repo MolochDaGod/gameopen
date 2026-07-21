@@ -17,15 +17,19 @@ import type { Vfx } from "../Vfx";
 import {
   MANTIS_ABILITIES,
   MANTIS_CLIPS,
+  MANTIS_ULTIMATE,
   SHADOW_FLAME_MANTIS,
   type AbilityDef,
   type BossAbilityId,
 } from "./volcanoBossCatalog";
 import { VolcanoGhastMinion } from "./VolcanoGhastMinion";
+import { BossMeteorOrbit } from "./BossMeteorOrbit";
 
 export type MantisBossCallbacks = {
   flash?: (msg: string, t?: number) => void;
   damagePlayer?: (amount: number, from: THREE.Vector3) => void;
+  /** Horizontal knockback (dir XZ normalized, speed, hop). */
+  knockbackPlayer?: (dir: THREE.Vector3, speed: number, hop?: number) => void;
   onBossDeath?: () => void;
   onShadowCall?: (ghasts: VolcanoGhastMinion[]) => void;
 };
@@ -56,6 +60,8 @@ export class ShadowFlameMantisBoss {
   private readonly vfx: Vfx | null;
   private readonly cbs: MantisBossCallbacks;
   private summons: VolcanoGhastMinion[] = [];
+  private meteorOrbit: BossMeteorOrbit | null = null;
+  private shockPulseT = 0;
   private readonly tmp = new THREE.Vector3();
   private readonly tmp2 = new THREE.Vector3();
 
@@ -73,6 +79,7 @@ export class ShadowFlameMantisBoss {
     this.damage = SHADOW_FLAME_MANTIS.damage;
     this.atkReach = SHADOW_FLAME_MANTIS.atkReach;
     this.aggro = SHADOW_FLAME_MANTIS.aggroRange;
+    this.meteorOrbit = new BossMeteorOrbit(vfx);
     scene.add(this.root);
     for (const a of MANTIS_ABILITIES) this.abilityCd.set(a.id, 0);
   }
@@ -225,15 +232,38 @@ export class ShadowFlameMantisBoss {
     this.activeAbility = ab;
     this.abilityTimer = 0;
     this.hitDone = false;
+    this.shockPulseT = 0;
     this.abilityCd.set(ab.id, ab.cd);
     this.playOnce(ab.clip);
-    this.cbs.flash?.(ab.telegraph, 1.1);
+    this.cbs.flash?.(ab.telegraph, 1.4);
 
     if (ab.id === "charge") {
-      // lunge direction locked at start
       this.tmp2.copy(playerPos).sub(this.root.position);
       this.tmp2.y = 0;
       if (this.tmp2.lengthSq() > 1e-4) this.tmp2.normalize();
+    }
+
+    // Nuclear ultimate: dual orbiting meteors (vfxgrudge O) + point-blank shockwave (D/A)
+    if (ab.id === "nuclearSlice") {
+      this.meteorOrbit?.start(this.root.position, {
+        radius: MANTIS_ULTIMATE.meteorRadiusM,
+        duration: MANTIS_ULTIMATE.meteorDurationSec,
+        warnRadius: MANTIS_ULTIMATE.meteorWarnRadiusM,
+        color: 0xff6a22,
+        damagePerImpact: MANTIS_ULTIMATE.meteorDamage,
+        onImpact: (pos, dmg) => {
+          // Damage if player near impact (host resolves player pos each frame via dist)
+          this.cbs.damagePlayer?.(dmg, pos);
+          this.cbs.flash?.("Meteor impact!", 0.45);
+        },
+      });
+      // Opening shockwave
+      this.vfx?.shockwave?.(
+        new THREE.Vector3(this.root.position.x, 0.05, this.root.position.z),
+        0xffb24d,
+        MANTIS_ULTIMATE.shockwaveRadiusM,
+        0.65,
+      );
     }
   }
 
@@ -245,13 +275,54 @@ export class ShadowFlameMantisBoss {
       this.root.position.addScaledVector(this.tmp2, this.speed * 2.4 * dt);
     }
 
+    // ── Ultimate: orbit meteors + close-range shockwave/knockback ──
+    if (ab.id === "nuclearSlice") {
+      this.meteorOrbit?.update(dt);
+      this.shockPulseT += dt;
+      if (this.shockPulseT >= MANTIS_ULTIMATE.shockwavePulseSec) {
+        this.shockPulseT = 0;
+        this.vfx?.shockwave?.(
+          new THREE.Vector3(this.root.position.x, 0.05, this.root.position.z),
+          0xff9940,
+          MANTIS_ULTIMATE.shockwaveRadiusM * 0.85,
+          0.4,
+        );
+        // Anything ≤ 1 m: damage + knockback (vfxgrudge D/A feel)
+        if (dist <= MANTIS_ULTIMATE.pointBlankM) {
+          this.cbs.damagePlayer?.(
+            MANTIS_ULTIMATE.pointBlankDamage,
+            this.root.position.clone(),
+          );
+          const away = this.tmp
+            .copy(playerPos)
+            .sub(this.root.position)
+            .setY(0);
+          if (away.lengthSq() < 1e-6) away.set(0, 0, 1);
+          else away.normalize();
+          this.cbs.knockbackPlayer?.(
+            away,
+            MANTIS_ULTIMATE.knockbackSpeed,
+            MANTIS_ULTIMATE.knockbackHop,
+          );
+        }
+      }
+      const total = ab.windup + ab.active + 0.2;
+      if (this.abilityTimer >= total) {
+        this.meteorOrbit?.cancel();
+        this.phase = "chase";
+        this.activeAbility = null;
+        if (this.model) groundFeetLocal(this.model, 0);
+      }
+      return;
+    }
+
     // Shadow Call VFX + summons at end of windup
     if (ab.id === "shadowCall" && !this.hitDone && this.abilityTimer >= ab.windup) {
       this.hitDone = true;
       void this.executeShadowCall();
     }
 
-    // Damage pulse
+    // Damage pulse (melee abilities)
     if (
       ab.id !== "shadowCall" &&
       !this.hitDone &&
@@ -262,7 +333,11 @@ export class ShadowFlameMantisBoss {
         this.hitDone = true;
         const dmg = Math.round(this.damage * ab.damageMul);
         this.cbs.damagePlayer?.(dmg, this.root.position.clone());
-        this.vfx?.smokePop?.(this.root.position.clone().setY(this.root.position.y + 1.2), 0xff6622, 1.1);
+        this.vfx?.smokePop?.(
+          this.root.position.clone().setY(this.root.position.y + 1.2),
+          0xff6622,
+          1.1,
+        );
       }
     }
 
@@ -293,6 +368,7 @@ export class ShadowFlameMantisBoss {
         flash: this.cbs.flash,
         damagePlayer: this.cbs.damagePlayer,
       });
+      // knockback not needed for minions
       const p = origin.clone().add(off);
       const ok = await g.load(p.x, p.y + 2.2, p.z);
       if (ok) {

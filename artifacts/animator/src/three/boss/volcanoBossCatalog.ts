@@ -199,15 +199,44 @@ export const MANTIS_ABILITIES: AbilityDef[] = [
   {
     id: "nuclearSlice",
     clip: MANTIS_CLIPS.nuclearSlice,
-    cd: 28,
-    windup: 0.7,
-    active: 0.85,
-    damageMul: 2.1,
-    range: 5.5,
-    preferBelowHp: 0.45,
-    telegraph: "Nuclear Slice",
+    cd: 32,
+    /** Telegraph + dual orbit meteors (half circle) */
+    windup: 0.45,
+    /** Orbit duration ~2.4s + impact settle */
+    active: 2.6,
+    damageMul: 1.8,
+    range: 9,
+    preferBelowHp: 0.5,
+    telegraph: "Nuclear Slice — dual meteor orbit + shockwave",
   },
 ];
+
+/** Ultimate tuning (vfxgrudge O = meteor; D/A = shockwave/knockback). */
+export const MANTIS_ULTIMATE = {
+  meteorRadiusM: 7,
+  meteorDurationSec: 2.4,
+  meteorWarnRadiusM: 2.4,
+  meteorDamage: 36,
+  /** Continuous shockwave pulse while ultimate runs */
+  shockwavePulseSec: 0.45,
+  shockwaveRadiusM: 3.2,
+  /** Knockback + damage for anything ≤ this distance from boss */
+  pointBlankM: 1.0,
+  pointBlankDamage: 22,
+  knockbackSpeed: 14,
+  knockbackHop: 0.35,
+} as const;
+
+/** Ghast fire pattern (vfxgrudge C = fireball). */
+export const GHAST_FIRE = {
+  castSec: 1.5,
+  coneSec: 2.0,
+  fireballDamageMul: 1.0,
+  coneDamagePerTick: 6,
+  coneTickSec: 0.25,
+  coneRangeM: 9,
+  cooldownSec: 5.5,
+} as const;
 
 export function unitAllowedOn(
   unit: VolcanoBossUnit,

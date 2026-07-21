@@ -54,6 +54,28 @@ Code: `artifacts/animator/src/three/boss/`
 3. Spawn **2** `VolcanoGhastMinion` offset left/right
 4. CD **22 s**; max ~4 summons
 
+### Nuclear Slice ultimate (vfxgrudge **O** meteor + **D/A** shockwave)
+
+1. Play `Nuclear Slice`
+2. **Two light meteors** start opposite on a circle (radius 7 m) around the boss
+3. **Warning circles** under each impact zone (`auraRing`); markers pulse along the arc
+4. Orbit **half circle** (π) over ~2.4 s — each ends where the other began
+5. Lightweight sky-drop (`bolt` + `blastImpact` + shockwave) — no heavy meteor GLB
+6. **While ultimate runs:** pulse shockwave; anything **≤ 1 m** from boss takes damage + **knockback**
+
+### Ash Ghast fire (vfxgrudge **C** fireball)
+
+1. **1.5 s cast** — cast aura + ground ring
+2. **Fireball** bolt toward player
+3. **2.0 s cone** — `flameCone` ticks every 0.25 s (forward arc damage)
+
+## World mesh production deploy
+
+See `src/three/world/worldMeshDeploy.ts`:
+
+- layers · colliders · UUID · sector location · size vs 1.8 m human
+- `HELLMAW_WORLD_NODES` production pins for mantis + ambient ghasts
+
 ## Where it spawns
 
 | Context | Gate |

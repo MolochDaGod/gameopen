@@ -1,5 +1,11 @@
 /**
  * Ash Ghast — floating ranged volcano enemy / Shadow Call summon.
+ *
+ * Fire pattern (vfxgrudge.puter.site hotkey **C** = Fireball):
+ *  1. 1.5 s cast (Idle hold + cast aura)
+ *  2. Fireball bolt
+ *  3. 2.0 s Fireball **cone** sustained flame (flameCone pulses)
+ *
  * Clips: Idle | Fire
  */
 
@@ -8,12 +14,14 @@ import { loadGltfFirst } from "../assets";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { fitCharacterHeight } from "../fitCharacterHeight";
 import type { Vfx } from "../Vfx";
-import { GHAST_CLIPS, VOLCANO_GHAST } from "./volcanoBossCatalog";
+import { GHAST_CLIPS, GHAST_FIRE, VOLCANO_GHAST } from "./volcanoBossCatalog";
 
 export type GhastCallbacks = {
   flash?: (msg: string, t?: number) => void;
   damagePlayer?: (amount: number, from: THREE.Vector3) => void;
 };
+
+type FirePhase = "idle" | "cast" | "cone" | "recover";
 
 export class VolcanoGhastMinion {
   readonly root = new THREE.Group();
@@ -25,11 +33,15 @@ export class VolcanoGhastMinion {
   private mixer: THREE.AnimationMixer | null = null;
   private actions = new Map<string, THREE.AnimationAction>();
   private fireCd = 0;
+  private firePhase: FirePhase = "idle";
+  private phaseT = 0;
+  private coneTick = 0;
   private hoverT = Math.random() * Math.PI * 2;
   private readonly baseY: number = 2.2;
   private readonly vfx: Vfx | null;
   private readonly cbs: GhastCallbacks;
   private readonly tmp = new THREE.Vector3();
+  private readonly face = new THREE.Vector3(0, 0, 1);
   private readonly projPool: THREE.Mesh[] = [];
 
   constructor(
@@ -93,10 +105,10 @@ export class VolcanoGhastMinion {
     this.mixer?.update(dt);
     this.fireCd = Math.max(0, this.fireCd - dt);
     this.hoverT += dt;
-    // Bob in air
     this.root.position.y = this.baseY + Math.sin(this.hoverT * 1.7) * 0.35;
 
     if (!playerPos) {
+      this.firePhase = "idle";
       this.play(GHAST_CLIPS.idle, true);
       return;
     }
@@ -105,34 +117,103 @@ export class VolcanoGhastMinion {
     const dist = to.length();
     to.y = 0;
     if (to.lengthSq() > 1e-4) {
+      this.face.copy(to).normalize();
       this.root.rotation.y = Math.atan2(to.x, to.z);
     }
 
-    // Keep mid range
-    if (dist < 10) {
-      this.root.position.addScaledVector(to.normalize().multiplyScalar(-1), VOLCANO_GHAST.speed * 0.6 * dt);
-    } else if (dist > 22) {
-      this.root.position.addScaledVector(to.normalize(), VOLCANO_GHAST.speed * 0.5 * dt);
+    // Kite while not in cast/cone
+    if (this.firePhase === "idle" || this.firePhase === "recover") {
+      if (dist < 10) {
+        this.root.position.addScaledVector(
+          this.face.clone().multiplyScalar(-1),
+          VOLCANO_GHAST.speed * 0.6 * dt,
+        );
+      } else if (dist > 22) {
+        this.root.position.addScaledVector(this.face, VOLCANO_GHAST.speed * 0.5 * dt);
+      }
     }
 
-    if (this.fireCd <= 0 && dist < VOLCANO_GHAST.atkReach && dist > 4) {
-      this.fireCd = 2.8;
-      this.play(GHAST_CLIPS.fire, false);
-      this.fireProjectile(playerPos);
-      // return to idle after fire
-      window.setTimeout(() => {
-        if (!this.dead) this.play(GHAST_CLIPS.idle, true);
-      }, 900);
+    // ── Fire state machine ──
+    if (this.firePhase === "idle") {
+      if (this.fireCd <= 0 && dist < VOLCANO_GHAST.atkReach && dist > 4) {
+        this.firePhase = "cast";
+        this.phaseT = 0;
+        this.play(GHAST_CLIPS.fire, false);
+        // Cast telegraph (vfxgrudge C — charge)
+        const mouth = this.root.position.clone().setY(this.root.position.y + 0.5);
+        this.vfx?.castAura?.(mouth, 0xff7a1e);
+        this.vfx?.auraRing?.(
+          new THREE.Vector3(this.root.position.x, 0.05, this.root.position.z),
+          0xff5522,
+          1.6,
+          GHAST_FIRE.castSec,
+        );
+        this.cbs.flash?.("Ash Ghast casting…", 0.8);
+      }
+      return;
+    }
+
+    if (this.firePhase === "cast") {
+      this.phaseT += dt;
+      // Hold aim during cast
+      if (this.phaseT >= GHAST_FIRE.castSec) {
+        this.firePhase = "cone";
+        this.phaseT = 0;
+        this.coneTick = 0;
+        this.launchFireball(playerPos);
+        this.cbs.flash?.("Fireball!", 0.5);
+      }
+      return;
+    }
+
+    if (this.firePhase === "cone") {
+      this.phaseT += dt;
+      this.coneTick += dt;
+      // Sustained cone (vfxgrudge C fireball cone feel)
+      if (this.coneTick >= GHAST_FIRE.coneTickSec) {
+        this.coneTick = 0;
+        const origin = this.root.position.clone().setY(this.root.position.y + 0.4);
+        this.vfx?.flameCone?.(origin, this.face, 0xff7a1e, GHAST_FIRE.coneRangeM);
+        // Cone damage if player in front arc
+        const toP = playerPos.clone().sub(this.root.position);
+        toP.y = 0;
+        const d = toP.length();
+        if (d < GHAST_FIRE.coneRangeM && d > 0.2) {
+          const dir = toP.normalize();
+          const dot = dir.dot(this.face);
+          if (dot > 0.55) {
+            this.cbs.damagePlayer?.(
+              GHAST_FIRE.coneDamagePerTick,
+              this.root.position.clone(),
+            );
+          }
+        }
+      }
+      if (this.phaseT >= GHAST_FIRE.coneSec) {
+        this.firePhase = "recover";
+        this.phaseT = 0;
+        this.fireCd = GHAST_FIRE.cooldownSec;
+        this.play(GHAST_CLIPS.idle, true);
+      }
+      return;
+    }
+
+    // recover
+    this.phaseT += dt;
+    if (this.phaseT >= 0.35) {
+      this.firePhase = "idle";
     }
   }
 
-  private fireProjectile(target: THREE.Vector3) {
+  /** Single fireball after cast (light mesh + VFX trail). */
+  private launchFireball(target: THREE.Vector3) {
     const origin = this.root.position.clone();
     origin.y += 0.6;
-    this.vfx?.smokePop?.(origin, 0xff8844, 0.6);
-    // Simple fireball mesh
+    this.vfx?.smokePop?.(origin, 0xff8844, 0.55);
+    this.vfx?.muzzle?.(origin, this.face, 0xff6622);
+
     const ball = new THREE.Mesh(
-      new THREE.SphereGeometry(0.28, 10, 10),
+      new THREE.SphereGeometry(0.32, 10, 10),
       new THREE.MeshBasicMaterial({ color: 0xff5522 }),
     );
     ball.position.copy(origin);
@@ -140,43 +221,29 @@ export class VolcanoGhastMinion {
     this.projPool.push(ball);
 
     const dir = target.clone().sub(origin).normalize();
-    const speed = 18;
-    const maxT = 2.2;
+    const speed = 16;
+    const maxT = 2.0;
     let t = 0;
-    const step = (dt: number) => {
+    let last = performance.now();
+    const dmg = Math.round(VOLCANO_GHAST.damage * GHAST_FIRE.fireballDamageMul);
+
+    const tick = (now: number) => {
       if (this.dead) {
         this.scene.remove(ball);
         return;
       }
-      t += dt;
-      ball.position.addScaledVector(dir, speed * dt);
-      if (ball.position.distanceTo(target) < 1.2 && t > 0.08) {
-        this.cbs.damagePlayer?.(VOLCANO_GHAST.damage, ball.position.clone());
-        this.vfx?.smokePop?.(ball.position, 0xffaa44, 0.9);
-        this.scene.remove(ball);
-        return;
-      }
-      if (t < maxT) requestAnimationFrame((now) => {
-        // approximate dt
-        step(1 / 60);
-      });
-      else this.scene.remove(ball);
-    };
-    // use simple interval for dt stability
-    let last = performance.now();
-    const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       t += dt;
       ball.position.addScaledVector(dir, speed * dt);
-      // soft track player a bit
-      if (t < 1.2) {
+      if (t < 1.0) {
         const steer = target.clone().sub(ball.position).normalize();
-        ball.position.addScaledVector(steer, 2.5 * dt);
+        ball.position.addScaledVector(steer, 2.2 * dt);
       }
-      if (ball.position.distanceTo(target) < 1.35) {
-        this.cbs.damagePlayer?.(VOLCANO_GHAST.damage, ball.position.clone());
-        this.vfx?.smokePop?.(ball.position, 0xffaa44, 0.9);
+      if (ball.position.distanceTo(target) < 1.4) {
+        this.cbs.damagePlayer?.(dmg, ball.position.clone());
+        this.vfx?.blastImpact?.(ball.position, 0xff6a22, 0.9, false);
+        this.vfx?.smokePop?.(ball.position, 0xffaa44, 0.85);
         this.scene.remove(ball);
         return;
       }

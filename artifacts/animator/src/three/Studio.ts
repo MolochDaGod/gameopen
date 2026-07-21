@@ -1079,6 +1079,9 @@ export class Studio {
     this.volcanoBoss = new VolcanoWorldBossSystem(this.scene, this.vfx, {
       flash: campCbs.flash,
       damagePlayer: campCbs.damagePlayer,
+      knockbackPlayer: (dir, speed, hop) => {
+        this.controller?.applyImpulse(dir, speed, hop ?? 0.3);
+      },
       onBossDeath: () => this.setCombatFlash("WORLD BOSS DOWN · Shadow Flame Mantis", 2.5),
     });
     this.fabledSky = new FabledSkyTowns(this.scene, {
