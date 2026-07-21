@@ -11,6 +11,10 @@ systems instead of finishing the path already on **grudox.grudge-studio.com**.
 1. **Finish existing SSOT first** — search GRUDOX arcade, arena, Warlords, D1
    before inventing a substitute mode.
 2. **Do not rebrand one game as another** — Voxel Velocity ≠ Danger Room.
+2b. **Production world only** — terrain / water / AI / island deploy work builds
+   and QA against **live** open.grudge-studio.com + CDN (skill
+   `grudge-production-world`, `docs/PRODUCTION_WORLD.md`). No sandbox-only
+   “world ready” claims; train AI on those rules.
 3. **Hosts**
    | Host | Owns |
    |------|------|

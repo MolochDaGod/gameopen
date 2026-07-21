@@ -13,6 +13,7 @@ import {
   unitAllowedOn,
   VOLCANO_GHAST,
 } from "./volcanoBossCatalog";
+import { AI_WORLD_PATTERNS } from "../world/productionWorldRules";
 
 export type VolcanoBossContext = {
   archetype?: string;
@@ -80,12 +81,16 @@ export class VolcanoWorldBossSystem {
       return false;
     }
 
-    // Ambient caldera ghasts (also allowed on volcano islands alone)
+    // Ambient caldera ghasts — placement follows production AI patterns
+    // (arena clear + min spawn separation), not ad-hoc scatter.
     if (unitAllowedOn(VOLCANO_GHAST, ctx)) {
+      const arena = AI_WORLD_PATTERNS.bossArenaClearRadiusM;
+      const sep = AI_WORLD_PATTERNS.minSpawnSeparationM;
+      const radius = Math.max(pin.ambientGhastRadius, arena * 0.85, sep * 2);
       for (let i = 0; i < pin.ambientGhastCount; i++) {
         const ang = (i / pin.ambientGhastCount) * Math.PI * 2;
-        const gx = x + Math.cos(ang) * pin.ambientGhastRadius;
-        const gz = z + Math.sin(ang) * pin.ambientGhastRadius;
+        const gx = x + Math.cos(ang) * radius;
+        const gz = z + Math.sin(ang) * radius;
         const g = new VolcanoGhastMinion(this.scene, this.vfx, {
           flash: this.cbs.flash,
           damagePlayer: this.cbs.damagePlayer,

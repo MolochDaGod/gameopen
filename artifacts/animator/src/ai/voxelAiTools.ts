@@ -15,6 +15,7 @@ import {
 } from "../three/voxel/voxelBehavior";
 import type { AiTool } from "./types";
 import type { WeaponId } from "../three/types";
+import { AI_WORLD_TRAINING_PROMPT } from "../three/world/productionWorldRules";
 
 export type VoxelAiContext = {
   getEditor: () => VoxelEditor | null;
@@ -299,6 +300,9 @@ export function voxelWorldbuilderSystemPrompt(ctx: {
     "Help place blocks, deploy NPCs/props, inspect AI behaviors, and prepare maps for Danger Room Play.",
     "Prefer tools over guessing. Canonical blocks: mine-loader / @workspace/voxel-canonical placeables.",
     "Play requires a Player Start (✦). Behaviors are authoring intent for NPCs (guard/patrol/etc).",
+    "PRODUCTION ONLY: author for live open.grudge-studio.com + CDN assets — not localhost-only stubs.",
+    "",
+    AI_WORLD_TRAINING_PROMPT,
     "",
     "Live state:",
     `  tool=${ctx.brush.tool} shape=${ctx.brush.shape} block=${ctx.brush.blockType}`,

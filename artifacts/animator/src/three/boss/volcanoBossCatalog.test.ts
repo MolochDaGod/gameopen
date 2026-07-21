@@ -10,6 +10,7 @@ import {
   VOLCANO_GHAST,
 } from "./volcanoBossCatalog";
 import { listHellmawDeployReport } from "../world/worldMeshDeploy";
+import { productionWorldReport } from "../world/productionWorldRules";
 
 describe("volcanoBossCatalog", () => {
   it("maps all mantis clips from source GLB", () => {
@@ -54,5 +55,10 @@ describe("volcanoBossCatalog", () => {
     const report = listHellmawDeployReport();
     expect(report.length).toBeGreaterThanOrEqual(3);
     expect(report.every((r) => r.ok)).toBe(true);
+  });
+
+  it("production world gates pass for Hellmaw pins", () => {
+    const report = productionWorldReport();
+    expect(report.allPass).toBe(true);
   });
 });
