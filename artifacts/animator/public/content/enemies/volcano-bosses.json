@@ -77,5 +77,23 @@
     "summonCount": 2,
     "vfx": ["smokeColumn", "smokePop"],
     "cooldownSec": 22
+  },
+  "nuclearSliceUltimate": {
+    "clip": "Nuclear Slice",
+    "vfxSandbox": { "meteor": "O", "shockwave": "D", "knockback": "A" },
+    "meteors": 2,
+    "orbitHalfCircle": true,
+    "orbitRadiusM": 7,
+    "orbitDurationSec": 2.4,
+    "warningCircles": true,
+    "lightBake": "bolt+blastImpact (no heavy meteor GLB)",
+    "pointBlankShockwaveM": 1.0,
+    "knockbackSpeed": 14
+  },
+  "ghastFire": {
+    "vfxSandbox": { "fireball": "C" },
+    "castSec": 1.5,
+    "coneSec": 2.0,
+    "coneRangeM": 9
   }
 }
