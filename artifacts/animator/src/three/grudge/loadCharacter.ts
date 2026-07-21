@@ -80,8 +80,11 @@ export function normalizeCharacterGroup(fbx: THREE.Object3D): THREE.Skeleton | n
   // animation clips actually deform every mesh.
   const skeleton = unifySkeletons(fbx);
 
-  // Face +Z (toward the default camera) at zero facing-rotation.
+  // Face +Z (Controller art-forward when root.yaw = 0). Toon RTS FBX ships +X.
+  // Mark artForwardSet so deployCharacterModel does not double-rotate.
   fbx.rotation.y = Math.PI / 2;
+  fbx.userData.artForwardSet = true;
+  fbx.userData.artForwardYaw = Math.PI / 2;
   fbx.updateWorldMatrix(true, true);
 
   // ── Per-mesh unit normalization (non-skinned meshes only) ──────────

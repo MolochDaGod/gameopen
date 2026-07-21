@@ -81,7 +81,8 @@ resolve raceId/classId from Railway character
 - **Skeleton:** Bip001 (not Mixamo) for grudge6 kits.  
 - **Equipment:** child-mesh **visibility**, never replace body GLB.  
 - **Hands:** `R_hand_container` / `L_hand_container` (or Bip001 hands).  
-- **Height:** ~1.8 m via `fitCharacterHeight` (no 100× skinned AABB bug).
+- **Height:** ~1.8 m via `fitCharacterHeight` (no 100× skinned AABB bug).  
+- **Scene deploy (XZ / Y / facing):** [CHARACTER_SCENE_DEPLOY.md](./CHARACTER_SCENE_DEPLOY.md) — Y-up, XZ ground, art-forward +Z, `deployCharacterModel`.
 
 ### 3.4 Character row → mesh join
 ```
@@ -100,7 +101,9 @@ Railway characters.race_id / class_id / model_3d / equipment
 | `three/grudge/raceAssets.ts` | CDN FBX + atlas URLs |
 | `three/grudge/loadCharacter.ts` | FBX load, normalize, **fuzzy equip**, atlas bind |
 | `three/grudge/texture.ts` | Atlas load multi-host + HTML reject |
-| `three/grudge/grudge6Runtime.ts` | Combat rig: mesh + atlas + anim packs |
+| `three/grudge/grudge6Runtime.ts` | Combat rig: mesh + atlas + anim packs + deploy validate |
+| `three/characterDeploy.ts` | **XZ/Y/facing** scene place SSOT |
+| `three/fitCharacterHeight.ts` | Height fit + Bip001 pelvis XZ |
 | `three/grudge/GrudgeAvatar.ts` | Studio avatar (primary production path) |
 | `three/grudge/anims.ts` | Baked Bip001 JSON clips |
 | `three/fleetAssetResolver.ts` | Same-origin / Open / R2 / arena candidates |

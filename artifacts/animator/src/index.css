@@ -422,6 +422,10 @@ html, body, #root {
    wandering crosshair-shaped cursor competes with it. Scoped to these modes so
    the Voxel Editor (same mount) keeps a usable cursor. */
 .canvas-mount.immersive canvas { cursor: none; }
+/* Free-mouse (`): unlock pointer lock and show a normal OS mouse for UI / aim. */
+.canvas-mount.immersive.free-mouse canvas {
+  cursor: default !important;
+}
 
 /* ---- top bar ---- */
 .topbar {

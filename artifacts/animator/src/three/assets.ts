@@ -812,7 +812,23 @@ for (const rc of RACE_CHARACTERS) {
 }
 
 export function getCharacter(id: string): CharacterDef {
-  return CHARACTERS.find((c) => c.id === id) ?? CHARACTERS[0];
+  const hit = CHARACTERS.find((c) => c.id === id);
+  if (hit) return hit;
+  // Fleet grudge6 avatar ids (`grudge:race:preset`) are not catalog rows.
+  // Return a safe stub so modelYaw / tank flags don't inherit explorer defaults.
+  if (id.startsWith("grudge:")) {
+    return {
+      id,
+      name: id.replace(/^grudge:/, "").replace(/:/g, " "),
+      file: "",
+      scale: 1,
+      clips: {},
+      signatureSkills: [],
+      handBone: "Bip001.*(R|L).*Hand",
+      modelYaw: 0,
+    };
+  }
+  return CHARACTERS[0];
 }
 
 /** Map fleet raceId strings → charactersgrudox race character catalog id. */

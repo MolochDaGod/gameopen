@@ -862,6 +862,24 @@ export class Studio {
   /** Scratch vector for net hit-distance tests (avoids per-call alloc). */
   private netTmp = new THREE.Vector3();
 
+  /**
+   * Free-mouse mode (` key): OS cursor visible, pointer lock off.
+   * Click must NOT re-grab lock until `' restores crosshair mode.
+   */
+  private freeMouseMode = false;
+
+  /** Toggle free OS mouse vs pointer-lock crosshair (App hotkeys ` / '). */
+  setFreeMouseMode(on: boolean) {
+    this.freeMouseMode = on;
+    if (on) {
+      this.input.exitLock();
+    }
+  }
+
+  get isFreeMouseMode(): boolean {
+    return this.freeMouseMode;
+  }
+
   private onClick = () => {
     this.sfx?.resume();
     // On touch devices the on-screen controls drive look, so never grab pointer
@@ -870,6 +888,8 @@ export class Studio {
     // App shows DangerStartScreen first — don't steal lock under the overlay.
     // After ENTER, canvas clicks re-acquire lock (sample three.js boot pattern).
     if (document.querySelector("[data-testid='danger-start-screen']")) return;
+    // Free-mouse (`): keep OS cursor; only Quote re-locks for crosshair.
+    if (this.freeMouseMode) return;
     if (!this.input.locked) this.input.requestLock();
   };
   private onMouseDown = (e: MouseEvent) => {
@@ -1421,9 +1441,13 @@ export class Studio {
   /**
    * Set equipment mesh_ids from fleet character (main panel SSOT).
    * Call before {@link setCharacter}; spawn re-binds atlas + child visibility.
+   * If a GrudgeAvatar is already live, re-applies visibility + re-grounds feet.
    */
   setEquipmentMeshIds(ids: string[] | null | undefined): void {
     this.pendingMeshIds = ids?.length ? ids.slice() : null;
+    if (this.character instanceof GrudgeAvatar) {
+      this.character.setMeshIds(this.pendingMeshIds);
+    }
   }
 
   /** Body armor tints for Explorer (Mine-Loader equipment visual). */
@@ -1499,6 +1523,13 @@ export class Studio {
     // Terrain foot IK — Character + GrudgeAvatar (flat y=0 Danger Room floor).
     if (typeof (next as { setFootIk?: (on: boolean) => void }).setFootIk === "function") {
       (next as { setFootIk: (on: boolean) => void }).setFootIk(true);
+    }
+    // Reliable scene deploy: human-scale + feet grounded (Y-up / XZ ground SSOT).
+    try {
+      const { ensureHumanScale } = await import("./characterDeploy");
+      ensureHumanScale(this.character.root);
+    } catch (e) {
+      console.warn("[Studio] ensureHumanScale failed", e);
     }
     // Honour the spectator invariant: a character swapped in mid-duel must stay
     // hidden (the player is a spectator until the duel stops).
@@ -1695,7 +1726,10 @@ export class Studio {
 
   /** Orient the model: per-character base offset plus the live editor offset. */
   private applyModelYaw() {
-    const base = getCharacter(this.characterId).modelYaw ?? 0;
+    // grudge:<race>:<preset> is not in the catalog — default art-forward +Z (yaw 0).
+    const base = this.characterId.startsWith("grudge:")
+      ? 0
+      : (getCharacter(this.characterId).modelYaw ?? 0);
     this.character?.setModelYaw(base + this.params.modelYaw);
   }
 

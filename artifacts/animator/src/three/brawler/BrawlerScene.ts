@@ -32,7 +32,6 @@ import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons"
 import { GRAVITY_Y, LOCOMOTION, PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 import type { Avatar, EditorParams, WeaponId } from "../types";
 import { DEFAULT_EDITOR } from "../types";
-import { fitCharacterHeight, bodyBox } from "../fitCharacterHeight";
 import { parseGrudgeAvatarId } from "../../lib/raceModel";
 import {
   applyContentSkillLabels,
@@ -562,53 +561,12 @@ export class BrawlerScene {
   /**
    * Final guard: if the loaded avatar is wildly off 1.8 m (e.g. residual 100×
    * unit bug), re-fit the visual model under the avatar root.
+   * SSOT: three/characterDeploy.ensureHumanScale (Y-up / XZ ground).
    */
   private ensureAvatarHumanScale(av: Avatar): void {
-    const target = PLAYER_HEIGHT_M;
-    av.root.updateMatrixWorld(true);
-    // Prefer first mesh child / model under root; avoid scaling controller extras
-    let model: THREE.Object3D | null = null;
-    if (av.root.children.length === 1) {
-      model = av.root.children[0]!;
-    } else {
-      // GrudgeAvatar: holder → model; Character: model under root
-      av.root.traverse((o) => {
-        if (model) return;
-        if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
-          // climb to a group just under root
-          let p: THREE.Object3D | null = o;
-          while (p && p.parent && p.parent !== av.root) p = p.parent;
-          model = p;
-        }
-      });
-    }
-    if (!model || model === av.root) model = av.root;
-
-    const h = bodyBox(model).getSize(new THREE.Vector3()).y;
-    if (!(h > 0.01)) return;
-    // Allow small variance; fix only gross errors (>3× or <0.4× target)
-    if (h > target * 3 || h < target * 0.4) {
-      console.warn(
-        `[BrawlerScene] avatar height ${h.toFixed(2)}m off target ${target}m — refitting`,
-      );
-      // Reset local scale before fit so we don't compound
-      if (model !== av.root) {
-        fitCharacterHeight(model, target, 1);
-      } else {
-        // Scale root uniformly as last resort
-        const s = target / h;
-        av.root.scale.multiplyScalar(s);
-        av.root.updateMatrixWorld(true);
-        const b = bodyBox(av.root);
-        av.root.position.y -= b.min.y;
-      }
-    }
-    // Ground feet at y=0 in root local space
-    av.root.updateMatrixWorld(true);
-    const box = bodyBox(av.root);
-    if (Math.abs(box.min.y) > 0.02) {
-      av.root.position.y -= box.min.y;
-    }
+    void import("../characterDeploy").then(({ ensureHumanScale }) => {
+      ensureHumanScale(av.root, PLAYER_HEIGHT_M);
+    });
   }
 
   /** Wire Danger Room Controller to the loaded Avatar. */

@@ -26,6 +26,11 @@ import { loadBodyTexture } from "./texture";
 import { unifySkeletons, rematchClipToSkeleton } from "./skeleton";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
+import {
+  deployCharacterModel,
+  reGroundAfterEquip,
+  validateCharacterDeploy,
+} from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 
@@ -152,23 +157,13 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
 }
 
 /**
- * Normalize race GLB to ~1.8 m human height.
- * Uses fitCharacterHeight (skinned body measure + decade unit fix + clamps)
- * so a bad bind-pose bbox cannot explode scale by ~100×.
+ * Normalize race mesh to ~1.8 m, XZ on pelvis, feet on y=0, art-forward +Z.
+ * Uses {@link deployCharacterModel} (Three.js Y-up / XZ ground SSOT).
  */
 function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): void {
-  // Force bind matrices current before measuring skinned AABB
-  root.updateWorldMatrix(true, true);
-  root.traverse((o) => {
-    const sk = o as THREE.SkinnedMesh;
-    if (sk.isSkinnedMesh && sk.skeleton) {
-      sk.skeleton.update();
-    }
-  });
-  root.updateWorldMatrix(true, true);
-
-  // FBX path already height-fits in loadCharacter.normalizeCharacterGroup —
-  // only re-fit if still absurd. GLB always fit once via fitCharacterHeight.
+  root.userData.importPipeline = pipeline;
+  // FBX path already height-fits + faces +Z in loadCharacter.normalizeCharacterGroup.
+  // GLB always fit once; deploy finalizes XZ/Y for both.
   const already = root.userData?.grudgeHeightFit === true;
   if (!already || pipeline === "glb-baked") {
     const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
@@ -180,14 +175,19 @@ function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): v
     }
   }
 
-  root.traverse((o) => {
-    const m = o as THREE.Mesh;
-    if (m.isMesh) {
-      m.castShadow = true;
-      m.receiveShadow = true;
-      m.frustumCulled = false;
-    }
+  const deployed = deployCharacterModel(root, {
+    targetHeightM: TARGET_HEIGHT,
+    groundY: 0,
+    facePlusZ: "auto",
+    refitIfAbsurd: true,
   });
+  if (Math.abs(deployed.groundDeltaY) > 0.02 || deployed.facingApplied) {
+    console.info(
+      `[grudge6Runtime] deploy pipeline=${pipeline} h=${deployed.heightM.toFixed(3)} ` +
+        `dy=${deployed.groundDeltaY.toFixed(4)} dXZ=(${deployed.centerDeltaX.toFixed(3)},${deployed.centerDeltaZ.toFixed(3)}) ` +
+        `face=${deployed.facingApplied} pelvis=${deployed.pelvis?.name ?? "bbox"}`,
+    );
+  }
 }
 
 /**
@@ -298,6 +298,8 @@ export async function loadGrudge6CombatRig(
   model.userData.equipMeshIds = meshIds.slice();
   model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
   model.userData.physicsLayer = "character";
+  // Gear hide/show changes skinned AABB — re-ground so feet stay on y=0
+  reGroundAfterEquip(model, 0);
 
   const root = new THREE.Group();
   root.add(model);
@@ -429,7 +431,7 @@ export async function loadGrudge6CombatRig(
     }
   }
 
-  // Re-ground feet AFTER idle pose evaluation so animated bind doesn't sink soles.
+  // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
   // Bind-pose fit alone leaves feet underground once hips rotate in walk/run.
   if (clips.has("idle")) {
     try {
@@ -437,21 +439,10 @@ export async function loadGrudge6CombatRig(
       const act = tmpMixer.clipAction(clips.get("idle")!);
       act.play();
       tmpMixer.update(0);
-      model.updateMatrixWorld(true);
-      const box = new THREE.Box3();
-      let n = 0;
-      model.traverse((o) => {
-        const sk = o as THREE.SkinnedMesh;
-        if (sk.isSkinnedMesh && sk.visible) {
-          box.expandByObject(sk);
-          n++;
-        }
-      });
-      if (n > 0 && Number.isFinite(box.min.y) && Math.abs(box.min.y) > 1e-4) {
-        model.position.y -= box.min.y;
-        model.updateMatrixWorld(true);
+      const dy = reGroundAfterEquip(model, 0);
+      if (Math.abs(dy) > 1e-4) {
         console.info(
-          `[grudge6Runtime] post-idle re-ground dy=${(-box.min.y).toFixed(4)} race=${raceId}`,
+          `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId}`,
         );
       }
       tmpMixer.stopAllAction();
@@ -459,6 +450,17 @@ export async function loadGrudge6CombatRig(
     } catch (e) {
       console.warn("[grudge6Runtime] post-idle re-ground failed", e);
     }
+  }
+
+  const check = validateCharacterDeploy(model);
+  if (!check.ok) {
+    console.warn(
+      `[grudge6Runtime] deploy validation race=${raceId}`,
+      check.issues,
+      `h=${check.heightM.toFixed(3)}`,
+    );
+  } else {
+    model.userData.deployValidated = true;
   }
 
   // Role aliases for T0 weapon skills / Studio multiPart names

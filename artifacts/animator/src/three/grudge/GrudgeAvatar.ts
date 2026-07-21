@@ -121,6 +121,16 @@ export class GrudgeAvatar implements Avatar {
   /** Update equipment mesh set (main panel / account bag). Call before load or re-apply after. */
   setMeshIds(ids: string[] | null | undefined): void {
     this.meshIds = ids?.length ? ids.slice() : null;
+    // Live re-equip: re-apply visibility + re-ground feet (AABB changes with gear).
+    if (this.model && this.meshIds?.length) {
+      void import("./loadCharacter").then(({ applyGearPreset }) => {
+        if (!this.model || !this.meshIds) return;
+        applyGearPreset(this.model, this.meshIds);
+        void import("../characterDeploy").then(({ reGroundAfterEquip }) => {
+          if (this.model) reGroundAfterEquip(this.model, 0);
+        });
+      });
+    }
   }
 
   getMeshIds(): string[] | null {

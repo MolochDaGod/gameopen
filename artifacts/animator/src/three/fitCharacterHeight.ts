@@ -18,12 +18,39 @@ import { prepObjectMaterials } from "./texturePrep";
 
 const MIN_NATIVE_M = 0.05;
 const MAX_NATIVE_M = 50;
-const MAX_SCALE = 12;
-const MIN_SCALE = 0.02;
+/** Residual aesthetic fit only — unit decade (100×) is NOT clamped by this. */
+const MAX_FIT = 12;
+const MIN_FIT = 0.02;
+const HUMAN_HEIGHT_M = 1.8;
 
 export function powerOfTenToward(reference: number, current: number): number {
   if (!(reference > 0) || !(current > 0)) return 1;
   return Math.pow(10, Math.round(Math.log10(reference / current)));
+}
+
+/**
+ * Find hips / pelvis for XZ centering (Y-up, XZ ground).
+ * grudge6 = Bip001 Pelvis; Mixamo = mixamorigHips / Hips.
+ */
+export function findPelvisBone(root: THREE.Object3D): THREE.Bone | null {
+  let best: THREE.Bone | null = null;
+  let bestScore = -1;
+  root.traverse((o) => {
+    const b = o as THREE.Bone;
+    if (!b.isBone || !b.name) return;
+    const n = b.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    let score = 0;
+    if (n === "bip001pelvis" || n === "pelvis") score = 100;
+    else if (n.endsWith("pelvis")) score = 90;
+    else if (n === "mixamorighips" || n === "hips") score = 80;
+    else if (n.endsWith("hips")) score = 70;
+    else if (n.includes("hip") && !n.includes("thigh")) score = 40;
+    if (score > bestScore) {
+      bestScore = score;
+      best = b;
+    }
+  });
+  return best;
 }
 
 /** World-space AABB over skinned body meshes only; fallback = full object. */
@@ -33,8 +60,25 @@ export function bodyBox(root: THREE.Object3D): THREE.Box3 {
   let n = 0;
   root.traverse((node) => {
     if (node instanceof THREE.SkinnedMesh && node.visible) {
-      box.expandByObject(node);
-      n++;
+      try {
+        // Incomplete test/stub skins (no skinIndex) throw inside expandByObject.
+        box.expandByObject(node);
+        n++;
+      } catch {
+        try {
+          if (node.geometry) {
+            if (!node.geometry.boundingBox) node.geometry.computeBoundingBox();
+            const gb = node.geometry.boundingBox;
+            if (gb && !gb.isEmpty()) {
+              const w = gb.clone().applyMatrix4(node.matrixWorld);
+              box.union(w);
+              n++;
+            }
+          }
+        } catch {
+          /* skip broken mesh */
+        }
+      }
     }
   });
   if (n === 0) box.setFromObject(root);
@@ -62,10 +106,18 @@ export function fitCharacterHeight(
 
   const nativeHeight = bodyBox(model).getSize(new THREE.Vector3()).y || 1;
 
-  // Decade unit fix (cm vs m etc.) so height fit stays in a sane range.
+  // Unit snap vs human 1.8 m — unclamped so classic 100× (cm as m) fully corrects.
+  // KILL: clamping unitFix×fit to 12 (left heroes wrong and broke deploy checks).
   let unitFix = 1;
-  if (nativeHeight < MIN_NATIVE_M || nativeHeight > MAX_NATIVE_M) {
+  const ratio = nativeHeight / (targetM || HUMAN_HEIGHT_M);
+  if (ratio >= 70 && ratio <= 140) unitFix = 0.01;
+  else if (ratio >= 1 / 140 && ratio <= 1 / 70) unitFix = 100;
+  else if (ratio >= 7 && ratio <= 14) unitFix = 0.1;
+  else if (ratio >= 1 / 14 && ratio <= 1 / 7) unitFix = 10;
+  else if (nativeHeight < MIN_NATIVE_M || nativeHeight > MAX_NATIVE_M) {
     unitFix = powerOfTenToward(targetM, nativeHeight);
+  } else if (nativeHeight > 15 && nativeHeight < 500) {
+    unitFix = 0.01; // absolute cm band (e.g. 180)
   }
 
   model.scale.setScalar(unitFix);
@@ -73,28 +125,34 @@ export function fitCharacterHeight(
   const midH = bodyBox(model).getSize(new THREE.Vector3()).y || targetM;
   let fit = midH > 1e-6 ? (targetM / midH) * authorScale : authorScale;
   if (!Number.isFinite(fit) || fit <= 0) fit = 1;
-  fit = Math.min(MAX_SCALE, Math.max(MIN_SCALE, fit));
+  fit = Math.min(MAX_FIT, Math.max(MIN_FIT, fit));
 
   const finalScale = unitFix * fit;
-  // Re-clamp the product so unitFix alone can't explode
-  const clamped = Math.min(MAX_SCALE, Math.max(MIN_SCALE, finalScale));
-  model.scale.setScalar(clamped);
+  model.scale.setScalar(finalScale);
   model.updateMatrixWorld(true);
+  model.userData.grudgeUnitFix = unitFix;
+  model.userData.grudgeNativeHeight = nativeHeight;
 
   const box2 = bodyBox(model);
   const center = box2.getCenter(new THREE.Vector3());
-  let hips: THREE.Bone | null = null;
-  model.traverse((o) => {
-    const b = o as THREE.Bone;
-    if (!hips && b.isBone && /hips$/i.test(b.name)) hips = b;
-  });
+  // grudge6 = Bip001 Pelvis; Mixamo = Hips — not only /hips$/i
+  const hips = findPelvisBone(model);
   const ax = new THREE.Vector3();
-  if (hips) (hips as THREE.Bone).getWorldPosition(ax);
-  else ax.set(center.x, 0, center.z);
+  if (hips) {
+    hips.getWorldPosition(ax);
+  } else {
+    ax.set(center.x, 0, center.z);
+  }
 
-  model.position.x -= ax.x;
-  model.position.z -= ax.z;
-  model.position.y -= box2.min.y;
+  // World-space pelvis/center → model.position (Y-up, XZ ground plane)
+  const origin = new THREE.Vector3();
+  model.getWorldPosition(origin);
+  model.position.x -= ax.x - origin.x;
+  model.position.z -= ax.z - origin.z;
+  // Re-measure after XZ so foot ground is correct
+  model.updateMatrixWorld(true);
+  const box3 = bodyBox(model);
+  model.position.y -= box3.min.y;
   model.updateMatrixWorld(true);
 
   return { scale: clamped, nativeHeight, unitFix };

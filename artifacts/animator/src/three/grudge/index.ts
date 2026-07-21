@@ -79,3 +79,15 @@ export {
   arenaCharacterGlbUrl,
 } from "./grudge6Runtime";
 export type { LoadGrudge6Opts, Grudge6LoadedRig } from "./grudge6Runtime";
+
+// Scene deploy (Y-up / XZ / art-forward +Z) — used by Studio + loaders
+export {
+  deployCharacterModel,
+  ensureHumanScale,
+  groundFeetLocal,
+  reGroundAfterEquip,
+  validateCharacterDeploy,
+  findPelvisBone,
+  CHARACTER_ART_FORWARD,
+  DEPLOY_TARGET_HEIGHT_M,
+} from "../characterDeploy";

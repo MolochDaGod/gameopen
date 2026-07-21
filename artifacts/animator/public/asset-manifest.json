@@ -1,33 +1,33 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-16T19:46:14.836Z",
+  "generatedAt": "2026-07-21T16:57:04.099Z",
   "game": "gameopen",
-  "count": 936,
+  "count": 1175,
   "byKind": {
-    "data": 8,
-    "animation": 542,
-    "model": 205,
-    "texture": 116,
-    "other": 57,
+    "data": 66,
+    "animation": 572,
+    "model": 206,
+    "texture": 260,
+    "other": 60,
     "icon": 4,
     "text": 2,
     "bin": 1,
-    "code": 1
+    "code": 4
   },
   "byPurpose": {
-    "data": 8,
-    "unknown": 206,
+    "data": 66,
+    "unknown": 225,
     "prop": 37,
-    "animation": 271,
-    "weapon": 192,
+    "animation": 286,
+    "weapon": 195,
     "vfx": 30,
-    "texture": 116,
+    "texture": 260,
     "audio": 54,
     "npc": 11,
     "map": 3,
     "character": 8
   },
-  "totalBytes": 589104992,
+  "totalBytes": 623155167,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -336,7 +336,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 250657,
+      "bytes": 224720,
       "category": "anim/animations/bow"
     },
     {
@@ -366,7 +366,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 182753,
+      "bytes": 135008,
       "category": "anim/animations/bow"
     },
     {
@@ -620,6 +620,46 @@
       "category": "anim/animations/climb"
     },
     {
+      "id": "GO-f9d1919328ac",
+      "path": "/anim/animations/climb/hanging-idle.fbx",
+      "rel": "anim/animations/climb/hanging-idle.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 192960,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-64a6d543789d",
+      "path": "/anim/animations/climb/jump-to-freehang.fbx",
+      "rel": "anim/animations/climb/jump-to-freehang.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 200384,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-d62b676ef34a",
+      "path": "/anim/animations/climb/stand-to-freehang.fbx",
+      "rel": "anim/animations/climb/stand-to-freehang.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 170256,
+      "category": "anim/animations/climb"
+    },
+    {
+      "id": "GO-98344b5697a8",
+      "path": "/anim/animations/climb/wall-run.fbx",
+      "rel": "anim/animations/climb/wall-run.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 141168,
+      "category": "anim/animations/climb"
+    },
+    {
       "id": "GO-8fed65faa2e5",
       "path": "/anim/animations/combo/melee-combo-1.glb",
       "rel": "anim/animations/combo/melee-combo-1.glb",
@@ -727,6 +767,16 @@
       "purpose": "animation",
       "ext": "fbx",
       "bytes": 176848,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-d4c828a8f137",
+      "path": "/anim/animations/extra/dual-weapon-combo.fbx",
+      "rel": "anim/animations/extra/dual-weapon-combo.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 243360,
       "category": "anim/animations/extra"
     },
     {
@@ -920,6 +970,16 @@
       "category": "anim/animations/extra"
     },
     {
+      "id": "GO-3beeacbaae5b",
+      "path": "/anim/animations/extra/roll-running.fbx",
+      "rel": "anim/animations/extra/roll-running.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 203840,
+      "category": "anim/animations/extra"
+    },
+    {
       "id": "GO-27ad716faba4",
       "path": "/anim/animations/extra/run-jump-attack.fbx",
       "rel": "anim/animations/extra/run-jump-attack.fbx",
@@ -927,6 +987,16 @@
       "purpose": "animation",
       "ext": "fbx",
       "bytes": 245088,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-dd622acc9fea",
+      "path": "/anim/animations/extra/running-arc.fbx",
+      "rel": "anim/animations/extra/running-arc.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 127440,
       "category": "anim/animations/extra"
     },
     {
@@ -957,6 +1027,16 @@
       "purpose": "animation",
       "ext": "fbx",
       "bytes": 189168,
+      "category": "anim/animations/extra"
+    },
+    {
+      "id": "GO-c157b42f1524",
+      "path": "/anim/animations/extra/standing-melee-combo-v3.fbx",
+      "rel": "anim/animations/extra/standing-melee-combo-v3.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 210096,
       "category": "anim/animations/extra"
     },
     {
@@ -1207,6 +1287,16 @@
       "purpose": "animation",
       "ext": "glb",
       "bytes": 83072,
+      "category": "anim/animations/gestures"
+    },
+    {
+      "id": "GO-fd177689b41e",
+      "path": "/anim/animations/gestures/wiping-sweat.fbx",
+      "rel": "anim/animations/gestures/wiping-sweat.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 204304,
       "category": "anim/animations/gestures"
     },
     {
@@ -1786,7 +1876,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 222608,
+      "bytes": 126192,
       "category": "anim/animations/pistol"
     },
     {
@@ -2040,6 +2130,16 @@
       "category": "anim/animations/pistol"
     },
     {
+      "id": "GO-d854fe6a2539",
+      "path": "/anim/animations/reactions/agony.fbx",
+      "rel": "anim/animations/reactions/agony.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 240624,
+      "category": "anim/animations/reactions"
+    },
+    {
       "id": "GO-1afa32babfbd",
       "path": "/anim/animations/reactions/big-body-blow.fbx",
       "rel": "anim/animations/reactions/big-body-blow.fbx",
@@ -2047,6 +2147,16 @@
       "purpose": "animation",
       "ext": "fbx",
       "bytes": 877952,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-416e35e1173e",
+      "path": "/anim/animations/reactions/death-from-back-headshot.fbx",
+      "rel": "anim/animations/reactions/death-from-back-headshot.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 244384,
       "category": "anim/animations/reactions"
     },
     {
@@ -2106,7 +2216,17 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 204896,
+      "bytes": 350352,
+      "category": "anim/animations/reactions"
+    },
+    {
+      "id": "GO-9b5bbb02fb2e",
+      "path": "/anim/animations/reactions/hit-on-side-of-head.fbx",
+      "rel": "anim/animations/reactions/hit-on-side-of-head.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 228496,
       "category": "anim/animations/reactions"
     },
     {
@@ -2116,7 +2236,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 222608,
+      "bytes": 228496,
       "category": "anim/animations/reactions"
     },
     {
@@ -2136,7 +2256,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 877760,
+      "bytes": 205680,
       "category": "anim/animations/reactions"
     },
     {
@@ -2370,6 +2490,16 @@
       "category": "anim/animations/spear"
     },
     {
+      "id": "GO-228ebbd20a8a",
+      "path": "/anim/animations/spear/spear1.fbx",
+      "rel": "anim/animations/spear/spear1.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 228240,
+      "category": "anim/animations/spear"
+    },
+    {
       "id": "GO-8b7e1ba81df3",
       "path": "/anim/animations/spear/upward-thrust.fbx",
       "rel": "anim/animations/spear/upward-thrust.fbx",
@@ -2476,7 +2606,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 179856,
+      "bytes": 155888,
       "category": "anim/animations/striker"
     },
     {
@@ -2570,6 +2700,16 @@
       "category": "anim/animations/sword"
     },
     {
+      "id": "GO-9b691bacad25",
+      "path": "/anim/animations/sword/melee-attack-backhand.fbx",
+      "rel": "anim/animations/sword/melee-attack-backhand.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 225728,
+      "category": "anim/animations/sword"
+    },
+    {
       "id": "GO-16419896afbe",
       "path": "/anim/animations/sword/melee-downward.fbx",
       "rel": "anim/animations/sword/melee-downward.fbx",
@@ -2607,6 +2747,16 @@
       "purpose": "animation",
       "ext": "fbx",
       "bytes": 198272,
+      "category": "anim/animations/sword"
+    },
+    {
+      "id": "GO-057e94c9c0d7",
+      "path": "/anim/animations/sword/run-with-sword.fbx",
+      "rel": "anim/animations/sword/run-with-sword.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 135296,
       "category": "anim/animations/sword"
     },
     {
@@ -2696,7 +2846,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 135521,
+      "bytes": 126368,
       "category": "anim/animations/sword"
     },
     {
@@ -3016,7 +3166,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 250657,
+      "bytes": 224720,
       "category": "anim/bow"
     },
     {
@@ -3046,7 +3196,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 182753,
+      "bytes": 135008,
       "category": "anim/bow"
     },
     {
@@ -3300,6 +3450,46 @@
       "category": "anim/climb"
     },
     {
+      "id": "GO-68a6f06283f6",
+      "path": "/anim/climb/hanging-idle.fbx",
+      "rel": "anim/climb/hanging-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 192960,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-d13ac615462e",
+      "path": "/anim/climb/jump-to-freehang.fbx",
+      "rel": "anim/climb/jump-to-freehang.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 200384,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-98e3645a27d2",
+      "path": "/anim/climb/stand-to-freehang.fbx",
+      "rel": "anim/climb/stand-to-freehang.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 170256,
+      "category": "anim/climb"
+    },
+    {
+      "id": "GO-f495b5b9985c",
+      "path": "/anim/climb/wall-run.fbx",
+      "rel": "anim/climb/wall-run.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 141168,
+      "category": "anim/climb"
+    },
+    {
       "id": "GO-5bbcd34b1fbf",
       "path": "/anim/combo/melee-combo-1.glb",
       "rel": "anim/combo/melee-combo-1.glb",
@@ -3407,6 +3597,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 176848,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-e2ab1e2f8777",
+      "path": "/anim/extra/dual-weapon-combo.fbx",
+      "rel": "anim/extra/dual-weapon-combo.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 243360,
       "category": "anim/extra"
     },
     {
@@ -3526,7 +3726,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 228512,
+      "bytes": 226992,
       "category": "anim/extra"
     },
     {
@@ -3600,6 +3800,16 @@
       "category": "anim/extra"
     },
     {
+      "id": "GO-edb12acaebf3",
+      "path": "/anim/extra/roll-running.fbx",
+      "rel": "anim/extra/roll-running.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 203840,
+      "category": "anim/extra"
+    },
+    {
       "id": "GO-f0a9525d8b6a",
       "path": "/anim/extra/run-jump-attack.fbx",
       "rel": "anim/extra/run-jump-attack.fbx",
@@ -3607,6 +3817,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 245088,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-810629682494",
+      "path": "/anim/extra/running-arc.fbx",
+      "rel": "anim/extra/running-arc.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 127440,
       "category": "anim/extra"
     },
     {
@@ -3637,6 +3857,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 189168,
+      "category": "anim/extra"
+    },
+    {
+      "id": "GO-b26ec5b3e644",
+      "path": "/anim/extra/standing-melee-combo-v3.fbx",
+      "rel": "anim/extra/standing-melee-combo-v3.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 210096,
       "category": "anim/extra"
     },
     {
@@ -3887,6 +4117,16 @@
       "purpose": "unknown",
       "ext": "glb",
       "bytes": 83072,
+      "category": "anim/gestures"
+    },
+    {
+      "id": "GO-5a0e137b20af",
+      "path": "/anim/gestures/wiping-sweat.fbx",
+      "rel": "anim/gestures/wiping-sweat.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 204304,
       "category": "anim/gestures"
     },
     {
@@ -4196,7 +4436,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 271600,
+      "bytes": 243360,
       "category": "anim/knife"
     },
     {
@@ -4466,7 +4706,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 222608,
+      "bytes": 126192,
       "category": "anim/pistol"
     },
     {
@@ -4720,6 +4960,16 @@
       "category": "anim/pistol"
     },
     {
+      "id": "GO-61dcfb47a447",
+      "path": "/anim/reactions/agony.fbx",
+      "rel": "anim/reactions/agony.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 240624,
+      "category": "anim/reactions"
+    },
+    {
       "id": "GO-8140ebf6977a",
       "path": "/anim/reactions/big-body-blow.fbx",
       "rel": "anim/reactions/big-body-blow.fbx",
@@ -4727,6 +4977,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 877952,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-d0dfa51a66f2",
+      "path": "/anim/reactions/death-from-back-headshot.fbx",
+      "rel": "anim/reactions/death-from-back-headshot.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 244384,
       "category": "anim/reactions"
     },
     {
@@ -4786,7 +5046,17 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 204896,
+      "bytes": 350352,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-14dc1f73f29d",
+      "path": "/anim/reactions/hit-on-side-of-head.fbx",
+      "rel": "anim/reactions/hit-on-side-of-head.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 228496,
       "category": "anim/reactions"
     },
     {
@@ -4796,7 +5066,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 222608,
+      "bytes": 228496,
       "category": "anim/reactions"
     },
     {
@@ -4816,7 +5086,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 877760,
+      "bytes": 205680,
       "category": "anim/reactions"
     },
     {
@@ -5050,6 +5320,16 @@
       "category": "anim/spear"
     },
     {
+      "id": "GO-c1c0256a4391",
+      "path": "/anim/spear/spear1.fbx",
+      "rel": "anim/spear/spear1.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 228240,
+      "category": "anim/spear"
+    },
+    {
       "id": "GO-3a7fdb0b6589",
       "path": "/anim/spear/upward-thrust.fbx",
       "rel": "anim/spear/upward-thrust.fbx",
@@ -5166,7 +5446,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 179856,
+      "bytes": 155888,
       "category": "anim/striker"
     },
     {
@@ -5270,6 +5550,16 @@
       "category": "anim/sword"
     },
     {
+      "id": "GO-a5f724752f83",
+      "path": "/anim/sword/melee-attack-backhand.fbx",
+      "rel": "anim/sword/melee-attack-backhand.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 225728,
+      "category": "anim/sword"
+    },
+    {
       "id": "GO-9be9aa544c34",
       "path": "/anim/sword/melee-downward.fbx",
       "rel": "anim/sword/melee-downward.fbx",
@@ -5307,6 +5597,16 @@
       "purpose": "weapon",
       "ext": "fbx",
       "bytes": 198272,
+      "category": "anim/sword"
+    },
+    {
+      "id": "GO-7f49281174be",
+      "path": "/anim/sword/run-with-sword.fbx",
+      "rel": "anim/sword/run-with-sword.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 135296,
       "category": "anim/sword"
     },
     {
@@ -5396,7 +5696,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 135521,
+      "bytes": 126368,
       "category": "anim/sword"
     },
     {
@@ -5508,6 +5808,486 @@
       "ext": "fbx",
       "bytes": 257600,
       "category": "anim/sword"
+    },
+    {
+      "id": "GO-29981c44682c",
+      "path": "/anims/baked/locomotion/dodging.json",
+      "rel": "anims/baked/locomotion/dodging.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 134274,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-2c28ffd52c76",
+      "path": "/anims/baked/locomotion/jump.json",
+      "rel": "anims/baked/locomotion/jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 111109,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-038102b19463",
+      "path": "/anims/baked/longbow/standing dodge forward.json",
+      "rel": "anims/baked/longbow/standing dodge forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60843,
+      "category": "anims/baked/longbow"
+    },
+    {
+      "id": "GO-bdd142247af3",
+      "path": "/anims/baked/longbow/standing dodge left.json",
+      "rel": "anims/baked/longbow/standing dodge left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 59293,
+      "category": "anims/baked/longbow"
+    },
+    {
+      "id": "GO-d6389d84f46b",
+      "path": "/anims/baked/longbow/standing dodge right.json",
+      "rel": "anims/baked/longbow/standing dodge right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 59180,
+      "category": "anims/baked/longbow"
+    },
+    {
+      "id": "GO-1f9a561f00d2",
+      "path": "/anims/baked/longbow/standing run forward.json",
+      "rel": "anims/baked/longbow/standing run forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 53076,
+      "category": "anims/baked/longbow"
+    },
+    {
+      "id": "GO-426822e5a6e0",
+      "path": "/anims/baked/longbow/standing walk forward.json",
+      "rel": "anims/baked/longbow/standing walk forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 73210,
+      "category": "anims/baked/longbow"
+    },
+    {
+      "id": "GO-fccbdec5d7ab",
+      "path": "/anims/baked/magic/Standing Run Forward.json",
+      "rel": "anims/baked/magic/Standing Run Forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 45131,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-991368698326",
+      "path": "/anims/baked/magic/Standing Walk Forward.json",
+      "rel": "anims/baked/magic/Standing Walk Forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 69117,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-658b914b1a03",
+      "path": "/anims/baked/polearm/attack.json",
+      "rel": "anims/baked/polearm/attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 25780,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-14fc58deeb07",
+      "path": "/anims/baked/polearm/attack2.json",
+      "rel": "anims/baked/polearm/attack2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31839,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-af1342108d2c",
+      "path": "/anims/baked/polearm/attack3.json",
+      "rel": "anims/baked/polearm/attack3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 35777,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-4d5f3b50bed6",
+      "path": "/anims/baked/polearm/attack4.json",
+      "rel": "anims/baked/polearm/attack4.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43820,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-fcdcd8c0e45b",
+      "path": "/anims/baked/polearm/attack5.json",
+      "rel": "anims/baked/polearm/attack5.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 57483,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-932191c414e0",
+      "path": "/anims/baked/polearm/cast.json",
+      "rel": "anims/baked/polearm/cast.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 259258,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-556566efdf54",
+      "path": "/anims/baked/polearm/combo.json",
+      "rel": "anims/baked/polearm/combo.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 25779,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-71157df5dd70",
+      "path": "/anims/baked/polearm/death.json",
+      "rel": "anims/baked/polearm/death.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 260730,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-8a4e0c564914",
+      "path": "/anims/baked/polearm/debut.json",
+      "rel": "anims/baked/polearm/debut.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 256622,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-fe94f3ecefab",
+      "path": "/anims/baked/polearm/dizzy.json",
+      "rel": "anims/baked/polearm/dizzy.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 224294,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-511911b60293",
+      "path": "/anims/baked/polearm/hitback.json",
+      "rel": "anims/baked/polearm/hitback.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 74819,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-80b4f74c85d6",
+      "path": "/anims/baked/polearm/hitdown.json",
+      "rel": "anims/baked/polearm/hitdown.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 105995,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-d39d44e4d72b",
+      "path": "/anims/baked/polearm/hitfly.json",
+      "rel": "anims/baked/polearm/hitfly.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 95261,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-604f3886f5b6",
+      "path": "/anims/baked/polearm/hitkneel.json",
+      "rel": "anims/baked/polearm/hitkneel.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 258904,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-34fde7c1b211",
+      "path": "/anims/baked/polearm/hurt.json",
+      "rel": "anims/baked/polearm/hurt.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 25637,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-88710f79947c",
+      "path": "/anims/baked/polearm/idle.json",
+      "rel": "anims/baked/polearm/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 260214,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-a34efb2972a9",
+      "path": "/anims/baked/polearm/manifest.json",
+      "rel": "anims/baked/polearm/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1781,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-52fd1cbc8ad3",
+      "path": "/anims/baked/polearm/overhead.json",
+      "rel": "anims/baked/polearm/overhead.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 35778,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-23f72afc38b5",
+      "path": "/anims/baked/polearm/power.json",
+      "rel": "anims/baked/polearm/power.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 139200,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-6067a2616311",
+      "path": "/anims/baked/polearm/run.json",
+      "rel": "anims/baked/polearm/run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 32894,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-6ce8ad4c82e2",
+      "path": "/anims/baked/polearm/skill.json",
+      "rel": "anims/baked/polearm/skill.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 259259,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-2641548d8f0a",
+      "path": "/anims/baked/polearm/skill1.json",
+      "rel": "anims/baked/polearm/skill1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 259260,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-129465301d4b",
+      "path": "/anims/baked/polearm/skill1_loop.json",
+      "rel": "anims/baked/polearm/skill1_loop.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 126493,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-6a7c46873344",
+      "path": "/anims/baked/polearm/skill2.json",
+      "rel": "anims/baked/polearm/skill2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 193370,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-bedb73c0d844",
+      "path": "/anims/baked/polearm/skill2_loop.json",
+      "rel": "anims/baked/polearm/skill2_loop.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 201225,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-39b709c935fe",
+      "path": "/anims/baked/polearm/skill3.json",
+      "rel": "anims/baked/polearm/skill3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 258903,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-0971d13181c6",
+      "path": "/anims/baked/polearm/skill4.json",
+      "rel": "anims/baked/polearm/skill4.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 139201,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-282aa993bf90",
+      "path": "/anims/baked/polearm/skill6.json",
+      "rel": "anims/baked/polearm/skill6.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 105933,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-9d59d4b25f0b",
+      "path": "/anims/baked/polearm/skill6_loop.json",
+      "rel": "anims/baked/polearm/skill6_loop.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 253820,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-aa2407c1c2cd",
+      "path": "/anims/baked/polearm/slash.json",
+      "rel": "anims/baked/polearm/slash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31837,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-ed0337b43f96",
+      "path": "/anims/baked/polearm/special.json",
+      "rel": "anims/baked/polearm/special.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 53673,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-f1866518614d",
+      "path": "/anims/baked/polearm/sprint.json",
+      "rel": "anims/baked/polearm/sprint.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 32897,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-42fb4540a4b3",
+      "path": "/anims/baked/polearm/switch.json",
+      "rel": "anims/baked/polearm/switch.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 55617,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-70d8a82a0000",
+      "path": "/anims/baked/polearm/thrust.json",
+      "rel": "anims/baked/polearm/thrust.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 25780,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-2b2009adc1ea",
+      "path": "/anims/baked/polearm/walk.json",
+      "rel": "anims/baked/polearm/walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 32895,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-990f5fa33351",
+      "path": "/anims/baked/polearm/win.json",
+      "rel": "anims/baked/polearm/win.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 248234,
+      "category": "anims/baked/polearm"
+    },
+    {
+      "id": "GO-aa0111b559c2",
+      "path": "/anims/baked/sword_shield/sword and shield run.json",
+      "rel": "anims/baked/sword_shield/sword and shield run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43224,
+      "category": "anims/baked/sword_shield"
+    },
+    {
+      "id": "GO-404630f5e4e4",
+      "path": "/anims/baked/unarmed/fight_idle.json",
+      "rel": "anims/baked/unarmed/fight_idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 142578,
+      "category": "anims/baked/unarmed"
+    },
+    {
+      "id": "GO-631f68949c9f",
+      "path": "/anims/baked/uploads_2026_06/locomotion/torch run forward.json",
+      "rel": "anims/baked/uploads_2026_06/locomotion/torch run forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 41358,
+      "category": "anims/baked/uploads_2026_06/locomotion"
     },
     {
       "id": "GO-2d1c7b908d58",
@@ -6120,13 +6900,43 @@
       "category": "root"
     },
     {
+      "id": "GO-f0ceb4f38294",
+      "path": "/content/camp/claim-flag.json",
+      "rel": "content/camp/claim-flag.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 8000,
+      "category": "content/camp"
+    },
+    {
+      "id": "GO-c3bd423fd9b4",
+      "path": "/content/class-relic-skillTrees.json",
+      "rel": "content/class-relic-skillTrees.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 22687,
+      "category": "content"
+    },
+    {
+      "id": "GO-acc4b8f4c7da",
+      "path": "/content/class-skill-bridges.json",
+      "rel": "content/class-skill-bridges.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 27032,
+      "category": "content"
+    },
+    {
       "id": "GO-05dabaf42a41",
       "path": "/content/harvest/operations.json",
       "rel": "content/harvest/operations.json",
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3859,
+      "bytes": 4010,
       "category": "content/harvest"
     },
     {
@@ -6136,7 +6946,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 11318,
+      "bytes": 11690,
       "category": "content/harvest"
     },
     {
@@ -6146,7 +6956,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 5577,
+      "bytes": 15531,
       "category": "content/harvest"
     },
     {
@@ -6156,8 +6966,48 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 4445,
+      "bytes": 4543,
       "category": "content/harvest"
+    },
+    {
+      "id": "GO-95edc221d7a0",
+      "path": "/content/runtime/example-danger-scripts.json",
+      "rel": "content/runtime/example-danger-scripts.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1005,
+      "category": "content/runtime"
+    },
+    {
+      "id": "GO-445d576b79fc",
+      "path": "/content/worlds/island-life-deployments.json",
+      "rel": "content/worlds/island-life-deployments.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 3967,
+      "category": "content/worlds"
+    },
+    {
+      "id": "GO-40ddd8474acc",
+      "path": "/content/worlds/outdoor-asset-catalog.json",
+      "rel": "content/worlds/outdoor-asset-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 3817,
+      "category": "content/worlds"
+    },
+    {
+      "id": "GO-6503501c756a",
+      "path": "/content/worlds/road-pack-catalog.json",
+      "rel": "content/worlds/road-pack-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 5758,
+      "category": "content/worlds"
     },
     {
       "id": "GO-9cf956d57e44",
@@ -6166,7 +7016,27 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 2966,
+      "bytes": 24157,
+      "category": "content/worlds"
+    },
+    {
+      "id": "GO-5bcb26a8719c",
+      "path": "/content/worlds/voxel-last30-catalog.json",
+      "rel": "content/worlds/voxel-last30-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 19931,
+      "category": "content/worlds"
+    },
+    {
+      "id": "GO-8bcf70f2994c",
+      "path": "/content/worlds/voxel-map-chunk-deployments.json",
+      "rel": "content/worlds/voxel-map-chunk-deployments.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 28230,
       "category": "content/worlds"
     },
     {
@@ -6880,6 +7750,506 @@
       "category": "icons"
     },
     {
+      "id": "GO-4d24d49661a4",
+      "path": "/icons/skill_nobg/Warriorskill_01_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_01_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 86902,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-86c411eb9c99",
+      "path": "/icons/skill_nobg/Warriorskill_02_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_02_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 87136,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-95f6bf40be04",
+      "path": "/icons/skill_nobg/Warriorskill_03_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_03_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 73533,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-84c2e4a7e872",
+      "path": "/icons/skill_nobg/Warriorskill_04_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_04_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 79401,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-c5e2e40866a1",
+      "path": "/icons/skill_nobg/Warriorskill_05_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_05_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 118474,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-d0fdb72746fa",
+      "path": "/icons/skill_nobg/Warriorskill_06_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_06_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 147967,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-6707318f1d14",
+      "path": "/icons/skill_nobg/Warriorskill_07_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_07_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 121382,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-00d1607585ad",
+      "path": "/icons/skill_nobg/Warriorskill_08_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_08_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 174411,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-3abd84dd1174",
+      "path": "/icons/skill_nobg/Warriorskill_09_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_09_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 137625,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-ce7cd71c28a7",
+      "path": "/icons/skill_nobg/Warriorskill_10_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_10_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 127830,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-6afee8ae6aee",
+      "path": "/icons/skill_nobg/Warriorskill_11_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_11_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 167756,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-5708719d4892",
+      "path": "/icons/skill_nobg/Warriorskill_12_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_12_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 137704,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-f42863e60fe8",
+      "path": "/icons/skill_nobg/Warriorskill_13_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_13_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 139434,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-592bb4e596cf",
+      "path": "/icons/skill_nobg/Warriorskill_14_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_14_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 131989,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-e7fe78556c5f",
+      "path": "/icons/skill_nobg/Warriorskill_15_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_15_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 118106,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-c69f4d1a3797",
+      "path": "/icons/skill_nobg/Warriorskill_16_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_16_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 187032,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-fd34dc0c4bb9",
+      "path": "/icons/skill_nobg/Warriorskill_17_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_17_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 171024,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-0c5369133581",
+      "path": "/icons/skill_nobg/Warriorskill_18_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_18_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 172244,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-076f6ab74ccb",
+      "path": "/icons/skill_nobg/Warriorskill_19_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_19_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 148304,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-0391b6bd2d8f",
+      "path": "/icons/skill_nobg/Warriorskill_20_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_20_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 171830,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-579cb7b19106",
+      "path": "/icons/skill_nobg/Warriorskill_21_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_21_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 131311,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-0eee603b76a6",
+      "path": "/icons/skill_nobg/Warriorskill_22_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_22_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 127662,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-6ea987ea3e83",
+      "path": "/icons/skill_nobg/Warriorskill_23_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_23_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 163189,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-7ad439bd1acf",
+      "path": "/icons/skill_nobg/Warriorskill_24_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_24_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 141364,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-78c8b0546ae1",
+      "path": "/icons/skill_nobg/Warriorskill_25_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_25_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 178011,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-10643875f619",
+      "path": "/icons/skill_nobg/Warriorskill_26_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_26_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 147792,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-9e789ba21c11",
+      "path": "/icons/skill_nobg/Warriorskill_27_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_27_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 149955,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-1d600c83d0ae",
+      "path": "/icons/skill_nobg/Warriorskill_28_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_28_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 144035,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-364efcecf84f",
+      "path": "/icons/skill_nobg/Warriorskill_29_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_29_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 108814,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-66795e14b42d",
+      "path": "/icons/skill_nobg/Warriorskill_30_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_30_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 125619,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-e33a9f2269e5",
+      "path": "/icons/skill_nobg/Warriorskill_31_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_31_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 155215,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-22496f3f1957",
+      "path": "/icons/skill_nobg/Warriorskill_32_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_32_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 149026,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-457bc3709e12",
+      "path": "/icons/skill_nobg/Warriorskill_33_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_33_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 113437,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-7e6d3ccd373b",
+      "path": "/icons/skill_nobg/Warriorskill_34_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_34_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 154550,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-3cafebcbf095",
+      "path": "/icons/skill_nobg/Warriorskill_35_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_35_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 168014,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-beee061baf42",
+      "path": "/icons/skill_nobg/Warriorskill_36_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_36_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 145147,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-e3c1a99eadc8",
+      "path": "/icons/skill_nobg/Warriorskill_37_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_37_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 191016,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-978da96cc0b6",
+      "path": "/icons/skill_nobg/Warriorskill_38_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_38_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 163617,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-d1f82369ad4e",
+      "path": "/icons/skill_nobg/Warriorskill_39_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_39_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 163741,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-5542153b9016",
+      "path": "/icons/skill_nobg/Warriorskill_40_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_40_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 102019,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-ed6a4fc99a20",
+      "path": "/icons/skill_nobg/Warriorskill_41_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_41_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 144556,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-68ebacce6f08",
+      "path": "/icons/skill_nobg/Warriorskill_42_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_42_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 143677,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-48487786bbfe",
+      "path": "/icons/skill_nobg/Warriorskill_43_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_43_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 162728,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-9e1936dd9662",
+      "path": "/icons/skill_nobg/Warriorskill_44_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_44_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 164248,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-7b3cfa8cb346",
+      "path": "/icons/skill_nobg/Warriorskill_45_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_45_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 139110,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-321c1f5e5872",
+      "path": "/icons/skill_nobg/Warriorskill_46_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_46_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 172815,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-e14a9dc5aacd",
+      "path": "/icons/skill_nobg/Warriorskill_47_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_47_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 160661,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-9af794cef62d",
+      "path": "/icons/skill_nobg/Warriorskill_48_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_48_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 143231,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-a1a85841c755",
+      "path": "/icons/skill_nobg/Warriorskill_49_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_49_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 147692,
+      "category": "icons/skill_nobg"
+    },
+    {
+      "id": "GO-c27db25c9ea6",
+      "path": "/icons/skill_nobg/Warriorskill_50_nobg.png",
+      "rel": "icons/skill_nobg/Warriorskill_50_nobg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 162176,
+      "category": "icons/skill_nobg"
+    },
+    {
       "id": "GO-9a6310ae791b",
       "path": "/icons/stop.png",
       "rel": "icons/stop.png",
@@ -7038,6 +8408,26 @@
       "ext": "glb",
       "bytes": 9479392,
       "category": "models"
+    },
+    {
+      "id": "GO-a7380ce9bcf6",
+      "path": "/models/camp/claim-flag.glb",
+      "rel": "models/camp/claim-flag.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 9048,
+      "category": "models/camp"
+    },
+    {
+      "id": "GO-2e48f746f71e",
+      "path": "/models/camp/claim-flag.manifest.json",
+      "rel": "models/camp/claim-flag.manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1101,
+      "category": "models/camp"
     },
     {
       "id": "GO-5cd452885979",
@@ -8870,6 +10260,66 @@
       "category": "root"
     },
     {
+      "id": "GO-1570279dc4d5",
+      "path": "/races/barbarian.png",
+      "rel": "races/barbarian.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 225373,
+      "category": "races"
+    },
+    {
+      "id": "GO-e77024728468",
+      "path": "/races/dwarf.png",
+      "rel": "races/dwarf.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 187510,
+      "category": "races"
+    },
+    {
+      "id": "GO-61525815023a",
+      "path": "/races/elf.png",
+      "rel": "races/elf.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 192254,
+      "category": "races"
+    },
+    {
+      "id": "GO-d16d25a76fc8",
+      "path": "/races/human.png",
+      "rel": "races/human.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 193073,
+      "category": "races"
+    },
+    {
+      "id": "GO-145e1dd401d0",
+      "path": "/races/orc.png",
+      "rel": "races/orc.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 218347,
+      "category": "races"
+    },
+    {
+      "id": "GO-696f802895ab",
+      "path": "/races/undead.png",
+      "rel": "races/undead.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 191766,
+      "category": "races"
+    },
+    {
       "id": "GO-377f6a321ea4",
       "path": "/robots.txt",
       "rel": "robots.txt",
@@ -8947,6 +10397,16 @@
       "purpose": "texture",
       "ext": "png",
       "bytes": 1934935,
+      "category": "rooms"
+    },
+    {
+      "id": "GO-94a7ca16869c",
+      "path": "/rooms/equipment-banner.png",
+      "rel": "rooms/equipment-banner.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1651376,
       "category": "rooms"
     },
     {
@@ -9206,7 +10666,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "js",
-      "bytes": 2733,
+      "bytes": 3773,
       "category": "root"
     },
     {
@@ -9218,6 +10678,906 @@
       "ext": "fbx",
       "bytes": 28064,
       "category": "root"
+    },
+    {
+      "id": "GO-184f2a2fbacf",
+      "path": "/ui/craftpix/part3/ab2_main_frame.png",
+      "rel": "ui/craftpix/part3/ab2_main_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 117052,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-25202ae9330b",
+      "path": "/ui/craftpix/part3/ab2_shurtcut_frame.png",
+      "rel": "ui/craftpix/part3/ab2_shurtcut_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19522,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-28b2c3cabf26",
+      "path": "/ui/craftpix/part3/ab2_shurtcut_frame_small.png",
+      "rel": "ui/craftpix/part3/ab2_shurtcut_frame_small.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19171,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-cc4f7b1a100e",
+      "path": "/ui/craftpix/part3/ab2_xp_empty_frame.png",
+      "rel": "ui/craftpix/part3/ab2_xp_empty_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 42536,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-c434680d31c2",
+      "path": "/ui/craftpix/part3/ab2_xp_fill.png",
+      "rel": "ui/craftpix/part3/ab2_xp_fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24627,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-663d03ab438c",
+      "path": "/ui/craftpix/part3/ab3/ab3_main_bar.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_main_bar.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 94814,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-e511fc15efbf",
+      "path": "/ui/craftpix/part3/ab3/ab3_shortcut.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_shortcut.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19319,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-2ec2423a8b32",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_1_left.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_1_left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20373,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-ecd95d9b18d1",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_1_right.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_1_right.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20385,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-fbb615c83729",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_2_left.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_2_left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19460,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-7809f14b54cb",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_2_right.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_blend_mode_OVERLAY_2_right.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19480,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-31b8324b7683",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_fill_blue_right.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_fill_blue_right.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 23503,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-093e78eea841",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_fill_red_left.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_fill_red_left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 23595,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-29bbbf43e4e6",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_overlay_left.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_overlay_left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24977,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-bd75232147d0",
+      "path": "/ui/craftpix/part3/ab3/ab3_stat_overlay_right.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_stat_overlay_right.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24961,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-1f5306f0c2d7",
+      "path": "/ui/craftpix/part3/ab3/ab3_xp_bar_empty.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_xp_bar_empty.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 37944,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-05ae26788da3",
+      "path": "/ui/craftpix/part3/ab3/ab3_xp_bar_fill.png",
+      "rel": "ui/craftpix/part3/ab3/ab3_xp_bar_fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 31521,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-70a9540e9cd3",
+      "path": "/ui/craftpix/part3/ab3/c_full_header.psd",
+      "rel": "ui/craftpix/part3/ab3/c_full_header.psd",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "psd",
+      "bytes": 4771705,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-5f386cc90387",
+      "path": "/ui/craftpix/part3/moba/atk_speed_icon.png",
+      "rel": "ui/craftpix/part3/moba/atk_speed_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19094,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-3ddcc8f66b22",
+      "path": "/ui/craftpix/part3/moba/coin_icon.png",
+      "rel": "ui/craftpix/part3/moba/coin_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19541,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-7c21631ba678",
+      "path": "/ui/craftpix/part3/moba/deff_icon.png",
+      "rel": "ui/craftpix/part3/moba/deff_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19173,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-951027ffb21a",
+      "path": "/ui/craftpix/part3/moba/dmg_icon.png",
+      "rel": "ui/craftpix/part3/moba/dmg_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19183,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-140373b10f96",
+      "path": "/ui/craftpix/part3/moba/mab_fill_red.png",
+      "rel": "ui/craftpix/part3/moba/mab_fill_red.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 30297,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-fedb589aebb4",
+      "path": "/ui/craftpix/part3/moba/mab_fill_yellow.png",
+      "rel": "ui/craftpix/part3/moba/mab_fill_yellow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 32442,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-912d9544f3e5",
+      "path": "/ui/craftpix/part3/moba/mab_frame.png",
+      "rel": "ui/craftpix/part3/moba/mab_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 110707,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-a339c56613ed",
+      "path": "/ui/craftpix/part3/moba/mab_shortcut.png",
+      "rel": "ui/craftpix/part3/moba/mab_shortcut.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19522,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-cbc7fa64b87f",
+      "path": "/ui/craftpix/part3/moba/mab_skill_level_empty.png",
+      "rel": "ui/craftpix/part3/moba/mab_skill_level_empty.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18893,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-1f029002bf89",
+      "path": "/ui/craftpix/part3/moba/mab_skill_level_fill.png",
+      "rel": "ui/craftpix/part3/moba/mab_skill_level_fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18736,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-83a1be407758",
+      "path": "/ui/craftpix/part3/moba/mis_avatar_overlay.png",
+      "rel": "ui/craftpix/part3/moba/mis_avatar_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18983,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-137501ad1570",
+      "path": "/ui/craftpix/part3/moba/mis_level_frame.png",
+      "rel": "ui/craftpix/part3/moba/mis_level_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22189,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-ff904db50d61",
+      "path": "/ui/craftpix/part3/moba/mis_main_frame.png",
+      "rel": "ui/craftpix/part3/moba/mis_main_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 82869,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-98309212022a",
+      "path": "/ui/craftpix/part3/moba/mis_xp_fill.png",
+      "rel": "ui/craftpix/part3/moba/mis_xp_fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 28948,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-36fcbf4e6d37",
+      "path": "/ui/craftpix/part3/moba/speed_icon.png",
+      "rel": "ui/craftpix/part3/moba/speed_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19268,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-b6e32fdfc4a5",
+      "path": "/ui/craftpix/part3/moba/sp_deff_icon.png",
+      "rel": "ui/craftpix/part3/moba/sp_deff_icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19193,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-7772d0cb5ac7",
+      "path": "/ui/craftpix/part3/moba/sp_deff_icon.psd",
+      "rel": "ui/craftpix/part3/moba/sp_deff_icon.psd",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "psd",
+      "bytes": 20474,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-1c61b6db50af",
+      "path": "/ui/craftpix/part3/moba/sp_dmg.png",
+      "rel": "ui/craftpix/part3/moba/sp_dmg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19014,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-a09b6db724a7",
+      "path": "/ui/craftpix/part3/resources/coin.png",
+      "rel": "ui/craftpix/part3/resources/coin.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 58125,
+      "category": "ui/craftpix/part3/resources"
+    },
+    {
+      "id": "GO-df2372a3cc13",
+      "path": "/ui/craftpix/part3/resources/crystal.png",
+      "rel": "ui/craftpix/part3/resources/crystal.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 39957,
+      "category": "ui/craftpix/part3/resources"
+    },
+    {
+      "id": "GO-fd35ec4a955e",
+      "path": "/ui/craftpix/part5/spells/action_bar.png",
+      "rel": "ui/craftpix/part5/spells/action_bar.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 43741,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-0f430b50f786",
+      "path": "/ui/craftpix/part5/spells/c_header_close-HOVER.png",
+      "rel": "ui/craftpix/part5/spells/c_header_close-HOVER.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22213,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-d4e7fda04c22",
+      "path": "/ui/craftpix/part5/spells/c_header_close-PUSH.png",
+      "rel": "ui/craftpix/part5/spells/c_header_close-PUSH.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22154,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-b1296799e2f7",
+      "path": "/ui/craftpix/part5/spells/c_header_close.png",
+      "rel": "ui/craftpix/part5/spells/c_header_close.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22264,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-a68dd3a7fb4a",
+      "path": "/ui/craftpix/part5/spells/c_header_icon_border.png",
+      "rel": "ui/craftpix/part5/spells/c_header_icon_border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 30614,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-36be2b4a73a0",
+      "path": "/ui/craftpix/part5/spells/c_header_icon_image_overlay.png",
+      "rel": "ui/craftpix/part5/spells/c_header_icon_image_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22864,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-c20f12ed3bc1",
+      "path": "/ui/craftpix/part5/spells/spell_rank_1.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_1.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20405,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-a5260e5aac80",
+      "path": "/ui/craftpix/part5/spells/spell_rank_10.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_10.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22664,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-86e2cdf37318",
+      "path": "/ui/craftpix/part5/spells/spell_rank_2.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_2.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21404,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-31ce36606671",
+      "path": "/ui/craftpix/part5/spells/spell_rank_3.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_3.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21707,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-d91230055b41",
+      "path": "/ui/craftpix/part5/spells/spell_rank_4.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_4.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21173,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-ca87ab501f19",
+      "path": "/ui/craftpix/part5/spells/spell_rank_5.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_5.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21421,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-4806b73cf5fa",
+      "path": "/ui/craftpix/part5/spells/spell_rank_6.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_6.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21839,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-c6510d003ee4",
+      "path": "/ui/craftpix/part5/spells/spell_rank_7.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_7.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20909,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-397dfd2799d8",
+      "path": "/ui/craftpix/part5/spells/spell_rank_8.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_8.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21993,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-a4ef5caa2dcd",
+      "path": "/ui/craftpix/part5/spells/spell_rank_9.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_9.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21795,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-3b2e4f1f76d8",
+      "path": "/ui/craftpix/part5/spells/spell_rank_text.png",
+      "rel": "ui/craftpix/part5/spells/spell_rank_text.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20555,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-8db49044a5d2",
+      "path": "/ui/craftpix/part5/spells/spell_row_background.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 36317,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-a46fb8da8d7b",
+      "path": "/ui/craftpix/part5/spells/spell_row_icon_bg.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_icon_bg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24272,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-1ce2eda61d81",
+      "path": "/ui/craftpix/part5/spells/spell_row_icon_overlay.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_icon_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19697,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-70db385c5ee6",
+      "path": "/ui/craftpix/part5/spells/spell_row_ribbon_GRAY.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_ribbon_GRAY.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 26623,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-26a5781fe6b1",
+      "path": "/ui/craftpix/part5/spells/spell_row_ribbon_GREEN.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_ribbon_GREEN.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 26553,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-bdd218b8b346",
+      "path": "/ui/craftpix/part5/spells/spell_row_ribbon_ORANGE.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_ribbon_ORANGE.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 26371,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-1821bbef782b",
+      "path": "/ui/craftpix/part5/spells/spell_row_ribbon_RED.png",
+      "rel": "ui/craftpix/part5/spells/spell_row_ribbon_RED.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 26466,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
+      "id": "GO-362b0f07d75f",
+      "path": "/ui/craftpix/part5/talents/action_bar.png",
+      "rel": "ui/craftpix/part5/talents/action_bar.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 43741,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-6ffba403b931",
+      "path": "/ui/craftpix/part5/talents/c_header_close-HOVER.png",
+      "rel": "ui/craftpix/part5/talents/c_header_close-HOVER.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22213,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-dd27e3134b95",
+      "path": "/ui/craftpix/part5/talents/c_header_close-PUSH.png",
+      "rel": "ui/craftpix/part5/talents/c_header_close-PUSH.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22154,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-4f40688ee4fc",
+      "path": "/ui/craftpix/part5/talents/c_header_close.png",
+      "rel": "ui/craftpix/part5/talents/c_header_close.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22264,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-021643a59cb6",
+      "path": "/ui/craftpix/part5/talents/c_header_icon_border.png",
+      "rel": "ui/craftpix/part5/talents/c_header_icon_border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 30614,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-51dc88d38fe2",
+      "path": "/ui/craftpix/part5/talents/c_header_icon_image_overlay.png",
+      "rel": "ui/craftpix/part5/talents/c_header_icon_image_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22864,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-311d41d5bb3d",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_01.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_01.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20894,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-453b91efc057",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_02.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_02.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20901,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-2c980019449f",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_03.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_03.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22106,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-fb2b7e6b5142",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_04.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_04.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22192,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-c9184bc498de",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_05.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_05.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21804,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-d3eca462e5a7",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_06.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_06.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21770,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-a37a544aa566",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_07.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_07.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20540,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-e998615a2024",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_08.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_08.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20515,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-61aa3ad285c7",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_09.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_09.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20621,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-976c66eeb18d",
+      "path": "/ui/craftpix/part5/talents/talents_arrow_10.png",
+      "rel": "ui/craftpix/part5/talents/talents_arrow_10.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20614,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-c9506094e69f",
+      "path": "/ui/craftpix/part5/talents/talents_points_frame.png",
+      "rel": "ui/craftpix/part5/talents/talents_points_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21433,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-c3308e285626",
+      "path": "/ui/craftpix/part5/talents/talents_spell_frame.png",
+      "rel": "ui/craftpix/part5/talents/talents_spell_frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24272,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-d8337c871757",
+      "path": "/ui/craftpix/part5/talents/talents_spell_overlay.png",
+      "rel": "ui/craftpix/part5/talents/talents_spell_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19697,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
+      "id": "GO-d3af2d5b9f11",
+      "path": "/ui/craftpix/part5/tooltip_frame_bg.png",
+      "rel": "ui/craftpix/part5/tooltip_frame_bg.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21448,
+      "category": "ui/craftpix/part5"
+    },
+    {
+      "id": "GO-a66d0dedb83e",
+      "path": "/ui/craftpix/windows/c_full.png",
+      "rel": "ui/craftpix/windows/c_full.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 214137,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-d1070e6077e4",
+      "path": "/ui/craftpix/windows/c_full_header.png",
+      "rel": "ui/craftpix/windows/c_full_header.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 249395,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-672c54d3d6f3",
+      "path": "/ui/craftpix/windows/c_header_close-HOVER.png",
+      "rel": "ui/craftpix/windows/c_header_close-HOVER.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22213,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-b26f8d022675",
+      "path": "/ui/craftpix/windows/c_header_close-PUSH.png",
+      "rel": "ui/craftpix/windows/c_header_close-PUSH.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22154,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-524c4e9e9fd1",
+      "path": "/ui/craftpix/windows/c_header_close.png",
+      "rel": "ui/craftpix/windows/c_header_close.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22264,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-003ee10c9a1a",
+      "path": "/ui/craftpix/windows/c_header_icon_border.png",
+      "rel": "ui/craftpix/windows/c_header_icon_border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 30614,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-d1bb1b94e19f",
+      "path": "/ui/craftpix/windows/c_header_icon_image_overlay.png",
+      "rel": "ui/craftpix/windows/c_header_icon_image_overlay.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22864,
+      "category": "ui/craftpix/windows"
+    },
+    {
+      "id": "GO-555d6126f83d",
+      "path": "/ui/craftpix/windows/window-PSD.psd",
+      "rel": "ui/craftpix/windows/window-PSD.psd",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "psd",
+      "bytes": 6153759,
+      "category": "ui/craftpix/windows"
     },
     {
       "id": "GO-3f71843dbe8b",
@@ -9238,6 +11598,36 @@
       "ext": "svg",
       "bytes": 655,
       "category": "ui"
+    },
+    {
+      "id": "GO-e070cfd998a5",
+      "path": "/ui/grudge-ui/equipment-tactical.css",
+      "rel": "ui/grudge-ui/equipment-tactical.css",
+      "kind": "code",
+      "purpose": "unknown",
+      "ext": "css",
+      "bytes": 2845,
+      "category": "ui/grudge-ui"
+    },
+    {
+      "id": "GO-a78f16fcf0a6",
+      "path": "/ui/grudge-ui/grudge-shell.css",
+      "rel": "ui/grudge-ui/grudge-shell.css",
+      "kind": "code",
+      "purpose": "unknown",
+      "ext": "css",
+      "bytes": 4927,
+      "category": "ui/grudge-ui"
+    },
+    {
+      "id": "GO-4f4cd11e539c",
+      "path": "/ui/grudge-ui/index-C7sTteZB.css",
+      "rel": "ui/grudge-ui/index-C7sTteZB.css",
+      "kind": "code",
+      "purpose": "unknown",
+      "ext": "css",
+      "bytes": 139021,
+      "category": "ui/grudge-ui"
     },
     {
       "id": "GO-619775826898",
@@ -9376,7 +11766,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 751,
+      "bytes": 777,
       "category": "root"
     },
     {
@@ -9386,7 +11776,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 105,
+      "bytes": 107,
       "category": "root"
     }
   ]
