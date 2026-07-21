@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "humanHeightM": 1.8,
+  "label": "Volcano / Hellmaw world boss + Ash Ghast minions",
+  "units": {
+    "shadow_flame_mantis": {
+      "id": "shadow_flame_mantis",
+      "name": "Shadow Flame Mantis",
+      "role": "world_boss",
+      "meshKeys": [
+        "models/bosses/shadow-flame-mantis.prod.glb",
+        "models/bosses/shadow-flame-mantis.glb"
+      ],
+      "heightM": 3.2,
+      "hp": 4200,
+      "damage": 48,
+      "speed": 3.4,
+      "atkReach": 3.2,
+      "aggroRange": 42,
+      "xp": 1200,
+      "allowOn": ["boss_event", "volcanic", "hellmaw", "event_island"],
+      "animClips": {
+        "idle": "Idle",
+        "walk": "Walk",
+        "run": "Run",
+        "grab": "Grabbing Munch",
+        "charge": "Rushing Charge",
+        "upperStab": "Flaming Upper Stab",
+        "shadowCall": "Shadow Call",
+        "burningSlice": "Burning Slice",
+        "nuclearSlice": "Nuclear Slice"
+      },
+      "abilities": [
+        "grab",
+        "charge",
+        "upperStab",
+        "shadowCall",
+        "burningSlice",
+        "nuclearSlice"
+      ]
+    },
+    "volcano_ghast": {
+      "id": "volcano_ghast",
+      "name": "Ash Ghast",
+      "role": "volcano_ranged",
+      "meshKeys": [
+        "models/enemies/volcano/minecraft-ghast.prod.glb",
+        "models/enemies/volcano/minecraft-ghast.glb"
+      ],
+      "heightM": 2.4,
+      "hp": 180,
+      "damage": 22,
+      "speed": 2.8,
+      "atkReach": 28,
+      "aggroRange": 36,
+      "xp": 95,
+      "allowOn": ["boss_event", "volcanic", "hellmaw", "event_island"],
+      "animClips": {
+        "idle": "Idle",
+        "fire": "Fire"
+      }
+    }
+  },
+  "hellmawSpawn": {
+    "sectorId": "s",
+    "sectorName": "Hellmaw Depths",
+    "x": 12,
+    "y": 0,
+    "z": -8,
+    "patrolRadius": 18,
+    "ambientGhastCount": 2,
+    "ambientGhastRadius": 22
+  },
+  "shadowCall": {
+    "clip": "Shadow Call",
+    "summonId": "volcano_ghast",
+    "summonCount": 2,
+    "vfx": ["smokeColumn", "smokePop"],
+    "cooldownSec": 22
+  }
+}

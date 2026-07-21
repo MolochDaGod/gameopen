@@ -124,6 +124,7 @@ import {
 } from "./testWorlds";
 import { CampEnemySystem } from "./enemies/CampEnemySystem";
 import { RaiderBoatSystem } from "./enemies/RaiderBoatSystem";
+import { VolcanoWorldBossSystem } from "./boss/VolcanoWorldBossSystem";
 import {
   RED_MUSHROOM_ANCHORS,
   ISLAND_EVENT_NODE_ANCHORS,
@@ -772,6 +773,8 @@ export class Studio {
   private forestWorld: ForestWorld | null = null;
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
+  /** Hellmaw / volcanic / boss-event world boss (Shadow Flame Mantis + Ash Ghasts). */
+  private volcanoBoss: VolcanoWorldBossSystem | null = null;
   private fabledSky: FabledSkyTowns | null = null;
   private testWorldId: TestWorldId = "danger-room";
   private playerXp = 0;
@@ -1073,6 +1076,11 @@ export class Studio {
     };
     this.campEnemies = new CampEnemySystem(this.scene, campCbs);
     this.raiderBoats = new RaiderBoatSystem(this.scene, campCbs);
+    this.volcanoBoss = new VolcanoWorldBossSystem(this.scene, this.vfx, {
+      flash: campCbs.flash,
+      damagePlayer: campCbs.damagePlayer,
+      onBossDeath: () => this.setCombatFlash("WORLD BOSS DOWN · Shadow Flame Mantis", 2.5),
+    });
     this.fabledSky = new FabledSkyTowns(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 1.2),
       teleportPlayer: (pos, yaw) => {
@@ -9465,6 +9473,7 @@ export class Studio {
     }
     // Camp / voxel hostiles (forest creeps + island tribes)
     this.campEnemies?.update(dt, this.character?.root.position ?? null);
+    this.volcanoBoss?.update(dt, this.character?.root.position ?? null);
     // Island Life bandit boat raids
     if (this.testWorldId === "island-life") {
       const base = this.character?.root.position ?? new THREE.Vector3();
@@ -10516,6 +10525,7 @@ export class Studio {
 
     // Voxel / outdoor camp enemies
     this.campEnemies?.clear();
+    this.volcanoBoss?.clear();
     if (def.kind === "survival_island" && this.campEnemies) {
       // Orc tribe + outlaws at red-mushroom anchors from island_life.glb materials
       const camps = RED_MUSHROOM_ANCHORS.map((a) => {
@@ -10533,9 +10543,25 @@ export class Studio {
       });
       const base = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, 0);
       this.raiderBoats?.setBase(base);
+      // Sailtest dual-island stands in for volcanic / boss-event host when tagged
+      void this.volcanoBoss?.spawnIfAllowed({
+        sectorId: "s",
+        archetype: "volcanic",
+        eventTags: ["boss_event", "volcanic", "hellmaw"],
+        origin: base.clone().setY(0),
+      });
     } else if (def.kind !== "combat" && this.campEnemies) {
       const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
       void this.campEnemies.spawnVoxelCamp(center);
+      // Forest / outdoor maps: still allow boss if event tags request it
+      if (id === "forest-map" || def.kind === "harvest") {
+        void this.volcanoBoss?.spawnIfAllowed({
+          sectorId: "s",
+          archetype: "boss",
+          eventTags: ["boss_event", "volcanic"],
+          origin: center.clone().setY(0),
+        });
+      }
     }
 
     // Fabled zone: dwarf + elf sky towns on floating islands + portal web

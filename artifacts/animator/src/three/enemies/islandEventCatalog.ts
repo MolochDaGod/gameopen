@@ -169,10 +169,78 @@ export const ELF_UNITS: IslandEnemyUnit[] = [
   },
 ];
 
+/** Volcano / Hellmaw / boss-event world boss + ranged minions */
+export const VOLCANO_BOSS_UNITS: IslandEnemyUnit[] = [
+  {
+    id: "shadow_flame_mantis",
+    name: "Shadow Flame Mantis",
+    role: "event_elite",
+    meshKeys: [
+      "models/bosses/shadow-flame-mantis.prod.glb",
+      "models/bosses/shadow-flame-mantis.glb",
+    ],
+    heightM: 3.2,
+    hp: 4200,
+    damage: 48,
+    speed: 3.4,
+    atkReach: 3.2,
+    xp: 1200,
+    tags: [
+      "island",
+      "event",
+      "world_boss",
+      "boss_event",
+      "volcano",
+      "hellmaw",
+      "volcanic",
+      "mantis",
+    ],
+    nodeHints: [
+      "world_boss",
+      "volcano_caldera",
+      "hellmaw_depths",
+      "boss_event_island",
+      "sector_s",
+    ],
+  },
+  {
+    id: "volcano_ghast",
+    name: "Ash Ghast",
+    role: "event_hostile",
+    meshKeys: [
+      "models/enemies/volcano/minecraft-ghast.prod.glb",
+      "models/enemies/volcano/minecraft-ghast.glb",
+    ],
+    heightM: 2.4,
+    hp: 180,
+    damage: 22,
+    speed: 2.8,
+    atkReach: 28,
+    xp: 95,
+    tags: [
+      "island",
+      "event",
+      "volcano",
+      "hellmaw",
+      "volcanic",
+      "ranged",
+      "flying",
+      "ghast",
+      "summon",
+    ],
+    nodeHints: [
+      "volcano_patrol",
+      "caldera_air",
+      "shadow_call_summon",
+      "boss_event_island",
+    ],
+  },
+];
+
 export const ISLAND_EVENT_ENEMY_CATALOG: IslandEnemyCatalog = {
-  version: "1.0.0",
-  label: "Island events · NPC · neutral enemy nodes",
-  units: [...GOLEM_UNITS, ...ELF_UNITS],
+  version: "1.1.0",
+  label: "Island events · NPC · neutral · volcano world boss",
+  units: [...GOLEM_UNITS, ...ELF_UNITS, ...VOLCANO_BOSS_UNITS],
   assist: {
     essentialAnims: [
       "anim/assist/essential-cc0/Idle.fbx",
