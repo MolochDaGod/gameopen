@@ -149,6 +149,7 @@ import {
   DODGE_CUT,
   SLIDE_CUT,
   STAMINA_COST,
+  planDodge,
   FORCEFIELD_CUT,
   PARRY_CUT,
   RECOVERY_CUT,
@@ -11983,27 +11984,12 @@ export class Studio {
    * - Dust / afterimage telegraph the avoid window
    */
   /**
-   * Dodge distance from current stamina:
-   * - under 15% max → floor 0.5 m
-   * - full stamina → max (baseline + 0.5 m)
-   * Cost = 40% of max stamina (or all remaining if lower).
+   * Dodge plan from fleet SSOT (`planDodge` in @workspace/epicfight).
+   * under 15% → 0.5 m; full → max; cost = 40% max stamina.
    */
   private dodgeDistanceFromStamina(): { dist: number; cost: number; ratio: number } {
-    const maxS = Math.max(1, this.sparring.getPlayerMaxStamina());
-    const cur = Math.max(0, this.sparring.getPlayerStamina());
-    const ratio = cur / maxS;
-    const cost = Math.min(cur, maxS * DODGE_CUT.staminaFrac);
-    const minD = DODGE_CUT.minDistance;
-    // Max travel: combatModel player dodge.distance (4.9) preferred; cut is fallback
-    const maxD = 4.9;
-    let dist: number;
-    if (ratio < DODGE_CUT.lowStaminaRatio) {
-      dist = minD;
-    } else {
-      const t = (ratio - DODGE_CUT.lowStaminaRatio) / (1 - DODGE_CUT.lowStaminaRatio);
-      dist = minD + (maxD - minD) * THREE.MathUtils.clamp(t, 0, 1);
-    }
-    return { dist, cost, ratio };
+    const p = planDodge(this.sparring.getPlayerStamina(), this.sparring.getPlayerMaxStamina());
+    return { dist: p.distance, cost: p.cost, ratio: p.ratio };
   }
 
   private performTimedDodgeRoll(forceSide?: "forward" | "back" | "left" | "right") {

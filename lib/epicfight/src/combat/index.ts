@@ -22,3 +22,6 @@ export {
   PARRY_PERFECT_WINDOW,
   DODGE_PUNISH_WINDOW,
 } from "./defense.js";
+
+/** Fleet-wide combat SSOT (Open / Voxel / Warlords). */
+export * from "./fleet/index.js";

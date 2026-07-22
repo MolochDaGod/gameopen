@@ -1,6 +1,7 @@
 import {
   CombatController,
   defaultCombatConfig,
+  fleetPlayerCombatPatch,
   type CombatConfig,
   type CombatEvents,
   type DefensiveOutcome,
@@ -20,26 +21,15 @@ export type FighterArchetype = "player" | "grunt" | "elite" | "boss";
 const ARCHETYPE_CONFIG: Record<FighterArchetype, Partial<CombatConfig>> = {
   player: {
     maxHealth: 100,
-    maxStamina: 120,
-    staminaRegenPerSec: 22,
-    staminaRegenDelay: 0.5,
     maxPoise: 60,
     poiseRegenPerSec: 15,
     staggerDuration: 0.55,
     stunnedDuration: 1.8,
     fallenDuration: 1.4,
     critWindowDuration: 2.0,
-    // Timed roll: ~0.5s i-frames; Studio scales travel by stamina (40% cost).
-    // max distance = baseline + 0.5 m; floor 0.5 m under 15% stamina.
-    dodge: {
-      duration: 0.72,
-      iframeStart: 0.06,
-      iframeEnd: 0.56,
-      staminaCost: 48, // 40% of maxStamina 120 — Studio may override with frac
-      distance: 4.9,
-    },
-    block: { staminaCostOnRaise: 8, staminaDrainPerSec: 10, force: 2 },
-    parry: { deflectWindow: 0.3, perfectWindow: 0.12, force: 2, staminaCost: 18 },
+    staminaRegenDelay: 0.5,
+    // Dodge / block / parry / max stamina — fleet SSOT
+    ...fleetPlayerCombatPatch(),
   },
   grunt: {
     maxHealth: 100,

@@ -3,9 +3,37 @@
  *
  * Fractions + knockback align to three/math worldMath (ASOD lattice + TIMING).
  * A "cut" trims slow wind-up (from→to), plays at timeScale, blends in quickly.
+ *
+ * **Fleet SSOT numbers** (dodge/slide/parry/stamina) live in
+ * `@workspace/epicfight` → `combat/fleet` — re-exported here for Studio.
  */
 
 import { CLIP_CUT, IMPACT, RANGE, TIMING } from "./math/worldMath";
+import {
+  FLEET_DODGE,
+  FLEET_SLIDE,
+  FLEET_PARRY,
+  FLEET_STAMINA_COST,
+  planDodge,
+  resolveSlideContact,
+  slideAttackPayload,
+  planFailedParryStamina,
+  parryClipsForSide,
+  slashVariantForStage,
+} from "@workspace/epicfight";
+
+export {
+  FLEET_DODGE,
+  FLEET_SLIDE,
+  FLEET_PARRY,
+  FLEET_STAMINA_COST,
+  planDodge,
+  resolveSlideContact,
+  slideAttackPayload,
+  planFailedParryStamina,
+  parryClipsForSide,
+  slashVariantForStage,
+};
 
 export interface ClipCutOpts {
   /** Start fraction of the parent clip [0..1]. */
@@ -36,27 +64,22 @@ export const SMASH_KB = {
 
 /**
  * Parry (KeyC) — lattice-aligned cut + bubble + success counter.
- * Perfect timing → rebound / stun / uppercut dash; miss → full damage + slow stam.
+ * Numbers from FLEET_PARRY (epicfight fleet SSOT).
  */
 export const PARRY_CUT = {
   ...CLIP_CUT.parry,
-  invuln: TIMING.parryPerfect * 1.85,
-  forceFieldRadius: RANGE.parryBubble * 0.55,
-  forceFieldLife: TIMING.parryWindow * 0.93,
-  stunOnSuccess: TIMING.parryWindow * 4.6,
-  /** Short lunge into the parried foe before the uppercut. */
-  uppercutDashM: 2.35,
-  uppercutDashDur: 0.12,
-  /** Delay after parry snap before the uppercut lands (s). */
-  uppercutDelay: 0.08,
-  /** Launch up-velocity handed to Targets.launch (clean knock-up ≥ 8). */
-  uppercutUpVel: 9.4,
-  uppercutDamage: 26,
-  uppercutRadius: 2.6,
-  /** Failed parry: stamina debt recovered evenly over this many seconds. */
-  failStamRecoverSec: 2.0,
-  /** Extra stamina lost on a failed (late) parry, restored over failStamRecoverSec. */
-  failStamDebt: 22,
+  invuln: FLEET_PARRY.invuln,
+  forceFieldRadius: FLEET_PARRY.forceFieldRadius,
+  forceFieldLife: FLEET_PARRY.forceFieldLife,
+  stunOnSuccess: FLEET_PARRY.stunOnSuccess,
+  uppercutDashM: FLEET_PARRY.uppercutDashM,
+  uppercutDashDur: FLEET_PARRY.uppercutDashDur,
+  uppercutDelay: FLEET_PARRY.uppercutDelay,
+  uppercutUpVel: FLEET_PARRY.uppercutUpVel,
+  uppercutDamage: FLEET_PARRY.uppercutDamage,
+  uppercutRadius: FLEET_PARRY.uppercutRadius,
+  failStamRecoverSec: FLEET_PARRY.failStamRecoverSec,
+  failStamDebt: FLEET_PARRY.failStamDebt,
 } as const satisfies ClipCutOpts & {
   invuln: number;
   forceFieldRadius: number;
@@ -102,20 +125,16 @@ export const RECOVERY_CUT = {
   cooldown: number;
 };
 
-/** Dodge cut (i-frames use TIMING.dodgeIframe*). Distance scales with stamina in Studio. */
+/** Dodge cut — clip fractions local; distance/stamina from FLEET_DODGE. */
 export const DODGE_CUT = {
   ...CLIP_CUT.dodge,
-  duration: TIMING.dodgeDuration,
-  iframeStart: TIMING.dodgeIframeStart,
-  iframeEnd: TIMING.dodgeIframeEnd,
-  /** Max roll travel at full stamina (+0.5 m over prior baseline). */
-  distance: 2.7,
-  /** Floor travel when stamina &lt; 15% of max. */
-  minDistance: 0.5,
-  /** Fraction of max stamina spent per dodge (uses available if lower). */
-  staminaFrac: 0.4,
-  /** Below this stamina ratio, distance locks to minDistance. */
-  lowStaminaRatio: 0.15,
+  duration: FLEET_DODGE.duration,
+  iframeStart: FLEET_DODGE.iframeStart,
+  iframeEnd: FLEET_DODGE.iframeEnd,
+  distance: FLEET_DODGE.maxDistance,
+  minDistance: FLEET_DODGE.minDistance,
+  staminaFrac: FLEET_DODGE.staminaFrac,
+  lowStaminaRatio: FLEET_DODGE.lowStaminaRatio,
 } as const satisfies ClipCutOpts & {
   duration: number;
   iframeStart: number;
@@ -126,28 +145,21 @@ export const DODGE_CUT = {
   lowStaminaRatio: number;
 };
 
-/**
- * Combat slide (Alt) — running-slide clip + rear push. Trips on contact:
- * unparryable damage; blocked → slider stops + 0.2s stun; parry broken → knockdown.
- */
+/** Combat slide (Alt) — from FLEET_SLIDE + local clip fractions / color. */
 export const SLIDE_CUT = {
   from: 0.05,
   to: 0.95,
   timeScale: 1.15,
   fade: 0.06,
-  /** Base slide travel (m) before rear-push boost. */
-  distance: 3.4,
-  /** Extra push from behind (m) for total travel feel. */
-  rearPushM: 0.85,
-  duration: 0.55,
-  cooldown: 0.95,
-  /** Stamina cost (absolute). */
-  staminaCost: 22,
-  hitRadius: 1.15,
-  damage: 16,
-  poiseDamage: 28,
-  /** Stuck on raised block (slider stunned). */
-  blockStunSec: 0.2,
+  distance: FLEET_SLIDE.distance,
+  rearPushM: FLEET_SLIDE.rearPushM,
+  duration: FLEET_SLIDE.duration,
+  cooldown: FLEET_SLIDE.cooldown,
+  staminaCost: FLEET_SLIDE.staminaCost,
+  hitRadius: FLEET_SLIDE.hitRadius,
+  damage: FLEET_SLIDE.damage,
+  poiseDamage: FLEET_SLIDE.poiseDamage,
+  blockStunSec: FLEET_SLIDE.blockStunSec,
   color: 0xc8e0ff,
 } as const satisfies ClipCutOpts & {
   distance: number;
@@ -162,18 +174,16 @@ export const SLIDE_CUT = {
   color: number;
 };
 
-/** Shared physical action stamina costs (player). */
+/** Shared physical action stamina costs — FLEET_STAMINA_COST alias. */
 export const STAMINA_COST = {
-  uppercut: 16,
-  stab: 14,
-  throw: 18,
-  jump: 8,
-  doubleJump: 12,
-  /** Block raise uses CC config; this is an extra tap tax if needed. */
-  blockTap: 0,
-  /** Parry uses CC config. */
-  parry: 0,
-  slide: 22,
+  uppercut: FLEET_STAMINA_COST.uppercut,
+  stab: FLEET_STAMINA_COST.stab,
+  throw: FLEET_STAMINA_COST.throw,
+  jump: FLEET_STAMINA_COST.jump,
+  doubleJump: FLEET_STAMINA_COST.doubleJump,
+  blockTap: FLEET_STAMINA_COST.blockTap,
+  parry: FLEET_STAMINA_COST.parryExtra,
+  slide: FLEET_STAMINA_COST.slide,
 } as const;
 
 /** Longbow standing-dodge cut — snappier phase-slide (KeyX / AA DD). */
