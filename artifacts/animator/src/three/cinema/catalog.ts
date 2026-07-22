@@ -353,6 +353,93 @@ export const CINEMA_HELLMAW: CinemaManifest = {
   },
 };
 
+/**
+ * Landing intro — Storm Ship Attack (island-3d production cinema).
+ * Full custom scene: StormShipAttackScene (not generic ProductionCinemaStage).
+ */
+export const CINEMA_STORM_SHIP_ATTACK: CinemaManifest = {
+  id: "storm_ship_attack",
+  title: "Production Open · island-3d — Storm Ship Attack",
+  surface: "landing",
+  durationSec: 20,
+  loop: false,
+  skippableAfterSec: 0.8,
+  post: "mystical",
+  background: 0x050810,
+  fogDensity: 0.018,
+  torch: false,
+  embers: false,
+  assets: [
+    {
+      meshKeys: [
+        "models/cinema/stylized-pirate-ship.prod.glb",
+        "models/cinema/stylized-pirate-ship.glb",
+      ],
+      kind: "shell",
+      heightM: 24,
+      position: [0, 0, 0],
+    },
+    {
+      meshKeys: [
+        "models/creatures/ocean/mutant-stingray.prod.glb",
+        "models/creatures/ocean/mutant-stingray.glb",
+      ],
+      kind: "world_boss",
+      heightM: 8,
+      position: [18, -2, -8],
+    },
+    {
+      meshKeys: ["models/introgamer.glb", "models/racalvin.glb"],
+      kind: "character",
+      heightM: 1.8,
+      position: [0.5, 3.2, 1.2],
+    },
+  ],
+  beats: [
+    {
+      t: 0,
+      hold: 3.2,
+      cam: { pos: [28, 12, 32], look: [0, 3, 0], fov: 42 },
+      caption: "PRODUCTION OPEN · ISLAND-3D",
+      sub: "Storm Ship Attack",
+    },
+    {
+      t: 3.2,
+      hold: 3.6,
+      cam: { pos: [14, 6, 18], look: [0, 4, -2], fov: 40 },
+      caption: "THE BLACK TIDE",
+      sub: "Grudge crew holds the deck",
+    },
+    {
+      t: 6.8,
+      hold: 4.2,
+      cam: { pos: [-18, 4, 12], look: [2, 1, -4], fov: 38 },
+      caption: "SOMETHING BENEATH",
+      sub: "Stonewisp mutant stingray",
+    },
+    {
+      t: 11,
+      hold: 4.5,
+      cam: { pos: [8, 5, 10], look: [0, 2, 0], fov: 36 },
+      caption: "TEAR THE HULL",
+      sub: "Follow your hero into the sea",
+    },
+    {
+      t: 15.5,
+      hold: 4.5,
+      cam: { pos: [4, 2.5, 14], look: [0, 0.5, -6], fov: 40 },
+      caption: "SURVIVE THE STORM",
+      sub: "open.grudge-studio.com",
+    },
+  ],
+  transitionTo: "characters",
+  location: { archetype: "tropical", tags: ["ocean", "storm", "island-3d", "intro"] },
+  notes: [
+    "Custom StormShipAttackScene with storm water shader",
+    "Ship: stylized_pirate_ship bake; beast: stonewisp stingray bake",
+  ],
+};
+
 /** Danger Room cold open. */
 export const CINEMA_DANGER: CinemaManifest = {
   id: "danger_establish",
@@ -402,6 +489,7 @@ export const PRODUCTION_CINEMAS: Record<string, CinemaManifest> = {
   [CINEMA_LOBBY.id]: CINEMA_LOBBY,
   [CINEMA_HOME_ISLAND.id]: CINEMA_HOME_ISLAND,
   [CINEMA_HELLMAW.id]: CINEMA_HELLMAW,
+  [CINEMA_STORM_SHIP_ATTACK.id]: CINEMA_STORM_SHIP_ATTACK,
   [CINEMA_DANGER.id]: CINEMA_DANGER,
 };
 
@@ -412,6 +500,7 @@ export function getCinema(id: string): CinemaManifest | null {
 /** Flow map: which cinema organizes entry into a surface. */
 export const CINEMA_FLOW: Record<string, string> = {
   doors: "intro_doors",
+  landing: "storm_ship_attack",
   characters: "char_select_establish",
   lobby: "lobby_establish",
   home_island: "home_island_arrive",

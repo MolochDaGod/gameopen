@@ -13,7 +13,7 @@ import {
   loginWithGrudgeId,
   logoutGrudge,
 } from "../lib/grudgeAuth";
-import { LandingHeroStage } from "./LandingHeroStage";
+import { StormShipCinema } from "./StormShipCinema";
 import "./landing.css";
 
 const emblemArt = `${import.meta.env.BASE_URL}emblem.png`;
@@ -86,8 +86,12 @@ export function LandingPage({ onEnter }: Props) {
   };
 
   return (
-    <div className="landing">
-      <LandingHeroStage />
+    <div className="landing landing--storm">
+      {/* Production Open · island-3d — Storm Ship Attack cinema */}
+      <StormShipCinema
+        interactive={false}
+        className="landing-storm-cinema"
+      />
       <div className="landing-vignette" aria-hidden />
 
       <div className="landing-inner">
@@ -95,9 +99,9 @@ export function LandingPage({ onEnter }: Props) {
         <h1 className="landing-brand">
           GRUDGE <span className="landing-brand-accent">OPEN</span>
         </h1>
-        <p className="landing-tag">Animator · Avatar · LED · Realms</p>
+        <p className="landing-tag">Production Open · island-3d · Storm Ship Attack</p>
         <p className="landing-hint">
-          Fleet login. Play as your Grudge ID characters with gear and saves.
+          Fleet login. Survive the storm — play as your Grudge ID characters.
         </p>
 
         {error && <div className="landing-error">{error}</div>}

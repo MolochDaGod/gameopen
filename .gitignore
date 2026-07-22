@@ -45,3 +45,8 @@ artifacts/animator/public/models/voxel/**/*.glb
 artifacts/animator/public/models/voxel-only/**/*
 artifacts/animator/public/models/battle/**/*.glb
 
+
+# Cinema source GLBs (use *.prod.glb only)
+artifacts/animator/public/models/cinema/stylized-pirate-ship.glb
+artifacts/animator/public/models/creatures/ocean/mutant-stingray.glb
+

@@ -25,6 +25,20 @@
   display: block;
 }
 
+/* Storm Ship Attack cinema behind auth */
+.landing--storm .landing-storm-cinema,
+.landing--storm .storm-ship-cinema {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing--storm .storm-ship-captions {
+  bottom: max(22vh, 140px);
+  opacity: 0.92;
+}
+
 /* Soft vignette so the form stays readable over the 3D scene */
 .landing-vignette {
   position: fixed;
