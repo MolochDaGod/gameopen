@@ -1028,7 +1028,8 @@ export interface HudSnapshot {
    */
   freeMouse?: boolean;
   /** Locomotion cam hint for reticle skin: swim | climb | ground. */
-  locoCam?: "ground" | "swim" | "climb";
+  /** Surface locomotion for HUD reticle / pointer (fleet SurfaceLocomotion). */
+  locoCam?: "ground" | "swim" | "climb" | "walk" | "mount" | "boat" | "fly" | "free";
   /** True while the first-person camera is active (KeyB toggles it). */
   firstPerson: boolean;
   /** Crosshair spread in px (grows with movement + recoil bloom). */

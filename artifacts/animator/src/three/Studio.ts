@@ -10167,11 +10167,13 @@ export class Studio {
       /** Hard FOCUS (combat) vs soft lock — drives reticle freedom + LMB semantics. */
       focusLocked: this.locked,
       freeMouse: this.freeMouseMode,
-      locoCam: this.controller?.isInWater()
-        ? "swim"
-        : this.controller?.isWallRunning
-          ? "climb"
-          : "ground",
+      // Prefer fleet SurfaceLocomotion (Controller.state.locoCam); fall back to legacy probes.
+      locoCam: (this.controller?.state?.locoCam as "ground" | "swim" | "climb" | undefined) ||
+        (this.controller?.isInWater()
+          ? "swim"
+          : this.controller?.isWallRunning
+            ? "climb"
+            : "ground"),
       firstPerson: this.viewMode === "first",
       aimSpread: this.aimSpread,
       /** Free-aim crosshair NDC offset (0 = over centre dot). */

@@ -13,7 +13,8 @@
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@workspace/grudge-physics": ["../../lib/grudge-physics/src/index.ts"]
     }
   },
   "references": [

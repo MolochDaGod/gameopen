@@ -13,6 +13,13 @@ import {
   type PlayAnimationOpts,
   type RegisterAnimationOpts,
 } from "./PlayerAnimationDirector";
+import {
+  resolveSurfaceLocomotion,
+  modeToLocoCam,
+  gravityScaleForMode,
+  type SurfaceLocomotionState,
+  type VehicleKind,
+} from "@workspace/grudge-physics";
 
 export interface ControllerState {
   grounded: boolean;
@@ -20,6 +27,10 @@ export interface ControllerState {
   speed: number;
   /** True when an edge/cliff probe blocked forward motion this frame. */
   edgeBlocked?: boolean;
+  /** Fleet SurfaceLocomotion mode (ground/wade/swim/climb/mount/boat/fly). */
+  surfaceMode?: string;
+  /** HUD locoCam mapping from surface mode. */
+  locoCam?: string;
 }
 
 /**
@@ -257,6 +268,11 @@ export class Controller {
   private readonly WALL_RUN_MIN_Y = 0.4;
   /** Probe reach for wall contact (m). */
   private readonly WALL_PROBE = 0.62;
+  /** Fleet surface locomotion (updated each frame). */
+  private surfaceState: SurfaceLocomotionState | null = null;
+  /** Explicit vehicle override (mount/boat/dragon) from inventory host. */
+  private vehicleKind: VehicleKind = "none";
+  private vehicleId: string | null = null;
 
   constructor(
     private character: Avatar,
@@ -269,12 +285,30 @@ export class Controller {
     this.params = p;
   }
 
+  /** Host sets vehicle from inventory (mount/boat/dragon). */
+  setVehicle(kind: VehicleKind = "none", id: string | null = null) {
+    this.vehicleKind = kind;
+    this.vehicleId = id;
+  }
+
+  getSurfaceLocomotion(): SurfaceLocomotionState | null {
+    return this.surfaceState;
+  }
+
   get state(): ControllerState {
     return {
       grounded: this.grounded,
       jumpsLeft: this.jumpsLeft,
       speed: this.smoothedSpeed,
       edgeBlocked: this.edgeBlocked,
+      surfaceMode: this.surfaceState?.mode,
+      locoCam: this.surfaceState
+        ? (() => {
+            const c = modeToLocoCam(this.surfaceState!.mode);
+            // HUD historically used "ground"; SSOT uses "walk" for ground mode.
+            return c === "walk" ? "ground" : c;
+          })()
+        : undefined,
     };
   }
 
@@ -1695,6 +1729,63 @@ export class Controller {
     if (this.grounded !== this.prevGrounded) {
       this.onGroundChange?.(this.grounded);
     }
+
+    // ── SurfaceLocomotion SSOT (fleet: feet/water/climb/vehicle) ──
+    // Non-invasive: publishes mode for HUD/AI; scales gravity on next fall.
+    try {
+      const feet = this.character.root.position;
+      const wall = this.wallRunActive
+        ? { dist: 0.2 }
+        : this.probeWall(this.WALL_PROBE);
+      const sampleH =
+        this.groundHeightAt ||
+        ((_x: number, _z: number) => {
+          // Flat danger-room floor fallback
+          if (!this.collision) return 0;
+          return null;
+        });
+      const hasWater = Number.isFinite(this.waterBand.top);
+      this.surfaceState = resolveSurfaceLocomotion({
+        feetY: feet.y,
+        x: feet.x,
+        z: feet.z,
+        sampleHeight: sampleH,
+        sampleWaterY: hasWater
+          ? (_x: number, _z: number) => {
+              if (isInWaterBand(feet.y, this.waterBand)) return this.waterBand.top;
+              if (
+                feet.y < this.waterBand.top + 0.5 &&
+                feet.y > this.waterBand.bottom - 0.2
+              ) {
+                return this.waterBand.top;
+              }
+              return null;
+            }
+          : undefined,
+        wallHit: wall,
+        wantWallRun: sprinting && !this.grounded,
+        airborne: !this.grounded,
+        vehicle: this.vehicleKind,
+        vehicleId: this.vehicleId,
+      });
+      // Soft gravity scale when swimming / flying (don't fight specials)
+      if (
+        !this.flipActive &&
+        !this.skillFlightActive &&
+        !this.wallRunActive &&
+        this.surfaceState
+      ) {
+        const gScale = gravityScaleForMode(this.surfaceState.mode);
+        if (gScale < 1 && this.vertical < 0) {
+          // Reduce fall speed proportionally (already applied gravity this frame;
+          // mild correction for next frame via vertical damp)
+          this.vertical *= 0.85 + 0.15 * gScale;
+        }
+      }
+    } catch {
+      /* physics SSOT optional at boot */
+    }
+
     this.animDirector?.update(dt);
 
     this.updateCamera(dt);
