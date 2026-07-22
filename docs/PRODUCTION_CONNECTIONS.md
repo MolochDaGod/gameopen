@@ -122,7 +122,7 @@ Open client: `VITE_AI_URL` + animator `ai/` surfaces (danger tools, companion, p
 | **Forge editor** | https://forge.grudge-studio.com | Grudge-Studio-Forge / RTS-Grudge |
 | Warlord Genesis | https://warlord-genesis.vercel.app/lobby | warlord-genesis Vercel |
 | Character Foundry | https://character.grudge-studio.com | create heroes → client |
-| Water home island | https://water.grudge-studio.com/island | TI / water |
+| Water home island | https://water.grudge-studio.com/island | **Canonical** Warlords water SPA (repo may still be named Tactical-Infinity). **Not** tactical-infinity.vercel.app (orphaned). **Not** Replit. |
 | Studio | https://studio.grudge-studio.com | monorepo studio artifact |
 | Dash | https://dash.grudge-studio.com | asset catalog admin |
 

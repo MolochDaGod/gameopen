@@ -30,10 +30,13 @@ export const FLEET_WORLD_HOSTS = {
   dcqVercel: "https://dungeon-crawler-quest.vercel.app/",
   /** Survival R3F */
   grudgesSurvival: "https://grudges.grudge-studio.com/",
-  /** Tactical Infinity / water / home island */
+  /**
+   * Warlords water / home-island SPA — **only** production host.
+   * Do NOT use tactical-infinity.vercel.app (orphaned; not fleet).
+   * Do NOT use old Replit TI hosts (dead).
+   */
   water: "https://water.grudge-studio.com/",
   waterIsland: "https://water.grudge-studio.com/island",
-  tacticalInfinity: "https://tactical-infinity.vercel.app/",
   /** Angel island demo */
   angelIsland: "https://angel-island.vercel.app/",
   /** RTS / command */
@@ -60,7 +63,6 @@ export type FleetWorldId =
   | "dcq"
   | "grudges-survival"
   | "water-island"
-  | "tactical-infinity"
   | "angel-island"
   | "rts"
   | "forge"
@@ -117,21 +119,13 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island",
+    title: "Warlords Home Island (Water)",
     url: FLEET_WORLD_HOSTS.waterIsland,
     fallbackUrl: FLEET_WORLD_HOSTS.water,
-    blurb: "Tactical Infinity / water production island — grudge6 + harvest.",
+    blurb:
+      "water.grudge-studio.com — production Warlords island (grudge6, harvest, nature). Canonical water SPA only.",
     kind: "island",
-    sources: ["F:\\GitHub\\Tactical-Infinity", "water.grudge-studio.com"],
-    featured: true,
-  },
-  {
-    id: "tactical-infinity",
-    title: "Tactical Infinity",
-    url: FLEET_WORLD_HOSTS.tacticalInfinity,
-    blurb: "Full TI client — islands, equipment, Warlords era systems.",
-    kind: "full-world",
-    sources: ["F:\\GitHub\\Tactical-Infinity"],
+    sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
     featured: true,
   },
   {

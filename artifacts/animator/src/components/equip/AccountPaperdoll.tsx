@@ -1,9 +1,10 @@
 /**
- * Canonical account-hub paperdoll — Tactical Infinity `/equipment` layout.
+ * Canonical account-hub paperdoll — Warlords water equipment layout
+ * (water.grudge-studio.com patterns; not tactical-infinity.vercel.app).
  * Amber/stone warlord chrome · race portrait images · 12 gear slots · icons.
  *
- * Reference: Tactical Infinity EquipmentPanel (self-hosted TI /equipment)
- *            F:\GitHub\Tactical-Infinity\client\src\components\EquipmentPanel.tsx
+ * Reference layout: water SPA EquipmentPanel (source tree may still be named Tactical-Infinity).
+ * Production host: https://water.grudge-studio.com only.
  */
 import { useState, type CSSProperties } from "react";
 import {

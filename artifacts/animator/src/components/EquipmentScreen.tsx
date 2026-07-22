@@ -1,5 +1,6 @@
 /**
- * In-play loadout — Tactical Infinity `/equipment` UI chrome + Three.js mesh center.
+ * In-play loadout — Warlords water SPA equipment UI chrome + Three.js mesh center.
+ * Layout originally patterned after water.grudge-studio.com equipment views.
  *
  * Layout (TI paperdoll):
  *   amber/stone warlord panel · armor/weapon slots · hub catalogue
@@ -358,7 +359,8 @@ export function EquipmentScreen({
               ) : null}
             </p>
             <p style={{ marginTop: 6 }}>
-              UI chrome from Tactical Infinity <strong>/equipment</strong>. Center stage is a{" "}
+              UI chrome from Warlords water equipment patterns (
+              <strong>water.grudge-studio.com</strong>). Center stage is a{" "}
               <strong>Three.js</strong> race mesh with live hand-mounted weapons (same{" "}
               <code>Character</code> + <code>mountWeaponModel</code> stack as Danger Room).
             </p>
