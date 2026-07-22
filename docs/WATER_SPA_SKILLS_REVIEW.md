@@ -179,4 +179,17 @@ Local skill `islands-and-terrain` matches this pipeline.
 
 Fix P0 boarding → grudge6, then seed-unify ProductionIsland + wire fleet seeds, and the water SPA matches canonical skill standards across characters, sail, assets, and island nodes.
 
-**Next step (implement):** say if you want P0 boarding + Meshy gates applied in `F:\GitHub\Tactical-Infinity` and deployed to water.
+## Implemented (2026-07) — commit `41a221a` on Tactical-Infinity main
+
+| Fix | Status |
+|-----|--------|
+| Boat boarding → CharacterBuilder grudge6 | Done |
+| World map Meshy default off | Done |
+| `/api/meshy` removed from production vercel rewrites | Done |
+| `useMeshyModels` requires `VITE_ENABLE_MESHY=true` | Done |
+| Sail polar uses player boat id | Done |
+| Home island seeded node/wave RNG | Done |
+| `islandFleetSeeds` + world map shell tags | Done |
+| Deploy runbook | `Tactical-Infinity/docs/PRODUCTION_WATER_DEPLOY.md` |
+
+Remaining P2: full 6-race equipment maps, BONE_CONTAINERS attach, ProductionIsland → full `buildIslandScene`.
