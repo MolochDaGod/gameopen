@@ -615,7 +615,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     engines: ["three", "r3f"],
     launch: "external",
     url: FLEET_WORLD_HOSTS.waterIsland,
-    deploy: { client: "vercel", edge: "water.grudge-studio.com" },
+    deploy: { client: "vercel", edge: "cloudflare-worker" },
     sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
     featured: true,
     status: "live",
