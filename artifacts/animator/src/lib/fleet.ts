@@ -25,6 +25,11 @@ export const FLEET = {
   objectStoreLegacy: "https://objectstore.grudge-studio.com/api/v1",
   /** Player state — Railway Postgres (never D1, never localStorage SSOT). */
   gameData: "https://grudge-api-production-0d46.up.railway.app",
+  /**
+   * AI hub Worker (grudge-ai-hub) — ONE TRUTH.
+   * Health: GET /health · chat: POST /v1/chat · roles: /v1/agents/:role/chat
+   * Override: VITE_AI_URL · client helpers: lib/engineStack.ts · ai/aiGateway.ts
+   */
   ai: "https://ai.grudge-studio.com",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
@@ -74,38 +79,56 @@ export function apiUrl(path: string): string {
   return `/api${p}`;
 }
 
+/** Brand Open launcher — never pin login return to gameopen.vercel.app / previews. */
+export const OPEN_BRAND = "https://open.grudge-studio.com";
+
+function isLocalDevHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
 /**
- * Canonical Grudge ID login URL.
- * Dual-writes every return alias the gateway / auth-page accept so handoff
- * always returns to THIS origin (e.g. https://gameopen.vercel.app/).
+ * Production return URL for Open. Maps vercel/preview hosts → open.grudge-studio.com.
+ * Keeps path + non-auth query; strips token handoff params.
  */
+export function openReturnUrl(pathAndQuery?: string): string {
+  const strip =
+    /[?&](grudge_token|sso_token|token|launch_token|access_token|characterId|character_id|provider)=[^&]*/gi;
+  if (typeof window === "undefined") {
+    return pathAndQuery
+      ? `${OPEN_BRAND}${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`
+      : `${OPEN_BRAND}/`;
+  }
+  const h = window.location.hostname || "";
+  if (isLocalDevHost(h)) {
+    const raw = pathAndQuery
+      ? `${window.location.origin}${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`
+      : `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+    return raw.replace(strip, "").replace(/\?&/, "?").replace(/[?&]$/, "") || window.location.origin + "/";
+  }
+  // Preview / alias → brand domain, preserve path
+  const path =
+    pathAndQuery ||
+    `${window.location.pathname}${window.location.search || ""}`;
+  const cleaned = path.replace(strip, "").replace(/\?&/, "?").replace(/[?&]$/, "") || "/";
+  return `${OPEN_BRAND}${cleaned.startsWith("/") ? cleaned : `/${cleaned}`}`;
+}
+
 /**
  * Canonical Grudge ID login URL for Open.
- * Always lands on /login (id.grudge-studio.com/auth/sso-check is 404 in production).
- * Dual-writes every return alias so the gateway never drops the Open origin.
- * Default return: current location, or https://open.grudge-studio.com/
+ * Always lands on /login; dual-writes every return alias; production return is brand Open.
  */
 export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean; app?: string }): string {
-  const defaultOrigin = "https://open.grudge-studio.com";
-  const redirect =
-    returnTo ||
-    (typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}${window.location.search || ""}`.replace(
-          /[?&](grudge_token|sso_token|token|launch_token|characterId|character_id)=[^&]*/g,
-          "",
-        )
-      : `${defaultOrigin}/`);
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : defaultOrigin;
+  const redirect = returnTo || openReturnUrl();
+  const origin = OPEN_BRAND;
   const q = new URLSearchParams({
     redirect_uri: redirect,
     redirect,
     return: redirect,
+    returnTo: redirect,
     return_to: redirect,
     origin,
     app: opts?.app || "gameopen",
   });
-  // Always /login — silent sso-check is not available on id-gateway (404).
   return `${FLEET.auth.replace(/\/$/, "")}/login?${q.toString()}`;
 }
 

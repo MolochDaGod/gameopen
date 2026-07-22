@@ -387,11 +387,8 @@ export async function loginWithGrudgeId(force = false): Promise<void> {
       return;
     }
   }
-  // Force full login UI with dual return params (never drop gameopen origin)
-  window.location.href = buildGrudgeLoginUrl(
-    `${window.location.origin}${window.location.pathname}`,
-    { force: true, app: "gameopen" },
-  );
+  // Brand return open.grudge-studio.com (not gameopen.vercel.app after 307)
+  window.location.href = buildGrudgeLoginUrl(undefined, { force: true, app: "gameopen" });
 }
 
 export function logoutGrudge(): void {

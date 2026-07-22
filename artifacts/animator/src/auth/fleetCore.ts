@@ -261,30 +261,49 @@ async function exchangeLaunchToken(launch: string): Promise<void> {
   }
 }
 
+function isLocalDevHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+/** Map preview hosts → brand Open; keep localhost as-is. */
+function fleetBrandReturn(pathAndQuery?: string): string {
+  const strip =
+    /[?&](grudge_token|sso_token|token|launch_token|characterId|character_id)=[^&]*/gi;
+  if (typeof window === "undefined") {
+    return pathAndQuery
+      ? `${FLEET.gameopen}${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`
+      : FLEET.gameopen;
+  }
+  const h = window.location.hostname || "";
+  if (isLocalDevHost(h)) {
+    const raw = pathAndQuery
+      ? `${window.location.origin}${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`
+      : `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+    return raw.replace(strip, "").replace(/\?&/, "?").replace(/[?&]$/, "") || window.location.origin + "/";
+  }
+  const path =
+    pathAndQuery || `${window.location.pathname}${window.location.search || ""}`;
+  const cleaned = path.replace(strip, "").replace(/\?&/, "?").replace(/[?&]$/, "") || "/";
+  return `${FLEET.gameopen}${cleaned.startsWith("/") ? cleaned : `/${cleaned}`}`;
+}
+
 /**
- * Grudge ID login with dual-write return aliases (gameopen contract).
+ * Grudge ID login with dual-write return aliases.
+ * Production always returns to open.grudge-studio.com (not gameopen.vercel.app).
+ * Always uses /login (sso-check is 404 on id-gateway).
  */
 export function buildFleetLoginUrl(returnTo?: string, opts?: { app?: string; force?: boolean }): string {
-  const redirect =
-    returnTo ||
-    (typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}${window.location.search || ""}`.replace(
-          /[?&](grudge_token|sso_token|token|launch_token|characterId)=[^&]*/g,
-          "",
-        )
-      : FLEET.gameopen);
-  const origin = typeof window !== "undefined" ? window.location.origin : FLEET.gameopen;
+  const redirect = returnTo || fleetBrandReturn();
   const q = new URLSearchParams({
     redirect_uri: redirect,
     redirect,
     return: redirect,
+    returnTo: redirect,
     return_to: redirect,
-    origin,
-    app: opts?.app || "grudox-play",
+    origin: FLEET.gameopen,
+    app: opts?.app || "gameopen",
   });
-  const base = FLEET.auth.replace(/\/$/, "");
-  if (opts?.force) return `${base}/login?${q.toString()}`;
-  return `${base}/auth/sso-check?${q.toString()}`;
+  return `${FLEET.auth.replace(/\/$/, "")}/login?${q.toString()}`;
 }
 
 export function buildCharacterCreateUrl(returnTo?: string): string {
