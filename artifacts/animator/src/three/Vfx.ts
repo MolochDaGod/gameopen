@@ -7,6 +7,12 @@ import type { SlashFxParams } from "./slashSettings";
 import { SmokeFx } from "./SmokeFx";
 import { ringTexture, unitGroundPlane } from "./fx/fxTextures";
 import { GoreImpact2D } from "./fx/goreImpact2d";
+import { createSlashEnergyMaterial } from "./fx/auraShaders";
+import {
+  slashVariant,
+  slashVariantForColor,
+  type SlashVariantId,
+} from "./fx/slashProjectileVariants";
 
 /** Which 4-stop palette the flame system currently uses. */
 export type FireTheme = "fire" | "chi";
@@ -84,6 +90,13 @@ const MODEL_VFX = {
    */
   // Prefer baked GLB; glTF pack folder kept as source/fallback.
   fireTornado: ["models/vfx/stylized-fire-tornado.glb", 2.0],
+  /**
+   * Stylized ice bow reshaped as Getsuga / slash-wave projectile collider.
+   * Multi-tint (ice/blue/purple/yellow); trails weapon edge then flies free.
+   */
+  iceBow: ["models/vfx/stylized_ice_bow.glb", 2.2],
+  fireball: ["models/vfx/fireball.glb", 1.1],
+  lightOfSlash: ["models/vfx/light-of-slash.glb", 2.4],
 } as const satisfies Record<string, readonly [string, number]>;
 
 /** Which turret chassis a deploy should use. */
@@ -421,6 +434,17 @@ export class Vfx {
       const gr = this.turretSpec("gameReady");
       this.ensureModel(gr.path, gr.size, gr.alts);
     }
+    // Production Getsuga / slash-wave: ice bow + light-of-slash so first mid-hit
+    // never falls back to procedural crescent on a cold cache.
+    this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1], [
+      MODEL_VFX.lightOfSlash[0],
+      "models/vfx/slash/slashblue.glb",
+      "models/vfx/slash/slashred.glb",
+      "models/vfx/slash/slashpurple.glb",
+      "models/vfx/slash/slashyellow.glb",
+    ]);
+    this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
+    this.ensureModel(MODEL_VFX.fireball[0], MODEL_VFX.fireball[1]);
   }
 
   private add(e: Effect) {
@@ -2890,55 +2914,272 @@ export class Vfx {
   }
 
   /**
-   * Forward slash-wave projectile (melee projectile deploy) — flat additive disc
-   * that travels along `dir` and calls onHit at end / optional range.
+   * Forward slash-wave / Getsuga projectile.
+   * Production variants: {@link SlashVariantId} slashred | slashblue | slashpurple | slashyellow.
+   * Ice-bow mesh + flame-aura patterned energy shader; trails weapon collider.
    */
   slashWave(
     from: THREE.Vector3,
     dir: THREE.Vector3,
-    opts: { speed?: number; range?: number; color?: number; onHit?: (p: THREE.Vector3) => void } = {},
+    opts: {
+      speed?: number;
+      range?: number;
+      color?: number;
+      /** Production variant id (preferred over color). */
+      variant?: SlashVariantId | string;
+      contactRadius?: number;
+      followWeapon?: () => { base: THREE.Vector3; tip: THREE.Vector3 } | null;
+      followDuration?: number;
+      onPathTick?: (p: THREE.Vector3, radius: number) => void;
+      onHit?: (p: THREE.Vector3) => void;
+      /** @deprecated use variant — maps ice→slashblue, yellow→slashyellow, etc. */
+      tint?: "ice" | "blue" | "purple" | "yellow" | "red";
+    } = {},
   ) {
-    const speed = opts.speed ?? 14;
-    const range = opts.range ?? 5;
-    const color = opts.color ?? 0x9fd0ff;
+    this.getsugaSlash(from, dir, opts);
+  }
+
+  /**
+   * Production Getsuga slash: ice-bow collider with patterned energy shader
+   * (same noise/palette language as fireAura trail: core → mid → edge).
+   *
+   * Variants (production names):
+   * - slashred    — fireRise
+   * - slashblue   — iceSwirl
+   * - slashpurple — arcanePulse
+   * - slashyellow — holyShimmer
+   */
+  getsugaSlash(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts: {
+      speed?: number;
+      range?: number;
+      color?: number;
+      variant?: SlashVariantId | string;
+      contactRadius?: number;
+      growFrom?: number;
+      growTo?: number;
+      followWeapon?: () => { base: THREE.Vector3; tip: THREE.Vector3 } | null;
+      followDuration?: number;
+      tickEvery?: number;
+      onPathTick?: (p: THREE.Vector3, radius: number) => void;
+      onHit?: (p: THREE.Vector3) => void;
+      /** @deprecated use variant */
+      tint?: "ice" | "blue" | "purple" | "yellow" | "red";
+    } = {},
+  ) {
+    // Resolve production variant (explicit id → tint alias → nearest color → blue default)
+    const variantId: SlashVariantId = (() => {
+      if (opts.variant) return slashVariant(opts.variant).id;
+      if (opts.tint === "red") return "slashred";
+      if (opts.tint === "blue" || opts.tint === "ice") return "slashblue";
+      if (opts.tint === "purple") return "slashpurple";
+      if (opts.tint === "yellow") return "slashyellow";
+      if (opts.color != null) return slashVariantForColor(opts.color);
+      return "slashblue";
+    })();
+    const vdef = slashVariant(variantId);
+    const color = opts.color ?? vdef.mid;
+
+    const speed = opts.speed ?? 15;
+    const range = opts.range ?? 8.5;
+    const contactRadius = opts.contactRadius ?? 0.95;
+    const growFrom = opts.growFrom ?? 0.4;
+    const growTo = opts.growTo ?? 2.0;
+    const followDur = opts.followDuration ?? 0.1;
+    const tickEvery = opts.tickEvery ?? 0.08;
     const d = dir.clone();
     d.y = 0;
     if (d.lengthSq() < 1e-6) d.set(0, 0, 1);
     d.normalize();
-    const mat = new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    // Thin horizontal ring as cutting wave
-    const mesh = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.55, 24), mat);
-    mesh.position.copy(from);
-    mesh.position.y = Math.max(0.9, from.y);
-    mesh.lookAt(mesh.position.clone().add(d));
-    mesh.rotateX(Math.PI / 2);
-    const life = range / speed;
+
+    const start = from.clone();
+    start.y = Math.max(0.95, from.y);
+
+    // Prefer production per-variant bake → shared ice bow → light-of-slash
+    const tpl =
+      this.ensureModel(vdef.modelPath, 2.2, [
+        vdef.fallbackModelPath,
+        MODEL_VFX.iceBow[0],
+        MODEL_VFX.lightOfSlash[0],
+      ]) ||
+      this.ensureModel(vdef.fallbackModelPath, MODEL_VFX.iceBow[1], [
+        MODEL_VFX.iceBow[0],
+        MODEL_VFX.lightOfSlash[0],
+      ]) ||
+      this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
+
+    let obj: THREE.Object3D;
+    const mats: THREE.Material[] = [];
+    let geos: THREE.BufferGeometry[] = [];
+    /** Owned energy mats we dispose (not shared template maps). */
+    const energyMats: THREE.ShaderMaterial[] = [];
+    let shared = false;
+
+    const applyEnergyShader = (root: THREE.Object3D) => {
+      root.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const energy = createSlashEnergyMaterial({
+          core: vdef.core,
+          mid: vdef.mid,
+          edge: vdef.edge,
+          dark: vdef.dark,
+          pattern: vdef.pattern,
+          opacity: 0.94,
+          speed: 1.4,
+          expand: 0.035,
+        });
+        energyMats.push(energy);
+        mats.push(energy);
+        // Keep geometry shared with template; only replace material
+        mesh.material = energy;
+        mesh.renderOrder = 3;
+      });
+    };
+
+    if (tpl) {
+      // Clone structure but strip template materials → energy shaders
+      obj = tpl.clone(true);
+      shared = true; // geometry shared; energy mats owned
+      applyEnergyShader(obj);
+      obj.position.copy(start);
+      obj.lookAt(start.clone().add(d));
+      obj.rotateZ(Math.PI / 2);
+      obj.scale.setScalar(growFrom);
+      obj.name = `slashProj:${vdef.id}`;
+    } else {
+      // Procedural crescent until GLB loads — still uses energy shader
+      const group = new THREE.Group();
+      group.name = `slashProj:${vdef.id}:proc`;
+      const energy = createSlashEnergyMaterial({
+        core: vdef.core,
+        mid: vdef.mid,
+        edge: vdef.edge,
+        dark: vdef.dark,
+        pattern: vdef.pattern,
+        opacity: 0.94,
+        speed: 1.4,
+        expand: 0.05,
+      });
+      energyMats.push(energy);
+      mats.push(energy);
+      const arcGeo = new THREE.TorusGeometry(0.85, 0.14, 10, 32, Math.PI * 1.15);
+      const arc = new THREE.Mesh(arcGeo, energy);
+      arc.rotation.x = Math.PI / 2;
+      const coreGeo = new THREE.BoxGeometry(0.2, 1.7, 0.6);
+      const core = new THREE.Mesh(coreGeo, energy);
+      group.add(arc, core);
+      group.position.copy(start);
+      group.lookAt(start.clone().add(d));
+      group.scale.setScalar(growFrom);
+      obj = group;
+      geos = [arcGeo, coreGeo];
+    }
+
+    this.addTrail(obj, color, { width: 0.48, segments: 30 });
+    this.burst(start.clone(), color, 10, 1.8, { spread: 0.28 });
+    // Soft cast aura tell in the variant palette (fireAura language, ground-light)
+    this.auraRing(new THREE.Vector3(start.x, 0.06, start.z), color, 0.9, 0.28);
+
+    const life = followDur + range / speed;
+    let tickAcc = 0;
+    let hit = opts.onHit;
+    const pathTick = opts.onPathTick;
+    const followWeapon = opts.followWeapon;
+    let released = false;
+    const velocity = d.clone();
+
     this.add({
-      obj: mesh,
+      obj,
       age: 0,
       life,
-      geos: [mesh.geometry],
-      mats: [mat],
+      geos,
+      mats,
+      // Geometry shared with template when from GLB; energy mats always owned
+      shared: shared && geos.length === 0,
+      // Always dispose energy shader mats (listed in mats)
       update: (e, dt) => {
-        mesh.position.addScaledVector(d, speed * dt);
-        const t = e.age / e.life;
-        mat.opacity = 0.95 * (1 - t * t);
-        const s = 0.85 + t * 1.4;
-        mesh.scale.set(s, s, s);
-        if (t > 0.92 && opts.onHit) {
-          opts.onHit(mesh.position.clone());
-          opts.onHit = undefined;
+        // Phase 1: stick to weapon collider (grip→tip trail)
+        if (!released && followWeapon && e.age < followDur) {
+          const edge = followWeapon();
+          if (edge) {
+            const mid = edge.base.clone().lerp(edge.tip, 0.72);
+            obj.position.copy(mid);
+            const along = edge.tip.clone().sub(edge.base);
+            if (along.lengthSq() > 1e-5) {
+              along.normalize();
+              obj.lookAt(mid.clone().add(along));
+              const flat = new THREE.Vector3(along.x, 0, along.z);
+              if (flat.lengthSq() > 1e-6) {
+                flat.normalize();
+                velocity.lerp(flat, 0.35);
+                if (velocity.lengthSq() > 1e-6) velocity.normalize();
+              }
+            }
+          } else {
+            released = true;
+          }
+        } else {
+          released = true;
+          obj.position.addScaledVector(velocity, speed * dt);
+        }
+
+        const t = Math.min(1, e.age / life);
+        const growT = Math.min(1, e.age / Math.max(0.12, life * 0.35));
+        obj.scale.setScalar(growFrom + (growTo - growFrom) * growT);
+
+        const fade = t > 0.78 ? 1 - (t - 0.78) / 0.22 : 1;
+        const pulse = 0.85 + 0.15 * Math.sin(e.age * 14);
+        for (const m of energyMats) {
+          m.uniforms.uTime.value = e.age;
+          m.uniforms.uFade.value = fade;
+          m.uniforms.uPulse.value = pulse;
+        }
+
+        tickAcc += dt;
+        while (tickAcc >= tickEvery) {
+          tickAcc -= tickEvery;
+          pathTick?.(obj.position.clone(), contactRadius * (0.75 + 0.25 * growT));
+        }
+
+        if (e.age + dt >= e.life && hit) {
+          const end = obj.position.clone();
+          this.impact(end, color, contactRadius);
+          this.burst(end, color, 16, 2.6);
+          // Variant-colored fireAura read on connect (patterned impact)
+          if (variantId === "slashred") {
+            this.fireAura(end, 0.85, "fire", { groundOnly: true });
+          } else {
+            this.auraRing(new THREE.Vector3(end.x, 0.05, end.z), color, 1.2, 0.4);
+            this.castAura(end, color);
+          }
+          hit(end);
+          hit = undefined;
         }
       },
     });
-    // Trail dust along path start
-    this.burst(from.clone(), color, 6, 1.5, { spread: 0.2 });
+  }
+
+  /** Classic fireball GLB projectile (sandbox C / skill fireball). */
+  castFireball(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    color = 0xff6a1e,
+    onHit?: (p: THREE.Vector3) => void,
+  ) {
+    this.flyModel("fireball", from, dir, {
+      color,
+      speed: 18,
+      range: 16,
+      spin: 6,
+      onHit: (p) => {
+        this.blastImpact(p, color, 1.2);
+        this.fireAura(p, 0.95);
+        onHit?.(p);
+      },
+    });
   }
 
   /**

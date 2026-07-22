@@ -269,6 +269,168 @@ export function createExpandedMeshLayer(
   return mesh;
 }
 
+/**
+ * Flame-aura-class energy material for slash projectiles (ice-bow mesh).
+ * Same noise / pattern language as body aura shells, plus a 3-stop fire trail
+ * palette (core → mid → edge) and flow along the blade UV.
+ *
+ * Drive each frame: `mat.uniforms.uTime.value = age; mat.uniforms.uFade.value = fade;`
+ */
+export function createSlashEnergyMaterial(opts: {
+  core: number;
+  mid: number;
+  edge: number;
+  dark?: number;
+  pattern: AuraPattern;
+  opacity?: number;
+  speed?: number;
+  /** Normal inflate for outer glow shell (0 = skin-tight). */
+  expand?: number;
+}): THREE.ShaderMaterial {
+  const mode =
+    opts.pattern === "healSwell"
+      ? 0
+      : opts.pattern === "chargeGlow"
+        ? 1
+        : opts.pattern === "iceSwirl"
+          ? 2
+          : opts.pattern === "arcanePulse"
+            ? 3
+            : opts.pattern === "fireRise"
+              ? 4
+              : opts.pattern === "sparkGrid"
+                ? 5
+                : opts.pattern === "holyShimmer"
+                  ? 6
+                  : 7;
+
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uFade: { value: 1 },
+      uPulse: { value: 1 },
+      uSpeed: { value: opts.speed ?? 1.35 },
+      uOpacity: { value: opts.opacity ?? 0.92 },
+      uExpand: { value: opts.expand ?? 0.04 },
+      uCore: { value: new THREE.Color(opts.core) },
+      uMid: { value: new THREE.Color(opts.mid) },
+      uEdge: { value: new THREE.Color(opts.edge) },
+      uDark: { value: new THREE.Color(opts.dark ?? 0x100800) },
+      uMode: { value: mode },
+      uBrightness: { value: 1.35 },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    vertexShader: /* glsl */ `
+      uniform float uExpand;
+      uniform float uTime;
+      uniform float uSpeed;
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPos;
+      varying float vFresnel;
+
+      void main() {
+        vUv = uv;
+        // Subtle breath along normals (flame-aura shell language)
+        float breath = 1.0 + 0.04 * sin(uTime * uSpeed * 3.0 + position.y * 6.0);
+        vec3 inflated = position + normalize(normal) * uExpand * breath;
+        vec4 worldPos = modelMatrix * vec4(inflated, 1.0);
+        vWorldPos = worldPos.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        vFresnel = pow(1.0 - max(dot(viewDir, vWorldNormal), 0.0), 2.0);
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uFade;
+      uniform float uPulse;
+      uniform float uSpeed;
+      uniform float uOpacity;
+      uniform vec3 uCore;
+      uniform vec3 uMid;
+      uniform vec3 uEdge;
+      uniform vec3 uDark;
+      uniform int uMode;
+      uniform float uBrightness;
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      varying vec3 vWorldPos;
+      varying float vFresnel;
+
+      ${NOISE_GLSL}
+
+      void main() {
+        float t = uTime * uSpeed;
+        vec2 uv = vUv;
+        // Flow along blade length (U) with heat rise (V) — same family as fire trail
+        float n = fbm(uv * 5.0 + vec2(-t * 0.55, t * 0.2));
+        float n2 = fbm(uv * 9.0 + vec2(t * 0.3, -t * 0.4));
+        float pattern = 0.0;
+        float alphaBoost = 1.0;
+
+        if (uMode == 0) {
+          float bands = sin((uv.y * 12.0 - t * 2.4) + n * 2.5) * 0.5 + 0.5;
+          pattern = smoothstep(0.3, 0.9, bands) * (0.55 + 0.45 * n);
+        } else if (uMode == 1) {
+          float r = length(uv - 0.5) * 2.0;
+          float ring = smoothstep(0.12, 0.0, abs(r - (0.4 + 0.12 * sin(t * 3.2))));
+          pattern = (1.0 - r) * 0.55 + ring + n * 0.2;
+          alphaBoost = 0.8 + 0.4 * uPulse;
+        } else if (uMode == 2) {
+          // iceSwirl — veins + crystal noise
+          float ang = atan(uv.y - 0.5, uv.x - 0.5);
+          float swirl = sin(ang * 6.0 + t * 2.0 + n * 4.0) * 0.5 + 0.5;
+          pattern = smoothstep(0.35, 0.95, swirl * (0.55 + n2)) + (1.0 - length(uv - 0.5) * 1.3) * 0.35;
+        } else if (uMode == 3) {
+          // arcanePulse — occult lattice
+          float grid = abs(sin(uv.x * 20.0 + t)) * abs(sin(uv.y * 16.0 - t * 0.8));
+          pattern = pow(grid, 0.4) * (0.5 + 0.5 * n) + vFresnel * 0.45;
+          alphaBoost = 0.75 + 0.45 * abs(sin(t * 2.8));
+        } else if (uMode == 4) {
+          // fireRise — heat tongues along blade
+          float rise = fbm(vec2(uv.x * 6.0, uv.y * 3.5 - t * 1.8));
+          float tongues = smoothstep(0.28, 0.92, rise + (1.0 - uv.y) * 0.4);
+          pattern = tongues * (0.55 + 0.45 * n2) + n * 0.15;
+        } else if (uMode == 5) {
+          float gx = abs(fract(uv.x * 14.0 + t * 0.6) - 0.5);
+          float gy = abs(fract(uv.y * 10.0 - t) - 0.5);
+          float line = 1.0 - smoothstep(0.0, 0.035, min(gx, gy));
+          pattern = line * 0.75 + step(0.9, n2) + n * 0.12;
+        } else if (uMode == 6) {
+          // holyShimmer
+          pattern = vFresnel * 0.75 + step(0.8, n2) + (1.0 - length(uv - 0.5)) * 0.3;
+          alphaBoost = 0.85 + 0.35 * uPulse;
+        } else {
+          float haze = fbm(uv * 2.8 + vec2(t * 0.12, -t * 0.1));
+          pattern = haze * 0.75 + 0.25;
+          alphaBoost = 0.6;
+        }
+
+        // 3-stop fire-trail palette along energy density
+        float dens = clamp(pattern * 0.7 + vFresnel * 0.45 + n * 0.15, 0.0, 1.0);
+        vec3 col;
+        if (dens < 0.33) col = mix(uCore, uMid, dens / 0.33);
+        else if (dens < 0.66) col = mix(uMid, uEdge, (dens - 0.33) / 0.33);
+        else col = mix(uEdge, uDark, (dens - 0.66) / 0.34);
+        col += uCore * vFresnel * 0.55;
+        col *= uBrightness;
+
+        float alpha = clamp(dens * uOpacity * alphaBoost + vFresnel * uOpacity * 0.55, 0.0, 1.0);
+        alpha *= uFade;
+        // Soft edge so hard mesh silhouette dissolves into aura
+        alpha *= smoothstep(0.0, 0.08, dens + vFresnel * 0.5);
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+  });
+}
+
 /** Map status-ish intent → default pattern. */
 export function patternForStatusStyle(
   style: string,

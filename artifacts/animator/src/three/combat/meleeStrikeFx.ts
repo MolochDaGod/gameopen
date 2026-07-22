@@ -48,6 +48,18 @@ export type MeleeStrikeFxProfile = {
     speed: number;
     range: number;
     color: number;
+    /**
+     * Production slash variant: slashred | slashblue | slashpurple | slashyellow.
+     * Drives ice-bow energy shader palette + pattern (flame-aura class).
+     */
+    variant?: "slashred" | "slashblue" | "slashpurple" | "slashyellow";
+    /**
+     * Path hit radius (m) for slash_wave / Getsuga ice-bow colliders.
+     * Extends contact beyond the body capsule along the residual wave.
+     */
+    contactRadius?: number;
+    /** Seconds the projectile sticks to the weapon edge before free flight. */
+    followDuration?: number;
   };
   /** Ground AoE on connect (radius m). 0 = none. */
   aoeRadius: number;
@@ -130,7 +142,15 @@ const ONE_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0x9fd0ff,
     trailWindow: 0.5,
     swingAura: true,
-    projectile: { kind: "slash_wave", speed: 14, range: 4.5, color: 0x9fd0ff },
+    projectile: {
+      kind: "slash_wave",
+      speed: 15,
+      range: 6.5,
+      color: 0x4aa8ff,
+      variant: "slashblue",
+      contactRadius: 0.9,
+      followDuration: 0.1,
+    },
     aoeRadius: 0.6,
     aoeColor: 0x9fd0ff,
     knockback: 2.0,
@@ -165,7 +185,15 @@ const ONE_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0xffd070,
     trailWindow: 0.58,
     swingAura: true,
-    projectile: { kind: "slash_wave", speed: 16, range: 6, color: 0xffd070 },
+    projectile: {
+      kind: "slash_wave",
+      speed: 16,
+      range: 8.5,
+      color: 0xffe08a,
+      variant: "slashyellow",
+      contactRadius: 1.05,
+      followDuration: 0.12,
+    },
     aoeRadius: 1.4,
     aoeColor: 0xffc060,
     knockback: 3.2,
@@ -227,7 +255,15 @@ const TWO_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0xa0b8ff,
     trailWindow: 0.55,
     swingAura: true,
-    projectile: { kind: "slash_wave", speed: 12, range: 5.5, color: 0xa0b8ff },
+    projectile: {
+      kind: "slash_wave",
+      speed: 13,
+      range: 7.5,
+      color: 0xb070ff,
+      variant: "slashpurple",
+      contactRadius: 1.0,
+      followDuration: 0.12,
+    },
     aoeRadius: 1.1,
     aoeColor: 0xa0b8ff,
     knockback: 3.0,
@@ -262,7 +298,15 @@ const TWO_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0xffa050,
     trailWindow: 0.65,
     swingAura: true,
-    projectile: { kind: "slash_wave", speed: 14, range: 7, color: 0xffa050 },
+    projectile: {
+      kind: "slash_wave",
+      speed: 14,
+      range: 9.5,
+      color: 0xff5a20,
+      variant: "slashred",
+      contactRadius: 1.2,
+      followDuration: 0.14,
+    },
     aoeRadius: 2.0,
     aoeColor: 0xff8040,
     knockback: 4.5,
@@ -314,7 +358,15 @@ const POLEARM: MeleeStrikeFxProfile[] = [
     trailColor: 0x88e0c0,
     trailWindow: 0.48,
     swingAura: true,
-    projectile: { kind: "slash_wave", speed: 18, range: 6, color: 0x88e0c0 },
+    projectile: {
+      kind: "slash_wave",
+      speed: 18,
+      range: 8,
+      color: 0x4aa8ff,
+      variant: "slashblue",
+      contactRadius: 0.95,
+      followDuration: 0.1,
+    },
     aoeRadius: 0.8,
     aoeColor: 0x88e0c0,
     knockback: 2.8,

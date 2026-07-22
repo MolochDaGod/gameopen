@@ -133,6 +133,11 @@ import {
 import { FabledSkyTowns } from "./fabled/FabledSkyTowns";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
+  deploySandboxVfx,
+  sandboxEffectForKey,
+  sandboxLabelForEffect,
+} from "./fx/vfxSandboxHotkeys";
+import {
   advanceBeamSession,
   beamProfileForWeapon,
   createBeamSession,
@@ -2626,27 +2631,64 @@ export class Studio {
         );
       }
 
-      // ── Projectile deploy (slash wave / bolt along swing) ──
+      // ── Projectile deploy (Getsuga ice-bow slash wave / bolt along swing) ──
       if (fx.projectile && fx.projectile.kind !== "none") {
         const muzzle = this.muzzleOrigin?.(dir) ?? slashPos.clone();
         if (fx.projectile.kind === "slash_wave") {
-          this.vfx.slashWave(muzzle, dir, {
+          const contactR = fx.projectile.contactRadius ?? 0.95;
+          const projDmg = strike.damage * dmgMul * 0.35;
+          // Light residual along the wave; end-hit carries the full residual pack.
+          const applyPathHit = (p: THREE.Vector3, radius: number, scale = 0.22) => {
+            const dmg = projDmg * scale;
+            this.targets.playerHit(
+              p,
+              radius,
+              {
+                force: 1,
+                damage: dmg,
+                poiseDamage: Math.round(4 * scale * 4),
+              },
+              1,
+              this.sparCtx,
+            );
+            this.campEnemies?.damageInRadius(p, radius, dmg);
+            this.raiderBoats?.damageInRadius(p, radius, dmg);
+          };
+          // Weapon edge for trail: grip→tip follows mounted collider
+          const followWeapon = () => {
+            if (this.mounted?.tip) {
+              const tip = new THREE.Vector3();
+              this.mounted.tip.getWorldPosition(tip);
+              const base = new THREE.Vector3();
+              if (this.mounted.tip.parent) {
+                this.mounted.tip.parent.getWorldPosition(base);
+              } else {
+                base.copy(tip).addScaledVector(dir, -0.6);
+              }
+              return { base, tip };
+            }
+            const pose = this.colliderPose();
+            if (pose) {
+              const tip = pose.pos.clone();
+              const base = tip.clone().addScaledVector(dir, -0.55);
+              return { base, tip };
+            }
+            return null;
+          };
+          this.vfx.getsugaSlash(muzzle, dir, {
             speed: fx.projectile.speed,
             range: fx.projectile.range,
             color: fx.projectile.color,
+            // Production variant: slashred | slashblue | slashpurple | slashyellow
+            variant: fx.projectile.variant,
+            contactRadius: contactR,
+            followDuration: fx.projectile.followDuration ?? 0.1,
+            followWeapon,
+            tickEvery: 0.14,
+            onPathTick: (p, radius) => applyPathHit(p, radius, 0.22),
             onHit: (p) => {
-              this.vfx.impact(p, fx.projectile!.color, 0.6);
-              this.targets.playerHit(
-                p,
-                0.75,
-                {
-                  force: 1,
-                  damage: strike.damage * dmgMul * 0.35,
-                  poiseDamage: 8,
-                },
-                1,
-                this.sparCtx,
-              );
+              this.vfx.impact(p, fx.projectile!.color, contactR);
+              applyPathHit(p, contactR * 1.15, 1);
             },
           });
         } else if (fx.projectile.kind === "bolt") {
@@ -11005,6 +11047,16 @@ export class Studio {
       this.setCombatFlash("Rotate ghost 45°", 0.35);
       return;
     }
+    // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C + Alt+Space Getsuga) ──
+    // Bare keys stay combat (C parry, G evade, T stomp, V kick, B camera, F skill).
+    {
+      const altHeld = this.input.down("AltLeft") || this.input.down("AltRight");
+      const effectId = sandboxEffectForKey(code, altHeld);
+      if (effectId) {
+        this.deploySandboxHotkeyVfx(effectId);
+        return;
+      }
+    }
     if (code === "Space") {
       // Smash recovery: Space during tumble/ragdoll = cut backflip, not jump.
       // Otherwise: wall jump (near wall / wall-run) → double jump → ground jump.
@@ -11099,6 +11151,51 @@ export class Studio {
       this.tabHoldArmed = true;
       this.radialHoldT = 0;
     }
+  }
+
+  /**
+   * Preview a Fantasy VFX Sandbox effect at the player (no skill CD).
+   * Used by Alt+hotkeys from https://vfxgrudge.puter.site/
+   */
+  private deploySandboxHotkeyVfx(effectId: string) {
+    if (!this.character) return;
+    const origin = this.character.root.position.clone();
+    const forward = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+    const aim =
+      this.targets?.selectedHostilePoint?.()?.clone() ??
+      origin.clone().addScaledVector(forward, 8).setY(origin.y + 1);
+    const weaponEdge = () => {
+      if (this.mounted?.tip) {
+        const tip = new THREE.Vector3();
+        this.mounted.tip.getWorldPosition(tip);
+        const base = new THREE.Vector3();
+        if (this.mounted.tip.parent) this.mounted.tip.parent.getWorldPosition(base);
+        else base.copy(tip).add(new THREE.Vector3(0, -0.4, 0));
+        return { base, tip };
+      }
+      const pose = this.colliderPose();
+      if (!pose) return null;
+      return {
+        base: pose.pos.clone().addScaledVector(forward, -0.5),
+        tip: pose.pos.clone(),
+      };
+    };
+    deploySandboxVfx(this.vfx, effectId, {
+      origin,
+      forward,
+      aim,
+      weaponEdge,
+      onHit: (p) => {
+        this.targets.playerHit(
+          p,
+          1.1,
+          { force: 1, damage: 12, poiseDamage: 6 },
+          1,
+          this.sparCtx,
+        );
+      },
+    });
+    this.setCombatFlash(sandboxLabelForEffect(effectId), 0.7);
   }
 
   /** Keyup path for F (gun reload vs hold-discharge) + Tab radial / cycle. */

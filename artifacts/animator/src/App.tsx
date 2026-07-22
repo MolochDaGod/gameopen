@@ -1040,7 +1040,8 @@ export default function App() {
         return;
       }
       // B = camp claim flag hub (units / buildings / farm / tame / upgrades)
-      if (e.code === "KeyB") {
+      // Alt+B = Fantasy VFX Sandbox Moon Beam preview (do not steal).
+      if (e.code === "KeyB" && !e.altKey) {
         e.preventDefault();
         toggleClaimFlag();
         return;
