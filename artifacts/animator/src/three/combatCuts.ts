@@ -102,19 +102,79 @@ export const RECOVERY_CUT = {
   cooldown: number;
 };
 
-/** Dodge cut (i-frames use TIMING.dodgeIframe*). */
+/** Dodge cut (i-frames use TIMING.dodgeIframe*). Distance scales with stamina in Studio. */
 export const DODGE_CUT = {
   ...CLIP_CUT.dodge,
   duration: TIMING.dodgeDuration,
   iframeStart: TIMING.dodgeIframeStart,
   iframeEnd: TIMING.dodgeIframeEnd,
-  distance: 2.2,
+  /** Max roll travel at full stamina (+0.5 m over prior baseline). */
+  distance: 2.7,
+  /** Floor travel when stamina &lt; 15% of max. */
+  minDistance: 0.5,
+  /** Fraction of max stamina spent per dodge (uses available if lower). */
+  staminaFrac: 0.4,
+  /** Below this stamina ratio, distance locks to minDistance. */
+  lowStaminaRatio: 0.15,
 } as const satisfies ClipCutOpts & {
   duration: number;
   iframeStart: number;
   iframeEnd: number;
   distance: number;
+  minDistance: number;
+  staminaFrac: number;
+  lowStaminaRatio: number;
 };
+
+/**
+ * Combat slide (Alt) — running-slide clip + rear push. Trips on contact:
+ * unparryable damage; blocked → slider stops + 0.2s stun; parry broken → knockdown.
+ */
+export const SLIDE_CUT = {
+  from: 0.05,
+  to: 0.95,
+  timeScale: 1.15,
+  fade: 0.06,
+  /** Base slide travel (m) before rear-push boost. */
+  distance: 3.4,
+  /** Extra push from behind (m) for total travel feel. */
+  rearPushM: 0.85,
+  duration: 0.55,
+  cooldown: 0.95,
+  /** Stamina cost (absolute). */
+  staminaCost: 22,
+  hitRadius: 1.15,
+  damage: 16,
+  poiseDamage: 28,
+  /** Stuck on raised block (slider stunned). */
+  blockStunSec: 0.2,
+  color: 0xc8e0ff,
+} as const satisfies ClipCutOpts & {
+  distance: number;
+  rearPushM: number;
+  duration: number;
+  cooldown: number;
+  staminaCost: number;
+  hitRadius: number;
+  damage: number;
+  poiseDamage: number;
+  blockStunSec: number;
+  color: number;
+};
+
+/** Shared physical action stamina costs (player). */
+export const STAMINA_COST = {
+  uppercut: 16,
+  stab: 14,
+  throw: 18,
+  jump: 8,
+  doubleJump: 12,
+  /** Block raise uses CC config; this is an extra tap tax if needed. */
+  blockTap: 0,
+  /** Parry uses CC config. */
+  parry: 0,
+  slide: 22,
+} as const;
 
 /** Longbow standing-dodge cut — snappier phase-slide (KeyX / AA DD). */
 export const LONGBOW_DODGE_CUT = {

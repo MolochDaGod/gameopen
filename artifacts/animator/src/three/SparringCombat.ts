@@ -92,7 +92,12 @@ export class SparringCombat {
   parry(): void { this._playerCC.parry(); }
   startBlock(): void { this._playerCC.startBlock(); }
   endBlock(): void { this._playerCC.endBlock(); }
-  dodge(dir: DodgeDir = { x: 0, z: 1 }): void { this._playerCC.dodge(dir); }
+  dodge(
+    dir: DodgeDir = { x: 0, z: 1 },
+    opts?: { staminaCost?: number; paidExternally?: boolean },
+  ): void {
+    this._playerCC.dodge(dir, opts);
+  }
   /** Restore player HP (clamped to max) — used by the heal-potion consumable. */
   healPlayer(amount: number): void { this._playerCC.heal(amount); }
 

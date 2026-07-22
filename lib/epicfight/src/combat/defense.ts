@@ -95,6 +95,17 @@ export function resolveDefense(
   switch (defense.action) {
     // ---------------------------------------------------------------------- parry
     case "parry": {
+      // Combat slide / trip: cannot be parried — breaks the parry into knockdown.
+      if (attack.unparryable) {
+        return {
+          outcome: "hit",
+          damageDealt: attack.damage,
+          poiseDamageDealt: attack.poiseDamage,
+          attackerReaction: "none",
+          defenderReaction: "fallen" as VulnerableState,
+          critWindow: true,
+        };
+      }
       if (defense.age <= PARRY_PERFECT_WINDOW) {
         return {
           outcome: "perfectParry",

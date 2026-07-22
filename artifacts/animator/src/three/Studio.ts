@@ -147,6 +147,8 @@ import {
 } from "./combat/beamCast";
 import {
   DODGE_CUT,
+  SLIDE_CUT,
+  STAMINA_COST,
   FORCEFIELD_CUT,
   PARRY_CUT,
   RECOVERY_CUT,
@@ -724,6 +726,16 @@ export class Studio {
    */
   private parryFailStamRemaining = 0;
   private parryFailStamRate = 0;
+  /** Combat slide (Alt) session — rear-push travel + trip volume. */
+  private combatSlide: {
+    token: number;
+    age: number;
+    life: number;
+    dir: THREE.Vector3;
+    hitIds: Set<number>;
+  } | null = null;
+  private combatSlideToken = 0;
+  private slideCd = 0;
   /**
    * KeyV Shadow Kick session: OPEN = planted parry window (no move);
    * COMMIT/SHADOW = finishing the kick. Token cancels stale schedules.
@@ -6438,6 +6450,7 @@ export class Studio {
   private doSurpriseUppercut() {
     if (!this.character || !this.controller || this.defeated) return;
     if (this.controller.isBusy || this.recoverLock > 0) return;
+    if (!this.spendPhysicalStamina(STAMINA_COST.uppercut, "uppercut")) return;
 
     const combat = weaponCombat(isGunWeapon(this.weaponId) ? "pistol" : this.weaponId);
     const target = this.pickCrosshairTarget(combat);
@@ -9891,6 +9904,8 @@ export class Studio {
     this.updateGunInput(dt);
     this.updateCastPlacement(dt);
     if (this.dodgeCd > 0) this.dodgeCd = Math.max(0, this.dodgeCd - dt);
+    if (this.slideCd > 0) this.slideCd = Math.max(0, this.slideCd - dt);
+    this.updateCombatSlide(dt);
     if (this.iceSlideCd > 0) this.iceSlideCd = Math.max(0, this.iceSlideCd - dt);
     if (this.forceFieldCd > 0) this.forceFieldCd = Math.max(0, this.forceFieldCd - dt);
     if (this.smashRecoverCd > 0) this.smashRecoverCd = Math.max(0, this.smashRecoverCd - dt);
@@ -11108,6 +11123,7 @@ export class Studio {
     }
     // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C + Alt+Space Getsuga) ──
     // Bare keys stay combat (C parry, G evade, T stomp, V kick, B camera, F skill).
+    // Alt alone (no VFX letter) = combat slide.
     {
       const altHeld = this.input.down("AltLeft") || this.input.down("AltRight");
       const effectId = sandboxEffectForKey(code, altHeld);
@@ -11115,12 +11131,19 @@ export class Studio {
         this.deploySandboxHotkeyVfx(effectId);
         return;
       }
+      if (
+        (code === "AltLeft" || code === "AltRight") &&
+        this.activityMode === "combat"
+      ) {
+        this.performCombatSlide();
+        return;
+      }
     }
     if (code === "Space") {
       // Smash recovery: Space during tumble/ragdoll = cut backflip, not jump.
       // Otherwise: wall jump (near wall / wall-run) → double jump → ground jump.
       if (this.tumbleActive || this.recoverLock > 0.2) this.smashRecover();
-      else this.controller?.jump();
+      else this.tryJumpWithStamina();
     }
     else if (code === "KeyR") this.doHeavyAttack();
     else if (code === "KeyF") {
@@ -11481,6 +11504,8 @@ export class Studio {
    */
   private executeParryUppercut(foePos: THREE.Vector3) {
     if (!this.character || !this.controller) return;
+    // Success counter still costs uppercut stamina (partial if low)
+    this.spendPhysicalStamina(STAMINA_COST.uppercut * 0.65, "parry-uppercut");
     const cut = PARRY_CUT;
     const me = this.character.root.position.clone();
     const dir = foePos.clone().sub(me);
@@ -11957,23 +11982,49 @@ export class Studio {
    * - True i-frames (~0.42–0.55s) on CombatController + Studio invuln
    * - Dust / afterimage telegraph the avoid window
    */
+  /**
+   * Dodge distance from current stamina:
+   * - under 15% max → floor 0.5 m
+   * - full stamina → max (baseline + 0.5 m)
+   * Cost = 40% of max stamina (or all remaining if lower).
+   */
+  private dodgeDistanceFromStamina(): { dist: number; cost: number; ratio: number } {
+    const maxS = Math.max(1, this.sparring.getPlayerMaxStamina());
+    const cur = Math.max(0, this.sparring.getPlayerStamina());
+    const ratio = cur / maxS;
+    const cost = Math.min(cur, maxS * DODGE_CUT.staminaFrac);
+    const minD = DODGE_CUT.minDistance;
+    // Max travel: combatModel player dodge.distance (4.9) preferred; cut is fallback
+    const maxD = 4.9;
+    let dist: number;
+    if (ratio < DODGE_CUT.lowStaminaRatio) {
+      dist = minD;
+    } else {
+      const t = (ratio - DODGE_CUT.lowStaminaRatio) / (1 - DODGE_CUT.lowStaminaRatio);
+      dist = minD + (maxD - minD) * THREE.MathUtils.clamp(t, 0, 1);
+    }
+    return { dist, cost, ratio };
+  }
+
   private performTimedDodgeRoll(forceSide?: "forward" | "back" | "left" | "right") {
     const ch = this.character;
     if (!this.controller || !ch || this.defeated) return;
     if (this.dodgeCd > 0) return;
-    // Allow cancel into dodge during attack recovery; block only during other
-    // hard-busy states (flip/spin). Walking/idle must always be able to AA/DD.
     if (
       this.controller.isBusy &&
       this.sparring.getPlayerState() !== "attack" &&
       !this.controller.isDashing
     ) {
-      // Still allow if only lightly busy (locomotion dash already running)
       const st = this.sparring.getPlayerState();
       if (st === "stunned" || st === "downed" || st === "dead") return;
     }
 
-    // Face-relative axes: hard focus → body already faces enemy (true strafe basis)
+    const { dist: rollDist, cost: stamCost, ratio } = this.dodgeDistanceFromStamina();
+    if (stamCost < 0.5 && ratio <= 0) {
+      this.setCombatFlash("NO STAMINA", 0.4);
+      return;
+    }
+
     const fwd = this.controller.forward().clone();
     fwd.y = 0;
     if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, 1);
@@ -11981,7 +12032,7 @@ export class Studio {
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
 
     let mx = 0;
-    let mz = 0; // camera/body-relative: +z forward, +x right
+    let mz = 0;
     if (forceSide === "forward") mz = 1;
     else if (forceSide === "back") mz = -1;
     else if (forceSide === "left") mx = -1;
@@ -11995,7 +12046,6 @@ export class Studio {
         mx = this.input.moveX;
         mz = this.input.moveY;
       }
-      // Neutral → back-roll (classic defensive i-frame roll)
       if (Math.abs(mx) < 0.15 && Math.abs(mz) < 0.15) mz = -1;
     }
 
@@ -12011,13 +12061,13 @@ export class Studio {
     if (Math.abs(fDot) >= Math.abs(rDot)) cardinal = fDot >= 0 ? "F" : "B";
     else cardinal = rDot >= 0 ? "R" : "L";
 
-    // CombatController dodge state + timed i-frames
-    this.sparring.dodge({ x: worldDir.x, z: worldDir.z });
+    // Pay 40% (or remaining) then open CC dodge without double-spend
+    this.sparring.drainPlayerStamina(stamCost, 0.35);
+    this.sparring.dodge({ x: worldDir.x, z: worldDir.z }, { paidExternally: true });
 
     const origin = ch.root.position.clone();
     const grounded = this.controller.state.grounded;
 
-    // Jump→roll blend: hop into the tumble (ER roll start)
     if (grounded) this.controller.hop(1.35);
     else this.controller.hop(0.65);
 
@@ -12048,20 +12098,15 @@ export class Studio {
       animDur = ch.rollDir(cardinal, grounded ? 0.08 : 0.14);
     }
     if (animDur <= 0) {
-      // Procedural pitch tumble (full body roll) when no clip
       this.controller.rollOut(worldDir, 0.52);
       if (ch.hasRole("hurt")) ch.playRoleOnce("hurt", 0.08);
       animDur = 0.52;
     } else {
-      // Layer procedural tumble under clip for ER-like body roll weight
       this.controller.rollOut(worldDir, Math.min(0.48, animDur * 0.85));
     }
 
-    // Root travel — long reposition (ER ~medium roll distance)
-    const rollDist = 4.15;
     const dashDur = THREE.MathUtils.clamp(animDur * 0.78, 0.36, 0.58);
     this.controller.dash(worldDir, rollDist, dashDur, 0.02, 0.42);
-    // Face travel on F/B; keep camera-forward facing on lateral rolls while locked
     if (cardinal === "L" || cardinal === "R") {
       if (this.locked) this.controller.faceToward(fwd, 0);
       else this.controller.faceToward(worldDir, 0.08);
@@ -12069,7 +12114,6 @@ export class Studio {
       this.controller.faceToward(cardinal === "F" ? worldDir : fwd, 0.05);
     }
 
-    // Readable avoid window: afterimages + dust (not "phase" magic)
     this.vfx.afterimage(ch.root, origin, worldDir, rollDist * 0.95, 0xc8e8ff, 10, 0.42);
     this.vfx.burst(origin.clone().setY(origin.y + 0.85), 0xdfeeff, 12, 2.2);
     const dustAt = origin.clone().addScaledVector(worldDir, 0.4);
@@ -12085,11 +12129,191 @@ export class Studio {
     });
     this.sfx?.play("somersault", origin.clone().setY(origin.y + 0.8), { volume: 0.78 });
 
-    // Active i-frame window (~ER medium roll) + recovery CD
     this.invuln = Math.max(this.invuln, 0.55);
     this.dodgeCd = 0.78;
-    this.setCombatFlash("ROLL", 0.28);
+    this.setCombatFlash(
+      ratio < DODGE_CUT.lowStaminaRatio ? "ROLL SHORT" : "ROLL",
+      0.28,
+    );
     this.bumpMusicHeat(0.12);
+  }
+
+  /** Ground / double jump with stamina cost. */
+  private tryJumpWithStamina() {
+    if (!this.controller || this.defeated) return;
+    const wasGrounded = this.controller.state.grounded;
+    const cur = this.sparring.getPlayerStamina();
+    const need = wasGrounded ? STAMINA_COST.jump : STAMINA_COST.doubleJump;
+    if (cur < Math.max(1, need * 0.4)) {
+      this.setCombatFlash("NO STAMINA", 0.35);
+      return;
+    }
+    this.controller.jump();
+    if (this.controller.consumeDoubleJump()) {
+      this.sparring.drainPlayerStamina(Math.min(cur, STAMINA_COST.doubleJump), 0.25);
+    } else if (wasGrounded && !this.controller.state.grounded) {
+      this.sparring.drainPlayerStamina(Math.min(cur, STAMINA_COST.jump), 0.25);
+    }
+  }
+
+  /**
+   * Combat slide (Alt): running-slide anim + rear push for distance.
+   * Contact: trip damage, unparryable; blocked → stop + 0.2s stun; breaks parry → knockdown.
+   */
+  private performCombatSlide() {
+    if (!this.character || !this.controller || this.defeated) return;
+    if (this.slideCd > 0 || this.recoverLock > 0.05) return;
+    if (this.combatSlide) return;
+    if (!this.controller.state.grounded) {
+      this.setCombatFlash("SLIDE · GROUND", 0.35);
+      return;
+    }
+    const cut = SLIDE_CUT;
+    const cur = this.sparring.getPlayerStamina();
+    if (cur < cut.staminaCost * 0.4) {
+      this.setCombatFlash("NO STAMINA", 0.4);
+      return;
+    }
+    this.sparring.drainPlayerStamina(Math.min(cur, cut.staminaCost), 0.4);
+
+    const fwd = this.controller.forward().clone();
+    fwd.y = 0;
+    if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    // Prefer movement intent, else body forward
+    let mx = 0;
+    let mz = 0;
+    if (this.input.down("KeyW") || this.input.down("ArrowUp")) mz += 1;
+    if (this.input.down("KeyS") || this.input.down("ArrowDown")) mz -= 1;
+    if (this.input.down("KeyD") || this.input.down("ArrowRight")) mx += 1;
+    if (this.input.down("KeyA") || this.input.down("ArrowLeft")) mx -= 1;
+    if (Math.abs(this.input.moveX) > 0.2 || Math.abs(this.input.moveY) > 0.2) {
+      mx = this.input.moveX;
+      mz = this.input.moveY;
+    }
+    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    const dir = new THREE.Vector3().addScaledVector(right, mx).addScaledVector(fwd, mz);
+    if (dir.lengthSq() < 1e-4) dir.copy(fwd);
+    dir.normalize();
+
+    const ch = this.character;
+    const origin = ch.root.position.clone();
+    // Slide clip (global `slide` + weapon slide-attack fallbacks)
+    const names = [
+      "slide",
+      "running-slide",
+      "running_slide",
+      "great-sword-slide-attack",
+      "dashAttack",
+      "roll",
+    ];
+    let played = 0;
+    for (const n of names) {
+      if (!ch.hasClip(n)) continue;
+      if (ch.playClipCut) {
+        played = ch.playClipCut(n, {
+          from: cut.from,
+          to: cut.to,
+          timeScale: cut.timeScale,
+          fade: cut.fade,
+        });
+      }
+      if (played <= 0) played = ch.playClipOnce(n, cut.fade);
+      if (played > 0) break;
+    }
+
+    const totalDist = cut.distance + cut.rearPushM;
+    // Main slide travel + small rear push (impulse feel from behind)
+    this.controller.dash(dir, totalDist, cut.duration, 0.05, 0.35);
+    this.controller.faceToward(dir, 0.2);
+    // Small rear push boost — impulse from behind along travel
+    this.controller.applyImpulse(dir, 3.2, 0.12, 5);
+
+    this.vfx.afterimage(ch.root, origin, dir, totalDist * 0.9, cut.color, 8, 0.4);
+    this.vfx.puff(origin.clone().setY(0.05), 0xd0dce8, 16, 1.5);
+    this.vfx.auraRing(origin.clone().setY(0.04), cut.color, 0.9, 0.3);
+    this.sfx?.play("whooshHeavy", origin, { volume: 0.7, rate: 1.1 });
+    this.setCombatFlash("SLIDE", 0.35);
+
+    this.combatSlideToken += 1;
+    this.combatSlide = {
+      token: this.combatSlideToken,
+      age: 0,
+      life: cut.duration + 0.08,
+      dir: dir.clone(),
+      hitIds: new Set(),
+    };
+    this.slideCd = cut.cooldown;
+    this.bumpMusicHeat(0.15);
+  }
+
+  /** Per-frame slide trip volume vs enemies. */
+  private updateCombatSlide(dt: number) {
+    const s = this.combatSlide;
+    if (!s || !this.character) return;
+    s.age += dt;
+    if (s.age >= s.life) {
+      this.combatSlide = null;
+      return;
+    }
+    const cut = SLIDE_CUT;
+    const me = this.character.root.position.clone();
+    const probe = me.clone().addScaledVector(s.dir, 0.65);
+    probe.y += 0.7;
+    // One contact probe per frame (dedupe via hitIds when result focuses an id)
+    const payload: AttackPayload = {
+      force: 2,
+      damage: cut.damage,
+      poiseDamage: cut.poiseDamage,
+      unparryable: true,
+    };
+    const result = this.targets.playerHit(probe, cut.hitRadius, payload, 2.2, this.sparCtx);
+    if (!result) return;
+    if (result.outcome === "blockStop") {
+      // Raised guard stops the slide — no damage, we are stuck 0.2s
+      this.endCombatSlideStuck(probe);
+      this.vfx.parryClash(probe, 0x88e0ff);
+      this.setCombatFlash("SLIDE BLOCKED", 0.5);
+      return;
+    }
+    if (result.defenderReaction === "fallen") {
+      // Broke their parry into knockdown
+      this.targets.reactAt(probe, "fallen");
+      this.vfx.burst(probe, 0xffa060, 18, 3);
+      this.vfx.shockwave(new THREE.Vector3(probe.x, 0.05, probe.z), 0xff9040, 1.6, 0.35);
+      this.setCombatFlash("SLIDE BREAK!", 0.55);
+      return;
+    }
+    if (result.outcome === "hit" || result.outcome === "crit") {
+      this.vfx.burst(probe, cut.color, 12, 2.2);
+      // Trip residual — short launch
+      this.targets.launch(probe, cut.hitRadius * 0.9, cut.damage * 0.35, 4.5);
+    }
+  }
+
+  private endCombatSlideStuck(at?: THREE.Vector3) {
+    this.combatSlide = null;
+    this.recoverLock = Math.max(this.recoverLock, SLIDE_CUT.blockStunSec);
+    this.hurt = Math.max(this.hurt, SLIDE_CUT.blockStunSec);
+    if (this.controller) {
+      const back = this.controller.forward().clone().negate();
+      back.y = 0;
+      if (back.lengthSq() > 1e-4) this.controller.dash(back.normalize(), 0.2, 0.1, 0, 0.5);
+    }
+    if (at) this.vfx.burst(at, 0x88d0ff, 10, 1.8);
+    this.playPlayerReaction("hitHead");
+  }
+
+  /** Spend stamina for a physical action; returns false if starved. */
+  private spendPhysicalStamina(cost: number, label: string): boolean {
+    const cur = this.sparring.getPlayerStamina();
+    if (cur < cost * 0.35) {
+      this.setCombatFlash("NO STAMINA", 0.35);
+      return false;
+    }
+    this.sparring.drainPlayerStamina(Math.min(cur, cost), 0.3);
+    void label;
+    return true;
   }
 
   /**
@@ -12405,6 +12629,7 @@ export class Studio {
   private throwBomb() {
     if (!this.character || !this.controller || this.defeated) return;
     if (this.controller.isBusy || this.throwCd > 0) return;
+    if (!this.spendPhysicalStamina(STAMINA_COST.throw, "throw")) return;
 
     const cfg = this.assistConfig();
     const origin = this.character.root.position.clone();
@@ -12850,6 +13075,7 @@ export class Studio {
     if (!this.character || !this.controller) return;
     if (this.controller.isBusy || this.recoverLock > 0) return;
     if (!this.character.hasClip("stab")) return;
+    if (!this.spendPhysicalStamina(STAMINA_COST.stab, "stab")) return;
     const weaponless = !!getCharacter(this.characterId).weaponless;
     const wid: WeaponId = weaponless ? "none" : this.weaponId;
     // Blade-only move: the thrust only reads with a sword or dagger in hand.

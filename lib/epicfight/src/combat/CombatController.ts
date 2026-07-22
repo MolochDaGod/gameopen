@@ -205,7 +205,14 @@ export class CombatController {
    * (dodge-cancel). `dir` is the intended travel direction in fighter-local
    * space; it is normalised and forwarded via `onDodge`.
    */
-  dodge(dir: DodgeDir = { x: 0, z: 1 }): void {
+  /**
+   * Begin a dodge. `opts.staminaCost` overrides the config cost (e.g. 40% of max).
+   * `opts.paidExternally` skips the spend when the host already drained stamina.
+   */
+  dodge(
+    dir: DodgeDir = { x: 0, z: 1 },
+    opts?: { staminaCost?: number; paidExternally?: boolean },
+  ): void {
     if (
       this.state === "dead" ||
       this.state === "stagger" ||
@@ -220,11 +227,14 @@ export class CombatController {
       const recoveryStart = m ? m.windup + m.active : 0;
       if (this.timer < recoveryStart) return; // can't cancel windup/active frames
     }
-    if (this.stamina < this.cfg.dodge.staminaCost) {
-      this.events.onStaminaBlocked?.();
-      return;
+    const cost = opts?.staminaCost ?? this.cfg.dodge.staminaCost;
+    if (!opts?.paidExternally) {
+      if (this.stamina < Math.min(cost, 1)) {
+        this.events.onStaminaBlocked?.();
+        return;
+      }
+      this.spendStamina(Math.min(cost, this.stamina));
     }
-    this.spendStamina(this.cfg.dodge.staminaCost);
     const len = Math.hypot(dir.x, dir.z) || 1;
     this.dodgeDir = { x: dir.x / len, z: dir.z / len };
     this.currentMove = null;

@@ -60,6 +60,11 @@ export interface AttackMove {
    * skill moves only.
    */
   shieldBreak?: boolean;
+  /**
+   * Combat slide / trip: cannot be parried (breaks parry into knockdown).
+   * Still fully blockable — on block the attacker stops and is stunned briefly.
+   */
+  unparryable?: boolean;
   /** If true the attacker has super armor for the whole move (cannot be staggered). */
   superArmor?: boolean;
   /**
@@ -188,6 +193,11 @@ export interface AttackPayload {
   poiseDamage: number;
   /** When true, the attack carries a shield-break flag. */
   shieldBreak?: boolean;
+  /**
+   * Combat slide / trip: ignores parry timing and knocks the parrier down.
+   * Block still stops the attack (no damage through a raised guard).
+   */
+  unparryable?: boolean;
 }
 
 /** Metadata describing the defender's chosen action + timing. */
