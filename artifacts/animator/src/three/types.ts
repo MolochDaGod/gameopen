@@ -65,7 +65,9 @@ export type SkillKind =
   // Witch Hut pack (scaled GLB → arrow / missile / spinning AOE disk).
   | "witchArrow"
   | "witchMissile"
-  | "witchDisk";
+  | "witchDisk"
+  /** Ground-skimming 2H skill-3 fire tornado (stylized_fire_tornado pack). */
+  | "fireTornado";
 
 /**
  * Status effects — BinbunVFX-inspired + itch-style body auras

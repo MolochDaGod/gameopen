@@ -59,6 +59,7 @@ const THEME: Record<SkillKind, number> = {
   witchArrow: 0xff6a1e,
   witchMissile: 0xb070ff,
   witchDisk: 0x3dff9a,
+  fireTornado: 0xff5510,
 };
 
 /** Projectile/spell GLB template paths + their normalised display size. */
@@ -77,6 +78,12 @@ const MODEL_VFX = {
   laser: ["models/vfx/burst-laser.glb", 1.6],
   // The javelin weapon's GLB doubles as its thrown-projectile base mesh.
   javelin: ["models/weapons/javelin.glb", 1.7],
+  /**
+   * Stylized fire tornado (skill 3 on 2H weapons) — ground contact, ~2 m tall.
+   * Prefer GLB when baked; glTF pack ships under models/vfx/stylized-fire-tornado/.
+   */
+  // Prefer baked GLB; glTF pack folder kept as source/fallback.
+  fireTornado: ["models/vfx/stylized-fire-tornado.glb", 2.0],
 } as const satisfies Record<string, readonly [string, number]>;
 
 /** Which turret chassis a deploy should use. */
@@ -618,6 +625,161 @@ export class Vfx {
       onHit: (p) => {
         this.blastImpact(p, color, 1.3);
         onHit?.(p);
+      },
+    });
+  }
+
+  /**
+   * 2H skill-3 **Fire Tornado** — launches from the weapon, skims the ground
+   * toward the target, rises to ~2 m tall, and deals AoE along the travel path.
+   *
+   * `onPathTick` fires every `tickEvery` seconds at the tornado's ground footprint
+   * so Studio can apply damage in a corridor in front of the caster.
+   */
+  castFireTornado(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts?: {
+      color?: number;
+      /** Horizontal travel speed m/s (default 11). */
+      speed?: number;
+      /** Max travel distance m (default 14). */
+      range?: number;
+      /** Visual height of the funnel in metres (default 2). */
+      heightM?: number;
+      /** Seconds between AoE path ticks (default 0.12). */
+      tickEvery?: number;
+      onPathTick?: (p: THREE.Vector3) => void;
+      onHit?: (p: THREE.Vector3) => void;
+    },
+  ) {
+    const color = opts?.color ?? THEME.fireTornado;
+    const speed = opts?.speed ?? 11;
+    const range = opts?.range ?? 14;
+    const heightM = opts?.heightM ?? 2;
+    const tickEvery = opts?.tickEvery ?? 0.12;
+    const flat = dir.clone().setY(0);
+    if (flat.lengthSq() < 1e-6) flat.set(0, 0, 1);
+    flat.normalize();
+
+    // Launch: weapon height → immediately drop to ground contact
+    const start = from.clone();
+    start.y = 0.05;
+    this.castAura(start.clone().setY(0.2), color);
+    this.shockwave(new THREE.Vector3(start.x, 0.04, start.z), color, 1.6, 0.35);
+
+    const [path, size] = MODEL_VFX.fireTornado;
+    // Prefer glTF pack; try glb alt if present
+    const tpl =
+      this.ensureModel(path, size, [
+        "models/vfx/stylized-fire-tornado/scene.gltf",
+        "models/vfx/fireball.glb",
+      ]) || this.ensureModel("models/vfx/fireball.glb", 1.2);
+
+    const life = range / speed;
+    let tickAcc = 0;
+    let hit = opts?.onHit;
+    const pathTick = opts?.onPathTick;
+
+    if (!tpl) {
+      // Procedural fallback: spinning fire column bolt along ground
+      const obj = new THREE.Group();
+      const geo = new THREE.CylinderGeometry(0.35, 0.7, heightM, 10, 1, true);
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.75,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.y = heightM * 0.5;
+      obj.add(mesh);
+      obj.position.copy(start);
+      this.addTrail(obj, color);
+      this.add({
+        obj,
+        age: 0,
+        life,
+        geos: [geo],
+        mats: [mat],
+        update: (e, dt) => {
+          obj.position.addScaledVector(flat, speed * dt);
+          obj.position.y = 0.05;
+          obj.rotation.y += dt * 8;
+          tickAcc += dt;
+          while (tickAcc >= tickEvery) {
+            tickAcc -= tickEvery;
+            const p = obj.position.clone();
+            p.y = 0.4;
+            pathTick?.(p);
+            this.burst(p, color, 6, 1.2);
+          }
+          const t = e.age / e.life;
+          mat.opacity = t > 0.8 ? 0.75 * (1 - (t - 0.8) / 0.2) : 0.75;
+          if (e.age + dt >= e.life && hit) {
+            const end = obj.position.clone();
+            end.y = 0.5;
+            this.blastImpact(end, color, 1.6);
+            this.shockwave(new THREE.Vector3(end.x, 0.05, end.z), color, 2.8, 0.55);
+            hit(end);
+            hit = undefined;
+          }
+        },
+      });
+      return;
+    }
+
+    const { obj, mats } = this.cloneModelInstance(tpl);
+    // Scale so vertical extent ≈ heightM (ensureModel already normalised to `size`)
+    const box = new THREE.Box3().setFromObject(obj);
+    const sz = new THREE.Vector3();
+    box.getSize(sz);
+    const curH = Math.max(sz.y, 0.01);
+    obj.scale.multiplyScalar(heightM / curH);
+    // Re-center: bottom of funnel on ground
+    const box2 = new THREE.Box3().setFromObject(obj);
+    const min = box2.min.y;
+    // Center of funnel at half height so base sits on ground (~heightM tall)
+    void min;
+    obj.position.set(start.x, heightM * 0.5 + 0.05, start.z);
+    // Orient upright, spin around Y
+    obj.lookAt(start.clone().add(flat));
+    obj.rotation.x = 0;
+    obj.rotation.z = 0;
+    this.addTrail(obj, color);
+    this.add({
+      obj,
+      age: 0,
+      life,
+      geos: [],
+      mats,
+      shared: true,
+      update: (e, dt) => {
+        obj.position.x += flat.x * speed * dt;
+        obj.position.z += flat.z * speed * dt;
+        // Keep funnel standing: center at half height so visual is ~2 m tall
+        obj.position.y = heightM * 0.5 + 0.05;
+        obj.rotation.y += dt * 7.5;
+        tickAcc += dt;
+        while (tickAcc >= tickEvery) {
+          tickAcc -= tickEvery;
+          const p = new THREE.Vector3(obj.position.x, 0.45, obj.position.z);
+          pathTick?.(p);
+          this.burst(p, color, 8, 1.4);
+          this.shockwave(new THREE.Vector3(p.x, 0.04, p.z), color, 1.1, 0.25);
+        }
+        const t = e.age / e.life;
+        const fade = t > 0.82 ? 1 - (t - 0.82) / 0.18 : 1;
+        for (const m of mats) m.opacity = fade;
+        if (e.age + dt >= e.life && hit) {
+          const end = new THREE.Vector3(obj.position.x, 0.55, obj.position.z);
+          this.blastImpact(end, color, 1.8);
+          this.shockwave(new THREE.Vector3(end.x, 0.05, end.z), color, 3.2, 0.6);
+          this.nova(end, color);
+          hit(end);
+          hit = undefined;
+        }
       },
     });
   }
@@ -4256,6 +4418,15 @@ export class Vfx {
         if (aim) this.castDragonAt(collider ? slashAt : cast, aim.clone(), color, onImpact);
         else this.castDragon(collider ? slashAt : cast, dir3, color, onImpact);
         break;
+      case "fireTornado": {
+        const launch = collider ? slashAt : front;
+        this.castFireTornado(launch, dir3, {
+          color,
+          onPathTick: (p) => onImpact?.(p),
+          onHit: (p) => onImpact?.(p),
+        });
+        break;
+      }
       case "meteor":
         this.castMeteor(
           origin,

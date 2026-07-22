@@ -1137,7 +1137,10 @@ export class Studio {
       dealToPlayer: (center, radius, damage, force, from, kind, isSkill) =>
         this.resolveOpponentStrike(center, radius, damage, force, from, kind, isSkill),
       onWindup: (pos, kind) => this.vfx.burst(pos, SKILL_COLOR[kind] ?? 0xffb24d, 6, 1.6),
-      onCastCharge: (pos, kind) => this.vfx.castAura(pos, SKILL_COLOR[kind] ?? 0x9fd0ff),
+      onCastCharge: (pos, kind) => {
+        this.vfx.castAura(pos, SKILL_COLOR[kind] ?? 0x9fd0ff);
+        this.pulseSpellPostFx(0.5);
+      },
       onStrike: (center, kind, radius, isSkill) => {
         const color = SKILL_COLOR[kind] ?? 0xffb24d;
         this.vfx.impact(center, color, 1.4);
@@ -1448,6 +1451,11 @@ export class Studio {
   private renderFrame(dt: number) {
     if (this.postfx) this.postfx.render(dt);
     else this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Spell/weapon cast: kick HDR bloom so ShaderMaterial fire/soul/dragon read. */
+  pulseSpellPostFx(durationSec = 0.55) {
+    this.postfx?.pulseSpell?.(durationSec);
   }
 
   private setupLights() {
@@ -5320,6 +5328,11 @@ export class Studio {
     const row = rows[Math.max(0, Math.min(3, slotIndex))];
     if (!row) return false;
 
+    // Skill 3 — Fire Tornado (harvest cast → ground-skimming AoE path)
+    if (row.skillId === "fire_tornado" || row.kind === "fireTornado" || slotIndex === 2) {
+      return this.doHeavy2hFireTornado(slotIndex, row, profile, clipOverride);
+    }
+
     // Prefer multi-part chains when defined (jump / slide / aoe)
     if (this.tryMultiPartSkill(slotIndex)) return true;
 
@@ -5399,6 +5412,113 @@ export class Studio {
 
     this.armSigSlot(slotIndex, Math.max(0.9, row.cooldown), 12);
     void dur;
+    return true;
+  }
+
+  /**
+   * 2H skill 3 — Fire Tornado.
+   * Cast anim: harvest (dig-and-plant-seeds). Projectile: stylized fire tornado
+   * launched from weapon toward target, ground contact, ~2 m tall, AoE along path.
+   */
+  private doHeavy2hFireTornado(
+    slotIndex: number,
+    row: ReturnType<typeof heavySignatureRows>[number],
+    profile: NonNullable<ReturnType<typeof heavyProfile>>,
+    clipOverride: string | null,
+  ): boolean {
+    if (!this.character || !this.controller) return false;
+
+    // Harvest cast animation (farming dig-and-plant) with fuzzy + melee fallbacks
+    const harvestClips = [
+      clipOverride,
+      row.clip,
+      "harvest",
+      "dig-and-plant-seeds",
+      "DigAndPlantSeeds",
+      "castSpell",
+      "magicArea",
+      "attack",
+    ].filter(Boolean) as string[];
+    let castDur = 0.55;
+    let played = false;
+    for (const c of harvestClips) {
+      if (this.character.hasClip(c)) {
+        castDur = Math.max(0.35, this.character.playClipOnce(c, 0.12) || 0.55);
+        played = true;
+        break;
+      }
+    }
+    if (!played && typeof this.character.clipNames === "function") {
+      const fuzzy = this.character
+        .clipNames()
+        .find((n) => /harvest|dig|plant|farm|water|gather|seed/i.test(n));
+      if (fuzzy) {
+        castDur = Math.max(0.35, this.character.playClipOnce(fuzzy, 0.12) || 0.55);
+        played = true;
+      }
+    }
+    if (!played && this.character.hasClip("attack")) {
+      castDur = Math.max(0.35, this.character.playClipOnce("attack", 0.12) || 0.55);
+    }
+
+    const fwd = this.facing();
+    const origin = this.character.root.position.clone();
+    const cfg = this.assistConfig();
+    const picked = this.pickTargetInFront(origin, fwd, cfg.acqRange + 8, cfg.minDot * 0.85);
+    const dir = this.steerToward(fwd, origin, picked, cfg.steer);
+    this.controller.faceToward(dir, 0.25);
+
+    const muzzle = this.muzzleOrigin(dir);
+    // Weapon glow charge during harvest cast
+    this.vfx.skillCharge(muzzle, 0xff5510, 1.35, Math.min(0.45, castDur * 0.55));
+    this.setCombatFlash("FIRE TORNADO", 0.55);
+
+    const dmg = (row.damage ?? 50) * profile.intensity;
+    const pathRadius = 1.85 * profile.aoeMul;
+    const releaseT = Math.min(0.42, castDur * 0.55);
+
+    this.schedule(releaseT, () => {
+      if (this.disposed || !this.character) return;
+      const launch = this.muzzleOrigin(dir);
+      // Drop to ground contact from weapon tip
+      const groundLaunch = launch.clone();
+      groundLaunch.y = Math.max(0.08, origin.y + 0.05);
+      const aimDir = picked
+        ? picked.position.clone().sub(groundLaunch).setY(0)
+        : dir.clone().setY(0);
+      if (aimDir.lengthSq() < 1e-6) aimDir.copy(dir).setY(0);
+      aimDir.normalize();
+
+      this.vfx.castFireTornado(groundLaunch, aimDir, {
+        color: 0xff5510,
+        heightM: 2.0,
+        speed: 11,
+        range: 14,
+        tickEvery: 0.11,
+        onPathTick: (p) => {
+          // AoE corridor in front of caster along the tornado path
+          this.targets.blast(
+            p,
+            pathRadius,
+            dmg * 0.28,
+            this.params.skillForce * 0.55 * profile.intensity,
+            this.sparCtx,
+          );
+        },
+        onHit: (p) => {
+          this.targets.blast(
+            p,
+            pathRadius * 1.35,
+            dmg * 0.85,
+            this.params.skillForce * profile.intensity,
+            this.sparCtx,
+          );
+          this.vfx.popAoE(p, 0xff5510, pathRadius * 1.2);
+        },
+      });
+    });
+
+    this.armSigSlot(slotIndex, Math.max(1.0, row.cooldown), 12);
     return true;
   }
 

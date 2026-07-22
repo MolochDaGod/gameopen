@@ -19,6 +19,13 @@ import {
 import { isSpearWeapon, spearSignatureRows } from "../ummorpg/spearCombat";
 import { heavySignatureRows, isHeavy2hWeapon } from "../combat/heavyWeaponCombat";
 import { resolveSlotIconUrl } from "../skillIcons";
+import {
+  MM_TO_M,
+  TIMING,
+  IMPACT,
+  mmToMeters as mmToM,
+} from "../math/worldMath";
+import { DEFENSE_WINDOWS } from "../math/defenseMath";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -98,7 +105,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   greatsword: kit("greatsword", "Great Sword", [
     ["combo", "Two Hand Sword Combo", "slash", 70],
     ["special", "Quick GS Slash", "slash", 85],
-    ["ranged", "Slide Dash", "slash", 100, "dash"],
+    ["ranged", "Fire Tornado", "fireTornado", 40],
     ["power", "Judgement", "slam", 100, "dash"],
   ]),
   axe: kit("axe", "Battle Axe", [
@@ -110,7 +117,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   greataxe: kit("greataxe", "Battle Axe", [
     ["combo", "Greataxe Combo", "slash", 70],
     ["special", "Dual Weapon Combo", "slash", 85],
-    ["ranged", "Cleave Wave", "slash", 55],
+    ["ranged", "Fire Tornado", "fireTornado", 40],
     ["power", "Execute", "slam", 100, "dash"],
   ]),
   // greataxe LMB uses Documents greataxe.fbx → great-axe-combo
@@ -136,7 +143,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
   hammer2h: kit("hammer2h", "War Hammer", [
     ["combo", "2H Hammer Combo", "slam", 70],
     ["special", "Dual Weapon Combo", "slash", 85],
-    ["ranged", "Rubble Shot", "bolt", 55],
+    ["ranged", "Fire Tornado", "fireTornado", 40],
     ["power", "Anvil Drop", "slam", 100, "dash"],
   ]),
   mace: kit("mace", "War Hammer", [
@@ -188,7 +195,7 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["power", "Judgement", "nova", -95],
   ]),
   // Class GUN — labels/kind from arsenal/gunClass (6 tiers each elsewhere).
-  pistol: kit("pistol", "Revolver", [
+  pistol: kit("pistol", "Flintlock", [
     ["combo", "Quick Draw", "muzzle", -70],
     ["special", "Smoke Phantom", "muzzle", -85],
     ["ranged", "Dive Kick", "slam", 70],
@@ -353,42 +360,43 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
   });
 }
 
-/** Map MM (−100…+100) → metres (matches Studio MM_TO_M = 0.01). */
-export function mmToMeters(mm: number, scale = 0.01): number {
-  return mm * scale;
+/** Map MM (−100…+100) → metres (worldMath SSOT: MM_TO_M = 0.01). */
+export function mmToMeters(mm: number, scale = MM_TO_M): number {
+  return mmToM(mm, scale);
 }
 
 /**
- * Enemy attack phase template from reaction-timeline ref (Shadow Lunge style).
- * Hosts should scale to clip duration but keep ratios for telegraphs.
+ * Enemy attack phase template — lattice 3U:1U:2U (windup:active:recovery)
+ * calibrated to ASOD edge modes + Shadow Lunge ref.
  */
 export const T0_ATTACK_PHASE = {
-  /** Total example attack duration (seconds) */
-  total: 1.7,
-  windup: 0.8,
-  active: 0.3,
-  recovery: 0.6,
-  /** Absolute windows on the attack timeline (for telegraphs / AI) */
-  parry: { start: 0.65, end: 0.95 }, // 0.30s narrow
-  block: { start: 0.3, end: 1.2 }, // 0.90s wide
-  dodge: { start: 0.3, end: 1.6 }, // 1.40s widest
+  total: TIMING.attackTotal,
+  windup: TIMING.windup,
+  active: TIMING.active,
+  recovery: TIMING.recovery,
+  parry: {
+    start: TIMING.windup - TIMING.parryWindow * 0.5,
+    end: TIMING.windup + TIMING.active,
+  },
+  block: {
+    start: TIMING.windup * 0.35,
+    end: TIMING.windup + TIMING.active + TIMING.recovery * 0.5,
+  },
+  dodge: {
+    start: TIMING.windup * 0.35,
+    end: TIMING.attackTotal - TIMING.u * 0.3,
+  },
 } as const;
 
 /**
- * Defender-side reaction windows used by CombatController (age since press).
- * Derived from ref: parry narrow 0.30s, perfect inside first ~40% of that.
+ * Defender-side reaction windows — same SSOT as three/math/defenseMath.
  */
 export const T0_REACTION_WINDOWS = {
-  /** Perfect parry (opens enemy) */
-  parryPerfect: 0.12,
-  /** Full parry / deflect window */
-  parryDeflect: 0.3,
-  /** Early-dodge punish window */
-  dodgePunish: 0.12,
-  /** Dodge i-frame span (iframeEnd − iframeStart) — matches wide evade feel */
-  dodgeIframeStart: 0.04,
-  dodgeIframeEnd: 0.42,
-  dodgeDuration: 0.55,
-  /** Chip fraction when block force is overwhelmed (block still helps) */
-  blockChipFraction: 0.4,
+  parryPerfect: DEFENSE_WINDOWS.parryPerfect,
+  parryDeflect: DEFENSE_WINDOWS.parryDeflect,
+  dodgePunish: DEFENSE_WINDOWS.dodgePunish,
+  dodgeIframeStart: DEFENSE_WINDOWS.dodgeIframeStart,
+  dodgeIframeEnd: DEFENSE_WINDOWS.dodgeIframeEnd,
+  dodgeDuration: DEFENSE_WINDOWS.dodgeDuration,
+  blockChipFraction: IMPACT.blockChip,
 } as const;
