@@ -96,6 +96,24 @@ export class SparringCombat {
   /** Restore player HP (clamped to max) — used by the heal-potion consumable. */
   healPlayer(amount: number): void { this._playerCC.heal(amount); }
 
+  /**
+   * Restore stamina (clamped). Used for failed-parry slow recovery and consumables.
+   * `holdRegen` keeps natural regen paused so recovery doesn't double-dip.
+   */
+  restorePlayerStamina(amount: number, holdRegen = 0): void {
+    this._playerCC.restoreStamina(amount, holdRegen);
+  }
+
+  /** Spend stamina now (failed-parry debt). */
+  drainPlayerStamina(amount: number, holdRegen = 0): void {
+    this._playerCC.drainStamina(amount, holdRegen);
+  }
+
+  /** Stretch natural stamina regen delay (failed parry = slow 2s recover). */
+  holdPlayerStaminaRegen(seconds: number): void {
+    this._playerCC.holdStaminaRegen(seconds);
+  }
+
   // ---- defense resolution ----
 
   /**

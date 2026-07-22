@@ -34,18 +34,42 @@ export const SMASH_KB = {
   launchAtStack: 2,
 } as const;
 
-/** Parry (KeyQ) — lattice-aligned cut + bubble. */
+/**
+ * Parry (KeyC) — lattice-aligned cut + bubble + success counter.
+ * Perfect timing → rebound / stun / uppercut dash; miss → full damage + slow stam.
+ */
 export const PARRY_CUT = {
   ...CLIP_CUT.parry,
   invuln: TIMING.parryPerfect * 1.85,
   forceFieldRadius: RANGE.parryBubble * 0.55,
   forceFieldLife: TIMING.parryWindow * 0.93,
   stunOnSuccess: TIMING.parryWindow * 4.6,
+  /** Short lunge into the parried foe before the uppercut. */
+  uppercutDashM: 2.35,
+  uppercutDashDur: 0.12,
+  /** Delay after parry snap before the uppercut lands (s). */
+  uppercutDelay: 0.08,
+  /** Launch up-velocity handed to Targets.launch (clean knock-up ≥ 8). */
+  uppercutUpVel: 9.4,
+  uppercutDamage: 26,
+  uppercutRadius: 2.6,
+  /** Failed parry: stamina debt recovered evenly over this many seconds. */
+  failStamRecoverSec: 2.0,
+  /** Extra stamina lost on a failed (late) parry, restored over failStamRecoverSec. */
+  failStamDebt: 22,
 } as const satisfies ClipCutOpts & {
   invuln: number;
   forceFieldRadius: number;
   forceFieldLife: number;
   stunOnSuccess: number;
+  uppercutDashM: number;
+  uppercutDashDur: number;
+  uppercutDelay: number;
+  uppercutUpVel: number;
+  uppercutDamage: number;
+  uppercutRadius: number;
+  failStamRecoverSec: number;
+  failStamDebt: number;
 };
 
 /** KeyE forcefield guard pulse. */

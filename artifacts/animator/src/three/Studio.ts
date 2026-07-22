@@ -707,6 +707,24 @@ export class Studio {
   /** Utility Kick (KeyV) cooldown so the guard-breaking kick can't be spammed. */
   private kickCd = 0;
   /**
+   * Active KeyC parry session — age tracks window for success/fail, side picks
+   * the best directional parry clip (left / right / front) from threat position.
+   */
+  private parrySession: {
+    token: number;
+    age: number;
+    side: "left" | "right" | "front";
+    /** World point of nearest threat at press (for face + rebound). */
+    threat: THREE.Vector3;
+  } | null = null;
+  private parrySessionToken = 0;
+  /**
+   * Failed-parry stamina: remaining points to restore over ~2s (slow recover).
+   * Natural regen is held so this is the only recovery path until cleared.
+   */
+  private parryFailStamRemaining = 0;
+  private parryFailStamRate = 0;
+  /**
    * KeyV Shadow Kick session: OPEN = planted parry window (no move);
    * COMMIT/SHADOW = finishing the kick. Token cancels stale schedules.
    */
@@ -1239,22 +1257,23 @@ export class Studio {
           case "perfectParry":
             this.setCombatFlash("PERFECT PARRY!", 1.5);
             this.triggerHitstop(0.09, 0.1);
-            // Anime clash spark where the incoming blow is turned aside. The
-            // parried enemy's own stun reaction + flash fire from onEnemyState
-            // when its CC enters the vulnerable state (parry attackerReaction).
+            // Full success package: clash + rebound + stun + uppercut dash launch.
             if (pos) {
-              this.vfx.parryClash(pos);
-              this.vfx.forceField(() => pos.clone(), PARRY_CUT.forceFieldRadius, PARRY_CUT.forceFieldLife, 0xffe8a0);
-              // Smash punish: hard stun + shield-break the nearest attacker.
-              this.targets.reactAt(pos, "stunned");
-              this.targets.shieldBreak(pos, 3.2, PARRY_CUT.stunOnSuccess);
-              this.targets.kickStagger(
-                pos,
-                2.8,
-                this.params.skillForce * 1.1,
-                PARRY_CUT.stunOnSuccess,
-                this.character?.root.position,
-              );
+              this.onParrySuccess(pos, {
+                perfect: true,
+                spell: this.lastIncomingSkill,
+              });
+            }
+            break;
+          case "deflect":
+            // Timed parry inside window (force held) — same counter package.
+            if (pos && this.parrySession) {
+              this.setCombatFlash("PARRY!", 1.1);
+              this.triggerHitstop(0.06, 0.08);
+              this.onParrySuccess(pos, {
+                perfect: false,
+                spell: this.lastIncomingSkill,
+              });
             }
             break;
           case "blockStop":
@@ -3691,6 +3710,8 @@ export class Studio {
 
   /** Origin of the most recent incoming strike, for directional guard reacts. */
   private lastStrikeFrom: THREE.Vector3 | null = null;
+  /** True when the latest resolved strike was a skill/spell (for parry rebound). */
+  private lastIncomingSkill = false;
 
   private resolveOpponentStrike(
     center: THREE.Vector3,
@@ -3750,7 +3771,18 @@ export class Studio {
     // Stash the attacker origin so the defender's guarded-hit react can be
     // directional (chest is the player's own position — useless for side math).
     this.lastStrikeFrom = from.clone();
+    this.lastIncomingSkill = !!isSkill;
+    const hadParrySession = !!this.parrySession;
     const result = this.sparring.resolvePlayerDefense(payload, chest);
+
+    // Failed / late parry → full damage already applied; slow stamina recover 2s
+    if (
+      hadParrySession &&
+      (result.outcome === "hit" || result.outcome === "crit")
+    ) {
+      this.onParryFail(chest);
+    }
+    // Spell rebound is included in onParrySuccess when perfect/deflect fires
 
     // Respect timer: a successful defense (block / parry / dodge) opens a brief
     // defender-advantage window — the player's next swing lands as a counter.
@@ -9864,6 +9896,27 @@ export class Studio {
     if (this.smashRecoverCd > 0) this.smashRecoverCd = Math.max(0, this.smashRecoverCd - dt);
     if (this.respectWindow > 0) this.respectWindow = Math.max(0, this.respectWindow - dt);
 
+    // KeyC parry session age + auto-clear when CC leaves parry
+    if (this.parrySession) {
+      this.parrySession.age += dt;
+      if (
+        this.parrySession.age > 0.55 ||
+        (this.sparring && this.sparring.getPlayerState() !== "parry" && this.parrySession.age > 0.05)
+      ) {
+        this.parrySession = null;
+      }
+    }
+    // Failed-parry stamina: drip restored points over ~2s
+    if (this.parryFailStamRemaining > 0 && this.parryFailStamRate > 0) {
+      const give = Math.min(this.parryFailStamRemaining, this.parryFailStamRate * dt);
+      this.sparring.restorePlayerStamina(give, 0.05);
+      this.parryFailStamRemaining = Math.max(0, this.parryFailStamRemaining - give);
+      if (this.parryFailStamRemaining <= 1e-3) {
+        this.parryFailStamRemaining = 0;
+        this.parryFailStamRate = 0;
+      }
+    }
+
     // Single combat authority: tick the player CC and read CC-authoritative
     // health/stamina back so gating code (skill cost checks, etc.) stays in sync.
     this.sparring.update(dt);
@@ -11131,7 +11184,7 @@ export class Studio {
     }
     // KeyJ = drink a heal potion (quick-draw use → restore HP). No-op at full HP.
     else if (code === "KeyJ") this.healPotion();
-    // KeyC = parry (moved off Q so Q can cycle activity modes).
+    // KeyC = timed parry (success: rebound + stun + uppercut dash knock-up).
     else if (code === "KeyC") {
       if (this.activityMode === "combat") this.doParry();
     }
@@ -11242,20 +11295,68 @@ export class Studio {
   }
 
   /**
-   * Parry (KeyQ): CC parry window + cut animation into the parry snap at 2× so
-   * the press feels immediate. On success (handled in defense reactions) the
-   * attacker is stunned; here we also flash a brief forcefield for feedback.
+   * Parry (KeyC): open a timed CC parry window and play the best directional
+   * parry/block clip for where the nearest enemy attack is coming from
+   * (left / right / front). Success is resolved in {@link onParrySuccess}
+   * when an incoming hit lands inside the window; a miss takes full damage
+   * and recovers the stamina debt slowly over 2s.
    */
   private doParry() {
     if (!this.character || this.defeated || this.spectating) return;
+    if (this.recoverLock > 0.05) return;
     const cut = PARRY_CUT;
+    const beforeStam = this.sparring.getPlayerStamina();
     this.sparring.parry();
+    // If CC refused (no stam / mid-attack), don't open a fake session.
+    if (this.sparring.getPlayerState() !== "parry") {
+      this.setCombatFlash("CAN'T PARRY", 0.45);
+      return;
+    }
 
-    // Cut into the parry pose — try dedicated clips first.
-    const parryNames = ["parry", "parryReact", "blockReact", "block"];
+    const me = this.character.root.position.clone();
+    // Threat = hard lock → nearest hostile → facing ray, for clip side + rebound
+    const lock = this.targets?.selectedHostilePoint?.();
+    let threat = lock?.clone() ?? null;
+    if (!threat) {
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      const picked = this.pickTargetInFront?.(me, fwd, 6.5, 0.15);
+      threat = picked?.position?.clone() ?? me.clone().addScaledVector(fwd, 2.5);
+    }
+    threat.y = me.y + 1.0;
+    const side = this.hitSide(threat);
+    this.parrySessionToken += 1;
+    this.parrySession = {
+      token: this.parrySessionToken,
+      age: 0,
+      side,
+      threat: threat.clone(),
+    };
+
+    // Face the threat so the parry reads into the incoming line
+    const face = threat.clone().sub(me);
+    face.y = 0;
+    if (face.lengthSq() > 1e-4) this.controller?.faceToward(face.normalize(), 0.85);
+
+    // Best clip for attack position — directional block/parry family first
+    const g = this.playerGroup();
+    const d = defenseClips(g);
+    const bySide: string[] =
+      side === "left"
+        ? [d.blockLeft, d.parry, "parry", "parryReact", d.blockReact, d.block]
+        : side === "right"
+          ? [d.blockRight, d.parry, "parry", "parryReact", d.blockReact, d.block]
+          : [d.parry, "parryReact", "parry", d.blockReact, "blockReact", d.block, "blockStart", "block"];
+    // Dedupe while keeping order
+    const seen = new Set<string>();
+    const parryNames = bySide.filter((n) => {
+      if (!n || seen.has(n)) return false;
+      seen.add(n);
+      return true;
+    });
+
     let played = 0;
     for (const n of parryNames) {
-      if (!this.character.hasClip(n)) continue;
+      if (!this.character.hasClip(n) && !this.character.hasRole?.(n as never)) continue;
       if (this.character.playClipCut) {
         played = this.character.playClipCut(n, {
           from: cut.from,
@@ -11269,12 +11370,210 @@ export class Studio {
     }
     if (played <= 0) this.playPlayerReaction("parryReact");
 
-    const p = this.character.root.position.clone();
+    const p = me.clone();
     p.y += 1.05;
-    this.vfx.forceField(() => p, cut.forceFieldRadius, cut.forceFieldLife, 0xa0f0ff);
+    this.vfx.forceField(() => {
+      const q = this.character?.root.position.clone() ?? p.clone();
+      q.y += 1.05;
+      return q;
+    }, cut.forceFieldRadius, cut.forceFieldLife, 0xa0f0ff);
     this.vfx.burst(p, 0xc8f4ff, 10, 2.0);
-    this.invuln = Math.max(this.invuln, cut.invuln);
+    this.invuln = Math.max(this.invuln, cut.invuln * 0.35); // brief open; full i-frames on success
     this.sfx?.play("block", p, { volume: 0.75, rate: 1.25 });
+    this.setCombatFlash(side === "front" ? "PARRY" : side === "left" ? "PARRY ←" : "PARRY →", 0.35);
+
+    // Track spent stamina so a failed window can slow-recover it
+    void beforeStam;
+  }
+
+  /**
+   * Timed parry SUCCESS — rebound projectiles, stun the attacker, auto uppercut
+   * dash with VFX, knock them up then to the ground.
+   */
+  private onParrySuccess(
+    pos: THREE.Vector3,
+    opts: { perfect: boolean; spell: boolean },
+  ) {
+    if (!this.character || this.defeated) return;
+    const cut = PARRY_CUT;
+    const me = this.character.root.position.clone();
+    const threat = this.parrySession?.threat.clone() ?? pos.clone();
+    // Prefer the contact point as the enemy reference
+    const foe = pos.clone();
+
+    this.vfx.parryClash(pos);
+    this.vfx.forceField(
+      () => pos.clone(),
+      cut.forceFieldRadius * (opts.perfect ? 1.15 : 1),
+      cut.forceFieldLife,
+      opts.perfect ? 0xffe8a0 : 0xbcd0ff,
+    );
+    this.invuln = Math.max(this.invuln, cut.invuln);
+    this.respectWindow = Math.max(this.respectWindow, 0.55);
+    this.sfx?.play("block", pos, { volume: 1, rate: opts.perfect ? 1.35 : 1.15 });
+
+    // Stun + shield-break the attacker so they eat the uppercut
+    this.targets.reactAt(foe, "stunned");
+    this.targets.shieldBreak(foe, 3.4, cut.stunOnSuccess);
+    this.targets.kickStagger(
+      foe,
+      2.8,
+      this.params.skillForce * 1.15,
+      cut.stunOnSuccess,
+      me,
+    );
+
+    // Rebound spell / projectile back at the attacker (getsuga + bolt)
+    this.reboundParryProjectile(foe, opts.perfect || opts.spell);
+
+    // Automatic uppercut dash counter → knock-up → slam down
+    this.executeParryUppercut(foe);
+
+    // Clear session so a second hit in the same window doesn't re-trigger
+    this.parrySession = null;
+  }
+
+  /** Fire a face-on slash projectile back along the attack line (spell rebound). */
+  private reboundParryProjectile(target: THREE.Vector3, strong: boolean) {
+    if (!this.character) return;
+    const from = this.character.root.position.clone();
+    from.y += 1.15;
+    const dir = target.clone().sub(from);
+    if (dir.lengthSq() < 1e-4) dir.copy(this.controller?.forward() ?? new THREE.Vector3(0, 0, 1));
+    dir.normalize();
+    const variant = strong ? "slashyellow" : "slashblue";
+    this.vfx.getsugaSlash(from, dir, {
+      variant,
+      aim: target.clone().setY(target.y + 0.2),
+      speed: 18,
+      range: 11,
+      contactRadius: 1.05,
+      followDuration: 0.04,
+      onPathTick: (p, r) => {
+        this.targets.playerHit(
+          p,
+          r,
+          { force: 2, damage: strong ? 14 : 10, poiseDamage: 12 },
+          2,
+          this.sparCtx,
+        );
+      },
+      onHit: (p) => {
+        this.vfx.impact(p, strong ? 0xffe08a : 0x4aa8ff, 0.9);
+        this.targets.playerHit(
+          p,
+          1.2,
+          { force: 2, damage: strong ? 18 : 12, poiseDamage: 16 },
+          2,
+          this.sparCtx,
+        );
+      },
+    });
+    // Extra bolt read for “spell rebound”
+    this.vfx.bolt(from, dir, strong ? 0xffe08a : 0x88d0ff, 22, 10, (p) => {
+      this.vfx.burst(p, 0xfff0c0, 12, 2.2);
+    });
+  }
+
+  /**
+   * Post-parry automatic uppercut: short dash into the foe, play best uppercut
+   * clip, launch them skyward then ground-slam residual.
+   */
+  private executeParryUppercut(foePos: THREE.Vector3) {
+    if (!this.character || !this.controller) return;
+    const cut = PARRY_CUT;
+    const me = this.character.root.position.clone();
+    const dir = foePos.clone().sub(me);
+    dir.y = 0;
+    if (dir.lengthSq() < 1e-4) dir.copy(this.controller.forward());
+    dir.normalize();
+    this.controller.faceToward(dir, 1);
+    this.controller.dash(dir, cut.uppercutDashM, cut.uppercutDashDur, 0.15, 0.55);
+
+    // Best available uppercut / rising clip
+    const upperNames = [
+      "uppercut",
+      "unarmed_uppercut",
+      "comboHit2",
+      "parryReact",
+      "attack",
+    ];
+    let played = 0;
+    for (const n of upperNames) {
+      if (!this.character.hasClip(n)) continue;
+      if (this.character.playClipCut) {
+        played = this.character.playClipCut(n, {
+          from: 0.08,
+          to: 0.72,
+          timeScale: 1.55,
+          fade: 0.05,
+        });
+      }
+      if (played <= 0) played = this.character.playClipOnce(n, 0.06);
+      if (played > 0) break;
+    }
+
+    const hand = me.clone().addScaledVector(dir, 0.6);
+    hand.y += 1.1;
+    this.vfx.castAura(hand, 0xffe08a);
+    this.vfx.burst(hand, 0xfff2c0, 16, 2.8);
+    this.setCombatFlash("PARRY UPPERCUT!", 0.9);
+
+    this.schedule(cut.uppercutDelay, () => {
+      if (!this.character || this.defeated) return;
+      const impact = this.character.root.position.clone().addScaledVector(dir, 1.1);
+      impact.y += 1.0;
+      // Clean knock-up (≥8) → rise → fall prone
+      this.targets.launch(impact, cut.uppercutRadius, cut.uppercutDamage, cut.uppercutUpVel);
+      this.targets.reactAt(impact, "stunned");
+      this.vfx.impact(impact, 0xffe08a, 1.2);
+      this.vfx.fireAura(impact, 0.95, this.fireThemeApplied, { groundOnly: true });
+      this.vfx.getsugaSlash(impact, dir, {
+        variant: "slashred",
+        aim: impact.clone().addScaledVector(dir, 4).setY(impact.y + 0.5),
+        speed: 14,
+        range: 5,
+        contactRadius: 1.1,
+        followDuration: 0.02,
+        onHit: (p) => this.vfx.impact(p, 0xff5a20, 0.8),
+      });
+      this.sfx?.play("whooshHeavy", impact, { volume: 0.9, rate: 1.15 });
+      this.controller?.addCameraShake(0.18);
+    });
+
+    // Ground residual after they peak / fall
+    this.schedule(cut.uppercutDelay + 0.42, () => {
+      if (!this.character || this.defeated) return;
+      const ground = foePos.clone();
+      ground.y = 0.05;
+      this.vfx.shockwave(ground, 0xffb060, 2.4, 0.55);
+      this.vfx.burst(ground.clone().setY(0.6), 0xff9040, 18, 3.2);
+      // Extra ground hit for the slam-down beat
+      this.targets.playerHit(
+        foePos.clone().setY(0.8),
+        2.2,
+        { force: 3, damage: 12, poiseDamage: 20 },
+        3,
+        this.sparCtx,
+      );
+    });
+  }
+
+  /**
+   * Failed / late parry: full damage already applied by the CC; drain stamina
+   * and drip it back evenly over {@link PARRY_CUT.failStamRecoverSec} (2s).
+   */
+  private onParryFail(pos: THREE.Vector3) {
+    const cut = PARRY_CUT;
+    // Drop the bar now, hold natural regen, drip the debt back over 2s
+    this.sparring.drainPlayerStamina(cut.failStamDebt, cut.failStamRecoverSec);
+    this.parryFailStamRemaining += cut.failStamDebt;
+    this.parryFailStamRate = this.parryFailStamRemaining / Math.max(0.05, cut.failStamRecoverSec);
+    this.sparring.holdPlayerStaminaRegen(cut.failStamRecoverSec);
+    this.parrySession = null;
+    this.setCombatFlash("PARRY FAIL", 0.85);
+    this.sfx?.play("block", pos, { volume: 0.55, rate: 0.75 });
+    this.vfx.burst(pos, 0xff6060, 14, 2.4);
   }
 
   /**

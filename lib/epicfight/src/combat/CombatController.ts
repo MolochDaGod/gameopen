@@ -582,6 +582,37 @@ export class CombatController {
     this.events.onStaminaChange?.(this.stamina, this.cfg.maxStamina);
   }
 
+  /**
+   * Restore stamina (clamped to max). Used for slow recovery after a failed
+   * parry, potions, etc. Optional `holdRegen` extends the natural regen delay
+   * so passive regen doesn't double-dip the recovery.
+   */
+  restoreStamina(amount: number, holdRegen = 0): void {
+    if (amount <= 0 || this.state === "dead") return;
+    this.stamina = Math.min(this.cfg.maxStamina, this.stamina + amount);
+    if (holdRegen > 0) this.regenDelay = Math.max(this.regenDelay, holdRegen);
+    this.events.onStaminaChange?.(this.stamina, this.cfg.maxStamina);
+  }
+
+  /** Spend stamina immediately (failed-parry debt, etc.). */
+  drainStamina(amount: number, holdRegen = 0): void {
+    if (amount <= 0 || this.state === "dead") return;
+    this.stamina = Math.max(0, this.stamina - amount);
+    if (holdRegen > 0) this.regenDelay = Math.max(this.regenDelay, holdRegen);
+    else this.regenDelay = Math.max(this.regenDelay, this.cfg.staminaRegenDelay);
+    this.events.onStaminaChange?.(this.stamina, this.cfg.maxStamina);
+  }
+
+  /** Seconds of stamina regen lock remaining (0 = regenerating). */
+  getStaminaRegenDelay(): number {
+    return this.regenDelay;
+  }
+
+  /** Stretch natural stamina regen delay (e.g. failed-parry recovery). */
+  holdStaminaRegen(seconds: number): void {
+    if (seconds > 0) this.regenDelay = Math.max(this.regenDelay, seconds);
+  }
+
   // ----- defensive helpers ---------------------------------------------------
 
   /** Build the defense payload from current state/timer. */
