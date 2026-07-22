@@ -59,3 +59,16 @@ export {
   type CapsuleSeg,
 } from "./sweptCapsule";
 export { createScenePhysics, type ScenePhysics, type ScenePhysicsOptions } from "./bootstrap";
+export {
+  resolveSurfaceLocomotion,
+  modeToLocoCam,
+  allowsGroundNav,
+  harvestUsesTerrainY,
+  gravityScaleForMode,
+  SURFACE_LOCOMOTION_PRIORITY,
+  SURFACE_LOCOMOTION_DOC,
+  type SurfaceLocomotionMode,
+  type VehicleKind,
+  type SurfaceLocomotionState,
+  type ResolveSurfaceInput,
+} from "./surfaceLocomotion";
