@@ -22,6 +22,16 @@ Full map: [`docs/OPEN_PRODUCT.md`](docs/OPEN_PRODUCT.md) · collection rules: [`
 
 **Macro stack / D1 / AI handoff:** [`docs/OPEN_STACK.md`](docs/OPEN_STACK.md)
 
+## Service worker (PWA shell)
+
+`artifacts/animator/public/sw.js` — **v3** (`grudge-open-shell-v3`).
+
+| Rule | Detail |
+|------|--------|
+| **Always return a Response** | Cache misses must not resolve `undefined` (browser: *Failed to convert value to 'Response'* / FetchEvent network error) |
+| **Navigations** | Network-only (`cache: no-store`) so Vite hash updates stick |
+| **Recovery** | `?nosw=1` or `localStorage.grudge_open_nosw=1` unregisters SW; `nukeServiceWorkers()` in `src/lib/pwa.ts` |
+
 ## Auth (return-to-origin SSO)
 
 Canonical login always returns to **this** origin with tokens the app can store.
