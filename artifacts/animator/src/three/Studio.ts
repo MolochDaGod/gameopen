@@ -2675,12 +2675,18 @@ export class Studio {
             }
             return null;
           };
+          // Aim point: hard/soft lock, else along swing so crescent faces that way
+          const lockPt = this.targets?.selectedHostilePoint?.();
+          const aimPt = lockPt
+            ? lockPt.clone().setY(lockPt.y + 0.2)
+            : muzzle.clone().addScaledVector(dir, fx.projectile.range);
           this.vfx.getsugaSlash(muzzle, dir, {
             speed: fx.projectile.speed,
             range: fx.projectile.range,
             color: fx.projectile.color,
-            // Production variant: slashred | slashblue | slashpurple | slashyellow
+            // Production mesh: slashred | slashblue | slashpurple | slashyellow
             variant: fx.projectile.variant,
+            aim: aimPt,
             contactRadius: contactR,
             followDuration: fx.projectile.followDuration ?? 0.1,
             followWeapon,

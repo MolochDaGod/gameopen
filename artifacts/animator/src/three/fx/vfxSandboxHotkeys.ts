@@ -123,9 +123,8 @@ export function deploySandboxVfx(vfx: Vfx, effectId: VfxEffectId | string, opts:
       break;
     }
     case "getsuga_slash": {
-      // Getsuga (Alt+Space) — production slashblue ice-bow + energy shader
+      // Getsuga (Alt+Space) — production slashblue mesh, crescent faces aim
       const dir = aim.clone().sub(cast);
-      dir.y = 0;
       if (dir.lengthSq() < 1e-4) dir.copy(fwd);
       dir.normalize();
       const edge = opts.weaponEdge?.();
@@ -134,6 +133,7 @@ export function deploySandboxVfx(vfx: Vfx, effectId: VfxEffectId | string, opts:
       vfx.getsugaSlash(muzzle, dir, {
         variant: "slashblue",
         color: blue.mid,
+        aim,
         speed: 16,
         range: 9,
         contactRadius: 0.95,

@@ -91,9 +91,13 @@ const MODEL_VFX = {
   // Prefer baked GLB; glTF pack folder kept as source/fallback.
   fireTornado: ["models/vfx/stylized-fire-tornado.glb", 2.0],
   /**
-   * Stylized ice bow reshaped as Getsuga / slash-wave projectile collider.
-   * Multi-tint (ice/blue/purple/yellow); trails weapon edge then flies free.
+   * Production Getsuga meshes — one GLB per color id (slashred/blue/purple/yellow).
+   * Shared ice-bow source baked to each name; energy shader tints at runtime.
    */
+  slashred: ["models/vfx/slash/slashred.glb", 2.2],
+  slashblue: ["models/vfx/slash/slashblue.glb", 2.2],
+  slashpurple: ["models/vfx/slash/slashpurple.glb", 2.2],
+  slashyellow: ["models/vfx/slash/slashyellow.glb", 2.2],
   iceBow: ["models/vfx/stylized_ice_bow.glb", 2.2],
   fireball: ["models/vfx/fireball.glb", 1.1],
   lightOfSlash: ["models/vfx/light-of-slash.glb", 2.4],
@@ -434,15 +438,13 @@ export class Vfx {
       const gr = this.turretSpec("gameReady");
       this.ensureModel(gr.path, gr.size, gr.alts);
     }
-    // Production Getsuga / slash-wave: ice bow + light-of-slash so first mid-hit
-    // never falls back to procedural crescent on a cold cache.
-    this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1], [
-      MODEL_VFX.lightOfSlash[0],
-      "models/vfx/slash/slashblue.glb",
-      "models/vfx/slash/slashred.glb",
-      "models/vfx/slash/slashpurple.glb",
-      "models/vfx/slash/slashyellow.glb",
-    ]);
+    // Production Getsuga: preload all four named slash assets so first cast hits
+    // slashred/blue/purple/yellow meshes (not a late fallback).
+    for (const id of ["slashred", "slashblue", "slashpurple", "slashyellow"] as const) {
+      const [path, size] = MODEL_VFX[id];
+      this.ensureModel(path, size, [MODEL_VFX.iceBow[0], MODEL_VFX.lightOfSlash[0]]);
+    }
+    this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1]);
     this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
     this.ensureModel(MODEL_VFX.fireball[0], MODEL_VFX.fireball[1]);
   }
@@ -2914,9 +2916,57 @@ export class Vfx {
   }
 
   /**
+   * Orient a Getsuga root so local +Z faces the target / travel direction and
+   * local +Y stays world-up (vertical crescent plane faces the target).
+   */
+  private orientSlashProjectile(
+    root: THREE.Object3D,
+    pos: THREE.Vector3,
+    travel: THREE.Vector3,
+  ) {
+    const f = travel.clone();
+    if (f.lengthSq() < 1e-8) f.set(0, 0, 1);
+    f.normalize();
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    const right = new THREE.Vector3().crossVectors(worldUp, f);
+    if (right.lengthSq() < 1e-8) {
+      // Travel nearly vertical — pick a stable side axis
+      right.set(1, 0, 0);
+    } else {
+      right.normalize();
+    }
+    const up = new THREE.Vector3().crossVectors(f, right).normalize();
+    // Basis: X = right, Y = up, Z = forward (toward target)
+    root.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, f));
+    root.position.copy(pos);
+  }
+
+  /**
+   * Resolve flight direction toward an optional aim point (hostile chest).
+   * Keeps a mostly horizontal slash path with mild pitch toward elevated targets.
+   */
+  private getsugaAimDir(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    aim?: THREE.Vector3 | null,
+  ): THREE.Vector3 {
+    const out = aim ? aim.clone().sub(from) : dir.clone();
+    if (out.lengthSq() < 1e-8) out.copy(dir);
+    if (out.lengthSq() < 1e-8) out.set(0, 0, 1);
+    const flat = Math.hypot(out.x, out.z);
+    if (flat > 1e-4) {
+      const pitch = Math.atan2(out.y, flat);
+      const cPitch = THREE.MathUtils.clamp(pitch, -0.4, 0.35);
+      const cos = Math.cos(cPitch);
+      out.set((out.x / flat) * cos, Math.sin(cPitch), (out.z / flat) * cos);
+    }
+    return out.normalize();
+  }
+
+  /**
    * Forward slash-wave / Getsuga projectile.
-   * Production variants: {@link SlashVariantId} slashred | slashblue | slashpurple | slashyellow.
-   * Ice-bow mesh + flame-aura patterned energy shader; trails weapon collider.
+   * Always uses production meshes: slashred | slashblue | slashpurple | slashyellow.
+   * Crescent faces the aim target as a flying slash projectile.
    */
   slashWave(
     from: THREE.Vector3,
@@ -2925,14 +2975,14 @@ export class Vfx {
       speed?: number;
       range?: number;
       color?: number;
-      /** Production variant id (preferred over color). */
       variant?: SlashVariantId | string;
+      /** World point the crescent should face / fly toward. */
+      aim?: THREE.Vector3 | null;
       contactRadius?: number;
       followWeapon?: () => { base: THREE.Vector3; tip: THREE.Vector3 } | null;
       followDuration?: number;
       onPathTick?: (p: THREE.Vector3, radius: number) => void;
       onHit?: (p: THREE.Vector3) => void;
-      /** @deprecated use variant — maps ice→slashblue, yellow→slashyellow, etc. */
       tint?: "ice" | "blue" | "purple" | "yellow" | "red";
     } = {},
   ) {
@@ -2940,14 +2990,9 @@ export class Vfx {
   }
 
   /**
-   * Production Getsuga slash: ice-bow collider with patterned energy shader
-   * (same noise/palette language as fireAura trail: core → mid → edge).
-   *
-   * Variants (production names):
-   * - slashred    — fireRise
-   * - slashblue   — iceSwirl
-   * - slashpurple — arcanePulse
-   * - slashyellow — holyShimmer
+   * Production Getsuga: loads `models/vfx/slash/{slashred|slashblue|slashpurple|slashyellow}.glb`,
+   * applies flame-aura energy shader, orients the curve face-on toward the target,
+   * trails the weapon briefly, then flies as a slash projectile.
    */
   getsugaSlash(
     from: THREE.Vector3,
@@ -2957,6 +3002,7 @@ export class Vfx {
       range?: number;
       color?: number;
       variant?: SlashVariantId | string;
+      aim?: THREE.Vector3 | null;
       contactRadius?: number;
       growFrom?: number;
       growTo?: number;
@@ -2965,11 +3011,9 @@ export class Vfx {
       tickEvery?: number;
       onPathTick?: (p: THREE.Vector3, radius: number) => void;
       onHit?: (p: THREE.Vector3) => void;
-      /** @deprecated use variant */
       tint?: "ice" | "blue" | "purple" | "yellow" | "red";
     } = {},
   ) {
-    // Resolve production variant (explicit id → tint alias → nearest color → blue default)
     const variantId: SlashVariantId = (() => {
       if (opts.variant) return slashVariant(opts.variant).id;
       if (opts.tint === "red") return "slashred";
@@ -2985,40 +3029,44 @@ export class Vfx {
     const speed = opts.speed ?? 15;
     const range = opts.range ?? 8.5;
     const contactRadius = opts.contactRadius ?? 0.95;
-    const growFrom = opts.growFrom ?? 0.4;
-    const growTo = opts.growTo ?? 2.0;
+    const growFrom = opts.growFrom ?? 0.45;
+    const growTo = opts.growTo ?? 2.05;
     const followDur = opts.followDuration ?? 0.1;
     const tickEvery = opts.tickEvery ?? 0.08;
-    const d = dir.clone();
-    d.y = 0;
-    if (d.lengthSq() < 1e-6) d.set(0, 0, 1);
-    d.normalize();
 
     const start = from.clone();
     start.y = Math.max(0.95, from.y);
+    // Flight dir always toward aim target when provided (curve faces that way)
+    const aimPoint = opts.aim?.clone() ?? start.clone().add(dir.clone().setY(0).normalize().multiplyScalar(range));
+    const velocity = this.getsugaAimDir(start, dir, aimPoint);
 
-    // Prefer production per-variant bake → shared ice bow → light-of-slash
+    // Named production asset first: slashred/blue/purple/yellow
+    const modelKey = variantId as keyof typeof MODEL_VFX;
+    const [namedPath, namedSize] =
+      modelKey in MODEL_VFX
+        ? MODEL_VFX[modelKey]
+        : ([vdef.modelPath, 2.2] as const);
     const tpl =
-      this.ensureModel(vdef.modelPath, 2.2, [
-        vdef.fallbackModelPath,
+      this.ensureModel(namedPath, namedSize, [
+        vdef.modelPath,
         MODEL_VFX.iceBow[0],
         MODEL_VFX.lightOfSlash[0],
       ]) ||
-      this.ensureModel(vdef.fallbackModelPath, MODEL_VFX.iceBow[1], [
-        MODEL_VFX.iceBow[0],
-        MODEL_VFX.lightOfSlash[0],
-      ]) ||
+      this.ensureModel(vdef.modelPath, 2.2, [MODEL_VFX.iceBow[0], MODEL_VFX.lightOfSlash[0]]) ||
+      this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1], [MODEL_VFX.lightOfSlash[0]]) ||
       this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
 
-    let obj: THREE.Object3D;
+    // Root carries world pose (toward target). Mesh is a child with local
+    // correction so the bow/crescent curve sits vertical and faces +Z (target).
+    const root = new THREE.Group();
+    root.name = `slashProj:${vdef.id}`;
     const mats: THREE.Material[] = [];
     let geos: THREE.BufferGeometry[] = [];
-    /** Owned energy mats we dispose (not shared template maps). */
     const energyMats: THREE.ShaderMaterial[] = [];
     let shared = false;
 
-    const applyEnergyShader = (root: THREE.Object3D) => {
-      root.traverse((o) => {
+    const applyEnergyShader = (node: THREE.Object3D) => {
+      node.traverse((o) => {
         const mesh = o as THREE.Mesh;
         if (!mesh.isMesh) return;
         const energy = createSlashEnergyMaterial({
@@ -3028,31 +3076,32 @@ export class Vfx {
           dark: vdef.dark,
           pattern: vdef.pattern,
           opacity: 0.94,
-          speed: 1.4,
-          expand: 0.035,
+          speed: 1.45,
+          expand: 0.04,
         });
         energyMats.push(energy);
         mats.push(energy);
-        // Keep geometry shared with template; only replace material
         mesh.material = energy;
         mesh.renderOrder = 3;
       });
     };
 
+    /**
+     * Local mesh layout: ice-bow limbs form a C in the plane that faces the target.
+     * +Z on root = toward target; crescent plane ≈ local XY (face-on to enemy).
+     */
+    const meshLocal = new THREE.Group();
+    meshLocal.name = `slashMesh:${vdef.id}`;
+    // Bow mesh: stand vertical and face travel (+Z). Tuned for stylized_ice_bow topology.
+    meshLocal.rotation.set(0, Math.PI / 2, Math.PI / 2);
+
     if (tpl) {
-      // Clone structure but strip template materials → energy shaders
-      obj = tpl.clone(true);
-      shared = true; // geometry shared; energy mats owned
-      applyEnergyShader(obj);
-      obj.position.copy(start);
-      obj.lookAt(start.clone().add(d));
-      obj.rotateZ(Math.PI / 2);
-      obj.scale.setScalar(growFrom);
-      obj.name = `slashProj:${vdef.id}`;
+      const mesh = tpl.clone(true);
+      shared = true;
+      applyEnergyShader(mesh);
+      meshLocal.add(mesh);
     } else {
-      // Procedural crescent until GLB loads — still uses energy shader
-      const group = new THREE.Group();
-      group.name = `slashProj:${vdef.id}:proc`;
+      // Procedural vertical crescent facing +Z (toward target)
       const energy = createSlashEnergyMaterial({
         core: vdef.core,
         mid: vdef.mid,
@@ -3060,27 +3109,28 @@ export class Vfx {
         dark: vdef.dark,
         pattern: vdef.pattern,
         opacity: 0.94,
-        speed: 1.4,
+        speed: 1.45,
         expand: 0.05,
       });
       energyMats.push(energy);
       mats.push(energy);
-      const arcGeo = new THREE.TorusGeometry(0.85, 0.14, 10, 32, Math.PI * 1.15);
+      // Torus arc in XY plane → face-on when looking along -Z (from target back to caster)
+      const arcGeo = new THREE.TorusGeometry(0.95, 0.13, 10, 36, Math.PI * 1.2);
       const arc = new THREE.Mesh(arcGeo, energy);
-      arc.rotation.x = Math.PI / 2;
-      const coreGeo = new THREE.BoxGeometry(0.2, 1.7, 0.6);
+      // Torus default is in XY; rotate so opening faces +Z slightly
+      arc.rotation.x = 0;
+      const coreGeo = new THREE.BoxGeometry(1.5, 0.22, 0.35);
       const core = new THREE.Mesh(coreGeo, energy);
-      group.add(arc, core);
-      group.position.copy(start);
-      group.lookAt(start.clone().add(d));
-      group.scale.setScalar(growFrom);
-      obj = group;
+      meshLocal.rotation.set(0, 0, 0);
+      meshLocal.add(arc, core);
       geos = [arcGeo, coreGeo];
     }
+    root.add(meshLocal);
+    this.orientSlashProjectile(root, start, velocity);
+    root.scale.setScalar(growFrom);
 
-    this.addTrail(obj, color, { width: 0.48, segments: 30 });
+    this.addTrail(root, color, { width: 0.5, segments: 30 });
     this.burst(start.clone(), color, 10, 1.8, { spread: 0.28 });
-    // Soft cast aura tell in the variant palette (fireAura language, ground-light)
     this.auraRing(new THREE.Vector3(start.x, 0.06, start.z), color, 0.9, 0.28);
 
     const life = followDur + range / speed;
@@ -3089,46 +3139,54 @@ export class Vfx {
     const pathTick = opts.onPathTick;
     const followWeapon = opts.followWeapon;
     let released = false;
-    const velocity = d.clone();
+    // Soft-home: keep a nudge toward original aim so the curve stays target-facing
+    const home = aimPoint.clone();
 
     this.add({
-      obj,
+      obj: root,
       age: 0,
       life,
       geos,
       mats,
-      // Geometry shared with template when from GLB; energy mats always owned
       shared: shared && geos.length === 0,
-      // Always dispose energy shader mats (listed in mats)
       update: (e, dt) => {
-        // Phase 1: stick to weapon collider (grip→tip trail)
         if (!released && followWeapon && e.age < followDur) {
           const edge = followWeapon();
           if (edge) {
             const mid = edge.base.clone().lerp(edge.tip, 0.72);
-            obj.position.copy(mid);
-            const along = edge.tip.clone().sub(edge.base);
-            if (along.lengthSq() > 1e-5) {
-              along.normalize();
-              obj.lookAt(mid.clone().add(along));
-              const flat = new THREE.Vector3(along.x, 0, along.z);
-              if (flat.lengthSq() > 1e-6) {
-                flat.normalize();
-                velocity.lerp(flat, 0.35);
-                if (velocity.lengthSq() > 1e-6) velocity.normalize();
+            // Prefer aim-facing over pure blade-along so the crescent already points at target
+            const toTarget = home.clone().sub(mid);
+            if (toTarget.lengthSq() > 1e-5) {
+              toTarget.normalize();
+              velocity.lerp(toTarget, 0.55).normalize();
+            } else {
+              const along = edge.tip.clone().sub(edge.base);
+              if (along.lengthSq() > 1e-5) {
+                along.y = 0;
+                if (along.lengthSq() > 1e-5) velocity.lerp(along.normalize(), 0.35).normalize();
               }
             }
+            this.orientSlashProjectile(root, mid, velocity);
           } else {
             released = true;
           }
         } else {
           released = true;
-          obj.position.addScaledVector(velocity, speed * dt);
+          // Mild home while flying so the slash stays pointed at the target
+          if (e.age < life * 0.65) {
+            const toHome = home.clone().sub(root.position);
+            if (toHome.lengthSq() > 0.25) {
+              toHome.normalize();
+              velocity.lerp(toHome, 0.08).normalize();
+            }
+          }
+          root.position.addScaledVector(velocity, speed * dt);
+          this.orientSlashProjectile(root, root.position, velocity);
         }
 
         const t = Math.min(1, e.age / life);
         const growT = Math.min(1, e.age / Math.max(0.12, life * 0.35));
-        obj.scale.setScalar(growFrom + (growTo - growFrom) * growT);
+        root.scale.setScalar(growFrom + (growTo - growFrom) * growT);
 
         const fade = t > 0.78 ? 1 - (t - 0.78) / 0.22 : 1;
         const pulse = 0.85 + 0.15 * Math.sin(e.age * 14);
@@ -3141,14 +3199,13 @@ export class Vfx {
         tickAcc += dt;
         while (tickAcc >= tickEvery) {
           tickAcc -= tickEvery;
-          pathTick?.(obj.position.clone(), contactRadius * (0.75 + 0.25 * growT));
+          pathTick?.(root.position.clone(), contactRadius * (0.75 + 0.25 * growT));
         }
 
         if (e.age + dt >= e.life && hit) {
-          const end = obj.position.clone();
+          const end = root.position.clone();
           this.impact(end, color, contactRadius);
           this.burst(end, color, 16, 2.6);
-          // Variant-colored fireAura read on connect (patterned impact)
           if (variantId === "slashred") {
             this.fireAura(end, 0.85, "fire", { groundOnly: true });
           } else {

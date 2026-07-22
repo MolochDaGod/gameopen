@@ -9,12 +9,13 @@ Open production paths (same-origin `public/` → fleet CDN candidates):
 | slashpurple  | `models/vfx/slash/slashpurple.glb`| arcanePulse    |
 | slashyellow  | `models/vfx/slash/slashyellow.glb`| holyShimmer    |
 
-**Shared fallback (shipped):** `models/vfx/stylized_ice_bow.glb`  
-Runtime applies `createSlashEnergyMaterial` per variant so one mesh serves all
-four colors until per-variant bakes land.
+**Shipped production names** (optimized meshopt/webp ice-bow source):
 
-SSOT catalog: `src/three/fx/slashProjectileVariants.ts`  
-Combat hotkeys: Alt+Space Getsuga (`vfxSandboxHotkeys.ts`).
+- `slashred.glb` / `slashblue.glb` / `slashpurple.glb` / `slashyellow.glb`
 
-When baking production meshes, keep SI scale ~2 m arc length and UVs continuous
-for the energy flow shader.
+Runtime always prefers these paths. Energy shader (`createSlashEnergyMaterial`)
+tints + patterns per variant. Orientation: crescent face-on toward aim target
+(local +Z = flight, vertical curve plane).
+
+SSOT: `src/three/fx/slashProjectileVariants.ts`  
+Combat: mid/finisher melee + Alt+Space Getsuga.

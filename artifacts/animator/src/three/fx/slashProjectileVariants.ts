@@ -26,11 +26,11 @@ export type SlashVariantDef = {
   /** Aura shell pattern (same family as body fireAura shells) */
   pattern: AuraPattern;
   /**
-   * Preferred production GLB path once baked.
-   * Until CDN bake exists, runtime falls back to shared ice bow + shader.
+   * Production GLB path — shipped as models/vfx/slash/{id}.glb
+   * (named slashred / slashblue / slashpurple / slashyellow assets).
    */
   modelPath: string;
-  /** Shared mesh used for all variants until per-color bakes ship. */
+  /** Shared source mesh fallback if a named file is missing. */
   fallbackModelPath: string;
   /** Tags for skill / element mapping */
   tags: string[];
