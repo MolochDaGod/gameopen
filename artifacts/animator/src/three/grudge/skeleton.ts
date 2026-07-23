@@ -139,28 +139,67 @@ export function unifySkeletons(root: THREE.Object3D): THREE.Skeleton | null {
   return widest;
 }
 
-// Resolve a character's hand bone for weapon attachment. All six races use the
-// unified Bip001 rig (exact "Bip001_R_Hand" / "Bip001_L_Hand"), tried first; a
-// fuzzy fallback handles non-standard skeletons. Finger/thumb bones excluded.
+/**
+ * Resolve a character's hand bone / weapon socket for attachment.
+ * Prefer order (grudge6 / uMMORPG / Mixamo):
+ *   1. Hand containers (`R_hand_container` / `L_hand_container`)
+ *   2. Bip001 hand (`Bip001 R Hand` / `Bip001_R_Hand`)
+ *   3. Mixamo (`mixamorigRightHand` / `RightHand`)
+ *   4. Fuzzy hand/wrist (excludes fingers)
+ */
 export function findHandBone(root: THREE.Object3D, side: "L" | "R"): THREE.Object3D | null {
-  const exact = side === "R" ? "Bip001_R_Hand" : "Bip001_L_Hand";
+  const containers =
+    side === "R"
+      ? ["R_hand_container", "R_Hand_Container", "RightHandContainer", "weapon_r"]
+      : ["L_hand_container", "L_Hand_Container", "LeftHandContainer", "L_shield_container", "weapon_l"];
+  const exactHands =
+    side === "R"
+      ? [
+          "Bip001_R_Hand",
+          "Bip001 R Hand",
+          "Bip001_R Hand",
+          "mixamorigRightHand",
+          "mixamorig:RightHand",
+          "RightHand",
+        ]
+      : [
+          "Bip001_L_Hand",
+          "Bip001 L Hand",
+          "Bip001_L Hand",
+          "mixamorigLeftHand",
+          "mixamorig:LeftHand",
+          "LeftHand",
+        ];
+  const exactSet = new Set([...containers, ...exactHands].map((n) => n.toLowerCase()));
+  let containerHit: THREE.Object3D | null = null;
   let exactHit: THREE.Object3D | null = null;
   let fuzzyHit: THREE.Object3D | null = null;
   let fuzzyName = "";
   const want = side === "R" ? /rhand|righthand|handr|rwrist/ : /lhand|lefthand|handl|lwrist/;
   const isFinger = /finger|thumb|index|middle|ring|pinky|pinkie|metacarp|digit/;
+  const containerRe = /container|socket/;
+
   root.traverse((node) => {
-    if (exactHit) return;
-    if (node.name === exact) {
-      exactHit = node;
+    if (containerHit && exactHit) return;
+    const lower = node.name.toLowerCase();
+    if (exactSet.has(lower)) {
+      if (containerRe.test(lower) || containers.some((c) => c.toLowerCase() === lower)) {
+        containerHit = node;
+      } else {
+        exactHit = node;
+      }
       return;
     }
-    const norm = node.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const norm = lower.replace(/[^a-z0-9]/g, "");
+    if (containerRe.test(norm) && want.test(norm)) {
+      if (!containerHit) containerHit = node;
+      return;
+    }
     if (!want.test(norm) || isFinger.test(norm)) return;
     if (!fuzzyHit || norm.length < fuzzyName.length) {
       fuzzyHit = node;
       fuzzyName = norm;
     }
   });
-  return exactHit ?? fuzzyHit;
+  return containerHit ?? exactHit ?? fuzzyHit;
 }

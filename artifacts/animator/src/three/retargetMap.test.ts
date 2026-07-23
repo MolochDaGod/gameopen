@@ -68,10 +68,76 @@ describe("canonicalSuffix", () => {
     expect(canonicalSuffix("Armature")).toBeNull();
     expect(canonicalSuffix("HeadTop_End")).toBeNull();
     expect(canonicalSuffix("Root")).toBeNull();
+    expect(canonicalSuffix("R_hand_container")).toBeNull();
+    expect(canonicalSuffix("L_shield_container")).toBeNull();
+  });
+
+  it("maps grudge6 Bip001 bones (spaces or underscores) onto Mixamo suffixes", () => {
+    expect(canonicalSuffix("Bip001 Pelvis")).toBe("Hips");
+    expect(canonicalSuffix("Bip001_Pelvis")).toBe("Hips");
+    expect(canonicalSuffix("Bip001 Spine")).toBe("Spine");
+    expect(canonicalSuffix("Bip001 Spine1")).toBe("Spine1");
+    expect(canonicalSuffix("Bip001 Spine2")).toBe("Spine2");
+    expect(canonicalSuffix("Bip001 Neck")).toBe("Neck");
+    expect(canonicalSuffix("Bip001 Head")).toBe("Head");
+    // Hands — critical for weapon skill clips
+    expect(canonicalSuffix("Bip001 R Hand")).toBe("RightHand");
+    expect(canonicalSuffix("Bip001_R_Hand")).toBe("RightHand");
+    expect(canonicalSuffix("Bip001 L Hand")).toBe("LeftHand");
+    expect(canonicalSuffix("Bip001_L_Hand")).toBe("LeftHand");
+    // Arms / legs
+    expect(canonicalSuffix("Bip001 R UpperArm")).toBe("RightArm");
+    expect(canonicalSuffix("Bip001_R_UpperArm")).toBe("RightArm");
+    expect(canonicalSuffix("Bip001 L Forearm")).toBe("LeftForeArm");
+    expect(canonicalSuffix("Bip001 R Thigh")).toBe("RightUpLeg");
+    expect(canonicalSuffix("Bip001 L Calf")).toBe("LeftLeg");
+    expect(canonicalSuffix("Bip001 R Foot")).toBe("RightFoot");
+    expect(canonicalSuffix("Bip001 L Toe0")).toBe("LeftToeBase");
   });
 });
 
+const GRUDGE6_BIP001_JOINTS = [
+  "Bip001",
+  "Bip001 Pelvis",
+  "Bip001 Spine",
+  "Bip001 Spine1",
+  "Bip001 Spine2",
+  "Bip001 Neck",
+  "Bip001 Head",
+  "Bip001 L Clavicle",
+  "Bip001 L UpperArm",
+  "Bip001 L Forearm",
+  "Bip001 L Hand",
+  "Bip001 R Clavicle",
+  "Bip001 R UpperArm",
+  "Bip001 R Forearm",
+  "Bip001 R Hand",
+  "Bip001 L Thigh",
+  "Bip001 L Calf",
+  "Bip001 L Foot",
+  "Bip001 L Toe0",
+  "Bip001 R Thigh",
+  "Bip001 R Calf",
+  "Bip001 R Foot",
+  "Bip001 R Toe0",
+  "R_hand_container",
+  "L_hand_container",
+];
+
 describe("buildRetargetNameMap", () => {
+  it("maps grudge6 Bip001 hands + body to mixamorig sources (containers skipped)", () => {
+    const map = buildRetargetNameMap(GRUDGE6_BIP001_JOINTS);
+    expect(map.hip).toBe(SOURCE_HIP);
+    expect(map.names["Bip001 Pelvis"] || map.names["Bip001"]).toBeDefined();
+    expect(map.names["Bip001 R Hand"]).toBe("mixamorigRightHand");
+    expect(map.names["Bip001 L Hand"]).toBe("mixamorigLeftHand");
+    expect(map.names["Bip001 R UpperArm"]).toBe("mixamorigRightArm");
+    expect(map.names["R_hand_container"]).toBeUndefined();
+    expect(map.matched).toContain("RightHand");
+    expect(map.matched).toContain("LeftHand");
+    expect(map.matched.length).toBeGreaterThanOrEqual(18);
+  });
+
   it("maps every canonical bone of the Racalvin rig to its mixamorig source", () => {
     const map = buildRetargetNameMap(RACALVIN_JOINTS);
     expect(map.hip).toBe(SOURCE_HIP);

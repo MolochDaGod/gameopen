@@ -60,17 +60,104 @@ export function sourceBoneName(suffix: CanonicalSuffix): string {
 }
 
 /**
+ * Unity Toon RTS / grudge6 **Bip001** bone → Mixamo canonical suffix.
+ * Spaces or underscores (`Bip001 R Hand` / `Bip001_R_Hand`) both work after
+ * normalize. Hand bones map to Mixamo LeftHand/RightHand so library weapon
+ * clips drive grudge6 kits (weapons mount on R_hand_container separately).
+ */
+const BIP001_TO_MIXAMO: Record<string, CanonicalSuffix> = {
+  // Hips / spine / head
+  pelvis: "Hips",
+  bip001: "Hips",
+  bip001pelvis: "Hips",
+  spine: "Spine",
+  bip001spine: "Spine",
+  spine1: "Spine1",
+  bip001spine1: "Spine1",
+  spine2: "Spine2",
+  bip001spine2: "Spine2",
+  neck: "Neck",
+  bip001neck: "Neck",
+  head: "Head",
+  bip001head: "Head",
+  // Arms (Bip001 uses Clavicle / UpperArm / Forearm / Hand)
+  lclavicle: "LeftShoulder",
+  bip001lclavicle: "LeftShoulder",
+  rclavicle: "RightShoulder",
+  bip001rclavicle: "RightShoulder",
+  lupperarm: "LeftArm",
+  bip001lupperarm: "LeftArm",
+  rupperarm: "RightArm",
+  bip001rupperarm: "RightArm",
+  lforearm: "LeftForeArm",
+  bip001lforearm: "LeftForeArm",
+  rforearm: "RightForeArm",
+  bip001rforearm: "RightForeArm",
+  lhand: "LeftHand",
+  bip001lhand: "LeftHand",
+  rhand: "RightHand",
+  bip001rhand: "RightHand",
+  // Legs (Thigh / Calf / Foot / Toe0)
+  lthigh: "LeftUpLeg",
+  bip001lthigh: "LeftUpLeg",
+  rthigh: "RightUpLeg",
+  bip001rthigh: "RightUpLeg",
+  lcalf: "LeftLeg",
+  bip001lcalf: "LeftLeg",
+  rcalf: "RightLeg",
+  bip001rcalf: "RightLeg",
+  lfoot: "LeftFoot",
+  bip001lfoot: "LeftFoot",
+  rfoot: "RightFoot",
+  bip001rfoot: "RightFoot",
+  ltoe0: "LeftToeBase",
+  bip001ltoe0: "LeftToeBase",
+  rtoe0: "RightToeBase",
+  bip001rtoe0: "RightToeBase",
+  ltoe: "LeftToeBase",
+  rtoe: "RightToeBase",
+};
+
+/** Normalize bone name for BIP001 / Mixamo comparison (no separators). */
+export function normalizeBoneKey(raw: string): string {
+  return String(raw || "")
+    .replace(/^mixamorig:?/i, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
  * Reduce a raw target bone name to its canonical Mixamo suffix, or `null` when it
- * has no library equivalent (and should be left un-driven). Strips a leading
- * `mixamorig`/`mixamorig:` prefix, folds the two common spine/neck/head/hips
- * spelling variants shipped across rigs (`Spine01`/`Spine11` → `Spine1`,
- * `Spine02`/`Spine21` → `Spine2`, `Neck2` → `Neck`, `Head1` → `Head`,
- * `Hips1` → `Hips`), and matches the rest case-insensitively against
- * {@link CANONICAL_SUFFIXES}. Container/leaf bones with no library segment
- * (`Armature`, `head_end`, `headfront`, `HeadTop_End`, `*_End`) return `null`.
+ * has no library equivalent (and should be left un-driven). Supports:
+ * - Mixamo suffixes (`RightHand`, `Spine01` → `Spine1`)
+ * - `mixamorig*` / `mixamorig:*` prefixes
+ * - **grudge6 Bip001** (`Bip001 R Hand`, `Bip001_R_Hand`, `Bip001 Pelvis`, …)
+ *
+ * Container / finger / leaf bones (`R_hand_container`, `head_end`, `*_End`) return
+ * `null` — weapons attach via sockets, not Mixamo tracks.
  */
 export function canonicalSuffix(raw: string): CanonicalSuffix | null {
+  // Hand/weapon containers are sockets — never retarget Mixamo onto them.
+  if (/container|socket|attach|weapon_r|weapon_l|shield_container|quiver|bone_bag|bone_wood/i.test(raw)) {
+    return null;
+  }
+  // Fingers / toes beyond Toe0 — leave at rest
+  if (/finger|thumb|index|middle|ring|pinky|pinkie|toe1|toe2|nub|end/i.test(raw) && !/toe0|toebase/i.test(raw)) {
+    return null;
+  }
+
   let n = raw.replace(/^mixamorig:?/i, "");
+
+  // Bip001 (spaces or underscores) → Mixamo before generic suffix fold
+  const bipKey = normalizeBoneKey(n);
+  if (bipKey.startsWith("bip001") || BIP001_TO_MIXAMO[bipKey]) {
+    const mapped = BIP001_TO_MIXAMO[bipKey];
+    if (mapped) return mapped;
+    // Strip bip001 prefix and retry (e.g. bip001rhand already in table)
+    const stripped = bipKey.replace(/^bip001/, "");
+    if (BIP001_TO_MIXAMO[stripped]) return BIP001_TO_MIXAMO[stripped];
+  }
+
   if (/^Spine0*1$|^Spine11$/i.test(n)) n = "Spine1";
   else if (/^Spine0*2$|^Spine21$/i.test(n)) n = "Spine2";
   else if (/^Spine$/i.test(n)) n = "Spine";

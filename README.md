@@ -93,6 +93,7 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 |------|---------|
 | `/` | Hub (door select) |
 | `/danger` | Danger Room combat lab |
+| `/annihilate-demo` | Danger Room + grudge6 hero boot (`?hero=elf_worge`) |
 | `/play` | Play authored map |
 | `/genesis` | Warlord Genesis waves |
 | `/brawl` | Ruins Brawler |
@@ -125,16 +126,42 @@ npm run assets:pipeline        # full report + convert recipes
 npm run assets:convert:doctor  # grudge-convert backends
 npm run assets:convert -- raw/hero.fbx -o dist/production-assets/character/hero.glb --purpose character
 npm run ingest:rapier          # pull missing threejs-rapier lab assets/modules
+npm run ci:test                # retarget + annihilate hero unit tests
 npm run deploy:prod            # vercel-build + vercel --prod
+npm run smoke:prod:open        # live SPA/API/CDN probes
+npm run readiness:anims        # baked anim pack availability
 ```
 
-See **[docs/ASSET_PRODUCTION_PIPELINE.md](docs/ASSET_PRODUCTION_PIPELINE.md)**.
+See **[docs/ASSET_PRODUCTION_PIPELINE.md](docs/ASSET_PRODUCTION_PIPELINE.md)** · deploy: **[docs/PRODUCTION_DEPLOY.md](docs/PRODUCTION_DEPLOY.md)**.
+
+### Annihilate demo (grudge6 + Danger Room)
+
+Deep-link boots a **GrudgeAvatar** combat rig (not bare race slug):
+
+```
+/annihilate-demo?hero=elf_worge
+→ grudge:high-elves:unarmed + mesh_ids + unarmed skills
+→ Bip001 hands / R_hand_container · Mixamo retarget map · X dodge · F skills · MM
+```
+
+| Piece | Location |
+|-------|----------|
+| Hero parse + apply | `artifacts/animator/src/lib/annihilateHero.ts` |
+| Bip001 ↔ Mixamo | `artifacts/animator/src/three/retargetMap.ts` |
+| Hand bones | `artifacts/animator/src/three/grudge/skeleton.ts` · `Studio.reportHandSockets` |
+| Route aliases | `artifacts/animator/src/lib/openRoutes.ts` |
+| Doc | [`docs/ANNIHILATE_DEMO.md`](docs/ANNIHILATE_DEMO.md) |
+
+Live: [open…/annihilate-demo?hero=elf_worge](https://open.grudge-studio.com/annihilate-demo?hero=elf_worge) · portal [grudge-studio.com/annihilate-demo](https://grudge-studio.com/annihilate-demo?hero=elf_worge)
 
 ### Docs index
 
 | Doc | Topic |
 |-----|--------|
 | [OPEN_STACK.md](docs/OPEN_STACK.md) | Stack, deps, D1 vs Postgres, AI handoff |
+| [PRODUCTION_DEPLOY.md](docs/PRODUCTION_DEPLOY.md) | Deploy order, smoke, annihilate connections |
+| [ANNIHILATE_DEMO.md](docs/ANNIHILATE_DEMO.md) | Hero tokens, hands, Bip/Mixamo, controls |
+| [VOXEL_STORE_ASSET_REVIEW.md](docs/VOXEL_STORE_ASSET_REVIEW.md) | itch Voxel Store → GLB unit DB bake |
 | [SEED_WORLD_DEPLOY.md](docs/SEED_WORLD_DEPLOY.md) | Seed worlds, portals, chunkIdx, APIs |
 | [CHARACTER_AVATARS.md](docs/CHARACTER_AVATARS.md) | Portraits, voxel heads, Railway avatarUrl |
 | [CHARACTER_MESH_DELIVERY.md](docs/CHARACTER_MESH_DELIVERY.md) | Cloudflare R2 mesh/atlas/skeleton/anims |

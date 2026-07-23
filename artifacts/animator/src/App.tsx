@@ -566,6 +566,13 @@ export default function App() {
   const applyFleetLoadoutRef = useRef<() => void>(() => undefined);
   useEffect(() => {
     const applyAvatarAndLoadout = () => {
+      // Annihilate deep-link owns avatar/equip; do not let session updates clobber it.
+      try {
+        const q = new URLSearchParams(window.location.search);
+        if (q.get("hero") || q.get("character")) return;
+      } catch {
+        /* ignore */
+      }
       const ch = gameSession.selectedCharacter();
       if (!ch) return;
       const { avatarId: raceAvatar } = resolveRaceModel(ch);
@@ -859,8 +866,34 @@ export default function App() {
       };
       // Hand the live relay client to the engine for multiplayer rooms.
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
-      // Re-apply fleet mesh_ids / weapon after Studio exists (fixes race with loadout).
-      applyFleetLoadoutRef.current();
+      // Annihilate-demo (?hero=) wins over fleet loadout so async equip cannot
+      // overwrite grudge:race:preset + mesh_ids after boot.
+      void import("./lib/annihilateHero").then(({ heroFromLocation, applyAnnihilateHeroToStudio }) => {
+        const s = studioRef.current;
+        if (!s) return;
+        const spec = heroFromLocation();
+        if (spec) {
+          setCharacterId(spec.studioAvatarId);
+          applyAnnihilateHeroToStudio(s, spec);
+          if (spec.weaponId && spec.weaponId !== "none") {
+            setWeaponId(spec.weaponId as WeaponId);
+          }
+          const prev = s.onCharacterLoaded;
+          s.onCharacterLoaded = (id) => {
+            prev?.(id);
+            try {
+              const report = s.reportHandSockets();
+              if (report) console.info("[annihilate-demo] sockets", report);
+            } catch {
+              /* ignore */
+            }
+          };
+        } else {
+          // Normal Danger entry: fleet mesh_ids / weapon after Studio exists.
+          applyFleetLoadoutRef.current();
+        }
+        refreshAnim();
+      });
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start renderer", err);

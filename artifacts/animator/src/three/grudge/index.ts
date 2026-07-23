@@ -36,16 +36,16 @@ export {
   SPEAR_SKILLS,
   AXE_SKILLS,
   familyFromWeaponId,
+  familyFromAnimPack,
   skillPackForFamily,
 } from "./weaponSkillPacks";
-
 export {
   powerOfTenScale,
-  unifySkeletons,
-  findHandBone,
   normalizeBoneKey,
   buildBoneNameLookup,
   rematchClipToSkeleton,
+  unifySkeletons,
+  findHandBone,
 } from "./skeleton";
 
 export type { LoadedCharacter } from "./loadCharacter";

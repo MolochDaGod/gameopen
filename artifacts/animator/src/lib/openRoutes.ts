@@ -93,12 +93,22 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "danger",
     slug: "danger",
-    aliases: ["danger-room", "combat", "train", "sandbox"],
+    aliases: [
+      "danger-room",
+      "combat",
+      "train",
+      "sandbox",
+      // Annihilate demo = Danger Room stack + grudge6 hero boot (?hero=elf_worge)
+      "annihilate-demo",
+      "annihilate",
+      "annihilatetrainer",
+    ],
     // Danger Room only — do NOT steal GRUDOX Voxel Arcade cabinets
     // (racer = Voxel Velocity, zombie, z-brawl live on grudox.grudge-studio.com).
-    cabinets: ["danger", "danger-room", "explorer"],
+    cabinets: ["danger", "danger-room", "explorer", "annihilate", "annihilate-demo"],
     title: "Danger Room",
-    blurb: "Live combat sandbox — weapons, skills, training targets.",
+    blurb:
+      "Live combat sandbox — grudge6 Bip001, Mixamo retarget, weapon skills, dodge/MM/VFX. Deep-link: /annihilate-demo?hero=elf_worge",
     group: "combat",
     poster: "danger",
     tags: ["Combat", "PvP"],
@@ -453,10 +463,11 @@ export function resolveModeFromLocation(
 
 /**
  * Push or replace the URL to match mode (keeps search params except door/mode noise).
+ * When ?hero= is set (annihilate-demo deep-link), keep path `/annihilate-demo` so
+ * shareable grudge-studio.com/annihilate-demo?hero=elf_worge links stay stable.
  */
 export function syncUrlToMode(mode: AppMode, opts?: { replace?: boolean }): void {
   if (typeof window === "undefined") return;
-  const path = pathForMode(mode);
   const url = new URL(window.location.href);
   // Preserve fleet handoff flags for account deep-links
   const keepFrom = url.searchParams.get("from");
@@ -467,6 +478,11 @@ export function syncUrlToMode(mode: AppMode, opts?: { replace?: boolean }): void
   if (mode === "account") {
     if (keepFrom) url.searchParams.set("from", keepFrom);
     if (keepOpen) url.searchParams.set("open", keepOpen);
+  }
+  // Annihilate / grudge6 hero demo: keep pretty path when hero is in the query
+  let path = pathForMode(mode);
+  if (mode === "danger" && (url.searchParams.get("hero") || url.searchParams.get("character"))) {
+    path = "/annihilate-demo";
   }
   const next = `${path}${url.search}${url.hash}`;
   const cur = `${window.location.pathname}${window.location.search}${window.location.hash}`;

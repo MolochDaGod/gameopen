@@ -7,6 +7,7 @@ import { DjBooth } from "./DjBooth";
 import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
+import { findHandBone } from "./grudge/skeleton";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
 import { resolveHudPortrait } from "../lib/hudPortrait";
 import {
@@ -1959,6 +1960,30 @@ export class Studio {
     if (id === this.characterId && this.character && meshKey === this.lastSpawnMeshKey) return;
     this.lastSpawnMeshKey = meshKey;
     void this.spawnCharacter(id);
+  }
+
+  /**
+   * Production / annihilate-demo: hand + container socket names after grudge6 load.
+   * Empty string if no character or sockets unresolved.
+   */
+  reportHandSockets(): string {
+    const ch = this.character;
+    if (!ch) return "";
+    if (ch instanceof GrudgeAvatar && ch.sockets) {
+      const sock = ch.sockets;
+      const parts = [
+        sock.containerR?.name ? `R-socket:${sock.containerR.name}` : null,
+        sock.handR?.name ? `R-hand:${sock.handR.name}` : null,
+        sock.containerL?.name ? `L-socket:${sock.containerL.name}` : null,
+        sock.handL?.name ? `L-hand:${sock.handL.name}` : null,
+      ].filter(Boolean);
+      return parts.length ? parts.join(" · ") : "NO HAND BONES";
+    }
+    const r = findHandBone(ch.root, "R");
+    const l = findHandBone(ch.root, "L");
+    const parts = [r?.name ? `R:${r.name}` : null, l?.name ? `L:${l.name}` : null].filter(Boolean);
+    if (parts.length) return parts.join(" · ");
+    return ch.rightHand?.name ? `R:${ch.rightHand.name}` : "NO HAND BONES";
   }
 
   setWeapon(id: WeaponId) {
