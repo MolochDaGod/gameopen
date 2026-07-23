@@ -155,7 +155,7 @@ export function fitCharacterHeight(
   model.position.y -= box3.min.y;
   model.updateMatrixWorld(true);
 
-  return { scale: clamped, nativeHeight, unitFix };
+  return { scale: finalScale, nativeHeight, unitFix };
 }
 
 /**
