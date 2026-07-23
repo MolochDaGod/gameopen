@@ -828,8 +828,8 @@ export default function App() {
     void import("./lib/productionSystemsPattern").then(({ warmupProductionSurface }) => {
       void warmupProductionSurface("danger", {
         prefetchMeshes: [
-          "https://assets.grudge-studio.com/models/grudge6/races/WK_Characters.fbx",
-          "https://assets.grudge-studio.com/models/grudge6/races/ELF_Characters.fbx",
+          "models/grudge6/races/WK_Characters.fbx",
+          "models/grudge6/races/ELF_Characters.fbx",
         ],
       }).then((r) => {
         if (cancelled) return;
