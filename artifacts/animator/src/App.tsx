@@ -465,6 +465,11 @@ export default function App() {
   const [dangerStartOpen, setDangerStartOpen] = useState(true);
   const dangerStartOpenRef = useRef(true);
   dangerStartOpenRef.current = dangerStartOpen;
+  /** Parallel REST/DB warmup for danger surface (account + characters + health). */
+  const [dangerWarm, setDangerWarm] = useState<{ ready: boolean; detail: string }>({
+    ready: false,
+    detail: "Warming API + account…",
+  });
   /**
    * Sticky free-mouse (F8 / \): OS cursor in world, no auto pointer-lock.
    * F9 / ' re-locks aim. Panels force free mouse until closed.
@@ -812,6 +817,36 @@ export default function App() {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
       window.clearTimeout(t3);
+    };
+  }, [mode]);
+
+  // Parallel production warmup (Railway characters/account + health) while room boots.
+  useEffect(() => {
+    if (mode !== "danger") return;
+    let cancelled = false;
+    setDangerWarm({ ready: false, detail: "Warming API + account…" });
+    void import("./lib/productionSystemsPattern").then(({ warmupProductionSurface }) => {
+      void warmupProductionSurface("danger", {
+        prefetchMeshes: [
+          "https://assets.grudge-studio.com/models/grudge6/races/WK_Characters.fbx",
+          "https://assets.grudge-studio.com/models/grudge6/races/ELF_Characters.fbx",
+        ],
+      }).then((r) => {
+        if (cancelled) return;
+        const okN = Object.values(r.restOk).filter(Boolean).length;
+        const total = Object.keys(r.restOk).length || 1;
+        setDangerWarm({
+          ready: true,
+          detail: r.withinBudget
+            ? `Systems ready · ${okN}/${total} API · fleet loadout`
+            : `Systems ready (slow) · ${okN}/${total} API · continue`,
+        });
+      }).catch(() => {
+        if (!cancelled) setDangerWarm({ ready: true, detail: "Offline warmup — local combat OK" });
+      });
+    });
+    return () => {
+      cancelled = true;
     };
   }, [mode]);
 
@@ -2603,9 +2638,15 @@ export default function App() {
           {/* Same ENTER → pointer-lock gate as Danger Room */}
           {dangerStartOpen && !isMobile && (
             <DangerStartScreen
-              characterLabel={hud?.character ?? characterId}
+              characterLabel={
+                hud?.character ||
+                gameSession.selectedCharacter()?.name ||
+                characterId
+              }
               weaponLabel={hud?.weapon ?? weaponId}
               ready={!!hud || helpersLoad.progress >= 0.85}
+              warmReady={true}
+              warmDetail="Map play · same combat stack"
               onEnter={() => {
                 setDangerStartOpen(false);
                 if (freeMouseRef.current) {
@@ -2641,7 +2682,7 @@ export default function App() {
               <div className="click-hint">
                 <p>Click canvas to re-lock · or F8 free mouse</p>
                 <p className="dim">
-                  AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
+                  AA/DD dash · X roll · LMB attack/select · RMB focus · C parry
                 </p>
               </div>
             )}
@@ -2840,14 +2881,35 @@ export default function App() {
             <DockSurface layout={dangerLayout} controls={dangerDock} panels={dangerPanels} />
           </TipProvider>
 
-          {/* Sample-style start gate: ENTER → pointer lock (blocks canvas until ready) */}
+          {/* Start gate: ENTER → pointer lock; room preset + fleet warmup */}
           {dangerStartOpen && !isMobile && (
             <DangerStartScreen
-              characterLabel={hud?.character ?? characterId}
+              characterLabel={
+                hud?.character ||
+                gameSession.selectedCharacter()?.name ||
+                characterId
+              }
+              raceLabel={
+                gameSession.selectedCharacter()?.raceId
+                  ? String(gameSession.selectedCharacter()?.raceId)
+                  : undefined
+              }
               weaponLabel={hud?.weapon ?? weaponId}
               ready={!!hud || helpersLoad.progress >= 0.85}
+              warmReady={dangerWarm.ready}
+              warmDetail={dangerWarm.detail}
+              roomPreset={roomPreset}
+              roomOptions={ROOM_PRESET_LIST.map((p) => ({
+                id: p.id,
+                name: p.name,
+                blurb: p.blurb,
+              }))}
+              onRoomPreset={onRoomPreset}
+              onOpenAccount={() => navigate("account")}
               onEnter={() => {
                 setDangerStartOpen(false);
+                // Ensure selected arena is applied before combat
+                studioRef.current?.setRoomPreset(roomPreset);
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
                   studioRef.current?.flashMessage?.(
@@ -2857,7 +2919,6 @@ export default function App() {
                   return;
                 }
                 applyFreeMouse(false);
-                // Prefer canvas lock (engine InputState binds to renderer.domElement)
                 const canvas = mountRef.current?.querySelector("canvas");
                 if (canvas) {
                   canvas.requestPointerLock?.();
@@ -2865,7 +2926,7 @@ export default function App() {
                   document.body.requestPointerLock?.();
                 }
                 studioRef.current?.flashMessage?.(
-                  "DANGER · F8 free mouse · RMB focus · soft lock",
+                  "DANGER · F8 free mouse · RMB focus · LMB attack · X roll",
                   1.8,
                 );
               }}
@@ -2883,7 +2944,7 @@ export default function App() {
               <div className="click-hint">
                 <p>Click canvas to re-lock · or F8 free mouse</p>
                 <p className="dim">
-                  AA/DD dash · X roll · LMB select · RMB focus · Space wall jump
+                  AA/DD dash · X roll · LMB attack/select · RMB focus · C parry · E guard
                 </p>
               </div>
             )}

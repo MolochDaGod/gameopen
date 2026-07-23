@@ -77,6 +77,88 @@
   border: 1px solid rgba(100, 160, 220, 0.12);
 }
 
+.danger-start-presets {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+.danger-start-preset {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 160, 220, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(210, 230, 255, 0.92);
+  cursor: pointer;
+  font-family: "Inter", system-ui, sans-serif;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.danger-start-preset:hover {
+  border-color: rgba(80, 200, 255, 0.45);
+  background: rgba(20, 40, 70, 0.45);
+}
+
+.danger-start-preset.is-active {
+  border-color: rgba(62, 233, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(62, 233, 255, 0.25), 0 0 20px rgba(40, 140, 255, 0.15);
+  background: rgba(20, 50, 80, 0.55);
+}
+
+.danger-start-preset-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e8f4ff;
+}
+
+.danger-start-preset-blurb {
+  font-size: 11px;
+  color: rgba(170, 200, 230, 0.7);
+  line-height: 1.35;
+}
+
+.danger-start-status {
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: rgba(160, 210, 255, 0.75);
+  background: rgba(0, 30, 50, 0.35);
+  border: 1px solid rgba(80, 160, 220, 0.12);
+}
+
+.danger-start-status[data-ready="1"] {
+  color: rgba(120, 240, 190, 0.9);
+  border-color: rgba(60, 200, 140, 0.25);
+}
+
+.danger-start-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.danger-start-btn--ghost {
+  background: transparent !important;
+  border: 1px solid rgba(120, 180, 240, 0.28) !important;
+  color: rgba(180, 210, 245, 0.9) !important;
+  box-shadow: none !important;
+}
+
+.danger-start-btn--ghost:hover:not(:disabled) {
+  background: rgba(40, 80, 120, 0.35) !important;
+}
+
 .danger-start-keys kbd {
   display: inline-block;
   padding: 1px 6px;

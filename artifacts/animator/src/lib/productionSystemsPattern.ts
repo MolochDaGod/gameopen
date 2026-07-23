@@ -142,9 +142,12 @@ export const SURFACE_LOAD_PLAN: Record<
   danger: {
     pattern: "boot_gate",
     cinemaId: "danger_establish",
-    rest: ["health", "charactersWarlords"],
-    criticalMeshes: [],
-    notes: "BootGate + HelpersLoadScreen; optional short cinema first",
+    rest: ["health", "charactersWarlords", "account"],
+    criticalMeshes: [
+      // Prefer CDN race kits — HEAD probes only during warmup budget
+      // (absolute URLs resolved at call site via assets CDN)
+    ],
+    notes: "BootGate + HelpersLoadScreen; parallel REST account/characters before ENTER",
   },
   home_island: {
     pattern: "cinema_flow",

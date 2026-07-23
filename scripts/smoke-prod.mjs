@@ -90,10 +90,35 @@ await probe(
   { expect: "html" },
 );
 
-// Same-origin API (must not return SPA HTML)
+// Same-origin API (must not return SPA HTML) — Railway DB proxies
 await probe("api-characters", `${BASE}/api/characters`, {
   expect: "jsonish",
   sample: true,
+});
+await probe("api-characters-warlords", `${BASE}/api/characters?era=warlords`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("api-account", `${BASE}/api/account`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("api-content-skills", `${BASE}/api/content/skills`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("api-content-weapons", `${BASE}/api/content/weapons`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("api-asset-registry", `${BASE}/api/asset-registry?limit=3`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
 });
 await probe("api-health", `${BASE}/api/health`, {
   expect: "jsonish",

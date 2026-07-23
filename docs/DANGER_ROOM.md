@@ -2,7 +2,18 @@
 
 **Live:** https://open.grudge-studio.com/danger  
 **Alias:** https://gameopen.vercel.app/danger  
-**Source:** `artifacts/animator` · engine `src/three/Studio.ts`
+**Source:** `artifacts/animator` · engine `src/three/Studio.ts`  
+**Package:** gameopen `1.2.0` — start gate room presets + parallel REST warmup (account/characters)
+
+### Start gate (ENTER flow)
+
+| Field | Source |
+|-------|--------|
+| Character / race | Fleet `GameSession.selectedCharacter` + Studio loadout |
+| Weapon | Live HUD / weaponId |
+| Arena | `RoomPresets` (holo / foundry / colosseum) via start chips |
+| Warmup | `warmupProductionSurface("danger")` — `/api/health`, characters, account |
+| Controls legend | `hud/quickActions.ts` SSOT (not ad-hoc docs) |
 
 ---
 
