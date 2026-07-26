@@ -25,6 +25,13 @@ import {
   AIM_HARD_MAX,
   AIM_FREE_MAX,
 } from "./aim/AimSystem";
+import {
+  DirectionStick,
+  sampleCombatDirection,
+  meleeImpactZone,
+  barrelSpawn,
+} from "./combat/directionStick";
+import { meleeImpactRadiusBonus } from "./combat/meleeStrikeFx";
 import { Vfx, type TurretHandle, type TurretVariant } from "./Vfx";
 import { AbilityOrchestrator } from "./abilities/abilityOrchestrator";
 import { deployAbility, getAbility, kitAbility, statusAbility, vfxSkill } from "./abilities/abilityRegistry";
@@ -684,6 +691,11 @@ export class Studio {
   private swingTimer = 0;
   /** Slash colour of the in-progress swing, used by the clean blade-trail ribbon. */
   private swingColor = 0x9fe8ff;
+  /**
+   * Sticky aim / weapon / muzzle direction so mouse + blade stay coherent across
+   * combo stages (see combat/directionStick.ts).
+   */
+  private readonly directionStick = new DirectionStick();
   /** 3-hit melee combo state: next stage (0-2), chain window, and a brief lock. */
   private comboIndex = 0;
   private comboTimer = 0;
@@ -2417,8 +2429,18 @@ export class Studio {
 
     // Acquire the crosshair target and steer the strike toward it (steer blend
     // scales with `direction`), then commit the body facing before striking.
+    // Mouse free-aim (crosshair ray) + sticky blade direction so "right at mouse"
+    // and weapon edge stay coherent through the combo.
     const target = this.pickCrosshairTarget(combat);
-    const aim = this.controller.forward();
+    const bodyFwd = this.controller.forward();
+    const ray = this.crosshairRay();
+    const mouseAim = new THREE.Vector3(ray.direction.x, 0, ray.direction.z);
+    if (mouseAim.lengthSq() > 1e-6) mouseAim.normalize();
+    else mouseAim.copy(bodyFwd);
+    // Blend body facing with mouse aim (direction combat stat opens the blend)
+    const aim = bodyFwd.clone().lerp(mouseAim, THREE.MathUtils.lerp(0.45, 0.9, dirN));
+    if (aim.lengthSq() > 1e-6) aim.normalize();
+    else aim.copy(bodyFwd);
     const dir = aim.clone();
     let targetDist = Infinity;
     if (target) {
@@ -2427,6 +2449,29 @@ export class Studio {
       const steer = THREE.MathUtils.clamp(THREE.MathUtils.lerp(0.3, 1, dirN) * this.params.attackSteer, 0, 1);
       dir.lerp(planar.dir, steer).normalize();
     }
+    // Sticky sample: grip→tip + aim so dashes/projectiles follow the steel
+    const tipW = new THREE.Vector3();
+    const gripW = new THREE.Vector3();
+    let tip: THREE.Vector3 | null = null;
+    let grip: THREE.Vector3 | null = null;
+    if (this.mounted?.tip) {
+      this.mounted.tip.getWorldPosition(tipW);
+      tip = tipW;
+      if (this.mounted.tip.parent) {
+        this.mounted.tip.parent.getWorldPosition(gripW);
+        grip = gripW;
+      }
+    }
+    const sample = sampleCombatDirection({
+      bodyPos: origin,
+      aimDir: dir,
+      tipWorld: tip,
+      gripWorld: grip,
+      stick: this.directionStick,
+      dt: 1 / 30,
+      opts: { aimWeight: 0.88, weaponWeight: 0.5, tipBias: 0.74 },
+    });
+    dir.copy(sample.forward);
     this.controller.faceToward(dir, 0.18);
 
     // State-dependent attack clip: air / after damage / enemy windup / stage,
@@ -2634,7 +2679,8 @@ export class Studio {
       const wid: WeaponId = weaponless ? "none" : this.weaponId;
       const fx = meleeStrikeFxFor(wid, stage, {
         finisher,
-        fourHit: this.playerGroup() === "polearm" || getWeapon(wid).group === "polearm",
+        // Polearm + heavy 2H use 4-stage Madarame chains (not WeaponGroup "polearm")
+        fourHit: isSpearWeapon(wid) || isHeavy2hWeapon(wid),
       });
       // Shared scriptable-weapon resolution: same path the AI opponents use.
       const strike = meleeStrike(
@@ -2644,8 +2690,40 @@ export class Studio {
       // Respect-through-range + counter window
       const counter = this.respectWindow > 0;
       const dmgMul = (verdict ? verdict.damageMul : 1) * (counter ? 1.5 : 1);
-      const center = this.character.root.position.clone().addScaledVector(dir, strike.reach);
-      center.y += 1.0;
+      // Directional stick + tip-biased zone of impact (not hip-centered sphere)
+      const tipW = new THREE.Vector3();
+      const gripW = new THREE.Vector3();
+      let tip: THREE.Vector3 | null = null;
+      let grip: THREE.Vector3 | null = null;
+      if (this.mounted?.tip) {
+        this.mounted.tip.getWorldPosition(tipW);
+        tip = tipW;
+        if (this.mounted.tip.parent) {
+          this.mounted.tip.parent.getWorldPosition(gripW);
+          grip = gripW;
+        }
+      }
+      const sample = sampleCombatDirection({
+        bodyPos: this.character.root.position,
+        aimDir: dir,
+        tipWorld: tip,
+        gripWorld: grip,
+        stick: this.directionStick,
+        dt: 0,
+        opts: { tipBias: 0.72 + Math.min(stage, 3) * 0.04 },
+      });
+      const zone = meleeImpactZone({
+        sample,
+        reach: strike.reach,
+        stage,
+        aoeRadius: fx.aoeRadius,
+        group: isSpearWeapon(wid)
+          ? "polearm"
+          : isHeavy2hWeapon(wid)
+            ? "melee-2h"
+            : getWeapon(wid).group,
+      });
+      const center = zone.center;
       const quat = new THREE.Quaternion().setFromEuler(
         new THREE.Euler(0, this.character.root.rotation.y, 0),
       );
@@ -2654,14 +2732,14 @@ export class Studio {
       let slashPos = pose ? pose.pos.clone() : center.clone();
       let slashQuat = pose ? pose.quat.clone() : quat.clone();
       if (this.mounted?.tip) {
-        const tip = new THREE.Vector3();
-        this.mounted.tip.getWorldPosition(tip);
-        slashPos = tip;
-        // Orient arc from grip→tip when tip exists
+        const tipPos = new THREE.Vector3();
+        this.mounted.tip.getWorldPosition(tipPos);
+        slashPos = tipPos;
+        // Orient arc from grip→tip when tip exists (sticky weapon direction)
         if (this.mounted.tip.parent) {
           const base = new THREE.Vector3();
           this.mounted.tip.parent.getWorldPosition(base);
-          const along = tip.clone().sub(base);
+          const along = tipPos.clone().sub(base);
           if (along.lengthSq() > 1e-5) {
             along.normalize();
             slashQuat = new THREE.Quaternion().setFromUnitVectors(
@@ -2670,6 +2748,11 @@ export class Studio {
             );
           }
         }
+      } else if (sample.weapon) {
+        slashQuat = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          sample.weapon,
+        );
       }
 
       // ── Deterministic slash arcs (profile-driven, never random) ──
@@ -2690,7 +2773,12 @@ export class Studio {
 
       // ── Projectile deploy (Getsuga ice-bow slash wave / bolt along swing) ──
       if (fx.projectile && fx.projectile.kind !== "none") {
-        const muzzle = this.muzzleOrigin?.(dir) ?? slashPos.clone();
+        // Barrel / tip spawn — sticky aim so waves leave near the edge, not the chest
+        const barrel = barrelSpawn(sample, 0.1);
+        const muzzle = tip
+          ? barrel.origin
+          : this.muzzleOrigin?.(dir) ?? slashPos.clone();
+        const projDir = barrel.dir.lengthSq() > 1e-6 ? barrel.dir : dir;
         if (fx.projectile.kind === "slash_wave") {
           const contactR = fx.projectile.contactRadius ?? 0.95;
           const projDmg = strike.damage * dmgMul * 0.35;
@@ -2737,7 +2825,7 @@ export class Studio {
           const aimPt = lockPt
             ? lockPt.clone().setY(lockPt.y + 0.2)
             : muzzle.clone().addScaledVector(dir, fx.projectile.range);
-          this.vfx.getsugaSlash(muzzle, dir, {
+          this.vfx.getsugaSlash(muzzle, projDir, {
             speed: fx.projectile.speed,
             range: fx.projectile.range,
             color: fx.projectile.color,
@@ -2757,7 +2845,7 @@ export class Studio {
         } else if (fx.projectile.kind === "bolt") {
           this.vfx.bolt(
             muzzle,
-            dir,
+            projDir,
             fx.projectile.color,
             fx.projectile.speed,
             fx.projectile.range,
@@ -2779,8 +2867,9 @@ export class Studio {
         }
       }
 
-      // Hit radius includes profile AoE bonus
-      const hitRadius = strike.radius + (fx.aoeRadius > 0 ? fx.aoeRadius * 0.35 : 0);
+      // Hit radius: mesh reach + zone-of-impact bonus (weapon family × stage × AoE)
+      const hitRadius =
+        Math.max(zone.radius, strike.radius) + meleeImpactRadiusBonus(wid, stage, fx);
       const payload: AttackPayload = {
         force: Math.max(finisher ? 2 : 1, fx.forceTier) as 1 | 2 | 3,
         damage: strike.damage * dmgMul,
@@ -2819,7 +2908,11 @@ export class Studio {
           );
         }
         const grp = this.playerGroup();
-        const bladed = grp === "melee-1h" || grp === "melee-2h" || grp === "polearm";
+        const bladed =
+          grp === "melee-1h" ||
+          grp === "melee-2h" ||
+          isSpearWeapon(wid) ||
+          isHeavy2hWeapon(wid);
         if (finisher || fx.kind === "finisher") {
           this.sfx?.play("heavyHit", center, { volume: 1 });
           this.sfx?.play("boneBreak", center, { volume: 0.55 });
@@ -7047,10 +7140,14 @@ export class Studio {
       this.mounted.tip.getWorldPosition(pos);
       // Nudge slightly along aim so tracers leave the bore, not the grip
       const aim = dir.clone();
+      // Prefer sticky forward when available so bullets stick to reticle
+      if (this.directionStick.forward.lengthSq() > 1e-6) {
+        aim.lerp(this.directionStick.forward, 0.35);
+      }
       aim.y = 0;
       if (aim.lengthSq() > 1e-6) {
         aim.normalize();
-        pos.addScaledVector(aim, 0.06);
+        pos.addScaledVector(aim, 0.08);
       }
     } else if (this.character) {
       // Prefer right-hand bone world pose when the tip socket is missing

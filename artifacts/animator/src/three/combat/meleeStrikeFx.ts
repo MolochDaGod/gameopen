@@ -484,18 +484,132 @@ const UNARMED: MeleeStrikeFxProfile[] = [
   },
 ];
 
+/** Shield bash / off-hand slam — short range, wide knock, little arc. */
+const SHIELD: MeleeStrikeFxProfile[] = [
+  {
+    id: "shield_bash",
+    kind: "light",
+    arcIndex: 0,
+    arc: arcParams({
+      rotate: 0,
+      scale: 0.65,
+      direction: 0,
+      bend: 0,
+      thickness: 1.1,
+      particles: 5,
+      colorHex: 0xc0d0e8,
+    }),
+    trailColor: 0xc0d0e8,
+    trailWindow: 0.28,
+    swingAura: true,
+    aoeRadius: 0.55,
+    aoeColor: 0xc0d0e8,
+    knockback: 2.6,
+    knockUp: 0.35,
+    fireAuraScale: 0.35,
+    forceTier: 2,
+  },
+  {
+    id: "shield_slam",
+    kind: "mid",
+    arcIndex: 1,
+    arc: arcParams({
+      rotate: 8,
+      scale: 0.85,
+      direction: 5,
+      bend: 0.05,
+      thickness: 1.2,
+      particles: 8,
+      colorHex: 0xa8c0e0,
+    }),
+    trailColor: 0xa8c0e0,
+    trailWindow: 0.35,
+    swingAura: true,
+    aoeRadius: 0.9,
+    aoeColor: 0xa8c0e0,
+    knockback: 3.4,
+    knockUp: 0.8,
+    fireAuraScale: 0.5,
+    forceTier: 2,
+  },
+  {
+    id: "shield_finisher",
+    kind: "finisher",
+    arcIndex: 2,
+    arc: arcParams({
+      rotate: 15,
+      scale: 1.05,
+      direction: 10,
+      bend: 0.1,
+      thickness: 1.35,
+      particles: 12,
+      colorHex: 0xffe08a,
+    }),
+    trailColor: 0xffe08a,
+    trailWindow: 0.42,
+    swingAura: true,
+    aoeRadius: 1.35,
+    aoeColor: 0xffc060,
+    knockback: 4.2,
+    knockUp: 2.2,
+    fireAuraScale: 0.75,
+    forceTier: 3,
+  },
+];
+
 function familyForWeapon(weaponId: WeaponId): MeleeStrikeFxProfile[] {
   const w = getWeapon(weaponId);
   const g = w.group || "";
   const id = weaponId.toLowerCase();
-  if (g === "melee-2h" || id.includes("great") || id.includes("hammer2h")) return TWO_HAND;
-  if (g === "polearm" || id.includes("spear") || id.includes("javelin") || id.includes("scythe"))
+  // WeaponGroup is unarmed|melee-1h|melee-2h|off-hand|ranged|magic — polearm/shield
+  // are identified by id / catalog kind, not group enum.
+  if (g === "melee-2h" || id.includes("great") || id.includes("hammer2h") || id.includes("greataxe"))
+    return TWO_HAND;
+  if (
+    id.includes("spear") ||
+    id.includes("javelin") ||
+    id.includes("scythe") ||
+    id.includes("halberd") ||
+    id.includes("pole") ||
+    id.includes("lance")
+  )
     return POLEARM;
-  if (g === "melee-1h" || id.includes("sword") || id.includes("axe") || id.includes("dagger") || id.includes("mace"))
+  if (id.includes("shield") || id.includes("buckler") || g === "off-hand") return SHIELD;
+  if (
+    g === "melee-1h" ||
+    id.includes("sword") ||
+    id.includes("axe") ||
+    id.includes("dagger") ||
+    id.includes("mace") ||
+    id.includes("knife")
+  )
     return ONE_HAND;
   if (id === "none" || g === "unarmed") return UNARMED;
   // Magic / ranged LMB fallbacks still use 1h arcs if they call melee path
   return ONE_HAND;
+}
+
+/**
+ * Extra contact radius (m) layered on sphere hits for zone-of-impact feel.
+ * Tuned per family + stage so 2H finishes wider than 1H lights.
+ */
+export function meleeImpactRadiusBonus(
+  weaponId: WeaponId,
+  stage: number,
+  fx: MeleeStrikeFxProfile,
+): number {
+  const w = getWeapon(weaponId);
+  const g = w.group || "";
+  const id = weaponId.toLowerCase();
+  let base = 0.12;
+  if (g === "melee-2h" || id.includes("great") || id.includes("hammer2h")) base = 0.28;
+  else if (id.includes("spear") || id.includes("javelin") || id.includes("halberd") || id.includes("pole"))
+    base = 0.1;
+  else if (id.includes("shield") || id.includes("buckler") || g === "off-hand") base = 0.22;
+  else if (g === "melee-1h") base = 0.16;
+  const stageBoost = stage * 0.05;
+  const aoe = fx.aoeRadius > 0 ? fx.aoeRadius * 0.32 : 0;
+  return base + stageBoost + aoe;
 }
 
 /**
