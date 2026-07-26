@@ -60,16 +60,24 @@ export class DjBooth {
     const gltfLoader = sharedGltfLoader();
     const fbxLoader = new FBXLoader();
 
+    // Mixamo dance FBX is stripped from Vercel (.vercelignore **/*.fbx) — optional.
+    const danceFbxP = loadFbxFirst(
+      "anim/animations/extra/hip-hop-dancing.fbx",
+      fbxLoader,
+      { sameOriginOnly: true },
+    )
+      .then((r) => r.group)
+      .catch(() => null);
     const [djGltf, boothGltf, danceFbx, skelSource] = await Promise.all([
       loadGltfFirst("models/racalvin.glb", gltfLoader),
       loadGltfFirst("models/dj-booth.glb", gltfLoader),
-      loadFbxFirst("anim/animations/extra/hip-hop-dancing.fbx", fbxLoader).then((r) => r.group),
+      danceFbxP,
       loadSkeletonSource(),
     ]);
     if (this.disposed) {
       this.disposeObject(djGltf.scene);
       this.disposeObject(boothGltf.scene);
-      this.disposeObject(danceFbx);
+      if (danceFbx) this.disposeObject(danceFbx);
       this.disposeObject(skelSource);
       return;
     }
@@ -105,8 +113,8 @@ export class DjBooth {
       this.current = this.idleAction;
     }
 
-    // Hip-hop dance: retarget the mixamorig FBX onto Racalvin's rig.
-    const rawDance = danceFbx.animations[0] ?? null;
+    // Hip-hop dance: retarget the mixamorig FBX onto Racalvin's rig (optional pack).
+    const rawDance = danceFbx?.animations?.[0] ?? null;
     if (target && rawDance) {
       const source = makeRetargetSource(skelSource);
       if (source) {

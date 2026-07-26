@@ -26,3 +26,34 @@ export function filterBindableTracks(
   if (bindable.length === clip.tracks.length) return clip;
   return new THREE.AnimationClip(clip.name, clip.duration, bindable, clip.blendMode);
 }
+
+/**
+ * Strip `.position` tracks from a clip bound to an already-grounded kit.
+ *
+ * grudge-character-correctness: hip/root position tracks after idle/attack
+ * sample cause hip-float, feet under terrain, and limb stretch when bone
+ * proportions differ between bake source and live race kit. Rotation-only is
+ * the default for grounded Controller characters (no true root-motion).
+ *
+ * @param keepRootPosition — when true, keep pelvis/hips position only (bob).
+ *   Default false for grudge6 combat kits.
+ */
+export function stripPositionTracks(
+  clip: THREE.AnimationClip,
+  opts?: { keepRootPosition?: boolean },
+): THREE.AnimationClip {
+  const keepRoot = opts?.keepRootPosition === true;
+  const kept = clip.tracks.filter((track) => {
+    const name = track.name;
+    const isPos =
+      name.endsWith(".position") ||
+      /\.position\[/.test(name) ||
+      name.includes(".position.");
+    if (!isPos) return true;
+    if (!keepRoot) return false;
+    const node = THREE.PropertyBinding.parseTrackName(name).nodeName || "";
+    return /pelvis|hips/i.test(node) && !/thigh|leg|foot|toe|spine|hand|arm/i.test(node);
+  });
+  if (kept.length === clip.tracks.length) return clip;
+  return new THREE.AnimationClip(clip.name, clip.duration, kept, clip.blendMode);
+}

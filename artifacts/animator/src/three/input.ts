@@ -82,7 +82,20 @@ export class InputState {
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.code);
   };
+  /**
+   * Last free-mouse client coords (canvas-relative aim). Updated when not
+   * pointer-locked so soft-lock select / free-aim follow the OS cursor.
+   */
+  clientX = 0;
+  clientY = 0;
+  /** True after at least one free-mouse mousemove over the canvas. */
+  hasClientPos = false;
+
   private onMouseMove = (e: MouseEvent) => {
+    // Always track free-cursor position for soft-lock / free-mouse aim.
+    this.clientX = e.clientX;
+    this.clientY = e.clientY;
+    this.hasClientPos = true;
     if (!this.locked) return;
     // Drop the first event after acquiring lock: its delta is unreliable and is
     // the usual source of the "camera snaps across the room" jolt.
@@ -107,7 +120,10 @@ export class InputState {
       this.mouseDX = 0;
       this.mouseDY = 0;
     } else {
-      this.keys.clear();
+      // Unlock must NOT clear WASD / edge presses — free-mouse sticky and ESC
+      // exit should keep locomotion. Only drop look deltas + tap queues.
+      this.mouseDX = 0;
+      this.mouseDY = 0;
       this.doubleTaps.clear();
       this.tripleTaps.clear();
       this.pressed.clear();

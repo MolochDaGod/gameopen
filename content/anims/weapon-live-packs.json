@@ -1,0 +1,359 @@
+{
+  "version": 1,
+  "updated": "2026-07-25",
+  "description": "When a weapon is equipped, which baked anim pack is LIVE (and role contract). Fallbacks keep combat playable when pack bake is incomplete.",
+  "policy": {
+    "preferredHost": "same-origin",
+    "bakeRoot": "anims/baked",
+    "mixamoRoot": "anim",
+    "integrity": "sha256",
+    "stripPositionTracks": true,
+    "skeleton": "Bip001",
+    "notes": [
+      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal.",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked).",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Verify SHA on bake input; ship baked JSON.",
+      "Never load locomotion/running (banned run-to-roll)."
+    ]
+  },
+  "sharedTraversal": {
+    "pack": "traversal",
+    "roles": {
+      "jump": "locomotion/jump",
+      "dodge": "locomotion/dodging",
+      "dodgeF": "longbow/standing dodge forward",
+      "dodgeL": "longbow/standing dodge left",
+      "dodgeR": "longbow/standing dodge right"
+    },
+    "alwaysLoadWithWeapon": true
+  },
+  "roleContract": {
+    "required": ["idle", "walk", "run", "attack"],
+    "recommended": ["sprint", "jump", "dodge", "skill1", "skill2", "skill3", "skill4"],
+    "optional": ["hurt", "death", "block", "parry", "cast"]
+  },
+  "weapons": {
+    "none": {
+      "label": "Unarmed",
+      "animPack": "unarmed",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "unarmed/fight_idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "uploads_2026_06/locomotion/torch run forward",
+        "attack": "unarmed/punching"
+      },
+      "liveWhenIncomplete": {
+        "note": "unarmed attack bake missing → polearm attack until punch bake",
+        "idle": "unarmed/fight_idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "uploads_2026_06/locomotion/torch run forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/striker/fight-idle.fbx",
+        "anim/striker/punch-combo.fbx",
+        "anim/striker/quick-kick.fbx"
+      ],
+      "skillSlots": ["striker_kick", "striker_combo", "striker_flip", "striker_uppercut"]
+    },
+    "sword": {
+      "label": "1H Sword",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "sword_shield/sword and shield idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "sword_shield/sword and shield run",
+        "attack": "sword_shield/sword and shield attack"
+      },
+      "liveWhenIncomplete": {
+        "note": "sword_shield idle/attack not baked yet → polearm + shared loco",
+        "idle": "polearm/idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "sword_shield/sword and shield run",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/sword/sword-and-shield-idle.fbx",
+        "anim/sword/sword-and-shield-run.fbx",
+        "anim/sword/sword-and-shield-attack.fbx",
+        "anim/sword/one-hand-sword-combo.fbx",
+        "anim/sword/slash-advance.fbx"
+      ],
+      "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"]
+    },
+    "shield": {
+      "label": "Shield (offhand / 1H stance)",
+      "animPack": "sword_shield",
+      "fallbackPack": "magic",
+      "liveRoles": {
+        "idle": "sword_shield/sword and shield idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "sword_shield/sword and shield run",
+        "attack": "sword_shield/sword and shield attack"
+      },
+      "inheritsFrom": "sword"
+    },
+    "axe": {
+      "label": "1H Axe",
+      "animPack": "sword_shield",
+      "fallbackPack": "magic",
+      "liveRoles": {
+        "idle": "sword_shield/sword and shield idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "sword_shield/sword and shield run",
+        "attack": "sword_shield/sword and shield attack"
+      },
+      "inheritsFrom": "sword"
+    },
+    "dagger": {
+      "label": "Daggers",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "sword",
+      "mixamoSources": ["anim/knife/knife-idle.fbx", "anim/knife/stabbing.fbx"],
+      "skillSlots": ["dagger_stab", "dagger_flurry", "dagger_backstab", "dagger_smoke"]
+    },
+    "mace": {
+      "label": "1H Mace",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "sword",
+      "mixamoSources": ["anim/mace/hell-slammer-a.fbx"],
+      "skillSlots": ["mace_crush", "mace_slam", "mace_whirl", "mace_ground"]
+    },
+    "hammer": {
+      "label": "1H Hammer",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "mace",
+      "skillSlots": ["hammer_pound", "hammer_quake", "hammer_spin", "hammer_meteor"]
+    },
+    "spear": {
+      "label": "Spear / Lance",
+      "animPack": "polearm",
+      "fallbackPack": null,
+      "liveRoles": {
+        "idle": "polearm/idle",
+        "walk": "polearm/walk",
+        "run": "polearm/run",
+        "attack": "polearm/attack",
+        "skill1": "polearm/skill1",
+        "skill2": "polearm/skill2",
+        "skill3": "polearm/skill3",
+        "skill4": "polearm/skill4",
+        "special": "polearm/special",
+        "thrust": "polearm/thrust",
+        "overhead": "polearm/overhead"
+      },
+      "mixamoSources": ["anim/spear/spear1.fbx", "anim/spear/lance-spartan.fbx"],
+      "skillSlots": ["spear_thrust", "spear_lunge", "spear_impale", "spear_rush"]
+    },
+    "javelin": {
+      "label": "Javelin",
+      "animPack": "polearm",
+      "fallbackPack": null,
+      "inheritsFrom": "spear"
+    },
+    "greatsword": {
+      "label": "2H Greatsword",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "twohand/idle",
+        "walk": "twohand/walk",
+        "run": "twohand/run",
+        "attack": "twohand/attack"
+      },
+      "liveWhenIncomplete": {
+        "note": "twohand bake missing → polearm roles live until bake",
+        "idle": "polearm/idle",
+        "walk": "polearm/walk",
+        "run": "polearm/run",
+        "attack": "polearm/attack",
+        "skill1": "polearm/skill1",
+        "skill2": "polearm/skill2",
+        "skill3": "polearm/skill3",
+        "skill4": "polearm/skill4"
+      },
+      "mixamoSources": [
+        "anim/greatsword/great-sword-idle.fbx",
+        "anim/greatsword/great-sword-run.fbx",
+        "anim/greatsword/great-sword-slash.fbx",
+        "anim/greatsword/great-sword-combo.fbx"
+      ],
+      "skillSlots": ["gs_cleave", "gs_whirlwind", "gs_bladestorm", "gs_apocalypse"]
+    },
+    "greataxe": {
+      "label": "2H Greataxe",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "greatsword",
+      "mixamoSources": ["anim/greataxe/great-axe-combo.fbx"]
+    },
+    "hammer2h": {
+      "label": "2H War Hammer",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "greatsword"
+    },
+    "scythe": {
+      "label": "Reaper Scythe",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "greatsword"
+    },
+    "bow": {
+      "label": "Longbow",
+      "animPack": "longbow",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "longbow/standing idle 01",
+        "walk": "longbow/standing walk forward",
+        "run": "longbow/standing run forward",
+        "attack": "longbow/standing aim recoil"
+      },
+      "liveWhenIncomplete": {
+        "note": "longbow idle/attack bake gaps → polearm idle/attack + longbow walk/run",
+        "idle": "polearm/idle",
+        "walk": "longbow/standing walk forward",
+        "run": "longbow/standing run forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/bow/standing-idle-01.fbx",
+        "anim/bow/standing-walk-forward.fbx",
+        "anim/bow/standing-run-forward.fbx",
+        "anim/bow/standing-aim-recoil.fbx",
+        "anim/bow/shooting-arrow.fbx"
+      ],
+      "skillSlots": ["bow_quick_shot", "bow_multishot", "bow_arrow_rain", "bow_bear_trap"]
+    },
+    "longbow": {
+      "label": "Longbow (alias)",
+      "animPack": "longbow",
+      "fallbackPack": "magic",
+      "inheritsFrom": "bow"
+    },
+    "crossbow": {
+      "label": "Crossbow",
+      "animPack": "crossbow",
+      "fallbackPack": "longbow",
+      "liveRoles": {
+        "idle": "crossbow/idle",
+        "walk": "crossbow/walk",
+        "run": "crossbow/run",
+        "attack": "crossbow/shoot"
+      },
+      "liveWhenIncomplete": {
+        "note": "crossbow bake + longbow idle/recoil missing → polearm idle/attack + longbow walk/run",
+        "idle": "polearm/idle",
+        "walk": "longbow/standing walk forward",
+        "run": "longbow/standing run forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [],
+      "skillSlots": ["xbow_heavy_bolt", "xbow_barrage", "xbow_knockback_bolt", "xbow_sweeping_bolt"]
+    },
+    "staff": {
+      "label": "Arcane Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "magic/standing idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "magic/Standing Run Forward",
+        "attack": "magic/standing 1h cast spell 01"
+      },
+      "liveWhenIncomplete": {
+        "note": "magic idle/attack not baked → polearm + magic walk/run",
+        "idle": "polearm/idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "magic/Standing Run Forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ]
+    },
+    "staffFire": { "inheritsFrom": "staff", "label": "Fire Staff", "animPack": "magic" },
+    "staffIce": { "inheritsFrom": "staff", "label": "Ice Staff", "animPack": "magic" },
+    "staffStorm": { "inheritsFrom": "staff", "label": "Storm Staff", "animPack": "magic" },
+    "staffNature": { "inheritsFrom": "staff", "label": "Nature Staff", "animPack": "magic" },
+    "staffHoly": { "inheritsFrom": "staff", "label": "Holy Staff", "animPack": "magic" },
+    "wand": { "inheritsFrom": "staff", "label": "Wand", "animPack": "magic" },
+    "tome": { "inheritsFrom": "staff", "label": "Tome", "animPack": "magic" },
+    "rifle": {
+      "label": "Rifle",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "rifle/idle",
+        "walk": "rifle/walk",
+        "run": "rifle/run",
+        "attack": "rifle/fire"
+      },
+      "liveWhenIncomplete": {
+        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack (unarmed punch not baked)",
+        "idle": "unarmed/fight_idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "uploads_2026_06/locomotion/torch run forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/rifle/idle.fbx",
+        "anim/rifle/idle-aiming.fbx",
+        "anim/rifle/run-forward.fbx"
+      ],
+      "skillSlots": ["rifle_shot", "rifle_burst", "rifle_reload_bash", "rifle_snipe"]
+    },
+    "hunter-rifle": {
+      "label": "Sniper Rifle",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "rifle",
+      "skillSlots": ["sniper_shot", "sniper_hold", "sniper_mark", "sniper_kill"]
+    },
+    "shotgun": {
+      "label": "Shotgun",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "rifle",
+      "skillSlots": ["shotgun_blast", "shotgun_pump", "shotgun_slug", "shotgun_knockback"]
+    },
+    "pistol": {
+      "label": "Pistol",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "liveRoles": {
+        "idle": "rifle/idle",
+        "walk": "rifle/walk",
+        "run": "rifle/run",
+        "attack": "rifle/fire"
+      },
+      "liveWhenIncomplete": {
+        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack",
+        "idle": "unarmed/fight_idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "uploads_2026_06/locomotion/torch run forward",
+        "attack": "polearm/attack"
+      },
+      "mixamoSources": [
+        "anim/pistol/idle.fbx",
+        "anim/pistol/walk-forward.fbx",
+        "anim/pistol/run-forward.fbx",
+        "anim/pistol/gunplay.fbx"
+      ],
+      "skillSlots": ["pistol_shot", "pistol_double", "pistol_fan", "pistol_reload"]
+    },
+    "gunblade": {
+      "label": "Gunblade",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "inheritsFrom": "sword"
+    }
+  }
+}

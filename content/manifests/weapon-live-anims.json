@@ -1,0 +1,1959 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-25T09:17:14.913Z",
+  "policy": {
+    "preferredHost": "same-origin",
+    "bakeRoot": "anims/baked",
+    "mixamoRoot": "anim",
+    "integrity": "sha256",
+    "stripPositionTracks": true,
+    "skeleton": "Bip001",
+    "notes": [
+      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal.",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked).",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Verify SHA on bake input; ship baked JSON.",
+      "Never load locomotion/running (banned run-to-roll)."
+    ]
+  },
+  "sharedTraversal": {
+    "pack": "traversal",
+    "roles": {
+      "jump": "locomotion/jump",
+      "dodge": "locomotion/dodging",
+      "dodgeF": "longbow/standing dodge forward",
+      "dodgeL": "longbow/standing dodge left",
+      "dodgeR": "longbow/standing dodge right"
+    },
+    "alwaysLoadWithWeapon": true,
+    "live": {
+      "jump": {
+        "bakeRel": "locomotion/jump",
+        "status": "ready",
+        "sha256": "ea4d31f8e975b1c69f38f1a2a86e683f46fd91aa08080426bda064923e3e212d"
+      },
+      "dodge": {
+        "bakeRel": "locomotion/dodging",
+        "status": "ready",
+        "sha256": "405c27f3b46f9e4999afc56e5e5e3e2314aa722266a800c96df35a0356b30fad"
+      },
+      "dodgeF": {
+        "bakeRel": "longbow/standing dodge forward",
+        "status": "ready",
+        "sha256": "09a0eac1aed7afb912e5a0d5e07ceb647bf9586c7ca15cd4dbcebcb007917b89"
+      },
+      "dodgeL": {
+        "bakeRel": "longbow/standing dodge left",
+        "status": "ready",
+        "sha256": "e89cb3e581495f099b90bb457831904a5f8f3302be35d7fb40e642270c7a14f3"
+      },
+      "dodgeR": {
+        "bakeRel": "longbow/standing dodge right",
+        "status": "ready",
+        "sha256": "cbc89955e241f65333c94d164df7c2a01532164fdf401f64a72f0e70dc313d34"
+      }
+    }
+  },
+  "roleContract": {
+    "required": [
+      "idle",
+      "walk",
+      "run",
+      "attack"
+    ],
+    "recommended": [
+      "sprint",
+      "jump",
+      "dodge",
+      "skill1",
+      "skill2",
+      "skill3",
+      "skill4"
+    ],
+    "optional": [
+      "hurt",
+      "death",
+      "block",
+      "parry",
+      "cast"
+    ]
+  },
+  "weapons": {
+    "none": {
+      "label": "Unarmed",
+      "animPack": "unarmed",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "unarmed/fight_idle",
+          "status": "ready",
+          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
+          "status": "ready",
+          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "striker_kick",
+        "striker_combo",
+        "striker_flip",
+        "striker_uppercut"
+      ],
+      "mixamoSources": [
+        "anim/striker/fight-idle.fbx",
+        "anim/striker/punch-combo.fbx",
+        "anim/striker/quick-kick.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/striker/fight-idle.fbx",
+          "sha256": "5b5d530bbe43bddfc60130e536e0109237a69a1a4a12ced347337345f5dfdfb4",
+          "bytes": 369840,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/striker/punch-combo.fbx",
+          "sha256": "68b8e03190321e6ae6d6a362079d2e8041d2ab8cbc463c687904bc25d52b5c15",
+          "bytes": 310656,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/striker/quick-kick.fbx",
+          "sha256": "b659f517aaa6da9f903b976f06ef5ef109f91be9c9216d33ecfaa3c3a729827d",
+          "bytes": 155888,
+          "status": "present"
+        }
+      ]
+    },
+    "sword": {
+      "label": "1H Sword",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "sword_slash",
+        "sword_two_hit",
+        "sword_spin_high",
+        "sword_dash"
+      ],
+      "mixamoSources": [
+        "anim/sword/sword-and-shield-idle.fbx",
+        "anim/sword/sword-and-shield-run.fbx",
+        "anim/sword/sword-and-shield-attack.fbx",
+        "anim/sword/one-hand-sword-combo.fbx",
+        "anim/sword/slash-advance.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/sword/sword-and-shield-idle.fbx",
+          "sha256": "175e57a2da4857c5700a288036c5b33359044e7cf7a25fccdc1b4c19ed5d1654",
+          "bytes": 222609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-run.fbx",
+          "sha256": "a518ed95cdcc9dd1eaa623ff55d19b5c51d17ab477355d8fb00d893dbe614503",
+          "bytes": 141425,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-attack.fbx",
+          "sha256": "0ac0ded563251f67dc6226ff7f355c197ee867b2bcffc313e9f6f260991f81f3",
+          "bytes": 213745,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/one-hand-sword-combo.fbx",
+          "sha256": "2c3897201562d7a205c263523a6a162a6f573dc9059fe9903ec61757f9c1add2",
+          "bytes": 242848,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/slash-advance.fbx",
+          "sha256": "5cf8435545003c7fe9a9ff77800f132e14f3bbe16c74f285790337078131c360",
+          "bytes": 199488,
+          "status": "present"
+        }
+      ]
+    },
+    "shield": {
+      "label": "Shield (offhand / 1H stance)",
+      "animPack": "sword_shield",
+      "fallbackPack": "magic",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "sword_slash",
+        "sword_two_hit",
+        "sword_spin_high",
+        "sword_dash"
+      ],
+      "mixamoSources": [
+        "anim/sword/sword-and-shield-idle.fbx",
+        "anim/sword/sword-and-shield-run.fbx",
+        "anim/sword/sword-and-shield-attack.fbx",
+        "anim/sword/one-hand-sword-combo.fbx",
+        "anim/sword/slash-advance.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/sword/sword-and-shield-idle.fbx",
+          "sha256": "175e57a2da4857c5700a288036c5b33359044e7cf7a25fccdc1b4c19ed5d1654",
+          "bytes": 222609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-run.fbx",
+          "sha256": "a518ed95cdcc9dd1eaa623ff55d19b5c51d17ab477355d8fb00d893dbe614503",
+          "bytes": 141425,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-attack.fbx",
+          "sha256": "0ac0ded563251f67dc6226ff7f355c197ee867b2bcffc313e9f6f260991f81f3",
+          "bytes": 213745,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/one-hand-sword-combo.fbx",
+          "sha256": "2c3897201562d7a205c263523a6a162a6f573dc9059fe9903ec61757f9c1add2",
+          "bytes": 242848,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/slash-advance.fbx",
+          "sha256": "5cf8435545003c7fe9a9ff77800f132e14f3bbe16c74f285790337078131c360",
+          "bytes": 199488,
+          "status": "present"
+        }
+      ]
+    },
+    "axe": {
+      "label": "1H Axe",
+      "animPack": "sword_shield",
+      "fallbackPack": "magic",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "sword_slash",
+        "sword_two_hit",
+        "sword_spin_high",
+        "sword_dash"
+      ],
+      "mixamoSources": [
+        "anim/sword/sword-and-shield-idle.fbx",
+        "anim/sword/sword-and-shield-run.fbx",
+        "anim/sword/sword-and-shield-attack.fbx",
+        "anim/sword/one-hand-sword-combo.fbx",
+        "anim/sword/slash-advance.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/sword/sword-and-shield-idle.fbx",
+          "sha256": "175e57a2da4857c5700a288036c5b33359044e7cf7a25fccdc1b4c19ed5d1654",
+          "bytes": 222609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-run.fbx",
+          "sha256": "a518ed95cdcc9dd1eaa623ff55d19b5c51d17ab477355d8fb00d893dbe614503",
+          "bytes": 141425,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-attack.fbx",
+          "sha256": "0ac0ded563251f67dc6226ff7f355c197ee867b2bcffc313e9f6f260991f81f3",
+          "bytes": 213745,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/one-hand-sword-combo.fbx",
+          "sha256": "2c3897201562d7a205c263523a6a162a6f573dc9059fe9903ec61757f9c1add2",
+          "bytes": 242848,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/slash-advance.fbx",
+          "sha256": "5cf8435545003c7fe9a9ff77800f132e14f3bbe16c74f285790337078131c360",
+          "bytes": 199488,
+          "status": "present"
+        }
+      ]
+    },
+    "dagger": {
+      "label": "Daggers",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "dagger_stab",
+        "dagger_flurry",
+        "dagger_backstab",
+        "dagger_smoke"
+      ],
+      "mixamoSources": [
+        "anim/knife/knife-idle.fbx",
+        "anim/knife/stabbing.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/knife/knife-idle.fbx",
+          "sha256": "68f74bdd5ae2252662e4b51d8fba257244b17b3af31ac646a6be544307ccf566",
+          "bytes": 267984,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/knife/stabbing.fbx",
+          "sha256": "dd73e936208a0a2eddee72d214dced3aa2dbae85b7d9ce1c89e1cd7dab0e9ffd",
+          "bytes": 227024,
+          "status": "present"
+        }
+      ]
+    },
+    "mace": {
+      "label": "1H Mace",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "mace_crush",
+        "mace_slam",
+        "mace_whirl",
+        "mace_ground"
+      ],
+      "mixamoSources": [
+        "anim/mace/hell-slammer-a.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/mace/hell-slammer-a.fbx",
+          "sha256": "289ac7846e5b6fb9567a6526cfee5425ebf5a4edd899a7988255afa854b86df5",
+          "bytes": 332800,
+          "status": "present"
+        }
+      ]
+    },
+    "hammer": {
+      "label": "1H Hammer",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "hammer_pound",
+        "hammer_quake",
+        "hammer_spin",
+        "hammer_meteor"
+      ],
+      "mixamoSources": [
+        "anim/mace/hell-slammer-a.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/mace/hell-slammer-a.fbx",
+          "sha256": "289ac7846e5b6fb9567a6526cfee5425ebf5a4edd899a7988255afa854b86df5",
+          "bytes": 332800,
+          "status": "present"
+        }
+      ]
+    },
+    "spear": {
+      "label": "Spear / Lance",
+      "animPack": "polearm",
+      "fallbackPack": null,
+      "status": "ready",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "ready",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "ready",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "ready",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "ready",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        },
+        "skill1": {
+          "bakeRel": "polearm/skill1",
+          "status": "ready",
+          "sha256": "e20c1b063e5932fe1d3d147414de130d1ef8e7c86d17eeeabf5fa5813c709f22"
+        },
+        "skill2": {
+          "bakeRel": "polearm/skill2",
+          "status": "ready",
+          "sha256": "58c7d9ee2f6e2b33d7f24614ff7433d7c8bb105d037b21a31107567013881211"
+        },
+        "skill3": {
+          "bakeRel": "polearm/skill3",
+          "status": "ready",
+          "sha256": "0f266fb3959fe94b2b328c540981be61d08d620fdc41ff0416c67aa4f5478a70"
+        },
+        "skill4": {
+          "bakeRel": "polearm/skill4",
+          "status": "ready",
+          "sha256": "2f25690dfe2d6e0967adeb032bd1796e5f75f936eedc60ce4397b20d37957438"
+        },
+        "special": {
+          "bakeRel": "polearm/special",
+          "status": "ready",
+          "sha256": "c8359d8b601ec4d0eeb005395674331f52ac589942a9eef485289bc34a20751e"
+        },
+        "thrust": {
+          "bakeRel": "polearm/thrust",
+          "status": "ready",
+          "sha256": "a8d69a3fca4c1d8fe913ed1280a17c2b2dc8e551e407480177515fb319e63e8d"
+        },
+        "overhead": {
+          "bakeRel": "polearm/overhead",
+          "status": "ready",
+          "sha256": "bfe0e3bd0fc42b6942f5c4c6280d6260df46ea029e400e7c9ada3f471ba43f94"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "spear_thrust",
+        "spear_lunge",
+        "spear_impale",
+        "spear_rush"
+      ],
+      "mixamoSources": [
+        "anim/spear/spear1.fbx",
+        "anim/spear/lance-spartan.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/spear/spear1.fbx",
+          "sha256": "021f5789787a952de9762b25d879c72bd0b7586aa9f4495fa53dadc99ae44847",
+          "bytes": 228240,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/spear/lance-spartan.fbx",
+          "sha256": "8fd29070b0c87088ca081a547ffb2a56438d42c78bbeab826b371016c57bec7c",
+          "bytes": 156576,
+          "status": "present"
+        }
+      ]
+    },
+    "javelin": {
+      "label": "Javelin",
+      "animPack": "polearm",
+      "fallbackPack": null,
+      "status": "ready",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "ready",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "ready",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "ready",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "ready",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        },
+        "skill1": {
+          "bakeRel": "polearm/skill1",
+          "status": "ready",
+          "sha256": "e20c1b063e5932fe1d3d147414de130d1ef8e7c86d17eeeabf5fa5813c709f22"
+        },
+        "skill2": {
+          "bakeRel": "polearm/skill2",
+          "status": "ready",
+          "sha256": "58c7d9ee2f6e2b33d7f24614ff7433d7c8bb105d037b21a31107567013881211"
+        },
+        "skill3": {
+          "bakeRel": "polearm/skill3",
+          "status": "ready",
+          "sha256": "0f266fb3959fe94b2b328c540981be61d08d620fdc41ff0416c67aa4f5478a70"
+        },
+        "skill4": {
+          "bakeRel": "polearm/skill4",
+          "status": "ready",
+          "sha256": "2f25690dfe2d6e0967adeb032bd1796e5f75f936eedc60ce4397b20d37957438"
+        },
+        "special": {
+          "bakeRel": "polearm/special",
+          "status": "ready",
+          "sha256": "c8359d8b601ec4d0eeb005395674331f52ac589942a9eef485289bc34a20751e"
+        },
+        "thrust": {
+          "bakeRel": "polearm/thrust",
+          "status": "ready",
+          "sha256": "a8d69a3fca4c1d8fe913ed1280a17c2b2dc8e551e407480177515fb319e63e8d"
+        },
+        "overhead": {
+          "bakeRel": "polearm/overhead",
+          "status": "ready",
+          "sha256": "bfe0e3bd0fc42b6942f5c4c6280d6260df46ea029e400e7c9ada3f471ba43f94"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "spear_thrust",
+        "spear_lunge",
+        "spear_impale",
+        "spear_rush"
+      ],
+      "mixamoSources": [
+        "anim/spear/spear1.fbx",
+        "anim/spear/lance-spartan.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/spear/spear1.fbx",
+          "sha256": "021f5789787a952de9762b25d879c72bd0b7586aa9f4495fa53dadc99ae44847",
+          "bytes": 228240,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/spear/lance-spartan.fbx",
+          "sha256": "8fd29070b0c87088ca081a547ffb2a56438d42c78bbeab826b371016c57bec7c",
+          "bytes": 156576,
+          "status": "present"
+        }
+      ]
+    },
+    "greatsword": {
+      "label": "2H Greatsword",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "gs_cleave",
+        "gs_whirlwind",
+        "gs_bladestorm",
+        "gs_apocalypse"
+      ],
+      "mixamoSources": [
+        "anim/greatsword/great-sword-idle.fbx",
+        "anim/greatsword/great-sword-run.fbx",
+        "anim/greatsword/great-sword-slash.fbx",
+        "anim/greatsword/great-sword-combo.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/greatsword/great-sword-idle.fbx",
+          "sha256": "074ccd427e6887d7a3e88248c9e440093b91b3dc53bffebbffe0f7ef943163bb",
+          "bytes": 162417,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-run.fbx",
+          "sha256": "c0bd38bb43d0005b37359a2bf7ad3e5fefcbd5820c7359432cf78cf0a45be408",
+          "bytes": 134129,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-slash.fbx",
+          "sha256": "d27fdcc6501dfc354b0af72c6ec0dac8eeb8c492135c58116f666041a8c2b568",
+          "bytes": 164321,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-combo.fbx",
+          "sha256": "3881481bdc3216931427152b931717e9dbc3803df3b2da47abb86efb4ad72e79",
+          "bytes": 233376,
+          "status": "present"
+        }
+      ]
+    },
+    "greataxe": {
+      "label": "2H Greataxe",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "gs_cleave",
+        "gs_whirlwind",
+        "gs_bladestorm",
+        "gs_apocalypse"
+      ],
+      "mixamoSources": [
+        "anim/greataxe/great-axe-combo.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/greataxe/great-axe-combo.fbx",
+          "sha256": "167435c45ca6046ebe0e28401fd8899142531f55f16a4b75fc3221eb52a133f1",
+          "bytes": 271040,
+          "status": "present"
+        }
+      ]
+    },
+    "hammer2h": {
+      "label": "2H War Hammer",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "gs_cleave",
+        "gs_whirlwind",
+        "gs_bladestorm",
+        "gs_apocalypse"
+      ],
+      "mixamoSources": [
+        "anim/greatsword/great-sword-idle.fbx",
+        "anim/greatsword/great-sword-run.fbx",
+        "anim/greatsword/great-sword-slash.fbx",
+        "anim/greatsword/great-sword-combo.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/greatsword/great-sword-idle.fbx",
+          "sha256": "074ccd427e6887d7a3e88248c9e440093b91b3dc53bffebbffe0f7ef943163bb",
+          "bytes": 162417,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-run.fbx",
+          "sha256": "c0bd38bb43d0005b37359a2bf7ad3e5fefcbd5820c7359432cf78cf0a45be408",
+          "bytes": 134129,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-slash.fbx",
+          "sha256": "d27fdcc6501dfc354b0af72c6ec0dac8eeb8c492135c58116f666041a8c2b568",
+          "bytes": 164321,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-combo.fbx",
+          "sha256": "3881481bdc3216931427152b931717e9dbc3803df3b2da47abb86efb4ad72e79",
+          "bytes": 233376,
+          "status": "present"
+        }
+      ]
+    },
+    "scythe": {
+      "label": "Reaper Scythe",
+      "animPack": "twohand",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "polearm/walk",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1390a1005b9a74359b692480f464a4750ba9bfca6d8af5cba05fcc408f3582f4"
+        },
+        "run": {
+          "bakeRel": "polearm/run",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "6b19b8cd5954d976d5a141152f93d716fce2220004408b0a2dc81fa158289eed"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "gs_cleave",
+        "gs_whirlwind",
+        "gs_bladestorm",
+        "gs_apocalypse"
+      ],
+      "mixamoSources": [
+        "anim/greatsword/great-sword-idle.fbx",
+        "anim/greatsword/great-sword-run.fbx",
+        "anim/greatsword/great-sword-slash.fbx",
+        "anim/greatsword/great-sword-combo.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/greatsword/great-sword-idle.fbx",
+          "sha256": "074ccd427e6887d7a3e88248c9e440093b91b3dc53bffebbffe0f7ef943163bb",
+          "bytes": 162417,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-run.fbx",
+          "sha256": "c0bd38bb43d0005b37359a2bf7ad3e5fefcbd5820c7359432cf78cf0a45be408",
+          "bytes": 134129,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-slash.fbx",
+          "sha256": "d27fdcc6501dfc354b0af72c6ec0dac8eeb8c492135c58116f666041a8c2b568",
+          "bytes": 164321,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/greatsword/great-sword-combo.fbx",
+          "sha256": "3881481bdc3216931427152b931717e9dbc3803df3b2da47abb86efb4ad72e79",
+          "bytes": 233376,
+          "status": "present"
+        }
+      ]
+    },
+    "bow": {
+      "label": "Longbow",
+      "animPack": "longbow",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "longbow/standing walk forward",
+          "status": "ready",
+          "sha256": "e6002a44d4fb28315c2be3faf8ddfe61f0edd49ef94fd6752eefde063664a192"
+        },
+        "run": {
+          "bakeRel": "longbow/standing run forward",
+          "status": "ready",
+          "sha256": "f38ef9fa54b861ca11a8eea6549e1899fb6533385a4a2d0d3f5fcfd332127e80"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "bow_quick_shot",
+        "bow_multishot",
+        "bow_arrow_rain",
+        "bow_bear_trap"
+      ],
+      "mixamoSources": [
+        "anim/bow/standing-idle-01.fbx",
+        "anim/bow/standing-walk-forward.fbx",
+        "anim/bow/standing-run-forward.fbx",
+        "anim/bow/standing-aim-recoil.fbx",
+        "anim/bow/shooting-arrow.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/bow/standing-idle-01.fbx",
+          "sha256": "4c3ca1c3847616a06a1fd3d8d4d9b2a7ab92f6d6590fb7e18298f58628c8a2d7",
+          "bytes": 281953,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-walk-forward.fbx",
+          "sha256": "bf44e7067281f857ed6739c2597d6b198f9eab7a95026d70acec8306755bf3af",
+          "bytes": 163569,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-run-forward.fbx",
+          "sha256": "c173358ec9e5bc4e212ddf44100d224254c0ef664e9a1d590d7d551de4ddcf33",
+          "bytes": 148801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-aim-recoil.fbx",
+          "sha256": "44e8c4f41cf034d97f191d283eda2311174db61eceded773e51f8d547d003fe9",
+          "bytes": 140017,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/shooting-arrow.fbx",
+          "sha256": "aa48dc711a26848d3abe7b433b9336fe99eae204bfd3d36e9fc5e2dadde24024",
+          "bytes": 255712,
+          "status": "present"
+        }
+      ]
+    },
+    "longbow": {
+      "label": "Longbow (alias)",
+      "animPack": "longbow",
+      "fallbackPack": "magic",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "longbow/standing walk forward",
+          "status": "ready",
+          "sha256": "e6002a44d4fb28315c2be3faf8ddfe61f0edd49ef94fd6752eefde063664a192"
+        },
+        "run": {
+          "bakeRel": "longbow/standing run forward",
+          "status": "ready",
+          "sha256": "f38ef9fa54b861ca11a8eea6549e1899fb6533385a4a2d0d3f5fcfd332127e80"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "magic",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "bow_quick_shot",
+        "bow_multishot",
+        "bow_arrow_rain",
+        "bow_bear_trap"
+      ],
+      "mixamoSources": [
+        "anim/bow/standing-idle-01.fbx",
+        "anim/bow/standing-walk-forward.fbx",
+        "anim/bow/standing-run-forward.fbx",
+        "anim/bow/standing-aim-recoil.fbx",
+        "anim/bow/shooting-arrow.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/bow/standing-idle-01.fbx",
+          "sha256": "4c3ca1c3847616a06a1fd3d8d4d9b2a7ab92f6d6590fb7e18298f58628c8a2d7",
+          "bytes": 281953,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-walk-forward.fbx",
+          "sha256": "bf44e7067281f857ed6739c2597d6b198f9eab7a95026d70acec8306755bf3af",
+          "bytes": 163569,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-run-forward.fbx",
+          "sha256": "c173358ec9e5bc4e212ddf44100d224254c0ef664e9a1d590d7d551de4ddcf33",
+          "bytes": 148801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/standing-aim-recoil.fbx",
+          "sha256": "44e8c4f41cf034d97f191d283eda2311174db61eceded773e51f8d547d003fe9",
+          "bytes": 140017,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/bow/shooting-arrow.fbx",
+          "sha256": "aa48dc711a26848d3abe7b433b9336fe99eae204bfd3d36e9fc5e2dadde24024",
+          "bytes": 255712,
+          "status": "present"
+        }
+      ]
+    },
+    "crossbow": {
+      "label": "Crossbow",
+      "animPack": "crossbow",
+      "fallbackPack": "longbow",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "longbow",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "longbow/standing walk forward",
+          "status": "fallback",
+          "fromPack": "longbow",
+          "sha256": "e6002a44d4fb28315c2be3faf8ddfe61f0edd49ef94fd6752eefde063664a192"
+        },
+        "run": {
+          "bakeRel": "longbow/standing run forward",
+          "status": "fallback",
+          "fromPack": "longbow",
+          "sha256": "f38ef9fa54b861ca11a8eea6549e1899fb6533385a4a2d0d3f5fcfd332127e80"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "longbow",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "xbow_heavy_bolt",
+        "xbow_barrage",
+        "xbow_knockback_bolt",
+        "xbow_sweeping_bolt"
+      ],
+      "mixamoSources": [],
+      "mixamoIntegrity": []
+    },
+    "staff": {
+      "label": "Arcane Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "staffFire": {
+      "label": "Fire Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "staffIce": {
+      "label": "Ice Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "staffStorm": {
+      "label": "Storm Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "staffNature": {
+      "label": "Nature Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "staffHoly": {
+      "label": "Holy Staff",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "wand": {
+      "label": "Wand",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "tome": {
+      "label": "Tome",
+      "animPack": "magic",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "magic/Standing Run Forward",
+          "status": "ready",
+          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [],
+      "mixamoSources": [
+        "anim/magic/standing-1h-cast-spell-01.fbx",
+        "anim/magic-loco/standing-idle.fbx",
+        "anim/magic-loco/standing-walk-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/magic/standing-1h-cast-spell-01.fbx",
+          "sha256": "1dad103f9b105fc75e200d83220b5a181add8fe58fcc1a83473884f0d73be03f",
+          "bytes": 210801,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-idle.fbx",
+          "sha256": "b075ee67256638ade0e1355c855bc117e3f03f3a9c0a88f4b76071fc2969978e",
+          "bytes": 193089,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/magic-loco/standing-walk-forward.fbx",
+          "sha256": "b0c5acdbc404f865ccd3592e803afc70c9dcebdf8405e205da89694fe1fe7186",
+          "bytes": 160609,
+          "status": "present"
+        }
+      ]
+    },
+    "rifle": {
+      "label": "Rifle",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "unarmed/fight_idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "rifle_shot",
+        "rifle_burst",
+        "rifle_reload_bash",
+        "rifle_snipe"
+      ],
+      "mixamoSources": [
+        "anim/rifle/idle.fbx",
+        "anim/rifle/idle-aiming.fbx",
+        "anim/rifle/run-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/rifle/idle.fbx",
+          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
+          "bytes": 198881,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/idle-aiming.fbx",
+          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
+          "bytes": 196609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/run-forward.fbx",
+          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
+          "bytes": 176209,
+          "status": "present"
+        }
+      ]
+    },
+    "hunter-rifle": {
+      "label": "Sniper Rifle",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "unarmed/fight_idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "sniper_shot",
+        "sniper_hold",
+        "sniper_mark",
+        "sniper_kill"
+      ],
+      "mixamoSources": [
+        "anim/rifle/idle.fbx",
+        "anim/rifle/idle-aiming.fbx",
+        "anim/rifle/run-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/rifle/idle.fbx",
+          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
+          "bytes": 198881,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/idle-aiming.fbx",
+          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
+          "bytes": 196609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/run-forward.fbx",
+          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
+          "bytes": 176209,
+          "status": "present"
+        }
+      ]
+    },
+    "shotgun": {
+      "label": "Shotgun",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "unarmed/fight_idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "shotgun_blast",
+        "shotgun_pump",
+        "shotgun_slug",
+        "shotgun_knockback"
+      ],
+      "mixamoSources": [
+        "anim/rifle/idle.fbx",
+        "anim/rifle/idle-aiming.fbx",
+        "anim/rifle/run-forward.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/rifle/idle.fbx",
+          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
+          "bytes": 198881,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/idle-aiming.fbx",
+          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
+          "bytes": 196609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/run-forward.fbx",
+          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
+          "bytes": 176209,
+          "status": "present"
+        }
+      ]
+    },
+    "pistol": {
+      "label": "Pistol",
+      "animPack": "rifle",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "unarmed/fight_idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "pistol_shot",
+        "pistol_double",
+        "pistol_fan",
+        "pistol_reload"
+      ],
+      "mixamoSources": [
+        "anim/pistol/idle.fbx",
+        "anim/pistol/walk-forward.fbx",
+        "anim/pistol/run-forward.fbx",
+        "anim/pistol/gunplay.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/pistol/idle.fbx",
+          "sha256": "7bb5440ca9d615a55728b9eb4f532714029ad64775ce9c6d782ca5eebcd22b7b",
+          "bytes": 166593,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/pistol/walk-forward.fbx",
+          "sha256": "3728fd3b203ef007ca2e56724d0b4a02eef4adac535ecb628ad618944bdb18e9",
+          "bytes": 145857,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/pistol/run-forward.fbx",
+          "sha256": "ed7147d77654c6a98808819b5dd94e0269d0d25c67c9d8d9210cc1b61e665b0a",
+          "bytes": 176849,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/pistol/gunplay.fbx",
+          "sha256": "db10cd2e423628c4f2d400849570b54b0afe8e8212c0e15f7da3f90f98c81726",
+          "bytes": 126192,
+          "status": "present"
+        }
+      ]
+    },
+    "gunblade": {
+      "label": "Gunblade",
+      "animPack": "sword_shield",
+      "fallbackPack": "polearm",
+      "status": "degraded",
+      "liveRoles": {
+        "idle": {
+          "bakeRel": "polearm/idle",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "90a25d43f2b5d697a332bbef5dbf0842946c85220b1af130fccfe9da4596f35b"
+        },
+        "walk": {
+          "bakeRel": "magic/Standing Walk Forward",
+          "status": "ready",
+          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+        },
+        "run": {
+          "bakeRel": "sword_shield/sword and shield run",
+          "status": "ready",
+          "sha256": "20b95cc5b2289b4b8db37f330ee7a52777e3f6985b7dd5e5d8eb6e4f6533a926"
+        },
+        "attack": {
+          "bakeRel": "polearm/attack",
+          "status": "fallback",
+          "fromPack": "polearm",
+          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+        }
+      },
+      "missingRoles": [],
+      "skillSlots": [
+        "sword_slash",
+        "sword_two_hit",
+        "sword_spin_high",
+        "sword_dash"
+      ],
+      "mixamoSources": [
+        "anim/sword/sword-and-shield-idle.fbx",
+        "anim/sword/sword-and-shield-run.fbx",
+        "anim/sword/sword-and-shield-attack.fbx",
+        "anim/sword/one-hand-sword-combo.fbx",
+        "anim/sword/slash-advance.fbx"
+      ],
+      "mixamoIntegrity": [
+        {
+          "sourceRel": "anim/sword/sword-and-shield-idle.fbx",
+          "sha256": "175e57a2da4857c5700a288036c5b33359044e7cf7a25fccdc1b4c19ed5d1654",
+          "bytes": 222609,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-run.fbx",
+          "sha256": "a518ed95cdcc9dd1eaa623ff55d19b5c51d17ab477355d8fb00d893dbe614503",
+          "bytes": 141425,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/sword-and-shield-attack.fbx",
+          "sha256": "0ac0ded563251f67dc6226ff7f355c197ee867b2bcffc313e9f6f260991f81f3",
+          "bytes": 213745,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/one-hand-sword-combo.fbx",
+          "sha256": "2c3897201562d7a205c263523a6a162a6f573dc9059fe9903ec61757f9c1add2",
+          "bytes": 242848,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/sword/slash-advance.fbx",
+          "sha256": "5cf8435545003c7fe9a9ff77800f132e14f3bbe16c74f285790337078131c360",
+          "bytes": 199488,
+          "status": "present"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "bakedCount": 47,
+    "mixamoCount": 575,
+    "mixamoDeclared": 33,
+    "mixamoDeclaredPresent": 33,
+    "mixamoDeclaredAbsent": 0,
+    "weaponsReady": 2,
+    "weaponsDegraded": 27,
+    "weaponsIncomplete": 0
+  }
+}

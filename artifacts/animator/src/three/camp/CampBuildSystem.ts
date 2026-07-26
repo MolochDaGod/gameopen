@@ -262,9 +262,9 @@ export class CampBuildSystem {
     this.group.add(this.ghost);
     this.cbs.flash?.(
       def.claimGated
-        ? `GHOST · ${def.name} · blue = ok · LMB place · R rotate · Esc cancel`
-        : `GHOST · ${def.name} · LMB place · R rotate · Esc cancel`,
-      1.4,
+        ? `GHOST · ${def.name} · LMB place · RMB place+continue · R rotate · Esc`
+        : `GHOST · ${def.name} · LMB place · RMB place+continue · R rotate · Esc`,
+      1.6,
     );
     // Canonical mesh: fleet load + blue ghost tint of the real asset
     const binding = getCampAssetBinding(def.id);
@@ -336,10 +336,16 @@ export class CampBuildSystem {
     return false;
   }
 
-  commitPlace(): PlacedStructure | null {
+  /**
+   * Commit ghost at current snap position.
+   * @param keepGhost — RMB “place and continue”: leave ghost active for chain place.
+   *   LMB single place: keepGhost false (default) clears ghost after deploy.
+   */
+  commitPlace(opts?: { keepGhost?: boolean }): PlacedStructure | null {
     if (!this.activeDef || !this.ghost) return null;
     const def = this.activeDef;
     const pos = this.ghost.position.clone();
+    const yaw = this.yaw;
     if (!this.canPlaceAt(pos, def)) {
       this.cbs.flash?.(
         def.claimGated ? "Need claim flag build rights in this area" : "Cannot place here",
@@ -354,7 +360,7 @@ export class CampBuildSystem {
       x: pos.x,
       y: pos.y,
       z: pos.z,
-      yaw: this.yaw,
+      yaw,
       placedAt: Date.now(),
       open: false,
       armed: def.behavior === "trap",
@@ -363,12 +369,25 @@ export class CampBuildSystem {
     void this.spawnSolid(def, structure);
     if (def.id === "claim_flag") {
       this.claimCenters.push(new THREE.Vector3(pos.x, pos.y, pos.z));
-      this.cbs.flash?.(`CLAIM PLANTED · build rights ${this.claimRadius}m`, 1.6);
+      this.cbs.flash?.(
+        opts?.keepGhost
+          ? `CLAIM PLANTED · place more · R rotate · Esc cancel`
+          : `CLAIM PLANTED · build rights ${this.claimRadius}m`,
+        1.6,
+      );
     } else {
-      this.cbs.flash?.(`DEPLOYED · ${def.name}`, 0.85);
+      this.cbs.flash?.(
+        opts?.keepGhost
+          ? `DEPLOYED · ${def.name} · continue · LMB end · R rotate`
+          : `DEPLOYED · ${def.name}`,
+        0.85,
+      );
     }
     this.cbs.onPlaced?.(structure);
-    this.cancelGhost();
+    if (!opts?.keepGhost) {
+      this.cancelGhost();
+    }
+    // keepGhost: same def/yaw stays; next frame updateGhost moves for chain place
     return structure;
   }
 
@@ -531,16 +550,40 @@ export class CampBuildSystem {
   }
 
   /**
-   * Interact nearest door/gate/workbench (E key).
-   * Returns true if something toggled.
+   * Interact nearest door / gate / workbench / vendor / storage / ally spawn (E).
+   * Returns true if something handled the interact.
    */
   tryInteract(playerPos: THREE.Vector3, maxDist = 2.8): boolean {
+    const INTERACTABLE = new Set([
+      "door",
+      "gate",
+      "workbench",
+      "building",
+      "npc_spawn",
+      "static",
+    ]);
     let bestId: string | null = null;
     let bestD = maxDist;
     for (const [id, mesh] of this.placedMeshes) {
       const rt = this.runtime.get(id);
       if (!rt) continue;
-      if (rt.behavior !== "door" && rt.behavior !== "gate" && rt.behavior !== "workbench") continue;
+      const beh = rt.behavior || "static";
+      // Prefer known interactables; also storage / profession benches by def id
+      const defId = rt.defId || "";
+      const isBench =
+        beh === "workbench" ||
+        /bench|table|forge|anvil|vendor|shop|chest|storage|market/i.test(defId);
+      const isAlly = beh === "npc_spawn" || /barracks|archery|stable|ally|guard/i.test(defId);
+      if (
+        !INTERACTABLE.has(beh) &&
+        !isBench &&
+        !isAlly &&
+        beh !== "door" &&
+        beh !== "gate"
+      ) {
+        continue;
+      }
+      if (beh === "tower" || beh === "trap" || beh === "harvest_node") continue;
       const d = mesh.position.distanceTo(playerPos);
       if (d < bestD) {
         bestD = d;
@@ -550,35 +593,64 @@ export class CampBuildSystem {
     if (!bestId) return false;
     const rt = this.runtime.get(bestId)!;
     const mesh = this.placedMeshes.get(bestId)!;
-    if (rt.behavior === "workbench") {
-      this.cbs.flash?.("Workbench · open Production (P)", 1.0);
+    const defId = rt.defId || "";
+
+    // Workbench / profession / forge / vendor
+    if (
+      rt.behavior === "workbench" ||
+      /bench|table|forge|anvil|vendor|shop|market|profession/i.test(defId)
+    ) {
+      if (/vendor|shop|market/i.test(defId)) {
+        this.cbs.flash?.("Vendor · trade (P production / account bag)", 1.1);
+      } else if (/profession|cook|fish/i.test(defId)) {
+        this.cbs.flash?.("Profession station · open Production (P)", 1.0);
+      } else if (/forge|anvil|miner/i.test(defId)) {
+        this.cbs.flash?.("Forge · craft (P)", 1.0);
+      } else if (/chest|storage/i.test(defId)) {
+        this.cbs.flash?.("Storage · deposit / withdraw (B bag)", 1.0);
+      } else {
+        this.cbs.flash?.("Workbench · open Production (P)", 1.0);
+      }
       return true;
     }
-    // Door / gate toggle
-    rt.open = !rt.open;
-    const st = this.placed.find((p) => p.instanceId === bestId);
-    if (st) st.open = rt.open;
-    if (rt.mixer && rt.clips && rt.clips.length) {
-      const openClip =
-        rt.clips.find((c) => /open/i.test(c.name)) ||
-        (rt.open ? rt.clips[0] : rt.clips[rt.clips.length - 1]);
-      const closeClip =
-        rt.clips.find((c) => /close/i.test(c.name)) || rt.clips[0];
-      const clip = rt.open ? openClip : closeClip;
-      if (clip) {
-        rt.mixer.stopAllAction();
-        const action = rt.mixer.clipAction(clip);
-        action.reset().setLoop(THREE.LoopOnce, 1);
-        action.clampWhenFinished = true;
-        action.play();
-      }
-    } else {
-      // Procedural swing if no clips
-      const target = rt.open ? Math.PI / 2 : 0;
-      mesh.rotation.y += rt.open ? Math.PI / 2 : -Math.PI / 2;
-      void target;
+
+    // Ally / train building
+    if (rt.behavior === "npc_spawn" || /barracks|archery|stable|guard/i.test(defId)) {
+      this.cbs.flash?.(
+        `Ally post · ${defId.replace(/_/g, " ")} · train units (B claim)`,
+        1.1,
+      );
+      return true;
     }
-    this.cbs.flash?.(rt.open ? "OPEN" : "CLOSED", 0.45);
+
+    // Door / gate toggle
+    if (rt.behavior === "door" || rt.behavior === "gate") {
+      rt.open = !rt.open;
+      const st = this.placed.find((p) => p.instanceId === bestId);
+      if (st) st.open = rt.open;
+      if (rt.mixer && rt.clips && rt.clips.length) {
+        const openClip =
+          rt.clips.find((c) => /open/i.test(c.name)) ||
+          (rt.open ? rt.clips[0] : rt.clips[rt.clips.length - 1]);
+        const closeClip =
+          rt.clips.find((c) => /close/i.test(c.name)) || rt.clips[0];
+        const clip = rt.open ? openClip : closeClip;
+        if (clip) {
+          rt.mixer.stopAllAction();
+          const action = rt.mixer.clipAction(clip);
+          action.reset().setLoop(THREE.LoopOnce, 1);
+          action.clampWhenFinished = true;
+          action.play();
+        }
+      } else {
+        mesh.rotation.y += rt.open ? Math.PI / 2 : -Math.PI / 2;
+      }
+      this.cbs.flash?.(rt.open ? "OPEN" : "CLOSED", 0.45);
+      return true;
+    }
+
+    // Generic building interact
+    this.cbs.flash?.(`Use · ${defId.replace(/_/g, " ")}`, 0.7);
     return true;
   }
 

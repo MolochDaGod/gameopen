@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { filterBindableTracks } from "../clipTracks";
+import { filterBindableTracks, stripPositionTracks } from "../clipTracks";
 
 // Order-of-magnitude unit correction. Ported from the grudge character-viewer
 // (powerOfTenScale).
@@ -44,13 +44,21 @@ export function buildBoneNameLookup(root: THREE.Object3D): Map<string, string> {
 /**
  * Rematch baked-clip tracks onto the live skeleton (Arena = underscores,
  * many JSON packs = spaces). Without this, clips bind zero bones → T-pose.
+ *
+ * After name rematch, **position tracks are stripped** (rotation-only) so
+ * grounded grudge6 kits do not sink feet / stretch limbs from foreign bind poses.
  */
 export function rematchClipToSkeleton(
   root: THREE.Object3D,
   clip: THREE.AnimationClip,
+  opts?: { stripPositions?: boolean },
 ): THREE.AnimationClip {
+  const stripPos = opts?.stripPositions !== false;
   const lookup = buildBoneNameLookup(root);
-  if (lookup.size === 0) return filterBindableTracks(root, clip);
+  if (lookup.size === 0) {
+    const filtered = filterBindableTracks(root, clip);
+    return stripPos ? stripPositionTracks(filtered) : filtered;
+  }
 
   let rewritten = 0;
   const tracks: THREE.KeyframeTrack[] = [];
@@ -96,7 +104,8 @@ export function rematchClipToSkeleton(
       `[grudge-kit] rematchClipToSkeleton "${clip.name}": rewrote ${rewritten}/${clip.tracks.length}`,
     );
   }
-  return filterBindableTracks(root, next);
+  const bindable = filterBindableTracks(root, next);
+  return stripPos ? stripPositionTracks(bindable) : bindable;
 }
 
 // Skeleton unification. The Toon_RTS customizable FBX ships each of its ~27

@@ -274,16 +274,30 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
   }
 }
 
-/** Map an animPack string (from gearPresets.ts) to a weapon family. */
+/** Map an animPack string (from gearPresets.ts / Explosive map) to a weapon family. */
 export function familyFromAnimPack(animPack: string): WeaponFamily {
   switch (animPack) {
-    case "sword_shield": return "sword";
-    case "2h_melee":     return "greatsword";
-    case "polearm":      return "spear";
-    case "longbow":      return "longbow";
-    case "magic":        return "magic";
-    case "unarmed":      return "unarmed";
-    default:             return "sword";
+    case "twohand":
+    case "2h_melee":
+    case "2h":
+      return "greatsword";
+    case "crossbow":
+      return "longbow"; // same ranged family until dedicated family ships
+    case "rifle":
+    case "gun":
+      return "longbow"; // ranged VFX path; T0 skills still use rifle kit by weaponId
+    case "sword_shield":
+      return "sword";
+    case "polearm":
+      return "spear";
+    case "longbow":
+      return "longbow";
+    case "magic":
+      return "magic";
+    case "unarmed":
+      return "unarmed";
+    default:
+      return "sword";
   }
 }
 

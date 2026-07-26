@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "updated": "2026-07-25",
+  "description": "Index of the fleet animation database",
+  "database": "content/anims/database.json",
+  "states": "content/anims/states.json",
+  "schemas": [
+    "content/schemas/anim_clip_entry.schema.json",
+    "content/schemas/anim_state.schema.json"
+  ],
+  "runtime": {
+    "api": "artifacts/animator/src/three/anim/AnimDatabase.ts",
+    "stateMachine": "artifacts/animator/src/three/anim/AnimStateMachine.ts",
+    "embed": "artifacts/animator/src/three/anim/data/",
+    "publicMirror": "artifacts/animator/public/content/anims/"
+  },
+  "packs": [
+    "unarmed",
+    "sword_shield",
+    "longbow",
+    "magic",
+    "polearm",
+    "twohand",
+    "crossbow",
+    "rifle",
+    "traversal",
+    "swim",
+    "climb",
+    "harvest"
+  ],
+  "surfaceModes": [
+    "ground",
+    "wade",
+    "swim",
+    "climb",
+    "wallRun",
+    "mantle",
+    "mount",
+    "boat",
+    "fly"
+  ],
+  "related": [
+    "content/anims/explosive-warrior-map.json",
+    "docs/ANIM_DATABASE_AND_API.md",
+    "docs/EXPLOSIVE_WARRIOR_PACK_REVIEW.md",
+    "lib/grudge-physics/src/surfaceLocomotion.ts"
+  ]
+}

@@ -21,16 +21,32 @@ export { RACE_GEAR_PRESETS, PRESET_IDS, getPreset } from "./gearPresets";
 export type { AnimPack, LoadoutClips } from "./anims";
 export {
   ANIM_PACK_CLIPS,
+  ANIM_PACK_FALLBACK,
   BANNED_LOCOMOTION_CLIPS,
   SPRINT_CLIP,
   SPRINT_LOCO_MULT,
   asAnimPack,
   animPackForWeapon,
+  resolveAnimPackClips,
   isBannedLocomotionClip,
   bakedClipUrl,
   toRotationOnlyClip,
   loadBakedClip,
 } from "./anims";
+
+// Fleet anim DB + state machine (loco / combat / harvest / swim / climb / mantle)
+export {
+  getAnimDatabase,
+  AnimDatabase,
+  AnimStateMachine,
+  resolveAnimForSurface,
+  bakePathFromRel,
+  liveAnimPackForWeapon,
+  liveBakeRelsForWeapon,
+  pickLiveBakeRel,
+  getWeaponLiveDef,
+  weaponLiveSummary,
+} from "../anim";
 export { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 export {
   SPEAR_SKILLS,
@@ -86,6 +102,8 @@ export {
   ensureHumanScale,
   groundFeetLocal,
   reGroundAfterEquip,
+  reGroundAfterAnimSample,
+  findDeployModel,
   validateCharacterDeploy,
   findPelvisBone,
   CHARACTER_ART_FORWARD,

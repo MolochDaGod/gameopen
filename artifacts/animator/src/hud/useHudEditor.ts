@@ -15,10 +15,12 @@ import {
   type HudAppearance,
   type HudConfig,
   type HudCustomLook,
+  type HudLayoutId,
   type HudPanelId,
   type PanelLayout,
 } from "./hudConfig";
 import type { HudThemeId } from "./hudThemes";
+import { clampQuickSlots, type QuickSlots } from "./quickActions";
 
 /** Props spread onto an editable HUD panel's root element. */
 export interface HudPanelBinding {
@@ -42,6 +44,8 @@ export interface HudEditorControls {
   selected: HudPanelId | null;
   setSelected: (id: HudPanelId | null) => void;
   setTheme: (theme: HudThemeId) => void;
+  setLayout: (layout: HudLayoutId) => void;
+  setQuickSlots: (slots: QuickSlots) => void;
   setAppearance: (patch: Partial<HudAppearance>) => void;
   resetAppearance: () => void;
   setPanel: (id: HudPanelId, patch: Partial<PanelLayout>) => void;
@@ -117,6 +121,16 @@ export function useHudEditor(): HudEditorControls {
 
   const setTheme = useCallback(
     (theme: HudThemeId) => update((cur) => ({ ...cur, theme })),
+    [update],
+  );
+
+  const setLayout = useCallback(
+    (layout: HudLayoutId) => update((cur) => ({ ...cur, layout })),
+    [update],
+  );
+
+  const setQuickSlots = useCallback(
+    (slots: QuickSlots) => update((cur) => ({ ...cur, quickSlots: clampQuickSlots(slots) })),
     [update],
   );
 
@@ -232,6 +246,8 @@ export function useHudEditor(): HudEditorControls {
       selected,
       setSelected,
       setTheme,
+      setLayout,
+      setQuickSlots,
       setAppearance,
       resetAppearance,
       setPanel,
@@ -249,6 +265,8 @@ export function useHudEditor(): HudEditorControls {
       config,
       selected,
       setTheme,
+      setLayout,
+      setQuickSlots,
       setAppearance,
       resetAppearance,
       setPanel,

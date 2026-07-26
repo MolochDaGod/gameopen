@@ -44,7 +44,7 @@ Resolve order (`findHandBone` / `resolveSkeletonSockets`):
 `buildRetargetNameMap` produces target→`mixamorig*` for `SkeletonUtils.retargetClip`.  
 Containers are **not** retarget targets (weapons attach as children).
 
-## Danger Room controls (unchanged)
+## Danger Room controls
 
 | Key | Action |
 |-----|--------|
@@ -54,9 +54,51 @@ Containers are **not** retarget targets (weapons attach as children).
 | C | Parry |
 | F / 1–4 | Weapon skills (MM lunges + VFX) |
 | R | Heavy |
-| LMB | Attack combo |
-| RMB | Lock focus |
+| LMB | Soft lock: **select** under aim · Hard FOCUS: **attack** combo |
+| RMB | Sticky toggle hard FOCUS ↔ soft lock/select |
+| F8 / `\` | Free mouse (OS cursor = aim; no pointer-lock) |
+| F9 / `'` | Re-lock aim (pointer-lock + HUD crosshair) |
+| ESC | Release pointer-lock (WASD stays; click canvas or F9 to re-lock) |
+
+### Mouse / soft-lock best practices (SSOT)
+
+| Mode | Cursor | Aim | LMB | RMB |
+|------|--------|-----|-----|-----|
+| **play-locked** | Hidden | HUD crosshair (NDC free-aim) | select or attack | toggle FOCUS |
+| **play-free** (F8) | Custom free-aim OS cursor | Cursor position → ray | select or attack | toggle FOCUS |
+| **ui** (panels) | UI arrow | n/a | UI | UI |
+
+- Free-mouse does **not** fight a second HUD reticle (crosshair hidden while free).
+- Unlocking does **not** clear WASD.
+- Click-to-relock is **off** while free-mouse sticky is on (use F9).
+- Anim packs bind **rotation-only** (position tracks stripped) so feet stay on the floor across all races.
+
+## Mesh / anim correctness
+
+| Issue | Fix |
+|-------|-----|
+| Feet under floor | `groundFeetLocal` + post-idle `reGroundAfterAnimSample`; never ground Avatar.holder |
+| Mesh stretch | `stripPositionTracks` after Bip001 rematch |
+| Anims dead / T-pose | `rematchClipToSkeleton` + pack clips for all races |
+| First hero wrong scale | `ensureHumanScale` → `findDeployModel` then fit |
 
 ## Deploy note
 
 Route aliases map `annihilate-demo` → Danger mode. With `?hero=` present, URL stays `/annihilate-demo` on mode sync. Edge proxy for `grudge-studio.com/annihilate-demo` should rewrite to this Open/gameopen SPA.
+
+**Example:** `https://open.grudge-studio.com/annihilate-demo?hero=barbarian_ranger` → BRB longbow kit.
+
+### Production asset rules (404 root cause)
+
+| Asset class | Where | Notes |
+|-------------|-------|--------|
+| grudge6 race FBX | R2 `assets.grudge-studio.com/models/grudge6/races/*` | OK |
+| Race atlases | R2 `textures/grudge6/*` | OK |
+| Baked Bip001 JSON | **Same-origin** `/anims/baked/*` (Open ships these) | R2 path often 404 — prefer same-origin first |
+| Mixamo `/anim/animations/**/*.fbx` | **Not on Vercel** (`.vercelignore` has `**/*.fbx`) and **not on R2** | One HEAD probe → pack marked missing → **zero** multi-host 404 fan-out |
+
+**404 storm (fixed):** Explorer used to call `allReferencedClipIds()` (every weapon class) and `loadFbxFirst` across same-origin + R2 + gameopen.vercel.app for each clip. Now:
+
+1. Single same-origin HEAD on `unarmed-idle-01.fbx`
+2. If missing → procedural Mixamo skeleton + base GLB only; no Mixamo network
+3. Runtime only preloads **equipped weapon + unarmed** (Editor may `preloadAll`)

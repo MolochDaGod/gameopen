@@ -35,6 +35,7 @@ import { InstallAppButton } from "./InstallAppButton";
 import { FriendsPanel } from "./FriendsPanel";
 import { StoreView } from "./StoreView";
 import "./steamLibrary.css";
+import "./mmoShell.css";
 
 /** Resolve a room poster from public/rooms/<name>-scene.png (CDN-aware). */
 const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
@@ -131,8 +132,8 @@ export function DoorSelect({ onEnter }: Props) {
   };
 
   return (
-    <div className="steam-lib" data-testid="steam-library" data-tab={tab}>
-      {/* ── Top bar ── */}
+    <div className="steam-lib mmo-shell" data-testid="steam-library" data-tab={tab} data-ui="mmo-4">
+      {/* ── Top bar (MMO UI 4 / HUD.psd family chrome) ── */}
       <header className="steam-top">
         <div className="steam-top-left">
           <img className="steam-logo" src={assetUrl("logo.svg")} alt="" width={28} height={28} draggable={false} />
@@ -287,6 +288,43 @@ export function DoorSelect({ onEnter }: Props) {
 
         {/* ── Main pane ── */}
         <main className="steam-main">
+          {tab === "library" && (
+            <div className="mmo-flow-rail" role="navigation" aria-label="Quick play flow">
+              <span className="mmo-flow-rail-label">Play flow</span>
+              <button
+                type="button"
+                className="mmo-flow-chip mmo-flow-chip--primary"
+                onClick={() => launchMode("danger")}
+              >
+                <Swords size={14} />
+                Danger Room
+              </button>
+              <button type="button" className="mmo-flow-chip" onClick={() => launchMode("lobby")}>
+                <Users size={14} />
+                Lobby
+              </button>
+              <button type="button" className="mmo-flow-chip" onClick={() => launchMode("characters")}>
+                <Library size={14} />
+                Characters
+              </button>
+              <button type="button" className="mmo-flow-chip" onClick={() => launchMode("zones")}>
+                <Play size={14} />
+                Zones
+              </button>
+              {featured && featured.mode !== "doors" && featured.mode !== "landing" && (
+                <button
+                  type="button"
+                  className="mmo-flow-chip"
+                  onClick={() => launch(featured)}
+                  title={featured.blurb}
+                >
+                  <Play size={14} />
+                  Play {featured.title}
+                </button>
+              )}
+            </div>
+          )}
+
           {tab === "store" && <StoreView onPlayNative={launchMode} />}
 
           {tab === "community" && (

@@ -57,6 +57,7 @@ function PlaceGhostBtn({
   onBeginPlace?: (id: string) => void;
   label?: string;
 }) {
+  // ui.grudge-studio / Open claim UI entry → Studio beginPlacePlaceable
   const ok = !!getPlaceable(placeableId);
   return (
     <button
@@ -65,7 +66,7 @@ function PlaceGhostBtn({
       disabled={!ok || !onBeginPlace}
       title={
         ok
-          ? "Ghost place — LMB commit · R rotate · Esc cancel"
+          ? "Ghost place — LMB place · RMB place+continue · R rotate · Esc · E interact"
           : `No placeable def for “${placeableId}” yet`
       }
       onClick={() => {
@@ -450,7 +451,7 @@ function FarmingPage({
     <>
       <p className="ccf-notice dim">
         Farm assets: Ultimate Fantasy RTS Farm / Windmill / Market lines. Claim-gated placeables —
-        Place ghost enters build mode (LMB commit, R rotate).
+        Place ghost · LMB place · RMB place+continue · R rotate · Esc cancel · E interact.
       </p>
       <div className="ccf-grid">
         {farms.map((f) => {
@@ -881,7 +882,8 @@ function BuildingsPage({
     <>
       <p className="ccf-notice">
         Migrated claim flag mesh: <code>models/camp/claim-flag.glb</code> (from Decor_PirateFlag_00).
-        Place ghost → LMB commit · R rotate · Esc cancel. Quick-craft stays field-only.
+        Place ghost → LMB place · RMB place+continue · R rotate · Esc cancel · E interact.
+        Quick-craft stays field-only.
       </p>
 
       <h3 className="ccf-section-title">Claim flag & placeables (ghost)</h3>

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExplosiveLLC FREE samples → Open anim roles",
+  "sourceRoot": "Desktop/grudgeproduction/grudgenew/FRESH GRUDGE/Assets/ExplosiveLLC",
+  "note": "FREE packs only ship teaser FBX. Full packs must be purchased for loco+skills.",
+  "classes": {
+    "TwoHanded": {
+      "openWeapons": ["greatsword", "greataxe"],
+      "animPack": "twohand",
+      "freeClips": [
+        {
+          "src": "Warrior Pack Bundle 2 FREE/2 Handed Warrior Mecanim Animation Pack/Animations/2Handed@Attack1.FBX",
+          "role": "attack",
+          "bakeAs": "anims/baked/twohand/attack"
+        }
+      ],
+      "needPaid": ["idle", "walk", "run", "attack2", "attack3", "skill1", "skill2", "jump"]
+    },
+    "Hammer": {
+      "openWeapons": ["hammer", "hammer2h", "mace"],
+      "animPack": "twohand",
+      "freeClips": [
+        {
+          "src": "Warrior Pack Bundle 3 FREE/Hammer Warrior Mecanim Animation Pack/Animations/Hammer@Attack1.FBX",
+          "role": "attack_hammer",
+          "bakeAs": "anims/baked/twohand/hammer_attack"
+        }
+      ],
+      "needPaid": ["idle", "walk", "run", "combo", "skills"]
+    },
+    "Crossbow": {
+      "openWeapons": ["crossbow"],
+      "animPack": "crossbow",
+      "freeClips": [],
+      "needPaid": ["idle", "aim", "shoot", "reload", "walk", "run", "dodge"],
+      "fallbackPack": "longbow"
+    },
+    "Spearman": {
+      "openWeapons": ["spear", "javelin"],
+      "animPack": "polearm",
+      "freeClips": [],
+      "needPaid": ["optional — Madarame polearm bake already ships"],
+      "fallbackPack": "polearm"
+    },
+    "Swordsman": {
+      "openWeapons": ["sword"],
+      "animPack": "sword_shield",
+      "freeClips": [
+        {
+          "src": "Warrior Pack Bundle 3 FREE/Swordsman Warrior Mecanim Animation Pack/Animations/Swordsman@Attack1.FBX",
+          "role": "attack_extra",
+          "bakeAs": "anims/baked/sword_shield/swordsman_attack1"
+        }
+      ]
+    },
+    "Knight": {
+      "openWeapons": ["sword", "shield"],
+      "animPack": "sword_shield",
+      "freeClips": [
+        {
+          "src": "Warrior Pack Bundle 2 FREE/Knight Warrior Mecanim Animation Pack/Animations/Knight@Attack1.FBX",
+          "role": "attack_extra",
+          "bakeAs": "anims/baked/sword_shield/knight_attack1"
+        }
+      ]
+    },
+    "Brute": {
+      "openWeapons": ["none"],
+      "animPack": "unarmed",
+      "freeClips": [
+        {
+          "src": "Warrior Pack Bundle 1 FREE/Brute Warrior Mecanim Animation Pack/Animations/Brute@Idle.FBX",
+          "role": "idle",
+          "bakeAs": "anims/baked/unarmed/brute_idle"
+        },
+        {
+          "src": "Warrior Pack Bundle 1 FREE/Brute Warrior Mecanim Animation Pack/Animations/Brute@Run.FBX",
+          "role": "run",
+          "bakeAs": "anims/baked/unarmed/brute_run"
+        },
+        {
+          "src": "Warrior Pack Bundle 1 FREE/Brute Warrior Mecanim Animation Pack/Animations/Brute@Jump.FBX",
+          "role": "jump",
+          "bakeAs": "anims/baked/unarmed/brute_jump"
+        },
+        {
+          "src": "Warrior Pack Bundle 1 FREE/Brute Warrior Mecanim Animation Pack/Animations/Brute@Attack1.FBX",
+          "role": "attack",
+          "bakeAs": "anims/baked/unarmed/brute_attack1"
+        }
+      ],
+      "note": "Brute is brawler, not Karate. Prefer paid Karate for true unarmed combo set."
+    },
+    "Rifle": {
+      "openWeapons": ["rifle", "hunter-rifle", "shotgun", "pistol"],
+      "animPack": "rifle",
+      "freeClips": [],
+      "needPaid": "Not in ExplosiveLLC FREE tree — use Open public/anim/rifle + pistol Mixamo bake",
+      "openLocal": ["anim/rifle/*", "anim/pistol/*"]
+    }
+  },
+  "scriptsToPort": {
+    "WarriorTiming.attack1Locks": {
+      "Archer": 0.7,
+      "Brute": 1.0,
+      "Crossbow": 0.8,
+      "Hammer": 1.25,
+      "Karate": 0.7,
+      "Knight": 0.6,
+      "Mage": 1.1,
+      "Ninja": 0.6,
+      "Sorceress": 1.2,
+      "Spearman": 1.0,
+      "Swordsman": 0.9,
+      "TwoHanded": 0.9
+    },
+    "IKHands.enableFor": ["TwoHanded", "Hammer", "Crossbow", "Spearman"]
+  }
+}

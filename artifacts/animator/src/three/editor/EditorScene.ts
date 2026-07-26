@@ -3451,9 +3451,15 @@ export class EditorScene {
     const target = findSkinnedMesh(root);
     if (!target) return [];
     try {
+      // Production: Mixamo pack gated — never fan-out allReferencedClipIds 404s.
+      const { isMixamoFbxPackAvailable } = await import("../explorer/mixamoPackAvailability");
+      const mixamoOk = await isMixamoFbxPackAvailable();
+      const clipIds = mixamoOk
+        ? allReferencedClipIds()
+        : allReferencedClipIds().filter((id) => id.startsWith("base/"));
       const [sourceScene, clips] = await Promise.all([
         loadSkeletonSource(),
-        loadClips(allReferencedClipIds()),
+        loadClips(clipIds),
       ]);
       const source = makeRetargetSource(sourceScene);
       if (!source || clips.size === 0) return [];

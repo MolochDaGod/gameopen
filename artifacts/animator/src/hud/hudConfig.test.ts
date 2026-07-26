@@ -95,7 +95,16 @@ describe("mergeConfig", () => {
 
   it("keeps a known theme and falls back on an unknown one", () => {
     expect(mergeConfig({ theme: "cyberpunk" }).theme).toBe("cyberpunk");
-    expect(mergeConfig({ theme: "bogus" }).theme).toBe("default");
+    // Unknown theme keeps production default (rpg / HUD Tight era)
+    expect(mergeConfig({ theme: "bogus" }).theme).toBe("rpg");
+  });
+
+  it("defaults to tight layout + rpg theme", () => {
+    const d = defaultHudConfig();
+    expect(d.layout).toBe("tight");
+    expect(d.theme).toBe("rpg");
+    expect(d.quickSlots.length).toBe(12);
+    expect(d.panels.tightbar).toBeDefined();
   });
 
   it("always materialises every panel id", () => {
@@ -386,13 +395,13 @@ describe("saved looks persistence", () => {
   });
 
   it("falls back to an empty list on a corrupt stored blob", () => {
-    localStorage.setItem("animator.hud.looks.v1", "{ not valid json");
+    localStorage.setItem("animator.hud.looks.v2", "{ not valid json");
     expect(loadCustomLooks()).toEqual([]);
   });
 
   it("sanitises a hostile stored blob on load", () => {
     localStorage.setItem(
-      "animator.hud.looks.v1",
+      "animator.hud.looks.v2",
       JSON.stringify([{ name: "Evil", theme: "x", appearance: { accent: "url(bad)" } }, 42]),
     );
     const loaded = loadCustomLooks();

@@ -27,9 +27,39 @@ const gltfLoader = new GLTFLoader();
 
 /** Load one FBX by catalog id via fleet multi-host resolve. */
 async function loadFbx(id: string): Promise<THREE.Group> {
+  const {
+    isMixamoFbxPackAvailable,
+    isMixamoClipPath,
+    markMixamoPackMissing,
+    markMixamoPackPresent,
+  } = await import("./mixamoPackAvailability");
+  // Gate: production has no Mixamo pack — never multi-host fan-out 404s.
+  const probePath = `anim/${id}.fbx`;
+  if (isMixamoClipPath(probePath) || isMixamoClipPath(id)) {
+    if (!(await isMixamoFbxPackAvailable())) {
+      throw new Error(`[mixamo] pack missing — skip ${id}`);
+    }
+  }
   const { loadFbxFirst } = await import("../assets");
-  const { group } = await loadFbxFirst([`anim/${id}.fbx`, `${id}.fbx`], fbxLoader);
-  return group;
+  const paths = [
+    `anim/${id}.fbx`,
+    `${id}.fbx`,
+    // Short form: animations/bow/x → anim/bow/x (public/anim/bow/* local layout)
+    id.startsWith("animations/") ? `anim/${id.replace(/^animations\//, "")}.fbx` : "",
+    id.startsWith("animations/") ? `${id.replace(/^animations\//, "anim/")}.fbx` : "",
+  ].filter(Boolean);
+  try {
+    // Same-origin only for Mixamo (pack is either local public/ or absent).
+    // Avoids assets.grudge-studio.com + gameopen.vercel.app CORS/404 spam.
+    const { group } = await loadFbxFirst(paths, fbxLoader, {
+      sameOriginOnly: true,
+    });
+    markMixamoPackPresent();
+    return group;
+  } catch (e) {
+    markMixamoPackMissing();
+    throw e;
+  }
 }
 
 /**
@@ -366,6 +396,10 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
   const needsBase = ids.some((id) => id.startsWith("base/"));
   const styleIds = ids.filter((id) => !id.startsWith("base/"));
 
+  // One probe: if Mixamo pack is gone (production), skip every FBX id with zero fetches.
+  const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
+  const mixamoOk = await isMixamoFbxPackAvailable();
+
   await Promise.all(
     styleIds.map(async (id) => {
       try {
@@ -381,6 +415,7 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
           map.set(id, clip0);
           return;
         }
+        if (!mixamoOk) return; // no multi-host 404 storm
         const group = await loadFbx(id);
         const clip = group.animations[0];
         if (clip) {
@@ -407,7 +442,22 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
 
 /** Load the shared skeleton source scene (the bone hierarchy clips bind to). */
 export async function loadSkeletonSource(): Promise<THREE.Object3D> {
-  return await loadFbx(SKELETON_SOURCE_ID);
+  // Production: no Mixamo FBX — go straight to procedural (zero 404s).
+  const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
+  if (!(await isMixamoFbxPackAvailable())) {
+    const { createProceduralMixamoSkeleton } = await import("./mixamoSkeletonSource");
+    return createProceduralMixamoSkeleton();
+  }
+  try {
+    return await loadFbx(SKELETON_SOURCE_ID);
+  } catch {
+    try {
+      return await loadFbx("bow/unarmed-idle-01");
+    } catch {
+      const { createProceduralMixamoSkeleton } = await import("./mixamoSkeletonSource");
+      return createProceduralMixamoSkeleton();
+    }
+  }
 }
 
 /** Default look used when the caller doesn't supply one. */
@@ -425,12 +475,17 @@ export const DEFAULT_LOOK: CharacterLook = {
 
 export interface CreateAnimatedCharacterOptions {
   look?: Partial<CharacterLook>;
-  /** Weapon classes whose clips to preload (default: all classes). */
+  /** Weapon classes whose clips to preload. Default: equipped weapon + unarmed. */
   classes?: WeaponClass[];
   /** Initial equipped class (default: "unarmed"). */
   weapon?: WeaponClass;
   /** Target world-space height of the avatar in metres (default: 2). */
   height?: number;
+  /**
+   * Preload every catalog clip (Editor only). Runtime must stay false —
+   * production has no Mixamo pack and this causes hundreds of 404s.
+   */
+  preloadAll?: boolean;
 }
 
 /**
@@ -441,35 +496,42 @@ export interface CreateAnimatedCharacterOptions {
 export async function createAnimatedCharacter(
   opts: CreateAnimatedCharacterOptions = {},
 ): Promise<Animator> {
-  const classes =
+  const weapon = opts.weapon ?? "unarmed";
+  // Runtime default: equipped weapon + unarmed only (not the full catalog).
+  // Bug was: missing opts.classes → allReferencedClipIds() × multi-host 404 storm.
+  const classes: WeaponClass[] =
     opts.classes ??
-    ([
-      "unarmed",
-      "sword",
-      "knife",
-      "greatsword",
-      "axe",
-      "mace",
-      "spear",
-      "hammer",
-      "greataxe",
-      "hammer2h",
-      "ranged",
-      "bow",
-      "magic",
-      "pistol",
-    ] as WeaponClass[]);
-  // Always include the global reaction clips regardless of which weapon classes
-  // are requested — reactions (stumble, fall, stun, wall-crash, etc.) are
-  // class-independent and must be available for defensive combat to play.
-  const ids = opts.classes
-    ? [...new Set([...classes.flatMap((c) => clipIdsForClass(c)), ...reactionClipIds()])]
-    : allReferencedClipIds();
+    (weapon === "unarmed" ? (["unarmed"] as WeaponClass[]) : ([weapon, "unarmed"] as WeaponClass[]));
 
-  const [source, clips] = await Promise.all([loadSkeletonSource(), loadClips(ids)]);
+  const ids = opts.preloadAll
+    ? allReferencedClipIds()
+    : [
+        ...new Set([
+          ...classes.flatMap((c) => clipIdsForClass(c)),
+          ...reactionClipIds(),
+        ]),
+      ];
+
+  // If Mixamo pack is missing, skip style FBX ids entirely (base GLB still loads).
+  const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
+  const mixamoOk = await isMixamoFbxPackAvailable();
+  const loadIds = mixamoOk
+    ? ids
+    : ids.filter((id) => id.startsWith("base/") || GLB_CLIP_IDS.has(id));
+
+  if (!mixamoOk && typeof console !== "undefined") {
+    console.info(
+      "[loader] Mixamo FBX pack unavailable — Explorer uses procedural skeleton + base GLB only (no /anim/animations 404s)",
+    );
+  }
+
+  const [source, clips] = await Promise.all([
+    loadSkeletonSource(),
+    loadClips(loadIds.length ? loadIds : ["base/idle"]),
+  ]);
   const look: CharacterLook = { ...DEFAULT_LOOK, ...opts.look };
   const character = new VoxelCharacter(source, look, opts.height ?? 2);
   const animator = new Animator(character, clips);
-  animator.setWeapon(opts.weapon ?? "unarmed");
+  animator.setWeapon(weapon);
   return animator;
 }

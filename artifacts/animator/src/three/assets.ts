@@ -123,17 +123,24 @@ export async function loadTextureFirst(
 
 /**
  * FBX resilient load (grudge6 race kits, Mixamo clips).
- * Tries every fleet host + path alias until one parses.
+ * Tries fleet hosts + path aliases until one parses.
+ *
+ * @param opts.sameOriginOnly — Mixamo clips: only same-origin (no R2/CORS fan-out).
+ *   Grudge6 race kits should leave this false (R2 has the FBX).
  */
 export async function loadFbxFirst(
   paths: string | string[],
   loader: { loadAsync: (url: string) => Promise<import("three").Group> },
+  opts?: { sameOriginOnly?: boolean },
 ): Promise<{ group: import("three").Group; url: string }> {
   const pathList = Array.isArray(paths) ? paths : [paths];
   let lastErr: unknown;
   for (const p of pathList) {
     if (!p) continue;
-    for (const url of assetCandidates(p)) {
+    const urls = opts?.sameOriginOnly
+      ? sameOriginFbxUrls(p)
+      : assetCandidates(p);
+    for (const url of urls) {
       try {
         const group = await loader.loadAsync(url);
         return { group, url };
@@ -143,6 +150,13 @@ export async function loadFbxFirst(
     }
   }
   throw lastErr ?? new Error(`Failed to load FBX: ${pathList.join(", ")}`);
+}
+
+/** Same-origin (+ relative) only — for Mixamo pack when present under public/anim. */
+function sameOriginFbxUrls(path: string): string[] {
+  const clean = path.replace(/^\//, "");
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  return [...new Set([`${base}/${clean}`, `/${clean}`, clean])];
 }
 
 export const CHARACTERS: CharacterDef[] = [

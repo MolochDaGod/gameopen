@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/anim_state.schema.json",
+  "title": "AnimStateDef",
+  "description": "Character animation state for the fleet director (combat, loco, harvest, vertical).",
+  "type": "object",
+  "required": ["id", "layer", "defaultRole"],
+  "properties": {
+    "id": { "type": "string" },
+    "layer": {
+      "type": "string",
+      "enum": ["loco", "action", "overlay", "traversal", "activity"]
+    },
+    "defaultRole": { "type": "string" },
+    "surfaceModes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "activityModes": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["combat", "harvest", "build", "any"] }
+    },
+    "interruptible": { "type": "boolean" },
+    "priority": { "type": "integer" },
+    "description": { "type": "string" }
+  }
+}

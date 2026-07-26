@@ -43,6 +43,7 @@ import type {
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { CursorManager } from "./components/CursorManager";
+import { heroFromLocation } from "./lib/annihilateHero";
 import {
   setFreeMouseSticky,
   setPlayPointerCtx,
@@ -859,39 +860,73 @@ export default function App() {
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
-      studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
+      // Annihilate ?hero= before first spawn — grudge6 kit, not Explorer Mixamo FBX
+      // (Vercel .vercelignore strips **/*.fbx; those URLs 404 in production).
+      const spec = heroFromLocation();
+      const bootId = spec?.studioAvatarId ?? characterId;
+      const bootWeapon =
+        spec?.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
+
+      studio = new Studio(mountRef.current, bootId, (h) => hudRef.current(h), {
+        meshIds: spec?.meshIds ?? null,
+        weaponId: bootWeapon,
+      });
       studio.onCharacterLoaded = () => {
         refreshAnim();
-        // A networked room with a chosen map loads it once the rig is ready.
         if (roomMap) void studioRef.current?.enterArena(roomMap);
         setHelpersLoad((s) =>
-          s.visible ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" } : s,
+          s.visible
+            ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" }
+            : s,
         );
       };
+      if (spec) {
+        setCharacterId(spec.studioAvatarId);
+        if (bootWeapon) setWeaponId(bootWeapon as WeaponId);
+        // Boot opts already applied mesh ids + weapon; flash + sockets
+        studio.flashMessage?.(
+          `ANNIHILATE · ${spec.hero.toUpperCase()} · ${spec.animPack} · ${spec.meshIds.length} meshes`,
+          2.6,
+        );
+        console.info(
+          "[annihilate-demo] hero boot",
+          spec.hero,
+          "avatar=",
+          spec.studioAvatarId,
+          "pack=",
+          spec.animPack,
+          "weapon=",
+          spec.weaponId,
+          "meshes=",
+          spec.meshIds.length,
+        );
+        const prev = studio.onCharacterLoaded;
+        studio.onCharacterLoaded = (id) => {
+          prev?.(id);
+          try {
+            const report = studio?.reportHandSockets();
+            if (report) console.info("[annihilate-demo] sockets", report);
+          } catch {
+            /* ignore */
+          }
+        };
+      } else {
+        applyFleetLoadoutRef.current();
+      }
       studio.setFireParams(loadFireFx());
-      // Re-read persisted controls at every mount so engine-only mutations
-      // (e.g. wheel-zoom cameraDistance, saved on the previous teardown) win on
-      // re-entry, and sync them back into React state so the settings sliders
-      // and the engine never diverge. Stale React state must not clobber them.
       const persistedControls = loadControls();
       setParams(persistedControls);
       studio.setParams(persistedControls);
       studio.setTimeScale(timeScale);
-      // A networked room dictates its environment preset; apply it over the
-      // engine's local default so every joiner sees the same arena. This adopts
-      // the room's current preset, so don't re-broadcast it back to the relay.
       if (inRoomRef.current && roomPresetRef.current) {
         studio.setRoomPreset(roomPresetRef.current, { propagate: false });
       }
-      // The host may swap the arena mid-session; mirror that into our React state
-      // so the menubar selection tracks the arena every joiner is now in.
       studio.onRoomPresetChanged = (id) => {
         roomPresetRef.current = id;
         setRoomPreset(id);
       };
       studioRef.current = studio;
       studio.setTouchMode(isMobile);
-      // Death: empty 3×3 carry; keep 2×2 loadout (main/side/mount/boat).
       studio.onPlayerDefeat = () => {
         const charId =
           gameSession.snapshot.selectedCharacterId || characterId || "local";
@@ -899,36 +934,7 @@ export default function App() {
         studio?.flashMessage?.(res.message, 2.2);
         refreshBagMeta();
       };
-      // Hand the live relay client to the engine for multiplayer rooms.
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
-      // Annihilate-demo (?hero=) wins over fleet loadout so async equip cannot
-      // overwrite grudge:race:preset + mesh_ids after boot.
-      void import("./lib/annihilateHero").then(({ heroFromLocation, applyAnnihilateHeroToStudio }) => {
-        const s = studioRef.current;
-        if (!s) return;
-        const spec = heroFromLocation();
-        if (spec) {
-          setCharacterId(spec.studioAvatarId);
-          applyAnnihilateHeroToStudio(s, spec);
-          if (spec.weaponId && spec.weaponId !== "none") {
-            setWeaponId(spec.weaponId as WeaponId);
-          }
-          const prev = s.onCharacterLoaded;
-          s.onCharacterLoaded = (id) => {
-            prev?.(id);
-            try {
-              const report = s.reportHandSockets();
-              if (report) console.info("[annihilate-demo] sockets", report);
-            } catch {
-              /* ignore */
-            }
-          };
-        } else {
-          // Normal Danger entry: fleet mesh_ids / weapon after Studio exists.
-          applyFleetLoadoutRef.current();
-        }
-        refreshAnim();
-      });
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start renderer", err);
@@ -2403,7 +2409,7 @@ export default function App() {
     <div
       className={`studio ${isMobile ? "touch" : ""}${
         hudEditor.config.theme !== "default" ? " hud-themed" : ""
-      }`}
+      }${hudEditor.config.layout === "tight" ? " hud-tight" : ""}`}
       style={themeVars}
     >
       <div
@@ -2496,8 +2502,9 @@ export default function App() {
       {/* Worldbuilder Play = Danger Room player UX only (camera/loco/skills/FX/anims). No admin/editor docks. */}
       {mode === "play" && (
         <>
+          {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen}
+            visible={!uiOverlayOpen && !freeMouse}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -2729,8 +2736,9 @@ export default function App() {
 
       {mode === "danger" && (
         <>
+          {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen}
+            visible={!uiOverlayOpen && !freeMouse}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}

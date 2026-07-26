@@ -80,9 +80,12 @@ export async function fleetRoleChat(
     messages,
     model: opts?.model,
   });
+  // Prefer same-origin /api/ai (Vercel rewrite) first — no CORS / no cookie issues.
+  // Absolute hub second (ai.grudge-studio.com is healthy but needs CORS + auth).
   const candidates = [
-    aiRoleChatUrl(role),
     `${aiGatewayUrl(true)}/v1/agents/${encodeURIComponent(role)}/chat`,
+    `${aiGatewayUrl(true)}/v1/chat`,
+    aiRoleChatUrl(role),
     aiChatUrl(),
   ];
 

@@ -2,6 +2,8 @@ import { Eye, EyeOff, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import {
   hasAppearanceOverrides,
+  HUD_LAYOUT_IDS,
+  HUD_LAYOUTS,
   HUD_PANEL_IDS,
   HUD_PANEL_META,
   lookMatchesConfig,
@@ -42,6 +44,7 @@ export function HudEditor({ controls, onClose }: Props) {
     selected,
     setSelected,
     setTheme,
+    setLayout,
     setAppearance,
     resetAppearance,
     setPanel,
@@ -84,6 +87,26 @@ export function HudEditor({ controls, onClose }: Props) {
         </header>
 
         <div className="hud-editor-scroll">
+          <section className="hud-editor-section">
+            <div className="hud-editor-label">Layout (play HUD)</div>
+            <div className="hud-layout-row">
+              {HUD_LAYOUT_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`hud-theme-card${config.layout === id ? " active" : ""}`}
+                  onClick={() => setLayout(id)}
+                  title={HUD_LAYOUTS[id].blurb}
+                >
+                  <span className="hud-theme-name">{HUD_LAYOUTS[id].name}</span>
+                  <span className="hud-editor-sub" style={{ display: "block", marginTop: 4 }}>
+                    {HUD_LAYOUTS[id].blurb}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <section className="hud-editor-section">
             <div className="hud-editor-label">Theme</div>
             {HUD_THEME_IDS.map((id) => {

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/anim_clip_entry.schema.json",
+  "title": "AnimClipEntry",
+  "description": "One clip in the Grudge Open animation database (bake path + roles + state tags).",
+  "type": "object",
+  "required": ["id", "pack", "role", "source", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable id: {pack}/{role} or {pack}/{slug}"
+    },
+    "pack": {
+      "type": "string",
+      "description": "Anim pack id (sword_shield, longbow, polearm, unarmed, twohand, crossbow, rifle, magic, traversal, harvest, swim, climb)"
+    },
+    "role": {
+      "type": "string",
+      "description": "Logical mixer role: idle, walk, run, attack, skill1, swim, climbUp, mantle, harvest, …"
+    },
+    "bakeRel": {
+      "type": "string",
+      "description": "Path under /anims/baked/ without .json (Bip001 JSON SSOT for grudge6)"
+    },
+    "sourceRel": {
+      "type": "string",
+      "description": "Author FBX/GLB path under public/ or raw/ when bake missing"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["baked", "mixamo_fbx", "explosive", "procedural", "external"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ready", "placeholder", "missing", "banned"]
+    },
+    "loop": { "type": "boolean" },
+    "states": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "AnimState ids this clip may drive"
+    },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ground", "wade", "swim", "climb", "wallRun", "mantle", "mount", "boat", "fly"]
+      }
+    },
+    "weapons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Weapon ids or * for any"
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Higher wins when multiple clips match"
+    },
+    "lockSec": {
+      "type": "number",
+      "description": "Action lock timing (from Explosive WarriorTiming or authoring)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

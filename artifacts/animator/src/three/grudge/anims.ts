@@ -9,7 +9,20 @@ import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 //
 // SSOT with grudge-arena `src/bakedAnimLoader.js` ANIM_PACK_CLIPS (2026-07)
 // + Open `polearm` pack baked from ikkaku_madarame.glb (spear / 2H).
-export type AnimPack = "magic" | "sword_shield" | "longbow" | "unarmed" | "polearm";
+/**
+ * grudge6 baked pack ids under /anims/baked/{pack}/.
+ * `twohand` | `crossbow` | `rifle` are reserved for ExplosiveLLC / Mixamo bake
+ * imports — until JSON exists, {@link animPackForWeapon} falls back to polearm/longbow/unarmed.
+ */
+export type AnimPack =
+  | "magic"
+  | "sword_shield"
+  | "longbow"
+  | "unarmed"
+  | "polearm"
+  | "twohand"
+  | "crossbow"
+  | "rifle";
 
 export interface LoadoutClips {
   idle: string;
@@ -138,7 +151,80 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "polearm/death",
     ],
   },
+  /**
+   * 2H sword / greataxe / hammer — ExplosiveLLC TwoHanded + Hammer (after bake).
+   * Until twohand/*.json ships, loaders should fall back via {@link resolveAnimPackClips}.
+   */
+  twohand: {
+    idle: "twohand/idle",
+    walk: "twohand/walk",
+    run: "twohand/run",
+    attack: "twohand/attack",
+    extras: [
+      "twohand/attack2",
+      "twohand/attack3",
+      "twohand/skill1",
+      "twohand/skill2",
+      "twohand/skill3",
+      "twohand/skill4",
+      "twohand/overhead",
+      "twohand/power",
+    ],
+  },
+  /** Crossbow Warrior pack (ExplosiveLLC) — bake before enabling in combat. */
+  crossbow: {
+    idle: "crossbow/idle",
+    walk: "crossbow/walk",
+    run: "crossbow/run",
+    attack: "crossbow/shoot",
+    extras: ["crossbow/aim", "crossbow/reload", "crossbow/skill1", "crossbow/skill2"],
+  },
+  /** Rifle / gun — from Open Mixamo anim/rifle bake (not Explosive FREE). */
+  rifle: {
+    idle: "rifle/idle",
+    walk: "rifle/walk",
+    run: "rifle/run",
+    attack: "rifle/fire",
+    extras: ["rifle/aim", "rifle/reload", "rifle/skill1", "rifle/skill2"],
+  },
 };
+
+/**
+ * Packs that may not have baked JSON yet → fall back for runtime safety.
+ * Explosive FREE only ships teaser Attack1 clips; full packs required for twohand/crossbow.
+ */
+export const ANIM_PACK_FALLBACK: Partial<Record<AnimPack, AnimPack>> = {
+  twohand: "polearm",
+  crossbow: "longbow",
+  rifle: "unarmed",
+};
+
+/**
+ * Resolve pack + clip table.
+ * Always returns a LoadoutClips row (twohand/crossbow/rifle rows exist for bake targets;
+ * runtime falls back when loadBakedClip 404s — callers may prefer ANIM_PACK_FALLBACK first).
+ */
+export function resolveAnimPackClips(pack: AnimPack): {
+  pack: AnimPack;
+  clips: LoadoutClips;
+  fallbackFrom?: AnimPack;
+} {
+  // Prefer fallback pack when we know full bake is not shipped yet
+  // (Explosive FREE teasers only — see docs/EXPLOSIVE_WARRIOR_PACK_REVIEW.md).
+  const forceFb = ANIM_PACK_FALLBACK[pack];
+  if (forceFb && (pack === "twohand" || pack === "crossbow" || pack === "rifle")) {
+    // Still expose intended pack name for logging; clips from fallback until bake lands
+    const fbClips = ANIM_PACK_CLIPS[forceFb];
+    if (fbClips) return { pack: forceFb, clips: fbClips, fallbackFrom: pack };
+  }
+  const clips = ANIM_PACK_CLIPS[pack];
+  if (clips) return { pack, clips };
+  const fb = ANIM_PACK_FALLBACK[pack];
+  if (fb && ANIM_PACK_CLIPS[fb]) {
+    return { pack: fb, clips: ANIM_PACK_CLIPS[fb]!, fallbackFrom: pack };
+  }
+  return { pack: "unarmed", clips: ANIM_PACK_CLIPS.unarmed, fallbackFrom: pack };
+}
 
 /**
  * Shared traversal / mobility clips loaded for EVERY grudge6 hero.
@@ -167,32 +253,58 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "dodge_backward", rel: "locomotion/dodging" },
 ];
 
-/** Map arsenal weapon id → anim pack (overrides class default when 2H/spear). */
+/**
+ * Map arsenal weapon id → anim pack (overrides class default when 2H/spear/gun).
+ * See docs/EXPLOSIVE_WARRIOR_PACK_REVIEW.md for ExplosiveLLC → pack mapping.
+ */
 export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
   const w = String(weaponId || "").toLowerCase();
-  if (!w || w === "none") return null;
+  if (!w || w === "none") return "unarmed";
+  // 2H heavy — Explosive TwoHanded / Hammer (bake → twohand; runtime falls back polearm)
   if (
-    w === "spear" ||
-    w === "javelin" ||
-    w === "lance" ||
     w === "greatsword" ||
     w === "greataxe" ||
     w === "hammer2h" ||
-    w === "halberd" ||
-    w === "polearm"
+    w === "scythe"
   ) {
+    return "twohand";
+  }
+  // Polearm / spear family — Madarame bake SSOT
+  if (w === "spear" || w === "javelin" || w === "lance" || w === "halberd" || w === "polearm") {
     return "polearm";
   }
-  if (w.startsWith("staff") || w === "wand") return "magic";
-  if (w === "bow" || w === "longbow" || w === "crossbow") return "longbow";
-  if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer") {
+  if (w.startsWith("staff") || w === "wand" || w === "tome") return "magic";
+  // Crossbow — Explosive Crossbow pack when baked; else longbow aim set
+  if (w === "crossbow") return "crossbow";
+  if (w === "bow" || w === "longbow") return "longbow";
+  // Guns — Open Mixamo rifle bake when present
+  if (
+    w === "rifle" ||
+    w === "hunter-rifle" ||
+    w === "shotgun" ||
+    w === "pistol" ||
+    w === "gunblade"
+  ) {
+    return "rifle";
+  }
+  if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer" || w === "shield") {
     return "sword_shield";
   }
   return null;
 }
 
 export function asAnimPack(value: string): AnimPack {
-  return value in ANIM_PACK_CLIPS ? (value as AnimPack) : "unarmed";
+  if (value in ANIM_PACK_CLIPS) return value as AnimPack;
+  // Accept aliases used in gear / Explosive maps
+  const alias: Record<string, AnimPack> = {
+    "2h": "twohand",
+    "2h_melee": "twohand",
+    greatsword: "twohand",
+    greataxe: "twohand",
+    gun: "rifle",
+    bow: "longbow",
+  };
+  return alias[value] ?? "unarmed";
 }
 
 /**

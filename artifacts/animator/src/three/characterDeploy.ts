@@ -229,8 +229,48 @@ export function reGroundAfterEquip(model: THREE.Object3D, groundY = 0): number {
 }
 
 /**
+ * Find the skinned deploy model under an Avatar root (holder → rig → model).
+ * Prefer an object already marked by deployCharacterModel / fitCharacterHeight.
+ */
+export function findDeployModel(avatarRoot: THREE.Object3D): THREE.Object3D | null {
+  let marked: THREE.Object3D | null = null;
+  let firstSkinned: THREE.Object3D | null = null;
+  avatarRoot.traverse((o) => {
+    if (!marked && (o.userData?.characterDeployed === true || o.userData?.grudgeHeightFit === true)) {
+      // Prefer fully deployed kit over intermediate height-fit nodes
+      if (o.userData?.characterDeployed === true || !marked) marked = o;
+      if (o.userData?.characterDeployed === true) marked = o;
+    }
+    if (!firstSkinned && (o as THREE.SkinnedMesh).isSkinnedMesh) {
+      firstSkinned = o;
+    }
+  });
+  if (marked) return marked;
+  if (!firstSkinned) return null;
+  // Walk up from first skinned mesh to a group that is a direct-ish child of
+  // avatarRoot or holder (skip the SkinnedMesh itself for scale ops).
+  let p: THREE.Object3D | null = firstSkinned;
+  while (p?.parent && p.parent !== avatarRoot) {
+    if (
+      p.userData?.importPipeline ||
+      p.userData?.grudgeHeightFit ||
+      p.userData?.characterDeployed
+    ) {
+      return p;
+    }
+    // Stop one level under avatarRoot (holder's child = rig/model)
+    if (p.parent.parent === avatarRoot) return p;
+    p = p.parent;
+  }
+  return p;
+}
+
+/**
  * Gross scale guard for live Avatar after spawn (BrawlerScene parity).
  * Returns true if a refit ran.
+ *
+ * Re-grounds the **skinned model** (not the holder wrapper). Grounding
+ * `avatarRoot.children[0]` (holder) double-offset Y and pushed feet under the floor.
  */
 export function ensureHumanScale(
   avatarRoot: THREE.Object3D,
@@ -240,26 +280,14 @@ export function ensureHumanScale(
   const h = bodyBox(avatarRoot).getSize(new THREE.Vector3()).y;
   if (!(h > 0.01)) return false;
 
+  const model = findDeployModel(avatarRoot) ?? avatarRoot;
+
   if (h <= targetM * RE_FIT_MAX_RATIO && h >= targetM * RE_FIT_MIN_RATIO) {
-    // Re-ground visual child only (Avatar.root.y is world feet for Controller)
-    const child = avatarRoot.children[0];
-    if (child) groundFeetLocal(child, 0);
+    // Avatar.root.y is world feet for Controller — only re-ground model-local Y.
+    groundFeetLocal(model, 0);
     return false;
   }
 
-  let model: THREE.Object3D = avatarRoot;
-  if (avatarRoot.children.length >= 1) {
-    let m: THREE.Object3D | null = null;
-    avatarRoot.traverse((o) => {
-      if (m) return;
-      if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
-        let p: THREE.Object3D | null = o;
-        while (p && p.parent && p.parent !== avatarRoot) p = p.parent;
-        m = p;
-      }
-    });
-    if (m) model = m;
-  }
   console.warn(
     `[characterDeploy] height ${h.toFixed(2)}m off target ${targetM}m — refitting`,
   );
@@ -267,6 +295,17 @@ export function ensureHumanScale(
   model.userData.grudgeHeightFit = true;
   deployCharacterModel(model, { facePlusZ: false, refitIfAbsurd: false });
   return true;
+}
+
+/**
+ * After first idle/attack sample, re-sit soles on groundY (position tracks /
+ * bind-pose drift). Safe no-op when already grounded.
+ */
+export function reGroundAfterAnimSample(
+  model: THREE.Object3D,
+  groundY = 0,
+): number {
+  return groundFeetLocal(model, groundY);
 }
 
 /** Validate a deployed kit is playable before unlocking input. */

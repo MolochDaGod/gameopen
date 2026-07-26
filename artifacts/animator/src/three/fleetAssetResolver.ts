@@ -205,15 +205,22 @@ export function pathAliases(path: string): string[] {
     out.push(clean.replace("models/weapons/", "weapons/"));
   }
 
-  // Baked anim JSON
-  if (clean.startsWith("anims/baked/") || clean.startsWith("anim/")) {
+  // Baked anim JSON (same-origin first via resolveAssetCandidates)
+  if (clean.startsWith("anims/baked/")) {
     out.push(clean);
   }
 
-  // Explorer / Mixamo clip paths
+  // Explorer / Mixamo clip paths — aliases only; loaders should use sameOriginOnly
+  // / pack gate. Do NOT invent extra R2 prefixes here (causes 404 storms).
   if (clean.startsWith("anim/animations/") || clean.startsWith("animations/")) {
     out.push(clean.replace(/^anim\//, ""));
     out.push(clean.startsWith("animations/") ? `anim/${clean}` : clean);
+    // Short public layout
+    if (clean.startsWith("anim/animations/")) {
+      out.push(clean.replace("anim/animations/", "anim/"));
+    }
+  } else if (clean.startsWith("anim/") && !clean.startsWith("anim/base/")) {
+    out.push(clean);
   }
 
   return [...new Set(out)];

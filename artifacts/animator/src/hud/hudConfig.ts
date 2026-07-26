@@ -10,6 +10,7 @@ import {
   type HudFontId,
   type HudThemeId,
 } from "./hudThemes";
+import { clampQuickSlots, defaultQuickSlots, type QuickSlots } from "./quickActions";
 
 /** The HUD panels the editor can move / scale / hide. */
 export type HudPanelId =
@@ -20,7 +21,8 @@ export type HudPanelId =
   | "status"
   | "reticle"
   | "mech"
-  | "classbar";
+  | "classbar"
+  | "tightbar";
 
 export const HUD_PANEL_IDS: HudPanelId[] = [
   "vitals",
@@ -31,6 +33,7 @@ export const HUD_PANEL_IDS: HudPanelId[] = [
   "reticle",
   "mech",
   "classbar",
+  "tightbar",
 ];
 
 /** Human-facing metadata for the editor's layer list. */
@@ -43,7 +46,29 @@ export const HUD_PANEL_META: Record<HudPanelId, { label: string; hint: string }>
   reticle: { label: "Reticle", hint: "Aiming crosshair" },
   mech: { label: "Mech Cockpit", hint: "Armour integrity + slam (piloting only)" },
   classbar: { label: "Class Skills", hint: "Upper Shift+1–5 class bar + passives" },
+  tightbar: { label: "Tight Bar", hint: "HUD.psd orbs + avatar + 6+6 slots (threejs-rapier)" },
 };
+
+/* ------------------------------------------------------------------ *
+ * Layouts — "tight" is production default (HUD.psd / threejs-rapier).
+ * "classic" keeps the older Craftpix / flat bar for opt-in.
+ * ------------------------------------------------------------------ */
+
+export type HudLayoutId = "classic" | "tight";
+
+export const HUD_LAYOUTS: Record<HudLayoutId, { name: string; blurb: string }> = {
+  classic: { name: "Classic", blurb: "Craftpix / flat bottom chrome." },
+  tight: {
+    name: "HUD Tight",
+    blurb: "HUD.psd — health & stamina orbs, avatar arch, 6+6 quick slots.",
+  },
+};
+
+export const HUD_LAYOUT_IDS = Object.keys(HUD_LAYOUTS) as HudLayoutId[];
+
+export function isHudLayoutId(v: unknown): v is HudLayoutId {
+  return typeof v === "string" && v in HUD_LAYOUTS;
+}
 
 export interface PanelLayout {
   /** Horizontal offset in px from the panel's anchored position. */
@@ -78,6 +103,10 @@ export interface HudConfig {
   theme: HudThemeId;
   appearance: HudAppearance;
   panels: Record<HudPanelId, PanelLayout>;
+  /** Production default: tight (HUD.psd bar from threejs-rapier). */
+  layout: HudLayoutId;
+  /** 12 quick-slot bindings for the tight bar (6 left + 6 right). */
+  quickSlots: QuickSlots;
 }
 
 /**
@@ -92,8 +121,9 @@ export interface HudCustomLook {
   appearance: HudAppearance;
 }
 
-export const HUD_STORAGE_KEY = "animator.hud.editor.v1";
-export const HUD_LOOKS_STORAGE_KEY = "animator.hud.looks.v1";
+/** v2: default layout=tight (HUD.psd) + theme=rpg — invalidates Steam-era classic HUD cache. */
+export const HUD_STORAGE_KEY = "animator.hud.editor.v2";
+export const HUD_LOOKS_STORAGE_KEY = "animator.hud.looks.v2";
 
 /** Upper bounds for the saved-looks system so a hostile blob can't bloat storage. */
 export const MAX_LOOKS = 50;
@@ -119,7 +149,14 @@ export function defaultAppearance(): HudAppearance {
 export function defaultHudConfig(): HudConfig {
   const panels = {} as Record<HudPanelId, PanelLayout>;
   for (const id of HUD_PANEL_IDS) panels[id] = defaultPanelLayout();
-  return { theme: "default", appearance: defaultAppearance(), panels };
+  return {
+    theme: "rpg",
+    appearance: defaultAppearance(),
+    panels,
+    // threejs-rapier production look — not the old Steam/Craftpix default
+    layout: "tight",
+    quickSlots: defaultQuickSlots(),
+  };
 }
 
 function clampNum(v: unknown, lo: number, hi: number, fallback: number): number {
@@ -166,13 +203,21 @@ export function clampPanel(raw: Partial<PanelLayout> | undefined): PanelLayout {
 export function mergeConfig(raw: unknown): HudConfig {
   const base = defaultHudConfig();
   if (!raw || typeof raw !== "object") return base;
-  const obj = raw as { theme?: unknown; appearance?: unknown; panels?: unknown };
+  const obj = raw as {
+    theme?: unknown;
+    appearance?: unknown;
+    panels?: unknown;
+    layout?: unknown;
+    quickSlots?: unknown;
+  };
   if (isHudThemeId(obj.theme)) base.theme = obj.theme;
   base.appearance = clampAppearance(obj.appearance as Partial<HudAppearance> | undefined);
   const panels = (obj.panels ?? {}) as Record<string, Partial<PanelLayout>>;
   if (panels && typeof panels === "object") {
     for (const id of HUD_PANEL_IDS) base.panels[id] = clampPanel(panels[id]);
   }
+  if (isHudLayoutId(obj.layout)) base.layout = obj.layout;
+  if (obj.quickSlots !== undefined) base.quickSlots = clampQuickSlots(obj.quickSlots);
   return base;
 }
 

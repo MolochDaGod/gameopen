@@ -85,6 +85,7 @@ import {
   isScriptDoc,
 } from "@workspace/grudge-runtime";
 import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
+import { getAnimDatabase } from "./anim/AnimDatabase";
 import {
   aoeFalloff,
   meleeStrike,
@@ -951,6 +952,30 @@ export class Studio {
     return this.freeMouseMode;
   }
 
+  /**
+   * Map OS cursor (client coords) → free-aim NDC for soft-lock select / free mouse.
+   * Full-screen range when free-mouse so the cursor IS the aim (no double reticle fight).
+   */
+  private aimFromClientPoint(clientX: number, clientY: number) {
+    const el = this.renderer?.domElement;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return;
+    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -(((clientY - rect.top) / rect.height) * 2 - 1);
+    // Free-mouse: full NDC so select ray matches the OS cursor.
+    // Soft pointer-lock: still clamp to aimMaxNdc via splitAimLook.
+    this.aimNdcX = THREE.MathUtils.clamp(ndcX, -1, 1);
+    this.aimNdcY = THREE.MathUtils.clamp(ndcY, -1, 1);
+  }
+
+  /** Sync free-aim from InputState free-cursor when not pointer-locked. */
+  private syncFreeMouseAim() {
+    if (this.input.locked || this.touchMode) return;
+    if (!this.input.hasClientPos) return;
+    this.aimFromClientPoint(this.input.clientX, this.input.clientY);
+  }
+
   private onClick = () => {
     this.sfx?.resume();
     // On touch devices the on-screen controls drive look, so never grab pointer
@@ -959,13 +984,19 @@ export class Studio {
     // App shows DangerStartScreen first — don't steal lock under the overlay.
     // After ENTER, canvas clicks re-acquire lock (sample three.js boot pattern).
     if (document.querySelector("[data-testid='danger-start-screen']")) return;
-    // Free-mouse (`): keep OS cursor; only Quote re-locks for crosshair.
+    // Free-mouse (F8 / \): keep OS cursor; only F9 / ' re-locks for crosshair.
+    // Click-to-relock is ONLY when sticky free-mouse is OFF (pointer-lock combat).
     if (this.freeMouseMode) return;
     if (!this.input.locked) this.input.requestLock();
   };
   private onMouseDown = (e: MouseEvent) => {
     this.sfx?.resume();
-    if (!this.input.locked) return;
+    // Free-mouse sticky OR pointer-lock: both can select / attack / toggle focus.
+    // Previously free-mouse short-circuited all LMB/RMB → soft lock dead + no skills.
+    if (!this.input.locked && !this.freeMouseMode) return;
+    if (this.freeMouseMode || !this.input.locked) {
+      this.aimFromClientPoint(e.clientX, e.clientY);
+    }
     // Prefight / result / choice: no offense until fighting or free roam.
     if (this.arenaMatch?.isActive && !this.arenaMatch.isFighting) return;
     if (e.button === 0) {
@@ -979,9 +1010,9 @@ export class Studio {
         this.selectHarvestUnderCrosshair();
         return;
       }
-      // Build: LMB = place / tool
+      // Build: LMB = place (end chain) / start ghost for selected tool
       if (this.activityMode === "build") {
-        this.runActivityTool();
+        this.runActivityTool(undefined, { placeContinue: false });
         return;
       }
       // Combat soft lock: LMB = select (NPC / enemy / interactable under aim)
@@ -996,7 +1027,7 @@ export class Studio {
       e.preventDefault();
       if (this.locked) this.doSurpriseUppercut();
     } else if (e.button === 2) {
-      // Cancel placement first
+      // Cancel cast placement first
       if (this.castPlacement) {
         this.cancelCastPlacement();
         return;
@@ -1007,10 +1038,15 @@ export class Studio {
         this.beginHarvestMove();
         return;
       }
-      // Build: RMB cancels ghost if any
-      if (this.activityMode === "build" && this.campBuild?.isGhostActive) {
-        this.campBuild.cancelGhost();
-        this.setCombatFlash("Place cancelled", 0.4);
+      // Build: RMB = place and CONTINUE (chain place). Esc cancels ghost.
+      // ui.grudge-studio / CampClaim: LMB end · RMB place+continue · R rotate
+      if (this.activityMode === "build") {
+        if (this.campBuild?.isGhostActive) {
+          this.runActivityTool(undefined, { placeContinue: true });
+        } else {
+          // No ghost yet — start place for current tool (same as LMB first step)
+          this.runActivityTool(undefined, { placeContinue: false });
+        }
         return;
       }
       // Combat: sticky toggle hard FOCUS ↔ soft lock/select.
@@ -1025,10 +1061,25 @@ export class Studio {
   private onContextMenu = (e: MouseEvent) => e.preventDefault();
   private onResize = () => this.resize();
 
-  constructor(container: HTMLElement, characterId: string, onHud: (h: HudSnapshot) => void) {
+  /**
+   * @param bootOpts.meshIds — apply before first spawn (annihilate-demo hero gear)
+   * @param bootOpts.skipInitialSpawn — rare; App applies hero then spawns
+   */
+  constructor(
+    container: HTMLElement,
+    characterId: string,
+    onHud: (h: HudSnapshot) => void,
+    bootOpts?: { meshIds?: string[] | null; weaponId?: string; skipInitialSpawn?: boolean },
+  ) {
     this.container = container;
     this.characterId = characterId;
     this.onHud = onHud;
+    if (bootOpts?.meshIds?.length) {
+      this.pendingMeshIds = bootOpts.meshIds.slice();
+    }
+    if (bootOpts?.weaponId) {
+      this.weaponId = bootOpts.weaponId as typeof this.weaponId;
+    }
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -1348,7 +1399,9 @@ export class Studio {
 
     this.loadOverrides();
     this.resize();
-    void this.spawnCharacter(this.characterId);
+    if (!bootOpts?.skipInitialSpawn) {
+      void this.spawnCharacter(this.characterId);
+    }
     void this.initPhysics();
     this.initPostFx();
     this.loop();
@@ -1572,9 +1625,14 @@ export class Studio {
     try {
       await next.load();
     } catch (err) {
-      console.error("[Studio] character load failed", err);
-      // The grudge6 race FBX can fail (asset host / CORS); fall back to the
-      // procedural Explorer so the surface always has a playable avatar.
+      console.error(
+        "[Studio] character load failed",
+        id,
+        grudge ? `grudge6 ${grudge.raceId}/${grudge.presetId}` : "catalog",
+        err,
+      );
+      // Grudge6 race FBX/CDN can fail; fall back to Explorer (procedural Mixamo
+      // skeleton — does not require Mixamo FBX on Vercel after loader fix).
       if (!grudge) return;
       next.dispose();
       if (this.disposed || token !== this.loadToken) return;
@@ -9533,6 +9591,8 @@ export class Studio {
       this.character != null &&
       this.room.nearDoor(this.character.root.position);
     if (this.controller && this.character) {
+      // Free-mouse / unlocked: aim follows OS cursor (soft-lock select under cursor).
+      this.syncFreeMouseAim();
       // Track the live enemy each frame; release the stance if the target dies.
       if (this.locked) {
         const lp = this.targets.lockPoint();
@@ -9960,12 +10020,18 @@ export class Studio {
       this.campBuild.update(dt, this.character?.root.position, hostiles);
     }
     if (this.campBuild?.isGhostActive && this.character) {
-      const origin = this.character.root.position.clone();
-      origin.y = 0;
-      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
-      const place = origin.clone().addScaledVector(fwd, 3.2);
-      place.y = 0;
-      this.campBuild.updateGhost(place);
+      // Mouse / free-aim ground assist preferred; fall back to body-forward ghost
+      const aim = this.buildAimGroundPoint();
+      if (aim) {
+        this.campBuild.updateGhost(aim);
+      } else {
+        const origin = this.character.root.position.clone();
+        origin.y = 0;
+        const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+        const place = origin.clone().addScaledVector(fwd, 3.2);
+        place.y = 0;
+        this.campBuild.updateGhost(place);
+      }
     }
     this.updatePending(dt);
     // Advance data-driven abilities here (same `dt`, adjacent to updatePending)
@@ -10895,10 +10961,15 @@ export class Studio {
       // Leave combat focus stance; tools use free-aim soft select
       this.locked = false;
       this.controller?.setLockTarget(null);
-      if (mode === "build") this.campBuild?.cancelGhost?.();
+      // Leaving build cancels ghost; entering build must NOT wipe a fresh beginPlace
+      if (prev === "build" && mode !== "build") {
+        this.campBuild?.cancelGhost?.();
+      }
       // Minecraft-like third person: over-shoulder crosshair, mid body look-at
       this.applyActivityCamera(mode);
     } else if (mode === "combat") {
+      // Leaving build → cancel place ghost
+      if (prev === "build") this.campBuild?.cancelGhost?.();
       // Restore Danger Room combat — same stack as always (no new systems).
       this.restoreDangerRoomCombatMode(prev);
       this.applyActivityCamera("combat");
@@ -11117,8 +11188,10 @@ export class Studio {
    * Non-combat primary action (LMB in harvest/build).
    * Minecraft-like: harvest tools write yields into the production bag;
    * build shows place ghost. Full world authority remains Mine-Loader.
+   *
+   * @param opts.placeContinue — RMB chain place (keep ghost after commit)
    */
-  private runActivityTool(toolId?: string) {
+  private runActivityTool(toolId?: string, opts?: { placeContinue?: boolean }) {
     const id = toolId ?? this.activityTool;
     if (this.activityMode === "combat") return;
     const origin = this.character?.root.position.clone() ?? new THREE.Vector3();
@@ -11135,8 +11208,23 @@ export class Studio {
         this.characterId ||
         "explorer";
       applyHarvestYield(tool, undefined, undefined, bagChar);
-      // Harvest / farm / build swing (attack role = chop/mine/gather feel)
+      // Anim database: harvest roles (chop/gather/mine) → clip; fallback attack
+      const toolRole =
+        tool === "wood" || tool === "axe" || /chop|wood/i.test(String(tool))
+          ? "harvestChop"
+          : tool === "pick" || /mine|ore/i.test(String(tool))
+            ? "harvestMine"
+            : "harvestGather";
+      const hit = getAnimDatabase().resolve({
+        role: toolRole,
+        activity: "harvest",
+        surface: "ground",
+        weaponId: this.weaponId,
+      });
+      const role = hit?.clip.role ?? "attack";
       const played =
+        this.character?.playRoleOnce?.(role as never, 0.08) ??
+        this.character?.playClipOnce?.(role, 0.1) ??
         this.character?.playRoleOnce?.("attack", 0.08) ??
         this.character?.playClipOnce?.("attack", 0.1);
       void played;
@@ -11180,17 +11268,27 @@ export class Studio {
         chest: "storage_chest",
       };
       if (this.campBuild?.isGhostActive) {
-        const s = this.campBuild.commitPlace();
+        // Aim-assisted snap: use free-aim ground hit when available
+        const aimPlace = this.buildAimGroundPoint() ?? place;
+        this.campBuild.updateGhost(aimPlace);
+        const s = this.campBuild.commitPlace({ keepGhost: !!opts?.placeContinue });
         if (s) {
           this.vfx.auraRing(new THREE.Vector3(s.x, 0.05, s.z), 0x6ee7b7, 1.6, 0.55);
           this.vfx.hexaring(() => new THREE.Vector3(s.x, 0.4, s.z), 0x6ee7b7, 0.45);
+          // Chain place: nudge ghost slightly forward so next place doesn't stack
+          if (opts?.placeContinue && this.campBuild?.isGhostActive) {
+            const next = new THREE.Vector3(s.x, 0, s.z);
+            const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+            next.addScaledVector(fwd, 1.2);
+            this.campBuild.updateGhost(next);
+          }
         }
         return;
       }
       const placeableId = toolToPlaceable[id] || id;
       if (getPlaceable(placeableId)) {
         this.campBuild?.beginPlace(placeableId);
-        this.campBuild?.updateGhost(place);
+        this.campBuild?.updateGhost(this.buildAimGroundPoint() ?? place);
       } else {
         this.setCombatFlash(`BUILD · ${id.toUpperCase()} · no placeable`, 0.45);
         this.vfx.auraRing(place, 0x7fb0ff, 1.4, 0.5);
@@ -11198,18 +11296,42 @@ export class Studio {
     }
   }
 
+  /** Ground point under free-aim / crosshair for ghost assist (Y=0 plane). */
+  private buildAimGroundPoint(): THREE.Vector3 | null {
+    try {
+      const ray = this.crosshairRay();
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const hit = new THREE.Vector3();
+      if (ray.intersectPlane(plane, hit)) {
+        hit.y = 0;
+        return hit;
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+
   /**
    * Camp UI / external: start placeable ghost (claim flag, barracks, wall…).
    * Switches to build mode and exits pointer-lock responsibility to the UI host.
    */
   beginPlacePlaceable(placeableId: string): boolean {
-    this.setActivityMode("build");
+    // Enter build without wiping the ghost we are about to spawn
+    if (this.activityMode !== "build") this.setActivityMode("build");
+    // Free-mouse helps UI.grudge-studio claim panel aim the ghost with the cursor
+    this.setFreeMouseMode(true);
     const ok = this.campBuild?.beginPlace(placeableId) ?? false;
     if (ok && this.character) {
-      const origin = this.character.root.position.clone();
-      origin.y = 0;
-      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
-      this.campBuild?.updateGhost(origin.addScaledVector(fwd, 3.2).setY(0));
+      const aim = this.buildAimGroundPoint();
+      if (aim) {
+        this.campBuild?.updateGhost(aim);
+      } else {
+        const origin = this.character.root.position.clone();
+        origin.y = 0;
+        const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+        this.campBuild?.updateGhost(origin.addScaledVector(fwd, 3.2).setY(0));
+      }
     }
     return ok;
   }

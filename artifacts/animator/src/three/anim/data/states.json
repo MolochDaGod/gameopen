@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "description": "Fleet character animation states — director layers for Open / grudge6 / Explorer",
+  "states": [
+    {
+      "id": "loco.idle",
+      "layer": "loco",
+      "defaultRole": "idle",
+      "surfaceModes": ["ground", "wade", "mount", "boat"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 10,
+      "description": "Standing / fight idle on ground"
+    },
+    {
+      "id": "loco.walk",
+      "layer": "loco",
+      "defaultRole": "walk",
+      "surfaceModes": ["ground", "wade", "mount", "boat"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 11
+    },
+    {
+      "id": "loco.run",
+      "layer": "loco",
+      "defaultRole": "run",
+      "surfaceModes": ["ground", "wade", "mount"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 12
+    },
+    {
+      "id": "loco.sprint",
+      "layer": "loco",
+      "defaultRole": "sprint",
+      "surfaceModes": ["ground"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 13
+    },
+    {
+      "id": "loco.swim",
+      "layer": "loco",
+      "defaultRole": "swim",
+      "surfaceModes": ["swim"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 40,
+      "description": "Full swim cycle"
+    },
+    {
+      "id": "loco.tread",
+      "layer": "loco",
+      "defaultRole": "tread",
+      "surfaceModes": ["swim", "wade"],
+      "activityModes": ["any"],
+      "interruptible": true,
+      "priority": 39
+    },
+    {
+      "id": "traversal.climb",
+      "layer": "traversal",
+      "defaultRole": "climb",
+      "surfaceModes": ["climb"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 50,
+      "description": "Vertical climb on wall / tree / boat hull"
+    },
+    {
+      "id": "traversal.climbUp",
+      "layer": "traversal",
+      "defaultRole": "climbUp",
+      "surfaceModes": ["climb"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 51
+    },
+    {
+      "id": "traversal.climbDown",
+      "layer": "traversal",
+      "defaultRole": "climbDown",
+      "surfaceModes": ["climb"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 51
+    },
+    {
+      "id": "traversal.hang",
+      "layer": "traversal",
+      "defaultRole": "hang",
+      "surfaceModes": ["climb", "mantle"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 52,
+      "description": "Freehang / grab vertical surface"
+    },
+    {
+      "id": "traversal.mantle",
+      "layer": "traversal",
+      "defaultRole": "mantle",
+      "surfaceModes": ["mantle", "climb"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 55,
+      "description": "Ledge pull-up (walls, boats, wide trees)"
+    },
+    {
+      "id": "traversal.wallRun",
+      "layer": "traversal",
+      "defaultRole": "wallRun",
+      "surfaceModes": ["wallRun"],
+      "activityModes": ["combat", "any"],
+      "interruptible": true,
+      "priority": 48
+    },
+    {
+      "id": "traversal.jump",
+      "layer": "action",
+      "defaultRole": "jump",
+      "surfaceModes": ["ground", "wade", "wallRun"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 30
+    },
+    {
+      "id": "traversal.dodge",
+      "layer": "action",
+      "defaultRole": "dodge",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["combat", "harvest"],
+      "interruptible": false,
+      "priority": 35
+    },
+    {
+      "id": "combat.attack",
+      "layer": "action",
+      "defaultRole": "attack",
+      "surfaceModes": ["ground", "wade", "boat"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 60
+    },
+    {
+      "id": "combat.skill1",
+      "layer": "action",
+      "defaultRole": "skill1",
+      "surfaceModes": ["ground", "wade", "boat"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 61
+    },
+    {
+      "id": "combat.skill2",
+      "layer": "action",
+      "defaultRole": "skill2",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 61
+    },
+    {
+      "id": "combat.skill3",
+      "layer": "action",
+      "defaultRole": "skill3",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 61
+    },
+    {
+      "id": "combat.skill4",
+      "layer": "action",
+      "defaultRole": "skill4",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 62
+    },
+    {
+      "id": "combat.block",
+      "layer": "overlay",
+      "defaultRole": "block",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["combat"],
+      "interruptible": true,
+      "priority": 45
+    },
+    {
+      "id": "combat.parry",
+      "layer": "action",
+      "defaultRole": "parry",
+      "surfaceModes": ["ground"],
+      "activityModes": ["combat"],
+      "interruptible": false,
+      "priority": 58
+    },
+    {
+      "id": "combat.hurt",
+      "layer": "action",
+      "defaultRole": "hurt",
+      "surfaceModes": ["ground", "wade", "swim"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 70
+    },
+    {
+      "id": "combat.death",
+      "layer": "action",
+      "defaultRole": "death",
+      "surfaceModes": ["ground", "wade", "swim", "climb"],
+      "activityModes": ["any"],
+      "interruptible": false,
+      "priority": 100
+    },
+    {
+      "id": "activity.harvest",
+      "layer": "activity",
+      "defaultRole": "harvest",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["harvest"],
+      "interruptible": false,
+      "priority": 40
+    },
+    {
+      "id": "activity.harvestChop",
+      "layer": "activity",
+      "defaultRole": "harvestChop",
+      "surfaceModes": ["ground"],
+      "activityModes": ["harvest"],
+      "interruptible": false,
+      "priority": 41
+    },
+    {
+      "id": "activity.harvestMine",
+      "layer": "activity",
+      "defaultRole": "harvestMine",
+      "surfaceModes": ["ground"],
+      "activityModes": ["harvest"],
+      "interruptible": false,
+      "priority": 41
+    },
+    {
+      "id": "activity.harvestGather",
+      "layer": "activity",
+      "defaultRole": "harvestGather",
+      "surfaceModes": ["ground", "wade"],
+      "activityModes": ["harvest"],
+      "interruptible": false,
+      "priority": 41
+    },
+    {
+      "id": "activity.build",
+      "layer": "activity",
+      "defaultRole": "buildPlace",
+      "surfaceModes": ["ground", "wade", "boat"],
+      "activityModes": ["build"],
+      "interruptible": true,
+      "priority": 25
+    }
+  ]
+}

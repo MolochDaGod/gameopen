@@ -16,6 +16,7 @@ import {
 import { UnitFrame } from "./hud/UnitFrame";
 import { CraftpixHarvestHud } from "./hud/CraftpixHarvestHud";
 import { CraftpixCombatHud } from "./hud/CraftpixCombatHud";
+import { TightBar } from "./hud/TightBar";
 import { portraitOnError } from "../lib/characterPortrait";
 import {
   COMBAT_KEY_LEGEND,
@@ -26,6 +27,7 @@ import {
   type QuickActionId,
 } from "../hud/quickActions";
 import { ArenaMinimapHud } from "./ArenaMinimapHud";
+import "./hud/tightBar.css";
 
 interface Props {
   hud: HudSnapshot | null;
@@ -1033,6 +1035,11 @@ export function Hud({
 
   const mode = hud.activityMode ?? "combat";
   const isHarvestBuild = mode === "harvest" || mode === "build";
+  // threejs-rapier default: HUD.psd tight bar. Classic = Craftpix combat bar.
+  const tight = (edit?.config.layout ?? "tight") === "tight";
+  const quickSlots = edit?.config.quickSlots ?? defaultQuickSlots();
+  const showTightBar = tight && !isHarvestBuild && !hud.mech;
+  const showClassicCombat = !isHarvestBuild && (!tight || !!hud.mech);
 
   return (
     <>
@@ -1042,8 +1049,8 @@ export function Hud({
       {/* Mode banner — top centre, above class skills / vitals (Q cycle) */}
       <ModeBanner mode={mode} tool={hud.activityTool ?? ""} />
 
-      {/* Combat key legend — bottom-left, not competing with centre mode banner */}
-      {!isHarvestBuild && (
+      {/* Combat key legend — hide under tight layout (slots carry keys) */}
+      {!isHarvestBuild && !tight && (
         <div className="combat-key-legend" aria-hidden>
           {COMBAT_KEY_LEGEND}
         </div>
@@ -1101,9 +1108,10 @@ export function Hud({
       <CombatFlash text={hud.combatFlash} />
 
       {/*
-        Mode-switched player chrome:
-          combat  → Craftpix Part_2 two-row bar (slots = icon XY) + Part_7 tips
-          harvest/build → Craftpix Part_3 bar (HP/SP, avatar, gold, professions, 6 tools)
+        Mode-switched player chrome (threejs-rapier production SSOT):
+          combat + layout=tight → HUD.psd TightBar (orbs + 6+6 + avatar)
+          combat + classic      → Craftpix combat bar
+          harvest/build         → Craftpix Part_3 bar
       */}
       {isHarvestBuild ? (
         <CraftpixHarvestHud
@@ -1116,10 +1124,21 @@ export function Hud({
           bagOccupied={bagOccupied}
           bagCapacity={bagCapacity}
         />
+      ) : showTightBar ? (
+        <>
+          <TightBar
+            hud={hud}
+            slots={quickSlots}
+            bind={bindOf(edit, "tightbar")}
+            portraitFallback={<Icon name={WEAPON_ICON[hud.weapon]} size={44} />}
+          />
+          <div className="cx-combat-poise-float tb-poise-float">
+            <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
+          </div>
+        </>
       ) : (
         <div {...applyBind(bindOf(edit, "vitals"), "cx-combat-bind")}>
           <CraftpixCombatHud hud={hud} onOpenProduction={onOpenProduction} />
-          {/* Poise / combat-state chip sits above the Part_2 bar */}
           <div className="cx-combat-poise-float">
             <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
             <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
@@ -1148,8 +1167,8 @@ export function Hud({
         <EnemyPanel hud={hud} edit={edit} />
       )}
 
-      {/* Combat-only secondary action bar + readout (harvest/build use Craftpix bar) */}
-      {!isHarvestBuild && (
+      {/* Mech cockpit / classic secondary bar (hidden under tight on-foot) */}
+      {showClassicCombat && (
         <>
           <div {...applyBind(bindOf(edit, "actionbar"), "rpg-actionbar rpg-actionbar-secondary")}>
             {hud.mech ? (
@@ -1192,6 +1211,19 @@ export function Hud({
             <span className="dim">{hud.fps} fps</span>
           </div>
         </>
+      )}
+
+      {/* Compact readout under tight layout (FPS / spar only) */}
+      {showTightBar && (
+        <div {...applyBind(bindOf(edit, "stats"), "rpg-stats rpg-stats-tight")}>
+          <span className={`spar-diff diff-${hud.difficulty}`}>
+            <em>Spar</em> {hud.difficulty}
+          </span>
+          <span>
+            <em>Targets</em> {hud.targetsAlive}
+          </span>
+          <span className="dim">{hud.fps} fps</span>
+        </div>
       )}
 
       {/* CSS for new combat animations */}

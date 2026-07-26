@@ -4,10 +4,13 @@ import {
   centerXZOnPelvis,
   deployCharacterModel,
   findPelvisBone,
+  findDeployModel,
   groundFeetLocal,
+  ensureHumanScale,
   validateCharacterDeploy,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
+import { stripPositionTracks } from "./clipTracks";
 
 /**
  * Toy hero: Mesh (not incomplete SkinnedMesh) + Bip001 Pelvis bone.
@@ -111,5 +114,48 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     const v = validateCharacterDeploy(root);
     expect(v.ok).toBe(false);
     expect(v.issues.some((i) => i.includes("height"))).toBe(true);
+  });
+
+  it("ensureHumanScale re-grounds the marked deploy model not the holder", () => {
+    const avatar = new THREE.Group();
+    const holder = new THREE.Group();
+    avatar.add(holder);
+    const { root: model } = makeBip001Hero({ offsetY: 0.35 });
+    model.userData.characterDeployed = true;
+    model.userData.grudgeHeightFit = true;
+    holder.add(model);
+    groundFeetLocal(model, 0);
+    const beforeHolderY = holder.position.y;
+    ensureHumanScale(avatar, 1.8);
+    // Holder must not absorb the ground offset (old bug: feet under floor)
+    expect(Math.abs(holder.position.y - beforeHolderY)).toBeLessThan(0.05);
+    const box = bodyBox(model);
+    expect(Math.abs(box.min.y)).toBeLessThan(0.12);
+    expect(findDeployModel(avatar)).toBe(model);
+  });
+});
+
+describe("stripPositionTracks", () => {
+  it("drops limb and hip position tracks by default", () => {
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.QuaternionKeyframeTrack("Bip001 Pelvis.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+      new THREE.VectorKeyframeTrack("Bip001 Pelvis.position", [0, 1], [0, 0.9, 0, 0, 0.85, 0]),
+      new THREE.VectorKeyframeTrack("Bip001 L Foot.position", [0, 1], [0, 0, 0, 0, -0.1, 0]),
+      new THREE.QuaternionKeyframeTrack("Bip001 L Foot.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+    ]);
+    const out = stripPositionTracks(clip);
+    expect(out.tracks.every((t) => t.name.endsWith(".quaternion"))).toBe(true);
+    expect(out.tracks.length).toBe(2);
+  });
+
+  it("can keep pelvis position only", () => {
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("Bip001 Pelvis.position", [0, 1], [0, 0.9, 0, 0, 0.9, 0]),
+      new THREE.VectorKeyframeTrack("Bip001 L Foot.position", [0, 1], [0, 0, 0, 0, 0, 0]),
+      new THREE.QuaternionKeyframeTrack("Bip001 Pelvis.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+    ]);
+    const out = stripPositionTracks(clip, { keepRootPosition: true });
+    expect(out.tracks.some((t) => t.name === "Bip001 Pelvis.position")).toBe(true);
+    expect(out.tracks.some((t) => t.name.includes("Foot.position"))).toBe(false);
   });
 });

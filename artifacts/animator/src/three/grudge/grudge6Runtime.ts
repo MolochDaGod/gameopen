@@ -15,6 +15,7 @@ import {
   asAnimPack,
   loadBakedClip,
   isNonLoopingLocoClip,
+  resolveAnimPackClips,
   type AnimPack,
 } from "./anims";
 // re-export for Studio weapon→pack swaps
@@ -29,6 +30,7 @@ import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHe
 import {
   deployCharacterModel,
   reGroundAfterEquip,
+  reGroundAfterAnimSample,
   validateCharacterDeploy,
 } from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
@@ -252,8 +254,16 @@ export async function loadGrudge6CombatRig(
   opts?: LoadGrudge6Opts,
 ): Promise<Grudge6LoadedRig> {
   const preset = getPreset(raceId, presetId);
-  const animPack = asAnimPack(preset.animPack);
-  const pack = ANIM_PACK_CLIPS[animPack];
+  const requestedPack = asAnimPack(preset.animPack);
+  // twohand/crossbow/rifle may not have baked JSON yet (Explosive FREE teasers only)
+  const resolved = resolveAnimPackClips(requestedPack);
+  const animPack = resolved.pack;
+  const pack = resolved.clips;
+  if (resolved.fallbackFrom) {
+    console.info(
+      `[grudge6Runtime] anim pack "${resolved.fallbackFrom}" not fully baked — using "${animPack}"`,
+    );
+  }
   const meshIds =
     opts?.meshIds && opts.meshIds.length >= 2 ? opts.meshIds : preset.visibleMeshes;
 
@@ -432,18 +442,27 @@ export async function loadGrudge6CombatRig(
   }
 
   // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
-  // Bind-pose fit alone leaves feet underground once hips rotate in walk/run.
+  // Position tracks are stripped in rematchClipToSkeleton; still sample idle
+  // once so residual rotation-only pose sits soles on y=0 (all races/packs).
   if (clips.has("idle")) {
     try {
       const tmpMixer = new THREE.AnimationMixer(model);
       const act = tmpMixer.clipAction(clips.get("idle")!);
       act.play();
-      tmpMixer.update(0);
-      const dy = reGroundAfterEquip(model, 0);
+      tmpMixer.update(1 / 30);
+      const dy = reGroundAfterAnimSample(model, 0);
       if (Math.abs(dy) > 1e-4) {
         console.info(
-          `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId}`,
+          `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId} pack=${animPack}`,
         );
+      }
+      // Also sample attack if present (combo start pose can shift hips)
+      if (clips.has("attack")) {
+        tmpMixer.stopAllAction();
+        const atk = tmpMixer.clipAction(clips.get("attack")!);
+        atk.play();
+        tmpMixer.update(1 / 30);
+        reGroundAfterAnimSample(model, 0);
       }
       tmpMixer.stopAllAction();
       tmpMixer.uncacheRoot(model);
