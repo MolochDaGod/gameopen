@@ -15,6 +15,7 @@ import {
   asAnimPack,
   loadBakedClip,
   isNonLoopingLocoClip,
+  isUnsuitableLocoCycle,
   resolveAnimPackClips,
   type AnimPack,
 } from "./anims";
@@ -35,8 +36,9 @@ import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHe
 import {
   deployCharacterModel,
   reGroundAfterEquip,
-  reGroundAfterAnimSample,
   validateCharacterDeploy,
+  diagnoseCharacterLook,
+  sampleClipAndReground,
 } from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
@@ -340,10 +342,18 @@ export async function loadGrudge6CombatRig(
     sprint: "uploads_2026_06/locomotion/torch run forward",
   };
 
+  const isLocoRole = (role: string) => role === "walk" || role === "run" || role === "sprint";
+
   const loadRole = async (role: string, rel: string) => {
     const tryLoad = async (path: string) => {
       let clip = await loadBakedClip(path);
-      if (isNonLoopingLocoClip(clip, path) && (role === "walk" || role === "run" || role === "sprint")) {
+      // Walk/run/sprint: reject roll transitions AND long full-take dumps (Madarame ~5s)
+      if (isLocoRole(role) && isUnsuitableLocoCycle(clip, path)) {
+        throw new Error(
+          `rejected unsuitable loco ${path} for ${role} dur=${clip.duration.toFixed(2)}`,
+        );
+      }
+      if (isNonLoopingLocoClip(clip, path) && isLocoRole(role)) {
         throw new Error(`rejected non-looping ${path} for ${role}`);
       }
       clip = rematchClipToSkeleton(model, clip);
@@ -357,7 +367,10 @@ export async function loadGrudge6CombatRig(
     } catch (e1) {
       try {
         let clip = await loadBakedClip(rel, ARENA_ORIGIN);
-        if (isNonLoopingLocoClip(clip, rel) && (role === "walk" || role === "run" || role === "sprint")) {
+        if (isLocoRole(role) && isUnsuitableLocoCycle(clip, rel)) {
+          throw new Error(`rejected unsuitable arena loco ${rel} for ${role}`);
+        }
+        if (isNonLoopingLocoClip(clip, rel) && isLocoRole(role)) {
           throw new Error(`rejected non-looping arena ${rel}`);
         }
         clip = rematchClipToSkeleton(model, clip);
@@ -430,10 +443,19 @@ export async function loadGrudge6CombatRig(
   }
 
   // Sprint from true run cycle only (time-scale applied by AnimationDirector /
-  // GrudgeAvatar setLocomotionRate when speed band is high).
+  // GrudgeAvatar when sprint flag / high speed band is set).
   // NEVER load locomotion/running — that is run-to-roll.
-  if (clips.has("run") && !isNonLoopingLocoClip(clips.get("run")!)) {
+  const ensureSprintFromRun = () => {
+    if (!clips.has("run")) return;
     const runClip = clips.get("run")!;
+    if (isUnsuitableLocoCycle(runClip, runClip.name || "run")) {
+      console.error(
+        "[grudge6Runtime] RUN CLIP UNSUITABLE (roll/full-take) — stripping; torch run fallback",
+      );
+      clips.delete("run");
+      roles.delete("run");
+      return;
+    }
     const sprintClip = runClip.clone();
     sprintClip.name = "sprint";
     clips.set("sprint", sprintClip);
@@ -443,59 +465,55 @@ export async function loadGrudge6CombatRig(
       locoMult: SPRINT_LOCO_MULT,
       source: "clone:run",
     };
-  } else if (clips.has("run") && isNonLoopingLocoClip(clips.get("run")!)) {
-    console.error("[grudge6Runtime] RUN CLIP IS NON-LOOPING (roll) — stripping; torch run fallback");
-    clips.delete("run");
-    roles.delete("run");
+  };
+  ensureSprintFromRun();
+  if (!clips.has("run")) {
     await loadRole("run", SAFE_LOCO_FALLBACK.run);
-    if (clips.has("run")) {
-      const sprintClip = clips.get("run")!.clone();
-      sprintClip.name = "sprint";
-      clips.set("sprint", sprintClip);
-      roles.set("sprint", "sprint");
-      sprintClip.userData = { locoMult: SPRINT_LOCO_MULT, source: "clone:run-fallback" };
+    ensureSprintFromRun();
+    if (clips.has("sprint")) {
+      clips.get("sprint")!.userData = {
+        ...(clips.get("sprint")!.userData || {}),
+        locoMult: SPRINT_LOCO_MULT,
+        source: "clone:run-fallback",
+      };
     }
   }
 
   // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
-  // Position tracks are stripped in rematchClipToSkeleton; still sample idle
-  // once so residual rotation-only pose sits soles on y=0 (all races/packs).
+  // Position/scale tracks stripped in rematchClipToSkeleton; sample still needed
+  // so rotation-only idle sits soles on y=0 (uniform mixer path).
   if (clips.has("idle")) {
     try {
-      const tmpMixer = new THREE.AnimationMixer(model);
-      const act = tmpMixer.clipAction(clips.get("idle")!);
-      act.play();
-      tmpMixer.update(1 / 30);
-      const dy = reGroundAfterAnimSample(model, 0);
+      const dy = sampleClipAndReground(model, clips.get("idle")!);
       if (Math.abs(dy) > 1e-4) {
         console.info(
           `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId} pack=${animPack}`,
         );
       }
-      // Also sample attack if present (combo start pose can shift hips)
       if (clips.has("attack")) {
-        tmpMixer.stopAllAction();
-        const atk = tmpMixer.clipAction(clips.get("attack")!);
-        atk.play();
-        tmpMixer.update(1 / 30);
-        reGroundAfterAnimSample(model, 0);
+        sampleClipAndReground(model, clips.get("attack")!);
       }
-      tmpMixer.stopAllAction();
-      tmpMixer.uncacheRoot(model);
     } catch (e) {
       console.warn("[grudge6Runtime] post-idle re-ground failed", e);
     }
   }
 
   const check = validateCharacterDeploy(model);
-  if (!check.ok) {
+  const look = diagnoseCharacterLook(model);
+  model.userData.diagnoseCharacterLook = look;
+  if (!check.ok || !look.ok) {
     console.warn(
       `[grudge6Runtime] deploy validation race=${raceId}`,
       check.issues,
-      `h=${check.heightM.toFixed(3)}`,
+      look.errors,
+      look.warnings,
+      `h=${check.heightM.toFixed(3)} skeletons=${look.skeletonCount}`,
     );
   } else {
     model.userData.deployValidated = true;
+    if (look.warnings.length) {
+      console.info(`[grudge6Runtime] deploy ok with warnings race=${raceId}`, look.warnings);
+    }
   }
 
   // Role aliases for T0 weapon skills / Studio multiPart names

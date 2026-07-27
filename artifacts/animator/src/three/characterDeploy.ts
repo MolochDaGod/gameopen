@@ -180,7 +180,19 @@ export function deployCharacterModel(
     facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
   } else if (faceMode === "auto") {
     const pipeline = model.userData.importPipeline as string | undefined;
-    if (pipeline === "fbx-atlas" && !model.userData.artForwardSet) {
+    // FBX modular kits: always art-forward +Z (export is +X).
+    // glb-baked grudge6 Characters.glb: apply when not proven +Z (convert must set
+    // userData.artForwardProven=true after orient bake; otherwise need yaw).
+    const needForward =
+      !model.userData.artForwardSet &&
+      (pipeline === "fbx-atlas" ||
+        model.userData.needsArtForward === true ||
+        (pipeline === "glb-baked" &&
+          model.userData.artForwardProven !== true &&
+          /Characters\.glb|_Characters|grudge6/i.test(
+            String(model.userData.importUrl || model.name || ""),
+          )));
+    if (needForward) {
       facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
     }
   }
@@ -302,9 +314,28 @@ export function ensureHumanScale(
   console.warn(
     `[characterDeploy] height ${h.toFixed(2)}m off target ${targetM}m — refitting`,
   );
+  const priorForward = model.userData.artForwardSet === true;
+  const priorYaw =
+    typeof model.userData.artForwardYaw === "number"
+      ? model.userData.artForwardYaw
+      : Math.PI / 2;
+  // Clear flag so re-deploy can re-apply facing after scale (do not leave sideways).
+  model.userData.artForwardSet = false;
   fitCharacterHeight(model, targetM, 1);
   model.userData.grudgeHeightFit = true;
-  deployCharacterModel(model, { facePlusZ: false, refitIfAbsurd: false });
+  deployCharacterModel(model, {
+    facePlusZ: priorForward ? true : false,
+    faceYaw: priorYaw,
+    refitIfAbsurd: false,
+  });
+  // Uniform scale on model after refit (non-uniform = stretch)
+  const sx = Math.abs(model.scale.x);
+  const sy = Math.abs(model.scale.y);
+  const sz = Math.abs(model.scale.z);
+  if (sx > 1e-6 && (Math.abs(sx - sy) > 0.02 || Math.abs(sx - sz) > 0.02)) {
+    const u = (sx + sy + sz) / 3;
+    model.scale.set(u, u, u);
+  }
   return true;
 }
 
@@ -328,17 +359,121 @@ export function validateCharacterDeploy(model: THREE.Object3D): {
   prepareSkinnedMeasure(model);
   const issues: string[] = [];
   let skinned = 0;
+  let skeletonCount = 0;
+  const skeletonIds = new Set<string>();
   model.traverse((o) => {
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh) skinned++;
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
+      skinned++;
+      const sk = (o as THREE.SkinnedMesh).skeleton;
+      if (sk) {
+        skeletonCount++;
+        skeletonIds.add(String(sk.uuid));
+      }
+    }
   });
   if (skinned === 0) issues.push("no SkinnedMesh");
+  // Multiple disconnected skeletons → T-pose / partial deform (must unifySkeletons)
+  if (skeletonIds.size > 1) {
+    issues.push(`multiple skeletons (${skeletonIds.size}) — run unifySkeletons`);
+  }
   const h = bodyBox(model).getSize(new THREE.Vector3()).y;
   if (!(h > 0.5 && h < 4)) issues.push(`height ${h.toFixed(2)}m not human-scale`);
+  // SI gate for heroes (stricter than 0.5–4)
+  if (h > 0.5 && (h < 1.55 || h > 2.05)) {
+    issues.push(`height ${h.toFixed(2)}m outside human band 1.55–2.05`);
+  }
   const box = bodyBox(model);
   if (Math.abs(box.min.y) > 0.15) {
     issues.push(`feet not grounded minY=${box.min.y.toFixed(3)}`);
   }
   const pelvis = findPelvisBone(model);
   if (!pelvis) issues.push("no pelvis/hips bone");
+  // Uniform scale
+  const sx = Math.abs(model.scale.x);
+  const sy = Math.abs(model.scale.y);
+  const sz = Math.abs(model.scale.z);
+  if (sx > 1e-6 && (Math.abs(sx - sy) > 0.05 || Math.abs(sx - sz) > 0.05)) {
+    issues.push(`non-uniform scale (${sx.toFixed(3)},${sy.toFixed(3)},${sz.toFixed(3)})`);
+  }
   return { ok: issues.length === 0, issues, heightM: h };
+}
+
+/**
+ * Full visual diagnosis (grudge-character-correctness gates).
+ * Call after idle sample + reGroundAfterAnimSample.
+ */
+export function diagnoseCharacterLook(model: THREE.Object3D): {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+  heightM: number;
+  feetMinY: number;
+  artForwardSet: boolean;
+  pelvis: string | null;
+  skeletonCount: number;
+  pipeline: string | null;
+} {
+  prepareSkinnedMeasure(model);
+  const v = validateCharacterDeploy(model);
+  const errors = [...v.issues];
+  const warnings: string[] = [];
+  const box = bodyBox(model);
+  const pelvis = findPelvisBone(model);
+  let skeletonCount = 0;
+  const ids = new Set<string>();
+  model.traverse((o) => {
+    const sk = (o as THREE.SkinnedMesh).skeleton;
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh && sk) ids.add(sk.uuid);
+  });
+  skeletonCount = ids.size;
+
+  const pipeline = (model.userData.importPipeline as string) || null;
+  if (pipeline === "fbx-atlas" && !model.userData.artForwardSet) {
+    errors.push("fbx-atlas missing art-forward +Z (sideways risk)");
+  }
+  if (pipeline === "glb-baked" && !model.userData.artForwardSet && !model.userData.artForwardProven) {
+    warnings.push("glb-baked without artForwardProven — verify facing +Z on convert");
+  }
+
+  // Hand containers for weapon packs
+  let handR = false;
+  model.traverse((o) => {
+    if (/R_hand_container|Bip001.*R.*Hand|mixamorigRightHand/i.test(o.name)) handR = true;
+  });
+  if (!handR) warnings.push("no R hand / R_hand_container found");
+
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    heightM: v.heightM,
+    feetMinY: box.min.y,
+    artForwardSet: model.userData.artForwardSet === true,
+    pelvis: pelvis?.name ?? null,
+    skeletonCount,
+    pipeline,
+  };
+}
+
+/**
+ * Sample a clip on a temporary mixer, re-ground feet, dispose mixer.
+ * Use after loading packs so bind-pose ≠ idle pose doesn't leave floating feet.
+ */
+export function sampleClipAndReground(
+  model: THREE.Object3D,
+  clip: THREE.AnimationClip,
+  opts?: { dt?: number; groundY?: number },
+): number {
+  const dt = opts?.dt ?? 1 / 30;
+  const groundY = opts?.groundY ?? 0;
+  const mixer = new THREE.AnimationMixer(model);
+  try {
+    const act = mixer.clipAction(clip);
+    act.play();
+    mixer.update(dt);
+    return reGroundAfterAnimSample(model, groundY);
+  } finally {
+    mixer.stopAllAction();
+    mixer.uncacheRoot(model);
+  }
 }
