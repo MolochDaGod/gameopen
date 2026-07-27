@@ -283,10 +283,11 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["rooms", "multiplayer", "mp"],
     cabinets: ["lobby"],
     title: "The Lobby",
-    blurb: "Join multiplayer rooms or browse community maps.",
+    blurb:
+      "Voxel 4-seat campfire party (Ethereal Falls) + multiplayer rooms + community maps.",
     group: "multiplayer",
     poster: "lobby",
-    tags: ["Multiplayer", "Community"],
+    tags: ["Multiplayer", "Community", "4-slot"],
     accent: "#9d8bff",
   },
   {

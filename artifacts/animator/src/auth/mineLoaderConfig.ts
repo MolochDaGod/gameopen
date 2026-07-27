@@ -120,8 +120,10 @@ export interface MineLoaderLaunchOpts {
 }
 
 /**
- * Absolute URL for Mine-Loader Realms (fleet edge / Vercel only).
- * Never returns same-origin /minegrudge or any replit host.
+ * Absolute URL for Mine-Loader Realms.
+ * Default: fleet edge / Vercel. Pass `apiBase` + env overrides as needed.
+ * Replit (`mine-loader.replit.app`) is a valid Grudge ID return host after fleet
+ * CORS/SSO allowlist — but production launches still prefer edge/Vercel.
  */
 export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   const surface = opts.surface ?? "lobby";
@@ -156,6 +158,7 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
 
   // Point SPA API at Railway authority (or same-origin Open proxy when embedded).
   // Mine-Loader Vercel also rewrites /api/* → Railway; absolute API avoids drift.
+  // On Replit the SPA uses fleetProxy + absolute Builder when rewrites are missing.
   const api =
     (opts.apiBase && opts.apiBase.replace(/\/+$/, "")) ||
     MINE_LOADER_API;
@@ -168,12 +171,10 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   url.hash = hash;
 
   let out = url.toString();
-  if (/replit/i.test(out) || /\/minegrudge\//i.test(out)) {
-    out = out
-      .replace(/https?:\/\/[^/"']*replit[^/"']*/gi, base)
-      .replace(/mine-loader\.replit\.app/gi, "mine-loader.vercel.app")
-      .replace(/https?:\/\/[^/"']+\/minegrudge\/?/gi, `${base}/`);
-    console.warn("[mineLoader] sanitized blocked host →", out);
+  // Never iframe local staged /minegrudge (404 on Open Vercel)
+  if (/\/minegrudge\//i.test(out)) {
+    out = out.replace(/https?:\/\/[^/"']+\/minegrudge\/?/gi, `${base}/`);
+    console.warn("[mineLoader] sanitized /minegrudge →", out);
   }
   return out;
 }

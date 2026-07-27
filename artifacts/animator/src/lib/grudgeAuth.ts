@@ -317,33 +317,42 @@ export async function bridgeLaunchToken(launchToken: string): Promise<string | n
   _exchangeInflight = (async () => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "https://open.grudge-studio.com";
-    // One body shape Railway accepts (audience required). No 3× body spam.
+    // One body shape — id hub accepts token|launchToken|grudge_token aliases.
     const body = JSON.stringify({
       token: launchToken,
+      launchToken,
       grudge_token: launchToken,
       audience: origin,
+      origin,
     });
-    // Prefer same-origin rewrite first (one hop), then Railway only.
+    // Auth SSOT: id.grudge-studio.com (via same-origin rewrite → id, then absolute id).
+    // Never apex grudge-studio.com; Railway is implementation behind the id-gateway only.
     const urls = [
       apiUrl("/api/auth/session/exchange"),
-      `${FLEET.gameData}/api/auth/session/exchange`,
+      `${FLEET.auth.replace(/\/$/, "")}/api/auth/session/exchange`,
+      `${FLEET.auth.replace(/\/$/, "")}/api/auth/grudge-bridge`,
     ];
 
     let hit429 = false;
     for (const url of urls) {
       try {
+        const cross =
+          url.startsWith("http") &&
+          typeof window !== "undefined" &&
+          !url.startsWith(window.location.origin);
         const r = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body,
-          credentials: "include",
+          // Cookie SSO on id hub; Bearer response is SSOT
+          credentials: /id\.grudge-studio\.com/i.test(url) ? "include" : cross ? "omit" : "include",
           signal: AbortSignal.timeout(8000),
         });
         if (r.status === 429) {
           hit429 = true;
           break; // stop all further exchange attempts this session
         }
-        if (r.status === 400 || r.status === 401) {
+        if (r.status === 400 || r.status === 401 || r.status === 403) {
           // Bad/expired launch token — don't thrash other hosts
           _exchangeFailedToken = launchToken;
           _exchangeCooldownUntil = Date.now() + 60_000;
@@ -487,16 +496,81 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 }
 
 /**
+ * Silent fleet re-entry via id hub cookie (Domain=.grudge-studio.com).
+ * When local JWT is missing but user already signed in on id.*, claim a fresh session.
+ */
+export async function claimFleetSession(): Promise<string | null> {
+  const urls = [
+    apiUrl("/api/auth/session/claim"),
+    `${FLEET.auth.replace(/\/$/, "")}/api/auth/session/claim`,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        credentials: "include",
+        body: "{}",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (r.status === 401) return null;
+      if (!r.ok) continue;
+      const data = (await r.json()) as Record<string, unknown>;
+      const t = String(
+        data.sessionToken || data.token || data.sso_token || data.access_token || "",
+      );
+      if (!t) continue;
+      setStoredToken(t, true);
+      const gid = String(
+        data.grudgeId ||
+          data.grudge_id ||
+          (data.user as { grudgeId?: string } | undefined)?.grudgeId ||
+          "",
+      );
+      const uname = String(
+        data.username ||
+          data.displayName ||
+          (data.user as { username?: string } | undefined)?.username ||
+          "",
+      );
+      if (gid) {
+        try {
+          localStorage.setItem("grudge_id", gid);
+          localStorage.setItem("grudge_account_id", gid);
+          if (uname) localStorage.setItem("grudge_username", uname);
+        } catch {
+          /* */
+        }
+        setStoredAccount({
+          grudgeId: gid,
+          displayName: uname || undefined,
+          source: "grudge-id",
+        });
+      }
+      return t;
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
+/**
  * Resolve account from the fleet API.
  *
  * TOKEN-FIRST: cached token+account → return immediately, background-revalidate.
+ * No token: try silent claim on id hub (cookie SSO), then guest.
  * Falls through to bridge launch tokens and multi-endpoint probing when needed.
  */
 export async function fetchFleetAccount(
   force = false,
 ): Promise<GrudgeAccount | null> {
   let token = getStoredToken();
-  if (!token) return getStoredAccount(); // guest
+  if (!token) {
+    // One silent claim — restores session after tab reopen on *.grudge-studio.com
+    token = (await claimFleetSession()) || null;
+    if (!token) return getStoredAccount(); // guest
+  }
 
   // Fast path: token + cached account → return instantly, revalidate in background.
   const cached = getStoredAccount();

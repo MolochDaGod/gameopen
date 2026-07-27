@@ -23,6 +23,13 @@ import {
 } from "../three/RoomPresets";
 import { EnvThumb } from "./EnvThumb";
 import { CharacterPicker } from "./CharacterPicker";
+import { CampfireLobbyScene } from "../three/intro/CampfireLobbyScene";
+import { gameSession } from "../game/GameSession";
+import {
+  buildGenesisHeroOptions,
+  type GenesisHeroOption,
+} from "../lib/grudoxRoster";
+import { setLobbyAvatarSlotTarget } from "../three/avatar/playerHead";
 
 interface Props {
   /** Load a posted voxel map into the editor. */
@@ -33,6 +40,8 @@ interface Props {
   onLoadScene: (scene: SceneDescriptor) => void;
   /** Return to the door select. */
   onExit: () => void;
+  /** Open Avatar Edit for a lobby seat (0–3). */
+  onAvatarEdit?: (slot: number) => void;
   /** The shared multiplayer relay client, created in App and reused by Studio. */
   net: DangerClient;
   /**
@@ -97,12 +106,13 @@ function timeAgo(iso: string): string {
 }
 
 /**
- * The Lobby: multiplayer Danger Room rooms on top, plus a public gallery of
- * community creations posted from the Voxel and Scene editors. Voxel maps
- * (posted as "dungeon") can be loaded into the editor, played solo, or used as
- * the content for a multiplayer room.
+ * The Lobby (open.grudge-studio.com/lobby):
+ *   L0 — Ethereal Falls campfire 3D scene with up to **4 voxel heroes** (SSOT seats)
+ *   L1 — Multiplayer rooms + community gallery chrome over the cinema
+ *
+ * Do not ship a void/plate-only lobby: the 4-slot voxel party scene is required.
  */
-export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }: Props) {
+export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, onEnterRoom }: Props) {
   const { user, isSignedIn } = useOptionalUser();
   const { data, isLoading, isError, refetch, isFetching } = useListPosts();
 
@@ -115,6 +125,73 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }:
     () => user?.firstName || user?.username || "Player",
     [user?.firstName, user?.username],
   );
+
+  // ── Voxel 4-slot campfire cinema (CampfireLobbyScene) ────────────────────
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sceneRef = useRef<CampfireLobbyScene | null>(null);
+  const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
+    buildGenesisHeroOptions(
+      gameSession.snapshot.characters,
+      gameSession.snapshot.selectedCharacterId,
+    ),
+  );
+  const heroesRef = useRef(heroes);
+  heroesRef.current = heroes;
+  const [selectedSlot, setSelectedSlot] = useState(0);
+
+  useEffect(() => {
+    const unsub = gameSession.subscribe(() => {
+      setHeroes(
+        buildGenesisHeroOptions(
+          gameSession.snapshot.characters,
+          gameSession.snapshot.selectedCharacterId,
+        ),
+      );
+    });
+    if (!gameSession.snapshot.ready) {
+      void gameSession.boot().catch(() => undefined);
+    }
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let scene: CampfireLobbyScene | null = null;
+    try {
+      scene = new CampfireLobbyScene(canvas, {
+        onSelect: (i) => {
+          setSelectedSlot(i);
+          const h = heroesRef.current[i];
+          if (h) gameSession.selectCharacter(h.id);
+        },
+      });
+      sceneRef.current = scene;
+      void scene.setHeroes(heroesRef.current);
+    } catch (err) {
+      console.warn("[Lobby] CampfireLobbyScene init failed", err);
+    }
+    return () => {
+      scene?.dispose();
+      sceneRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    void sceneRef.current?.setHeroes(heroes);
+  }, [heroes]);
+
+  useEffect(() => {
+    sceneRef.current?.setSelected(selectedSlot);
+    const h = heroes[selectedSlot];
+    if (h) gameSession.selectCharacter(h.id);
+  }, [selectedSlot, heroes]);
+
+  const slots = useMemo(() => {
+    const out: (GenesisHeroOption | null)[] = [null, null, null, null];
+    for (let i = 0; i < 4; i++) out[i] = heroes[i] ?? null;
+    return out;
+  }, [heroes]);
 
   // Playable dungeon maps usable as room content.
   const dungeonPosts = useMemo(
@@ -243,13 +320,20 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }:
   );
 
   return (
-    <div className="lobby">
+    <div className="lobby lobby-with-scene">
+      {/* Full-bleed voxel 4-seat campfire (Ethereal Falls) — never a black void */}
+      <canvas ref={canvasRef} className="lobby-scene-canvas" aria-label="Voxel party campfire" />
+      <div className="lobby-scene-veil" aria-hidden />
+
+      <div className="lobby-chrome">
       <div className="lobby-bar">
         <div className="lobby-title">
           <span className="brand">
             THE<span className="brand-accent">LOBBY</span>
           </span>
-          <p className="lobby-sub">Join a multiplayer room — or grab a community map and jump in.</p>
+          <p className="lobby-sub">
+            4-seat voxel party · Ethereal Falls · rooms &amp; community maps
+          </p>
         </div>
         <div className="lobby-actions">
           <button className="ve-btn" onClick={() => void refetch()} disabled={isFetching}>
@@ -259,6 +343,54 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }:
             ⮐ Back
           </button>
         </div>
+      </div>
+
+      {/* ── 4-slot seat strip (mirrors 3D campfire seats) ─────────────────── */}
+      <div className="lobby-slots" role="listbox" aria-label="Voxel party seats">
+        {slots.map((hero, i) => {
+          const sel = i === selectedSlot;
+          return (
+            <button
+              key={i}
+              type="button"
+              role="option"
+              aria-selected={sel}
+              className={`lobby-slot ${sel ? "on" : ""} ${hero ? "filled" : "empty"}`}
+              onClick={() => {
+                setSelectedSlot(i);
+                if (hero) gameSession.selectCharacter(hero.id);
+              }}
+              title={
+                hero
+                  ? `${hero.name} · ${hero.raceLabel}`
+                  : `Empty seat ${i + 1} — edit voxel look in Avatar`
+              }
+            >
+              <span className="lobby-slot-idx">Seat {i + 1}</span>
+              <span className="lobby-slot-name">
+                {hero ? hero.name : "Empty seat"}
+              </span>
+              <span className="lobby-slot-meta">
+                {hero ? hero.raceLabel : "Voxel mannequin"}
+              </span>
+              {onAvatarEdit && (
+                <span
+                  className="lobby-slot-avatar"
+                  role="link"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedSlot(i);
+                    if (hero) gameSession.selectCharacter(hero.id);
+                    setLobbyAvatarSlotTarget(i);
+                    onAvatarEdit(i);
+                  }}
+                >
+                  {hero ? "Edit avatar" : "Make in Avatar"}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Active fleet character (shared avatar + GRUDOX handoff) ────────── */}
@@ -481,6 +613,7 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, net, onEnterRoom }:
           );
         })}
       </div>
+      </div>{/* /.lobby-chrome */}
     </div>
   );
 }

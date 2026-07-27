@@ -7,7 +7,13 @@
  */
 
 export const FLEET = {
+  /**
+   * Grudge ID hub — login UI + ALL /api/auth/* (me, session/exchange, grudge-bridge).
+   * id-gateway Worker → Railway. Never use apex grudge-studio.com for auth APIs.
+   */
   auth: "https://id.grudge-studio.com",
+  /** @deprecated Alias of auth — kept for older callers named identityApi */
+  identityApi: "https://id.grudge-studio.com",
   /** Binary CDN — R2 grudge-assets via r2-cdn Worker. */
   assets: "https://assets.grudge-studio.com",
   gameopenPrefix: "gameopen",
@@ -23,7 +29,10 @@ export const FLEET = {
   objectStore: "https://info.grudge-studio.com/api/v1",
   /** Legacy definitions hostname (often 404 for catalogs — fallback only). */
   objectStoreLegacy: "https://objectstore.grudge-studio.com/api/v1",
-  /** Player state — Railway Postgres (never D1, never localStorage SSOT). */
+  /**
+   * Player state — Railway Postgres (characters, account bag, island).
+   * Auth endpoints do NOT belong here — use {@link FLEET.auth}.
+   */
   gameData: "https://grudge-api-production-0d46.up.railway.app",
   /**
    * AI hub Worker (grudge-ai-hub) — ONE TRUTH.
@@ -33,8 +42,34 @@ export const FLEET = {
   ai: "https://ai.grudge-studio.com",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
+  /** Mine-Loader SPA edge */
+  mineLoader: "https://mine.grudge-studio.com",
   arena: "https://grudge-arena.grudge-studio.com",
 } as const;
+
+/**
+ * Auth API path helper.
+ * On Open / Vercel: same-origin `/api/auth/*` (rewrites → id.grudge-studio.com).
+ * Elsewhere: absolute id hub.
+ */
+export function authApiUrl(path: string): string {
+  let p = path.startsWith("/") ? path : `/${path}`;
+  if (!p.startsWith("/api/auth")) {
+    p = p.startsWith("/api/") ? p.replace(/^\/api/, "/api/auth") : `/api/auth${p}`;
+  }
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname || "";
+    if (
+      h.endsWith("grudge-studio.com") ||
+      h.endsWith("vercel.app") ||
+      h === "localhost" ||
+      h === "127.0.0.1"
+    ) {
+      return p;
+    }
+  }
+  return `${FLEET.auth.replace(/\/$/, "")}${p}`;
+}
 
 /** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap). */
 export const FLEET_TOKEN_KEYS = [

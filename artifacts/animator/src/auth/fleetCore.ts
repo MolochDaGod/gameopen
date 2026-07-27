@@ -7,13 +7,16 @@
  */
 
 export const FLEET = {
+  /** Grudge ID hub — login + /api/auth/* (id-gateway → Railway). */
   auth: "https://id.grudge-studio.com",
+  /** Alias of auth (session/exchange lives here — not apex portal). */
+  identityApi: "https://id.grudge-studio.com",
   assets: "https://assets.grudge-studio.com",
   /** Definitions SSOT — info.grudge-studio.com (objectstore catalogs 404 as of 2026-07). */
   definitions: "https://info.grudge-studio.com/api/v1",
   objectStore: "https://info.grudge-studio.com/api/v1",
   objectStoreLegacy: "https://objectstore.grudge-studio.com/api/v1",
-  /** Character / account SSOT (never api.grudge-studio.com). */
+  /** Character / account SSOT Postgres (never auth endpoints; never api.grudge-studio.com). */
   gameData: "https://grudge-api-production-0d46.up.railway.app",
   characterStudio: "https://character.grudge-studio.com",
   /** Canonical Open launcher + Animator suite (replaces threejs-rapier hub). */
@@ -21,6 +24,7 @@ export const FLEET = {
   gameopenAlias: "https://gameopen.vercel.app",
   warlords: "https://grudgewarlords.com",
   grudox: "https://grudox.grudge-studio.com",
+  mineLoader: "https://mine.grudge-studio.com",
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   arena: "https://grudge-arena.grudge-studio.com",
   /** Realtime (prefer env override). */

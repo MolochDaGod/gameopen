@@ -1806,6 +1806,122 @@ body.ptr-ui .opt:hover {
   background: radial-gradient(1200px 600px at 50% -10%, rgba(79,195,255,0.08), transparent), #070b12;
   color: #eaf4ff;
 }
+
+/* Voxel 4-seat campfire cinema behind lobby chrome (open.grudge-studio.com/lobby) */
+.lobby.lobby-with-scene {
+  padding: 0;
+  background: #060c14;
+  overflow: hidden;
+}
+.lobby-scene-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+.lobby-scene-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6, 12, 20, 0.55) 0%, rgba(6, 12, 20, 0.2) 28%, rgba(6, 12, 20, 0.55) 100%),
+    radial-gradient(ellipse 70% 55% at 50% 40%, transparent 25%, rgba(4, 8, 14, 0.55) 100%);
+}
+.lobby-chrome {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  overflow-y: auto;
+  padding: 22px 26px 40px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.lobby-chrome > * {
+  pointer-events: auto;
+}
+.lobby-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.lobby-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(79, 195, 255, 0.22);
+  background: rgba(8, 14, 24, 0.78);
+  backdrop-filter: blur(10px);
+  color: #eaf4ff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.lobby-slot:hover {
+  border-color: rgba(95, 224, 255, 0.55);
+  transform: translateY(-1px);
+}
+.lobby-slot.on {
+  border-color: #5fe0ff;
+  box-shadow: 0 0 0 1px rgba(95, 224, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.lobby-slot.empty {
+  opacity: 0.72;
+  border-style: dashed;
+}
+.lobby-slot-idx {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #5fe0ff;
+  opacity: 0.9;
+}
+.lobby-slot-name {
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lobby-slot-meta {
+  font-size: 11px;
+  color: #9bb3d4;
+}
+.lobby-slot-avatar {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #5fe0ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.lobby-slot-avatar:hover {
+  color: #9ef0ff;
+}
+@media (max-width: 720px) {
+  .lobby-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.lobby.lobby-with-scene .rooms,
+.lobby.lobby-with-scene .lobby-card,
+.lobby.lobby-with-scene .lobby-note {
+  background: rgba(10, 16, 28, 0.82);
+  backdrop-filter: blur(12px);
+}
+.lobby.lobby-with-scene .lobby-bar,
+.lobby.lobby-with-scene .lobby-title .brand {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+
 .lobby-bar {
   display: flex;
   align-items: flex-start;
