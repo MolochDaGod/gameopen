@@ -24,12 +24,25 @@ const CRITICAL = [
   "textures/grudge6/elves/ELF_HighElves_Texture.webp",
   "textures/grudge6/orcs/ORC_StandardUnits.webp",
   "textures/grudge6/undead/UD_Standard_Units.webp",
+  // Production combat GLBs (SSOT for Open Danger / annihilate)
+  "models/grudge6/races/WK_Characters.glb",
+  "models/grudge6/races/BRB_Characters.glb",
+  "models/grudge6/races/ORC_Characters.glb",
+  "models/grudge6/races/ELF_Characters.glb",
+  "models/grudge6/races/DWF_Characters.glb",
+  "models/grudge6/races/UD_Characters.glb",
+  // Author FBX still on CDN for convert pipeline
   "models/grudge6/races/WK_Characters.fbx",
   "models/grudge6/races/BRB_Characters.fbx",
   "models/grudge6/races/ORC_Characters.fbx",
   "models/grudge6/races/ELF_Characters.fbx",
   "models/grudge6/races/DWF_Characters.fbx",
   "models/grudge6/races/UD_Characters.fbx",
+  // Game props / heroes used by Open doors + camp
+  "models/racalvin.glb",
+  "models/props/dying-torch.glb",
+  "models/camp/claim-flag.glb",
+  "models/vfx/stylized_ice_bow.glb",
   // TVS production GLB (compressed)
   "models/voxels/tvs/voxel-knights/characters/voxel-knights-champion.glb",
   "models/voxels/tvs/unit-roster.json",

@@ -131,12 +131,20 @@ await probe("api-healthz", `${BASE}/api/healthz`, {
   critical: false,
 });
 
-// CDN grudge6 kits (production meshes)
-await probe("cdn-elf-kit", `${CDN}/models/grudge6/races/ELF_Characters.fbx`, {
+// CDN grudge6 kits (production meshes) — complete game pack
+const RACE_GLB = ["WK", "BRB", "ELF", "DWF", "ORC", "UD"];
+for (const p of RACE_GLB) {
+  await probe(
+    `cdn-${p}-glb`,
+    `${CDN}/models/grudge6/races/${p}_Characters.glb`,
+    { expect: "asset", critical: true },
+  );
+}
+await probe("cdn-elf-kit-fbx", `${CDN}/models/grudge6/races/ELF_Characters.fbx`, {
   expect: "asset",
   critical: false,
 });
-await probe("cdn-wk-kit", `${CDN}/models/grudge6/races/WK_Characters.fbx`, {
+await probe("cdn-wk-kit-fbx", `${CDN}/models/grudge6/races/WK_Characters.fbx`, {
   expect: "asset",
   critical: false,
 });
@@ -145,6 +153,71 @@ await probe(
   `${CDN}/textures/grudge6/elves/ELF_HighElves_Texture.webp`,
   { expect: "asset", critical: false },
 );
+await probe("cdn-human-icon", `${CDN}/icons/pack/races/human.png`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("cdn-warrior-icon", `${CDN}/icons/pack/classes/warrior.png`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("cdn-racalvin", `${CDN}/models/racalvin.glb`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("cdn-dying-torch", `${CDN}/models/props/dying-torch.glb`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("cdn-claim-flag", `${CDN}/models/camp/claim-flag.glb`, {
+  expect: "asset",
+  critical: false,
+});
+
+// Same-origin Open game pack (must ship with SPA)
+await probe("open-wk-arena-glb", `${BASE}/cdn/assets/characters/human/WK_Characters.glb`, {
+  expect: "asset",
+  critical: true,
+});
+await probe("open-sword-shield-idle", `${BASE}/anims/baked/sword_shield/sword%20and%20shield%20idle.json`, {
+  expect: "asset",
+  critical: true,
+});
+await probe("open-polearm-idle", `${BASE}/anims/baked/polearm/idle.json`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("open-gear-presets", `${BASE}/content/grudge6-gear-presets.json`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("open-class-skill-bridges", `${BASE}/content/class-skill-bridges.json`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+// Combat VFX live on R2 (same-origin may omit large VFX pack — loaders CDN-first)
+await probe("cdn-vfx-slashes", `${CDN}/models/vfx/attack-slashes.glb`, {
+  expect: "asset",
+  critical: true,
+});
+await probe("cdn-vfx-target-ring", `${CDN}/models/vfx/target-ring.glb`, {
+  expect: "asset",
+  critical: true,
+});
+await probe("cdn-vfx-ice-bow", `${CDN}/models/vfx/stylized_ice_bow.glb`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("open-vfx-slashes", `${BASE}/models/vfx/attack-slashes.glb`, {
+  expect: "asset",
+  critical: false,
+});
+await probe("open-human-warrior-hero", `${BASE}/annihilate-demo?hero=human_warrior`, {
+  expect: "html",
+  critical: true,
+});
 
 // Optional portal host when BASE is open.*
 if (!BASE.includes("grudge-studio.com") || BASE.includes("open.")) {
