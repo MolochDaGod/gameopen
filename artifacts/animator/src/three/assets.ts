@@ -52,6 +52,30 @@ export function assetCandidates(path: string): string[] {
 }
 
 /**
+ * Session dead-URL set — once a host 404s for a GLB, skip it for the tab lifetime.
+ * Stops multi-host × multi-component spam (cinema + doors + warmup).
+ */
+const _deadAssetUrls = new Set<string>();
+const DEAD_URL_TTL_MS = 10 * 60 * 1000;
+const _deadAssetAt = new Map<string, number>();
+
+function isDeadAssetUrl(url: string): boolean {
+  const t = _deadAssetAt.get(url);
+  if (t == null) return false;
+  if (Date.now() - t > DEAD_URL_TTL_MS) {
+    _deadAssetAt.delete(url);
+    _deadAssetUrls.delete(url);
+    return false;
+  }
+  return true;
+}
+
+function markDeadAssetUrl(url: string): void {
+  _deadAssetUrls.add(url);
+  _deadAssetAt.set(url, Date.now());
+}
+
+/**
  * Try each relative path × fleet hosts until one GLB/GLTF loads.
  * Use with {@link sharedGltfLoader} (Draco + Meshopt; KTX2 when bound).
  */
@@ -75,6 +99,7 @@ export async function loadGltfFirst(
   for (const p of pathList) {
     if (!p) continue;
     for (const url of assetCandidates(p)) {
+      if (isDeadAssetUrl(url)) continue;
       tried.push(url);
       try {
         const gltf = await loader.loadAsync(url);
@@ -90,6 +115,7 @@ export async function loadGltfFirst(
         };
       } catch (err) {
         lastErr = err;
+        markDeadAssetUrl(url);
       }
     }
   }
@@ -243,7 +269,7 @@ export const CHARACTERS: CharacterDef[] = [
     id: "gunslinger",
     name: "Racalvin the Pirate King",
     // Production GLB (self-contained clips). Not a live Meshy fetch — local/R2 only.
-    // Exemplar for special-weapon kits; art-forward matches travel heading (yaw 0).
+    // Living twin swords: My Brothers Keeper mesh (orbit + floating slash + X on back).
     file: "models/racalvin.glb",
     scale: 1,
     // Locomotion roles pinned to baked clip names; autoMapClips() back-fills
@@ -254,17 +280,17 @@ export const CHARACTERS: CharacterDef[] = [
       run: "run",
       attack: "thrust_slash",
     },
-    // Signature slots point at his real native clips (driven through the generic
-    // skill path now that the hardcoded pistol-kiter kit is gone — special-weapon
-    // combat will be rebuilt on the trainable system).
+    // Signature slots — LivingTwinSwords: projectile / spin AOE / tornado (R).
     signatureSkills: [
-      { label: "Quick Draw", clip: "draw_and_shoot_left", kind: "muzzle" },
-      { label: "Cutlass Storm", clip: "double_blade_spin", kind: "nova" },
+      { label: "Keeper Shot", clip: "thrust_slash", kind: "slash" },
+      { label: "Blade Cyclone", clip: "double_blade_spin", kind: "nova" },
       { label: "Spartan Kick", clip: "spartan_kick", kind: "bolt" },
-      { label: "Charged Slash", clip: "charged_upward_slash", kind: "muzzle" },
+      { label: "Keeper Tornados", clip: "charged_upward_slash", kind: "fireTornado" },
     ],
     handBone: "Hand",
     modelYaw: 0,
+    /** Skip default hand pistol mount — dual living swords are SSOT. */
+    defaultWeapon: "none",
   },
   {
     id: "karate-boss",

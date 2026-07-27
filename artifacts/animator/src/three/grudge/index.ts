@@ -93,6 +93,8 @@ export type { WarlordsRole, WarlordsRoleKind, RoleStrategyBias, PickHostileRoleO
 export {
   applyGearVisibility,
   rebindRaceAtlas,
+  ensureGrudge6Materials,
+  aliasCombatRoles,
   loadGrudge6CombatRig,
   arenaCharacterGlbUrl,
 } from "./grudge6Runtime";

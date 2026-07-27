@@ -239,6 +239,124 @@ export async function rebindRaceAtlas(root: THREE.Object3D, raceId: RaceId): Pro
   }
 }
 
+/**
+ * Production materials for Danger Room grudge6 heroes.
+ * Fixes yellow/grey wash (ACES + black tint + missing maps) and ensures atlas.
+ */
+export async function ensureGrudge6Materials(
+  model: THREE.Object3D,
+  raceId: RaceId,
+  pipeline: RaceImportPipeline,
+  allowAtlasRebind = true,
+): Promise<void> {
+  // Always normalize metal / color spaces first
+  restoreCharacterMaterials(model, { neutralizeMetal: true });
+
+  let meshCount = 0;
+  let mappedMeshes = 0;
+  model.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    meshCount++;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    let meshHasMap = false;
+    for (const m of mats) {
+      if (!m) continue;
+      if (m instanceof THREE.MeshBasicMaterial) {
+        m.toneMapped = false;
+        if (m.map) {
+          meshHasMap = true;
+          m.color.setHex(0xffffff);
+        }
+        m.needsUpdate = true;
+      } else if (m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshPhysicalMaterial) {
+        if (m.map) {
+          meshHasMap = true;
+          m.color.setHex(0xffffff);
+        } else {
+          // Unmapped skins read as plastic yellow under ACES — nudge toward neutral grey
+          // until atlas rebind lands (or stay if rebind fails).
+          const c = m.color.getHex();
+          if (c === 0x000000 || c === 0xffffff || c > 0xe8d080) {
+            m.color.setHex(0xc8c8c8);
+          }
+        }
+        m.metalness = Math.min(m.metalness, 0.08);
+        m.roughness = Math.max(m.roughness, 0.62);
+        m.envMapIntensity = 0.35;
+        m.needsUpdate = true;
+      }
+    }
+    if (meshHasMap) mappedMeshes++;
+  });
+
+  const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
+  const needsAtlas =
+    allowAtlasRebind &&
+    (pipeline === "fbx-atlas" || mapRatio < 0.35 || withMap === 0);
+
+  if (needsAtlas) {
+    const mat = await rebindRaceAtlas(model, raceId);
+    if (mat) {
+      console.info(
+        `[grudge6Runtime] atlas bound race=${raceId} pipeline=${pipeline} mapRatio=${mapRatio.toFixed(2)}`,
+      );
+    }
+  } else {
+    // Ensure existing albedo maps are sRGB + white tint (second pass after restore)
+    model.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        if (m instanceof THREE.MeshStandardMaterial && m.map) {
+          m.color.setHex(0xffffff);
+          m.metalness = Math.min(m.metalness, 0.08);
+          m.roughness = Math.max(m.roughness, 0.55);
+          m.needsUpdate = true;
+        }
+      }
+    });
+  }
+}
+
+/**
+ * Alias missing combat roles to pack attack so LMB combo + skills 1–4 always animate.
+ * (sword_shield / magic / longbow often ship a single attack cycle.)
+ */
+export function aliasCombatRoles(clips: Map<string, THREE.AnimationClip>, roles: Map<string, string>): void {
+  const attack = clips.get("attack");
+  if (!attack) return;
+  const aliases = [
+    "attack2",
+    "attack3",
+    "attack4",
+    "attack5",
+    "meleeCombo1",
+    "meleeCombo2",
+    "meleeCombo3",
+    "skill1",
+    "skill2",
+    "skill3",
+    "skill4",
+    "combo",
+    "special",
+    "power",
+    "slash",
+    "thrust",
+    "overhead",
+    "sig1",
+    "sig2",
+    "sig3",
+    "sig4",
+  ];
+  for (const a of aliases) {
+    if (clips.has(a)) continue;
+    clips.set(a, attack);
+    roles.set(a, a);
+  }
+}
+
 export interface Grudge6LoadedRig {
   root: THREE.Group;
   model: THREE.Object3D;
@@ -253,6 +371,11 @@ export interface LoadGrudge6Opts {
   meshIds?: string[];
   /** Prefer race FBX atlas rebind (always on). */
   rebindAtlas?: boolean;
+  /**
+   * Force anim pack (combat style picker: samurai / knight / spearman / …).
+   * When set, overrides class gear-preset animPack.
+   */
+  animPack?: AnimPack | string;
 }
 
 /**
@@ -265,7 +388,9 @@ export async function loadGrudge6CombatRig(
   opts?: LoadGrudge6Opts,
 ): Promise<Grudge6LoadedRig> {
   const preset = getPreset(raceId, presetId);
-  const requestedPack = asAnimPack(preset.animPack);
+  const requestedPack = asAnimPack(
+    opts?.animPack ? String(opts.animPack) : preset.animPack,
+  );
   // twohand/crossbow/rifle may not have baked JSON yet (Explosive FREE teasers only)
   const resolved = resolveAnimPackClips(requestedPack);
   const animPack = resolved.pack;
@@ -274,6 +399,8 @@ export async function loadGrudge6CombatRig(
     console.info(
       `[grudge6Runtime] anim pack "${resolved.fallbackFrom}" not fully baked — using "${animPack}"`,
     );
+  } else if (opts?.animPack) {
+    console.info(`[grudge6Runtime] combat style pack override → ${animPack}`);
   }
   const meshIds =
     opts?.meshIds && opts.meshIds.length >= 2 ? opts.meshIds : preset.visibleMeshes;
@@ -298,33 +425,11 @@ export async function loadGrudge6CombatRig(
 
   normalizeSkinned(model, template.pipeline);
 
-  // Materials:
-  //  - FBX modular kits need Toon RTS atlas rebind (UV contract matches FBX).
-  //  - Arena/R2 GLBs already have correct baked materials — rebinding the FBX
-  //    atlas onto them scrambles UVs and is the main "messed up models" bug.
-  if (template.pipeline === "fbx-atlas" && opts?.rebindAtlas !== false) {
-    await rebindRaceAtlas(model, raceId);
-  } else {
-    restoreCharacterMaterials(model, { neutralizeMetal: true });
-    // Unlit MeshBasic mats must not be ACES-crushed (yellow/grey wash).
-    model.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.material) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const m of mats) {
-        if (m instanceof THREE.MeshBasicMaterial) {
-          m.toneMapped = false;
-          if (m.map) m.color.setHex(0xffffff);
-          m.needsUpdate = true;
-        } else if (m instanceof THREE.MeshStandardMaterial && m.map) {
-          m.color.setHex(0xffffff);
-          m.metalness = Math.min(m.metalness, 0.12);
-          m.roughness = Math.max(m.roughness, 0.55);
-          m.needsUpdate = true;
-        }
-      }
-    });
-  }
+  // Materials / colors:
+  //  - FBX modular kits: always rebind Toon RTS atlas (flipY=false MeshStandard).
+  //  - GLB-baked: fix embedded maps first; if most skins have no albedo, rebind
+  //    the race atlas (broken/untextured GLB → yellow/grey wash without this).
+  await ensureGrudge6Materials(model, raceId, template.pipeline, opts?.rebindAtlas !== false);
 
   // Gear hide/show changes skinned AABB — re-ground so feet stay on y=0
   reGroundAfterEquip(model, 0);
@@ -478,6 +583,9 @@ export async function loadGrudge6CombatRig(
       };
     }
   }
+
+  // LMB combo + weapon skills 1–4 need named roles even when pack ships one attack
+  aliasCombatRoles(clips, roles);
 
   // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
   // Position/scale tracks stripped in rematchClipToSkeleton; sample still needed

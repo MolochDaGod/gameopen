@@ -4,7 +4,15 @@ import type { EditorScene } from "../../three/editor/EditorScene";
 import type { EditorSnapshot } from "../../three/editor/types";
 import { WEAPONS } from "../../three/assets";
 import { VFX_PRESETS } from "../../three/editor/vfxCatalog";
-import { CLIP_CATEGORIES, VERB_CATEGORY, verbLabel, humanizeClipId } from "../../three/ExplorerCharacter";
+import {
+  CLIP_CATEGORIES,
+  VERB_CATEGORY,
+  verbLabel,
+  humanizeClipId,
+  previewClipLabel,
+  resolvePreviewClipId,
+} from "../../three/ExplorerCharacter";
+import type { WeaponClass } from "../../three/explorer/types";
 import { useClipLabels, type EffectKind, type SkillSlot } from "./useClipLabels";
 
 /** Built-in category display order; user categories sort after, "Unsorted" always last. */
@@ -36,6 +44,14 @@ interface ClipItem {
   key: string;
   /** Default (catalog) label shown when the user hasn't renamed the clip. */
   fallback: string;
+  /**
+   * Abstract role name (e.g. "Skill") when it differs from the motion label
+   * (e.g. "Dual Weapon Combo") — shown as a secondary hint so the list never
+   * pretends the motion is something else.
+   */
+  roleHint?: string;
+  /** Resolved catalog id for tooltips (e.g. animations/knife/dual-weapon-combo). */
+  clipId?: string;
   /** Built-in section this clip groups under when the user hasn't assigned a category. */
   defaultCat?: string;
   playing: boolean;
@@ -148,14 +164,28 @@ function ClipList({
                   </div>
                 );
               }
-              const name = labels.store[it.key]?.label || it.fallback;
+              const renamed = labels.store[it.key]?.label;
+              const name = renamed || it.fallback;
               const meta = labels.store[it.key];
               const open = bindOpen === it.key;
+              const tipParts = [
+                `Play — ${it.fallback}`,
+                it.roleHint ? `role: ${it.roleHint}` : null,
+                it.clipId ? it.clipId : null,
+              ].filter(Boolean);
               return (
                 <div key={it.key}>
                   <div className={`ed-row ${it.playing ? "on" : ""}`}>
-                    <span className="nm" title={`Play — ${it.fallback}`} onClick={it.onPlay}>
+                    <span className="nm" title={tipParts.join(" · ")} onClick={it.onPlay}>
                       {name}
+                      {!renamed && it.roleHint ? (
+                        <span
+                          className="ed-clip-role"
+                          style={{ opacity: 0.45, fontSize: 10, marginLeft: 6, fontWeight: 400 }}
+                        >
+                          ({it.roleHint})
+                        </span>
+                      ) : null}
                     </span>
                     {binding && meta?.skill && !open && (
                       <span className="ed-skill-badge" title={`Skill ${meta.skill} — ${meta.effectKind ?? "melee"}${meta.vfx ? ` · ${VFX_LABEL.get(meta.vfx) ?? meta.vfx}` : ""}`}>
@@ -284,16 +314,27 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
     return () => clearInterval(t);
   }, [engine, loaded, snap.rigWeapon, snap.rigClips.length]);
 
+  // Label from the clip that will actually play for the equipped weapon set —
+  // not the abstract verb id (which is why "Skill" used to play dual-weapon
+  // combo / casting while still saying "Skill").
+  const weaponClass = (snap.rigWeapon as WeaponClass | null) ?? "sword";
   const rigItems = useMemo<ClipItem[]>(
     () =>
-      snap.rigClips.map((c) => ({
-        key: c,
-        fallback: verbLabel(c),
-        defaultCat: VERB_CATEGORY[c],
-        playing: snap.rigPlaying === c,
-        onPlay: () => engine.previewClip(c),
-      })),
-    [snap.rigClips, snap.rigPlaying, engine],
+      snap.rigClips.map((c) => {
+        const motion = previewClipLabel(c, weaponClass);
+        const role = verbLabel(c);
+        const clipId = resolvePreviewClipId(c, weaponClass);
+        return {
+          key: c,
+          fallback: motion,
+          roleHint: motion !== role ? role : undefined,
+          clipId,
+          defaultCat: VERB_CATEGORY[c],
+          playing: snap.rigPlaying === c,
+          onPlay: () => engine.previewClip(c),
+        };
+      }),
+    [snap.rigClips, snap.rigPlaying, engine, weaponClass],
   );
 
   return (
@@ -345,6 +386,13 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
             <div className="ed-row-actions">
               <button className="ed-btn" onClick={() => engine.refresh()}>
                 Refresh
+              </button>
+              <button
+                className="ed-btn"
+                title="Clear personal renames so labels match the real motions again"
+                onClick={() => labels.resetLabels()}
+              >
+                Reset names
               </button>
               <button className="ed-btn danger" onClick={() => engine.unloadRig()}>
                 Unload

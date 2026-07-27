@@ -1,4 +1,4 @@
-# Keep Vercel uploads small — GLBs live on R2 (assets.grudge-studio.com)
+# Keep Vercel uploads small — large mesh libraries live on R2 (assets.grudge-studio.com)
 server/node_modules
 server/dist
 artifacts/api-server/node_modules
@@ -23,10 +23,22 @@ artifacts/animator/public/models/battle/**
 artifacts/animator/public/models/packs/**
 artifacts/animator/public/models/maps/**
 artifacts/animator/public/models/kenney/**
+artifacts/animator/public/models/**/*.glb
+artifacts/animator/public/models/**/*.fbx
+
+# Ban GLB/FBX by default (keeps multi-GB model trees out of the deploy tarball)
 **/*.glb
 **/*.fbx
 **/*.rar
 **/*.zip
+
+# EXCEPTION: Explorer Mixamo + Layer-A base pack under public/anim MUST ship.
+# Without these, open.grudge-studio.com/dressing loads a procedural skeleton with
+# zero mixer clips → permanent T-pose (probed: /anim/** 404 on production).
+!artifacts/animator/public/anim/
+!artifacts/animator/public/anim/**
+!artifacts/animator/public/anim/**/*.glb
+!artifacts/animator/public/anim/**/*.fbx
 
 # Dev / reports
 reports/

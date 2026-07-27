@@ -138,6 +138,8 @@ export async function saveCharacterOpenLoadout(
       body: JSON.stringify({ saveData }),
     });
     if (r.ok) return true;
+    // 403/404 = stale char id from another account — do not hammer PUT
+    if (r.status === 401 || r.status === 403 || r.status === 404) return false;
     // Some gateways use PUT
     const r2 = await apiFetch(`/api/characters/${encodeURIComponent(characterId)}`, {
       method: "PUT",

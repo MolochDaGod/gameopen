@@ -56,8 +56,9 @@ const VARIANT_PRESETS: Record<
       maxEnemies: 16,
       spawnInterval: 3.2,
       initialSpawnCount: 6,
-      safeZoneRadius: 8,
-      spawnRadius: 36,
+      // SI map ~80–120 m span after scaleMapToSi — zone + ring track footprint
+      safeZoneRadius: 10,
+      spawnRadius: 42,
     },
   },
 };

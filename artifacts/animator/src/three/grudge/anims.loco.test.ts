@@ -7,6 +7,7 @@ import {
   BANNED_LOCOMOTION_CLIPS,
   TRAVERSAL_CLIPS,
   isBannedLocomotionClip,
+  isBadLocoClipName,
   SPRINT_CLIP,
 } from "./anims";
 
@@ -17,6 +18,9 @@ describe("grudge6 locomotion pack SSOT", () => {
     expect(isBannedLocomotionClip("uploads/locomotion/Quick_Roll_To_Run")).toBe(true);
     expect(isBannedLocomotionClip("magic/Standing Run Forward")).toBe(false);
     expect(isBannedLocomotionClip("uploads_2026_06/locomotion/torch run forward")).toBe(false);
+    expect(isBadLocoClipName("Running Roll")).toBe(true);
+    expect(isBadLocoClipName("roll-running")).toBe(true);
+    expect(isBadLocoClipName("Standing Run Forward")).toBe(false);
   });
 
   it("no pack run/walk points at banned clips", () => {
@@ -27,7 +31,17 @@ describe("grudge6 locomotion pack SSOT", () => {
       expect(clips.run).not.toBe(SPRINT_CLIP);
       expect(clips.run).not.toBe("locomotion/running");
       expect(clips.run).not.toBe("uploads_2026_06/locomotion/running");
+      // No Madarame full-take dumps as gait
+      expect(clips.run).not.toBe("polearm/run");
+      expect(clips.walk).not.toBe("polearm/walk");
     }
+  });
+
+  it("polearm uses standing walk + torch run cycles (not 5s full takes)", () => {
+    expect(ANIM_PACK_CLIPS.polearm.walk).toBe("magic/Standing Walk Forward");
+    expect(ANIM_PACK_CLIPS.polearm.run).toBe(
+      "uploads_2026_06/locomotion/torch run forward",
+    );
   });
 
   it("uses torch run forward for unarmed (arena parity)", () => {

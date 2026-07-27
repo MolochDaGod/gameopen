@@ -123,7 +123,8 @@ export const PREVIEW_VERB_KEYS: Record<string, ActionKey> = {
   dash: "dash",
   dashAttack: "dashAttack",
   roll: "dodgeF",
-  jump: "jumpAir",
+  // Jump takeoff (jump-up.fbx) — not the airborne fall loop (jumpAir / falling-idle).
+  jump: "jumpUp",
   death: "death",
   hit: "hit",
   pistolWhip: "pistolWhip",
@@ -269,6 +270,35 @@ export function verbLabel(verb: string): string {
 }
 
 /**
+ * Resolve the catalog clip id the Dressing Room will actually play for a verb on
+ * a given weapon class. Mirrors {@link ExplorerCharacter.previewClip}: equipped
+ * class first, then {@link resolveActionAnywhere}.
+ */
+export function resolvePreviewClipId(
+  verb: string,
+  weaponClass: WeaponClass = "sword",
+): string | undefined {
+  const key = PREVIEW_VERB_KEYS[verb];
+  if (!key) return undefined;
+  return WEAPON_SETS[weaponClass]?.actions[key] ?? resolveActionAnywhere(key);
+}
+
+/**
+ * Default Animations-tab label for a verb = the motion that will play (humanised
+ * catalog tail), not the abstract verb id. "Skill" on sword becomes
+ * "Dual Weapon Combo"; "Roll" becomes "Standing Dodge Forward". Falls back to
+ * {@link verbLabel} only when nothing resolves.
+ */
+export function previewClipLabel(
+  verb: string,
+  weaponClass: WeaponClass = "sword",
+): string {
+  const id = resolvePreviewClipId(verb, weaponClass);
+  if (id) return humanizeClipId(id);
+  return verbLabel(verb);
+}
+
+/**
  * Adapter that drives the ported procedural {@link Animator} (box rig + Mixamo
  * FBX clips) behind the same surface the {@link import("./Character").Character}
  * GLB class exposes, so {@link import("./Studio").Studio} and
@@ -312,7 +342,11 @@ export class ExplorerCharacter implements Avatar {
     this.modelYaw = def.modelYaw ?? 0;
   }
 
-  async load(): Promise<void> {
+  /**
+   * @param opts.preloadAll — Dressing Room / Anim library: load every catalog clip
+   *   so preview verbs resolve. Runtime combat must leave this false (smaller set).
+   */
+  async load(opts?: { preloadAll?: boolean }): Promise<void> {
     // Explorer uses Avatar Edit modular head (play-shell parity) unless look overrides.
     // Prefer Dressing Room "Save avatar" (local / fleet voxelLook) over catalog defaults.
     let look =
@@ -338,6 +372,8 @@ export class ExplorerCharacter implements Avatar {
       height: CHARACTER_HEIGHT_M,
       weapon: this.weaponClass,
       look,
+      // Animations tab needs the full Mixamo set; combat stays lean.
+      preloadAll: opts?.preloadAll === true,
     });
     if (this.disposed) {
       animator.dispose();
@@ -593,22 +629,16 @@ export class ExplorerCharacter implements Avatar {
   previewClip(name: string): number {
     const a = this.animator;
     if (!a) return 0;
-    // Dressing Room library preview: ALWAYS play the clip of the SAME NAME,
-    // independent of the equipped weapon. Most verbs map to a concrete catalog
-    // clip id (PREVIEW_VERB_KEYS); resolve the equipped class first, then fall
-    // back to ANY class / global that ships the clip so out-of-class verbs
-    // (jumpAttack, pistolWhip, hurricaneKick, hit, jump, …) still play their own
-    // animation instead of no-opping or firing a generic attack. The rig loads
-    // every referenced clip, so playById finds them all.
-    const key = PREVIEW_VERB_KEYS[name];
-    if (key) {
-      const id = WEAPON_SETS[this.weaponClass].actions[key] ?? resolveActionAnywhere(key);
-      if (id) {
-        const dur = a.playById(id);
-        if (dur) {
-          this.lastClip = name;
-          return dur;
-        }
+    // Dressing Room library preview: play the resolved catalog clip for this
+    // verb + equipped weapon (same path as {@link resolvePreviewClipId} so the
+    // Animations tab label always matches motion). Fall back across classes /
+    // globals for out-of-class verbs; if nothing resolves, use gameplay one-shot.
+    const id = resolvePreviewClipId(name, this.weaponClass);
+    if (id) {
+      const dur = a.playById(id);
+      if (dur) {
+        this.lastClip = name;
+        return dur;
       }
     }
     // Verbs without a static clip id (or an unexpectedly missing clip) fall back

@@ -10,14 +10,12 @@ export const CINEMA_HERO_MESHES = [
   "models/racalvin.glb",
   "models/karate-boss.glb",
   "models/orc.glb",
-  "models/introgamer.glb",
-  "models/landing/astrocreeper.glb",
-  "models/astrocreeper.glb",
-  "models/karate-boss.glb",
+  "models/skeleton-warrior.glb",
 ] as const;
 
+/** Live arena shells only (probed 2026-07: instarena-phyxt-fight 404 everywhere). */
 export const CINEMA_ARENA_MESHES = [
-  "models/instarena-phyxt-fight.glb",
+  "models/arena-war-zone.glb",
   "models/dungeon.glb",
   "models/dj-booth.glb",
 ] as const;
@@ -391,7 +389,7 @@ export const CINEMA_STORM_SHIP_ATTACK: CinemaManifest = {
       position: [18, -2, -8],
     },
     {
-      meshKeys: ["models/introgamer.glb", "models/racalvin.glb"],
+      meshKeys: ["models/racalvin.glb", "models/karate-boss.glb", "models/orc.glb"],
       kind: "character",
       heightM: 1.8,
       position: [0.5, 3.2, 1.2],

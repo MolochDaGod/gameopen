@@ -1,33 +1,33 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-21T16:57:04.099Z",
+  "generatedAt": "2026-07-27T22:49:11.996Z",
   "game": "gameopen",
-  "count": 1175,
+  "count": 1648,
   "byKind": {
-    "data": 66,
+    "data": 71,
     "animation": 572,
-    "model": 206,
-    "texture": 260,
-    "other": 60,
+    "model": 408,
+    "texture": 498,
+    "other": 86,
     "icon": 4,
-    "text": 2,
-    "bin": 1,
+    "text": 3,
+    "bin": 2,
     "code": 4
   },
   "byPurpose": {
-    "data": 66,
-    "unknown": 225,
-    "prop": 37,
+    "data": 71,
+    "unknown": 394,
+    "prop": 48,
     "animation": 286,
-    "weapon": 195,
-    "vfx": 30,
-    "texture": 260,
+    "weapon": 197,
+    "vfx": 50,
+    "texture": 498,
     "audio": 54,
-    "npc": 11,
-    "map": 3,
+    "npc": 16,
+    "map": 26,
     "character": 8
   },
-  "totalBytes": 623155167,
+  "totalBytes": 4133002536,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -6066,7 +6066,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1781,
+      "bytes": 1695,
       "category": "anims/baked/polearm"
     },
     {
@@ -6640,6 +6640,16 @@
       "category": "audio/sfx"
     },
     {
+      "id": "GO-ca4be984f04f",
+      "path": "/avatar/hats/crown.glb",
+      "rel": "avatar/hats/crown.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 681400,
+      "category": "avatar/hats"
+    },
+    {
       "id": "GO-4886d98ea877",
       "path": "/avatar/hats/hat-pack.glb",
       "rel": "avatar/hats/hat-pack.glb",
@@ -6648,6 +6658,96 @@
       "ext": "glb",
       "bytes": 3742416,
       "category": "avatar/hats"
+    },
+    {
+      "id": "GO-46dd9900a065",
+      "path": "/avatar/hats/icons/cowboy.jpg",
+      "rel": "avatar/hats/icons/cowboy.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 101784,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-ea4f0e6bd96e",
+      "path": "/avatar/hats/icons/crown.jpg",
+      "rel": "avatar/hats/icons/crown.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 159620,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-62931e70bf7a",
+      "path": "/avatar/hats/icons/hood.jpg",
+      "rel": "avatar/hats/icons/hood.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 113576,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-35191ac2b98f",
+      "path": "/avatar/hats/icons/horns.jpg",
+      "rel": "avatar/hats/icons/horns.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 88090,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-9effb51bfe11",
+      "path": "/avatar/hats/icons/pirate.jpg",
+      "rel": "avatar/hats/icons/pirate.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 102323,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-0955c47ac9e0",
+      "path": "/avatar/hats/icons/pirateVoxel.jpg",
+      "rel": "avatar/hats/icons/pirateVoxel.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 125956,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-ce2a520285cc",
+      "path": "/avatar/hats/icons/princess.jpg",
+      "rel": "avatar/hats/icons/princess.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 131570,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-298a705eacab",
+      "path": "/avatar/hats/icons/tophat.jpg",
+      "rel": "avatar/hats/icons/tophat.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 70566,
+      "category": "avatar/hats/icons"
+    },
+    {
+      "id": "GO-d6c6296134dd",
+      "path": "/avatar/hats/icons/witch.jpg",
+      "rel": "avatar/hats/icons/witch.jpg",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "jpg",
+      "bytes": 89568,
+      "category": "avatar/hats/icons"
     },
     {
       "id": "GO-ac0fea17a62a",
@@ -6900,6 +7000,36 @@
       "category": "root"
     },
     {
+      "id": "GO-1998bcb51baf",
+      "path": "/content/anims/database.json",
+      "rel": "content/anims/database.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 21069,
+      "category": "content/anims"
+    },
+    {
+      "id": "GO-6010577e1c12",
+      "path": "/content/anims/states.json",
+      "rel": "content/anims/states.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 7059,
+      "category": "content/anims"
+    },
+    {
+      "id": "GO-63edbc950362",
+      "path": "/content/anims/weapon-live-packs.json",
+      "rel": "content/anims/weapon-live-packs.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 13013,
+      "category": "content/anims"
+    },
+    {
       "id": "GO-f0ceb4f38294",
       "path": "/content/camp/claim-flag.json",
       "rel": "content/camp/claim-flag.json",
@@ -6916,7 +7046,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 22687,
+      "bytes": 22025,
       "category": "content"
     },
     {
@@ -6926,7 +7056,27 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 27032,
+      "bytes": 25986,
+      "category": "content"
+    },
+    {
+      "id": "GO-cd5dd231047c",
+      "path": "/content/enemies/volcano-bosses.json",
+      "rel": "content/enemies/volcano-bosses.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2611,
+      "category": "content/enemies"
+    },
+    {
+      "id": "GO-bdc8724f6c86",
+      "path": "/content/grudge6-gear-presets.json",
+      "rel": "content/grudge6-gear-presets.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 17724,
       "category": "content"
     },
     {
@@ -6976,7 +7126,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1005,
+      "bytes": 962,
       "category": "content/runtime"
     },
     {
@@ -6986,7 +7136,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3967,
+      "bytes": 3844,
       "category": "content/worlds"
     },
     {
@@ -6996,7 +7146,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3817,
+      "bytes": 3703,
       "category": "content/worlds"
     },
     {
@@ -7006,7 +7156,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 5758,
+      "bytes": 5674,
       "category": "content/worlds"
     },
     {
@@ -7016,7 +7166,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 24157,
+      "bytes": 23292,
       "category": "content/worlds"
     },
     {
@@ -7026,7 +7176,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 19931,
+      "bytes": 19299,
       "category": "content/worlds"
     },
     {
@@ -7036,7 +7186,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 28230,
+      "bytes": 27188,
       "category": "content/worlds"
     },
     {
@@ -8310,6 +8460,16 @@
       "category": "icons"
     },
     {
+      "id": "GO-e0a427d5f107",
+      "path": "/icons/worldbuilder.png",
+      "rel": "icons/worldbuilder.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1606066,
+      "category": "icons"
+    },
+    {
       "id": "GO-2e68bac8470c",
       "path": "/kick_long_whoosh_19_1781882547201.wav",
       "rel": "kick_long_whoosh_19_1781882547201.wav",
@@ -8390,6 +8550,56 @@
       "category": "models/armor"
     },
     {
+      "id": "GO-09f84b26d95d",
+      "path": "/models/battle/animals/bear.glb",
+      "rel": "models/battle/animals/bear.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 718744,
+      "category": "models/battle/animals"
+    },
+    {
+      "id": "GO-b5ad3baacbc5",
+      "path": "/models/battle/animals/buffalo.glb",
+      "rel": "models/battle/animals/buffalo.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 33132,
+      "category": "models/battle/animals"
+    },
+    {
+      "id": "GO-bacf844091b4",
+      "path": "/models/battle/animals/deer.glb",
+      "rel": "models/battle/animals/deer.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 197832,
+      "category": "models/battle/animals"
+    },
+    {
+      "id": "GO-301c80087b07",
+      "path": "/models/battle/animals/minecraft-animals.glb",
+      "rel": "models/battle/animals/minecraft-animals.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3254080,
+      "category": "models/battle/animals"
+    },
+    {
+      "id": "GO-47cd90a98c46",
+      "path": "/models/battle/animals/wolf.glb",
+      "rel": "models/battle/animals/wolf.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 240296,
+      "category": "models/battle/animals"
+    },
+    {
       "id": "GO-af9e070f3314",
       "path": "/models/bear.glb",
       "rel": "models/bear.glb",
@@ -8398,6 +8608,16 @@
       "ext": "glb",
       "bytes": 66196,
       "category": "models"
+    },
+    {
+      "id": "GO-ebbf0ee22407",
+      "path": "/models/bosses/shadow-flame-mantis.prod.glb",
+      "rel": "models/bosses/shadow-flame-mantis.prod.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2158224,
+      "category": "models/bosses"
     },
     {
       "id": "GO-3d9525d76f3e",
@@ -8426,7 +8646,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1101,
+      "bytes": 1057,
       "category": "models/camp"
     },
     {
@@ -8440,6 +8660,16 @@
       "category": "models"
     },
     {
+      "id": "GO-ea70076b7c5b",
+      "path": "/models/cinema/stylized-pirate-ship.prod.glb",
+      "rel": "models/cinema/stylized-pirate-ship.prod.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1581128,
+      "category": "models/cinema"
+    },
+    {
       "id": "GO-c0e198ced068",
       "path": "/models/creatures/cannon.glb",
       "rel": "models/creatures/cannon.glb",
@@ -8448,6 +8678,16 @@
       "ext": "glb",
       "bytes": 92652,
       "category": "models/creatures"
+    },
+    {
+      "id": "GO-f0314b840963",
+      "path": "/models/creatures/ocean/mutant-stingray.prod.glb",
+      "rel": "models/creatures/ocean/mutant-stingray.prod.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3052952,
+      "category": "models/creatures/ocean"
     },
     {
       "id": "GO-3e4cec884190",
@@ -8548,6 +8788,16 @@
       "ext": "glb",
       "bytes": 5903604,
       "category": "models"
+    },
+    {
+      "id": "GO-cba26327edeb",
+      "path": "/models/enemies/volcano/minecraft-ghast.prod.glb",
+      "rel": "models/enemies/volcano/minecraft-ghast.prod.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 759328,
+      "category": "models/enemies/volcano"
     },
     {
       "id": "GO-edc90aa28a7a",
@@ -8920,6 +9170,686 @@
       "category": "models"
     },
     {
+      "id": "GO-b39c6723531c",
+      "path": "/models/kenney/roads/bridge_pillar.glb",
+      "rel": "models/kenney/roads/bridge_pillar.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5312,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-3b7d51c8ca5d",
+      "path": "/models/kenney/roads/bridge_pillarWide.glb",
+      "rel": "models/kenney/roads/bridge_pillarWide.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5320,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-deee48ec9a04",
+      "path": "/models/kenney/roads/construction_barrier.glb",
+      "rel": "models/kenney/roads/construction_barrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5264,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-f0c6068a94a0",
+      "path": "/models/kenney/roads/construction_light.glb",
+      "rel": "models/kenney/roads/construction_light.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 7992,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-9898967a378a",
+      "path": "/models/kenney/roads/construction_pylon.glb",
+      "rel": "models/kenney/roads/construction_pylon.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 10684,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-7d0cbece4738",
+      "path": "/models/kenney/roads/light_curved.glb",
+      "rel": "models/kenney/roads/light_curved.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 8472,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-9100ea91cf8c",
+      "path": "/models/kenney/roads/light_curvedCross.glb",
+      "rel": "models/kenney/roads/light_curvedCross.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 19964,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-8fa604399889",
+      "path": "/models/kenney/roads/light_curvedDouble.glb",
+      "rel": "models/kenney/roads/light_curvedDouble.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 12212,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-70562d78e6ad",
+      "path": "/models/kenney/roads/light_square.glb",
+      "rel": "models/kenney/roads/light_square.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5928,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-d40a54ed272e",
+      "path": "/models/kenney/roads/light_squareCross.glb",
+      "rel": "models/kenney/roads/light_squareCross.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 10688,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-198f5f069b05",
+      "path": "/models/kenney/roads/light_squareDouble.glb",
+      "rel": "models/kenney/roads/light_squareDouble.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 7632,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-623c81ff8d39",
+      "path": "/models/kenney/roads/road_bend.glb",
+      "rel": "models/kenney/roads/road_bend.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 15456,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-c1b876b69614",
+      "path": "/models/kenney/roads/road_bendBarrier.glb",
+      "rel": "models/kenney/roads/road_bendBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 9512,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-39356f172004",
+      "path": "/models/kenney/roads/road_bendSidewalk.glb",
+      "rel": "models/kenney/roads/road_bendSidewalk.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13068,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-022a5700ee16",
+      "path": "/models/kenney/roads/road_bendSquare.glb",
+      "rel": "models/kenney/roads/road_bendSquare.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6012,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-41609c0f99bf",
+      "path": "/models/kenney/roads/road_bendSquareBarrier.glb",
+      "rel": "models/kenney/roads/road_bendSquareBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 4720,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-184664397e2c",
+      "path": "/models/kenney/roads/road_bridge.glb",
+      "rel": "models/kenney/roads/road_bridge.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 20884,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-996d96d17939",
+      "path": "/models/kenney/roads/road_crossing.glb",
+      "rel": "models/kenney/roads/road_crossing.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6988,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-cb7c01175114",
+      "path": "/models/kenney/roads/road_crossroad.glb",
+      "rel": "models/kenney/roads/road_crossroad.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 8612,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-bb9cf2cdf525",
+      "path": "/models/kenney/roads/road_crossroadBarrier.glb",
+      "rel": "models/kenney/roads/road_crossroadBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 8948,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-342fabc6aa2a",
+      "path": "/models/kenney/roads/road_crossroadLine.glb",
+      "rel": "models/kenney/roads/road_crossroadLine.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 8396,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-cd504d0b0f74",
+      "path": "/models/kenney/roads/road_crossroadPath.glb",
+      "rel": "models/kenney/roads/road_crossroadPath.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 12848,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-4dea4c350dca",
+      "path": "/models/kenney/roads/road_curve.glb",
+      "rel": "models/kenney/roads/road_curve.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 18332,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-5b360c74c618",
+      "path": "/models/kenney/roads/road_curveBarrier.glb",
+      "rel": "models/kenney/roads/road_curveBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13828,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-dcd3c6a89912",
+      "path": "/models/kenney/roads/road_curveIntersection.glb",
+      "rel": "models/kenney/roads/road_curveIntersection.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 18768,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-d7aeab5ab908",
+      "path": "/models/kenney/roads/road_curveIntersectionBarrier.glb",
+      "rel": "models/kenney/roads/road_curveIntersectionBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 11972,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-8ba865589b6f",
+      "path": "/models/kenney/roads/road_curvePavement.glb",
+      "rel": "models/kenney/roads/road_curvePavement.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13064,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-89b5db1746b4",
+      "path": "/models/kenney/roads/road_drivewayDouble.glb",
+      "rel": "models/kenney/roads/road_drivewayDouble.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 7192,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-90fc09b4cf5f",
+      "path": "/models/kenney/roads/road_drivewayDoubleBarrier.glb",
+      "rel": "models/kenney/roads/road_drivewayDoubleBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5112,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-f84fbd1eefa1",
+      "path": "/models/kenney/roads/road_drivewaySingle.glb",
+      "rel": "models/kenney/roads/road_drivewaySingle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6344,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-9cddd1928f43",
+      "path": "/models/kenney/roads/road_drivewaySingleBarrier.glb",
+      "rel": "models/kenney/roads/road_drivewaySingleBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 4196,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-bdefd09fd2af",
+      "path": "/models/kenney/roads/road_end.glb",
+      "rel": "models/kenney/roads/road_end.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5164,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-5a59db57821b",
+      "path": "/models/kenney/roads/road_endBarrier.glb",
+      "rel": "models/kenney/roads/road_endBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3312,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-d08a179a4e0f",
+      "path": "/models/kenney/roads/road_endRound.glb",
+      "rel": "models/kenney/roads/road_endRound.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 14300,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-eb953804aa1a",
+      "path": "/models/kenney/roads/road_endRoundBarrier.glb",
+      "rel": "models/kenney/roads/road_endRoundBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 12468,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-c3f6edd8e4b5",
+      "path": "/models/kenney/roads/road_intersection.glb",
+      "rel": "models/kenney/roads/road_intersection.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 7080,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-ba6fe5da33f6",
+      "path": "/models/kenney/roads/road_intersectionBarrier.glb",
+      "rel": "models/kenney/roads/road_intersectionBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6120,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-3c92310fd408",
+      "path": "/models/kenney/roads/road_intersectionLine.glb",
+      "rel": "models/kenney/roads/road_intersectionLine.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6864,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-5849f385fd94",
+      "path": "/models/kenney/roads/road_intersectionPath.glb",
+      "rel": "models/kenney/roads/road_intersectionPath.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 10260,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-5774dd9d5be1",
+      "path": "/models/kenney/roads/road_roundabout.glb",
+      "rel": "models/kenney/roads/road_roundabout.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 72764,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-f4ca4a2fcf17",
+      "path": "/models/kenney/roads/road_roundaboutBarrier.glb",
+      "rel": "models/kenney/roads/road_roundaboutBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 47448,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-e5be74358134",
+      "path": "/models/kenney/roads/road_side.glb",
+      "rel": "models/kenney/roads/road_side.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5316,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-b0086a4958d8",
+      "path": "/models/kenney/roads/road_sideBarrier.glb",
+      "rel": "models/kenney/roads/road_sideBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3272,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-e77769200cb2",
+      "path": "/models/kenney/roads/road_sideEntry.glb",
+      "rel": "models/kenney/roads/road_sideEntry.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 19140,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-7b6d527b3477",
+      "path": "/models/kenney/roads/road_sideEntryBarrier.glb",
+      "rel": "models/kenney/roads/road_sideEntryBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 15596,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-fa8dd3b7ec87",
+      "path": "/models/kenney/roads/road_sideExit.glb",
+      "rel": "models/kenney/roads/road_sideExit.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 19140,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-5c7ba918869d",
+      "path": "/models/kenney/roads/road_sideExitBarrier.glb",
+      "rel": "models/kenney/roads/road_sideExitBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 15592,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-c665909d8008",
+      "path": "/models/kenney/roads/road_slant.glb",
+      "rel": "models/kenney/roads/road_slant.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5304,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-b46ae5caf55d",
+      "path": "/models/kenney/roads/road_slantBarrier.glb",
+      "rel": "models/kenney/roads/road_slantBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3272,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-7ef20d675085",
+      "path": "/models/kenney/roads/road_slantCurve.glb",
+      "rel": "models/kenney/roads/road_slantCurve.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 31484,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-aa2afe1cdedc",
+      "path": "/models/kenney/roads/road_slantCurveBarrier.glb",
+      "rel": "models/kenney/roads/road_slantCurveBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 29540,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-f0f2cc131ae1",
+      "path": "/models/kenney/roads/road_slantFlat.glb",
+      "rel": "models/kenney/roads/road_slantFlat.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5312,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-873a4f306810",
+      "path": "/models/kenney/roads/road_slantFlatCurve.glb",
+      "rel": "models/kenney/roads/road_slantFlatCurve.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 38120,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-a4fbe19acfbd",
+      "path": "/models/kenney/roads/road_slantFlatHigh.glb",
+      "rel": "models/kenney/roads/road_slantFlatHigh.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5312,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-cab8a86105ae",
+      "path": "/models/kenney/roads/road_slantHigh.glb",
+      "rel": "models/kenney/roads/road_slantHigh.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5304,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-2056ad7e70fe",
+      "path": "/models/kenney/roads/road_slantHighBarrier.glb",
+      "rel": "models/kenney/roads/road_slantHighBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3276,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-77721ceb0af6",
+      "path": "/models/kenney/roads/road_split.glb",
+      "rel": "models/kenney/roads/road_split.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 42944,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-7d14b5f5a0ca",
+      "path": "/models/kenney/roads/road_splitBarrier.glb",
+      "rel": "models/kenney/roads/road_splitBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 31980,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-b95a9aa8400c",
+      "path": "/models/kenney/roads/road_square.glb",
+      "rel": "models/kenney/roads/road_square.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 4392,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-00c39fafe48b",
+      "path": "/models/kenney/roads/road_squareBarrier.glb",
+      "rel": "models/kenney/roads/road_squareBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3364,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-1bb844e55cb7",
+      "path": "/models/kenney/roads/road_straight.glb",
+      "rel": "models/kenney/roads/road_straight.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 5304,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-3671511478c2",
+      "path": "/models/kenney/roads/road_straightBarrier.glb",
+      "rel": "models/kenney/roads/road_straightBarrier.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 3272,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-256e7d03c801",
+      "path": "/models/kenney/roads/road_straightBarrierEnd.glb",
+      "rel": "models/kenney/roads/road_straightBarrierEnd.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2796,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-8100911bc2d7",
+      "path": "/models/kenney/roads/tile_high.glb",
+      "rel": "models/kenney/roads/tile_high.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2336,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-45fe377de1eb",
+      "path": "/models/kenney/roads/tile_low.glb",
+      "rel": "models/kenney/roads/tile_low.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2332,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-145d9ab4e925",
+      "path": "/models/kenney/roads/tile_slant.glb",
+      "rel": "models/kenney/roads/tile_slant.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2344,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-a81f333669dd",
+      "path": "/models/kenney/roads/tile_slantHigh.glb",
+      "rel": "models/kenney/roads/tile_slantHigh.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2344,
+      "category": "models/kenney/roads"
+    },
+    {
+      "id": "GO-d0d8285ae472",
+      "path": "/models/maps/ultimate_assasination_grounds.glb",
+      "rel": "models/maps/ultimate_assasination_grounds.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 37241248,
+      "category": "models/maps"
+    },
+    {
       "id": "GO-0f71e319e719",
       "path": "/models/mech-00.glb",
       "rel": "models/mech-00.glb",
@@ -8968,6 +9898,46 @@
       "ext": "glb",
       "bytes": 68244,
       "category": "models"
+    },
+    {
+      "id": "GO-7d8c9c72a6f6",
+      "path": "/models/packs/farm_asset_pack_3d.glb",
+      "rel": "models/packs/farm_asset_pack_3d.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 80740900,
+      "category": "models/packs"
+    },
+    {
+      "id": "GO-ccf42756dd61",
+      "path": "/models/packs/fields_near_the_city_of_amida.glb",
+      "rel": "models/packs/fields_near_the_city_of_amida.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 59592496,
+      "category": "models/packs"
+    },
+    {
+      "id": "GO-0460e9bff196",
+      "path": "/models/packs/low_poly_farm.glb",
+      "rel": "models/packs/low_poly_farm.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 17028036,
+      "category": "models/packs"
+    },
+    {
+      "id": "GO-02f461801ecf",
+      "path": "/models/packs/road_pack.glb",
+      "rel": "models/packs/road_pack.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 14765904,
+      "category": "models/packs"
     },
     {
       "id": "GO-987b7bba6b8c",
@@ -9330,6 +10300,16 @@
       "category": "models"
     },
     {
+      "id": "GO-5aa777312d4d",
+      "path": "/models/vfx/another_shape_of_data.glb",
+      "rel": "models/vfx/another_shape_of_data.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1509692,
+      "category": "models/vfx"
+    },
+    {
       "id": "GO-0e4e742dc566",
       "path": "/models/vfx/aoe-warning.glb",
       "rel": "models/vfx/aoe-warning.glb",
@@ -9540,6 +10520,56 @@
       "category": "models/vfx"
     },
     {
+      "id": "GO-6103b8af53f4",
+      "path": "/models/vfx/slash/README.md",
+      "rel": "models/vfx/slash/README.md",
+      "kind": "other",
+      "purpose": "vfx",
+      "ext": "md",
+      "bytes": 1002,
+      "category": "models/vfx/slash"
+    },
+    {
+      "id": "GO-e1dbfe868f63",
+      "path": "/models/vfx/slash/slashblue.glb",
+      "rel": "models/vfx/slash/slashblue.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 212312,
+      "category": "models/vfx/slash"
+    },
+    {
+      "id": "GO-a4bf8794928d",
+      "path": "/models/vfx/slash/slashpurple.glb",
+      "rel": "models/vfx/slash/slashpurple.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 212312,
+      "category": "models/vfx/slash"
+    },
+    {
+      "id": "GO-d5b3f8a00bc1",
+      "path": "/models/vfx/slash/slashred.glb",
+      "rel": "models/vfx/slash/slashred.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 212312,
+      "category": "models/vfx/slash"
+    },
+    {
+      "id": "GO-6e752c024279",
+      "path": "/models/vfx/slash/slashyellow.glb",
+      "rel": "models/vfx/slash/slashyellow.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 212312,
+      "category": "models/vfx/slash"
+    },
+    {
       "id": "GO-5aab8d1ce84a",
       "path": "/models/vfx/soul.glb",
       "rel": "models/vfx/soul.glb",
@@ -9567,6 +10597,76 @@
       "purpose": "vfx",
       "ext": "glb",
       "bytes": 1610948,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-c2ca41948c13",
+      "path": "/models/vfx/stylized-fire-tornado/license.txt",
+      "rel": "models/vfx/stylized-fire-tornado/license.txt",
+      "kind": "text",
+      "purpose": "vfx",
+      "ext": "txt",
+      "bytes": 776,
+      "category": "models/vfx/stylized-fire-tornado"
+    },
+    {
+      "id": "GO-badf2bd0d96e",
+      "path": "/models/vfx/stylized-fire-tornado/scene.bin",
+      "rel": "models/vfx/stylized-fire-tornado/scene.bin",
+      "kind": "bin",
+      "purpose": "vfx",
+      "ext": "bin",
+      "bytes": 776280,
+      "category": "models/vfx/stylized-fire-tornado"
+    },
+    {
+      "id": "GO-97f12f92e63c",
+      "path": "/models/vfx/stylized-fire-tornado/scene.gltf",
+      "rel": "models/vfx/stylized-fire-tornado/scene.gltf",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "gltf",
+      "bytes": 626752,
+      "category": "models/vfx/stylized-fire-tornado"
+    },
+    {
+      "id": "GO-05de85d162f0",
+      "path": "/models/vfx/stylized-fire-tornado/textures/Tornado_baseColor.png",
+      "rel": "models/vfx/stylized-fire-tornado/textures/Tornado_baseColor.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 4030,
+      "category": "models/vfx/stylized-fire-tornado/textures"
+    },
+    {
+      "id": "GO-86b968689b96",
+      "path": "/models/vfx/stylized-fire-tornado/textures/Tornado_emissive.png",
+      "rel": "models/vfx/stylized-fire-tornado/textures/Tornado_emissive.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 265,
+      "category": "models/vfx/stylized-fire-tornado/textures"
+    },
+    {
+      "id": "GO-3c8ebfc10c05",
+      "path": "/models/vfx/stylized-fire-tornado.glb",
+      "rel": "models/vfx/stylized-fire-tornado.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1034732,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-c71dbba59ab7",
+      "path": "/models/vfx/stylized_ice_bow.glb",
+      "rel": "models/vfx/stylized_ice_bow.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 212312,
       "category": "models/vfx"
     },
     {
@@ -9610,6 +10710,16 @@
       "category": "models/vfx"
     },
     {
+      "id": "GO-e0c1c1f555f0",
+      "path": "/models/vfx/witch_hut_in_a_swamp.glb",
+      "rel": "models/vfx/witch_hut_in_a_swamp.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 11558652,
+      "category": "models/vfx"
+    },
+    {
       "id": "GO-b4c652765af6",
       "path": "/models/vfx/yellow-light.glb",
       "rel": "models/vfx/yellow-light.glb",
@@ -9628,6 +10738,976 @@
       "ext": "glb",
       "bytes": 5240184,
       "category": "models"
+    },
+    {
+      "id": "GO-32e974be886f",
+      "path": "/models/voxel/animals/brute_minion_p2.glb",
+      "rel": "models/voxel/animals/brute_minion_p2.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6783376,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-d69cfdfca9f8",
+      "path": "/models/voxel/animals/chaotic_marine_life.glb",
+      "rel": "models/voxel/animals/chaotic_marine_life.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2930884,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-d1f565f7b512",
+      "path": "/models/voxel/animals/crystal_pangolin.glb",
+      "rel": "models/voxel/animals/crystal_pangolin.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1078084,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-cd0361b38e5b",
+      "path": "/models/voxel/animals/dragon_run_loop.glb",
+      "rel": "models/voxel/animals/dragon_run_loop.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 17145444,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-3f445fb8a3e2",
+      "path": "/models/voxel/animals/dragon_three_loops.glb",
+      "rel": "models/voxel/animals/dragon_three_loops.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 17490324,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-0f1645524a86",
+      "path": "/models/voxel/animals/hanu_animated.glb",
+      "rel": "models/voxel/animals/hanu_animated.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 70347384,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-bae08e645906",
+      "path": "/models/voxel/animals/wing_animated.glb",
+      "rel": "models/voxel/animals/wing_animated.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1369884,
+      "category": "models/voxel/animals"
+    },
+    {
+      "id": "GO-56582c4e2547",
+      "path": "/models/voxel/content/anvil.glb",
+      "rel": "models/voxel/content/anvil.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 17024328,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-83fcc8c68674",
+      "path": "/models/voxel/content/balloons.glb",
+      "rel": "models/voxel/content/balloons.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 6136580,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-114b54e3873e",
+      "path": "/models/voxel/content/brick_modular_kit.glb",
+      "rel": "models/voxel/content/brick_modular_kit.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 200380,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-7eda8d83bef5",
+      "path": "/models/voxel/content/desert_portal.glb",
+      "rel": "models/voxel/content/desert_portal.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 705248,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-16749b15f8bb",
+      "path": "/models/voxel/content/phantom_seal_altar.glb",
+      "rel": "models/voxel/content/phantom_seal_altar.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 20605032,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-5494711521f2",
+      "path": "/models/voxel/content/queen_annes_revenge.glb",
+      "rel": "models/voxel/content/queen_annes_revenge.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 53902716,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-433266e89bcb",
+      "path": "/models/voxel/content/t0_crossbow.glb",
+      "rel": "models/voxel/content/t0_crossbow.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13452308,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-b7046c6dd4ac",
+      "path": "/models/voxel/content/warning_bell.glb",
+      "rel": "models/voxel/content/warning_bell.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 4656872,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-851de98967e9",
+      "path": "/models/voxel/content/xyz_buildings_draft.glb",
+      "rel": "models/voxel/content/xyz_buildings_draft.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2044760,
+      "category": "models/voxel/content"
+    },
+    {
+      "id": "GO-1f3043d4c47e",
+      "path": "/models/voxel/maps/animal_company_lobby.glb",
+      "rel": "models/voxel/maps/animal_company_lobby.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 60448228,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-5432663fd96e",
+      "path": "/models/voxel/maps/awesome_realm_world.glb",
+      "rel": "models/voxel/maps/awesome_realm_world.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 359736068,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-54c0de00bf01",
+      "path": "/models/voxel/maps/dalaran_fantasy_island.glb",
+      "rel": "models/voxel/maps/dalaran_fantasy_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 133863356,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-211f99e94fcf",
+      "path": "/models/voxel/maps/dragon_head_cave.glb",
+      "rel": "models/voxel/maps/dragon_head_cave.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 59992992,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-e707f725c7ca",
+      "path": "/models/voxel/maps/faction_spawn_castle_town.glb",
+      "rel": "models/voxel/maps/faction_spawn_castle_town.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 462669824,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-3ff14e7e7277",
+      "path": "/models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "rel": "models/voxel/maps/floating_islands_dwarves_haven.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 40158248,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-c827dbe7f903",
+      "path": "/models/voxel/maps/geonosis_arena.glb",
+      "rel": "models/voxel/maps/geonosis_arena.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 22881752,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-f5ca613f7d97",
+      "path": "/models/voxel/maps/glowstone_mountain.glb",
+      "rel": "models/voxel/maps/glowstone_mountain.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 21406036,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-a28142135b45",
+      "path": "/models/voxel/maps/glowstone_mountain_oriental.glb",
+      "rel": "models/voxel/maps/glowstone_mountain_oriental.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 21511404,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-893b2375e100",
+      "path": "/models/voxel/maps/grotto_cavern_cave.glb",
+      "rel": "models/voxel/maps/grotto_cavern_cave.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 61162168,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-f188dbbcc5f8",
+      "path": "/models/voxel/maps/koth_bundle.glb",
+      "rel": "models/voxel/maps/koth_bundle.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 66309016,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-50518351c245",
+      "path": "/models/voxel/maps/low_poly_canyon.glb",
+      "rel": "models/voxel/maps/low_poly_canyon.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 13239552,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-61deb0d53364",
+      "path": "/models/voxel/maps/pirat_bay.glb",
+      "rel": "models/voxel/maps/pirat_bay.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 26145944,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-4b8a78c5be84",
+      "path": "/models/voxel/maps/tower_koth.glb",
+      "rel": "models/voxel/maps/tower_koth.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 21381320,
+      "category": "models/voxel/maps"
+    },
+    {
+      "id": "GO-f89e363a87a2",
+      "path": "/models/voxel/tools/all_jade_stone_tools.glb",
+      "rel": "models/voxel/tools/all_jade_stone_tools.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 147692,
+      "category": "models/voxel/tools"
+    },
+    {
+      "id": "GO-3e3cc0da8104",
+      "path": "/models/voxel/vfx/energy_particle_stream.glb",
+      "rel": "models/voxel/vfx/energy_particle_stream.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 58584,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-919783c0997e",
+      "path": "/models/voxel/vfx/fire_hurricane.glb",
+      "rel": "models/voxel/vfx/fire_hurricane.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1009656,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-2674a231eed9",
+      "path": "/models/voxel/vfx/kaens_spike.glb",
+      "rel": "models/voxel/vfx/kaens_spike.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 7247304,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-a94a464920bf",
+      "path": "/models/voxel/vfx/tornado_vortex.glb",
+      "rel": "models/voxel/vfx/tornado_vortex.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 173388,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-6631d45304b7",
+      "path": "/models/voxel/vfx/unstable_antimatter.glb",
+      "rel": "models/voxel/vfx/unstable_antimatter.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 5799344,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-84a909d5768a",
+      "path": "/models/voxel/vfx/wind_rasenshuriken.glb",
+      "rel": "models/voxel/vfx/wind_rasenshuriken.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 4071628,
+      "category": "models/voxel/vfx"
+    },
+    {
+      "id": "GO-2bdb4ca971a9",
+      "path": "/models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
+      "rel": "models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "rar",
+      "bytes": 28874483,
+      "category": "models/voxel-only/buildings"
+    },
+    {
+      "id": "GO-698729e0b293",
+      "path": "/models/voxel-only/buildings/Voxel_Buildings.zip",
+      "rel": "models/voxel-only/buildings/Voxel_Buildings.zip",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "zip",
+      "bytes": 2387730,
+      "category": "models/voxel-only/buildings"
+    },
+    {
+      "id": "GO-49d77e1aa28e",
+      "path": "/models/warlords-era/animals/flying/crow.glb",
+      "rel": "models/warlords-era/animals/flying/crow.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 249760,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-61305c083f78",
+      "path": "/models/warlords-era/animals/flying/crow_baby.glb",
+      "rel": "models/warlords-era/animals/flying/crow_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 526960,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-0e90efc92f6f",
+      "path": "/models/warlords-era/animals/flying/eagle.glb",
+      "rel": "models/warlords-era/animals/flying/eagle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1467024,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-7562a605a144",
+      "path": "/models/warlords-era/animals/flying/eagle_baby.glb",
+      "rel": "models/warlords-era/animals/flying/eagle_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 399856,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-e2a96cbfde57",
+      "path": "/models/warlords-era/animals/flying/harpia.glb",
+      "rel": "models/warlords-era/animals/flying/harpia.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1728172,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-6202ed91329b",
+      "path": "/models/warlords-era/animals/flying/owl.glb",
+      "rel": "models/warlords-era/animals/flying/owl.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 755852,
+      "category": "models/warlords-era/animals/flying"
+    },
+    {
+      "id": "GO-801f7157b156",
+      "path": "/models/warlords-era/animals/land/bear.glb",
+      "rel": "models/warlords-era/animals/land/bear.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1080844,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-6538dd456375",
+      "path": "/models/warlords-era/animals/land/bear_baby.glb",
+      "rel": "models/warlords-era/animals/land/bear_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 932392,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-c3657d596a0b",
+      "path": "/models/warlords-era/animals/land/boar.glb",
+      "rel": "models/warlords-era/animals/land/boar.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1241448,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-0a1216b66c62",
+      "path": "/models/warlords-era/animals/land/deer.glb",
+      "rel": "models/warlords-era/animals/land/deer.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1974004,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-cc87465ba7c2",
+      "path": "/models/warlords-era/animals/land/deer_baby.glb",
+      "rel": "models/warlords-era/animals/land/deer_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1800592,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-18b243f59b1e",
+      "path": "/models/warlords-era/animals/land/doe.glb",
+      "rel": "models/warlords-era/animals/land/doe.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1946028,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-ef84a3c0c952",
+      "path": "/models/warlords-era/animals/land/fox.glb",
+      "rel": "models/warlords-era/animals/land/fox.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1424568,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-2071e9a1ebb9",
+      "path": "/models/warlords-era/animals/land/fox_baby.glb",
+      "rel": "models/warlords-era/animals/land/fox_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1254200,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-d624b6f30240",
+      "path": "/models/warlords-era/animals/land/horse.glb",
+      "rel": "models/warlords-era/animals/land/horse.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2506128,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-c1842f373bc8",
+      "path": "/models/warlords-era/animals/land/kangaroo_baby.glb",
+      "rel": "models/warlords-era/animals/land/kangaroo_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1287108,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-74fd88b68955",
+      "path": "/models/warlords-era/animals/land/wolf.glb",
+      "rel": "models/warlords-era/animals/land/wolf.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1173688,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-df5c6ebc3b49",
+      "path": "/models/warlords-era/animals/land/wolf_baby.glb",
+      "rel": "models/warlords-era/animals/land/wolf_baby.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1202944,
+      "category": "models/warlords-era/animals/land"
+    },
+    {
+      "id": "GO-8e9a8bd856b3",
+      "path": "/models/warlords-era/animals/water/cavern_turtle.glb",
+      "rel": "models/warlords-era/animals/water/cavern_turtle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2116136,
+      "category": "models/warlords-era/animals/water"
+    },
+    {
+      "id": "GO-8e703b88c6b6",
+      "path": "/models/warlords-era/animals/water/sea_turtle.glb",
+      "rel": "models/warlords-era/animals/water/sea_turtle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 874436,
+      "category": "models/warlords-era/animals/water"
+    },
+    {
+      "id": "GO-5ee3e957be3a",
+      "path": "/models/warlords-era/animals/water/shark.glb",
+      "rel": "models/warlords-era/animals/water/shark.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 311272,
+      "category": "models/warlords-era/animals/water"
+    },
+    {
+      "id": "GO-113e9803d992",
+      "path": "/models/warlords-era/buildings/anglers_house.glb",
+      "rel": "models/warlords-era/buildings/anglers_house.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 36695064,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-4e07d26f73dc",
+      "path": "/models/warlords-era/buildings/archertower_modular.glb",
+      "rel": "models/warlords-era/buildings/archertower_modular.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 11340540,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-f14065845f92",
+      "path": "/models/warlords-era/buildings/castle.glb",
+      "rel": "models/warlords-era/buildings/castle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 8149460,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-aedf294f9dc6",
+      "path": "/models/warlords-era/buildings/entrance_to_fort.glb",
+      "rel": "models/warlords-era/buildings/entrance_to_fort.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 36020432,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-9be8c7023090",
+      "path": "/models/warlords-era/buildings/medieval_camp.glb",
+      "rel": "models/warlords-era/buildings/medieval_camp.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2916800,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-8b4163ff798d",
+      "path": "/models/warlords-era/buildings/pirate_tavern.glb",
+      "rel": "models/warlords-era/buildings/pirate_tavern.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 7078812,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-4ce83ca69576",
+      "path": "/models/warlords-era/buildings/skycastle.glb",
+      "rel": "models/warlords-era/buildings/skycastle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 4035320,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-b288e2259542",
+      "path": "/models/warlords-era/buildings/smeltery.glb",
+      "rel": "models/warlords-era/buildings/smeltery.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 230230488,
+      "category": "models/warlords-era/buildings"
+    },
+    {
+      "id": "GO-2fdfa07f8f9e",
+      "path": "/models/warlords-era/enemies/abyss_demon.glb",
+      "rel": "models/warlords-era/enemies/abyss_demon.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 8190616,
+      "category": "models/warlords-era/enemies"
+    },
+    {
+      "id": "GO-5c268a020a78",
+      "path": "/models/warlords-era/enemies/baphomet_ancient.glb",
+      "rel": "models/warlords-era/enemies/baphomet_ancient.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 4733864,
+      "category": "models/warlords-era/enemies"
+    },
+    {
+      "id": "GO-5d4be78cd141",
+      "path": "/models/warlords-era/nature/plants/grass.glb",
+      "rel": "models/warlords-era/nature/plants/grass.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 7747332,
+      "category": "models/warlords-era/nature/plants"
+    },
+    {
+      "id": "GO-edb0229de47b",
+      "path": "/models/warlords-era/nature/plants/ivy.glb",
+      "rel": "models/warlords-era/nature/plants/ivy.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 30320996,
+      "category": "models/warlords-era/nature/plants"
+    },
+    {
+      "id": "GO-38bb28f9efaa",
+      "path": "/models/warlords-era/nature/plants/plants_asset_set.glb",
+      "rel": "models/warlords-era/nature/plants/plants_asset_set.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 22428552,
+      "category": "models/warlords-era/nature/plants"
+    },
+    {
+      "id": "GO-6cd18d0c37eb",
+      "path": "/models/warlords-era/nature/plants/stylized_plants_free.glb",
+      "rel": "models/warlords-era/nature/plants/stylized_plants_free.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 221528,
+      "category": "models/warlords-era/nature/plants"
+    },
+    {
+      "id": "GO-deb47a4a19e5",
+      "path": "/models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
+      "rel": "models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 104036552,
+      "category": "models/warlords-era/nature/rocks"
+    },
+    {
+      "id": "GO-fec51271a52a",
+      "path": "/models/warlords-era/nature/rocks/stylized_rocks_70.glb",
+      "rel": "models/warlords-era/nature/rocks/stylized_rocks_70.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 69016308,
+      "category": "models/warlords-era/nature/rocks"
+    },
+    {
+      "id": "GO-df09f7ea6f80",
+      "path": "/models/warlords-era/nature/trees/autumn_forest.glb",
+      "rel": "models/warlords-era/nature/trees/autumn_forest.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 10289732,
+      "category": "models/warlords-era/nature/trees"
+    },
+    {
+      "id": "GO-16a2d531acb4",
+      "path": "/models/warlords-era/nature/trees/redwood_lod.glb",
+      "rel": "models/warlords-era/nature/trees/redwood_lod.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 2862328,
+      "category": "models/warlords-era/nature/trees"
+    },
+    {
+      "id": "GO-1f67e0810966",
+      "path": "/models/warlords-era/nature/trees/stylized_nature_vol1.glb",
+      "rel": "models/warlords-era/nature/trees/stylized_nature_vol1.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 3062908,
+      "category": "models/warlords-era/nature/trees"
+    },
+    {
+      "id": "GO-cfb080e617b3",
+      "path": "/models/warlords-era/nature/vfx/cloud_ring.glb",
+      "rel": "models/warlords-era/nature/vfx/cloud_ring.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 7646052,
+      "category": "models/warlords-era/nature/vfx"
+    },
+    {
+      "id": "GO-4a5ccd4300fb",
+      "path": "/models/warlords-era/nature/vfx/thunderstorm.glb",
+      "rel": "models/warlords-era/nature/vfx/thunderstorm.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 12147044,
+      "category": "models/warlords-era/nature/vfx"
+    },
+    {
+      "id": "GO-8069939d9a4a",
+      "path": "/models/warlords-era/props/crates_and_barrels.glb",
+      "rel": "models/warlords-era/props/crates_and_barrels.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 1951268,
+      "category": "models/warlords-era/props"
+    },
+    {
+      "id": "GO-93147fc764f3",
+      "path": "/models/warlords-era/props/magic_ice_scroll.glb",
+      "rel": "models/warlords-era/props/magic_ice_scroll.glb",
+      "kind": "model",
+      "purpose": "prop",
+      "ext": "glb",
+      "bytes": 8829936,
+      "category": "models/warlords-era/props"
+    },
+    {
+      "id": "GO-21d41a6f8d9e",
+      "path": "/models/warlords-era/units/knight_01.glb",
+      "rel": "models/warlords-era/units/knight_01.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 376304,
+      "category": "models/warlords-era/units"
+    },
+    {
+      "id": "GO-d697ac43b4f1",
+      "path": "/models/warlords-era/units/knight_02.glb",
+      "rel": "models/warlords-era/units/knight_02.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 358456,
+      "category": "models/warlords-era/units"
+    },
+    {
+      "id": "GO-9f5c0e5c3531",
+      "path": "/models/warlords-era/units/knight_03.glb",
+      "rel": "models/warlords-era/units/knight_03.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 350924,
+      "category": "models/warlords-era/units"
+    },
+    {
+      "id": "GO-f204c091a848",
+      "path": "/models/warlords-era/units/skeleton.glb",
+      "rel": "models/warlords-era/units/skeleton.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 1002184,
+      "category": "models/warlords-era/units"
+    },
+    {
+      "id": "GO-e541ec6c0688",
+      "path": "/models/warlords-era/units/skeleton_archer.glb",
+      "rel": "models/warlords-era/units/skeleton_archer.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 665112,
+      "category": "models/warlords-era/units"
+    },
+    {
+      "id": "GO-bd70d245c102",
+      "path": "/models/warlords-era/vehicles/minecarts.glb",
+      "rel": "models/warlords-era/vehicles/minecarts.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2008808,
+      "category": "models/warlords-era/vehicles"
+    },
+    {
+      "id": "GO-84108aa8af5d",
+      "path": "/models/warlords-era/vehicles/steampunk_airship.glb",
+      "rel": "models/warlords-era/vehicles/steampunk_airship.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 34795396,
+      "category": "models/warlords-era/vehicles"
+    },
+    {
+      "id": "GO-b5cd8a1edd36",
+      "path": "/models/warlords-era/weapons/harpoon_gun.glb",
+      "rel": "models/warlords-era/weapons/harpoon_gun.glb",
+      "kind": "model",
+      "purpose": "weapon",
+      "ext": "glb",
+      "bytes": 127828,
+      "category": "models/warlords-era/weapons"
+    },
+    {
+      "id": "GO-93f7f7399be6",
+      "path": "/models/warlords-era/worlds/castle_eltz.glb",
+      "rel": "models/warlords-era/worlds/castle_eltz.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 163443404,
+      "category": "models/warlords-era/worlds"
+    },
+    {
+      "id": "GO-8faaed97fd57",
+      "path": "/models/warlords-era/worlds/ice_world.glb",
+      "rel": "models/warlords-era/worlds/ice_world.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 9429824,
+      "category": "models/warlords-era/worlds"
+    },
+    {
+      "id": "GO-8ab8f16ad27c",
+      "path": "/models/warlords-era/worlds/low_poly_island.glb",
+      "rel": "models/warlords-era/worlds/low_poly_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 9230032,
+      "category": "models/warlords-era/worlds"
+    },
+    {
+      "id": "GO-90234ce3d091",
+      "path": "/models/warlords-era/worlds/medieval_camp.glb",
+      "rel": "models/warlords-era/worlds/medieval_camp.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 2916800,
+      "category": "models/warlords-era/worlds"
+    },
+    {
+      "id": "GO-1772226bc50b",
+      "path": "/models/warlords-era/worlds/pirate_island_pack.glb",
+      "rel": "models/warlords-era/worlds/pirate_island_pack.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 10657764,
+      "category": "models/warlords-era/worlds"
+    },
+    {
+      "id": "GO-99de872ec2f7",
+      "path": "/models/warlords-era/worlds/tropical_island_small.glb",
+      "rel": "models/warlords-era/worlds/tropical_island_small.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 6696792,
+      "category": "models/warlords-era/worlds"
     },
     {
       "id": "GO-b9426a7a8ea7",
@@ -10010,6 +12090,16 @@
       "category": "models/weapons"
     },
     {
+      "id": "GO-9619b28883ca",
+      "path": "/models/weapons/my-brothers-keeper.prod.glb",
+      "rel": "models/weapons/my-brothers-keeper.prod.glb",
+      "kind": "model",
+      "purpose": "weapon",
+      "ext": "glb",
+      "bytes": 1326876,
+      "category": "models/weapons"
+    },
+    {
       "id": "GO-a76d167684cb",
       "path": "/models/weapons/pistol.glb",
       "rel": "models/weapons/pistol.glb",
@@ -10207,6 +12297,156 @@
       "purpose": "map",
       "ext": "glb",
       "bytes": 32823844,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-7e6192a52370",
+      "path": "/models/worlds/bridge_town.glb",
+      "rel": "models/worlds/bridge_town.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1980992,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-ce1d62c28326",
+      "path": "/models/worlds/forest-map.glb",
+      "rel": "models/worlds/forest-map.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 26002032,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-b5d8e1aa9b0e",
+      "path": "/models/worlds/island_life.glb",
+      "rel": "models/worlds/island_life.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 450735736,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-db979c05988e",
+      "path": "/models/worlds/sailtest.glb",
+      "rel": "models/worlds/sailtest.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 9636856,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-0ad251c60aa0",
+      "path": "/models/worlds/sky/dwarf-main-city.glb",
+      "rel": "models/worlds/sky/dwarf-main-city.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13553816,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-fd0104003292",
+      "path": "/models/worlds/sky/dwarf-winter-castle-town.glb",
+      "rel": "models/worlds/sky/dwarf-winter-castle-town.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 13553816,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-207aa3450787",
+      "path": "/models/worlds/sky/elf-lord-temple.glb",
+      "rel": "models/worlds/sky/elf-lord-temple.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1141404,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-6ec4afdf07a5",
+      "path": "/models/worlds/sky/elf-sky-town.glb",
+      "rel": "models/worlds/sky/elf-sky-town.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1141404,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-c97aacac1864",
+      "path": "/models/worlds/sky/fantasy-floating-island.glb",
+      "rel": "models/worlds/sky/fantasy-floating-island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 75035600,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-270cbc82ce29",
+      "path": "/models/worlds/sky/floating-island-map.glb",
+      "rel": "models/worlds/sky/floating-island-map.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 8636684,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-5e6e9c814918",
+      "path": "/models/worlds/sky/floating-island-roots.glb",
+      "rel": "models/worlds/sky/floating-island-roots.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 44958132,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-a8fe5deabb92",
+      "path": "/models/worlds/sky/floating-town-hand-painted.glb",
+      "rel": "models/worlds/sky/floating-town-hand-painted.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 17132656,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-324f3420e66e",
+      "path": "/models/worlds/sky/medieval-town.glb",
+      "rel": "models/worlds/sky/medieval-town.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 15686288,
+      "category": "models/worlds/sky"
+    },
+    {
+      "id": "GO-34bc019e022c",
+      "path": "/models/worlds/small_island.glb",
+      "rel": "models/worlds/small_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 4925272,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-609ade1a6275",
+      "path": "/models/worlds/witch_hut_in_a_swamp.glb",
+      "rel": "models/worlds/witch_hut_in_a_swamp.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 11558652,
       "category": "models/worlds"
     },
     {
@@ -10630,6 +12870,16 @@
       "category": "rooms"
     },
     {
+      "id": "GO-fa620bd7ca71",
+      "path": "/rooms/worldbuilder-scene.png",
+      "rel": "rooms/worldbuilder-scene.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1606066,
+      "category": "rooms"
+    },
+    {
       "id": "GO-2e642b806e50",
       "path": "/rooms/zones-scene.png",
       "rel": "rooms/zones-scene.png",
@@ -10666,7 +12916,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "js",
-      "bytes": 3773,
+      "bytes": 5538,
       "category": "root"
     },
     {
@@ -10678,6 +12928,36 @@
       "ext": "fbx",
       "bytes": 28064,
       "category": "root"
+    },
+    {
+      "id": "GO-f25e5abbadcb",
+      "path": "/ui/craftpix/part2/Action_Bar/Thumbs.db",
+      "rel": "ui/craftpix/part2/Action_Bar/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 358400,
+      "category": "ui/craftpix/part2/Action_Bar"
+    },
+    {
+      "id": "GO-a840baa9e4d0",
+      "path": "/ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
+      "rel": "ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 99840,
+      "category": "ui/craftpix/part2/Battle_Time-Team_Stats"
+    },
+    {
+      "id": "GO-7f37693741cd",
+      "path": "/ui/craftpix/part2/Loading_Bar/Thumbs.db",
+      "rel": "ui/craftpix/part2/Loading_Bar/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 8192,
+      "category": "ui/craftpix/part2/Loading_Bar"
     },
     {
       "id": "GO-184f2a2fbacf",
@@ -10857,6 +13137,16 @@
       "purpose": "unknown",
       "ext": "psd",
       "bytes": 4771705,
+      "category": "ui/craftpix/part3/ab3"
+    },
+    {
+      "id": "GO-402d00732451",
+      "path": "/ui/craftpix/part3/ab3/Thumbs.db",
+      "rel": "ui/craftpix/part3/ab3/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 119296,
       "category": "ui/craftpix/part3/ab3"
     },
     {
@@ -11040,6 +13330,26 @@
       "category": "ui/craftpix/part3/moba"
     },
     {
+      "id": "GO-f636375c7e61",
+      "path": "/ui/craftpix/part3/moba/Thumbs.db",
+      "rel": "ui/craftpix/part3/moba/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 59904,
+      "category": "ui/craftpix/part3/moba"
+    },
+    {
+      "id": "GO-2e69c2718e71",
+      "path": "/ui/craftpix/part3/progress/Thumbs.db",
+      "rel": "ui/craftpix/part3/progress/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 48640,
+      "category": "ui/craftpix/part3/progress"
+    },
+    {
       "id": "GO-a09b6db724a7",
       "path": "/ui/craftpix/part3/resources/coin.png",
       "rel": "ui/craftpix/part3/resources/coin.png",
@@ -11058,6 +13368,126 @@
       "ext": "png",
       "bytes": 39957,
       "category": "ui/craftpix/part3/resources"
+    },
+    {
+      "id": "GO-1949f4581986",
+      "path": "/ui/craftpix/part3/resources/Thumbs.db",
+      "rel": "ui/craftpix/part3/resources/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 236544,
+      "category": "ui/craftpix/part3/resources"
+    },
+    {
+      "id": "GO-8903da5ac015",
+      "path": "/ui/craftpix/part3/Thumbs.db",
+      "rel": "ui/craftpix/part3/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 332800,
+      "category": "ui/craftpix/part3"
+    },
+    {
+      "id": "GO-7f659b40a040",
+      "path": "/ui/craftpix/part4/Actions_Bar/Thumbs.db",
+      "rel": "ui/craftpix/part4/Actions_Bar/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 318976,
+      "category": "ui/craftpix/part4/Actions_Bar"
+    },
+    {
+      "id": "GO-2aa9b93de425",
+      "path": "/ui/craftpix/part4/container/Thumbs.db",
+      "rel": "ui/craftpix/part4/container/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 93696,
+      "category": "ui/craftpix/part4/container"
+    },
+    {
+      "id": "GO-cd3b9c15707b",
+      "path": "/ui/craftpix/part4/Form_Elements/Thumbs.db",
+      "rel": "ui/craftpix/part4/Form_Elements/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 24576,
+      "category": "ui/craftpix/part4/Form_Elements"
+    },
+    {
+      "id": "GO-9537d3b0cc02",
+      "path": "/ui/craftpix/part4/Important_Message/Thumbs.db",
+      "rel": "ui/craftpix/part4/Important_Message/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 22016,
+      "category": "ui/craftpix/part4/Important_Message"
+    },
+    {
+      "id": "GO-3eb0a5f3b9ab",
+      "path": "/ui/craftpix/part4/Scales/Thumbs.db",
+      "rel": "ui/craftpix/part4/Scales/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 27648,
+      "category": "ui/craftpix/part4/Scales"
+    },
+    {
+      "id": "GO-633a26479050",
+      "path": "/ui/craftpix/part4/Side_Menu/Thumbs.db",
+      "rel": "ui/craftpix/part4/Side_Menu/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 36352,
+      "category": "ui/craftpix/part4/Side_Menu"
+    },
+    {
+      "id": "GO-94dd02bb614c",
+      "path": "/ui/craftpix/part4/Text_Container_1/Thumbs.db",
+      "rel": "ui/craftpix/part4/Text_Container_1/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 91136,
+      "category": "ui/craftpix/part4/Text_Container_1"
+    },
+    {
+      "id": "GO-c8eaa8761789",
+      "path": "/ui/craftpix/part4/Text_Indicators/Thumbs.db",
+      "rel": "ui/craftpix/part4/Text_Indicators/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 14336,
+      "category": "ui/craftpix/part4/Text_Indicators"
+    },
+    {
+      "id": "GO-83bfcc00d640",
+      "path": "/ui/craftpix/part4/Thumbs.db",
+      "rel": "ui/craftpix/part4/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 5632,
+      "category": "ui/craftpix/part4"
+    },
+    {
+      "id": "GO-918e20954a93",
+      "path": "/ui/craftpix/part5/scroll/Thumbs.db",
+      "rel": "ui/craftpix/part5/scroll/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 13312,
+      "category": "ui/craftpix/part5/scroll"
     },
     {
       "id": "GO-fd35ec4a955e",
@@ -11300,6 +13730,16 @@
       "category": "ui/craftpix/part5/spells"
     },
     {
+      "id": "GO-8b5c1e953cf8",
+      "path": "/ui/craftpix/part5/spells/Thumbs.db",
+      "rel": "ui/craftpix/part5/spells/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 259072,
+      "category": "ui/craftpix/part5/spells"
+    },
+    {
       "id": "GO-362b0f07d75f",
       "path": "/ui/craftpix/part5/talents/action_bar.png",
       "rel": "ui/craftpix/part5/talents/action_bar.png",
@@ -11490,6 +13930,16 @@
       "category": "ui/craftpix/part5/talents"
     },
     {
+      "id": "GO-cb7b191f5f74",
+      "path": "/ui/craftpix/part5/talents/Thumbs.db",
+      "rel": "ui/craftpix/part5/talents/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 144896,
+      "category": "ui/craftpix/part5/talents"
+    },
+    {
       "id": "GO-d3af2d5b9f11",
       "path": "/ui/craftpix/part5/tooltip_frame_bg.png",
       "rel": "ui/craftpix/part5/tooltip_frame_bg.png",
@@ -11498,6 +13948,26 @@
       "ext": "png",
       "bytes": 21448,
       "category": "ui/craftpix/part5"
+    },
+    {
+      "id": "GO-ece5ab8af24e",
+      "path": "/ui/craftpix/part7/Character_Window/Thumbs.db",
+      "rel": "ui/craftpix/part7/Character_Window/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 339968,
+      "category": "ui/craftpix/part7/Character_Window"
+    },
+    {
+      "id": "GO-a4e3022e4f44",
+      "path": "/ui/craftpix/part7/Notification_Window/Thumbs.db",
+      "rel": "ui/craftpix/part7/Notification_Window/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 187904,
+      "category": "ui/craftpix/part7/Notification_Window"
     },
     {
       "id": "GO-a66d0dedb83e",
@@ -11570,6 +14040,16 @@
       "category": "ui/craftpix/windows"
     },
     {
+      "id": "GO-ac7129ccfcef",
+      "path": "/ui/craftpix/windows/Thumbs.db",
+      "rel": "ui/craftpix/windows/Thumbs.db",
+      "kind": "other",
+      "purpose": "unknown",
+      "ext": "db",
+      "bytes": 110080,
+      "category": "ui/craftpix/windows"
+    },
+    {
       "id": "GO-555d6126f83d",
       "path": "/ui/craftpix/windows/window-PSD.psd",
       "rel": "ui/craftpix/windows/window-PSD.psd",
@@ -11606,7 +14086,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 2845,
+      "bytes": 2742,
       "category": "ui/grudge-ui"
     },
     {
@@ -11616,7 +14096,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 4927,
+      "bytes": 4695,
       "category": "ui/grudge-ui"
     },
     {
@@ -11626,7 +14106,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 139021,
+      "bytes": 139020,
       "category": "ui/grudge-ui"
     },
     {
@@ -11710,6 +14190,2256 @@
       "category": "ui/menu"
     },
     {
+      "id": "GO-fbb14fd05702",
+      "path": "/ui/mmo-ui-4/Action Bar/ActionBar_Background.png",
+      "rel": "ui/mmo-ui-4/Action Bar/ActionBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 115575,
+      "category": "ui/mmo-ui-4/Action Bar"
+    },
+    {
+      "id": "GO-f27694721dea",
+      "path": "/ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_ArrowUp.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_ArrowUp.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17542,
+      "category": "ui/mmo-ui-4/Action Bar/Arrows"
+    },
+    {
+      "id": "GO-fd148302df28",
+      "path": "/ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_ArrowUp_Hover.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_ArrowUp_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16969,
+      "category": "ui/mmo-ui-4/Action Bar/Arrows"
+    },
+    {
+      "id": "GO-0c1713a5a69c",
+      "path": "/ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_Background.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Arrows/ActionBar_Arrows_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20829,
+      "category": "ui/mmo-ui-4/Action Bar/Arrows"
+    },
+    {
+      "id": "GO-4e206ceb883a",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Background.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20589,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-6a6f9110c7ad",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Profile.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Profile.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17149,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-6a6efc419572",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Settings.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Settings.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17466,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-05adc8e271bc",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Spells.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Spells.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17611,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-343ca522226b",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Talents.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Icon_Talents.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16719,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-e626932c3557",
+      "path": "/ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Press.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Buttons/ActionBar_Button_Press.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16783,
+      "category": "ui/mmo-ui-4/Action Bar/Buttons"
+    },
+    {
+      "id": "GO-1e1c50d706e7",
+      "path": "/ui/mmo-ui-4/Action Bar/Globes/ActionBar_Globe_Background.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Globes/ActionBar_Globe_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 108753,
+      "category": "ui/mmo-ui-4/Action Bar/Globes"
+    },
+    {
+      "id": "GO-2e8cb874f91a",
+      "path": "/ui/mmo-ui-4/Action Bar/Globes/ActionBar_Globe_Fill.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Globes/ActionBar_Globe_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 80013,
+      "category": "ui/mmo-ui-4/Action Bar/Globes"
+    },
+    {
+      "id": "GO-f2a8edf957e2",
+      "path": "/ui/mmo-ui-4/Action Bar/Slot/ActionBar_Slot_Frame.png",
+      "rel": "ui/mmo-ui-4/Action Bar/Slot/ActionBar_Slot_Frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19293,
+      "category": "ui/mmo-ui-4/Action Bar/Slot"
+    },
+    {
+      "id": "GO-104598724d51",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Button_RL_Background.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Button_RL_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 62066,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular"
+    },
+    {
+      "id": "GO-9b46f518aac0",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Button_RL_Hover.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Button_RL_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18319,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular"
+    },
+    {
+      "id": "GO-7bd727ad1b78",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Button_SS_Hover.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Button_SS_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18330,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular"
+    },
+    {
+      "id": "GO-f13d28b02abe",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_ModalBox_Cross.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_ModalBox_Cross.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18981,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular/Icons"
+    },
+    {
+      "id": "GO-a3f954ad8792",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Back.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Back.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18585,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular/Icons"
+    },
+    {
+      "id": "GO-de1636a9e75d",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Cross.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Cross.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19369,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular/Icons"
+    },
+    {
+      "id": "GO-5b8f870953a4",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Cross_Small.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Cross_Small.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17932,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular/Icons"
+    },
+    {
+      "id": "GO-731cf8711c5c",
+      "path": "/ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Plus.png",
+      "rel": "ui/mmo-ui-4/Buttons/Rectangular/Icons/Icon_SS_Plus.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18249,
+      "category": "ui/mmo-ui-4/Buttons/Rectangular/Icons"
+    },
+    {
+      "id": "GO-4d45f243507f",
+      "path": "/ui/mmo-ui-4/Cast Bar/CastBar_Background.png",
+      "rel": "ui/mmo-ui-4/Cast Bar/CastBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 41608,
+      "category": "ui/mmo-ui-4/Cast Bar"
+    },
+    {
+      "id": "GO-55b643bdd109",
+      "path": "/ui/mmo-ui-4/Cast Bar/CastBar_Fill.png",
+      "rel": "ui/mmo-ui-4/Cast Bar/CastBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18107,
+      "category": "ui/mmo-ui-4/Cast Bar"
+    },
+    {
+      "id": "GO-80956a2b6904",
+      "path": "/ui/mmo-ui-4/Cast Bar/CastBar_IconFrame.png",
+      "rel": "ui/mmo-ui-4/Cast Bar/CastBar_IconFrame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16632,
+      "category": "ui/mmo-ui-4/Cast Bar"
+    },
+    {
+      "id": "GO-6222ac04e57d",
+      "path": "/ui/mmo-ui-4/Character/Arrows/Character_Arrow_Left.png",
+      "rel": "ui/mmo-ui-4/Character/Arrows/Character_Arrow_Left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17877,
+      "category": "ui/mmo-ui-4/Character/Arrows"
+    },
+    {
+      "id": "GO-842e980135e3",
+      "path": "/ui/mmo-ui-4/Character/Arrows/Character_Arrow_Middle.png",
+      "rel": "ui/mmo-ui-4/Character/Arrows/Character_Arrow_Middle.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17330,
+      "category": "ui/mmo-ui-4/Character/Arrows"
+    },
+    {
+      "id": "GO-8c7e87c88ac2",
+      "path": "/ui/mmo-ui-4/Character/Character_Example.png",
+      "rel": "ui/mmo-ui-4/Character/Character_Example.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 40745,
+      "category": "ui/mmo-ui-4/Character"
+    },
+    {
+      "id": "GO-d5bc56def7f3",
+      "path": "/ui/mmo-ui-4/Character/Reputation Bar/Character_ReputationBar_Background.png",
+      "rel": "ui/mmo-ui-4/Character/Reputation Bar/Character_ReputationBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16274,
+      "category": "ui/mmo-ui-4/Character/Reputation Bar"
+    },
+    {
+      "id": "GO-bcde07dff636",
+      "path": "/ui/mmo-ui-4/Character/Reputation Bar/Character_ReputationBar_Fill.png",
+      "rel": "ui/mmo-ui-4/Character/Reputation Bar/Character_ReputationBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19461,
+      "category": "ui/mmo-ui-4/Character/Reputation Bar"
+    },
+    {
+      "id": "GO-6e38e979854b",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Back.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Back.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21357,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-229ddf127c95",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Belt.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Belt.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19588,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-604a2b8bd1d3",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Boots.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Boots.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18914,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-811f03e8d510",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Bracers.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Bracers.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20750,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-bdcd7e5569cd",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Chest.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Chest.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20304,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-3cae15d6c680",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Gloves.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Gloves.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20231,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-79a27f8dee33",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Helmet.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Helmet.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21030,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-fd4f41b138a2",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Legs.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Legs.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20319,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-540f81915d91",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Mainhand.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Mainhand.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20210,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-3e17dce602cc",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Necklace.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Necklace.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21336,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-195f0e978878",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Offhand.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Offhand.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20769,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-f277b3499d14",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Ring.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Ring.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18592,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-de2305e15462",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Shoulders.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Shoulders.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20118,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-53f54db128cd",
+      "path": "/ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Trinket.png",
+      "rel": "ui/mmo-ui-4/Character/Slot Icons/Slot_Icon_Trinket.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18596,
+      "category": "ui/mmo-ui-4/Character/Slot Icons"
+    },
+    {
+      "id": "GO-971968fb2ee8",
+      "path": "/ui/mmo-ui-4/Character/Titles/Character_Titles_Checkbox_Background.png",
+      "rel": "ui/mmo-ui-4/Character/Titles/Character_Titles_Checkbox_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16836,
+      "category": "ui/mmo-ui-4/Character/Titles"
+    },
+    {
+      "id": "GO-faaca4094126",
+      "path": "/ui/mmo-ui-4/Character/Titles/Character_Titles_Glow.png",
+      "rel": "ui/mmo-ui-4/Character/Titles/Character_Titles_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21770,
+      "category": "ui/mmo-ui-4/Character/Titles"
+    },
+    {
+      "id": "GO-cd5c7acdeac6",
+      "path": "/ui/mmo-ui-4/Chat/Chat_Sidemenu_Bar.png",
+      "rel": "ui/mmo-ui-4/Chat/Chat_Sidemenu_Bar.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 37794,
+      "category": "ui/mmo-ui-4/Chat"
+    },
+    {
+      "id": "GO-e059c8599c1e",
+      "path": "/ui/mmo-ui-4/Chat/Chat_Tab_Background.png",
+      "rel": "ui/mmo-ui-4/Chat/Chat_Tab_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22356,
+      "category": "ui/mmo-ui-4/Chat"
+    },
+    {
+      "id": "GO-f9ddcab96895",
+      "path": "/ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Arrow_Up.png",
+      "rel": "ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Arrow_Up.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16567,
+      "category": "ui/mmo-ui-4/Chat/Menu Icons"
+    },
+    {
+      "id": "GO-2018242f1502",
+      "path": "/ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_DoubleArrow_Up.png",
+      "rel": "ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_DoubleArrow_Up.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16911,
+      "category": "ui/mmo-ui-4/Chat/Menu Icons"
+    },
+    {
+      "id": "GO-6a73d8c6a93b",
+      "path": "/ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Lock.png",
+      "rel": "ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Lock.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16469,
+      "category": "ui/mmo-ui-4/Chat/Menu Icons"
+    },
+    {
+      "id": "GO-843eba49f86c",
+      "path": "/ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Settings.png",
+      "rel": "ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Settings.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17381,
+      "category": "ui/mmo-ui-4/Chat/Menu Icons"
+    },
+    {
+      "id": "GO-7859b2d48fbe",
+      "path": "/ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Submit.png",
+      "rel": "ui/mmo-ui-4/Chat/Menu Icons/Chat_Icon_Submit.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16761,
+      "category": "ui/mmo-ui-4/Chat/Menu Icons"
+    },
+    {
+      "id": "GO-2f9abbd86411",
+      "path": "/ui/mmo-ui-4/Demo/Background.png",
+      "rel": "ui/mmo-ui-4/Demo/Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 704731,
+      "category": "ui/mmo-ui-4/Demo"
+    },
+    {
+      "id": "GO-506e64b0877b",
+      "path": "/ui/mmo-ui-4/Demo/Background2.png",
+      "rel": "ui/mmo-ui-4/Demo/Background2.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 2035809,
+      "category": "ui/mmo-ui-4/Demo"
+    },
+    {
+      "id": "GO-54a483247343",
+      "path": "/ui/mmo-ui-4/Demo/Logo_Login_Background.png",
+      "rel": "ui/mmo-ui-4/Demo/Logo_Login_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 234359,
+      "category": "ui/mmo-ui-4/Demo"
+    },
+    {
+      "id": "GO-ac0d3b2293fa",
+      "path": "/ui/mmo-ui-4/Demo/Logo_Login_Foreground.png",
+      "rel": "ui/mmo-ui-4/Demo/Logo_Login_Foreground.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 57940,
+      "category": "ui/mmo-ui-4/Demo"
+    },
+    {
+      "id": "GO-e024290dbf15",
+      "path": "/ui/mmo-ui-4/Demo/Logo_Login_Texts.png",
+      "rel": "ui/mmo-ui-4/Demo/Logo_Login_Texts.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 180937,
+      "category": "ui/mmo-ui-4/Demo"
+    },
+    {
+      "id": "GO-79d7fbe23a95",
+      "path": "/ui/mmo-ui-4/Dialog/Dialog_Rewards_Border.png",
+      "rel": "ui/mmo-ui-4/Dialog/Dialog_Rewards_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22593,
+      "category": "ui/mmo-ui-4/Dialog"
+    },
+    {
+      "id": "GO-2e18602bfc3a",
+      "path": "/ui/mmo-ui-4/Dialog/Dialog_Rewards_Glow.png",
+      "rel": "ui/mmo-ui-4/Dialog/Dialog_Rewards_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 52956,
+      "category": "ui/mmo-ui-4/Dialog"
+    },
+    {
+      "id": "GO-ad19d889df70",
+      "path": "/ui/mmo-ui-4/Dialog/Dialog_Rewards_Slot_Frame.png",
+      "rel": "ui/mmo-ui-4/Dialog/Dialog_Rewards_Slot_Frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 31426,
+      "category": "ui/mmo-ui-4/Dialog"
+    },
+    {
+      "id": "GO-941327757d63",
+      "path": "/ui/mmo-ui-4/General/General_Border_A.png",
+      "rel": "ui/mmo-ui-4/General/General_Border_A.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18304,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-c5266545a947",
+      "path": "/ui/mmo-ui-4/General/General_Border_B.png",
+      "rel": "ui/mmo-ui-4/General/General_Border_B.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19094,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-c470409ae566",
+      "path": "/ui/mmo-ui-4/General/General_Container_A.png",
+      "rel": "ui/mmo-ui-4/General/General_Container_A.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 56075,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-d9fbe7c2ece4",
+      "path": "/ui/mmo-ui-4/General/General_Container_B.png",
+      "rel": "ui/mmo-ui-4/General/General_Container_B.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 95309,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-a2afcf8d3ae7",
+      "path": "/ui/mmo-ui-4/General/General_Container_C.png",
+      "rel": "ui/mmo-ui-4/General/General_Container_C.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 80545,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-ffa7ecb05833",
+      "path": "/ui/mmo-ui-4/General/General_Container_D.png",
+      "rel": "ui/mmo-ui-4/General/General_Container_D.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 64076,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-8f95818c6256",
+      "path": "/ui/mmo-ui-4/General/General_Square.png",
+      "rel": "ui/mmo-ui-4/General/General_Square.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 25205,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-6b828510ee83",
+      "path": "/ui/mmo-ui-4/General/White.png",
+      "rel": "ui/mmo-ui-4/General/White.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 14989,
+      "category": "ui/mmo-ui-4/General"
+    },
+    {
+      "id": "GO-b57ab73d7edb",
+      "path": "/ui/mmo-ui-4/Input Fields/Input_Background.png",
+      "rel": "ui/mmo-ui-4/Input Fields/Input_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 40667,
+      "category": "ui/mmo-ui-4/Input Fields"
+    },
+    {
+      "id": "GO-df3529efc75d",
+      "path": "/ui/mmo-ui-4/Input Fields/Input_Border.png",
+      "rel": "ui/mmo-ui-4/Input Fields/Input_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18638,
+      "category": "ui/mmo-ui-4/Input Fields"
+    },
+    {
+      "id": "GO-b3fa879d18db",
+      "path": "/ui/mmo-ui-4/Input Fields/Input_Focus.png",
+      "rel": "ui/mmo-ui-4/Input Fields/Input_Focus.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18249,
+      "category": "ui/mmo-ui-4/Input Fields"
+    },
+    {
+      "id": "GO-56aba7e742e8",
+      "path": "/ui/mmo-ui-4/Inventory/Currency_Copper.png",
+      "rel": "ui/mmo-ui-4/Inventory/Currency_Copper.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18180,
+      "category": "ui/mmo-ui-4/Inventory"
+    },
+    {
+      "id": "GO-151c28040fe4",
+      "path": "/ui/mmo-ui-4/Inventory/Currency_Gold.png",
+      "rel": "ui/mmo-ui-4/Inventory/Currency_Gold.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18298,
+      "category": "ui/mmo-ui-4/Inventory"
+    },
+    {
+      "id": "GO-c5b3c9164109",
+      "path": "/ui/mmo-ui-4/Inventory/Currency_Silver.png",
+      "rel": "ui/mmo-ui-4/Inventory/Currency_Silver.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18325,
+      "category": "ui/mmo-ui-4/Inventory"
+    },
+    {
+      "id": "GO-fe555282d550",
+      "path": "/ui/mmo-ui-4/Inventory/Inventory_Slot_Frame.png",
+      "rel": "ui/mmo-ui-4/Inventory/Inventory_Slot_Frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18633,
+      "category": "ui/mmo-ui-4/Inventory"
+    },
+    {
+      "id": "GO-a4b25d5c465d",
+      "path": "/ui/mmo-ui-4/Inventory/Inventory_Slot_IconFrame.png",
+      "rel": "ui/mmo-ui-4/Inventory/Inventory_Slot_IconFrame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 27381,
+      "category": "ui/mmo-ui-4/Inventory"
+    },
+    {
+      "id": "GO-756035291eb5",
+      "path": "/ui/mmo-ui-4/Loading Bar/LoadingBar_Background.png",
+      "rel": "ui/mmo-ui-4/Loading Bar/LoadingBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24334,
+      "category": "ui/mmo-ui-4/Loading Bar"
+    },
+    {
+      "id": "GO-8f0dac80036b",
+      "path": "/ui/mmo-ui-4/Loading Bar/LoadingBar_Fill.png",
+      "rel": "ui/mmo-ui-4/Loading Bar/LoadingBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21880,
+      "category": "ui/mmo-ui-4/Loading Bar"
+    },
+    {
+      "id": "GO-a09f669a94af",
+      "path": "/ui/mmo-ui-4/Lobby/Bottom Bar/Lobby_BottomBar_Background.png",
+      "rel": "ui/mmo-ui-4/Lobby/Bottom Bar/Lobby_BottomBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 40763,
+      "category": "ui/mmo-ui-4/Lobby/Bottom Bar"
+    },
+    {
+      "id": "GO-43ac769483be",
+      "path": "/ui/mmo-ui-4/Lobby/Bottom Bar/Lobby_BottomBar_RedBorder.png",
+      "rel": "ui/mmo-ui-4/Lobby/Bottom Bar/Lobby_BottomBar_RedBorder.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 23953,
+      "category": "ui/mmo-ui-4/Lobby/Bottom Bar"
+    },
+    {
+      "id": "GO-b8f21bc57733",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Active.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Active.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18003,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Colors"
+    },
+    {
+      "id": "GO-cdb7581651b9",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Foreground.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Foreground.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17341,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Colors"
+    },
+    {
+      "id": "GO-58372ad25c4a",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Hover.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Colors/Lobby_CharacterCreate_Color_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17349,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Colors"
+    },
+    {
+      "id": "GO-1f7b036517cb",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Factions/CharacterCreate_Faction_A.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Factions/CharacterCreate_Faction_A.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 25634,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Factions"
+    },
+    {
+      "id": "GO-e765202c293e",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Factions/CharacterCreate_Faction_B.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Factions/CharacterCreate_Faction_B.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 25960,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Factions"
+    },
+    {
+      "id": "GO-c8d6ae74cf35",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Active.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Active.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18338,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Frame"
+    },
+    {
+      "id": "GO-e1c17a45e715",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Background.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 34752,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Frame"
+    },
+    {
+      "id": "GO-cb2661436e6c",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Borders.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Borders.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20744,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Frame"
+    },
+    {
+      "id": "GO-d9a8be1eb01d",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Hover.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Frame/Lobby_CharacterCreate_Frame_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19034,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Frame"
+    },
+    {
+      "id": "GO-6141f86ca298",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Genders/CharacterCreate_Gender_Female.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Genders/CharacterCreate_Gender_Female.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 23714,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Genders"
+    },
+    {
+      "id": "GO-5290a5972b45",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Genders/CharacterCreate_Gender_Male.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Genders/CharacterCreate_Gender_Male.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 23520,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Genders"
+    },
+    {
+      "id": "GO-69f2d9a6db89",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Races/CharacterCreate_Race_Example.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Races/CharacterCreate_Race_Example.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 73012,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Races"
+    },
+    {
+      "id": "GO-34a9da6df89f",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Background_A.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Background_A.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 93626,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Section"
+    },
+    {
+      "id": "GO-87309d6631ae",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Background_B.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Background_B.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 150295,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Section"
+    },
+    {
+      "id": "GO-c426b50183cd",
+      "path": "/ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Border.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Create/Section/Lobby_CharacterCreate_Section_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22525,
+      "category": "ui/mmo-ui-4/Lobby/Character Create/Section"
+    },
+    {
+      "id": "GO-b0aeaaac80ba",
+      "path": "/ui/mmo-ui-4/Lobby/Character Info/Lobby_CharacterInfo_Background.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Info/Lobby_CharacterInfo_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 56509,
+      "category": "ui/mmo-ui-4/Lobby/Character Info"
+    },
+    {
+      "id": "GO-69a275b32666",
+      "path": "/ui/mmo-ui-4/Lobby/Character Info/Lobby_CharacterInfo_RedGlow.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Info/Lobby_CharacterInfo_RedGlow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 564318,
+      "category": "ui/mmo-ui-4/Lobby/Character Info"
+    },
+    {
+      "id": "GO-c226e4579581",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Background.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 46738,
+      "category": "ui/mmo-ui-4/Lobby/Character Select 3D"
+    },
+    {
+      "id": "GO-1e6be4dc286d",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Hover.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18612,
+      "category": "ui/mmo-ui-4/Lobby/Character Select 3D"
+    },
+    {
+      "id": "GO-397b817f3ef6",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Press.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select 3D/Lobby_CharacterSelect_Arrow_Press.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18565,
+      "category": "ui/mmo-ui-4/Lobby/Character Select 3D"
+    },
+    {
+      "id": "GO-8128273651c0",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Avatar_Example.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Avatar_Example.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 59434,
+      "category": "ui/mmo-ui-4/Lobby/Character Select List"
+    },
+    {
+      "id": "GO-30c57d82c578",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Create_Icon.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Create_Icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17389,
+      "category": "ui/mmo-ui-4/Lobby/Character Select List"
+    },
+    {
+      "id": "GO-667c5ef3a0b8",
+      "path": "/ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Hover.png",
+      "rel": "ui/mmo-ui-4/Lobby/Character Select List/CharacterSelect_List_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17962,
+      "category": "ui/mmo-ui-4/Lobby/Character Select List"
+    },
+    {
+      "id": "GO-74076604e384",
+      "path": "/ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Defense.png",
+      "rel": "ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Defense.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17399,
+      "category": "ui/mmo-ui-4/Lobby/Hero Select"
+    },
+    {
+      "id": "GO-eafab48b692f",
+      "path": "/ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Offense.png",
+      "rel": "ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Offense.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19430,
+      "category": "ui/mmo-ui-4/Lobby/Hero Select"
+    },
+    {
+      "id": "GO-b5d37aeacdd9",
+      "path": "/ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Support.png",
+      "rel": "ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Support.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17371,
+      "category": "ui/mmo-ui-4/Lobby/Hero Select"
+    },
+    {
+      "id": "GO-9b5f80e5472b",
+      "path": "/ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Tank.png",
+      "rel": "ui/mmo-ui-4/Lobby/Hero Select/HeroSelect_Role_Tank.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18822,
+      "category": "ui/mmo-ui-4/Lobby/Hero Select"
+    },
+    {
+      "id": "GO-e9192234106c",
+      "path": "/ui/mmo-ui-4/Lobby/Important Message/Important_Message_Icon.png",
+      "rel": "ui/mmo-ui-4/Lobby/Important Message/Important_Message_Icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18262,
+      "category": "ui/mmo-ui-4/Lobby/Important Message"
+    },
+    {
+      "id": "GO-08cb6c9085ee",
+      "path": "/ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Anchor_Arrow.png",
+      "rel": "ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Anchor_Arrow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16465,
+      "category": "ui/mmo-ui-4/Lobby/Tooltip"
+    },
+    {
+      "id": "GO-eca1eab86a11",
+      "path": "/ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Anchor_Border.png",
+      "rel": "ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Anchor_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16956,
+      "category": "ui/mmo-ui-4/Lobby/Tooltip"
+    },
+    {
+      "id": "GO-56cc05717d0b",
+      "path": "/ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Background.png",
+      "rel": "ui/mmo-ui-4/Lobby/Tooltip/Lobby_Tooltip_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 43129,
+      "category": "ui/mmo-ui-4/Lobby/Tooltip"
+    },
+    {
+      "id": "GO-5cbed661a6e6",
+      "path": "/ui/mmo-ui-4/Minimap/Minimap_Button_Background.png",
+      "rel": "ui/mmo-ui-4/Minimap/Minimap_Button_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20879,
+      "category": "ui/mmo-ui-4/Minimap"
+    },
+    {
+      "id": "GO-ee4d3fa90ce5",
+      "path": "/ui/mmo-ui-4/Minimap/Minimap_Button_Icon.png",
+      "rel": "ui/mmo-ui-4/Minimap/Minimap_Button_Icon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17489,
+      "category": "ui/mmo-ui-4/Minimap"
+    },
+    {
+      "id": "GO-08a21cb48211",
+      "path": "/ui/mmo-ui-4/Minimap/Minimap_Example.png",
+      "rel": "ui/mmo-ui-4/Minimap/Minimap_Example.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1246651,
+      "category": "ui/mmo-ui-4/Minimap"
+    },
+    {
+      "id": "GO-0b84a5daeabf",
+      "path": "/ui/mmo-ui-4/Minimap/Minimap_Mask.png",
+      "rel": "ui/mmo-ui-4/Minimap/Minimap_Mask.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 148361,
+      "category": "ui/mmo-ui-4/Minimap"
+    },
+    {
+      "id": "GO-9a60d4cb6e68",
+      "path": "/ui/mmo-ui-4/Minimap/Minimap_RedGlow.png",
+      "rel": "ui/mmo-ui-4/Minimap/Minimap_RedGlow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 58733,
+      "category": "ui/mmo-ui-4/Minimap"
+    },
+    {
+      "id": "GO-c530a750a6e6",
+      "path": "/ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Boss.png",
+      "rel": "ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Boss.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18596,
+      "category": "ui/mmo-ui-4/Minimap/Pins"
+    },
+    {
+      "id": "GO-db6d9e07afd9",
+      "path": "/ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Boss_Dead.png",
+      "rel": "ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Boss_Dead.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18634,
+      "category": "ui/mmo-ui-4/Minimap/Pins"
+    },
+    {
+      "id": "GO-3c252b5b6692",
+      "path": "/ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Green.png",
+      "rel": "ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Green.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16859,
+      "category": "ui/mmo-ui-4/Minimap/Pins"
+    },
+    {
+      "id": "GO-d0c85f1b5048",
+      "path": "/ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Red.png",
+      "rel": "ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Red.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16834,
+      "category": "ui/mmo-ui-4/Minimap/Pins"
+    },
+    {
+      "id": "GO-5a63c3692789",
+      "path": "/ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Yellow.png",
+      "rel": "ui/mmo-ui-4/Minimap/Pins/Minimap_Pin_Yellow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16847,
+      "category": "ui/mmo-ui-4/Minimap/Pins"
+    },
+    {
+      "id": "GO-514dab553fa0",
+      "path": "/ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Circle.png",
+      "rel": "ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Circle.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20230,
+      "category": "ui/mmo-ui-4/Miscellaneous/Text Box Icons"
+    },
+    {
+      "id": "GO-5c91a22cf1bf",
+      "path": "/ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Star.png",
+      "rel": "ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Star.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20810,
+      "category": "ui/mmo-ui-4/Miscellaneous/Text Box Icons"
+    },
+    {
+      "id": "GO-3c746df074b6",
+      "path": "/ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Symbol.png",
+      "rel": "ui/mmo-ui-4/Miscellaneous/Text Box Icons/Icon_Symbol.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19682,
+      "category": "ui/mmo-ui-4/Miscellaneous/Text Box Icons"
+    },
+    {
+      "id": "GO-d9c4dfbc65a8",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Background.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 91599,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-5d6671d874e5",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Border.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 83668,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-e7315b4463b6",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Cooldown.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Cooldown.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20949,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-4ca64639907c",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_CountBox.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_CountBox.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20699,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-53f573fe603f",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_InnerGlow.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_InnerGlow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 37288,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-bef550de3929",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Press.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ActionButton_Press.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 34750,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-da4c425b59d1",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/ConsumableButton_InnerGlow.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/ConsumableButton_InnerGlow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24438,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons"
+    },
+    {
+      "id": "GO-aecbe1c8b0ec",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/Icons/Bow_Large.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/Icons/Bow_Large.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 38104,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons/Icons"
+    },
+    {
+      "id": "GO-dfe59e277126",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/Icons/Knife.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/Icons/Knife.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 27521,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons/Icons"
+    },
+    {
+      "id": "GO-b58c63c5bc2c",
+      "path": "/ui/mmo-ui-4/Mobile/Action Buttons/Icons/Sword.png",
+      "rel": "ui/mmo-ui-4/Mobile/Action Buttons/Icons/Sword.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 25903,
+      "category": "ui/mmo-ui-4/Mobile/Action Buttons/Icons"
+    },
+    {
+      "id": "GO-31e2ed8019a8",
+      "path": "/ui/mmo-ui-4/Mobile/Consumables/Potion_Blue.png",
+      "rel": "ui/mmo-ui-4/Mobile/Consumables/Potion_Blue.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 35020,
+      "category": "ui/mmo-ui-4/Mobile/Consumables"
+    },
+    {
+      "id": "GO-afdc3abca281",
+      "path": "/ui/mmo-ui-4/Mobile/Consumables/Potion_Green.png",
+      "rel": "ui/mmo-ui-4/Mobile/Consumables/Potion_Green.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 35305,
+      "category": "ui/mmo-ui-4/Mobile/Consumables"
+    },
+    {
+      "id": "GO-27f03cb95b2b",
+      "path": "/ui/mmo-ui-4/Mobile/Consumables/Potion_Red.png",
+      "rel": "ui/mmo-ui-4/Mobile/Consumables/Potion_Red.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 35363,
+      "category": "ui/mmo-ui-4/Mobile/Consumables"
+    },
+    {
+      "id": "GO-b7a11383faae",
+      "path": "/ui/mmo-ui-4/Mobile/Joystick/Joystick_Background.png",
+      "rel": "ui/mmo-ui-4/Mobile/Joystick/Joystick_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 134507,
+      "category": "ui/mmo-ui-4/Mobile/Joystick"
+    },
+    {
+      "id": "GO-ce158e6aabb0",
+      "path": "/ui/mmo-ui-4/Mobile/Joystick/Joystick_Handle.png",
+      "rel": "ui/mmo-ui-4/Mobile/Joystick/Joystick_Handle.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21574,
+      "category": "ui/mmo-ui-4/Mobile/Joystick"
+    },
+    {
+      "id": "GO-0791d8a52a8b",
+      "path": "/ui/mmo-ui-4/Mobile/Joystick/Joystick_Handle_Border.png",
+      "rel": "ui/mmo-ui-4/Mobile/Joystick/Joystick_Handle_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20928,
+      "category": "ui/mmo-ui-4/Mobile/Joystick"
+    },
+    {
+      "id": "GO-8244dfdc6f1e",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_Background.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 29742,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-c773c4f74f62",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_Border.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20171,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-532c560490e9",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_Health_Fill.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_Health_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22658,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-55113b20da33",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_LevelFrame.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_LevelFrame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20754,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-fe9ad00ba862",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_Power_Fill.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_Power_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20215,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-1be778723025",
+      "path": "/ui/mmo-ui-4/Mobile/Unit Frame/MUF_Skull.png",
+      "rel": "ui/mmo-ui-4/Mobile/Unit Frame/MUF_Skull.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18642,
+      "category": "ui/mmo-ui-4/Mobile/Unit Frame"
+    },
+    {
+      "id": "GO-a16c3eb92c05",
+      "path": "/ui/mmo-ui-4/Nameplates/Nameplate_Background.png",
+      "rel": "ui/mmo-ui-4/Nameplates/Nameplate_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 44498,
+      "category": "ui/mmo-ui-4/Nameplates"
+    },
+    {
+      "id": "GO-fb96d9cef5a5",
+      "path": "/ui/mmo-ui-4/Nameplates/Nameplate_Bar_Fill.png",
+      "rel": "ui/mmo-ui-4/Nameplates/Nameplate_Bar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 28885,
+      "category": "ui/mmo-ui-4/Nameplates"
+    },
+    {
+      "id": "GO-38ac3a32d50f",
+      "path": "/ui/mmo-ui-4/Nameplates/Nameplate_Border.png",
+      "rel": "ui/mmo-ui-4/Nameplates/Nameplate_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22774,
+      "category": "ui/mmo-ui-4/Nameplates"
+    },
+    {
+      "id": "GO-ba007d16a935",
+      "path": "/ui/mmo-ui-4/Nameplates/Nameplate_LevelFrame.png",
+      "rel": "ui/mmo-ui-4/Nameplates/Nameplate_LevelFrame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21949,
+      "category": "ui/mmo-ui-4/Nameplates"
+    },
+    {
+      "id": "GO-ee608143c5dc",
+      "path": "/ui/mmo-ui-4/Notifications/Notification_1_Background.png",
+      "rel": "ui/mmo-ui-4/Notifications/Notification_1_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 74458,
+      "category": "ui/mmo-ui-4/Notifications"
+    },
+    {
+      "id": "GO-136769385a33",
+      "path": "/ui/mmo-ui-4/Notifications/Notification_1_Glow.png",
+      "rel": "ui/mmo-ui-4/Notifications/Notification_1_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 48920,
+      "category": "ui/mmo-ui-4/Notifications"
+    },
+    {
+      "id": "GO-4d65d3a7562d",
+      "path": "/ui/mmo-ui-4/Notifications/Notification_2_Background.png",
+      "rel": "ui/mmo-ui-4/Notifications/Notification_2_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 44735,
+      "category": "ui/mmo-ui-4/Notifications"
+    },
+    {
+      "id": "GO-fd4680363bb2",
+      "path": "/ui/mmo-ui-4/Notifications/Notification_2_Glow.png",
+      "rel": "ui/mmo-ui-4/Notifications/Notification_2_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 30344,
+      "category": "ui/mmo-ui-4/Notifications"
+    },
+    {
+      "id": "GO-fad5162413f2",
+      "path": "/ui/mmo-ui-4/Quest Log/QuestLog_Quest_Active.png",
+      "rel": "ui/mmo-ui-4/Quest Log/QuestLog_Quest_Active.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17498,
+      "category": "ui/mmo-ui-4/Quest Log"
+    },
+    {
+      "id": "GO-c7718dfd2410",
+      "path": "/ui/mmo-ui-4/Quest Log/QuestLog_Quest_Hover.png",
+      "rel": "ui/mmo-ui-4/Quest Log/QuestLog_Quest_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17162,
+      "category": "ui/mmo-ui-4/Quest Log"
+    },
+    {
+      "id": "GO-be7318479448",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Background.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 126449,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-7ab25a415a17",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Arrow.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Arrow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16847,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-91f796c69236",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Arrow_Hover.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Arrow_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16495,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-c586628784f2",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Background.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Button_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18213,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-499abde25a45",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Background.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16216,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-6c6fbb1ac527",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Checkmark_Complete.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Checkmark_Complete.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16426,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-3ca8111d565b",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Checkmark_Failed.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Checkbox_Checkmark_Failed.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16359,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-abbddb68639a",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Header_Border.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Header_Border.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21947,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-2a2ed0481dde",
+      "path": "/ui/mmo-ui-4/Quest Tracker/QuestTracker_Header_Glow.png",
+      "rel": "ui/mmo-ui-4/Quest Tracker/QuestTracker_Header_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 42669,
+      "category": "ui/mmo-ui-4/Quest Tracker"
+    },
+    {
+      "id": "GO-c14918780dc8",
+      "path": "/ui/mmo-ui-4/Select Fields/SelectField_Arrow.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SelectField_Arrow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18397,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-452a841b04a5",
+      "path": "/ui/mmo-ui-4/Select Fields/SwitchSelect_Anchor.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SwitchSelect_Anchor.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17076,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-47395175a1e2",
+      "path": "/ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowLeft.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowLeft.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18005,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-a6fc624c3e19",
+      "path": "/ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowRight.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowRight.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17964,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-30d54c293997",
+      "path": "/ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowRight_Hover.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SwitchSelect_ArrowRight_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17238,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-847b16e2d422",
+      "path": "/ui/mmo-ui-4/Select Fields/SwitchSelect_Background.png",
+      "rel": "ui/mmo-ui-4/Select Fields/SwitchSelect_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 51188,
+      "category": "ui/mmo-ui-4/Select Fields"
+    },
+    {
+      "id": "GO-bd3cb597fbcc",
+      "path": "/ui/mmo-ui-4/Sliders/Slider_Horizontal_Background.png",
+      "rel": "ui/mmo-ui-4/Sliders/Slider_Horizontal_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21201,
+      "category": "ui/mmo-ui-4/Sliders"
+    },
+    {
+      "id": "GO-0da0aac6509a",
+      "path": "/ui/mmo-ui-4/Sliders/Slider_Horizontal_Handle.png",
+      "rel": "ui/mmo-ui-4/Sliders/Slider_Horizontal_Handle.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19260,
+      "category": "ui/mmo-ui-4/Sliders"
+    },
+    {
+      "id": "GO-07b6b7b64c1c",
+      "path": "/ui/mmo-ui-4/Sliders/Slider_Horizontal_Sep.png",
+      "rel": "ui/mmo-ui-4/Sliders/Slider_Horizontal_Sep.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16732,
+      "category": "ui/mmo-ui-4/Sliders"
+    },
+    {
+      "id": "GO-3201318c8b04",
+      "path": "/ui/mmo-ui-4/Spell Book/SpellBook_Spell_Frame.png",
+      "rel": "ui/mmo-ui-4/Spell Book/SpellBook_Spell_Frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19083,
+      "category": "ui/mmo-ui-4/Spell Book"
+    },
+    {
+      "id": "GO-26e448d52174",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Begin.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Begin.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16864,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-9ccfe0714011",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_End.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_End.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16847,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-3c52cbeb4a1c",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Left.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Left.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17356,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-a433c28a019c",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Right.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Down_Right.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16924,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-94d83bfab6f1",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Right_Begin.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Right_Begin.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16336,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-b049b6044614",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Right_End.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Arrows/Talent_Arrow_Right_End.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17841,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Arrows"
+    },
+    {
+      "id": "GO-ece9610d4f87",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Flame.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Flame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17784,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons"
+    },
+    {
+      "id": "GO-caa4410283c2",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Shield.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Shield.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18357,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons"
+    },
+    {
+      "id": "GO-6e1332c93871",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Sword.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecIcon_Sword.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16951,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons"
+    },
+    {
+      "id": "GO-05fb3a2e4186",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecTab_Arrow.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons/SpellBook_SpecTab_Arrow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16695,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Spec Icons"
+    },
+    {
+      "id": "GO-871eb57cf1d7",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_Background.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21902,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Special Slot"
+    },
+    {
+      "id": "GO-c4b5fb9597ac",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_Frame.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_Frame.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19241,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Special Slot"
+    },
+    {
+      "id": "GO-987c57c74471",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_PointsBox.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Special Slot/Talent_Special_PointsBox.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16701,
+      "category": "ui/mmo-ui-4/Spell Book/Talents/Special Slot"
+    },
+    {
+      "id": "GO-6cda88684703",
+      "path": "/ui/mmo-ui-4/Spell Book/Talents/Talent_PointsBox.png",
+      "rel": "ui/mmo-ui-4/Spell Book/Talents/Talent_PointsBox.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16659,
+      "category": "ui/mmo-ui-4/Spell Book/Talents"
+    },
+    {
+      "id": "GO-fbe124f101bc",
+      "path": "/ui/mmo-ui-4/Toggles/RadioToggle_Background.png",
+      "rel": "ui/mmo-ui-4/Toggles/RadioToggle_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 19556,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-87d3b7acf68f",
+      "path": "/ui/mmo-ui-4/Toggles/RadioToggle_Checkmark.png",
+      "rel": "ui/mmo-ui-4/Toggles/RadioToggle_Checkmark.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17111,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-82daa0eec78e",
+      "path": "/ui/mmo-ui-4/Toggles/RadioToggle_Hover.png",
+      "rel": "ui/mmo-ui-4/Toggles/RadioToggle_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18117,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-23921a4af63b",
+      "path": "/ui/mmo-ui-4/Toggles/SwitchToggle_Background.png",
+      "rel": "ui/mmo-ui-4/Toggles/SwitchToggle_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 40338,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-017bbf79d749",
+      "path": "/ui/mmo-ui-4/Toggles/SwitchToggle_Handle.png",
+      "rel": "ui/mmo-ui-4/Toggles/SwitchToggle_Handle.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 22816,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-b1d66ab2dadf",
+      "path": "/ui/mmo-ui-4/Toggles/SwitchToggle_Handle_Decoration.png",
+      "rel": "ui/mmo-ui-4/Toggles/SwitchToggle_Handle_Decoration.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18227,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-b7ddcb965984",
+      "path": "/ui/mmo-ui-4/Toggles/Toggle_Background.png",
+      "rel": "ui/mmo-ui-4/Toggles/Toggle_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21771,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-3ba3cc8acbf8",
+      "path": "/ui/mmo-ui-4/Toggles/Toggle_Checkmark.png",
+      "rel": "ui/mmo-ui-4/Toggles/Toggle_Checkmark.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16673,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-84fc24a566c8",
+      "path": "/ui/mmo-ui-4/Toggles/Toggle_Hover.png",
+      "rel": "ui/mmo-ui-4/Toggles/Toggle_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16900,
+      "category": "ui/mmo-ui-4/Toggles"
+    },
+    {
+      "id": "GO-31a093030a1e",
+      "path": "/ui/mmo-ui-4/Tooltip/Tooltip_Anchor.png",
+      "rel": "ui/mmo-ui-4/Tooltip/Tooltip_Anchor.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17426,
+      "category": "ui/mmo-ui-4/Tooltip"
+    },
+    {
+      "id": "GO-9200c912853a",
+      "path": "/ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 28020,
+      "category": "ui/mmo-ui-4/Unit Frames/Avatar"
+    },
+    {
+      "id": "GO-663a8fda3b45",
+      "path": "/ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Background_Red.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Background_Red.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 27625,
+      "category": "ui/mmo-ui-4/Unit Frames/Avatar"
+    },
+    {
+      "id": "GO-acf1963bdf73",
+      "path": "/ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Example.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Avatar/UnitFrame_Avatar_Example.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 58904,
+      "category": "ui/mmo-ui-4/Unit Frames/Avatar"
+    },
+    {
+      "id": "GO-acf2d7878c26",
+      "path": "/ui/mmo-ui-4/Unit Frames/Bars/UnitFrame_MainBar_Fill.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Bars/UnitFrame_MainBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 45936,
+      "category": "ui/mmo-ui-4/Unit Frames/Bars"
+    },
+    {
+      "id": "GO-588b5631015b",
+      "path": "/ui/mmo-ui-4/Unit Frames/Bars/UnitFrame_SecondaryBar_Fill.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Bars/UnitFrame_SecondaryBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 31964,
+      "category": "ui/mmo-ui-4/Unit Frames/Bars"
+    },
+    {
+      "id": "GO-485b5c70cfec",
+      "path": "/ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 20891,
+      "category": "ui/mmo-ui-4/Unit Frames/Level"
+    },
+    {
+      "id": "GO-e7b348bbe300",
+      "path": "/ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Background_Red.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Background_Red.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21052,
+      "category": "ui/mmo-ui-4/Unit Frames/Level"
+    },
+    {
+      "id": "GO-29f3df9cf8af",
+      "path": "/ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Skull.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Level/UnitFrame_Level_Skull.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17181,
+      "category": "ui/mmo-ui-4/Unit Frames/Level"
+    },
+    {
+      "id": "GO-0015f5b8b3dd",
+      "path": "/ui/mmo-ui-4/Unit Frames/Orbs/UnitFrame_Orb_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Orbs/UnitFrame_Orb_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17860,
+      "category": "ui/mmo-ui-4/Unit Frames/Orbs"
+    },
+    {
+      "id": "GO-e6db2f945c6b",
+      "path": "/ui/mmo-ui-4/Unit Frames/Orbs/UnitFrame_Orb_Foreground.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Orbs/UnitFrame_Orb_Foreground.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17561,
+      "category": "ui/mmo-ui-4/Unit Frames/Orbs"
+    },
+    {
+      "id": "GO-7a9a47f350fb",
+      "path": "/ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Attack.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Attack.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17656,
+      "category": "ui/mmo-ui-4/Unit Frames/Roles"
+    },
+    {
+      "id": "GO-3d5ed945502a",
+      "path": "/ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16874,
+      "category": "ui/mmo-ui-4/Unit Frames/Roles"
+    },
+    {
+      "id": "GO-dbb69da89caa",
+      "path": "/ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Defense.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Defense.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17386,
+      "category": "ui/mmo-ui-4/Unit Frames/Roles"
+    },
+    {
+      "id": "GO-c221e0f88be6",
+      "path": "/ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Support.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/Roles/UnitFrame_Role_Support.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 17567,
+      "category": "ui/mmo-ui-4/Unit Frames/Roles"
+    },
+    {
+      "id": "GO-76f96395c7c3",
+      "path": "/ui/mmo-ui-4/Unit Frames/UnitFrame_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/UnitFrame_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 85590,
+      "category": "ui/mmo-ui-4/Unit Frames"
+    },
+    {
+      "id": "GO-dbdc3923a8a7",
+      "path": "/ui/mmo-ui-4/Unit Frames/UnitFrame_Buff_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/UnitFrame_Buff_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16353,
+      "category": "ui/mmo-ui-4/Unit Frames"
+    },
+    {
+      "id": "GO-1298937e71c0",
+      "path": "/ui/mmo-ui-4/Unit Frames/UnitFrame_Dragon.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/UnitFrame_Dragon.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 47562,
+      "category": "ui/mmo-ui-4/Unit Frames"
+    },
+    {
+      "id": "GO-6e405b4c7504",
+      "path": "/ui/mmo-ui-4/Unit Frames/UnitFrame_Name_Background.png",
+      "rel": "ui/mmo-ui-4/Unit Frames/UnitFrame_Name_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 62163,
+      "category": "ui/mmo-ui-4/Unit Frames"
+    },
+    {
+      "id": "GO-ef37c5017333",
+      "path": "/ui/mmo-ui-4/Window/Window_CloseBtn_Background.png",
+      "rel": "ui/mmo-ui-4/Window/Window_CloseBtn_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21662,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-858c37827ba0",
+      "path": "/ui/mmo-ui-4/Window/Window_CloseBtn_Hover.png",
+      "rel": "ui/mmo-ui-4/Window/Window_CloseBtn_Hover.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21852,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-4112784973cb",
+      "path": "/ui/mmo-ui-4/Window/Window_Header_RedGlow.png",
+      "rel": "ui/mmo-ui-4/Window/Window_Header_RedGlow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 32968,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-5d2f4efe6653",
+      "path": "/ui/mmo-ui-4/Window/Window_Header_RedGrunge.png",
+      "rel": "ui/mmo-ui-4/Window/Window_Header_RedGrunge.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 26732,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-d75a5a020493",
+      "path": "/ui/mmo-ui-4/Window/Window_Tab_Anchor.png",
+      "rel": "ui/mmo-ui-4/Window/Window_Tab_Anchor.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16796,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-8c3617272a28",
+      "path": "/ui/mmo-ui-4/Window/Window_Tab_Glow.png",
+      "rel": "ui/mmo-ui-4/Window/Window_Tab_Glow.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 18580,
+      "category": "ui/mmo-ui-4/Window"
+    },
+    {
+      "id": "GO-660de8f83dc0",
+      "path": "/ui/mmo-ui-4/XP Bar/XPBar_Background.png",
+      "rel": "ui/mmo-ui-4/XP Bar/XPBar_Background.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 21531,
+      "category": "ui/mmo-ui-4/XP Bar"
+    },
+    {
+      "id": "GO-7061da1fe20e",
+      "path": "/ui/mmo-ui-4/XP Bar/XPBar_Fill.png",
+      "rel": "ui/mmo-ui-4/XP Bar/XPBar_Fill.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 24972,
+      "category": "ui/mmo-ui-4/XP Bar"
+    },
+    {
       "id": "GO-9272f06da682",
       "path": "/ui/pixel-ui-pack-1.png",
       "rel": "ui/pixel-ui-pack-1.png",
@@ -11766,7 +16496,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 777,
+      "bytes": 751,
       "category": "root"
     },
     {
@@ -11776,7 +16506,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 107,
+      "bytes": 105,
       "category": "root"
     }
   ]

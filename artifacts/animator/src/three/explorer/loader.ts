@@ -355,14 +355,27 @@ let basePackPromise: Promise<Map<string, THREE.AnimationClip>> | null = null;
 /**
  * Load Animated Base Character once; register each semantic role as `base/<role>`
  * with DEF→mixamorig retarget + strip-style root lock (rotation-only tracks).
+ *
+ * Uses fleet multi-host resolve (same-origin first) — production Open used to
+ * reference an undefined `BASE` path and 404 the only gap-fill pack, leaving
+ * Explorer in T-pose when Mixamo FBX is not deployed.
  */
 export async function loadBasePackClips(): Promise<Map<string, THREE.AnimationClip>> {
   if (basePackPromise) return basePackPromise;
   basePackPromise = (async () => {
     const out = new Map<string, THREE.AnimationClip>();
     try {
-      const gltf = await gltfLoader.loadAsync(`${BASE}anim/${BASE_PACK_URL}.glb`);
-      const anims = gltf.animations ?? [];
+      const { loadGltfFirst } = await import("../assets");
+      const { animations, url } = await loadGltfFirst(
+        [
+          `anim/${BASE_PACK_URL}.glb`,
+          `anim/base/animated-base-character.glb`,
+          `${BASE_PACK_URL}.glb`,
+        ],
+        gltfLoader,
+        { quiet: true, prepMaterials: false },
+      );
+      const anims = animations ?? [];
       for (const [role, glbName] of Object.entries(BASE_PACK_GLB_NAMES) as [
         BasePackRole,
         string,
@@ -375,9 +388,11 @@ export async function loadBasePackClips(): Promise<Map<string, THREE.AnimationCl
         retargeted.name = basePackId(role);
         out.set(basePackId(role), retargeted);
       }
-      console.info(`[loader] base pack: ${out.size} roles from ${BASE_PACK_URL}.glb`);
+      console.info(
+        `[loader] base pack: ${out.size} roles from ${url} (${BASE_PACK_URL}.glb)`,
+      );
     } catch (e) {
-      console.warn("[loader] base pack load failed", e);
+      console.warn("[loader] base pack load failed — Explorer will T-pose without clips", e);
       basePackPromise = null;
     }
     return out;
@@ -529,9 +544,23 @@ export async function createAnimatedCharacter(
     loadSkeletonSource(),
     loadClips(loadIds.length ? loadIds : ["base/idle"]),
   ]);
+  if (clips.size === 0 && typeof console !== "undefined") {
+    console.error(
+      "[loader] Explorer loaded ZERO clips (skeleton is bind/T-pose). " +
+        "Deploy public/anim (base GLB + Mixamo FBX) or host them on the fleet CDN.",
+    );
+  } else if (typeof console !== "undefined") {
+    console.info(
+      `[loader] Explorer ready: ${clips.size} clips, mixamo=${mixamoOk ? "yes" : "no"}, weapon=${weapon}`,
+    );
+  }
   const look: CharacterLook = { ...DEFAULT_LOOK, ...opts.look };
   const character = new VoxelCharacter(source, look, opts.height ?? 2);
   const animator = new Animator(character, clips);
   animator.setWeapon(weapon);
+  // Kick idle immediately so dressing room is never stuck on bind pose while
+  // waiting for the first controller setLocomotion tick.
+  animator.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
+  animator.update(1 / 60);
   return animator;
 }

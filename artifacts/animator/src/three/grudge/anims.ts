@@ -10,9 +10,9 @@ import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 // SSOT with grudge-arena `src/bakedAnimLoader.js` ANIM_PACK_CLIPS (2026-07)
 // + Open `polearm` pack baked from ikkaku_madarame.glb (spear / 2H).
 /**
- * grudge6 baked pack ids under /anims/baked/{pack}/.
- * `twohand` | `crossbow` | `rifle` are reserved for ExplosiveLLC / Mixamo bake
- * imports — until JSON exists, {@link animPackForWeapon} falls back to polearm/longbow/unarmed.
+ * grudge6 baked pack ids under /anims/baked/{pack}/ (or composite packs).
+ * `samurai` = curated retargeted slash set (sword loco + Madarame combat).
+ * `twohand` | `crossbow` | `rifle` fall back until full bake ships.
  */
 export type AnimPack =
   | "magic"
@@ -22,7 +22,9 @@ export type AnimPack =
   | "polearm"
   | "twohand"
   | "crossbow"
-  | "rifle";
+  | "rifle"
+  /** Katana / iaijutsu feel — retargeted Bip001 from sword + Madarame skills. */
+  | "samurai";
 
 export interface LoadoutClips {
   idle: string;
@@ -57,12 +59,34 @@ export function isBannedLocomotionClip(rel: string): boolean {
     .trim()
     .replace(/\\/g, "/")
     .replace(/\.json$/i, "");
+  const base = n.split("/").pop() || n;
+  // Path ban list + name heuristics so renamed roll uploads can't slip in as "run"
+  if (
+    /roll|tumble|somersault|cartwheel/i.test(base) ||
+    /quick[_\s-]?roll/i.test(n) ||
+    /^running$/i.test(base) // bare "running" = historical run-to-roll file stem
+  ) {
+    return true;
+  }
   return (BANNED_LOCOMOTION_CLIPS as readonly string[]).some(
     (b) =>
       n === b ||
       n.endsWith(`/${b}`) ||
       n.includes("Quick_Roll_To_Run") ||
       n.includes("Quick Roll To Run"),
+  );
+}
+
+/**
+ * GLB / mixer clip names that must never auto-map to walk/run/sprint.
+ * "Running Roll", "roll-running", dodge cycles, etc.
+ */
+export function isBadLocoClipName(name: string): boolean {
+  const n = String(name || "");
+  return (
+    /roll|dodge|tumble|flip|somersault|cartwheel|quick[_\s-]?roll/i.test(n) ||
+    /run[-_\s]?to[-_\s]?roll|running[-_\s]?roll|roll[-_\s]?run/i.test(n) ||
+    isBannedLocomotionClip(n)
   );
 }
 
@@ -84,11 +108,25 @@ export function pelvisLoopError(clip: THREE.AnimationClip): number {
   return err;
 }
 
-/** True if clip looks like a non-looping transition (run-to-roll class). */
+/**
+ * True if clip looks like a non-looping transition (run-to-roll class).
+ * Safe for loadBakedClip (all roles) — does NOT reject long attack/skill takes.
+ */
 export function isNonLoopingLocoClip(clip: THREE.AnimationClip, rel = ""): boolean {
-  if (isBannedLocomotionClip(rel)) return true;
-  // Long duration + open pelvis loop = classic roll transition
+  if (isBannedLocomotionClip(rel) || isBadLocoClipName(clip.name || rel)) return true;
+  // Classic run-to-roll: long + open pelvis loop
   if (clip.duration > 1.8 && pelvisLoopError(clip) > 0.25) return true;
+  return false;
+}
+
+/**
+ * Stricter gate for **walk / run / sprint only**.
+ * Pure stride cycles are ~0.6–1.2s; Madarame full takes (~5s) must never drive gait.
+ */
+export function isUnsuitableLocoCycle(clip: THREE.AnimationClip, rel = ""): boolean {
+  if (isNonLoopingLocoClip(clip, rel)) return true;
+  if (clip.duration > 1.45) return true;
+  if (clip.duration > 1.2 && pelvisLoopError(clip) > 0.08) return true;
   return false;
 }
 
@@ -115,6 +153,47 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     walk: "magic/Standing Walk Forward",
     run: "sword_shield/sword and shield run",
     attack: "sword_shield/sword and shield attack",
+    extras: [
+      "sword_shield/sword and shield attack",
+      "sword_shield/sword and shield block",
+      "polearm/slash",
+      "polearm/thrust",
+      "polearm/overhead",
+      "polearm/combo",
+      "polearm/skill1",
+      "polearm/skill2",
+    ],
+  },
+  /**
+   * Samurai — player-facing combat style (retargeted Bip001).
+   * Loco from sword_shield / torch run; attacks & skills from Madarame slash set
+   * (iaijutsu / thrust / overhead / special) already baked under polearm/*.
+   */
+  samurai: {
+    idle: "sword_shield/sword and shield idle",
+    walk: "magic/Standing Walk Forward",
+    run: "sword_shield/sword and shield run",
+    attack: "polearm/slash",
+    extras: [
+      "polearm/slash",
+      "polearm/thrust",
+      "polearm/overhead",
+      "polearm/combo",
+      "polearm/attack",
+      "polearm/attack2",
+      "polearm/attack3",
+      "polearm/attack4",
+      "polearm/attack5",
+      "polearm/skill1",
+      "polearm/skill2",
+      "polearm/skill3",
+      "polearm/skill4",
+      "polearm/special",
+      "polearm/power",
+      "polearm/debut",
+      "sword_shield/sword and shield attack",
+      "sword_shield/sword and shield block",
+    ],
   },
   longbow: {
     idle: "longbow/standing idle 01",
@@ -128,9 +207,11 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
    * attack1_1..5 → attack..attack5 · skill1–4 for hotbar · special = bankai
    */
   polearm: {
+    // Madarame polearm/* locomotion dumps are ~5s full takes (not stride cycles).
+    // Keep polearm idle/attack/skills; walk/run use proven standing cycles.
     idle: "polearm/idle",
-    walk: "polearm/walk",
-    run: "polearm/run",
+    walk: "magic/Standing Walk Forward",
+    run: "uploads_2026_06/locomotion/torch run forward",
     attack: "polearm/attack",
     extras: [
       "polearm/attack2",
@@ -197,6 +278,7 @@ export const ANIM_PACK_FALLBACK: Partial<Record<AnimPack, AnimPack>> = {
   twohand: "polearm",
   crossbow: "longbow",
   rifle: "unarmed",
+  // Samurai is self-contained from existing bakes — no fallback needed
 };
 
 /**
@@ -290,12 +372,16 @@ export function animPackForWeapon(weaponId: string | null | undefined): AnimPack
   if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer" || w === "shield") {
     return "sword_shield";
   }
+  // Katana / samurai weapons
+  if (w === "katana" || w === "samurai" || w === "nodachi" || w === "wakizashi") {
+    return "samurai";
+  }
   return null;
 }
 
 export function asAnimPack(value: string): AnimPack {
   if (value in ANIM_PACK_CLIPS) return value as AnimPack;
-  // Accept aliases used in gear / Explosive maps
+  // Accept aliases used in gear / Explosive maps / combat styles
   const alias: Record<string, AnimPack> = {
     "2h": "twohand",
     "2h_melee": "twohand",
@@ -303,9 +389,43 @@ export function asAnimPack(value: string): AnimPack {
     greataxe: "twohand",
     gun: "rifle",
     bow: "longbow",
+    katana: "samurai",
+    iaijutsu: "samurai",
+    knight: "sword_shield",
+    spearman: "polearm",
+    striker: "unarmed",
+    mage: "magic",
+    archer: "longbow",
+    gunner: "rifle",
+    berserker: "twohand",
   };
   return alias[value] ?? "unarmed";
 }
+
+/** Human labels for pack picker / Admin. */
+export const ANIM_PACK_LABELS: Record<AnimPack, string> = {
+  unarmed: "Unarmed / Striker",
+  sword_shield: "Knight (Sword & Shield)",
+  samurai: "Samurai (Retargeted)",
+  polearm: "Spearman (Madarame)",
+  magic: "Mage / Staff",
+  longbow: "Archer / Longbow",
+  twohand: "Berserker / 2H",
+  crossbow: "Crossbow",
+  rifle: "Gunner / Rifle",
+};
+
+/** Packs offered as explicit player choices (retargeted / ready). */
+export const CHOOSABLE_ANIM_PACKS: AnimPack[] = [
+  "samurai",
+  "sword_shield",
+  "polearm",
+  "unarmed",
+  "magic",
+  "longbow",
+  "twohand",
+  "rifle",
+];
 
 /**
  * @deprecated Do not load this for sprint. It points at the banned run-to-roll

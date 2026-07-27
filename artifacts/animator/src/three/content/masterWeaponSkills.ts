@@ -11,7 +11,7 @@
  * Prefab JSON under content/skills remains the sandbox anim/VFX layer.
  */
 import type { SkillKind, WeaponId } from "../types";
-import { contentCandidates } from "../../lib/fleetSsot";
+import { fetchCatalogJson } from "../../lib/fleetSsot";
 import { cdnIconUrl, resolveSlotIconUrl } from "../skillIcons";
 import { spearClipForSkillId } from "../ummorpg/spearCombat";
 
@@ -188,28 +188,30 @@ export async function loadMasterWeaponSkills(
   if (_promise && !force) return _promise;
 
   _promise = (async () => {
-    const urls = contentCandidates("master-weaponSkills.json");
-    for (const url of urls) {
-      try {
-        const r = await fetch(url, { credentials: "omit" });
-        if (!r.ok) continue;
-        const raw = await r.json();
-        const weaponTypes = Array.isArray(raw?.weaponTypes) ? raw.weaponTypes : [];
+    // info.grudge-studio.com first via fleetSsot (dead-URL cache; no /content spam)
+    try {
+      const raw = await fetchCatalogJson<Record<string, unknown>>("masterWeaponSkills");
+      if (raw) {
+        const weaponTypes = Array.isArray(raw.weaponTypes)
+          ? (raw.weaponTypes as MasterWeaponSkillsCatalog["weaponTypes"])
+          : [];
         _catalog = {
-          version: String(raw?.version || MASTER_WEAPON_SKILLS_VERSION),
-          totalSkills: Number(raw?.totalSkills || 0),
+          version: String(raw.version || MASTER_WEAPON_SKILLS_VERSION),
+          totalSkills: Number(raw.totalSkills || 0),
           weaponTypes,
-          classRestrictions: raw?.classRestrictions,
-          offhandMechanics: raw?.offhandMechanics,
+          classRestrictions:
+            raw.classRestrictions as MasterWeaponSkillsCatalog["classRestrictions"],
+          offhandMechanics:
+            raw.offhandMechanics as MasterWeaponSkillsCatalog["offhandMechanics"],
           raw,
         };
         console.info(
           `[masterWeaponSkills] v${_catalog.version} types=${weaponTypes.length} skills=${_catalog.totalSkills}`,
         );
         return _catalog;
-      } catch (err) {
-        console.warn("[masterWeaponSkills] fetch failed", url, err);
       }
+    } catch (err) {
+      console.warn("[masterWeaponSkills] catalog load failed", err);
     }
     return null;
   })();

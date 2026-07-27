@@ -1,28 +1,24 @@
 /**
  * Cinematic 3D backdrop for the doors hall.
- * Multi-candidate GLB load — introgamer / instarena often 404 on Vercel until
- * redeployed; fall back to live models (racalvin, dungeon, karate-boss).
+ * Multi-candidate GLB load via fleet loadGltfFirst (CDN + dead-URL cache).
+ * Arena SSOT: arena-war-zone.glb (instarena-phyxt-fight is dead on all hosts).
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { loadGltfFirst } from "../three/assets";
 
-// Prefer models that exist on R2 / Open public (probed 2026-07) — skip 404 spam first
+// Live meshes only (probed 2026-07) — never list known-404 keys first
 const ARENA_CANDIDATES = [
+  "models/arena-war-zone.glb",
   "models/dungeon.glb",
   "models/dj-booth.glb",
-  "models/arena-war-zone.glb",
-  "models/instarena-phyxt-fight.glb",
 ];
 const HERO_CANDIDATES = [
   "models/racalvin.glb",
   "models/karate-boss.glb",
   "models/orc.glb",
   "models/skeleton-warrior.glb",
-  "models/introgamer.glb",
-  "models/astrocreeper.glb",
-  "models/landing/astrocreeper.glb",
 ];
 
 function fitOnTop(

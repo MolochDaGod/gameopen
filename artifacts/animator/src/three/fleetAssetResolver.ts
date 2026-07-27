@@ -73,6 +73,19 @@ export function pathAliases(path: string): string[] {
 
   // Lab heroes — prefer models that exist on R2 / Open public (probed 2026-07)
   if (clean === "models/orc.glb") out.push("models/characters/orc.glb");
+  // Dead arena key — alias to live war-zone shell (never probe instarena hosts)
+  if (
+    clean === "models/instarena-phyxt-fight.glb" ||
+    clean === "models/instarena.glb" ||
+    /instarena/i.test(clean)
+  ) {
+    out.length = 0;
+    out.push(
+      "models/arena-war-zone.glb",
+      "models/dungeon.glb",
+      "models/dj-booth.glb",
+    );
+  }
   if (clean === "models/racalvin.glb") {
     out.push(
       "models/racalvin.glb",
@@ -82,19 +95,35 @@ export function pathAliases(path: string): string[] {
       "models/orc.glb",
     );
   }
-  // Cinema / doors hall — introgamer/astrocreeper often missing; cascade to live heroes
+  // Racalvin living twin swords (Brothers Keeper)
+  if (
+    clean === "models/weapons/my-brothers-keeper.prod.glb" ||
+    clean === "models/weapons/my-brothers-keeper.glb" ||
+    /brothers.?keeper/i.test(clean)
+  ) {
+    out.length = 0;
+    out.push(
+      "models/weapons/my-brothers-keeper.prod.glb",
+      "models/weapons/my-brothers-keeper.glb",
+      "models/weapons/sword.glb",
+      "models/weapons/sculk-sword.glb",
+      "models/weapons/greatsword.glb",
+    );
+  }
+  // Cinema / doors hall — introgamer/astrocreeper never shipped to R2; rewrite entirely
+  // so loaders never HEAD the dead URL (console 404 spam on lobby).
   if (
     clean === "models/introgamer.glb" ||
     clean === "models/astrocreeper.glb" ||
     clean === "models/landing/astrocreeper.glb" ||
     clean === "models/landing/helpers.glb"
   ) {
+    out.length = 0;
     out.push(
       "models/racalvin.glb",
       "models/karate-boss.glb",
       "models/orc.glb",
       "models/skeleton-warrior.glb",
-      "models/dungeon.glb",
     );
   }
   if (clean === "models/dj-booth.glb") {

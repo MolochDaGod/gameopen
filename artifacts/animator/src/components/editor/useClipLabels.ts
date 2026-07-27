@@ -19,7 +19,11 @@ export interface ClipMeta {
 
 type Store = Record<string, ClipMeta>;
 
-const STORAGE_KEY = "animator.dressing-room.clip-labels.v1";
+/**
+ * v2: labels default to the resolved motion name (not abstract verbs). Bump so
+ * stale personal renames from v1 (which often misnamed clips) do not stick.
+ */
+const STORAGE_KEY = "animator.dressing-room.clip-labels.v2";
 
 /** Every optional field, used to prune empties so the store stays compact. */
 const META_KEYS: (keyof ClipMeta)[] = ["label", "category", "skill", "effectKind", "vfx"];
@@ -105,5 +109,15 @@ export function useClipLabels() {
     [store],
   );
 
-  return { store, setLabel, setCategory, setSkill, setEffectKind, setVfx, categories };
+  /** Wipe all personal renames/categories/bindings so catalog motion labels show. */
+  const resetLabels = useCallback(() => {
+    setStore({});
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* best-effort */
+    }
+  }, []);
+
+  return { store, setLabel, setCategory, setSkill, setEffectKind, setVfx, categories, resetLabels };
 }

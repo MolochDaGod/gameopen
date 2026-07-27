@@ -50,8 +50,15 @@ import {
 } from "../three/avatar/catalog";
 import { hatIconUrl, warmHatTemplates } from "../three/avatar/hats";
 import { asset } from "../three/assets";
-import { loadPlayerHeadConfig, savePlayerHeadConfig } from "../three/avatar/playerHead";
+import {
+  getLobbyAvatarSlotTarget,
+  loadPlayerHeadConfig,
+  loadPlayerHeadForSlot,
+  savePlayerHeadConfig,
+  savePlayerHeadForLobbySlot,
+} from "../three/avatar/playerHead";
 import { cssHex } from "../three/avatar/pixels";
+import { gameSession } from "../game/GameSession";
 import "./avatarEdit.css";
 
 interface Props {
@@ -244,10 +251,23 @@ export function AvatarEditMode({ onExit }: Props) {
     a.click();
   }, [cfg.race]);
 
+  const lobbySlot = useMemo(() => getLobbyAvatarSlotTarget(), []);
+
   const saveToCharacter = useCallback(() => {
+    const slot = getLobbyAvatarSlotTarget();
+    const charId = gameSession.snapshot.selectedCharacterId;
+    if (slot != null) {
+      savePlayerHeadForLobbySlot(slot, cfg, charId);
+      setSavedToCharacter(true);
+      notice(`Saved to lobby seat ${slot + 1} — return to Lobby to see it`);
+      return;
+    }
     savePlayerHeadConfig(cfg);
+    if (charId) {
+      savePlayerHeadForLobbySlot(0, cfg, charId);
+    }
     setSavedToCharacter(true);
-    notice("Saved — Explorer / campfire heroes wear this head");
+    notice("Saved — Explorer / campfire / lobby seats wear this head");
   }, [cfg, notice]);
 
   const copyCode = useCallback(() => {
@@ -274,9 +294,14 @@ export function AvatarEditMode({ onExit }: Props) {
     notice("Avatar imported");
   }, [notice]);
 
-  // On mount: reflect whether the current build is already the saved head.
+  // On mount: if opened from lobby seat, seed that slot's head; mark saved state.
   useEffect(() => {
-    const saved = loadPlayerHeadConfig();
+    const slot = getLobbyAvatarSlotTarget();
+    if (slot != null) {
+      const slotHead = loadPlayerHeadForSlot(slot);
+      if (slotHead) setCfg(slotHead);
+    }
+    const saved = slot != null ? loadPlayerHeadForSlot(slot) : loadPlayerHeadConfig();
     if (saved && JSON.stringify(saved) === JSON.stringify(cfg)) setSavedToCharacter(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -284,12 +309,23 @@ export function AvatarEditMode({ onExit }: Props) {
   return (
     <div className="avatar-edit">
       <header className="ae-head">
-        <button className="ae-exit" onClick={onExit} aria-label="Back to doors">
+        <button
+          className="ae-exit"
+          onClick={() => {
+            // Keep slot target until save; clear only when leaving without intent
+            onExit();
+          }}
+          aria-label="Back"
+        >
           <DoorOpen size={16} />
         </button>
         <div className="ae-title">
           <span className="ae-brand">AVATAR EDIT</span>
-          <span className="ae-sub">Cube modular head builder</span>
+          <span className="ae-sub">
+            {lobbySlot != null
+              ? `Lobby seat ${lobbySlot + 1} · cube modular head`
+              : "Cube modular head builder"}
+          </span>
         </div>
         <div className="ae-actions">
           <button className="ae-act" onClick={() => setCfg(randomConfig(cfg.race))} title="Randomize this race">
@@ -316,10 +352,20 @@ export function AvatarEditMode({ onExit }: Props) {
           <button
             className={`ae-act ae-save ${savedToCharacter ? "on" : ""}`}
             onClick={saveToCharacter}
-            title="Use this head on your Explorer character in-game"
+            title={
+              lobbySlot != null
+                ? `Save this head to lobby seat ${lobbySlot + 1}`
+                : "Use this head on Explorer / lobby seats"
+            }
           >
             {savedToCharacter ? <Check size={15} /> : <UserCheck size={15} />}
-            {savedToCharacter ? "On character" : "Save to character"}
+            {savedToCharacter
+              ? lobbySlot != null
+                ? `Seat ${lobbySlot + 1} saved`
+                : "On character"
+              : lobbySlot != null
+                ? `Save seat ${lobbySlot + 1}`
+                : "Save to character"}
           </button>
         </div>
         {codeNotice && <div className="ae-notice">{codeNotice}</div>}

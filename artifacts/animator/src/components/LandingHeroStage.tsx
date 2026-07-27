@@ -11,17 +11,16 @@ import * as THREE from "three";
 import { loadGltfFirst } from "../three/assets";
 import { sharedGltfLoader } from "../three/loaders/gltf";
 
-/** Prefer landing pack; fall back to live root models when landing/* 404s. */
+/** Live CDN heroes only — landing/astrocreeper + introgamer never shipped. */
 const HERO_PATH = [
-  "models/landing/astrocreeper.glb",
-  "models/astrocreeper.glb",
   "models/racalvin.glb",
   "models/karate-boss.glb",
+  "models/orc.glb",
 ];
 const HELPERS_PATH = [
+  "models/dj-booth.glb",
   "models/landing/helpers.glb",
   "models/landing-helpers.glb",
-  "models/dj-booth.glb",
 ];
 
 /** Height-normalize a model and plant feet on y=0; returns world height. */

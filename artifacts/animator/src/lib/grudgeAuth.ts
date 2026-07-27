@@ -612,8 +612,13 @@ async function _revalidateAccountBackground(
           // Retry same-origin me only with new token
           continue;
         }
-        // Guest / expired — stop; 401 is expected when not signed in
-        return getStoredAccount();
+        // Dead / expired launch token — clear so lobby can mint a silent guest
+        setStoredToken(null);
+        return null;
+      }
+      if (r.status === 401) {
+        setStoredToken(null);
+        return null;
       }
       if (!r.ok) continue;
       const data = (await r.json()) as Record<string, unknown>;
@@ -633,27 +638,36 @@ async function _revalidateAccountBackground(
       /* try next */
     }
   }
-  // Return stale cache rather than forcing logout.
+  // Stale cache only if we still hold a token that might work offline
+  if (!getStoredToken()) return null;
   return getStoredAccount();
 }
 
 /** List characters for the signed-in Grudge account (Warlords / fleet SSOT). */
 export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
+  // No JWT → skip network (avoids lobby 401/403 red noise for pure guests pre-boot)
+  if (!getStoredToken()) return [];
+
   const paths = [
     // Warlords era is the fleet character roster used across Open / Realms / Island
     "/api/characters?era=warlords",
-    "/api/characters",
+    // Bare /api/characters often 403 without era — only try after warlords fails non-auth
   ];
   for (const path of paths) {
     try {
       const r = await apiFetch(path, { method: "GET" });
-      if (r.status === 401) {
+      if (r.status === 401 || r.status === 403) {
         const token = getStoredToken();
         if (token && !isTokenExpired(token)) {
           // Try bridge once in case this is still a launch JWT
           const bridged = await bridgeLaunchToken(token);
-          if (bridged) continue;
+          if (bridged) {
+            // Retry warlords with bridged token only
+            continue;
+          }
         }
+        // Dead session — clear so ensureGuestSession can recover on next boot
+        setStoredToken(null);
         return [];
       }
       if (!r.ok) continue;
@@ -706,7 +720,8 @@ export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
           };
         })
         .filter((c: GrudgeCharacter) => c.id);
-      if (mapped.length || path.endsWith("/characters")) return mapped;
+      // 200 with empty list is valid (new guest / no Warlords slots yet)
+      return mapped;
     } catch {
       /* try next path */
     }
@@ -722,13 +737,19 @@ export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
 export async function ensureGuestSession(): Promise<GrudgeAccount | null> {
   const existing = getStoredToken();
   if (existing && !isTokenExpired(existing)) {
-    return fetchFleetAccount(false);
+    const acc = await fetchFleetAccount(true);
+    if (acc) return acc;
+    // Token looks valid but /me rejects — drop it and mint a real guest
+    setStoredToken(null);
+    setStoredAccount(null);
+  } else if (existing && isTokenExpired(existing)) {
+    setStoredToken(null);
   }
 
   const urls = [
     apiUrl("/api/auth/guest"),
-    `${FLEET.gameData}/api/auth/guest`,
     `${FLEET.auth}/api/auth/guest`,
+    `${FLEET.gameData}/api/auth/guest`,
   ];
 
   for (const url of urls) {
@@ -814,6 +835,18 @@ export async function initFleetAuth(): Promise<{
     account = await fetchFleetAccount(true);
   }
 
+  // Dead JWT left in storage (401 on /me, failed exchange) → clear so guest can mint.
+  if (!account && getStoredToken()) {
+    // Force verify once more; if still null, token is unusable
+    const again = await fetchFleetAccount(true);
+    if (!again) {
+      setStoredToken(null);
+      setStoredAccount(null);
+    } else {
+      account = again;
+    }
+  }
+
   // No SSO / no token → silent Railway guest so character APIs work for play.
   // Skip auto-guest when URL forced full login (?force_login=1).
   const forceLogin =
@@ -827,8 +860,11 @@ export async function initFleetAuth(): Promise<{
   let characters: GrudgeCharacter[] = [];
   if (account || getStoredToken()) {
     characters = await fetchCharacters();
-    // One retry after force revalidate (token may have just been written).
-    if (!characters.length && getStoredToken()) {
+    // Token rejected mid-list → recover guest and retry once
+    if (!characters.length && !getStoredToken() && !forceLogin) {
+      account = (await ensureGuestSession()) || account;
+      if (getStoredToken()) characters = await fetchCharacters();
+    } else if (!characters.length && getStoredToken()) {
       account = (await fetchFleetAccount(true)) || account;
       characters = await fetchCharacters();
     }

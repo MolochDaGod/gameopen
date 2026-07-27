@@ -113,7 +113,8 @@ export const CLIP_REGISTRY: readonly ClipEntry[] = [
   // ----- Movement -----
   { verb: "dash", key: "dash", category: "Movement", play: "dash" },
   { verb: "roll", key: "dodgeF", category: "Movement", play: { roll: "F" } },
-  { verb: "jump", key: "jumpAir", category: "Movement" },
+  // Jump takeoff (jump-up.fbx), not the airborne fall loop (jumpAir).
+  { verb: "jump", key: "jumpUp", category: "Movement" },
   { verb: "slide", key: "slide", category: "Movement", play: "slide" },
   { verb: "pivotR", key: "pivotR", category: "Movement", label: "Pivot Right" },
   { verb: "sideStepL", key: "sideStepL", category: "Movement", label: "Side-Step Left" },

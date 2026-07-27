@@ -1966,7 +1966,9 @@ export class EditorScene {
     const def = getCharacter(charId);
     const rig = new ExplorerCharacter(def);
     try {
-      await rig.load();
+      // Dressing Room needs the full clip catalog for Animations-tab previews
+      // (combat uses the lean equipped-class set).
+      await rig.load({ preloadAll: true });
     } catch (err) {
       console.error("[EditorScene] rig load failed", err);
       return;

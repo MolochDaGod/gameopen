@@ -115,29 +115,30 @@ export const SURFACE_LOAD_PLAN: Record<
     pattern: "cinema_backdrop",
     cinemaId: "intro_doors",
     rest: ["health", "charactersWarlords"],
-    criticalMeshes: ["models/introgamer.glb", "models/props/dying-torch.glb"],
+    // introgamer.glb never shipped — use live CDN heroes only
+    criticalMeshes: ["models/racalvin.glb", "models/props/dying-torch.glb"],
     notes: "Ambient cinema + library; roster REST in parallel",
   },
   characters: {
     pattern: "cinema_flow",
     cinemaId: "char_select_establish",
     rest: ["charactersWarlords", "account"],
-    criticalMeshes: ["models/introgamer.glb"],
+    criticalMeshes: ["models/racalvin.glb"],
     notes: "Cinema then campfire; heroes from Railway",
   },
   intro_handoff: {
     pattern: "cinema_flow",
     cinemaId: "intro_to_characters",
     rest: ["charactersWarlords", "account"],
-    criticalMeshes: ["models/introgamer.glb", "models/props/dying-torch.glb"],
+    criticalMeshes: ["models/racalvin.glb", "models/props/dying-torch.glb"],
     notes: "Landing → roster cinema",
   },
   lobby: {
     pattern: "cinema_flow",
     cinemaId: "lobby_establish",
     rest: ["health", "charactersWarlords"],
-    criticalMeshes: ["models/instarena-phyxt-fight.glb"],
-    notes: "Establish then multiplayer lobby",
+    criticalMeshes: ["models/arena-war-zone.glb", "models/racalvin.glb"],
+    notes: "Establish then multiplayer lobby (arena-war-zone — instarena dead)",
   },
   danger: {
     pattern: "boot_gate",
@@ -208,6 +209,8 @@ export async function warmupProductionSurface(
     /** Prefetch mesh candidates (HEAD or GET range) */
     prefetchMeshes?: string[];
     fetchImpl?: typeof fetch;
+    /** Override fleet JWT (tests / embed). Default: grudge.open.token storage. */
+    authToken?: string | null;
   },
 ): Promise<WarmupResult> {
   const plan = SURFACE_LOAD_PLAN[surface];
@@ -220,10 +223,34 @@ export async function warmupProductionSurface(
     typeof performance !== "undefined" ? performance.now() : Date.now();
 
   const restOk: Record<string, boolean> = {};
+  // Attach fleet JWT when present so characters/account warmup is not a red 401 for guests mid-boot
+  let authHeader: Record<string, string> = { Accept: "application/json" };
+  try {
+    const tok =
+      (opts?.authToken !== undefined ? opts.authToken : null) ||
+      (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("grudge.open.token") : null) ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("grudge.open.token") : null) ||
+      "";
+    if (tok) authHeader = { ...authHeader, Authorization: `Bearer ${tok}` };
+  } catch {
+    /* private mode */
+  }
   const restJobs = restKeys.map(async (key) => {
     const path = REST_SAME_ORIGIN[key as keyof typeof REST_SAME_ORIGIN];
     if (!path) {
       restOk[String(key)] = false;
+      return;
+    }
+    // Auth-gated routes: skip network when no token (avoids console 401 spam on lobby)
+    const needsAuth =
+      key === "charactersWarlords" ||
+      key === "characters" ||
+      key === "account" ||
+      key === "wallet" ||
+      key === "island" ||
+      key === "inventory";
+    if (needsAuth && !authHeader.Authorization) {
+      restOk[String(key)] = true; // deferred until initFleetAuth / guest
       return;
     }
     try {
@@ -233,10 +260,10 @@ export async function warmupProductionSurface(
         method: "GET",
         credentials: "include",
         signal: ctrl.signal,
-        headers: { Accept: "application/json" },
+        headers: authHeader,
       });
       clearTimeout(timer);
-      // 401 is still "reachable"
+      // 401 is still "reachable" (guest expected before token)
       restOk[String(key)] = r.ok || r.status === 401 || r.status === 403;
     } catch {
       restOk[String(key)] = false;

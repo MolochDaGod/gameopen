@@ -38,10 +38,11 @@ describe("productionSystemsPattern", () => {
     expect(PROD_TIMING_MS.surfaceStall).toBeLessThan(PROD_TIMING_MS.bootStall);
   });
 
-  it("warmup parallelizes REST with mock fetch", async () => {
+  it("warmup parallelizes REST with mock fetch when token present", async () => {
     const calls: string[] = [];
     const result = await warmupProductionSurface("characters", {
       budgetMs: 500,
+      authToken: "test.jwt.token",
       fetchImpl: async (input) => {
         calls.push(String(input));
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -51,6 +52,27 @@ describe("productionSystemsPattern", () => {
     expect(calls.some((c) => c.includes("/api/characters"))).toBe(true);
     expect(result.surface).toBe("characters");
     expect(PROD_HOSTS.open).toContain("open.grudge-studio.com");
+  });
+
+  it("warmup skips characters REST when guest has no token", async () => {
+    const calls: string[] = [];
+    await warmupProductionSurface("doors", {
+      budgetMs: 500,
+      authToken: null,
+      fetchImpl: async (input) => {
+        calls.push(String(input));
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      },
+      prefetchMeshes: [],
+    });
+    expect(calls.some((c) => c.includes("/api/characters"))).toBe(false);
+    expect(calls.some((c) => c.includes("/api/health"))).toBe(true);
+  });
+
+  it("doors critical meshes use live CDN heroes not introgamer", () => {
+    const meshes = SURFACE_LOAD_PLAN.doors?.criticalMeshes ?? [];
+    expect(meshes.some((m) => m.includes("introgamer"))).toBe(false);
+    expect(meshes.some((m) => m.includes("racalvin"))).toBe(true);
   });
 
   it("exports deploy checklist and kill list for agents", () => {

@@ -84,7 +84,8 @@ export class AnimationDirector {
       this.gaitTarget = 0;
       return;
     }
-    if (sprinting || speed01 > 0.85) this.gaitTarget = 1;
+    // Explicit sprint (Shift) always wins — run clone @ locoMult, never roll
+    if (sprinting || speed01 > 0.92) this.gaitTarget = 1;
     else if (speed01 > 0.55) this.gaitTarget = 0.7;
     else this.gaitTarget = 0.34;
   }
@@ -213,11 +214,18 @@ export class AnimationDirector {
 export function clipsFromRoleMap(
   clips: Map<string, THREE.AnimationClip>,
 ): DirectorClips {
-  return {
+  // Include every loaded role so LMB combo / skill1–4 / sig* one-shots work
+  // through AnimationDirector.requestOneShot (not only core loco + attack).
+  const out: DirectorClips = {
     idle: clips.get("idle") || null,
     walk: clips.get("walk") || clips.get("run") || null,
     run: clips.get("run") || clips.get("walk") || null,
     sprint: clips.get("sprint") || clips.get("run") || null,
     attack: clips.get("attack") || null,
   };
+  for (const [name, clip] of clips) {
+    if (!clip) continue;
+    if (out[name] == null) out[name] = clip;
+  }
+  return out;
 }

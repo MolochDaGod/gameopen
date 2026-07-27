@@ -49,24 +49,42 @@ export async function isMixamoFbxPackAvailable(): Promise<boolean> {
   if (probe) return probe;
 
   probe = (async () => {
+    // Same-origin only (pack is either under public/anim after deploy, or absent).
+    // Prefer short layout first — production ships public/anim/bow/* not nested
+    // anim/animations/bow/* (both exist locally; Vercel allowlist covers both).
     const candidates = [
-      `/${MIXAMO_PROBE_REL}`,
       `/${MIXAMO_PROBE_REL.replace("anim/animations/", "anim/")}`,
+      `/${MIXAMO_PROBE_REL}`,
+      // Range GET fallback: some hosts lie on HEAD or omit Content-Type for .fbx
+      { url: `/${MIXAMO_PROBE_REL.replace("anim/animations/", "anim/")}`, get: true as const },
     ];
-    for (const url of candidates) {
+    for (const c of candidates) {
+      const url = typeof c === "string" ? c : c.url;
+      const useGet = typeof c !== "string" && c.get;
       try {
         const ctrl = new AbortController();
         const t = window.setTimeout(() => ctrl.abort(), 2500);
         const r = await fetch(url, {
-          method: "HEAD",
+          method: useGet ? "GET" : "HEAD",
           signal: ctrl.signal,
           cache: "force-cache",
+          headers: useGet ? { Range: "bytes=0-15" } : undefined,
         });
         window.clearTimeout(t);
-        if (!r.ok) continue;
+        if (!r.ok && r.status !== 206) continue;
         const ct = (r.headers.get("content-type") || "").toLowerCase();
         if (ct.includes("text/html") || ct.includes("text/plain")) continue;
-        // FBX is often application/octet-stream
+        // FBX is often application/octet-stream / empty CT on static hosts
+        if (useGet) {
+          const buf = await r.arrayBuffer();
+          // Kaydara FBX binary magic or ASCII "Kaydara FBX"
+          const u8 = new Uint8Array(buf);
+          const head = String.fromCharCode(...u8.slice(0, 12));
+          if (!head.includes("Kaydara") && !(u8[0] === 0x4b && u8[1] === 0x61)) {
+            // Still accept if body is clearly non-HTML binary
+            if (u8.length < 4 || u8[0] === 0x3c /* < */) continue;
+          }
+        }
         state = "present";
         return true;
       } catch {

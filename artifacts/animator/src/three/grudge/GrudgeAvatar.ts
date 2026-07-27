@@ -20,6 +20,7 @@ import {
 } from "../ummorpg/animationDirector";
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
+import { SPRINT_LOCO_MULT } from "./anims";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -111,7 +112,15 @@ export class GrudgeAvatar implements Avatar {
       name: `${race.name} ${preset.label}`,
       file: race.modelUrl,
       scale: 1,
-      clips: {},
+      // Role keys match baked pack roles; Studio LMB/combo resolves via hasClip + aliases
+      clips: {
+        idle: "idle",
+        walk: "walk",
+        run: "run",
+        attack: "attack",
+        jump: "jump",
+      },
+      // Filled by Studio.setCharacter / applyWeapon from t0SignatureSkills (HUD 1–4)
       signatureSkills: [],
       handBone: "Bip001_(R|L)_Hand",
       modelYaw: 0,
@@ -261,25 +270,6 @@ export class GrudgeAvatar implements Avatar {
     return this.roleClip.has(role);
   }
 
-  hasClip(name: string): boolean {
-    if (this.actions.has(name) || this.actions.has(name.toLowerCase())) return true;
-    // Studio hyphen/underscore dodge aliases
-    const alt = name.replace(/-/g, "_");
-    if (alt !== name && this.actions.has(alt)) return true;
-    if (name.includes("dodge") || name.includes("roll")) {
-      return (
-        this.actions.has("dodge") ||
-        this.actions.has("dodgeL") ||
-        this.actions.has("dodgeR") ||
-        this.actions.has("dodgeF")
-      );
-    }
-    if (name === "jump" || name === "jumpAway" || name === "mantle") {
-      return this.actions.has("jump") || this.actions.has("jumpAway");
-    }
-    return false;
-  }
-
   /**
    * Traversal mode (wall-run / climb / swim). Grudge6 uses the same mixer —
    * climb keeps gait at walk; swim uses slower walk cycle until swim clips ship.
@@ -349,21 +339,34 @@ export class GrudgeAvatar implements Avatar {
 
   /**
    * Continuous locomotion for Controller (same contract as Character).
-   * Maps 0..1 speed → idle / walk / run roles with crossfade.
+   * Maps 0..1 speed → idle / walk / run / **sprint** (run clone @ 1.75×).
+   * Never selects roll / run-to-roll clips for gait.
    */
-  setLocomotion(speed: number): void {
+  setLocomotion(speed: number, sprinting = false): void {
     if (!this.mixer) return;
     const s = Math.max(0, Math.min(1, speed));
+    // Explicit Shift/touch sprint OR high speed band → sprint gait
+    const wantSprint = sprinting || s > 0.92;
     // Prefer uMMORPG-style director when present
     if (this.director) {
-      this.director.setGaitTarget(s > 0.08, s > 0.85, s);
+      this.director.setGaitTarget(s > 0.08, wantSprint, s);
       return;
     }
     if (this.oneShot) return;
-    if (s > 0.72 && this.hasRole("run")) this.playRole("run");
-    else if (s > 0.08 && this.hasRole("walk")) this.playRole("walk");
-    else this.playRole("idle");
-    this.setLocomotionRate(s > 0.72 ? 1 + (s - 0.72) * 0.8 : 0.85 + s * 0.4);
+    if (wantSprint && (this.hasRole("sprint") || this.actions.has("sprint"))) {
+      // playRole types as AnimRole; sprint is registered under role key "sprint"
+      this.playRole("sprint");
+      this.setLocomotionRate(SPRINT_LOCO_MULT);
+    } else if (s > 0.55 && this.hasRole("run")) {
+      this.playRole("run");
+      this.setLocomotionRate(1);
+    } else if (s > 0.08 && this.hasRole("walk")) {
+      this.playRole("walk");
+      this.setLocomotionRate(0.85 + s * 0.4);
+    } else {
+      this.playRole("idle");
+      this.setLocomotionRate(1);
+    }
   }
 
   // ── Skill Lab authoring API ────────────────────────────────────────────────
@@ -577,32 +580,52 @@ export class GrudgeAvatar implements Avatar {
     this.colliderHelper = null;
   }
 
+  /**
+   * Resolve a Studio / T0 / skill clip name onto a loaded action key.
+   * Always falls through to pack `attack` so LMB never silent-fails on grudge6.
+   */
+  private resolveClipKey(name: string): string | null {
+    if (this.actions.has(name)) return name;
+    const lower = name.toLowerCase();
+    if (this.actions.has(lower)) return lower;
+    if (name.includes("cast") || name.includes("magic") || name.includes("spell")) {
+      if (this.actions.has("cast")) return "cast";
+      if (this.actions.has("magicAttack")) return "magicAttack";
+    }
+    if (name.includes("dodge") || name.includes("parry") || name.includes("block")) {
+      if (this.actions.has("dodge")) return "dodge";
+      if (this.actions.has("dodgeF")) return "dodgeF";
+    }
+    if (
+      /skill|sig|combo|special|power|dash|slash|thrust|overhead|attack|melee/i.test(name)
+    ) {
+      if (this.actions.has("attack")) return "attack";
+    }
+    if (this.actions.has("attack")) return "attack";
+    return null;
+  }
+
   playClipOnce(name: string, fade = 0.12): number {
     // Resolve skill / defense / cast names onto loaded roles (attack fallback).
-    // Mirrors player T0 kit + AI brain clip requests when baked skill packs
-    // only ship idle/walk/run/attack.
-    const resolved =
-      this.actions.get(name) ||
-      this.actions.get(name.toLowerCase()) ||
-      (name.includes("cast") || name.includes("magic") || name.includes("spell")
-        ? this.actions.get("cast") || this.actions.get("magicAttack") || this.actions.get("attack")
-        : null) ||
-      (name.includes("dodge") || name.includes("parry") || name.includes("block")
-        ? this.actions.get("dodge") || this.actions.get("attack")
-        : null) ||
-      (name.includes("skill") ||
-      name.includes("sig") ||
-      name.includes("combo") ||
-      name.includes("special") ||
-      name.includes("power") ||
-      name.includes("dash") ||
-      name.includes("slash") ||
-      name.includes("thrust") ||
-      name.includes("overhead")
-        ? this.actions.get("attack")
-        : null) ||
-      this.actions.get("attack");
-    const action = resolved;
+    const key = this.resolveClipKey(name);
+    if (!key) return 0;
+
+    // Prefer director one-shot so locomotion weights dim correctly (LMB/skills).
+    if (this.director && this.director.has(key)) {
+      const d = this.director.requestOneShot(key, {
+        fade,
+        timeScale: this.overdrive,
+        allowQueue: false,
+      });
+      if (d > 0) {
+        this.oneShotEnd = d;
+        // Mark local oneShot active so Studio busy checks work even if director owns mixer
+        this.oneShot = this.actions.get(key) ?? null;
+        return d;
+      }
+    }
+
+    const action = this.actions.get(key);
     if (!action) return 0;
     action.reset();
     action.setLoop(THREE.LoopOnce, 1);
@@ -621,17 +644,46 @@ export class GrudgeAvatar implements Avatar {
   }
 
   playRoleOnce(role: AnimRole, fade = 0.12): number {
-    const key = this.roleClip.get(role);
-    if (!key) return 0;
+    const key = this.roleClip.get(role) ?? (role === "attack" ? "attack" : undefined);
+    if (!key) {
+      // Attack always tries pack attack even if role map incomplete
+      if (role === "attack") return this.playClipOnce("attack", fade);
+      return 0;
+    }
     // Director one-shot for attack/skill (ScriptableSkill cast)
-    if (this.director && (role === "attack" || key === "attack")) {
-      const d = this.director.requestOneShot("attack", { fade, timeScale: this.overdrive });
+    if (this.director && this.director.has(key)) {
+      const d = this.director.requestOneShot(key, { fade, timeScale: this.overdrive });
       if (d > 0) {
         this.oneShotEnd = d;
+        this.oneShot = this.actions.get(key) ?? null;
         return d;
       }
     }
     return this.playClipOnce(key, fade);
+  }
+
+  /**
+   * True when clip or alias exists (Studio combo picker / weapon skills).
+   * Attack aliases (attack2, skill1, sig1…) count as present via resolveClipKey.
+   */
+  hasClip(name: string): boolean {
+    if (this.actions.has(name) || this.actions.has(name.toLowerCase())) return true;
+    if (this.resolveClipKey(name)) return true;
+    // Studio hyphen/underscore dodge aliases
+    const alt = name.replace(/-/g, "_");
+    if (alt !== name && this.actions.has(alt)) return true;
+    if (name.includes("dodge") || name.includes("roll")) {
+      return (
+        this.actions.has("dodge") ||
+        this.actions.has("dodgeL") ||
+        this.actions.has("dodgeR") ||
+        this.actions.has("dodgeF")
+      );
+    }
+    if (name === "jump" || name === "jumpAway" || name === "mantle") {
+      return this.actions.has("jump") || this.actions.has("jumpAway");
+    }
+    return false;
   }
 
   get isOneShotActive(): boolean {

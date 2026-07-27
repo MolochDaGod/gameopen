@@ -153,6 +153,8 @@ export async function ensureWallet(): Promise<GrudgeWallet | null> {
   if (cached?.address) return cached;
 
   if (!getStoredToken()) return null; // guest — no wallet
+  // Railway has not published /api/wallet on all deploys — fail soft, never block lobby.
+  if (walletRouteMissing) return null;
 
   // Fetch existing wallet.
   let wallet = await fetchWallet();

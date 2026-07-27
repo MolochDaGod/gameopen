@@ -261,12 +261,19 @@ export class Vfx {
   }
 
   /**
-   * "Hot hands": a tight blaze wreathing a caster's hand — a white-hot core flash
-   * and a plume of rising embers that cool to red. Call it on the casting-hand
-   * world position each time a fire spell fires so the hands visibly burn while
-   * channelling. Additive points + a core mesh + a brief swirl, all self-disposed.
+   * "Hot hands": a tight blaze wreathing a caster's hand — core flash + rising
+   * embers. Default fire cools to red; pass `coolColor` / `coreColor` for other
+   * themes (e.g. Racalvin green→purple arcane hands).
    */
-  hotHands(pos: THREE.Vector3, color = 0xff7a1e, scale = 1) {
+  hotHands(
+    pos: THREE.Vector3,
+    color = 0xff7a1e,
+    scale = 1,
+    opts?: { coolColor?: number; coreColor?: number; life?: number },
+  ) {
+    const coolColor = opts?.coolColor ?? 0xff3010;
+    const coreColor = opts?.coreColor ?? 0xffe6a0;
+    const life = opts?.life ?? 0.5;
     const count = Math.max(8, Math.round(18 * scale));
     const positions = new Float32Array(count * 3);
     const vel: THREE.Vector3[] = [];
@@ -296,7 +303,7 @@ export class Vfx {
     this.add({
       obj: points,
       age: 0,
-      life: 0.5,
+      life,
       geos: [geo],
       mats: [mat],
       update: (e, dt) => {
@@ -312,13 +319,13 @@ export class Vfx {
         geo.attributes.position.needsUpdate = true;
         const t = e.age / e.life;
         mat.opacity = 1 - t;
-        if (t > 0.5) mat.color.setHex(0xff3010);
+        if (t > 0.45) mat.color.setHex(coolColor);
       },
     });
-    // White-hot core flash at the palm.
+    // Core flash at the palm (warm white for fire; mint/violet for arcane).
     const cGeo = new THREE.SphereGeometry(0.1 * scale, 8, 6);
     const cMat = new THREE.MeshBasicMaterial({
-      color: 0xffe6a0,
+      color: coreColor,
       transparent: true,
       opacity: 1,
       blending: THREE.AdditiveBlending,
@@ -329,7 +336,7 @@ export class Vfx {
     this.add({
       obj: core,
       age: 0,
-      life: 0.24,
+      life: Math.min(0.28, life * 0.5),
       geos: [cGeo],
       mats: [cMat],
       update: (e) => {
@@ -340,6 +347,36 @@ export class Vfx {
     });
     // A short swirl of embers ringing the hand for extra volume.
     this.castSwirl(pos, color, 0.45, 0.5 * scale);
+  }
+
+  /**
+   * Dual-tone hot hands (green + purple) — Racalvin / arcane pirate theme.
+   * Right hand leans green, left leans purple; both cool into the other hue.
+   */
+  hotHandsArcane(
+    right: THREE.Vector3,
+    left: THREE.Vector3 | null,
+    scale = 1,
+    burst = false,
+  ) {
+    const green = 0x3dff8a;
+    const purple = 0xb44dff;
+    const mintCore = 0xd8ffe8;
+    const violetCore = 0xf0d8ff;
+    const s = burst ? scale * 1.35 : scale * 0.72;
+    const life = burst ? 0.55 : 0.38;
+    this.hotHands(right, green, s, {
+      coolColor: purple,
+      coreColor: mintCore,
+      life,
+    });
+    if (left) {
+      this.hotHands(left, purple, s, {
+        coolColor: green,
+        coreColor: violetCore,
+        life,
+      });
+    }
   }
 
   /**

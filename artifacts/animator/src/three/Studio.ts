@@ -99,6 +99,7 @@ import { StatusController, STATUS_DEFS } from "./fx/StatusFx";
 import { TargetIndicators, TelegraphField } from "./fx/Indicators";
 import { InputState } from "./input";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "./Weapons";
+import { LivingTwinSwords } from "./fx/LivingTwinSwords";
 import { MaceThrowMachine, type MaceThrowEvent } from "./mace/maceThrow";
 import type { FireFxParams } from "./fxSettings";
 import { loadSound, saveSound, type SoundSettings } from "./soundSettings";
@@ -584,6 +585,13 @@ export class Studio {
   private character!: Avatar;
   private controller!: Controller;
   private mounted: MountedWeapon | null = null;
+  /**
+   * Racalvin (gunslinger): dual living Brothers Keeper swords —
+   * sheathed X on back, orbit while moving, floating slash on attack.
+   */
+  private livingSwords: LivingTwinSwords | null = null;
+  /** Throttle for ambient green/purple hot-hands on Racalvin. */
+  private racalvinHandFxT = 0;
   /** Independent off-hand piece (Tower Shield) mounted alongside the main weapon. */
   private mountedOff: MountedWeapon | null = null;
   /**
@@ -1733,10 +1741,14 @@ export class Studio {
     // Characters may declare a weapon to spawn with (e.g. the Gunslinger's pistol).
     if (def.defaultWeapon) this.weaponId = def.defaultWeapon;
 
-    // Explorer: live weapon skill tree = T0 kit signatures (HUD 1–4 + VFX kinds).
-    // Ensures procedural rig always has combat skill defs even when CharacterDef
-    // signatures are static demo rows.
-    if (next instanceof ExplorerCharacter || def.procedural) {
+    // Live weapon skill tree = T0 / master-weaponSkills (HUD 1–4 + VFX kinds).
+    // Explorer, GrudgeAvatar, and any hero with a weapon id need skill options for LMB chain + hotbar.
+    if (
+      next instanceof ExplorerCharacter ||
+      next instanceof GrudgeAvatar ||
+      def.procedural ||
+      /^grudge:/i.test(id)
+    ) {
       const t0 = t0SignatureSkills(this.weaponId);
       if (t0.length) {
         def.signatureSkills = t0.map((s) => ({
@@ -1757,6 +1769,8 @@ export class Studio {
 
     this.applyWeapon(this.weaponId);
     this.applyModelYaw();
+    // Racalvin living twin swords (Brothers Keeper mesh)
+    void this.syncLivingSwords(id);
     this.onCharacterLoaded?.(id);
     // Kick-style characters that declare `kickClips` get extra FBX clips injected
     // after commit (Tera-kasi pulls flip_kick/backflip/roll). The Striker declares
@@ -1884,6 +1898,206 @@ export class Studio {
   }
 
   /**
+   * Attach / detach dual living Brothers Keeper swords for Racalvin.
+   * Sheathed X on spine, orbit while moving, floating slash on attack.
+   */
+  private async syncLivingSwords(characterId: string): Promise<void> {
+    if (characterId !== "gunslinger") {
+      if (this.livingSwords) {
+        this.livingSwords.dispose();
+        this.livingSwords = null;
+      }
+      return;
+    }
+    const ch = this.character;
+    if (!ch) return;
+    if (!this.livingSwords) {
+      this.livingSwords = new LivingTwinSwords();
+    }
+    try {
+      await this.livingSwords.load();
+      if (this.disposed || this.characterId !== "gunslinger" || this.character !== ch) {
+        this.livingSwords.dispose();
+        this.livingSwords = null;
+        return;
+      }
+      // Spine lookup walks the full character root (model is private on Character)
+      this.livingSwords.attach(ch.root, ch.root);
+      this.bindLivingSwordCallbacks();
+      // Unmount hand weapons if any — living swords are the only blades
+      if (this.mounted) {
+        unmountWeapon(this.mounted);
+        this.mounted = null;
+      }
+      console.info("[Studio] Living twin swords armed (Brothers Keeper · projectile/AOE/tornado)");
+    } catch (err) {
+      console.warn("[Studio] living swords failed", err);
+    }
+  }
+
+  /**
+   * Wire LivingTwinSwords hit / tornado launch callbacks into combat + VFX.
+   */
+  private bindLivingSwordCallbacks(): void {
+    if (!this.livingSwords) return;
+    this.livingSwords.setCallbacks({
+      onHit: (p, kind) => {
+        if (kind === "projectile") {
+          this.sparringBlast(p, 1.6, 28, this.params.skillForce * 0.85);
+          this.vfx.burst(p, 0xb44dff, 18, 2.4);
+          this.vfx.impact(p, 0x3dff8a, 0.7);
+        } else if (kind === "aoe") {
+          this.sparringBlast(p, 2.4, 14, this.params.skillForce * 0.55);
+        } else {
+          this.sparringBlast(p, 2.0, 22, this.params.skillForce * 0.75);
+        }
+      },
+      onTornadoLaunch: (from, dir, index) => {
+        // Green/purple tinted fire tornado — sequential straight shots
+        const color = index === 0 ? 0x3dff8a : 0xb44dff;
+        this.vfx.castFireTornado(from, dir, {
+          color,
+          speed: 12,
+          range: 16,
+          heightM: 2.1,
+          tickEvery: 0.1,
+          onPathTick: (p) => {
+            this.sparringBlast(p, 1.8, 12, this.params.skillForce * 0.5);
+          },
+          onHit: (p) => {
+            this.sparringBlast(p, 2.4, 36, this.params.skillForce * 1.1);
+            this.vfx.aoeBlast(p, color, 2.2);
+          },
+        });
+        this.pulseRacalvinHotHands(true);
+      },
+    });
+  }
+
+  /** Aim point for living-sword projectiles (selected hostile or aim ray). */
+  private livingSwordAim(fwd: THREE.Vector3): {
+    dir: THREE.Vector3;
+    target: THREE.Vector3;
+  } {
+    const origin = this.character!.root.position.clone();
+    origin.y += 1.1;
+    const picked = this.pickTargetInFront(origin, fwd, 22, -0.15);
+    if (picked) {
+      const target = picked.position.clone();
+      target.y += 1.0;
+      const dir = target.clone().sub(origin);
+      dir.y = 0;
+      if (dir.lengthSq() < 1e-4) dir.copy(fwd);
+      else dir.normalize();
+      return { dir, target };
+    }
+    const target = origin.clone().addScaledVector(fwd, 10);
+    target.y = origin.y;
+    return { dir: fwd.clone(), target };
+  }
+
+  /** LMB: ranged living-sword projectiles at enemy (or aim point). */
+  private doLivingSwordStrike(preferredClip?: string): void {
+    if (!this.character || !this.livingSwords) return;
+    if (this.livingSwords.isBusy()) return;
+    const fwd = this.facing();
+    const { dir, target } = this.livingSwordAim(fwd);
+    this.livingSwords.launchProjectile(dir, target);
+    this.pulseRacalvinHotHands(true);
+    this.playLivingSwordClip(preferredClip || "thrust_slash");
+    if (this.comboLock <= 0) {
+      this.comboLock = 0.42;
+      this.comboTimer = 0.65;
+    }
+    this.setCombatFlash("KEEPER SHOT", 0.4);
+  }
+
+  /** Spin AOE: blades whirl around Racalvin. */
+  private doLivingSwordSpinAoe(): void {
+    if (!this.character || !this.livingSwords) return;
+    if (this.livingSwords.isBusy()) return;
+    this.livingSwords.startSpinAoe(1.4);
+    this.pulseRacalvinHotHands(true);
+    this.playLivingSwordClip("double_blade_spin");
+    const origin = this.character.root.position.clone();
+    this.vfx.auraRing(new THREE.Vector3(origin.x, 0.06, origin.z), 0xb44dff, 2.6, 0.9);
+    this.vfx.castSwirl(origin.clone().setY(origin.y + 1.1), 0x3dff8a, 0.9, 1.3);
+    this.setCombatFlash("BLADE CYCLONE", 0.55);
+  }
+
+  /**
+   * R skill: spin swords rapidly → convert to fire tornados → launch
+   * one after the other in a straight path toward the target.
+   */
+  private doLivingSwordTornadoSkill(): boolean {
+    if (!this.character || !this.livingSwords) return false;
+    if (this.livingSwords.isBusy()) return false;
+    if (this.sigCooldowns[3]! > 0) return false;
+    const fwd = this.facing();
+    const { dir, target } = this.livingSwordAim(fwd);
+    this.livingSwords.startTornadoBarrage(dir, target);
+    this.pulseRacalvinHotHands(true);
+    this.playLivingSwordClip("charged_upward_slash");
+    const origin = this.character.root.position.clone();
+    this.vfx.skillCharge(origin.clone().setY(origin.y + 1.2), 0xff5510, 1.4, 0.55);
+    this.vfx.auraRing(new THREE.Vector3(origin.x, 0.05, origin.z), 0xff6a1e, 2.0, 0.6);
+    this.armSigSlot(3, 4.5, 22);
+    this.setCombatFlash("KEEPER TORNADOS", 0.75);
+    return true;
+  }
+
+  private playLivingSwordClip(preferred?: string): void {
+    if (!this.character) return;
+    const order = [
+      preferred,
+      "double_blade_spin",
+      "thrust_slash",
+      "charged_upward_slash",
+      "spartan_kick",
+    ].filter(Boolean) as string[];
+    for (const c of order) {
+      if (this.character.hasClip(c)) {
+        this.character.playClipOnce(c, 0.1);
+        return;
+      }
+    }
+    this.character.playRoleOnce?.("attack", 0.1);
+  }
+
+  /** World positions of Racalvin's hands (or chest fallback). */
+  private racalvinHandWorld(): { right: THREE.Vector3; left: THREE.Vector3 } {
+    const root = this.character!.root;
+    const base = root.position.clone();
+    base.y += 1.25;
+    const right = this.character!.rightHand
+      ? this.character!.rightHand.getWorldPosition(new THREE.Vector3())
+      : base.clone().add(new THREE.Vector3(0.28, 0, 0.1));
+    const left = this.character!.leftHand
+      ? this.character!.leftHand.getWorldPosition(new THREE.Vector3())
+      : base.clone().add(new THREE.Vector3(-0.28, 0, 0.1));
+    // Ensure matrices are current for skinned hands
+    this.character!.rightHand?.updateWorldMatrix(true, false);
+    this.character!.leftHand?.updateWorldMatrix(true, false);
+    if (this.character!.rightHand) {
+      this.character!.rightHand.getWorldPosition(right);
+    }
+    if (this.character!.leftHand) {
+      this.character!.leftHand.getWorldPosition(left);
+    }
+    return { right, left };
+  }
+
+  /**
+   * Hot-hands style aura in green + purple (Vfx.hotHandsArcane).
+   * Ambient smolder on both hands; burst=true for attack/signature.
+   */
+  private pulseRacalvinHotHands(burst = false): void {
+    if (!this.character || this.characterId !== "gunslinger") return;
+    const { right, left } = this.racalvinHandWorld();
+    this.vfx.hotHandsArcane(right, left, burst ? 1.15 : 0.78, burst);
+  }
+
+  /**
    * Equip a weapon: swap the animation set (per rig) AND mount the real GLB
    * model onto the hand bones. A token guards against overlapping async loads,
    * and a character-swap check prevents a stale mount landing on a new rig.
@@ -1916,8 +2130,13 @@ export class Studio {
     // Swap the rig's animation set (procedural Explorer maps id -> animSet clips;
     // the GLB Character has no clip-swap and ignores this).
     this.character?.setWeaponId?.(id);
-    // Explorer skill tree: rebind HUD 1–4 + VFX kinds to T0 / master-weaponSkills kit.
-    if (this.character instanceof ExplorerCharacter || this.character?.def?.procedural) {
+    // Skill tree: rebind HUD 1–4 + VFX kinds to T0 / master-weaponSkills kit.
+    // Grudge6 + Explorer + procedural all need live skill options on weapon change.
+    if (
+      this.character instanceof ExplorerCharacter ||
+      this.character instanceof GrudgeAvatar ||
+      this.character?.def?.procedural
+    ) {
       const t0 = t0SignatureSkills(id);
       if (t0.length && this.character?.def) {
         this.character.def.signatureSkills = t0.map((s) => ({
@@ -1943,6 +2162,11 @@ export class Studio {
     const leftHand = character?.leftHand;
     if (!character || !rightHand || !leftHand) return;
     if (getCharacter(this.characterId).weaponless) return; // martial artist: no weapon
+
+    // Living twin swords replace hand mounts for Racalvin (gunslinger)
+    if (this.characterId === "gunslinger" && this.livingSwords) {
+      return;
+    }
 
     // uMMORPG / grudge6 kit path: handheld weapons already live as child meshes
     // on the race FBX (mesh_ids / gear preset). Mounting a second arsenal GLB
@@ -2347,6 +2571,11 @@ export class Studio {
     // Broadcast a swing so remote clients animate this player's attack.
     if (this.net?.roomCode) {
       this.net.sendCombat({ k: "attack", from: this.net.selfId, action: "attack" });
+    }
+    // Racalvin: living twin swords slash (floating animated blades)
+    if (this.characterId === "gunslinger" && this.livingSwords) {
+      this.doLivingSwordStrike("thrust_slash");
+      return;
     }
     const def = getCharacter(this.characterId);
     if (def.meleeStyle === "kick") {
@@ -5309,6 +5538,23 @@ export class Studio {
       const clip = override ?? sig?.clip;
       // Nothing assigned to this slot and no native signature — no-op.
       if (!clip && !sig && !t0) return false;
+      // Racalvin living swords — per-slot combat modes
+      if (this.characterId === "gunslinger" && this.livingSwords) {
+        const si = signatureIndex!;
+        if (si === 0) {
+          this.doLivingSwordStrike(clip || "thrust_slash");
+        } else if (si === 1) {
+          this.doLivingSwordSpinAoe();
+        } else if (si === 3 || (sig?.kind as string) === "fireTornado") {
+          if (!this.doLivingSwordTornadoSkill()) return false;
+          return true;
+        } else {
+          this.doLivingSwordStrike(clip || "spartan_kick");
+        }
+        const cd = Math.max(0.8, t0?.cooldown ?? (si === 1 ? 2.2 : 1.6));
+        this.armSigSlot(si, cd, 16);
+        return true;
+      }
       const dur = clip && this.character.hasClip(clip) ? this.character.playClipOnce(clip, 0.12) : 0;
       const kind = t0?.kind ?? sig?.kind ?? "slash";
       const mode = t0?.mode ?? sig?.mode;
@@ -9869,6 +10115,35 @@ export class Studio {
       }
     }
     this.character?.update(dt);
+    // Living twin swords: orbit while moving, sheathe when idle, animate strikes
+    if (this.livingSwords) {
+      let sp = 0;
+      const c = this.controller as unknown as {
+        velocity?: THREE.Vector3;
+        grounded?: boolean;
+        isMoving?: () => boolean;
+        state?: { speed?: number };
+      } | null;
+      if (c?.state && typeof c.state.speed === "number") sp = c.state.speed;
+      else if (c?.velocity) sp = Math.hypot(c.velocity.x, c.velocity.z);
+      else if (typeof c?.isMoving === "function") sp = c.isMoving() ? 1 : 0;
+      // Input WASD also counts as "moving" for orbit style
+      if (sp < 0.05 && this.input) {
+        const inp = this.input as { keys?: Record<string, boolean> };
+        const k = inp.keys || {};
+        if (k.KeyW || k.KeyA || k.KeyS || k.KeyD || k.ArrowUp || k.ArrowDown) sp = 1;
+      }
+      this.livingSwords.moving = sp > 0.08;
+      this.livingSwords.update(dt);
+    }
+    // Racalvin: continuous green/purple hot-hands on both palms (idle smolder)
+    if (this.characterId === "gunslinger" && this.character) {
+      this.racalvinHandFxT -= dt;
+      if (this.racalvinHandFxT <= 0) {
+        this.racalvinHandFxT = 0.14;
+        this.pulseRacalvinHotHands(false);
+      }
+    }
     // Step the Rapier physics core (dungeon/arena colliders + dynamic props).
     this.physics?.step(dt);
     // Drive the sparring opponents with the live player position + damage hooks.
@@ -11392,7 +11667,14 @@ export class Studio {
       if (this.tumbleActive || this.recoverLock > 0.2) this.smashRecover();
       else this.tryJumpWithStamina();
     }
-    else if (code === "KeyR") this.doHeavyAttack();
+    else if (code === "KeyR") {
+      // Racalvin: R = Keeper Tornados (spin → fire tornado projectiles)
+      if (this.characterId === "gunslinger" && this.livingSwords) {
+        this.doLivingSwordTornadoSkill();
+      } else {
+        this.doHeavyAttack();
+      }
+    }
     else if (code === "KeyF") {
       // Guns: F starts hold-charge / reload on release (see updateGunInput).
       // Crossbow: F = charged magical bolt.

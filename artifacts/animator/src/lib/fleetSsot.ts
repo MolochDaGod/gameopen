@@ -44,6 +44,12 @@ export type FleetCatalogKey = keyof typeof FLEET_CATALOGS;
 /**
  * Ordered definition hosts. First live host wins at runtime via
  * {@link fetchCatalogJson}.
+ *
+ * Probed 2026-07-27:
+ *  - `info…/content/*` + Open same-origin `/content/*` → 200 (gear presets, etc.)
+ *  - `info…/api/v1/*` → 200 for materials/weapons; **404** for grudge6-gear-presets
+ *  - `assets…/content/*` → 200 mirror for gear presets
+ * Prefer `/content` before `/api/v1` so lobby does not paint a red 404 first.
  */
 export function definitionBaseCandidates(): string[] {
   const env = (import.meta.env?.VITE_OBJECTSTORE_URL as string | undefined)?.replace(
@@ -52,27 +58,27 @@ export function definitionBaseCandidates(): string[] {
   );
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const list = [
-    // Same-origin static content (ships with SPA — always CSP-safe)
+    // Same-origin first (vercel /content rewrite + any SPA-shipped catalogs)
     origin ? `${origin}/content` : "",
-    origin ? `${origin}/api/v1` : "",
-    // Same-origin proxy (vercel.json → info or objectstore)
-    origin ? `${origin}/api/objectstore/v1` : "",
-    // Env override
-    env || "",
-    // Live SSOT (2026-07)
+    // info content mount (gear presets live here — not under /api/v1)
+    "https://info.grudge-studio.com/content",
+    // R2 content mirror
+    "https://assets.grudge-studio.com/content",
+    // Classic definitions API (materials, weapons, master-*)
     FLEET.definitions,
-    // Legacy public name (often 404 — after info)
+    origin ? `${origin}/api/v1` : "",
+    origin ? `${origin}/api/objectstore/v1` : "",
+    env || "",
+    // Legacy public name (often 404 — last)
     FLEET.objectStoreLegacy,
-    // NOTE: molochdagod.github.io ObjectStore is blocked by Open CSP connect-src —
-    // never add it; causes console spam + failed fetch.
   ];
   return [...new Set(list.filter(Boolean))];
 }
 
 /** Absolute URL for a catalog file under the primary definitions host. */
 export function contentUrl(path: string): string {
-  const base = FLEET.definitions.replace(/\/$/, "");
-  return `${base}/${path.replace(/^\//, "")}`;
+  // Prefer content mount — gear presets and most lobby catalogs resolve here.
+  return `https://info.grudge-studio.com/content/${path.replace(/^\//, "")}`;
 }
 
 /** All candidate URLs for a catalog path (for resilient fetch). */
@@ -80,6 +86,9 @@ export function contentCandidates(path: string): string[] {
   const clean = path.replace(/^\//, "");
   return definitionBaseCandidates().map((b) => `${b.replace(/\/$/, "")}/${clean}`);
 }
+
+/** Session dead catalog URLs — avoid re-probing same-origin 404s after info hits. */
+const _deadCatalogUrls = new Set<string>();
 
 /** Fetch first successful catalog JSON (CORS). */
 export async function fetchCatalogJson<T = unknown>(
@@ -91,14 +100,21 @@ export async function fetchCatalogJson<T = unknown>(
       ? FLEET_CATALOGS[pathOrKey as FleetCatalogKey]
       : String(pathOrKey).replace(/^\//, "");
   for (const url of contentCandidates(path)) {
+    if (_deadCatalogUrls.has(url)) continue;
     try {
       const r = await fetch(url, { mode: "cors", ...init });
-      if (!r.ok) continue;
+      if (!r.ok) {
+        if (r.status === 404 || r.status === 410) _deadCatalogUrls.add(url);
+        continue;
+      }
       const ct = (r.headers.get("content-type") || "").toLowerCase();
-      if (ct.includes("text/html")) continue;
+      if (ct.includes("text/html")) {
+        _deadCatalogUrls.add(url);
+        continue;
+      }
       return (await r.json()) as T;
     } catch {
-      /* next host */
+      /* next host — network errors may be transient; do not mark dead */
     }
   }
   console.warn(`[fleetSsot] catalog miss: ${path}`);

@@ -608,6 +608,14 @@ export class Controller {
     this.waterBand = NO_WATER_BAND;
   }
 
+  /**
+   * Terrain / mesh height sampler for feet + edge probes (L0 SSOT).
+   * Return metres Y or null when no ground (void).
+   */
+  setGroundHeightAt(fn: ((x: number, z: number) => number | null) | null) {
+    this.groundHeightAt = fn;
+  }
+
   /** True while the body's feet are within the active water band. */
   isInWater(): boolean {
     return isInWaterBand(this.character.root.position.y, this.waterBand);
@@ -1710,9 +1718,12 @@ export class Controller {
       !(this.animDirector?.isOverridePlaying)
     ) {
       if (this.character.setLocomotion) {
-        // Weight-blended path (GLB Character): one continuous speed eases the
-        // idle/walk/run weights — no discrete role swap or rate hack needed.
-        this.character.setLocomotion(this.smoothedSpeed);
+        // Speed 0..1 + explicit sprint flag so grudge6 uses run-clone @ 1.75×
+        // (never locomotion/running roll). GLB Character ignores sprint flag.
+        this.character.setLocomotion(this.smoothedSpeed, sprinting);
+      } else if (sprinting && this.character.hasRole("sprint")) {
+        this.character.playRole("sprint");
+        this.character.setLocomotionRate(1.75);
       } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
         this.character.playRole("run");
         this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);

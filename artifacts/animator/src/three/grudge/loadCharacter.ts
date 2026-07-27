@@ -249,10 +249,16 @@ export function applyBodyTexture(group: THREE.Object3D, texture: THREE.Texture):
     metalness: 0,
     roughness: 0.75,
     side: THREE.DoubleSide,
+    vertexColors: false,
+    envMapIntensity: 0.35,
   });
+  // Toon RTS atlas is authored for FBX UV layout; force white tint so atlas colors show.
   group.traverse((node) => {
     if (node instanceof THREE.Mesh || node instanceof THREE.SkinnedMesh) {
       node.material = material;
+      node.castShadow = true;
+      node.receiveShadow = true;
+      if (node instanceof THREE.SkinnedMesh) node.frustumCulled = false;
     }
   });
   return material;

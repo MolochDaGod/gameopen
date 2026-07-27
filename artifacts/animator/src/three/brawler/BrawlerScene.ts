@@ -40,6 +40,13 @@ import {
   softLoadContentCatalog,
   type ContentCatalogOverlay,
 } from "./combatLoadout";
+import {
+  createTerrainHeightSampler,
+  meshToWorldTrimesh,
+  scaleMapToSi,
+  SurvivalWaterLayer,
+} from "./survivalEnvironment";
+import { ensureHumanScale } from "../characterDeploy";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYER_MAX_HP = 150;
@@ -264,6 +271,10 @@ export class BrawlerScene {
   private maxEnemies = ENEMY_MAX;
   private spawnInterval = SPAWN_INTERVAL;
   private initialSpawnCount = 4;
+  /** Agama / large maps: terrain height + water layers */
+  private waterLayer: SurvivalWaterLayer | null = null;
+  private terrainHeightAt: ((x: number, z: number) => number | null) | null = null;
+  private mapRoot: THREE.Object3D | null = null;
 
   constructor(canvas: HTMLCanvasElement, onState: StateCb, opts: BrawlerSceneOptions = {}) {
     this.canvas = canvas;
@@ -562,11 +573,14 @@ export class BrawlerScene {
    * Final guard: if the loaded avatar is wildly off 1.8 m (e.g. residual 100×
    * unit bug), re-fit the visual model under the avatar root.
    * SSOT: three/characterDeploy.ensureHumanScale (Y-up / XZ ground).
+   * Synchronous so the first frame is already SI-correct vs the map.
    */
   private ensureAvatarHumanScale(av: Avatar): void {
-    void import("../characterDeploy").then(({ ensureHumanScale }) => {
+    try {
       ensureHumanScale(av.root, PLAYER_HEIGHT_M);
-    });
+    } catch (err) {
+      console.warn("[BrawlerScene] ensureHumanScale failed", err);
+    }
   }
 
   /** Wire Danger Room Controller to the loaded Avatar. */
@@ -579,6 +593,15 @@ export class BrawlerScene {
     if (this.arenaColliders.length) {
       this.controller.setCameraOccluders(this.arenaColliders);
     }
+    // Re-apply terrain / water after controller recreate (map may load first)
+    if (this.terrainHeightAt) {
+      this.controller.setGroundHeightAt(this.terrainHeightAt);
+    }
+    if (this.waterLayer) {
+      const wy = this.waterLayer.waterY;
+      this.controller.setWaterBand(wy + 0.05, wy - 2.2);
+    }
+    this.snapPlayerToTerrain();
   }
 
   /** T0 weapon skills (+ optional content API labels) — Danger Room kit. */
@@ -740,97 +763,6 @@ export class BrawlerScene {
     }
   }
 
-  /**
-   * Scale arena GLB into metres relative to a 1.8 m player.
-   * Handles cm-authored maps (100×) and oversized pads without shrinking
-   * doors/props smaller than a human.
-   */
-  private scaleMapToPlayer(root: THREE.Object3D): { half: number; unitScale: number } {
-    const playerH = PLAYER_HEIGHT_M; // 1.8 m
-    root.scale.set(1, 1, 1);
-    root.position.set(0, 0, 0);
-    root.updateMatrixWorld(true);
-
-    let box = new THREE.Box3().setFromObject(root);
-    let size = box.getSize(new THREE.Vector3());
-    let maxXZ = Math.max(size.x, size.z) || 1;
-    let height = size.y || 1;
-
-    // Decade unit fix: cm scenes often report XZ thousands / height hundreds
-    let unitScale = 1;
-    if (maxXZ > 500 || height > 100) {
-      // e.g. 180 cm character authoring → treat scene as cm
-      unitScale = 0.01;
-    } else if (maxXZ > 80 && height > 40 && height / playerH > 25) {
-      // Borderline: very tall "buildings" relative to human → likely cm
-      unitScale = 0.01;
-    } else if (maxXZ < 0.5 && height < 0.5) {
-      unitScale = 100;
-    }
-    if (unitScale !== 1) {
-      root.scale.setScalar(unitScale);
-      root.updateMatrixWorld(true);
-      box = new THREE.Box3().setFromObject(root);
-      size = box.getSize(new THREE.Vector3());
-      maxXZ = Math.max(size.x, size.z) || 1;
-      height = size.y || 1;
-    }
-
-    // Playable footprint vs 1.8 m human:
-    //  - too huge (> ~120 m span) → shrink so half-extent ≈ 40–50 m
-    //  - too tiny (< ~20 m span) → enlarge so half-extent ≈ 25 m
-    const span = maxXZ;
-    const TARGET_SPAN = 90; // full width metres — roomy for survival waves
-    const MIN_SPAN = 24;
-    let playScale = 1;
-    if (span > TARGET_SPAN * 1.35) {
-      playScale = TARGET_SPAN / span;
-    } else if (span < MIN_SPAN) {
-      playScale = MIN_SPAN / span;
-    }
-    // Don't squash vertical props: if height after unit fix is already human
-    // scale (doors ~2–3 m), avoid further shrink below ~0.4
-    if (playScale < 1 && height * playScale < playerH * 1.2 && height < playerH * 8) {
-      playScale = Math.max(playScale, (playerH * 2.2) / Math.max(height, playerH));
-    }
-    if (Math.abs(playScale - 1) > 0.02) {
-      root.scale.multiplyScalar(playScale);
-      unitScale *= playScale;
-      root.updateMatrixWorld(true);
-      box = new THREE.Box3().setFromObject(root);
-      size = box.getSize(new THREE.Vector3());
-      maxXZ = Math.max(size.x, size.z) || 1;
-    }
-
-    // Center XZ, feet of terrain at y=0
-    const b2 = new THREE.Box3().setFromObject(root);
-    const c2 = b2.getCenter(new THREE.Vector3());
-    root.position.x -= c2.x;
-    root.position.z -= c2.z;
-    root.position.y -= b2.min.y;
-    root.updateMatrixWorld(true);
-
-    const finalBox = new THREE.Box3().setFromObject(root);
-    const finalSize = finalBox.getSize(new THREE.Vector3());
-    const finalHalf = Math.max(finalSize.x, finalSize.z) * 0.5;
-
-    console.info(
-      "[BrawlerScene] map scale unit=",
-      unitScale.toFixed(4),
-      "playerH=",
-      playerH,
-      "span=",
-      finalSize.x.toFixed(1),
-      "×",
-      finalSize.z.toFixed(1),
-      "h=",
-      finalSize.y.toFixed(1),
-      "m",
-    );
-
-    return { half: finalHalf, unitScale };
-  }
-
   private async loadEnvironment() {
     const paths = [this.mapPath];
     // Fallback chain: requested map → classic ruins → none
@@ -842,18 +774,26 @@ export class BrawlerScene {
         const gltf = await this.loadGltf(path);
         if (this.disposed) return;
         const root = gltf.scene;
-        const { half } = this.scaleMapToPlayer(root);
-        // Auto-fit spawn ring to ~42% of map half-extent (clamped for 1.8 m play)
+        this.mapRoot = root;
+
+        // SI calibration (100× / Sketchfab / tiny maps) + terrain/water layers
+        const scaled = scaleMapToSi(root, {
+          targetSpanM: path.includes("agama") ? 120 : 90,
+          mapKey: path,
+        });
+        const half = scaled.half;
+
+        // Auto-fit spawn ring to map footprint
         if (half > 8) {
-          const autoSpawn = Math.min(70, Math.max(14, half * 0.42));
+          const autoSpawn = Math.min(70, Math.max(16, half * 0.4));
           if (this.spawnRadius <= SPAWN_RADIUS + 0.01) {
             this.spawnRadius = autoSpawn;
           }
         }
-        // Room bound tracks playable footprint
-        const bound = Math.max(18, Math.min(80, half * 0.95));
+        const bound = Math.max(22, Math.min(90, half * 0.92));
         this.controller?.setRoomBound(bound);
 
+        // Materials + shadows
         const occluders: THREE.Object3D[] = [];
         root.traverse((o) => {
           const m = o as THREE.Mesh;
@@ -861,18 +801,49 @@ export class BrawlerScene {
           m.castShadow = true;
           m.receiveShadow = true;
           m.frustumCulled = true;
-          m.userData.physicsLayer = "terrain";
           occluders.push(m);
           const mats = Array.isArray(m.material) ? m.material : [m.material];
           for (const mm of mats) {
             const std = mm as THREE.MeshStandardMaterial;
-            if (std?.map) std.map.colorSpace = THREE.SRGBColorSpace;
+            if (std?.map) {
+              std.map.colorSpace = THREE.SRGBColorSpace;
+              std.map.anisotropy = Math.max(std.map.anisotropy || 1, 4);
+            }
+            // Hide original water planes — SurvivalWaterLayer replaces them
+            if (m.userData.terrainLayer === "water") {
+              m.visible = false;
+            }
           }
         });
+
         this.scene.add(root);
         this.arenaColliders = occluders;
         this.controller?.setCameraOccluders(occluders);
-        void this.bakeArenaTrimesh(root);
+
+        // L0 height sampler from terrain surface meshes
+        const terrainForRay =
+          scaled.terrainMeshes.length > 0
+            ? scaled.terrainMeshes
+            : (occluders.filter((o) => (o as THREE.Mesh).isMesh) as THREE.Mesh[]);
+        this.terrainHeightAt = createTerrainHeightSampler(terrainForRay);
+        this.controller?.setGroundHeightAt(this.terrainHeightAt);
+
+        // Water layer + buoyancy band
+        if (scaled.waterY != null || path.includes("agama")) {
+          const wy = scaled.waterY ?? 0.35;
+          this.waterLayer?.dispose();
+          this.waterLayer = new SurvivalWaterLayer(Math.max(40, half * 1.1), wy);
+          this.scene.add(this.waterLayer.group);
+          // Wade/swim band around water surface (Controller SurfaceLocomotion)
+          this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
+        }
+
+        // Physics: multi-mesh terrain colliders (game mechanics)
+        void this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
+
+        // Snap player feet to terrain at spawn if already built
+        this.snapPlayerToTerrain();
+
         console.info(
           "[BrawlerScene] map loaded:",
           path,
@@ -882,6 +853,8 @@ export class BrawlerScene {
           half.toFixed(1),
           "player=",
           `${PLAYER_HEIGHT_M}m`,
+          "unit=",
+          scaled.unitScale.toFixed(5),
         );
         return;
       } catch (err) {
@@ -892,44 +865,53 @@ export class BrawlerScene {
     this.buildFallbackGround();
   }
 
-  /** Optional static layer: extract first large mesh into Rapier trimesh. */
-  private async bakeArenaTrimesh(root: THREE.Object3D) {
+  /** Rapier trimeshes for terrain + large props (not a single mesh only). */
+  private async bakeTerrainColliders(
+    terrain: THREE.Mesh[],
+    props: THREE.Mesh[],
+  ) {
     const phys = this.physics;
     if (!phys?.world) return;
-    try {
-      let best: THREE.Mesh | null = null;
-      let bestVerts = 0;
-      root.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (!m.isMesh || !m.geometry) return;
-        const pos = m.geometry.getAttribute("position");
-        if (pos && pos.count > bestVerts) {
-          bestVerts = pos.count;
-          best = m;
-        }
-      });
-      if (!best || bestVerts < 12) return;
-      const mesh = best as THREE.Mesh;
-      mesh.updateWorldMatrix(true, false);
-      const geo = mesh.geometry.index
-        ? mesh.geometry.toNonIndexed()
-        : mesh.geometry;
-      const posAttr = geo.getAttribute("position");
-      if (!posAttr) return;
-      const verts = new Float32Array(posAttr.count * 3);
-      const v = new THREE.Vector3();
-      for (let i = 0; i < posAttr.count; i++) {
-        v.fromBufferAttribute(posAttr, i).applyMatrix4(mesh.matrixWorld);
-        verts[i * 3] = v.x;
-        verts[i * 3 + 1] = v.y;
-        verts[i * 3 + 2] = v.z;
+    let baked = 0;
+    // Top terrain surfaces by footprint
+    const terrainPick = [...terrain]
+      .sort((a, b) => footprint(b) - footprint(a))
+      .slice(0, 8);
+    for (const m of terrainPick) {
+      const tri = meshToWorldTrimesh(m, 10000);
+      if (!tri) continue;
+      try {
+        phys.addStaticTrimesh(tri.verts, tri.indices);
+        baked++;
+      } catch {
+        /* skip bad mesh */
       }
-      const indices = new Uint32Array(posAttr.count);
-      for (let i = 0; i < posAttr.count; i++) indices[i] = i;
-      phys.addStaticTrimesh(verts, indices);
-      console.info("[BrawlerScene] arena trimesh layer:", posAttr.count, "verts");
-    } catch (err) {
-      console.warn("[BrawlerScene] arena trimesh bake skipped", err);
+    }
+    // Large props as simplified collision (walls, buildings)
+    const propPick = [...props]
+      .filter((m) => footprint(m) > 12)
+      .sort((a, b) => footprint(b) - footprint(a))
+      .slice(0, 10);
+    for (const m of propPick) {
+      const tri = meshToWorldTrimesh(m, 4000);
+      if (!tri) continue;
+      try {
+        phys.addStaticTrimesh(tri.verts, tri.indices);
+        baked++;
+      } catch {
+        /* skip */
+      }
+    }
+    console.info("[BrawlerScene] terrain/prop colliders baked:", baked);
+  }
+
+  /** Place player feet on terrain height at current XZ. */
+  private snapPlayerToTerrain(): void {
+    if (!this.terrainHeightAt || !this.avatar) return;
+    const p = this.avatar.root.position;
+    const y = this.terrainHeightAt(p.x, p.z);
+    if (y != null && Number.isFinite(y)) {
+      p.y = y;
     }
   }
 
@@ -942,6 +924,7 @@ export class BrawlerScene {
     g.receiveShadow = true;
     g.userData.physicsLayer = "terrain";
     this.scene.add(g);
+    this.controller?.setGroundHeightAt(() => 0);
   }
 
   private async initNetwork() {
@@ -1478,11 +1461,22 @@ export class BrawlerScene {
     this.dashCd = Math.max(0, this.dashCd - dt);
     for (const s of this.skills) s.cd = Math.max(0, s.cd - dt);
 
+    // Water surface animation (Agama / survival)
+    this.waterLayer?.update(dt);
+
     if (this.phase === "playing") {
       // Canonical controller: camera + WASD + gravity + loco weights
       if (this.controller) {
         this.controller.update(dt);
         this.moving = this.controller.state.speed > 0.15;
+        // Soft plant feet on terrain heightfield when grounded (L0 SSOT)
+        if (this.terrainHeightAt && this.controller.state.grounded && this.avatar) {
+          const p = this.avatar.root.position;
+          const ty = this.terrainHeightAt(p.x, p.z);
+          if (ty != null && Math.abs(p.y - ty) < 2.5) {
+            p.y = THREE.MathUtils.lerp(p.y, ty, 0.35);
+          }
+        }
       } else if (this.fallbackModel) {
         // Minimal fallback if Controller couldn't bind
         this.fallbackModel.position.y =
@@ -1716,6 +1710,10 @@ export class BrawlerScene {
 
   dispose() {
     this.disposed = true;
+    this.waterLayer?.dispose();
+    this.waterLayer = null;
+    this.controller?.setGroundHeightAt(null);
+    this.controller?.clearWaterBand();
     cancelAnimationFrame(this.raf);
     this.ro?.disconnect();
     window.removeEventListener("keydown", this.onKeyDown);
@@ -1765,6 +1763,13 @@ function isDescendant(obj: THREE.Object3D, root: THREE.Object3D): boolean {
     p = p.parent;
   }
   return false;
+}
+
+/** Mesh XZ footprint (m²) for collider prioritization. */
+function footprint(m: THREE.Mesh): number {
+  const b = new THREE.Box3().setFromObject(m);
+  const s = b.getSize(new THREE.Vector3());
+  return Math.max(0, s.x) * Math.max(0, s.z);
 }
 
 /** Stamp uMMORPG EntityPrefab combat + identity onto a template / spawn root. */

@@ -41,11 +41,7 @@ export const STORM_SHIP_ASSETS = {
     "models/racalvin.glb",
     "models/karate-boss.glb",
     "models/orc.glb",
-    "models/introgamer.glb",
-    "models/landing/astrocreeper.glb",
-    "models/astrocreeper.glb",
-    "models/karate-boss.glb",
-    "models/orc.glb",
+    "models/skeleton-warrior.glb",
   ],
 } as const;
 

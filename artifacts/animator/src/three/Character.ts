@@ -134,12 +134,18 @@ export class Character {
    * own animations even when its export uses non-standard clip names.
    */
   private autoMapClips() {
+    /** Never auto-map roll / dodge / run-to-roll as walk or run. */
+    const badLoco = (n: string) =>
+      /roll|dodge|tumble|somersault|cartwheel|run[-_\s]?to[-_\s]?roll|running[-_\s]?roll|roll[-_\s]?run|quick[_\s-]?roll/i.test(
+        n,
+      );
     const roleKeywords: [AnimRole, RegExp][] = [
       ["idle", /idle|idol|breath|stand/i],
       ["walk", /walk|stroll/i],
-      ["run", /\brun\b|running|sprint|jog/i],
+      // Prefer exact "run" / "sprint" / "jog" — not bare "running" (often run-to-roll)
+      ["run", /(?:^|[\s_|.-])(run|sprint|jog)(?:$|[\s_|.-])/i],
       ["attack", /attack|slash|strike|punch|kick|swing|combat|melee|\bhit\b|chop|stab/i],
-      ["jump", /jump|leap|flip|vault/i],
+      ["jump", /jump|leap|vault/i], // drop "flip" — often acrobatic one-shots
       ["death", /death|die|dead|defeat|ko\b/i],
       ["hurt", /hurt|damage|flinch|stagger|impact|recoil/i],
       ["block", /block|guard|parry|defen[cs]e|shield/i],
@@ -147,7 +153,14 @@ export class Character {
     const names = [...this.actions.keys()];
     for (const [role, re] of roleKeywords) {
       if (this.roleClip.has(role)) continue;
-      const found = names.find((n) => re.test(n));
+      const pool =
+        role === "walk" || role === "run" || role === "sprint"
+          ? names.filter((n) => !badLoco(n))
+          : names;
+      // Prefer shorter / exact names (e.g. "run" over "Sword_And_Shield_Run_Attack")
+      const candidates = pool.filter((n) => re.test(n));
+      candidates.sort((a, b) => a.length - b.length);
+      const found = candidates[0];
       if (found) this.roleClip.set(role, found);
     }
     // Guarantee a base idle, and cross-fill locomotion so movement always reads.
@@ -157,6 +170,10 @@ export class Character {
     }
     if (!this.roleClip.has("run") && this.roleClip.has("walk")) {
       this.roleClip.set("run", this.roleClip.get("walk")!);
+    }
+    // Sprint role: never invent from roll clips — alias run (Controller speeds it)
+    if (!this.roleClip.has("sprint") && this.roleClip.has("run")) {
+      this.roleClip.set("sprint", this.roleClip.get("run")!);
     }
   }
 
@@ -292,9 +309,12 @@ export class Character {
    * characters (NPC/editor rigs that never call this keep the discrete path).
    * The blend yields automatically to one-shots via collapse-to-dominant.
    */
-  setLocomotion(speed: number) {
+  setLocomotion(speed: number, _sprinting = false) {
     this.blendActive = true;
-    this.locoSpeed = THREE.MathUtils.clamp(speed, 0, 1);
+    // GLB blend tree is idle/walk/run only; sprint raises intensity toward run.
+    // (GrudgeAvatar uses the sprint flag for a dedicated 1.75× run clone.)
+    const s = THREE.MathUtils.clamp(speed, 0, 1);
+    this.locoSpeed = _sprinting ? Math.max(s, 0.95) : s;
   }
 
   /** Play a one-shot clip by exact name; returns its duration (sec) or 0. */

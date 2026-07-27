@@ -17,10 +17,12 @@
 | mage | magic | Standing Walk Forward | Standing Run Forward |
 | knight | sword_shield | Standing Walk Forward | sword and shield run |
 | ranger | longbow | standing walk forward | standing run forward |
-| warrior | polearm | polearm/walk | polearm/run |
+| warrior | polearm | Standing Walk Forward | torch run forward |
 | (+ unarmed traveler) | unarmed | Standing Walk Forward | torch run forward |
 
-Sprint is **never** a separate roll clip — it is `run` cloned at **1.75×**.
+**Polearm note:** Madarame `polearm/walk` + `polearm/run` are ~5s full takes (not stride cycles). Gait uses standing/torch cycles; polearm attack/skills stay Madarame.
+
+Sprint is **never** a separate roll clip — it is `run` cloned at **1.75×**. Controller passes explicit `sprinting` into `setLocomotion(speed, sprinting)`.
 
 ## Code SSOT
 

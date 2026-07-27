@@ -21,6 +21,12 @@ import {
   voxelAvatarToLook,
   VOXEL_AVATAR_EVENT,
 } from "../explorer/voxelAvatarSave";
+import {
+  AVATAR_HEAD_EVENT,
+  LOBBY_SEAT_RACES,
+  resolveLobbySeatAvatar,
+} from "../avatar/playerHead";
+import { skinToneOf } from "../avatar/catalog";
 
 export interface CampfireSlotView {
   index: number;
@@ -91,6 +97,8 @@ export class CampfireLobbyScene {
   private envRoot = new THREE.Group();
   private lastHeroes: GenesisHeroOption[] = [];
   private keyLight: THREE.DirectionalLight | null = null;
+  /** Bumps on each setHeroes to cancel stale async loads. */
+  private heroGen = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -141,14 +149,20 @@ export class CampfireLobbyScene {
     this.ro.observe(canvas);
     canvas.addEventListener("pointerdown", this.onPointerDown);
     window.addEventListener(VOXEL_AVATAR_EVENT, this.onAvatarSaved);
+    window.addEventListener(AVATAR_HEAD_EVENT, this.onAvatarSaved);
 
     this.animate = this.animate.bind(this);
     this.raf = requestAnimationFrame(this.animate);
   }
 
-  /** Load up to 4 roster heroes as Explorer rigs around the fire. */
+  /**
+   * Always fill **4 seat locations** with voxel Explorer rigs.
+   * Roster heroes bind when present; empty seats still show race mannequins
+   * using Avatar Edit heads (per-slot / race builds / defaults).
+   */
   async setHeroes(heroes: GenesisHeroOption[]): Promise<void> {
     if (this.disposed) return;
+    const gen = ++this.heroGen;
     this.lastHeroes = heroes.slice(0, 4);
     for (let i = 0; i < 4; i++) {
       const prev = this.heroes[i];
@@ -159,33 +173,51 @@ export class CampfireLobbyScene {
       }
     }
     for (let i = 0; i < 4; i++) {
+      if (this.disposed || gen !== this.heroGen) return;
       const hero = heroes[i] ?? null;
-      this.updateLabel(i, hero?.name ?? (i === 0 ? "Empty seat" : "—"));
-      if (!hero) continue;
+      const raceKey =
+        (hero ? baseIdToRaceKey(hero.baseId) || hero.raceKey : null) ||
+        LOBBY_SEAT_RACES[i] ||
+        "human";
+      const label = hero?.name ?? `Seat ${i + 1}`;
+      this.updateLabel(i, hero ? label : `Empty · ${i + 1}`);
       try {
-        const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
-        const saved = loadVoxelAvatarForCharacter(hero.id || null);
+        const avatarCfg = resolveLobbySeatAvatar(i, {
+          characterId: hero?.id ?? null,
+          raceKey,
+        });
+        const skinHex = `#${skinToneOf(avatarCfg).toString(16).padStart(6, "0")}`;
+        const saved = hero ? loadVoxelAvatarForCharacter(hero.id || null) : null;
         let look: CharacterLook = {
-          skin: "#c98c5a",
           shirt: "#c0392b",
           pants: "#2e3440",
           hat: "none",
           hatColor: "#b03030",
-          avatarHead: true,
           ...LOOK_RACES[raceKey],
+          // Avatar Edit head + skin override race kit defaults
+          skin: skinHex,
+          avatarHead: true,
+          avatarConfig: avatarCfg,
         };
         let parts: Partial<Record<VoxelPart, string>> | null = null;
         if (saved) {
-          look = { ...look, ...voxelAvatarToLook(saved) };
+          look = {
+            ...look,
+            ...voxelAvatarToLook(saved),
+            avatarHead: true,
+            avatarConfig: avatarCfg,
+          };
           parts = partOverridesFromSave(saved);
         }
+        // Empty seats: soft idle mannequin; filled: sword pose
+        const weapon = hero ? "sword" : "unarmed";
         const anim = await createAnimatedCharacter({
           height: CHARACTER_HEIGHT_M * 0.92,
-          weapon: "sword",
+          weapon,
           look,
-          classes: ["unarmed", "sword"],
+          classes: hero ? ["unarmed", "sword"] : ["unarmed"],
         });
-        if (this.disposed) {
+        if (this.disposed || gen !== this.heroGen) {
           anim.dispose();
           return;
         }
@@ -194,14 +226,26 @@ export class CampfireLobbyScene {
             if (hex) anim.character.setPartColor(part as VoxelPart, hex);
           }
         }
-        anim.setWeapon("sword", true);
+        anim.setWeapon(weapon, true);
         anim.root.position.set(0, 0, 0);
         anim.root.rotation.y = Math.PI;
+        // Dim empty mannequins slightly so filled heroes read as primary
+        if (!hero) {
+          anim.root.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!m.isMesh) return;
+            const mat = m.material as THREE.MeshStandardMaterial;
+            if (mat && "opacity" in mat) {
+              mat.transparent = true;
+              mat.opacity = 0.78;
+            }
+          });
+        }
         const seat = this.seats[i]!;
         seat.add(anim.root);
         this.heroes[i] = anim;
       } catch (err) {
-        console.warn("[CampfireLobby] hero load failed", hero.name, err);
+        console.warn("[CampfireLobby] seat load failed", i, hero?.name ?? "empty", err);
       }
     }
     this.setSelected(this.selected);
@@ -228,6 +272,7 @@ export class CampfireLobbyScene {
     cancelAnimationFrame(this.raf);
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     window.removeEventListener(VOXEL_AVATAR_EVENT, this.onAvatarSaved);
+    window.removeEventListener(AVATAR_HEAD_EVENT, this.onAvatarSaved);
     this.ro?.disconnect();
     for (const h of this.heroes) h?.dispose();
     this.heroes = [null, null, null, null];
@@ -241,7 +286,8 @@ export class CampfireLobbyScene {
   // ── private ────────────────────────────────────────────────────────────
 
   private onAvatarSaved = (): void => {
-    if (this.lastHeroes.length) void this.setHeroes(this.lastHeroes);
+    // Re-paint all 4 seats when Avatar Edit saves (slot or global)
+    void this.setHeroes(this.lastHeroes);
   };
 
   private buildEnvironment(): void {

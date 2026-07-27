@@ -8,6 +8,8 @@ export type AnimRole =
   | "idle"
   | "walk"
   | "run"
+  /** Sprint gait — always a clone of pack `run` @ SPRINT_LOCO_MULT, never roll. */
+  | "sprint"
   | "attack"
   | "jump"
   | "death"
@@ -912,11 +914,12 @@ export interface Avatar {
   setLocomotionRate(rate: number): void;
   readonly isOneShotActive: boolean;
   /**
-   * GLB `Character` only: push a continuous 0..1 movement intensity to the
-   * weight-blended locomotion layer (idle/walk/run eased by speed). When present
-   * it replaces the discrete {@link playRole}/{@link setLocomotionRate} loco path.
+   * Push continuous locomotion. `speed` is 0..1 movement intensity.
+   * `sprinting` (Shift / touch sprint) selects the sprint role (run clone @ 1.75×)
+   * on grudge6 / director avatars — never a run-to-roll clip.
+   * When present it replaces the discrete {@link playRole}/{@link setLocomotionRate} path.
    */
-  setLocomotion?(speed: number): void;
+  setLocomotion?(speed: number, sprinting?: boolean): void;
   /** Role → clip rebinding (locomotion sets / animation director). */
   getRoleClip?(role: AnimRole): string | undefined;
   setRoleClip?(role: AnimRole, clipName: string): boolean;

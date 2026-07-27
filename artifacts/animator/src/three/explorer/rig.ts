@@ -265,10 +265,10 @@ export class VoxelCharacter {
       this.addHat(head, look);
 
       // Player-authored Avatar Edit head (play-shell / Mine-Loader Explorer design).
-      // Always ensure a face config so the head is never a blank skin cube.
+      // Prefer look.avatarConfig (lobby 4-seat / multi-hero); else global save.
       // Skipped under LED mask; optional override via look.avatarHead.
       if (look.avatarHead && look.hat !== "ledMask") {
-        const cfg = ensurePlayerHeadConfig();
+        const cfg = look.avatarConfig ?? ensurePlayerHeadConfig();
         this.avatarHeadFx = applyAvatarHead(head, cfg, 0.44);
         for (const eye of this.eyeMeshes) eye.visible = false;
         this.avatarSkinHex = skinToneOf(cfg);

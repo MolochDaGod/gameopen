@@ -94,6 +94,12 @@ export type ActionKey =
   | "hit"
   | "death"
   | "jumpAir"
+  /**
+   * Launching jump takeoff (Documents Jump Up.fbx). Distinct from {@link jumpAir}
+   * (held airborne / fall loop) so the Dressing Room "Jump" verb can preview a real
+   * jump instead of a fall pose.
+   */
+  | "jumpUp"
   | "land"
   | "crouchIdle"
   | "dodgeF"
@@ -332,4 +338,9 @@ export interface CharacterLook {
    * threejs-rapier play-shell Explorer. Ignored while `hat === "ledMask"`.
    */
   avatarHead?: boolean;
+  /**
+   * Explicit Avatar Edit config for this rig (lobby 4-seat, multi-hero).
+   * When set with `avatarHead`, overrides the global player head save.
+   */
+  avatarConfig?: import("../avatar/catalog").AvatarConfig;
 }

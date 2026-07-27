@@ -871,6 +871,9 @@ export const GLOBAL_ACTIONS: Partial<Record<ActionKey, string>> = {
   gestureHeadShake: "animations/gestures/thoughtful-head-shake",
   gestureWeightShift: "animations/gestures/weight-shift",
   // Movement / combat verbs available to any loadout.
+  // Jump takeoff (Dressing Room "Jump" + any loadout that lacks a class jump).
+  // Distinct from UNIVERSAL_MOVEMENT.jumpAir (falling-idle hold for airborne).
+  jumpUp: "animations/extra/jump-up",
   slide: "animations/extra/running-slide",
   throw: "animations/extra/grenade-throw",
   // Quick sidestep evade ("evading a threat") — the default ground evade one-shot.
