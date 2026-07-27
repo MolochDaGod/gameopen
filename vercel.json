@@ -182,6 +182,74 @@
       "destination": "https://assets.grudge-studio.com/models/weapons/:path*"
     },
     {
+      "source": "/models/props/:path*",
+      "destination": "https://assets.grudge-studio.com/models/props/:path*"
+    },
+    {
+      "source": "/models/camp/:path*",
+      "destination": "https://assets.grudge-studio.com/models/camp/:path*"
+    },
+    {
+      "source": "/models/vfx/:path*",
+      "destination": "https://assets.grudge-studio.com/models/vfx/:path*"
+    },
+    {
+      "source": "/models/worlds/:path*",
+      "destination": "https://assets.grudge-studio.com/models/worlds/:path*"
+    },
+    {
+      "source": "/models/nature/:path*",
+      "destination": "https://assets.grudge-studio.com/models/nature/:path*"
+    },
+    {
+      "source": "/models/characters/:path*",
+      "destination": "https://assets.grudge-studio.com/models/characters/:path*"
+    },
+    {
+      "source": "/models/landing/:path*",
+      "destination": "https://assets.grudge-studio.com/models/landing/:path*"
+    },
+    {
+      "source": "/models/buildings/:path*",
+      "destination": "https://assets.grudge-studio.com/models/buildings/:path*"
+    },
+    {
+      "source": "/models/ships/:path*",
+      "destination": "https://assets.grudge-studio.com/models/ships/:path*"
+    },
+    {
+      "source": "/models/creatures/:path*",
+      "destination": "https://assets.grudge-studio.com/models/creatures/:path*"
+    },
+    {
+      "source": "/models/bosses/:path*",
+      "destination": "https://assets.grudge-studio.com/models/bosses/:path*"
+    },
+    {
+      "source": "/models/battle/:path*",
+      "destination": "https://assets.grudge-studio.com/models/battle/:path*"
+    },
+    {
+      "source": "/models/destructibles/:path*",
+      "destination": "https://assets.grudge-studio.com/models/destructibles/:path*"
+    },
+    {
+      "source": "/models/cinema/:path*",
+      "destination": "https://assets.grudge-studio.com/models/cinema/:path*"
+    },
+    {
+      "source": "/models/armor/:path*",
+      "destination": "https://assets.grudge-studio.com/models/armor/:path*"
+    },
+    {
+      "source": "/vfx/:path*",
+      "destination": "https://assets.grudge-studio.com/models/vfx/:path*"
+    },
+    {
+      "source": "/models/:path*",
+      "destination": "https://assets.grudge-studio.com/models/:path*"
+    },
+    {
       "source": "/anim/:path*",
       "destination": "https://assets.grudge-studio.com/anim/:path*"
     },
