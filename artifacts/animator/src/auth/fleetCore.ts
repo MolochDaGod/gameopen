@@ -242,22 +242,13 @@ export function writeFleetToken(token: string): void {
 
 /** Exchange short launch JWT for session when only grudge_token is present. */
 async function exchangeLaunchToken(launch: string): Promise<void> {
+  // Delegate to grudgeAuth circuit-breaker (no parallel 429 storms).
   try {
-    const res = await fetch(apiUrl("/api/auth/session/exchange"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        token: launch,
-        grudge_token: launch,
-        audience: typeof window !== "undefined" ? window.location.origin : FLEET.gameopen,
-      }),
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { token?: string; access_token?: string; sso_token?: string };
-    const next = data.sso_token || data.token || data.access_token;
+    const { bridgeLaunchToken } = await import("../lib/grudgeAuth");
+    const next = await bridgeLaunchToken(launch);
     if (next) writeFleetToken(next);
   } catch {
-    /* exchange optional */
+    /* exchange optional — guest play continues */
   }
 }
 

@@ -283,6 +283,17 @@ export function ensureHumanScale(
   const model = findDeployModel(avatarRoot) ?? avatarRoot;
 
   if (h <= targetM * RE_FIT_MAX_RATIO && h >= targetM * RE_FIT_MIN_RATIO) {
+    // Uniform scale guard: non-uniform axes = "stretched" look.
+    avatarRoot.traverse((o) => {
+      if (o === avatarRoot) return;
+      const sx = Math.abs(o.scale.x);
+      const sy = Math.abs(o.scale.y);
+      const sz = Math.abs(o.scale.z);
+      if (sx > 1e-6 && (Math.abs(sx - sy) > 0.02 || Math.abs(sx - sz) > 0.02)) {
+        const u = (sx + sy + sz) / 3;
+        o.scale.set(u, u, u);
+      }
+    });
     // Avatar.root.y is world feet for Controller — only re-ground model-local Y.
     groundFeetLocal(model, 0);
     return false;

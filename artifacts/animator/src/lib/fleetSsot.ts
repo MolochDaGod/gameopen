@@ -50,17 +50,21 @@ export function definitionBaseCandidates(): string[] {
     /\/$/,
     "",
   );
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const list = [
+    // Same-origin static content (ships with SPA — always CSP-safe)
+    origin ? `${origin}/content` : "",
+    origin ? `${origin}/api/v1` : "",
     // Same-origin proxy (vercel.json → info or objectstore)
-    typeof window !== "undefined" ? `${window.location.origin}/api/objectstore/v1` : "",
+    origin ? `${origin}/api/objectstore/v1` : "",
     // Env override
     env || "",
     // Live SSOT (2026-07)
     FLEET.definitions,
-    // Legacy public name (often 404 — kept last for dual-write deploys)
+    // Legacy public name (often 404 — after info)
     FLEET.objectStoreLegacy,
-    // Static mirror
-    "https://molochdagod.github.io/ObjectStore/api/v1",
+    // NOTE: molochdagod.github.io ObjectStore is blocked by Open CSP connect-src —
+    // never add it; causes console spam + failed fetch.
   ];
   return [...new Set(list.filter(Boolean))];
 }

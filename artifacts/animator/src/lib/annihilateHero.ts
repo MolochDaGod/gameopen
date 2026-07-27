@@ -74,8 +74,9 @@ const CLASS_TOKEN: Record<
   beast: { presetId: "unarmed", weaponId: "none" },
   unarmed: { presetId: "unarmed", weaponId: "none" },
   brawler: { presetId: "unarmed", weaponId: "none" },
-  warrior: { presetId: "warrior", weaponId: "axe" },
-  fighter: { presetId: "warrior", weaponId: "axe" },
+  // Sturdy MMO default: 1H sword + shield + sword_shield anims (not polearm stretch)
+  warrior: { presetId: "warrior", weaponId: "sword" },
+  fighter: { presetId: "warrior", weaponId: "sword" },
   knight: { presetId: "knight", weaponId: "sword" },
   ranger: { presetId: "ranger", weaponId: "bow" },
   archer: { presetId: "ranger", weaponId: "bow" },
@@ -83,7 +84,7 @@ const CLASS_TOKEN: Record<
   wizard: { presetId: "mage", weaponId: "staff" },
   staff: { presetId: "mage", weaponId: "staff" },
   berserker: { presetId: "warrior", weaponId: "greatsword" },
-  barbarian: { presetId: "warrior", weaponId: "axe" },
+  barbarian: { presetId: "warrior", weaponId: "sword" },
   greataxe: { presetId: "warrior", weaponId: "greataxe" },
   spear: { presetId: "warrior", weaponId: "spear" },
 };

@@ -22,7 +22,12 @@ import {
 export { animPackForWeapon } from "./anims";
 import { RACE_ASSETS, type RaceId } from "./raceAssets";
 import { getPreset, type PresetId } from "./gearPresets";
-import { applyBodyTexture, applyGearPreset, meshKey } from "./loadCharacter";
+import {
+  applyBodyTexture,
+  applyGearPreset,
+  hideEquippableMeshes,
+  meshKey,
+} from "./loadCharacter";
 import { loadBodyTexture } from "./texture";
 import { unifySkeletons, rematchClipToSkeleton } from "./skeleton";
 import { sharedGltfLoader } from "../loaders/gltf";
@@ -99,36 +104,25 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
     const file = ARENA_RACE_GLB[raceId];
     const dir = ARENA_RACE_DIR[raceId];
 
-    // 1) Arena combat GLB first — production-proven skinned kits (Danger Room SSOT).
-    //    Keep baked materials; atlas rebind from FBX UV layout ruins these.
+    // 1) R2 production GLB first (always CORS + 200 for WK/BRB/…_Characters.glb).
+    //    Arena absolute second — CORS from open.grudge-studio.com is flaky.
     {
-      const rel = `cdn/assets/characters/${dir}/${file}`;
+      const r2Glb = `https://assets.grudge-studio.com/models/grudge6/races/${file}`;
+      const rel = `models/grudge6/races/${file}`;
+      const sameOriginArena = `/cdn/assets/characters/${dir}/${file}`;
       const urls = [
+        r2Glb,
         ...resolveAssetCandidates(rel),
+        sameOriginArena,
         arenaCharacterGlbUrlAbsolute(raceId),
       ];
       const loader = sharedGltfLoader();
       for (const url of [...new Set(urls)]) {
+        // Skip known-bad R2 mirror of arena path
+        if (url.includes("assets.grudge-studio.com/cdn/assets/")) continue;
         try {
           const gltf = await loader.loadAsync(url);
-          console.info(`[grudge6Runtime] race kit Arena GLB ready ${raceId} ${url}`);
-          return { object: gltf.scene, pipeline: "glb-baked", url };
-        } catch (e) {
-          lastErr = e;
-        }
-      }
-    }
-
-    // 2) R2 production GLB (smaller meshopt bake) — still glb-baked materials.
-    {
-      const r2Glb = `https://assets.grudge-studio.com/models/grudge6/races/${file}`;
-      const rel = `models/grudge6/races/${file}`;
-      const urls = [...resolveAssetCandidates(rel), r2Glb];
-      const loader = sharedGltfLoader();
-      for (const url of [...new Set(urls)]) {
-        try {
-          const gltf = await loader.loadAsync(url);
-          console.info(`[grudge6Runtime] race kit R2 GLB ready ${raceId} ${url}`);
+          console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
           return { object: gltf.scene, pipeline: "glb-baked", url };
         } catch (e) {
           lastErr = e;
@@ -159,22 +153,36 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
 }
 
 /**
+ * Force uniform root scale (non-uniform scale = "stretched" heroes).
+ */
+function forceUniformScale(root: THREE.Object3D): void {
+  const s = (Math.abs(root.scale.x) + Math.abs(root.scale.y) + Math.abs(root.scale.z)) / 3;
+  const u = Number.isFinite(s) && s > 1e-6 ? s : 1;
+  root.scale.set(u, u, u);
+}
+
+/**
  * Normalize race mesh to ~1.8 m, XZ on pelvis, feet on y=0, art-forward +Z.
  * Uses {@link deployCharacterModel} (Three.js Y-up / XZ ground SSOT).
+ *
+ * MUST run **after** gear visibility so bodyBox only measures the equipped
+ * skinned parts (not every armor variant + every weapon).
  */
 function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): void {
   root.userData.importPipeline = pipeline;
-  // FBX path already height-fits + faces +Z in loadCharacter.normalizeCharacterGroup.
-  // GLB always fit once; deploy finalizes XZ/Y for both.
-  const already = root.userData?.grudgeHeightFit === true;
-  if (!already || pipeline === "glb-baked") {
-    const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
-    root.userData.grudgeHeightFit = true;
-    if (fit.unitFix !== 1 || fit.scale > 3 || fit.scale < 0.05) {
-      console.info(
-        `[grudge6Runtime] height fit pipeline=${pipeline} native=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} target=${TARGET_HEIGHT}`,
-      );
-    }
+  // Always re-fit from identity for clean SI human — modular kits ship Unity 2.54
+  // bone/mesh scale; measuring with full wardrobe visible warps height.
+  root.scale.set(1, 1, 1);
+  root.position.set(0, 0, 0);
+  root.userData.grudgeHeightFit = false;
+
+  const fit = fitCharacterHeight(root, TARGET_HEIGHT, 1);
+  root.userData.grudgeHeightFit = true;
+  forceUniformScale(root);
+  if (fit.unitFix !== 1 || fit.scale > 3 || fit.scale < 0.05) {
+    console.info(
+      `[grudge6Runtime] height fit pipeline=${pipeline} native=${fit.nativeHeight.toFixed(3)} unitFix=${fit.unitFix} scale=${fit.scale.toFixed(4)} target=${TARGET_HEIGHT}`,
+    );
   }
 
   const deployed = deployCharacterModel(root, {
@@ -183,6 +191,7 @@ function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): v
     facePlusZ: "auto",
     refitIfAbsurd: true,
   });
+  forceUniformScale(root);
   if (Math.abs(deployed.groundDeltaY) > 0.02 || deployed.facingApplied) {
     console.info(
       `[grudge6Runtime] deploy pipeline=${pipeline} h=${deployed.heightM.toFixed(3)} ` +
@@ -274,6 +283,17 @@ export async function loadGrudge6CombatRig(
 
   // Arena modular kits ship multiple disconnected skeletons — unify so clips deform all meshes.
   unifySkeletons(model);
+
+  // ── EQUIP BEFORE FIT (sturdy MMO proportions) ────────────────────────────
+  // Modular race GLBs ship every armor/weapon variant visible. Fitting while
+  // the full wardrobe is on inflates the skinned AABB → wrong scale / "stretch".
+  // SSOT: hide equippable → show mesh_ids only → then SI height fit.
+  hideEquippableMeshes(model);
+  applyGearVisibility(model, meshIds);
+  model.userData.equipMeshIds = meshIds.slice();
+  model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
+  model.userData.physicsLayer = "character";
+
   normalizeSkinned(model, template.pipeline);
 
   // Materials:
@@ -304,10 +324,6 @@ export async function loadGrudge6CombatRig(
     });
   }
 
-  applyGearVisibility(model, meshIds);
-  model.userData.equipMeshIds = meshIds.slice();
-  model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
-  model.userData.physicsLayer = "character";
   // Gear hide/show changes skinned AABB — re-ground so feet stay on y=0
   reGroundAfterEquip(model, 0);
 

@@ -7,10 +7,12 @@ import { CHARACTER_HEIGHT_M } from "../types";
 
 /** Hero / character mesh candidates for cinema stages (fleet + local bake). */
 export const CINEMA_HERO_MESHES = [
+  "models/racalvin.glb",
+  "models/karate-boss.glb",
+  "models/orc.glb",
   "models/introgamer.glb",
   "models/landing/astrocreeper.glb",
   "models/astrocreeper.glb",
-  "models/racalvin.glb",
   "models/karate-boss.glb",
 ] as const;
 

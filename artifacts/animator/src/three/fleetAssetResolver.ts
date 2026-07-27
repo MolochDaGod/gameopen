@@ -71,10 +71,60 @@ export function pathAliases(path: string): string[] {
     }
   }
 
-  // Lab heroes
+  // Lab heroes — prefer models that exist on R2 / Open public (probed 2026-07)
   if (clean === "models/orc.glb") out.push("models/characters/orc.glb");
   if (clean === "models/racalvin.glb") {
-    out.push("models/characters/gunslinger.glb", "models/gunslinger.glb");
+    out.push(
+      "models/racalvin.glb",
+      "models/characters/gunslinger.glb",
+      "models/gunslinger.glb",
+      "models/karate-boss.glb",
+      "models/orc.glb",
+    );
+  }
+  // Cinema / doors hall — introgamer/astrocreeper often missing; cascade to live heroes
+  if (
+    clean === "models/introgamer.glb" ||
+    clean === "models/astrocreeper.glb" ||
+    clean === "models/landing/astrocreeper.glb" ||
+    clean === "models/landing/helpers.glb"
+  ) {
+    out.push(
+      "models/racalvin.glb",
+      "models/karate-boss.glb",
+      "models/orc.glb",
+      "models/skeleton-warrior.glb",
+      "models/dungeon.glb",
+    );
+  }
+  if (clean === "models/dj-booth.glb") {
+    out.push("models/dj-booth.glb", "models/dungeon.glb");
+  }
+  // Camp props — dying-torch lives on R2; same-origin often stale deploy
+  if (clean === "models/props/dying-torch.glb") {
+    out.push(
+      "models/props/dying-torch.glb",
+      "models/props/torch-burning.glb",
+      "models/props/torch.glb",
+    );
+  }
+  if (clean === "models/camp/claim-flag.glb") {
+    out.push("models/camp/claim-flag.glb");
+  }
+  // Hip-hop clip often missing — don't block; loaders skip 404
+  if (clean.includes("hip-hop-dancing")) {
+    out.push("anim/animations/extra/front-flip.fbx", "anim/extra/front-flip.fbx");
+  }
+  // Portraits: human_warrior → pack race icon
+  if (
+    /human[_-]?warrior/i.test(clean) ||
+    clean === "races/portraits/human-warrior.png"
+  ) {
+    out.push(
+      "icons/pack/races/human.png",
+      "icons/pack/classes/warrior.png",
+      "races/human.png",
+    );
   }
 
   // grudge class GLBs (Open has models/grudge/{race}_{class}.glb; R2 may not)
@@ -140,12 +190,14 @@ export function pathAliases(path: string): string[] {
     if (race) out.push(`assets/${race}/textures/${file}`);
   }
 
-  // Arena skinned race GLBs (combat runtime)
+  // Arena skinned race GLBs (combat runtime) — R2 holds models/grudge6/races/*.glb
   const arenaM = clean.match(/^cdn\/assets\/characters\/([^/]+)\/([^/]+)$/i);
   if (arenaM) {
     out.push(clean);
-    // Also try R2-style keys if ever mirrored
+    // Production R2 path (200) — never assets…/cdn/assets/… (404)
     out.push(`models/grudge6/races/${arenaM[2]}`);
+    // Open same-origin proxy path
+    out.push(`cdn/assets/characters/${arenaM[1]}/${arenaM[2]}`);
   }
 
   // Icons — Open pack + R2 root (icons/attack.png works; pack/ often 404)
@@ -194,9 +246,22 @@ export function pathAliases(path: string): string[] {
     out.push("rooms/lobby-scene.png");
   }
 
-  // VFX — Open has models/vfx/*; R2 often missing
-  if (clean.startsWith("models/vfx/")) {
-    out.push(clean.replace("models/vfx/", "vfx/"));
+  // VFX — Open public + R2 both host models/vfx/* (probed 200)
+  if (clean.startsWith("models/vfx/") || clean.startsWith("vfx/")) {
+    const base = clean.replace(/^vfx\//, "models/vfx/").replace(/\\/g, "/");
+    out.push(base);
+    out.push(base.replace("models/vfx/", "vfx/"));
+    // underscore ↔ hyphen (stylized_ice_bow vs stylized-ice-bow)
+    if (base.includes("_")) out.push(base.replace(/_/g, "-"));
+    if (base.includes("-")) out.push(base.replace(/-/g, "_"));
+    // ice bow not always deployed — fall back to shipped slash VFX
+    if (/ice.?bow|stylized_ice/i.test(base)) {
+      out.push(
+        "models/vfx/light-of-slash.glb",
+        "models/vfx/attack-slashes.glb",
+        "models/vfx/elemental-swords.glb",
+      );
+    }
   }
 
   // Weapons — both Open and R2 root
@@ -210,17 +275,22 @@ export function pathAliases(path: string): string[] {
     out.push(clean);
   }
 
-  // Explorer / Mixamo clip paths — aliases only; loaders should use sameOriginOnly
-  // / pack gate. Do NOT invent extra R2 prefixes here (causes 404 storms).
+  // Explorer / Mixamo clip paths — Open ships under anim/ and anim/animations/
+  // (same-origin first). Hip-hop etc. often missing → fall back to shipped extras.
   if (clean.startsWith("anim/animations/") || clean.startsWith("animations/")) {
-    out.push(clean.replace(/^anim\//, ""));
-    out.push(clean.startsWith("animations/") ? `anim/${clean}` : clean);
-    // Short public layout
-    if (clean.startsWith("anim/animations/")) {
-      out.push(clean.replace("anim/animations/", "anim/"));
+    const leaf = clean.replace(/^anim\/animations\//, "").replace(/^animations\//, "");
+    out.push(`anim/animations/${leaf}`);
+    out.push(`anim/${leaf}`);
+    out.push(`animations/${leaf}`);
+    if (/hip-hop|hiphop/i.test(leaf)) {
+      out.push("anim/extra/front-flip.fbx", "anim/animations/extra/front-flip.fbx");
     }
   } else if (clean.startsWith("anim/") && !clean.startsWith("anim/base/")) {
     out.push(clean);
+  }
+  if (clean.startsWith("anim/extra/") || clean.startsWith("anim/animations/extra/")) {
+    const name = clean.split("/").pop()!;
+    out.push(`anim/extra/${name}`, `anim/animations/extra/${name}`);
   }
 
   return [...new Set(out)];
@@ -235,6 +305,13 @@ function isFleetCdnFirst(clean: string): boolean {
     clean.startsWith("textures/grudge6/") ||
     clean.startsWith("models/grudge6/") ||
     clean.startsWith("models/voxels/") ||
+    clean.startsWith("models/props/") ||
+    clean.startsWith("models/camp/") ||
+    clean.startsWith("models/vfx/") ||
+    clean === "models/racalvin.glb" ||
+    clean === "models/dj-booth.glb" ||
+    clean === "models/introgamer.glb" ||
+    clean.startsWith("models/landing/") ||
     clean.startsWith("assets/western-kingdoms/") ||
     clean.startsWith("assets/barbarians/") ||
     clean.startsWith("assets/dwarves/") ||
@@ -242,7 +319,8 @@ function isFleetCdnFirst(clean: string): boolean {
     clean.startsWith("assets/orcs/") ||
     clean.startsWith("assets/undead/") ||
     clean.startsWith("icons/pack/") ||
-    clean.startsWith("icons/wcs/")
+    clean.startsWith("icons/wcs/") ||
+    clean.startsWith("cdn/assets/characters/")
   );
 }
 

@@ -299,35 +299,56 @@ export function captureAuthCallbackFromUrl(): string | null {
   return null;
 }
 
+/** Circuit-breaker for session exchange — prevents 429 storms (9× retries × N callers). */
+let _exchangeInflight: Promise<string | null> | null = null;
+let _exchangeCooldownUntil = 0;
+let _exchangeFailedToken: string | null = null;
+
 /** Exchange short launch JWT for full session JWT. */
 export async function bridgeLaunchToken(launchToken: string): Promise<string | null> {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://open.grudge-studio.com";
-  // Railway exchange expects token + audience (400 without body fields).
-  const bodies = [
-    JSON.stringify({ token: launchToken, audience: origin }),
-    JSON.stringify({ launchToken, audience: origin }),
-    JSON.stringify({ grudge_token: launchToken, audience: origin }),
-  ];
-  // Only probe endpoints that exist in production.
-  // `/api/auth/grudge-bridge` 404s on id.grudge-studio.com and Railway — do not hit it.
-  const urls = [
-    // Builder Railway (works in production — 400 without body, not 404)
-    `${FLEET.gameData}/api/auth/session/exchange`,
-    // Same-origin rewrites (Open → id or Railway)
-    apiUrl("/api/auth/session/exchange"),
-    `${FLEET.auth}/api/auth/session/exchange`,
-  ];
-  for (const url of urls) {
-    for (const body of bodies) {
+  if (!launchToken || !String(launchToken).trim()) return null;
+
+  // Cooldown after 429 / hard fail — do not hammer Railway / id hub.
+  if (Date.now() < _exchangeCooldownUntil) {
+    if (_exchangeFailedToken === launchToken) return null;
+  }
+  if (_exchangeInflight) return _exchangeInflight;
+
+  _exchangeInflight = (async () => {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "https://open.grudge-studio.com";
+    // One body shape Railway accepts (audience required). No 3× body spam.
+    const body = JSON.stringify({
+      token: launchToken,
+      grudge_token: launchToken,
+      audience: origin,
+    });
+    // Prefer same-origin rewrite first (one hop), then Railway only.
+    const urls = [
+      apiUrl("/api/auth/session/exchange"),
+      `${FLEET.gameData}/api/auth/session/exchange`,
+    ];
+
+    let hit429 = false;
+    for (const url of urls) {
       try {
         const r = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body,
           credentials: "include",
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(8000),
         });
+        if (r.status === 429) {
+          hit429 = true;
+          break; // stop all further exchange attempts this session
+        }
+        if (r.status === 400 || r.status === 401) {
+          // Bad/expired launch token — don't thrash other hosts
+          _exchangeFailedToken = launchToken;
+          _exchangeCooldownUntil = Date.now() + 60_000;
+          return null;
+        }
         if (!r.ok) continue;
         const data = (await r.json()) as Record<string, unknown>;
         const t = String(
@@ -335,6 +356,7 @@ export async function bridgeLaunchToken(launchToken: string): Promise<string | n
         );
         if (!t) continue;
         setStoredToken(t, true);
+        _exchangeFailedToken = null;
         const gid = String(
           data.grudgeId ||
             data.grudge_id ||
@@ -363,11 +385,28 @@ export async function bridgeLaunchToken(launchToken: string): Promise<string | n
         }
         return t;
       } catch {
-        /* try next body/url */
+        /* try next url */
       }
     }
+    if (hit429) {
+      // 2 minutes cool-off — browser multi-tab / multi-module storms
+      _exchangeCooldownUntil = Date.now() + 120_000;
+      _exchangeFailedToken = launchToken;
+      console.warn(
+        "[grudgeAuth] session/exchange rate-limited (429) — cooldown 120s; guest play continues",
+      );
+    } else {
+      _exchangeCooldownUntil = Date.now() + 30_000;
+      _exchangeFailedToken = launchToken;
+    }
+    return null;
+  })();
+
+  try {
+    return await _exchangeInflight;
+  } finally {
+    _exchangeInflight = null;
   }
-  return null;
 }
 
 /**
@@ -482,6 +521,7 @@ async function _revalidateAccountBackground(
     `${FLEET.auth}/api/auth/me`,
   ];
 
+  let bridgedOnce = false;
   for (const url of endpoints) {
     try {
       const r = await fetch(url, {
@@ -489,10 +529,17 @@ async function _revalidateAccountBackground(
         credentials: "include",
         signal: AbortSignal.timeout(6000),
       });
-      if (r.status === 401 && token) {
-        // Short launch JWT — bridge to full session once.
+      if (r.status === 401 && token && !bridgedOnce) {
+        // Short launch JWT — bridge to full session **once** (never per-endpoint loop).
+        bridgedOnce = true;
         const bridged = await bridgeLaunchToken(token);
-        if (bridged) { token = bridged; continue; }
+        if (bridged) {
+          token = bridged;
+          // Retry same-origin me only with new token
+          continue;
+        }
+        // Guest / expired — stop; 401 is expected when not signed in
+        return getStoredAccount();
       }
       if (!r.ok) continue;
       const data = (await r.json()) as Record<string, unknown>;

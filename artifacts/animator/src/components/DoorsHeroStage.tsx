@@ -6,20 +6,23 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { assetUrl } from "../three/assetHost";
+import { loadGltfFirst } from "../three/assets";
 
+// Prefer models that exist on R2 / Open public (probed 2026-07) — skip 404 spam first
 const ARENA_CANDIDATES = [
-  "models/instarena-phyxt-fight.glb",
   "models/dungeon.glb",
   "models/dj-booth.glb",
+  "models/arena-war-zone.glb",
+  "models/instarena-phyxt-fight.glb",
 ];
 const HERO_CANDIDATES = [
-  "models/introgamer.glb",
-  "models/astrocreeper.glb",
-  "models/landing/astrocreeper.glb",
   "models/racalvin.glb",
   "models/karate-boss.glb",
   "models/orc.glb",
+  "models/skeleton-warrior.glb",
+  "models/introgamer.glb",
+  "models/astrocreeper.glb",
+  "models/landing/astrocreeper.glb",
 ];
 
 function fitOnTop(
@@ -61,23 +64,6 @@ function fitOnTop(
 
   const focus = new THREE.Vector3(0, arenaTop + targetHeroHeight * 0.55, 0);
   return { arenaRadius: radius, focus };
-}
-
-async function loadGltfFirst(
-  paths: string[],
-  loader: GLTFLoader,
-): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[]; url: string }> {
-  let last: unknown;
-  for (const p of paths) {
-    const url = assetUrl(p);
-    try {
-      const gltf = await loader.loadAsync(url);
-      return { scene: gltf.scene, animations: gltf.animations ?? [], url };
-    } catch (err) {
-      last = err;
-    }
-  }
-  throw last ?? new Error(`Failed to load: ${paths.join(", ")}`);
 }
 
 function buildFallbackArena(): THREE.Group {

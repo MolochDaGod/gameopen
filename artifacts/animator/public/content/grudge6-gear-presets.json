@@ -1,0 +1,724 @@
+{
+  "version": "1.0.0",
+  "source": "gameopen/gearPresets",
+  "presets": [
+    {
+      "id": "GRDG-BAR-MAG",
+      "raceId": "barbarians",
+      "raceRaw": "barbarians",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "BRB_head_A",
+        "BRB_body_A",
+        "BRB_arms_A",
+        "BRB_legs_A",
+        "BRB_weapon_staff_C"
+      ],
+      "mesh_ids": [
+        "BRB_head_A",
+        "BRB_body_A",
+        "BRB_arms_A",
+        "BRB_legs_A",
+        "BRB_weapon_staff_C"
+      ]
+    },
+    {
+      "id": "GRDG-BAR-KNI",
+      "raceId": "barbarians",
+      "raceRaw": "barbarians",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "BRB_head_F",
+        "BRB_body_F",
+        "BRB_arms_C",
+        "BRB_legs_C",
+        "BRB_shoulderpads_C",
+        "BRB_weapon_sword_B",
+        "BRB_Shield_B"
+      ],
+      "mesh_ids": [
+        "BRB_head_F",
+        "BRB_body_F",
+        "BRB_arms_C",
+        "BRB_legs_C",
+        "BRB_shoulderpads_C",
+        "BRB_weapon_sword_B",
+        "BRB_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-BAR-RAN",
+      "raceId": "barbarians",
+      "raceRaw": "barbarians",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "BRB_head_C",
+        "BRB_body_B",
+        "BRB_arms_B",
+        "BRB_legs_B",
+        "BRB_shoulderpads_A",
+        "BRB_weapon_Bow",
+        "BRB_Xtra_quiver"
+      ],
+      "mesh_ids": [
+        "BRB_head_C",
+        "BRB_body_B",
+        "BRB_arms_B",
+        "BRB_legs_B",
+        "BRB_shoulderpads_A",
+        "BRB_weapon_Bow",
+        "BRB_Xtra_quiver"
+      ]
+    },
+    {
+      "id": "GRDG-BAR-WAR",
+      "raceId": "barbarians",
+      "raceRaw": "barbarians",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "BRB_head_B",
+        "BRB_body_C",
+        "BRB_arms_B",
+        "BRB_legs_B",
+        "BRB_shoulderpads_B",
+        "BRB_weapon_sword_B",
+        "BRB_Shield_B"
+      ],
+      "mesh_ids": [
+        "BRB_head_B",
+        "BRB_body_C",
+        "BRB_arms_B",
+        "BRB_legs_B",
+        "BRB_shoulderpads_B",
+        "BRB_weapon_sword_B",
+        "BRB_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-BAR-UNA",
+      "raceId": "barbarians",
+      "raceRaw": "barbarians",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "BRB_head_A",
+        "BRB_body_B",
+        "BRB_arms_A",
+        "BRB_legs_A"
+      ],
+      "mesh_ids": [
+        "BRB_head_A",
+        "BRB_body_B",
+        "BRB_arms_A",
+        "BRB_legs_A"
+      ]
+    },
+    {
+      "id": "GRDG-WES-MAG",
+      "raceId": "western-kingdoms",
+      "raceRaw": "western-kingdoms",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "WK_Units_head_A",
+        "WK_Units_Body_A",
+        "WK_Units_Arms_A",
+        "WK_Units_Legs_A",
+        "WK_weapon_staff_C"
+      ],
+      "mesh_ids": [
+        "WK_Units_head_A",
+        "WK_Units_Body_A",
+        "WK_Units_Arms_A",
+        "WK_Units_Legs_A",
+        "WK_weapon_staff_C"
+      ]
+    },
+    {
+      "id": "GRDG-WES-KNI",
+      "raceId": "western-kingdoms",
+      "raceRaw": "western-kingdoms",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "WK_Units_head_F",
+        "WK_Units_Body_E",
+        "WK_Units_Arms_D",
+        "WK_Units_Legs_C",
+        "WK_Units_shoulderpads_B",
+        "WK_weapon_sword_B",
+        "WK_Shield_B"
+      ],
+      "mesh_ids": [
+        "WK_Units_head_F",
+        "WK_Units_Body_E",
+        "WK_Units_Arms_D",
+        "WK_Units_Legs_C",
+        "WK_Units_shoulderpads_B",
+        "WK_weapon_sword_B",
+        "WK_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-WES-RAN",
+      "raceId": "western-kingdoms",
+      "raceRaw": "western-kingdoms",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "WK_Units_head_C",
+        "WK_Units_Body_B",
+        "WK_Units_Arms_B",
+        "WK_Units_Legs_B",
+        "WK_weapon_Bow",
+        "WK_Xtra_quiver"
+      ],
+      "mesh_ids": [
+        "WK_Units_head_C",
+        "WK_Units_Body_B",
+        "WK_Units_Arms_B",
+        "WK_Units_Legs_B",
+        "WK_weapon_Bow",
+        "WK_Xtra_quiver"
+      ]
+    },
+    {
+      "id": "GRDG-WES-WAR",
+      "raceId": "western-kingdoms",
+      "raceRaw": "western-kingdoms",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "WK_Units_head_D",
+        "WK_Units_Body_C",
+        "WK_Units_Arms_B",
+        "WK_Units_Legs_B",
+        "WK_Units_shoulderpads_A",
+        "WK_weapon_sword_B",
+        "WK_Shield_B"
+      ],
+      "mesh_ids": [
+        "WK_Units_head_D",
+        "WK_Units_Body_C",
+        "WK_Units_Arms_B",
+        "WK_Units_Legs_B",
+        "WK_Units_shoulderpads_A",
+        "WK_weapon_sword_B",
+        "WK_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-WES-UNA",
+      "raceId": "western-kingdoms",
+      "raceRaw": "western-kingdoms",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "WK_Units_head_A",
+        "WK_Units_Body_B",
+        "WK_Units_Arms_A",
+        "WK_Units_Legs_A"
+      ],
+      "mesh_ids": [
+        "WK_Units_head_A",
+        "WK_Units_Body_B",
+        "WK_Units_Arms_A",
+        "WK_Units_Legs_A"
+      ]
+    },
+    {
+      "id": "GRDG-HIG-MAG",
+      "raceId": "high-elves",
+      "raceRaw": "high-elves",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "ELF_Units_Head_B",
+        "ELF_Units_Body_A",
+        "ELF_Units_Arms_A",
+        "ELF_Units_Legs_A",
+        "ELF_weapon_staff_C"
+      ],
+      "mesh_ids": [
+        "ELF_Units_Head_B",
+        "ELF_Units_Body_A",
+        "ELF_Units_Arms_A",
+        "ELF_Units_Legs_A",
+        "ELF_weapon_staff_C"
+      ]
+    },
+    {
+      "id": "GRDG-HIG-KNI",
+      "raceId": "high-elves",
+      "raceRaw": "high-elves",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "ELF_Units_Head_G",
+        "ELF_Units_Body_E",
+        "ELF_Units_Arms_C",
+        "ELF_Units_Legs_C",
+        "ELF_Units_Shoulderpads_C",
+        "ELF_weapon_sword_B",
+        "ELF_shield_B"
+      ],
+      "mesh_ids": [
+        "ELF_Units_Head_G",
+        "ELF_Units_Body_E",
+        "ELF_Units_Arms_C",
+        "ELF_Units_Legs_C",
+        "ELF_Units_Shoulderpads_C",
+        "ELF_weapon_sword_B",
+        "ELF_shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-HIG-RAN",
+      "raceId": "high-elves",
+      "raceRaw": "high-elves",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "ELF_Units_Head_C",
+        "ELF_Units_Body_B",
+        "ELF_Units_Arms_B",
+        "ELF_Units_Legs_B",
+        "ELF_Units_Shoulderpads_A",
+        "ELF_weapon_bow",
+        "ELF_Xtra_quiver"
+      ],
+      "mesh_ids": [
+        "ELF_Units_Head_C",
+        "ELF_Units_Body_B",
+        "ELF_Units_Arms_B",
+        "ELF_Units_Legs_B",
+        "ELF_Units_Shoulderpads_A",
+        "ELF_weapon_bow",
+        "ELF_Xtra_quiver"
+      ]
+    },
+    {
+      "id": "GRDG-HIG-WAR",
+      "raceId": "high-elves",
+      "raceRaw": "high-elves",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "ELF_Units_Head_D",
+        "ELF_Units_Body_C",
+        "ELF_Units_Arms_B",
+        "ELF_Units_Legs_B",
+        "ELF_Units_Shoulderpads_B",
+        "ELF_weapon_sword_B",
+        "ELF_shield_B"
+      ],
+      "mesh_ids": [
+        "ELF_Units_Head_D",
+        "ELF_Units_Body_C",
+        "ELF_Units_Arms_B",
+        "ELF_Units_Legs_B",
+        "ELF_Units_Shoulderpads_B",
+        "ELF_weapon_sword_B",
+        "ELF_shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-HIG-UNA",
+      "raceId": "high-elves",
+      "raceRaw": "high-elves",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "ELF_Units_Head_A",
+        "ELF_Units_Body_B",
+        "ELF_Units_Arms_A",
+        "ELF_Units_Legs_A"
+      ],
+      "mesh_ids": [
+        "ELF_Units_Head_A",
+        "ELF_Units_Body_B",
+        "ELF_Units_Arms_A",
+        "ELF_Units_Legs_A"
+      ]
+    },
+    {
+      "id": "GRDG-DWA-MAG",
+      "raceId": "dwarves",
+      "raceRaw": "dwarves",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "DWF_Units_Head_A",
+        "DWF_Units_Body_A",
+        "DWF_Units_Arms_A",
+        "DWF_Units_Legs_A",
+        "DWF_Weapon_staff_B"
+      ],
+      "mesh_ids": [
+        "DWF_Units_Head_A",
+        "DWF_Units_Body_A",
+        "DWF_Units_Arms_A",
+        "DWF_Units_Legs_A",
+        "DWF_Weapon_staff_B"
+      ]
+    },
+    {
+      "id": "GRDG-DWA-KNI",
+      "raceId": "dwarves",
+      "raceRaw": "dwarves",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "DWF_Units_Head_F",
+        "DWF_Units_Body_D",
+        "DWF_Units_Arms_C",
+        "DWF_Units_Legs_C",
+        "DWF_Units_Shoulderpads_C",
+        "DWF_Weapon_sword_B",
+        "DWF_Shield_B"
+      ],
+      "mesh_ids": [
+        "DWF_Units_Head_F",
+        "DWF_Units_Body_D",
+        "DWF_Units_Arms_C",
+        "DWF_Units_Legs_C",
+        "DWF_Units_Shoulderpads_C",
+        "DWF_Weapon_sword_B",
+        "DWF_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-DWA-RAN",
+      "raceId": "dwarves",
+      "raceRaw": "dwarves",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "DWF_Units_Head_C",
+        "DWF_Units_Body_B",
+        "DWF_Units_Arms_B",
+        "DWF_Units_Legs_B",
+        "DWF_Units_Shoulderpads_A",
+        "DWF_Weapon_bow",
+        "DWF_Xtra_quiver"
+      ],
+      "mesh_ids": [
+        "DWF_Units_Head_C",
+        "DWF_Units_Body_B",
+        "DWF_Units_Arms_B",
+        "DWF_Units_Legs_B",
+        "DWF_Units_Shoulderpads_A",
+        "DWF_Weapon_bow",
+        "DWF_Xtra_quiver"
+      ]
+    },
+    {
+      "id": "GRDG-DWA-WAR",
+      "raceId": "dwarves",
+      "raceRaw": "dwarves",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "DWF_Units_Head_G",
+        "DWF_Units_Body_C",
+        "DWF_Units_Arms_B",
+        "DWF_Units_Legs_B",
+        "DWF_Units_Shoulderpads_B",
+        "DWF_Weapon_sword_B",
+        "DWF_Shield_B"
+      ],
+      "mesh_ids": [
+        "DWF_Units_Head_G",
+        "DWF_Units_Body_C",
+        "DWF_Units_Arms_B",
+        "DWF_Units_Legs_B",
+        "DWF_Units_Shoulderpads_B",
+        "DWF_Weapon_sword_B",
+        "DWF_Shield_B"
+      ]
+    },
+    {
+      "id": "GRDG-DWA-UNA",
+      "raceId": "dwarves",
+      "raceRaw": "dwarves",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "DWF_Units_Head_A",
+        "DWF_Units_Body_B",
+        "DWF_Units_Arms_A",
+        "DWF_Units_Legs_A"
+      ],
+      "mesh_ids": [
+        "DWF_Units_Head_A",
+        "DWF_Units_Body_B",
+        "DWF_Units_Arms_A",
+        "DWF_Units_Legs_A"
+      ]
+    },
+    {
+      "id": "GRDG-ORC-MAG",
+      "raceId": "orcs",
+      "raceRaw": "orcs",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "ORC_Units_Head_A",
+        "ORC_Units_Body_A",
+        "ORC_Units_Arms_A",
+        "ORC_Units_Legs_A",
+        "ORC_weapon_staff_C"
+      ],
+      "mesh_ids": [
+        "ORC_Units_Head_A",
+        "ORC_Units_Body_A",
+        "ORC_Units_Arms_A",
+        "ORC_Units_Legs_A",
+        "ORC_weapon_staff_C"
+      ]
+    },
+    {
+      "id": "GRDG-ORC-KNI",
+      "raceId": "orcs",
+      "raceRaw": "orcs",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "ORC_Units_Head_G",
+        "ORC_Units_Body_F",
+        "ORC_Units_Arms_C",
+        "ORC_Units_Legs_C",
+        "ORC_Units_Shoulderpads_F",
+        "ORC_weapon_Axe_C",
+        "ORC_Shield_C"
+      ],
+      "mesh_ids": [
+        "ORC_Units_Head_G",
+        "ORC_Units_Body_F",
+        "ORC_Units_Arms_C",
+        "ORC_Units_Legs_C",
+        "ORC_Units_Shoulderpads_F",
+        "ORC_weapon_Axe_C",
+        "ORC_Shield_C"
+      ]
+    },
+    {
+      "id": "GRDG-ORC-RAN",
+      "raceId": "orcs",
+      "raceRaw": "orcs",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "ORC_Units_Head_B",
+        "ORC_Units_Body_B",
+        "ORC_Units_Arms_B",
+        "ORC_Units_Legs_B",
+        "ORC_Units_Shoulderpads_A",
+        "ORC_weapon_Bow",
+        "ORC_Xtra_quiver"
+      ],
+      "mesh_ids": [
+        "ORC_Units_Head_B",
+        "ORC_Units_Body_B",
+        "ORC_Units_Arms_B",
+        "ORC_Units_Legs_B",
+        "ORC_Units_Shoulderpads_A",
+        "ORC_weapon_Bow",
+        "ORC_Xtra_quiver"
+      ]
+    },
+    {
+      "id": "GRDG-ORC-WAR",
+      "raceId": "orcs",
+      "raceRaw": "orcs",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "ORC_Units_Head_E",
+        "ORC_Units_Body_C",
+        "ORC_Units_Arms_B",
+        "ORC_Units_Legs_B",
+        "ORC_Units_Shoulderpads_C",
+        "ORC_weapon_Axe_B",
+        "ORC_Shield_C"
+      ],
+      "mesh_ids": [
+        "ORC_Units_Head_E",
+        "ORC_Units_Body_C",
+        "ORC_Units_Arms_B",
+        "ORC_Units_Legs_B",
+        "ORC_Units_Shoulderpads_C",
+        "ORC_weapon_Axe_B",
+        "ORC_Shield_C"
+      ]
+    },
+    {
+      "id": "GRDG-ORC-UNA",
+      "raceId": "orcs",
+      "raceRaw": "orcs",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "ORC_Units_Head_A",
+        "ORC_Units_Body_A",
+        "ORC_Units_Arms_A",
+        "ORC_Units_Legs_A"
+      ],
+      "mesh_ids": [
+        "ORC_Units_Head_A",
+        "ORC_Units_Body_A",
+        "ORC_Units_Arms_A",
+        "ORC_Units_Legs_A"
+      ]
+    },
+    {
+      "id": "GRDG-UND-MAG",
+      "raceId": "undead",
+      "raceRaw": "undead",
+      "classId": "mage",
+      "label": "mage",
+      "animPack": "magic",
+      "meshIds": [
+        "UD_Units_head_A",
+        "UD_Units_body_G",
+        "UD_Units_arms_B",
+        "UD_Units_legs_B",
+        "UD_weapon_staff_D"
+      ],
+      "mesh_ids": [
+        "UD_Units_head_A",
+        "UD_Units_body_G",
+        "UD_Units_arms_B",
+        "UD_Units_legs_B",
+        "UD_weapon_staff_D"
+      ]
+    },
+    {
+      "id": "GRDG-UND-KNI",
+      "raceId": "undead",
+      "raceRaw": "undead",
+      "classId": "knight",
+      "label": "knight",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "UD_Units_head_F",
+        "UD_Units_body_F",
+        "UD_Units_arms_D",
+        "UD_Units_legs_D",
+        "UD_Units_shoulderpads_C",
+        "UD_weapon_Sword_B",
+        "UD_Shield_C"
+      ],
+      "mesh_ids": [
+        "UD_Units_head_F",
+        "UD_Units_body_F",
+        "UD_Units_arms_D",
+        "UD_Units_legs_D",
+        "UD_Units_shoulderpads_C",
+        "UD_weapon_Sword_B",
+        "UD_Shield_C"
+      ]
+    },
+    {
+      "id": "GRDG-UND-RAN",
+      "raceId": "undead",
+      "raceRaw": "undead",
+      "classId": "ranger",
+      "label": "ranger",
+      "animPack": "longbow",
+      "meshIds": [
+        "UD_Units_head_C",
+        "UD_Units_body_B",
+        "UD_Units_arms_B",
+        "UD_Units_legs_B",
+        "UD_Units_shoulderpads_A",
+        "UD_weapon_Bow",
+        "UD_Xtra_Quiver"
+      ],
+      "mesh_ids": [
+        "UD_Units_head_C",
+        "UD_Units_body_B",
+        "UD_Units_arms_B",
+        "UD_Units_legs_B",
+        "UD_Units_shoulderpads_A",
+        "UD_weapon_Bow",
+        "UD_Xtra_Quiver"
+      ]
+    },
+    {
+      "id": "GRDG-UND-WAR",
+      "raceId": "undead",
+      "raceRaw": "undead",
+      "classId": "warrior",
+      "label": "warrior",
+      "animPack": "sword_shield",
+      "meshIds": [
+        "UD_Units_head_G",
+        "UD_Units_body_D",
+        "UD_Units_arms_C",
+        "UD_Units_legs_C",
+        "UD_Units_shoulderpads_B",
+        "UD_weapon_Sword_B",
+        "UD_Shield_C"
+      ],
+      "mesh_ids": [
+        "UD_Units_head_G",
+        "UD_Units_body_D",
+        "UD_Units_arms_C",
+        "UD_Units_legs_C",
+        "UD_Units_shoulderpads_B",
+        "UD_weapon_Sword_B",
+        "UD_Shield_C"
+      ]
+    },
+    {
+      "id": "GRDG-UND-UNA",
+      "raceId": "undead",
+      "raceRaw": "undead",
+      "classId": "unarmed",
+      "label": "unarmed",
+      "animPack": "unarmed",
+      "meshIds": [
+        "UD_Units_head_A",
+        "UD_Units_body_B",
+        "UD_Units_arms_A",
+        "UD_Units_legs_A"
+      ],
+      "mesh_ids": [
+        "UD_Units_head_A",
+        "UD_Units_body_B",
+        "UD_Units_arms_A",
+        "UD_Units_legs_A"
+      ]
+    }
+  ]
+}

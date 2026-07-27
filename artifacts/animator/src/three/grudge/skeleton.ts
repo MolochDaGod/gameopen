@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { filterBindableTracks, stripPositionTracks } from "../clipTracks";
+import { filterBindableTracks } from "../clipTracks";
 
 // Order-of-magnitude unit correction. Ported from the grudge character-viewer
 // (powerOfTenScale).
@@ -57,12 +57,15 @@ export function rematchClipToSkeleton(
   const lookup = buildBoneNameLookup(root);
   if (lookup.size === 0) {
     const filtered = filterBindableTracks(root, clip);
-    return stripPos ? stripPositionTracks(filtered) : filtered;
+    return stripPos ? stripPositionAndScaleTracks(filtered) : filtered;
   }
 
   let rewritten = 0;
   const tracks: THREE.KeyframeTrack[] = [];
   for (const track of clip.tracks) {
+    // Grounded kits: rotation-only. Position/scale tracks = hip-float + stretch.
+    if (/\.position$|\.scale$/.test(track.name)) continue;
+
     const parsed = THREE.PropertyBinding.parseTrackName(track.name);
     const nodeName = parsed.nodeName;
     if (!nodeName) {
@@ -94,7 +97,7 @@ export function rematchClipToSkeleton(
       tracks.push(track);
     }
   }
-  if (tracks.length === 0) return clip;
+  if (tracks.length === 0) return stripPositionAndScaleTracks(clip);
   const next =
     tracks.length === clip.tracks.length && rewritten === 0
       ? clip
@@ -105,7 +108,14 @@ export function rematchClipToSkeleton(
     );
   }
   const bindable = filterBindableTracks(root, next);
-  return stripPos ? stripPositionTracks(bindable) : bindable;
+  return stripPos ? stripPositionAndScaleTracks(bindable) : bindable;
+}
+
+/** Drop .position / .scale tracks — keep grounded kits sturdy (no limb stretch). */
+export function stripPositionAndScaleTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
+  const keep = clip.tracks.filter((t) => !/\.position$|\.scale$/.test(t.name));
+  if (keep.length === clip.tracks.length) return clip;
+  return new THREE.AnimationClip(clip.name, clip.duration, keep, clip.blendMode);
 }
 
 // Skeleton unification. The Toon_RTS customizable FBX ships each of its ~27

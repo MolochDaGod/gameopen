@@ -63,7 +63,7 @@ export async function loadGltfFirst(
       animations?: import("three").AnimationClip[];
     }>;
   },
-  opts?: { prepMaterials?: boolean },
+  opts?: { prepMaterials?: boolean; quiet?: boolean },
 ): Promise<{
   scene: import("three").Object3D;
   animations: import("three").AnimationClip[];
@@ -71,9 +71,11 @@ export async function loadGltfFirst(
 }> {
   const pathList = Array.isArray(paths) ? paths : [paths];
   let lastErr: unknown;
+  const tried: string[] = [];
   for (const p of pathList) {
     if (!p) continue;
     for (const url of assetCandidates(p)) {
+      tried.push(url);
       try {
         const gltf = await loader.loadAsync(url);
         // Default: fix colour-space + mips on every production load path.
@@ -90,6 +92,14 @@ export async function loadGltfFirst(
         lastErr = err;
       }
     }
+  }
+  // One summary line — never N red network rows without context
+  if (!opts?.quiet) {
+    console.warn(
+      `[loadGltfFirst] miss after ${tried.length} candidates:`,
+      pathList.slice(0, 4).join(" | "),
+      lastErr instanceof Error ? lastErr.message : lastErr,
+    );
   }
   throw lastErr ?? new Error(`Failed to load: ${pathList.join(", ")}`);
 }

@@ -173,13 +173,28 @@ function isEquippableMeshName(n: string): boolean {
   );
 }
 
+/** Hide every equippable wardrobe piece (body/armor/weapon). Call before equip. */
+export function hideEquippableMeshes(group: THREE.Object3D): void {
+  group.traverse((node) => {
+    if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
+    const n = node.name;
+    if (!n || !isEquippableMeshName(n)) return;
+    node.visible = false;
+  });
+}
+
 /**
  * Show only the preset's armour + weapon meshes (child visibility).
  * Uses fuzzy meshKey matching — never exact string equality alone.
+ *
+ * HARD RULE (grudge6 modular): hide all equippable first, then show loadout.
+ * Never leave default "everything visible" — that is the spiked-blob / stretch
+ * look on modular race kits.
  */
 export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]): void {
   if (!visibleMeshes.length) return;
   const wantKeys = visibleMeshes.map(meshKey);
+  let matched = 0;
   group.traverse((node) => {
     if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
     const n = node.name;
@@ -193,7 +208,31 @@ export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]):
       }
     }
     node.visible = show;
+    if (show) matched++;
   });
+  // Fail-safe: if nothing matched (name drift), show at least one body so the
+  // hero is never an invisible/spiked full-wardrobe blob.
+  if (matched === 0) {
+    console.warn(
+      "[applyGearPreset] 0 mesh matches for",
+      visibleMeshes.slice(0, 6),
+      "— showing first body/head/arms/legs",
+    );
+    const roles = ["body", "head", "arms", "legs"];
+    const shown = new Set<string>();
+    group.traverse((node) => {
+      if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
+      const key = meshKey(node.name);
+      for (const r of roles) {
+        if (shown.has(r)) continue;
+        if (key.includes(r) && !key.includes("weapon") && !key.includes("shield")) {
+          node.visible = true;
+          shown.add(r);
+          break;
+        }
+      }
+    });
+  }
 }
 
 /**

@@ -16,12 +16,19 @@ describe("parseAnnihilateHero", () => {
     expect(s!.meshIds.some((m) => /ELF_/i.test(m))).toBe(true);
   });
 
-  it("parses wk_warrior → warrior preset (polearm pack on WK)", () => {
+  it("parses wk_warrior / human_warrior → sword_shield MMO kit", () => {
     const s = parseAnnihilateHero("wk_warrior");
     expect(s!.raceId).toBe("western-kingdoms");
     expect(s!.studioAvatarId).toBe("grudge:western-kingdoms:warrior");
     expect(s!.presetId).toBe("warrior");
+    expect(s!.animPack).toBe("sword_shield");
+    expect(s!.weaponId).toBe("sword");
     expect(s!.meshIds.length).toBeGreaterThan(0);
+    expect(s!.meshIds.some((m) => /sword|Shield/i.test(m))).toBe(true);
+
+    const human = parseAnnihilateHero("human_warrior");
+    expect(human!.raceId).toBe("western-kingdoms");
+    expect(human!.animPack).toBe("sword_shield");
   });
 
   it("parses high-elves/mage and orc_ranger", () => {
