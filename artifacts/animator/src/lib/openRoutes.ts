@@ -24,6 +24,8 @@ export type AppMode =
   | "play"
   | "editor"
   | "lobby"
+  /** Multiplayer rooms + community gallery (not the 4-seat character scene). */
+  | "rooms"
   | "ledmask"
   | "avatar"
   | "characters"
@@ -280,14 +282,27 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "lobby",
     slug: "lobby",
-    aliases: ["rooms", "multiplayer", "mp"],
-    cabinets: ["lobby"],
-    title: "The Lobby",
+    // Product SSOT: /lobby = 4-slot voxel character scene (same as /characters campfire).
+    aliases: ["party", "roster-lobby", "4slot", "four-slot"],
+    cabinets: ["lobby", "party"],
+    title: "Character Lobby",
     blurb:
-      "Voxel 4-seat campfire party (Ethereal Falls) + multiplayer rooms + community maps.",
+      "Ethereal Falls campfire — up to 4 voxel heroes, select seat, launch PvE/PvP.",
+    group: "hub",
+    poster: "lobby",
+    tags: ["4-slot", "Characters", "Campfire"],
+    accent: "#5fe0ff",
+  },
+  {
+    mode: "rooms",
+    slug: "rooms",
+    aliases: ["multiplayer", "mp", "mp-rooms", "community-maps"],
+    cabinets: ["rooms", "multiplayer"],
+    title: "Multiplayer Rooms",
+    blurb: "Join/create co-op & PvP rooms · community voxel maps.",
     group: "multiplayer",
     poster: "lobby",
-    tags: ["Multiplayer", "Community", "4-slot"],
+    tags: ["Multiplayer", "Community"],
     accent: "#9d8bff",
   },
   {

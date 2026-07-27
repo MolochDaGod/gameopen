@@ -52,6 +52,7 @@ export type ShellMode =
   | "play"
   | "editor"
   | "lobby"
+  | "rooms"
   | "ledmask"
   | "zones"
   | "brawl"
@@ -83,7 +84,8 @@ const NAV: NavItem[] = [
   { mode: "voxel",            label: "Worldbuilder",    hint: "Map editor · Danger Play", icon: <GameIcon name="worldbuilder" tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
   { mode: "voxgrudge-native", label: "VoxGrudge",       hint: "Open voxel world",     icon: <GameIcon name="explore"         tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Play" },
   { mode: "editor",           label: "Dressing Room",   hint: "Equip & preview",      icon: <GameIcon name="equip"           tone="#ffb24d" />,          tone: "#ffb24d", group: "Create" },
-  { mode: "lobby",            label: "Lobby",           hint: "Rooms & community",    icon: <GameIcon name="inventory"       tone="#9d8bff" />,          tone: "#9d8bff", group: "Community" },
+  { mode: "lobby",            label: "Lobby",           hint: "4 heroes · campfire",  icon: <GameIcon name="inventory"       tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Community" },
+  { mode: "rooms",            label: "Rooms",           hint: "MP rooms & maps",      icon: <GameIcon name="inventory"       tone="#9d8bff" />,          tone: "#9d8bff", group: "Community" },
   { mode: "realms",           label: "Realms",          hint: "Mine-Loader worlds",   icon: <GameIcon name="explore"         tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Community" },
   { mode: "zones",            label: "GRUDOX Zones",    hint: "Shared GRUDOX world",  icon: <GameIcon name="loot"            tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Community" },
   { mode: "ledmask",          label: "LED Mask",        hint: "AI face companion",    icon: <GameIcon name="animation-editor" tone="#a78bff" />,         tone: "#a78bff", group: "Tools" },

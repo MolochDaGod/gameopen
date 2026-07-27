@@ -2126,7 +2126,22 @@ export default function App() {
 
   if (mode === "avatar") {
     return shell(
-      withScreenTheme(<AvatarEditMode onExit={() => setMode("doors")} />),
+      withScreenTheme(
+        <AvatarEditMode
+          onExit={() => {
+            let back: string | null = null;
+            try {
+              back = sessionStorage.getItem("grudge.lobby.returnTo");
+              sessionStorage.removeItem("grudge.lobby.returnTo");
+            } catch {
+              /* ignore */
+            }
+            if (back === "lobby") navigate("lobby");
+            else if (back === "rooms") navigate("rooms");
+            else setMode("doors");
+          }}
+        />,
+      ),
     );
   }
 
@@ -2197,6 +2212,49 @@ export default function App() {
   }
 
   if (mode === "lobby") {
+    // Product SSOT: /lobby = 4-character Ethereal Falls campfire (not multiplayer rooms UI).
+    // Same scene as /characters; rooms live at /rooms.
+    return shell(
+      withScreenTheme(
+        <CinemaFlowGate cinemaId="lobby_establish">
+          <CampfireLobby
+            onExit={() => setMode("doors")}
+            onNavigate={(m) => {
+              if (m === "lobbyWorld") navigate("realms");
+              else if (m === "voxgrudge-native") navigate("voxgrudge-native");
+              else if (m === "home" || m === "hub") navigate("doors");
+              else if (m === "lobby" || m === "rooms") navigate("rooms");
+              else navigate(m as Mode);
+            }}
+            onAvatarEdit={() => {
+              try {
+                sessionStorage.setItem("grudge.lobby.returnTo", "lobby");
+              } catch {
+                /* ignore */
+              }
+              navigate("avatar");
+            }}
+            onPlayDanger={(hero) => {
+              gameSession.selectCharacter(hero.id);
+              const animId =
+                hero.baseId === "explorer" || !hero.baseId
+                  ? "explorer"
+                  : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
+                    ? hero.baseId
+                    : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
+              setCharacterId(animId === "human" ? "race-human" : animId);
+              studioRef.current?.setCharacter(
+                animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
+              );
+              navigate("danger");
+            }}
+          />
+        </CinemaFlowGate>,
+      ),
+    );
+  }
+
+  if (mode === "rooms") {
     return shell(
       withScreenTheme(
         <CinemaFlowGate cinemaId="lobby_establish">
@@ -2205,6 +2263,15 @@ export default function App() {
             onPlay={onPlayPost}
             onLoadScene={onLoadScenePost}
             onExit={() => setMode("doors")}
+            onAvatarEdit={(slot) => {
+              try {
+                sessionStorage.setItem("grudge.lobby.avatarSlot", String(slot));
+                sessionStorage.setItem("grudge.lobby.returnTo", "rooms");
+              } catch {
+                /* ignore */
+              }
+              navigate("avatar");
+            }}
             net={getNet()}
             onEnterRoom={onEnterRoom}
           />

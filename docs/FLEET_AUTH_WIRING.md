@@ -43,6 +43,14 @@ All `/api/auth/:path*` → `https://id.grudge-studio.com/api/auth/:path*`
 | Drop-in | `grudge-game-bootstrap.js`, `grudge-fleet.js` ≥ 2.10 |
 | Shared | GrudgeBuilder `shared/fleet/authConnect.ts`, `manifest.ts` |
 
+## Open surfaces (characters)
+
+| Path | Mode | Scene |
+|------|------|--------|
+| `/lobby` | `lobby` | **4-slot Ethereal Falls campfire** (`CampfireLobby`) — product character lobby |
+| `/characters` | `characters` | Same campfire roster hub |
+| `/rooms` | `rooms` | Multiplayer rooms + community maps (`Lobby.tsx`) |
+
 ## Smoke
 
 ```bash

@@ -150,11 +150,11 @@ const PVE_DESTS: MenuDest[] = [
 /** PvP — lobby first, then spar / live modes. */
 const PVP_DESTS: MenuDest[] = [
   {
-    id: "lobby",
-    label: "Multiplayer Lobby",
+    id: "rooms",
+    label: "Multiplayer Rooms",
     blurb: "Rooms · community maps · join / host",
     kind: "local",
-    mode: "lobby",
+    mode: "rooms",
     needsHero: true,
   },
   {
