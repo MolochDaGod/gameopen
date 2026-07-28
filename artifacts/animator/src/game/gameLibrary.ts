@@ -168,7 +168,9 @@ export const MINE_LOADER = {
     "Exactly one API replica (in-memory world authority → Postgres flush)",
     "Open /voxel exports interchange → Realms scene; combat labs stay on Open /danger",
     "Accounts: same Grudge ID + characterId on Open and Realms handoff",
-    "Primary SPA: https://mine-loader.vercel.app/ (mineloader.grudge-studio.com NXDOMAIN until CF)",
+    "Primary SPA: https://mine-loader.vercel.app/ · edge: https://mine.grudge-studio.com",
+    "Wide fleet map: Mine-Loader docs/FLEET_WIDE_INTEGRATION.md (Builder + pipeline + VoxGrudge + GRUDOX)",
+    "Blocks/worlds API: mine-loader-api Railway; characters/bag stay on grudge-api-production",
   ],
 } as const;
 
