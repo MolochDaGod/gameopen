@@ -146,7 +146,15 @@ export function heroFromLocation(
 ): AnnihilateHeroSpec | null {
   try {
     const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
-    return parseAnnihilateHero(q.get("hero") || q.get("character") || q.get("race"));
+    // Prefer explicit hero / character tokens. Bare ?race= alone is handled by
+    // dangerPlayableCharacter.parseAreQuery (with class) — avoid double-parse.
+    const token = q.get("hero") || q.get("character");
+    if (token) return parseAnnihilateHero(token);
+    // Legacy: race only without are/class → parse as hero race token
+    if (q.get("race") && !q.get("class") && !q.get("are")) {
+      return parseAnnihilateHero(q.get("race"));
+    }
+    return null;
   } catch {
     return null;
   }

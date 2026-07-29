@@ -45,6 +45,11 @@ import { Crosshair } from "./components/Crosshair";
 import { CursorManager } from "./components/CursorManager";
 import { heroFromLocation } from "./lib/annihilateHero";
 import {
+  resolveDangerPlayable,
+  applyDangerPlayableToStudio,
+  type DangerPlayableCharacter,
+} from "./lib/dangerPlayableCharacter";
+import {
   setFreeMouseSticky,
   setPlayPointerCtx,
   setPointerLayer,
@@ -79,7 +84,7 @@ import { IntroCinematic } from "./components/IntroCinematic";
 import { CinemaFlowGate } from "./components/CinemaFlowGate";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
-import { FleetBar } from "./components/FleetBar";
+
 import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
 import { ThreeVoxBattle } from "./components/ThreeVoxBattle";
@@ -661,6 +666,13 @@ export default function App() {
     return gameSession.subscribe(applyAvatarAndLoadout);
   }, []);
   const [weaponId, setWeaponId] = useState<WeaponId>("sword");
+  const [combatStyleId, setCombatStyleId] = useState<string>(() => {
+    try {
+      return localStorage.getItem("grudge.open.combatStyle") || "auto";
+    } catch {
+      return "auto";
+    }
+  });
   const [offHand, setOffHandState] = useState<WeaponId | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   // Hydrate from persisted controls so the saved controller/camera/mouse feel
@@ -860,15 +872,18 @@ export default function App() {
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
-      // Annihilate ?hero= before first spawn — grudge6 kit, not Explorer Mixamo FBX
-      // (Vercel .vercelignore strips **/*.fbx; those URLs 404 in production).
-      const spec = heroFromLocation();
-      const bootId = spec?.studioAvatarId ?? characterId;
+      // Playable hero SSOT: URL (ARE / annihilate) → fleet selected → default grudge6.
+      // Never boot Explorer Mixamo FBX for production danger (Vercel strips FBX).
+      const playable: DangerPlayableCharacter = resolveDangerPlayable({
+        fleetCharacter: gameSession.selectedCharacter(),
+      });
+      const spec = playable.spec;
+      const bootId = spec.studioAvatarId ?? characterId;
       const bootWeapon =
-        spec?.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
+        spec.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
 
       studio = new Studio(mountRef.current, bootId, (h) => hudRef.current(h), {
-        meshIds: spec?.meshIds ?? null,
+        meshIds: spec.meshIds ?? null,
         weaponId: bootWeapon,
       });
       studio.onCharacterLoaded = () => {
@@ -880,39 +895,37 @@ export default function App() {
             : s,
         );
       };
-      if (spec) {
-        setCharacterId(spec.studioAvatarId);
-        if (bootWeapon) setWeaponId(bootWeapon as WeaponId);
-        // Boot opts already applied mesh ids + weapon; flash + sockets
-        studio.flashMessage?.(
-          `ANNIHILATE · ${spec.hero.toUpperCase()} · ${spec.animPack} · ${spec.meshIds.length} meshes`,
-          2.6,
-        );
-        console.info(
-          "[annihilate-demo] hero boot",
-          spec.hero,
-          "avatar=",
-          spec.studioAvatarId,
-          "pack=",
-          spec.animPack,
-          "weapon=",
-          spec.weaponId,
-          "meshes=",
-          spec.meshIds.length,
-        );
-        const prev = studio.onCharacterLoaded;
-        studio.onCharacterLoaded = (id) => {
-          prev?.(id);
-          try {
-            const report = studio?.reportHandSockets();
-            if (report) console.info("[annihilate-demo] sockets", report);
-          } catch {
-            /* ignore */
-          }
-        };
-      } else {
+      // Always apply resolved playable (mesh_ids + avatar + weapon skills path)
+      setCharacterId(spec.studioAvatarId);
+      if (bootWeapon) setWeaponId(bootWeapon as WeaponId);
+      applyDangerPlayableToStudio(studio, playable);
+      // Async fleet mesh_ids (equipment bag) when source is fleet
+      if (playable.source === "fleet-character") {
         applyFleetLoadoutRef.current();
       }
+      console.info(
+        "[danger] playable boot",
+        playable.source,
+        playable.displayName,
+        "avatar=",
+        spec.studioAvatarId,
+        "pack=",
+        spec.animPack,
+        "weapon=",
+        spec.weaponId,
+        "meshes=",
+        spec.meshIds.length,
+      );
+      const prev = studio.onCharacterLoaded;
+      studio.onCharacterLoaded = (id) => {
+        prev?.(id);
+        try {
+          const report = studio?.reportHandSockets();
+          if (report) console.info("[danger] sockets", report);
+        } catch {
+          /* ignore */
+        }
+      };
       studio.setFireParams(loadFireFx());
       const persistedControls = loadControls();
       setParams(persistedControls);
@@ -1369,6 +1382,12 @@ export default function App() {
         });
       });
     }
+  }, []);
+
+  /** Samurai / Knight / Spearman / … retargeted motion packs. */
+  const onCombatStyle = useCallback((id: string) => {
+    setCombatStyleId(id);
+    studioRef.current?.setCombatStyle?.(id);
   }, []);
 
   const onOffHand = useCallback((id: WeaponId | null) => {
@@ -1948,6 +1967,7 @@ export default function App() {
   ]);
 
   // Wrap any mode's content in the persistent shell (launcher + toolbox + AI).
+  // Fleet account/mode/hero strip lives IN the shell header — never a second fixed bar.
   const shell = (content: React.ReactNode) => (
     <AppShell
       mode={mode}
@@ -1956,9 +1976,8 @@ export default function App() {
       hideAssistant={mode === "ledmask"}
       onToolLaunch={onToolLaunch}
       music={toolboxMusic}
+      showFleetStrip={mode !== "doors"}
     >
-      {/* Library hub owns its own Steam chrome + account strip */}
-      {mode !== "doors" && <FleetBar />}
       {content}
     </AppShell>
   );
@@ -2146,47 +2165,53 @@ export default function App() {
   }
 
   if (mode === "characters") {
-    // Production cinema → Ethereal Falls campfire (character select / create).
-    // Landing may request intro_to_characters once; otherwise short establish.
-    let gateId = "char_select_establish";
+    // ONE scene only: Ethereal Falls CampfireLobbyScene (no ProductionCinema dungeon).
+    // Optional storm-ship intro is allowed once, then campfire — never stacked.
+    let introOnce: string | null = null;
     try {
       const play = sessionStorage.getItem("grudge.cinema.play");
       if (play === "intro_to_characters") {
-        gateId = "intro_to_characters";
+        introOnce = "intro_to_characters";
         sessionStorage.removeItem("grudge.cinema.play");
       }
     } catch {
       /* ignore */
     }
+    const campfire = (
+      <CampfireLobby
+        onExit={() => setMode("doors")}
+        onNavigate={(m) => {
+          if (m === "lobbyWorld") navigate("realms");
+          else if (m === "voxgrudge-native") navigate("voxgrudge-native");
+          else if (m === "home" || m === "hub") navigate("doors");
+          else navigate(m as Mode);
+        }}
+        onAvatarEdit={() => navigate("avatar")}
+        onPlayDanger={(hero) => {
+          gameSession.selectCharacter(hero.id);
+          const animId =
+            hero.baseId === "explorer" || !hero.baseId
+              ? "explorer"
+              : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
+                ? hero.baseId
+                : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
+          setCharacterId(animId === "human" ? "race-human" : animId);
+          studioRef.current?.setCharacter(
+            animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
+          );
+          navigate("danger");
+        }}
+      />
+    );
     return shell(
       withScreenTheme(
-        <CinemaFlowGate cinemaId={gateId} force={gateId === "intro_to_characters"}>
-        <CampfireLobby
-          onExit={() => setMode("doors")}
-          onNavigate={(m) => {
-            // charactersgrudox wooden-sign → Open collection modes
-            if (m === "lobbyWorld") navigate("realms");
-            else if (m === "voxgrudge-native") navigate("voxgrudge-native");
-            else if (m === "home" || m === "hub") navigate("doors");
-            else navigate(m as Mode);
-          }}
-          onAvatarEdit={() => navigate("avatar")}
-          onPlayDanger={(hero) => {
-            gameSession.selectCharacter(hero.id);
-            const animId =
-              hero.baseId === "explorer" || !hero.baseId
-                ? "explorer"
-                : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                  ? hero.baseId
-                  : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-            setCharacterId(animId === "human" ? "race-human" : animId);
-            studioRef.current?.setCharacter(
-              animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-            );
-            navigate("danger");
-          }}
-        />
-        </CinemaFlowGate>,
+        introOnce ? (
+          <CinemaFlowGate cinemaId={introOnce} force>
+            {campfire}
+          </CinemaFlowGate>
+        ) : (
+          campfire
+        ),
       ),
     );
   }
@@ -2212,70 +2237,68 @@ export default function App() {
   }
 
   if (mode === "lobby") {
-    // Product SSOT: /lobby = 4-character Ethereal Falls campfire (not multiplayer rooms UI).
-    // Same scene as /characters; rooms live at /rooms.
+    // Product SSOT: ONE WebGL scene = Ethereal Falls CampfireLobbyScene.
+    // Never wrap in CinemaFlowGate(lobby_establish) — that loaded dungeon.glb
+    // as a second full render over the campfire (double-scene conflict).
     return shell(
       withScreenTheme(
-        <CinemaFlowGate cinemaId="lobby_establish">
-          <CampfireLobby
-            onExit={() => setMode("doors")}
-            onNavigate={(m) => {
-              if (m === "lobbyWorld") navigate("realms");
-              else if (m === "voxgrudge-native") navigate("voxgrudge-native");
-              else if (m === "home" || m === "hub") navigate("doors");
-              else if (m === "lobby" || m === "rooms") navigate("rooms");
-              else navigate(m as Mode);
-            }}
-            onAvatarEdit={() => {
-              try {
-                sessionStorage.setItem("grudge.lobby.returnTo", "lobby");
-              } catch {
-                /* ignore */
-              }
-              navigate("avatar");
-            }}
-            onPlayDanger={(hero) => {
-              gameSession.selectCharacter(hero.id);
-              const animId =
-                hero.baseId === "explorer" || !hero.baseId
-                  ? "explorer"
-                  : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                    ? hero.baseId
-                    : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-              setCharacterId(animId === "human" ? "race-human" : animId);
-              studioRef.current?.setCharacter(
-                animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-              );
-              navigate("danger");
-            }}
-          />
-        </CinemaFlowGate>,
+        <CampfireLobby
+          onExit={() => setMode("doors")}
+          onNavigate={(m) => {
+            if (m === "lobbyWorld") navigate("realms");
+            else if (m === "voxgrudge-native") navigate("voxgrudge-native");
+            else if (m === "home" || m === "hub") navigate("doors");
+            else if (m === "lobby" || m === "rooms") navigate("rooms");
+            else navigate(m as Mode);
+          }}
+          onAvatarEdit={() => {
+            try {
+              sessionStorage.setItem("grudge.lobby.returnTo", "lobby");
+            } catch {
+              /* ignore */
+            }
+            navigate("avatar");
+          }}
+          onPlayDanger={(hero) => {
+            gameSession.selectCharacter(hero.id);
+            const animId =
+              hero.baseId === "explorer" || !hero.baseId
+                ? "explorer"
+                : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
+                  ? hero.baseId
+                  : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
+            setCharacterId(animId === "human" ? "race-human" : animId);
+            studioRef.current?.setCharacter(
+              animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
+            );
+            navigate("danger");
+          }}
+        />,
       ),
     );
   }
 
   if (mode === "rooms") {
+    // ONE scene: Lobby.tsx already owns CampfireLobbyScene canvas — no cinema dungeon gate.
     return shell(
       withScreenTheme(
-        <CinemaFlowGate cinemaId="lobby_establish">
-          <Lobby
-            onLoad={onLoadPost}
-            onPlay={onPlayPost}
-            onLoadScene={onLoadScenePost}
-            onExit={() => setMode("doors")}
-            onAvatarEdit={(slot) => {
-              try {
-                sessionStorage.setItem("grudge.lobby.avatarSlot", String(slot));
-                sessionStorage.setItem("grudge.lobby.returnTo", "rooms");
-              } catch {
-                /* ignore */
-              }
-              navigate("avatar");
-            }}
-            net={getNet()}
-            onEnterRoom={onEnterRoom}
-          />
-        </CinemaFlowGate>,
+        <Lobby
+          onLoad={onLoadPost}
+          onPlay={onPlayPost}
+          onLoadScene={onLoadScenePost}
+          onExit={() => setMode("doors")}
+          onAvatarEdit={(slot) => {
+            try {
+              sessionStorage.setItem("grudge.lobby.avatarSlot", String(slot));
+              sessionStorage.setItem("grudge.lobby.returnTo", "rooms");
+            } catch {
+              /* ignore */
+            }
+            navigate("avatar");
+          }}
+          net={getNet()}
+          onEnterRoom={onEnterRoom}
+        />,
       ),
     );
   }
@@ -2319,12 +2342,32 @@ export default function App() {
   }
 
   if (mode === "genesis") {
-    // Product SSOT is warlord-genesis.vercel.app — open inside InAppGameCanvas.
+    // Primary: native Open arena (WarlordGenesis) — always playable same-origin.
+    // Secondary: Full MOBA SPA via InAppGameCanvas (SSO + character handoff).
     return shell(
-      <GenesisExternalLaunch
-        onStay={() => navigate("doors")}
-        onOpenInApp={openInApp}
-      />,
+      withScreenTheme(
+        <WarlordGenesis
+          onExit={() => navigate("doors")}
+          onOpenFullMoba={() => {
+            const ch = gameSession.selectedCharacter();
+            const url =
+              buildWarlordGenesisUrl({
+                characterId: ch?.id ?? gameSession.snapshot.selectedCharacterId,
+                characterName: ch?.name,
+                raceId: ch?.raceId,
+                from: "open",
+              }) || WARLORD_GENESIS_ENTRY;
+            openInApp({
+              url,
+              title: "Warlord Genesis — Full MOBA",
+              tone: "#ffd24d",
+              poster: assetUrl("rooms/genesis-scene.png"),
+              id: "warlord-genesis",
+              returnMode: "genesis",
+            });
+          }}
+        />,
+      ),
     );
   }
 
@@ -2345,9 +2388,11 @@ export default function App() {
             open
             characterId={characterId}
             weaponId={weaponId}
+            combatStyleId={combatStyleId}
             difficulty={difficulty}
             onCharacter={onCharacter}
             onWeapon={onWeapon}
+            onCombatStyle={onCombatStyle}
             onDifficulty={onDifficulty}
             onSpawn={onSpawn}
             onSpawnBoss={onSpawnBoss}
@@ -2467,6 +2512,60 @@ export default function App() {
           onSelect: () => setHudEditing((v) => !v),
         },
         { kind: "item", label: "Reset layout", icon: <RotateCcw size={13} />, onSelect: () => dangerDock.resetLayout() },
+      ],
+    },
+    {
+      label: "Play",
+      entries: [
+        { kind: "label", label: "Gameplay overlays" },
+        {
+          kind: "item",
+          label: "Loadout (I)",
+          icon: <Swords size={13} />,
+          onSelect: () => openEquip(),
+        },
+        {
+          kind: "item",
+          label: "Systems / skillbook (K)",
+          icon: <BookOpen size={13} />,
+          onSelect: () => openSystems(),
+        },
+        {
+          kind: "item",
+          label: "Camp claim flag (B)",
+          icon: <Flag size={13} />,
+          onSelect: () => openClaimFlag(),
+        },
+        { kind: "sep" },
+        {
+          kind: "item",
+          label: "Back to doors / library",
+          icon: <DoorOpen size={13} />,
+          onSelect: () => onLeaveDanger(),
+        },
+      ],
+    },
+    {
+      label: "Audio",
+      entries: [
+        { kind: "label", label: "Sound & music" },
+        {
+          kind: "custom",
+          render: () => (
+            <div style={{ padding: "6px 8px", minWidth: 220 }}>
+              <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} />
+            </div>
+          ),
+        },
+        { kind: "sep" },
+        {
+          kind: "custom",
+          render: () => (
+            <div style={{ padding: "4px 6px" }}>
+              <DjStationPanel variant="menubar" {...djPanelProps} />
+            </div>
+          ),
+        },
       ],
     },
   ];
@@ -2914,61 +3013,48 @@ export default function App() {
                 menus={dangerMenus}
                 right={
                   <>
-                    <SoundMixer sound={sound} onToggleMute={onToggleMute} onLevel={onSoundLevel} />
-                    <DjStationPanel variant="menubar" {...djPanelProps} />
-                    <Tip label="Camp claim flag (B) — units, buildings, farm, tame">
-                      <button
-                        className={`tm-btn eq-open-btn ${claimFlagOpen ? "live" : ""}`}
-                        onClick={openClaimFlag}
-                      >
-                        <Flag size={14} />
-                        <span>Camp</span>
-                      </button>
-                    </Tip>
-                    <Tip label="Systems / skillbook (K) — Creator tabs">
-                      <button
-                        className={`tm-btn eq-open-btn ${systemsOpen ? "live" : ""}`}
-                        onClick={openSystems}
-                      >
-                        <BookOpen size={14} />
-                        <span>Systems</span>
-                      </button>
-                    </Tip>
                     <Tip label="Loadout (I)">
                       <button
                         className={`tm-btn eq-open-btn ${equipOpen ? "live" : ""}`}
                         onClick={openEquip}
+                        aria-label="Loadout"
                       >
                         <Swords size={14} />
                         <span>Loadout</span>
                       </button>
                     </Tip>
-                    <Tip label="Back to door select">
-                      <button className="tm-btn" onClick={onLeaveDanger}>
+                    <Tip label="Library / doors">
+                      <button className="tm-btn" onClick={onLeaveDanger} aria-label="Doors">
                         <DoorOpen size={14} />
-                        <span>Doors</span>
                       </button>
                     </Tip>
                   </>
                 }
               />
             </div>
-            <DockSurface layout={dangerLayout} controls={dangerDock} panels={dangerPanels} />
+            <DockSurface
+              layout={dangerLayout}
+              controls={dangerDock}
+              panels={dangerPanels}
+              menuHeight={100}
+            />
           </TipProvider>
 
           {/* Start gate: ENTER → pointer lock; room preset + fleet warmup */}
           {dangerStartOpen && !isMobile && (
             <DangerStartScreen
-              characterLabel={
-                hud?.character ||
-                gameSession.selectedCharacter()?.name ||
-                characterId
-              }
-              raceLabel={
-                gameSession.selectedCharacter()?.raceId
-                  ? String(gameSession.selectedCharacter()?.raceId)
-                  : undefined
-              }
+              characterLabel={(() => {
+                const p = resolveDangerPlayable({
+                  fleetCharacter: gameSession.selectedCharacter(),
+                });
+                return p.displayName || hud?.character || characterId;
+              })()}
+              raceLabel={(() => {
+                const p = resolveDangerPlayable({
+                  fleetCharacter: gameSession.selectedCharacter(),
+                });
+                return `${p.spec.raceId} · ${p.spec.animPack} · ${p.source}`;
+              })()}
               weaponLabel={hud?.weapon ?? weaponId}
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={dangerWarm.ready}
