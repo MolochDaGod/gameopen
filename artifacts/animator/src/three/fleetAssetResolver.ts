@@ -61,14 +61,32 @@ export function pathAliases(path: string): string[] {
   const clean = cleanPath(path);
   const out: string[] = [clean];
 
-  // Race GLBs (Open public) ↔ characters/ on R2
+  // Race GLBs — production SSOT is grudge6 modular kit on R2; races/* is lab fallback
   const raceM = clean.match(/^models\/races\/([a-z0-9_-]+)\.glb$/i);
   if (raceM) {
     const n = raceM[1]!.toLowerCase().replace(/_/g, "-");
+    const g6 = grudge6RaceGlbForSlug(n);
+    if (g6) {
+      // Prefer grudge6 first in candidate list
+      out.unshift(g6);
+      out.push(g6.replace(/\.glb$/i, ".fbx"));
+    }
     out.push(`models/characters/${n}.glb`);
     if (n === "high-elf" || n === "high_elf") {
-      out.push("models/characters/elf.glb", "models/races/high_elf.glb");
+      out.push(
+        GRUDGE6_RACE_GLB.elf!,
+        "models/characters/elf.glb",
+        "models/races/high_elf.glb",
+      );
     }
+  }
+  // Direct grudge6 race GLB — also accept FBX authoring path
+  const g6m = clean.match(/^models\/grudge6\/races\/([A-Z]+)_Characters\.glb$/i);
+  if (g6m) {
+    const pfx = g6m[1]!.toUpperCase();
+    out.push(`models/grudge6/races/${pfx}_Characters.glb`);
+    out.push(`models/grudge6/races/${pfx}_Characters.fbx`);
+    out.push(`models/grudge6/races/${pfx}_Characters_customizable.FBX`);
   }
 
   // Lab heroes — prefer models that exist on R2 / Open public (probed 2026-07)
@@ -95,6 +113,28 @@ export function pathAliases(path: string): string[] {
       "models/orc.glb",
     );
   }
+  // Dead voxel stand-ins → live weapon GLBs (probed 2026-07)
+  if (
+    clean === "models/weapons/voxel/00.obj" ||
+    clean === "models/weapons/voxel/00.glb" ||
+    /^models\/weapons\/voxel\//i.test(clean)
+  ) {
+    out.length = 0;
+    out.push(
+      "models/weapons/sword.glb",
+      "models/weapons/greatsword.glb",
+      "models/weapons/dagger.glb",
+    );
+  }
+  // Scythe family: no dedicated scythe GLB yet → war-spear / spear
+  if (/scythe/i.test(clean) && !out.some((p) => /war-spear|spear/.test(p))) {
+    out.push("models/weapons/war-spear.glb", "models/weapons/spear.glb");
+  }
+  // Tome / book offhand stand-in until dedicated mesh
+  if (/models\/weapons\/tome/i.test(clean)) {
+    out.push("models/weapons/shield.glb", "models/weapons/staff.glb");
+  }
+
   // Racalvin living twin swords (Brothers Keeper)
   if (
     clean === "models/weapons/my-brothers-keeper.prod.glb" ||
@@ -356,11 +396,12 @@ function isFleetCdnFirst(clean: string): boolean {
 /**
  * Ordered absolute URLs to try for a logical asset path.
  * Fleet CDN-first for grudge6 textures/models; same-origin first for Open lab pack.
+ * Absolute CDN URLs get Mine-Loader deploy-epoch ?v= bust when epoch is set.
  */
 export function resolveAssetCandidates(path: string): string[] {
-  // Absolute URL → single candidate
+  // Absolute URL → single candidate (still epoch-bust http(s) CDN)
   if (/^([a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) {
-    return [path];
+    return [withFleetEpochBust(path)];
   }
 
   const aliases = pathAliases(path);
@@ -401,7 +442,33 @@ export function resolveAssetCandidates(path: string): string[] {
   // Never append r2Gameopen — that prefix 404s for Open lab pack (props/races/vfx)
   // and only pollutes the network panel + lastErr when all real hosts fail.
 
-  return [...new Set(urls.filter(Boolean))];
+  return [...new Set(urls.filter(Boolean).map(withFleetEpochBust))];
+}
+
+/** Deploy-epoch query for fleet CDN hosts (Mine-Loader worldFleet / stamp). */
+function withFleetEpochBust(url: string): string {
+  try {
+    // Lazy import path avoided — use localStorage epoch set by bootstrap
+    const epoch =
+      (typeof localStorage !== "undefined" &&
+        localStorage.getItem("grudge_fleet_deploy_epoch")) ||
+      "";
+    if (!epoch || !url || url.startsWith("data:")) return url;
+    if (!/^https?:\/\//i.test(url)) return url;
+    if (/[?&]v=/.test(url)) return url;
+    // Bust R2 / open hosts / mine SPA island paths only
+    if (
+      !/assets\.grudge-studio\.com|open\.grudge-studio\.com|mine-loader\.vercel\.app|mine\.grudge-studio\.com|grudge-arena\.grudge-studio\.com/i.test(
+        url,
+      )
+    ) {
+      return url;
+    }
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}v=${encodeURIComponent(epoch)}`;
+  } catch {
+    return url;
+  }
 }
 
 /** Primary URL for <img src> / simple cases (same-origin first). */
@@ -528,6 +595,7 @@ export async function resolveIconUrl(name: string): Promise<string> {
 
 /**
  * Canonical grudge6 race FBX paths (R2-proven) for a RaceId-like slug.
+ * Authoring / convert source — prefer {@link GRUDGE6_RACE_GLB} for play.
  */
 export const GRUDGE6_RACE_FBX: Record<string, string> = {
   human: "models/grudge6/races/WK_Characters.fbx",
@@ -542,6 +610,42 @@ export const GRUDGE6_RACE_FBX: Record<string, string> = {
   orcs: "models/grudge6/races/ORC_Characters.fbx",
   undead: "models/grudge6/races/UD_Characters.fbx",
 };
+
+/**
+ * Production grudge6 race GLBs (R2 HEAD 200 2026-07) — textured SI bake, Bip001.
+ * Use for play / loadout / combat. charactersgrudox races/*.glb is lab fallback only.
+ */
+export const GRUDGE6_RACE_GLB: Record<string, string> = {
+  human: "models/grudge6/races/WK_Characters.glb",
+  "western-kingdoms": "models/grudge6/races/WK_Characters.glb",
+  barbarian: "models/grudge6/races/BRB_Characters.glb",
+  barbarians: "models/grudge6/races/BRB_Characters.glb",
+  dwarf: "models/grudge6/races/DWF_Characters.glb",
+  dwarves: "models/grudge6/races/DWF_Characters.glb",
+  elf: "models/grudge6/races/ELF_Characters.glb",
+  "high-elves": "models/grudge6/races/ELF_Characters.glb",
+  "high-elf": "models/grudge6/races/ELF_Characters.glb",
+  orc: "models/grudge6/races/ORC_Characters.glb",
+  orcs: "models/grudge6/races/ORC_Characters.glb",
+  undead: "models/grudge6/races/UD_Characters.glb",
+};
+
+/** Fleet race slug → grudge6 production GLB path (or null). */
+export function grudge6RaceGlbForSlug(raceId?: string | null): string | null {
+  if (!raceId) return null;
+  const k = String(raceId)
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (GRUDGE6_RACE_GLB[k]) return GRUDGE6_RACE_GLB[k]!;
+  if (k.includes("orc")) return GRUDGE6_RACE_GLB.orc!;
+  if (k.includes("elf")) return GRUDGE6_RACE_GLB.elf!;
+  if (k.includes("dwarf") || k.includes("dwf")) return GRUDGE6_RACE_GLB.dwarf!;
+  if (k.includes("barb")) return GRUDGE6_RACE_GLB.barbarian!;
+  if (k.includes("undead") || k === "ud") return GRUDGE6_RACE_GLB.undead!;
+  if (k.includes("human") || k.includes("kingdom") || k === "wk") return GRUDGE6_RACE_GLB.human!;
+  return null;
+}
 
 /** Prefer game-hosted webp + R2 texture atlases. */
 export const GRUDGE6_TEX_PATHS: Record<string, string[]> = {

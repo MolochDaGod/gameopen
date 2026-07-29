@@ -164,6 +164,20 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
     MINE_LOADER_API;
   url.searchParams.set("api", api);
 
+  // Ask Realms to re-pull shells after Open detected a new fleet deploy epoch.
+  try {
+    const epoch =
+      (typeof localStorage !== "undefined" &&
+        localStorage.getItem("grudge_fleet_deploy_epoch")) ||
+      "";
+    if (epoch) {
+      url.searchParams.set("clearCache", "1");
+      url.searchParams.set("fleetEpoch", epoch);
+    }
+  } catch {
+    /* private mode */
+  }
+
   let hash = MINE_LOADER_HASH[surface] || "#/";
   if (opts.joinCode && surface === "join") {
     hash = `#/join/${encodeURIComponent(opts.joinCode)}`;

@@ -3,6 +3,7 @@ import App from "./App";
 import { AppShell } from "./auth/ClerkSetup";
 import { gameSession } from "./game/GameSession";
 import { bindInstallPrompt, registerServiceWorker } from "./lib/pwa";
+import { bootstrapMineLoaderFleetCache } from "./lib/mineLoaderFleetCache";
 import "./index.css";
 
 // Kill legacy R2 fetch hijack (prepare-client used to rewrite /models|/icons to
@@ -11,6 +12,11 @@ if (typeof window !== "undefined") {
   const g = (window as unknown as { __GAMEOPEN__?: { useR2?: boolean } }).__GAMEOPEN__;
   if (g) g.useR2 = false;
 }
+
+// Mine-Loader worldFleet / stamp epoch → CDN ?v= bust (shared with Realms).
+void bootstrapMineLoaderFleetCache().catch((err) => {
+  console.warn("[gameopen] fleet cache bootstrap failed", err);
+});
 
 // Fleet auth + character roster (non-blocking — guest play works offline).
 void gameSession.boot().catch((err) => {
