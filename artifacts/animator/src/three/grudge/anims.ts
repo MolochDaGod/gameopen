@@ -85,6 +85,44 @@ export type MobilityRole =
   | "hitfly"
   | "getUp";
 
+/**
+ * Dual-wield / PC_B melee pack from dual_wieldingandothers.glb
+ * (Bip001 bake: anims/baked/dual_wield/*). Rotation-only, hip Y/XZ stripped.
+ * Use for dash, attacks, flinch, dodge on grudge6 + Explorer.
+ */
+export const DUAL_WIELD_CLIPS: ReadonlyArray<{
+  role: string;
+  bakeRel: string;
+  loop: boolean;
+  kind: "dash" | "attack" | "hit" | "dodge" | "block" | "loco" | "kick";
+}> = [
+  { role: "sword_dash_attack", bakeRel: "dual_wield/sword_dash_attack", loop: false, kind: "dash" },
+  { role: "dash", bakeRel: "dual_wield/dash", loop: false, kind: "dash" },
+  { role: "attack", bakeRel: "dual_wield/attack", loop: false, kind: "attack" },
+  { role: "attack2", bakeRel: "dual_wield/attack2", loop: false, kind: "attack" },
+  { role: "attack3", bakeRel: "dual_wield/attack3", loop: false, kind: "attack" },
+  { role: "attack4", bakeRel: "dual_wield/attack4", loop: false, kind: "attack" },
+  { role: "attack5", bakeRel: "dual_wield/attack5", loop: false, kind: "attack" },
+  { role: "skill1", bakeRel: "dual_wield/skill1", loop: false, kind: "dash" },
+  { role: "skill2", bakeRel: "dual_wield/skill2", loop: false, kind: "attack" },
+  { role: "skill3", bakeRel: "dual_wield/skill3", loop: false, kind: "attack" },
+  { role: "skill4", bakeRel: "dual_wield/skill4", loop: false, kind: "attack" },
+  { role: "overhead", bakeRel: "dual_wield/overhead", loop: false, kind: "attack" },
+  { role: "slash", bakeRel: "dual_wield/slash", loop: false, kind: "attack" },
+  { role: "thrust", bakeRel: "dual_wield/thrust", loop: false, kind: "dash" },
+  { role: "special", bakeRel: "dual_wield/special", loop: false, kind: "attack" },
+  { role: "combo", bakeRel: "dual_wield/combo", loop: false, kind: "attack" },
+  { role: "hurt", bakeRel: "dual_wield/hurt", loop: false, kind: "hit" },
+  { role: "hitfly", bakeRel: "dual_wield/hitfly", loop: false, kind: "hit" },
+  { role: "death", bakeRel: "dual_wield/death", loop: false, kind: "hit" },
+  { role: "dodgeF", bakeRel: "dual_wield/dodgeF", loop: false, kind: "dodge" },
+  { role: "dodgeB", bakeRel: "dual_wield/dodgeB", loop: false, kind: "dodge" },
+  { role: "dodgeL", bakeRel: "dual_wield/dodgeL", loop: false, kind: "dodge" },
+  { role: "dodgeR", bakeRel: "dual_wield/dodgeR", loop: false, kind: "dodge" },
+  { role: "block", bakeRel: "dual_wield/block", loop: true, kind: "block" },
+  { role: "kick", bakeRel: "dual_wield/kick", loop: false, kind: "kick" },
+];
+
 export const MOBILITY_CLIPS: ReadonlyArray<{
   role: MobilityRole;
   /** Preferred baked path (after bake pipeline). */
@@ -512,6 +550,8 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "dodge_backward", rel: "locomotion/dodge_back" },
   // Mobility SSOT (bake plan + prod/anims fallbacks via loadBakedClip candidates)
   ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
+  // Dual-wield melee dash / attacks / hits (dual_wieldingandothers.glb → Bip001)
+  ...DUAL_WIELD_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
   // Production CDN packages (roll/harvest/block + climbup alias)
   { role: "roll", rel: "roll_dodge/dodging-back" },
   { role: "climbAlt", rel: "locomotion/climbup_1m" },

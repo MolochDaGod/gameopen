@@ -7,7 +7,7 @@
  */
 import * as THREE from "three";
 import { filterBindableTracks } from "./clipTracks";
-import { loadBakedClip, MOBILITY_CLIPS } from "./grudge/anims";
+import { loadBakedClip, MOBILITY_CLIPS, DUAL_WIELD_CLIPS } from "./grudge/anims";
 import { rematchClipToSkeleton } from "./grudge/skeleton";
 import type { AnimRole } from "./types";
 
@@ -112,8 +112,12 @@ export async function hydrateFleetAvatarRoles(opts: {
     return { loaded, failed: ["no-skinned-mesh"], aliased, hasSkinned: false };
   }
 
-  const tryBake = async (role: string, paths: string[]): Promise<boolean> => {
-    if (!opts.force && opts.hasRole(role)) return true;
+  const tryBake = async (
+    role: string,
+    paths: string[],
+    allowOverwrite = false,
+  ): Promise<boolean> => {
+    if (!opts.force && !allowOverwrite && opts.hasRole(role)) return true;
     for (const path of paths) {
       try {
         const raw = await loadBakedClip(path);
@@ -156,6 +160,45 @@ export async function hydrateFleetAvatarRoles(opts: {
     MOBILITY_CLIPS.map(async ({ role, bakeRel }) => {
       if (!opts.force && opts.hasRole(role)) return;
       await tryBake(role, [bakeRel]);
+    }),
+  );
+
+  // 3b) Dual-wield melee pack (dash / attacks / hit / dodge) — overwrite combat
+  // roles so melee dash + take-hit use reviewed dual_wieldingandothers.glb bakes
+  const dualOverwrite = new Set([
+    "dash",
+    "sword_dash_attack",
+    "hurt",
+    "hitfly",
+    "death",
+    "dodgeF",
+    "dodgeB",
+    "dodgeL",
+    "dodgeR",
+    "skill1",
+    "skill2",
+    "skill3",
+    "skill4",
+    "overhead",
+    "slash",
+    "thrust",
+    "special",
+    "combo",
+    "kick",
+    "block",
+    "attack2",
+    "attack3",
+    "attack4",
+    "attack5",
+  ]);
+  await Promise.all(
+    DUAL_WIELD_CLIPS.map(async ({ role, bakeRel, kind }) => {
+      if (kind === "loco") return;
+      // Keep primary pack idle/walk/run/attack from weapon pack; fill extras always
+      if (role === "attack" && opts.hasRole("attack") && !opts.force) return;
+      const allowOverwrite = dualOverwrite.has(role);
+      if (!allowOverwrite && opts.hasRole(role)) return;
+      await tryBake(role, [bakeRel], allowOverwrite);
     }),
   );
 

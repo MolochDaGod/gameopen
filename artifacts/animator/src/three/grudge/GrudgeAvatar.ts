@@ -195,22 +195,12 @@ export class GrudgeAvatar implements Avatar {
           logId: `grudge6:${this.raceId}/${this.presetId}`,
           hasRole: (role) => this.roleClip.has(role as import("../types").AnimRole) || this.actions.has(role),
           register: (role, clip) => {
-            if (!this.mixer || this.actions.has(role)) return;
+            if (!this.mixer) return;
+            // Overwrite allowed for dual_wield dash/hurt/skill roles
             const action = this.mixer.clipAction(clip);
             this.actions.set(role, action);
             this.actions.set(clip.name, action);
             this.roleClip.set(role as import("../types").AnimRole, role);
-            // Keep director clip map in sync when possible
-            if (this.director && "registerClip" in this.director) {
-              try {
-                (this.director as { registerClip?: (n: string, c: THREE.AnimationClip) => void }).registerClip?.(
-                  role,
-                  clip,
-                );
-              } catch {
-                /* optional */
-              }
-            }
           },
         });
         applyRoleAliases(

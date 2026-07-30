@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:playtest": "vitest run --config vitest.config.ts src/playtest/",
-    "bake:mobility": "node scripts/bake-mobility-p1.mjs"
+    "bake:mobility": "node scripts/bake-mobility-p1.mjs",
+    "bake:dual-wield": "node scripts/bake-dual-wield-glb.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",

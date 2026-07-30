@@ -138,7 +138,8 @@ export class Character {
         logId: this.def.id,
         hasRole: (role) => this.roleClip.has(role as AnimRole),
         register: (role, clip) => {
-          if (!this.mixer || this.roleClip.has(role as AnimRole)) return;
+          if (!this.mixer) return;
+          // Allow dual_wield overwrite of dash/hurt/skills (hydrate force path)
           const action = this.mixer.clipAction(clip);
           this.actions.set(role, action);
           this.actions.set(clip.name, action);
