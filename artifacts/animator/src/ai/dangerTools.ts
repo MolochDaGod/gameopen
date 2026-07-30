@@ -52,6 +52,10 @@ export interface DangerHandlers {
   onParry?: () => void;
   onDodge?: () => void;
   getWeaponId?: () => WeaponId;
+  /** Switch outdoor / combat test map (Admin Test Maps + Studio.setTestWorld). */
+  onTestWorld?: (id: string) => void | Promise<boolean>;
+  /** Back-slot wing: parachute / glider / flight / sail deploy. */
+  onEquipWing?: (itemId: string | null) => void;
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -335,6 +339,140 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
         return `Hitstop ${s}s`;
       },
     },
+    {
+      name: "run_playtest_suite",
+      description:
+        "Run AI play-tester suites (locomotion naming/sprint ban, pathfinding A*, blend math, combat MM skills, danger e2e). Returns text report for Q&A development. suite=all|locomotion|pathfinding|blend-math|combat-mm|danger-e2e.",
+      parameters: {
+        type: "object",
+        properties: {
+          suite: {
+            type: "string",
+            enum: [
+              "all",
+              "locomotion",
+              "pathfinding",
+              "blend-math",
+              "combat-mm",
+              "danger-e2e",
+              "map-scale",
+              "tropical-harvest",
+            ],
+          },
+        },
+      },
+      execute: async (args) => {
+        const { runPlaytestText } = await import("../playtest/index");
+        const suite = String(args.suite || "all") as
+          | "all"
+          | "locomotion"
+          | "pathfinding"
+          | "blend-math"
+          | "combat-mm"
+          | "danger-e2e"
+          | "map-scale"
+          | "tropical-harvest";
+        const live = {
+          listClips: handlers.onListClips,
+          getWeaponId: handlers.getWeaponId
+            ? () => String(handlers.getWeaponId?.() || "sword")
+            : undefined,
+        };
+        return runPlaytestText(suite, { surface: "danger", live });
+      },
+    },
+    {
+      name: "playtest_locomotion_health",
+      description:
+        "Quick locomotion audit only: banned run-to-roll sprint, pack gait paths, mobility roles, never-alias-to-attack.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        const { runPlaytestText } = await import("../playtest/index");
+        return runPlaytestText("locomotion", { surface: "danger" });
+      },
+    },
+    {
+      name: "playtest_nav_math",
+      description:
+        "Run pathfinding A* + SI scale + nav stack notes (Yuka/Rapier) for agent debugging.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        const { runPlaytestText } = await import("../playtest/index");
+        return runPlaytestText("pathfinding", { surface: "danger" });
+      },
+    },
+    {
+      name: "playtest_tropical_harvest",
+      description:
+        "Classify tropical_island meshes: water/skybox excluded; rocks/trees/plants as generative harvest nodes for Q&A loco map.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        const { runPlaytestText } = await import("../playtest/index");
+        return runPlaytestText("tropical-harvest", { surface: "danger" });
+      },
+    },
+    {
+      name: "set_test_world",
+      description:
+        "Switch Danger live test map: danger-room (combat chamber), sailtest, forest-map, island-life, fabled-zone, bridge-town-docks, tropical-harvest (dry island harvest Q&A), pirate-village (orc loco + water band).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            enum: [
+              "danger-room",
+              "sailtest",
+              "forest-map",
+              "island-life",
+              "fabled-zone",
+              "bridge-town-docks",
+              "tropical-harvest",
+              "pirate-village",
+              "shipwreck-island",
+              "arena",
+              "forest-mountains",
+            ],
+          },
+        },
+        required: ["id"],
+      },
+      execute: async (args) => {
+        if (!handlers.onTestWorld) throw new Error("Test world switch not wired.");
+        const id = String(args.id);
+        await handlers.onTestWorld(id);
+        return `Test map → ${id}`;
+      },
+    },
+    {
+      name: "equip_back_wing",
+      description:
+        "Equip back-slot wing pack modes: back_wing_pack (stowed circle), back_parachute, back_glider, back_flight_rig, back_sail_deploy (ocean sail/waterboard). Pass null/empty to hide.",
+      parameters: {
+        type: "object",
+        properties: {
+          itemId: {
+            type: "string",
+            enum: [
+              "back_wing_pack",
+              "back_parachute",
+              "back_glider",
+              "back_flight_rig",
+              "back_sail_deploy",
+              "none",
+            ],
+          },
+        },
+        required: ["itemId"],
+      },
+      execute: (args) => {
+        if (!handlers.onEquipWing) throw new Error("Wing equip not wired.");
+        const raw = String(args.itemId || "none");
+        const id = raw === "none" || raw === "" ? null : raw;
+        handlers.onEquipWing(id);
+        return id ? `Back wing → ${id}` : "Back wing cleared";
+      },
+    },
   ];
 
   return tools;
@@ -353,22 +491,30 @@ export function dangerSystemPrompt(state: DangerState): string {
   const toggles = TOGGLE_FIELDS.map((f) => `${String(f.key)}=${state.params[f.key]}`).join(", ");
   const icon = resolveSlotIconUrl("primary", state.weaponId);
   return [
-    "You are the Danger Room Master — AI combat director for Grudge Open (open.grudge-studio.com/danger).",
-    "You help FIX combat feel, CREATE/EDIT/PREVIEW animations with effects, request UNIQUE MOVEMENT (MM lunges/dashes), and tune blocking/parry/pushback.",
+    "You are the Danger Room Master — AI combat director + play-tester for Grudge Open (open.grudge-studio.com/danger).",
+    "You help FIX combat feel, CREATE/EDIT/PREVIEW animations with effects, request UNIQUE MOVEMENT (MM lunges/dashes), tune blocking/parry/pushback, RUN AI playtest suites, and SWITCH test maps (set_test_world: danger-room, tropical-harvest, pirate-village, sailtest, forest-map, …).",
     "Act only through tools. After tools, reply in one short natural sentence.",
+    "",
+    "Play-testers (Q&A development):",
+    "- run_playtest_suite — full or partial headless+live audits",
+    "- playtest_locomotion_health — sprint≠run-to-roll, pack gait, mobility crawl/climb/swim",
+    "- playtest_nav_math — A* pathfinding + SI 1.8m + Yuka/Rapier notes",
+    "- Loop: run suite → set_param / preview_animation / unique_movement → re-run",
     "",
     "Combat systems (wired):",
     "- MM (Maneuver Motion): dashDistance + Controller.dash / skill lunge; tool unique_movement",
+    "- Sprint: clone pack.run × 1.75 — NEVER load locomotion/running (run-to-roll)",
     "- Block: RMB hold; pushback via skillForce + guard bounce",
-    "- Parry: Q; perfect parry flash + hitstop",
+    "- Parry: C; perfect parry flash + hitstop (not Q — Q is activity mode)",
     "- Hitstop: trigger_hitstop / auto on hits",
     "- Skill icons: R2 pack art (assets.grudge-studio.com/icons/pack/*) with local fallback",
+    "- Stack: three + Rapier + three-mesh-bvh + Yuka + epicfight + baked Bip001 packs",
     "",
     "Asset/API SSOT:",
     "- Icons CDN: https://assets.grudge-studio.com/icons/pack/",
     "- Master skills: https://info.grudge-studio.com/api/v1/master-weaponSkills.json",
     "- Content API: /api/content/skills · /api/content/weapons",
-    "- Docs: docs/DANGER_ROOM.md",
+    "- Docs: docs/DANGER_ROOM.md · docs/DANGER_PLAYTESTERS.md · content/anims/bake-plan.json",
     "",
     `Characters: ${CHARACTER_IDS.join(", ")}.`,
     `Weapons: ${WEAPON_IDS.join(", ")}.`,

@@ -165,6 +165,16 @@ export function HarvestProductionUI({
     warmGameMedia();
     setBag(ensureStarterBag());
     setSystemsState(loadSystemsState(characterId));
+    // ObjectStore materials + icon shard (info.grudge-studio.com) for bag/craft icons
+    void import("../game/inventory/objectStoreMaterials").then(({ prefetchObjectStoreMaterials }) =>
+      prefetchObjectStoreMaterials().then((s) => {
+        if (s.loaded) {
+          console.info(
+            `[HarvestUI] ObjectStore materials ${s.materials.length} · icons ${Object.keys(s.icons).length}`,
+          );
+        }
+      }),
+    );
     void loadHarvestRecipes().then((r) => {
       setRecipes(r.recipes);
       setStations(r.stations);

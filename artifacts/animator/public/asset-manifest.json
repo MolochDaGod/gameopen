@@ -1,33 +1,33 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-27T22:49:11.996Z",
+  "generatedAt": "2026-07-30T02:51:10.534Z",
   "game": "gameopen",
-  "count": 1648,
+  "count": 1467,
   "byKind": {
-    "data": 71,
+    "data": 90,
     "animation": 572,
-    "model": 408,
+    "model": 233,
     "texture": 498,
-    "other": 86,
+    "other": 61,
     "icon": 4,
     "text": 3,
     "bin": 2,
     "code": 4
   },
   "byPurpose": {
-    "data": 71,
-    "unknown": 394,
-    "prop": 48,
+    "data": 90,
+    "unknown": 231,
+    "prop": 37,
     "animation": 286,
-    "weapon": 197,
-    "vfx": 50,
+    "weapon": 196,
+    "vfx": 44,
     "texture": 498,
     "audio": 54,
-    "npc": 16,
-    "map": 26,
+    "npc": 12,
+    "map": 11,
     "character": 8
   },
-  "totalBytes": 4133002536,
+  "totalBytes": 898146576,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -6066,7 +6066,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1695,
+      "bytes": 1781,
       "category": "anims/baked/polearm"
     },
     {
@@ -7046,7 +7046,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 22025,
+      "bytes": 22687,
       "category": "content"
     },
     {
@@ -7056,7 +7056,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 25986,
+      "bytes": 27032,
       "category": "content"
     },
     {
@@ -7066,7 +7066,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 2611,
+      "bytes": 2512,
       "category": "content/enemies"
     },
     {
@@ -7120,14 +7120,144 @@
       "category": "content/harvest"
     },
     {
+      "id": "GO-a13a747b6c38",
+      "path": "/content/maps/danger-maps.json",
+      "rel": "content/maps/danger-maps.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 4927,
+      "category": "content/maps"
+    },
+    {
       "id": "GO-95edc221d7a0",
       "path": "/content/runtime/example-danger-scripts.json",
       "rel": "content/runtime/example-danger-scripts.json",
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 962,
+      "bytes": 1005,
       "category": "content/runtime"
+    },
+    {
+      "id": "GO-355f28d5d547",
+      "path": "/content/skills/tome_divine_wave_sacred_shield_smite_grace_fury_wrath_page.json",
+      "rel": "content/skills/tome_divine_wave_sacred_shield_smite_grace_fury_wrath_page.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2242,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-4e452e08cda0",
+      "path": "/content/skills/tome_flame_wave_fireball_inferno_shield_blaze_fury_wrath_page_slot2.json",
+      "rel": "content/skills/tome_flame_wave_fireball_inferno_shield_blaze_fury_wrath_page_slot2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2198,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-9f8f71ab214d",
+      "path": "/content/skills/tome_flame_wave_fireball_inferno_shield_crimson_surge_inferno_page_slot1.json",
+      "rel": "content/skills/tome_flame_wave_fireball_inferno_shield_crimson_surge_inferno_page_slot1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2066,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-ce2e6ccefa9b",
+      "path": "/content/skills/tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page_slot3.json",
+      "rel": "content/skills/tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page_slot3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2085,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-bdefa06fa8c7",
+      "path": "/content/skills/wand_blink.json",
+      "rel": "content/skills/wand_blink.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1142,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-1a8e8fad008f",
+      "path": "/content/skills/wand_chain.json",
+      "rel": "content/skills/wand_chain.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1160,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-e26267e69dda",
+      "path": "/content/skills/wand_meteor_shower.json",
+      "rel": "content/skills/wand_meteor_shower.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1129,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-7851b05028f5",
+      "path": "/content/skills/wand_missile.json",
+      "rel": "content/skills/wand_missile.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1149,
+      "category": "content/skills"
+    },
+    {
+      "id": "GO-ebd96743b4fc",
+      "path": "/content/vfx/fleet-vfx-map.json",
+      "rel": "content/vfx/fleet-vfx-map.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1777,
+      "category": "content/vfx"
+    },
+    {
+      "id": "GO-61b1bcf99e71",
+      "path": "/content/weapons/wpn_sword_iron_01.json",
+      "rel": "content/weapons/wpn_sword_iron_01.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1083,
+      "category": "content/weapons"
+    },
+    {
+      "id": "GO-4cd4fe4775a6",
+      "path": "/content/weapons/wpn_tome_master.json",
+      "rel": "content/weapons/wpn_tome_master.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1333,
+      "category": "content/weapons"
+    },
+    {
+      "id": "GO-4940b42fc9a4",
+      "path": "/content/weapons/wpn_wand_master.json",
+      "rel": "content/weapons/wpn_wand_master.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 963,
+      "category": "content/weapons"
     },
     {
       "id": "GO-445d576b79fc",
@@ -7136,7 +7266,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3844,
+      "bytes": 3967,
       "category": "content/worlds"
     },
     {
@@ -7146,7 +7276,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3703,
+      "bytes": 3817,
       "category": "content/worlds"
     },
     {
@@ -7156,7 +7286,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 5674,
+      "bytes": 5758,
       "category": "content/worlds"
     },
     {
@@ -7166,7 +7296,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 23292,
+      "bytes": 24157,
       "category": "content/worlds"
     },
     {
@@ -7176,7 +7306,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 19299,
+      "bytes": 19931,
       "category": "content/worlds"
     },
     {
@@ -7186,7 +7316,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 27188,
+      "bytes": 28230,
       "category": "content/worlds"
     },
     {
@@ -8550,56 +8680,6 @@
       "category": "models/armor"
     },
     {
-      "id": "GO-09f84b26d95d",
-      "path": "/models/battle/animals/bear.glb",
-      "rel": "models/battle/animals/bear.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 718744,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-b5ad3baacbc5",
-      "path": "/models/battle/animals/buffalo.glb",
-      "rel": "models/battle/animals/buffalo.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 33132,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-bacf844091b4",
-      "path": "/models/battle/animals/deer.glb",
-      "rel": "models/battle/animals/deer.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 197832,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-301c80087b07",
-      "path": "/models/battle/animals/minecraft-animals.glb",
-      "rel": "models/battle/animals/minecraft-animals.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3254080,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-47cd90a98c46",
-      "path": "/models/battle/animals/wolf.glb",
-      "rel": "models/battle/animals/wolf.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 240296,
-      "category": "models/battle/animals"
-    },
-    {
       "id": "GO-af9e070f3314",
       "path": "/models/bear.glb",
       "rel": "models/bear.glb",
@@ -8646,7 +8726,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1057,
+      "bytes": 1101,
       "category": "models/camp"
     },
     {
@@ -8658,6 +8738,16 @@
       "ext": "glb",
       "bytes": 4224780,
       "category": "models"
+    },
+    {
+      "id": "GO-9ff6279f0b6f",
+      "path": "/models/cinema/stylized-pirate-ship.glb",
+      "rel": "models/cinema/stylized-pirate-ship.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 27501948,
+      "category": "models/cinema"
     },
     {
       "id": "GO-ea70076b7c5b",
@@ -8678,6 +8768,16 @@
       "ext": "glb",
       "bytes": 92652,
       "category": "models/creatures"
+    },
+    {
+      "id": "GO-c6999c7c3eeb",
+      "path": "/models/creatures/ocean/mutant-stingray.glb",
+      "rel": "models/creatures/ocean/mutant-stingray.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 19422784,
+      "category": "models/creatures/ocean"
     },
     {
       "id": "GO-f0314b840963",
@@ -8828,6 +8928,26 @@
       "ext": "glb",
       "bytes": 39128,
       "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-39b7b23d4c6e",
+      "path": "/models/equipment/wing_animated.glb",
+      "rel": "models/equipment/wing_animated.glb",
+      "kind": "model",
+      "purpose": "weapon",
+      "ext": "glb",
+      "bytes": 1369884,
+      "category": "models/equipment"
+    },
+    {
+      "id": "GO-119c0a3b103d",
+      "path": "/models/equipment/wing_animated_inspect.json",
+      "rel": "models/equipment/wing_animated_inspect.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 23722,
+      "category": "models/equipment"
     },
     {
       "id": "GO-ba7e05fb91d0",
@@ -9170,683 +9290,113 @@
       "category": "models"
     },
     {
-      "id": "GO-b39c6723531c",
-      "path": "/models/kenney/roads/bridge_pillar.glb",
-      "rel": "models/kenney/roads/bridge_pillar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3b7d51c8ca5d",
-      "path": "/models/kenney/roads/bridge_pillarWide.glb",
-      "rel": "models/kenney/roads/bridge_pillarWide.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5320,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-deee48ec9a04",
-      "path": "/models/kenney/roads/construction_barrier.glb",
-      "rel": "models/kenney/roads/construction_barrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5264,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f0c6068a94a0",
-      "path": "/models/kenney/roads/construction_light.glb",
-      "rel": "models/kenney/roads/construction_light.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7992,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9898967a378a",
-      "path": "/models/kenney/roads/construction_pylon.glb",
-      "rel": "models/kenney/roads/construction_pylon.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10684,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7d0cbece4738",
-      "path": "/models/kenney/roads/light_curved.glb",
-      "rel": "models/kenney/roads/light_curved.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8472,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9100ea91cf8c",
-      "path": "/models/kenney/roads/light_curvedCross.glb",
-      "rel": "models/kenney/roads/light_curvedCross.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19964,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8fa604399889",
-      "path": "/models/kenney/roads/light_curvedDouble.glb",
-      "rel": "models/kenney/roads/light_curvedDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12212,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-70562d78e6ad",
-      "path": "/models/kenney/roads/light_square.glb",
-      "rel": "models/kenney/roads/light_square.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5928,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d40a54ed272e",
-      "path": "/models/kenney/roads/light_squareCross.glb",
-      "rel": "models/kenney/roads/light_squareCross.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10688,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-198f5f069b05",
-      "path": "/models/kenney/roads/light_squareDouble.glb",
-      "rel": "models/kenney/roads/light_squareDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7632,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-623c81ff8d39",
-      "path": "/models/kenney/roads/road_bend.glb",
-      "rel": "models/kenney/roads/road_bend.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15456,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c1b876b69614",
-      "path": "/models/kenney/roads/road_bendBarrier.glb",
-      "rel": "models/kenney/roads/road_bendBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9512,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-39356f172004",
-      "path": "/models/kenney/roads/road_bendSidewalk.glb",
-      "rel": "models/kenney/roads/road_bendSidewalk.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13068,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-022a5700ee16",
-      "path": "/models/kenney/roads/road_bendSquare.glb",
-      "rel": "models/kenney/roads/road_bendSquare.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6012,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-41609c0f99bf",
-      "path": "/models/kenney/roads/road_bendSquareBarrier.glb",
-      "rel": "models/kenney/roads/road_bendSquareBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4720,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-184664397e2c",
-      "path": "/models/kenney/roads/road_bridge.glb",
-      "rel": "models/kenney/roads/road_bridge.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 20884,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-996d96d17939",
-      "path": "/models/kenney/roads/road_crossing.glb",
-      "rel": "models/kenney/roads/road_crossing.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6988,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cb7c01175114",
-      "path": "/models/kenney/roads/road_crossroad.glb",
-      "rel": "models/kenney/roads/road_crossroad.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8612,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-bb9cf2cdf525",
-      "path": "/models/kenney/roads/road_crossroadBarrier.glb",
-      "rel": "models/kenney/roads/road_crossroadBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8948,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-342fabc6aa2a",
-      "path": "/models/kenney/roads/road_crossroadLine.glb",
-      "rel": "models/kenney/roads/road_crossroadLine.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8396,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cd504d0b0f74",
-      "path": "/models/kenney/roads/road_crossroadPath.glb",
-      "rel": "models/kenney/roads/road_crossroadPath.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12848,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-4dea4c350dca",
-      "path": "/models/kenney/roads/road_curve.glb",
-      "rel": "models/kenney/roads/road_curve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 18332,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5b360c74c618",
-      "path": "/models/kenney/roads/road_curveBarrier.glb",
-      "rel": "models/kenney/roads/road_curveBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13828,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-dcd3c6a89912",
-      "path": "/models/kenney/roads/road_curveIntersection.glb",
-      "rel": "models/kenney/roads/road_curveIntersection.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 18768,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d7aeab5ab908",
-      "path": "/models/kenney/roads/road_curveIntersectionBarrier.glb",
-      "rel": "models/kenney/roads/road_curveIntersectionBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11972,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8ba865589b6f",
-      "path": "/models/kenney/roads/road_curvePavement.glb",
-      "rel": "models/kenney/roads/road_curvePavement.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13064,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-89b5db1746b4",
-      "path": "/models/kenney/roads/road_drivewayDouble.glb",
-      "rel": "models/kenney/roads/road_drivewayDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7192,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-90fc09b4cf5f",
-      "path": "/models/kenney/roads/road_drivewayDoubleBarrier.glb",
-      "rel": "models/kenney/roads/road_drivewayDoubleBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5112,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f84fbd1eefa1",
-      "path": "/models/kenney/roads/road_drivewaySingle.glb",
-      "rel": "models/kenney/roads/road_drivewaySingle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6344,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9cddd1928f43",
-      "path": "/models/kenney/roads/road_drivewaySingleBarrier.glb",
-      "rel": "models/kenney/roads/road_drivewaySingleBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4196,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-bdefd09fd2af",
-      "path": "/models/kenney/roads/road_end.glb",
-      "rel": "models/kenney/roads/road_end.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5164,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5a59db57821b",
-      "path": "/models/kenney/roads/road_endBarrier.glb",
-      "rel": "models/kenney/roads/road_endBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d08a179a4e0f",
-      "path": "/models/kenney/roads/road_endRound.glb",
-      "rel": "models/kenney/roads/road_endRound.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 14300,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-eb953804aa1a",
-      "path": "/models/kenney/roads/road_endRoundBarrier.glb",
-      "rel": "models/kenney/roads/road_endRoundBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12468,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c3f6edd8e4b5",
-      "path": "/models/kenney/roads/road_intersection.glb",
-      "rel": "models/kenney/roads/road_intersection.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7080,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-ba6fe5da33f6",
-      "path": "/models/kenney/roads/road_intersectionBarrier.glb",
-      "rel": "models/kenney/roads/road_intersectionBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6120,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3c92310fd408",
-      "path": "/models/kenney/roads/road_intersectionLine.glb",
-      "rel": "models/kenney/roads/road_intersectionLine.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6864,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5849f385fd94",
-      "path": "/models/kenney/roads/road_intersectionPath.glb",
-      "rel": "models/kenney/roads/road_intersectionPath.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10260,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5774dd9d5be1",
-      "path": "/models/kenney/roads/road_roundabout.glb",
-      "rel": "models/kenney/roads/road_roundabout.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 72764,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f4ca4a2fcf17",
-      "path": "/models/kenney/roads/road_roundaboutBarrier.glb",
-      "rel": "models/kenney/roads/road_roundaboutBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 47448,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-e5be74358134",
-      "path": "/models/kenney/roads/road_side.glb",
-      "rel": "models/kenney/roads/road_side.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5316,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b0086a4958d8",
-      "path": "/models/kenney/roads/road_sideBarrier.glb",
-      "rel": "models/kenney/roads/road_sideBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-e77769200cb2",
-      "path": "/models/kenney/roads/road_sideEntry.glb",
-      "rel": "models/kenney/roads/road_sideEntry.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19140,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7b6d527b3477",
-      "path": "/models/kenney/roads/road_sideEntryBarrier.glb",
-      "rel": "models/kenney/roads/road_sideEntryBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15596,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-fa8dd3b7ec87",
-      "path": "/models/kenney/roads/road_sideExit.glb",
-      "rel": "models/kenney/roads/road_sideExit.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19140,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5c7ba918869d",
-      "path": "/models/kenney/roads/road_sideExitBarrier.glb",
-      "rel": "models/kenney/roads/road_sideExitBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15592,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c665909d8008",
-      "path": "/models/kenney/roads/road_slant.glb",
-      "rel": "models/kenney/roads/road_slant.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b46ae5caf55d",
-      "path": "/models/kenney/roads/road_slantBarrier.glb",
-      "rel": "models/kenney/roads/road_slantBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7ef20d675085",
-      "path": "/models/kenney/roads/road_slantCurve.glb",
-      "rel": "models/kenney/roads/road_slantCurve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 31484,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-aa2afe1cdedc",
-      "path": "/models/kenney/roads/road_slantCurveBarrier.glb",
-      "rel": "models/kenney/roads/road_slantCurveBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 29540,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f0f2cc131ae1",
-      "path": "/models/kenney/roads/road_slantFlat.glb",
-      "rel": "models/kenney/roads/road_slantFlat.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-873a4f306810",
-      "path": "/models/kenney/roads/road_slantFlatCurve.glb",
-      "rel": "models/kenney/roads/road_slantFlatCurve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 38120,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-a4fbe19acfbd",
-      "path": "/models/kenney/roads/road_slantFlatHigh.glb",
-      "rel": "models/kenney/roads/road_slantFlatHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cab8a86105ae",
-      "path": "/models/kenney/roads/road_slantHigh.glb",
-      "rel": "models/kenney/roads/road_slantHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-2056ad7e70fe",
-      "path": "/models/kenney/roads/road_slantHighBarrier.glb",
-      "rel": "models/kenney/roads/road_slantHighBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3276,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-77721ceb0af6",
-      "path": "/models/kenney/roads/road_split.glb",
-      "rel": "models/kenney/roads/road_split.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 42944,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7d14b5f5a0ca",
-      "path": "/models/kenney/roads/road_splitBarrier.glb",
-      "rel": "models/kenney/roads/road_splitBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 31980,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b95a9aa8400c",
-      "path": "/models/kenney/roads/road_square.glb",
-      "rel": "models/kenney/roads/road_square.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4392,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-00c39fafe48b",
-      "path": "/models/kenney/roads/road_squareBarrier.glb",
-      "rel": "models/kenney/roads/road_squareBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3364,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-1bb844e55cb7",
-      "path": "/models/kenney/roads/road_straight.glb",
-      "rel": "models/kenney/roads/road_straight.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3671511478c2",
-      "path": "/models/kenney/roads/road_straightBarrier.glb",
-      "rel": "models/kenney/roads/road_straightBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-256e7d03c801",
-      "path": "/models/kenney/roads/road_straightBarrierEnd.glb",
-      "rel": "models/kenney/roads/road_straightBarrierEnd.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2796,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8100911bc2d7",
-      "path": "/models/kenney/roads/tile_high.glb",
-      "rel": "models/kenney/roads/tile_high.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2336,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-45fe377de1eb",
-      "path": "/models/kenney/roads/tile_low.glb",
-      "rel": "models/kenney/roads/tile_low.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2332,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-145d9ab4e925",
-      "path": "/models/kenney/roads/tile_slant.glb",
-      "rel": "models/kenney/roads/tile_slant.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2344,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-a81f333669dd",
-      "path": "/models/kenney/roads/tile_slantHigh.glb",
-      "rel": "models/kenney/roads/tile_slantHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2344,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d0d8285ae472",
-      "path": "/models/maps/ultimate_assasination_grounds.glb",
-      "rel": "models/maps/ultimate_assasination_grounds.glb",
+      "id": "GO-39fc5ef28deb",
+      "path": "/models/maps/arena/arena.glb",
+      "rel": "models/maps/arena/arena.glb",
       "kind": "model",
       "purpose": "map",
       "ext": "glb",
-      "bytes": 37241248,
+      "bytes": 19374460,
+      "category": "models/maps/arena"
+    },
+    {
+      "id": "GO-865020be3bad",
+      "path": "/models/maps/forest_mountains/forest_mountains.glb",
+      "rel": "models/maps/forest_mountains/forest_mountains.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 11748668,
+      "category": "models/maps/forest_mountains"
+    },
+    {
+      "id": "GO-1352985c0bd0",
+      "path": "/models/maps/forest_mountains/mesh-catalog.json",
+      "rel": "models/maps/forest_mountains/mesh-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 145315,
+      "category": "models/maps/forest_mountains"
+    },
+    {
+      "id": "GO-d2bc137a76e0",
+      "path": "/models/maps/pirate/date_palm.glb",
+      "rel": "models/maps/pirate/date_palm.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 7300460,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-dbf78b5a68bd",
+      "path": "/models/maps/pirate/palm_trees.glb",
+      "rel": "models/maps/pirate/palm_trees.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 4865968,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-a7b15993d103",
+      "path": "/models/maps/pirate/village.glb",
+      "rel": "models/maps/pirate/village.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 7633528,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-41f4ccdeb790",
+      "path": "/models/maps/shipwreck/shipwreck_island.glb",
+      "rel": "models/maps/shipwreck/shipwreck_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 1043528,
+      "category": "models/maps/shipwreck"
+    },
+    {
+      "id": "GO-850d5b3dfe32",
+      "path": "/models/maps/tropical/harvest-catalog.json",
+      "rel": "models/maps/tropical/harvest-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 20273,
+      "category": "models/maps/tropical"
+    },
+    {
+      "id": "GO-d5b7fe204c67",
+      "path": "/models/maps/tropical/tropical_island.glb",
+      "rel": "models/maps/tropical/tropical_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 72594788,
+      "category": "models/maps/tropical"
+    },
+    {
+      "id": "GO-370724a1e3bc",
+      "path": "/models/maps/tropical/tropical_island_dry.glb",
+      "rel": "models/maps/tropical/tropical_island_dry.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 72584400,
+      "category": "models/maps/tropical"
+    },
+    {
+      "id": "GO-df9f98fc1de9",
+      "path": "/models/maps/_inspect_arena_shipwreck.json",
+      "rel": "models/maps/_inspect_arena_shipwreck.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 839133,
       "category": "models/maps"
     },
     {
@@ -9898,46 +9448,6 @@
       "ext": "glb",
       "bytes": 68244,
       "category": "models"
-    },
-    {
-      "id": "GO-7d8c9c72a6f6",
-      "path": "/models/packs/farm_asset_pack_3d.glb",
-      "rel": "models/packs/farm_asset_pack_3d.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 80740900,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-ccf42756dd61",
-      "path": "/models/packs/fields_near_the_city_of_amida.glb",
-      "rel": "models/packs/fields_near_the_city_of_amida.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 59592496,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-0460e9bff196",
-      "path": "/models/packs/low_poly_farm.glb",
-      "rel": "models/packs/low_poly_farm.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17028036,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-02f461801ecf",
-      "path": "/models/packs/road_pack.glb",
-      "rel": "models/packs/road_pack.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 14765904,
-      "category": "models/packs"
     },
     {
       "id": "GO-987b7bba6b8c",
@@ -10300,16 +9810,6 @@
       "category": "models"
     },
     {
-      "id": "GO-5aa777312d4d",
-      "path": "/models/vfx/another_shape_of_data.glb",
-      "rel": "models/vfx/another_shape_of_data.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 1509692,
-      "category": "models/vfx"
-    },
-    {
       "id": "GO-0e4e742dc566",
       "path": "/models/vfx/aoe-warning.glb",
       "rel": "models/vfx/aoe-warning.glb",
@@ -10500,6 +10000,56 @@
       "category": "models/vfx"
     },
     {
+      "id": "GO-5cf2a29a7334",
+      "path": "/models/vfx/orbs/orb-core.glb",
+      "rel": "models/vfx/orbs/orb-core.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 275072,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-9cb920e45602",
+      "path": "/models/vfx/orbs/orb-ember.glb",
+      "rel": "models/vfx/orbs/orb-ember.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 275312,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-0a0c000e55d9",
+      "path": "/models/vfx/orbs/orb-fire.glb",
+      "rel": "models/vfx/orbs/orb-fire.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 279656,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-ebb55c2acbbe",
+      "path": "/models/vfx/orbs/orb-flare.glb",
+      "rel": "models/vfx/orbs/orb-flare.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 274964,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-afffc8dbec8d",
+      "path": "/models/vfx/orbs/orb-manifest.json",
+      "rel": "models/vfx/orbs/orb-manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2126,
+      "category": "models/vfx/orbs"
+    },
+    {
       "id": "GO-459eaab1c5e3",
       "path": "/models/vfx/ring-green.glb",
       "rel": "models/vfx/ring-green.glb",
@@ -10597,6 +10147,16 @@
       "purpose": "vfx",
       "ext": "glb",
       "bytes": 1610948,
+      "category": "models/vfx"
+    },
+    {
+      "id": "GO-9221c1822e5b",
+      "path": "/models/vfx/strawberry-strike.meta.json",
+      "rel": "models/vfx/strawberry-strike.meta.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2219,
       "category": "models/vfx"
     },
     {
@@ -10710,16 +10270,6 @@
       "category": "models/vfx"
     },
     {
-      "id": "GO-e0c1c1f555f0",
-      "path": "/models/vfx/witch_hut_in_a_swamp.glb",
-      "rel": "models/vfx/witch_hut_in_a_swamp.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 11558652,
-      "category": "models/vfx"
-    },
-    {
       "id": "GO-b4c652765af6",
       "path": "/models/vfx/yellow-light.glb",
       "rel": "models/vfx/yellow-light.glb",
@@ -10738,976 +10288,6 @@
       "ext": "glb",
       "bytes": 5240184,
       "category": "models"
-    },
-    {
-      "id": "GO-32e974be886f",
-      "path": "/models/voxel/animals/brute_minion_p2.glb",
-      "rel": "models/voxel/animals/brute_minion_p2.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6783376,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-d69cfdfca9f8",
-      "path": "/models/voxel/animals/chaotic_marine_life.glb",
-      "rel": "models/voxel/animals/chaotic_marine_life.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2930884,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-d1f565f7b512",
-      "path": "/models/voxel/animals/crystal_pangolin.glb",
-      "rel": "models/voxel/animals/crystal_pangolin.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1078084,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-cd0361b38e5b",
-      "path": "/models/voxel/animals/dragon_run_loop.glb",
-      "rel": "models/voxel/animals/dragon_run_loop.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17145444,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-3f445fb8a3e2",
-      "path": "/models/voxel/animals/dragon_three_loops.glb",
-      "rel": "models/voxel/animals/dragon_three_loops.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17490324,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-0f1645524a86",
-      "path": "/models/voxel/animals/hanu_animated.glb",
-      "rel": "models/voxel/animals/hanu_animated.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 70347384,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-bae08e645906",
-      "path": "/models/voxel/animals/wing_animated.glb",
-      "rel": "models/voxel/animals/wing_animated.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1369884,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-56582c4e2547",
-      "path": "/models/voxel/content/anvil.glb",
-      "rel": "models/voxel/content/anvil.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17024328,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-83fcc8c68674",
-      "path": "/models/voxel/content/balloons.glb",
-      "rel": "models/voxel/content/balloons.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6136580,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-114b54e3873e",
-      "path": "/models/voxel/content/brick_modular_kit.glb",
-      "rel": "models/voxel/content/brick_modular_kit.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 200380,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-7eda8d83bef5",
-      "path": "/models/voxel/content/desert_portal.glb",
-      "rel": "models/voxel/content/desert_portal.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 705248,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-16749b15f8bb",
-      "path": "/models/voxel/content/phantom_seal_altar.glb",
-      "rel": "models/voxel/content/phantom_seal_altar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 20605032,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-5494711521f2",
-      "path": "/models/voxel/content/queen_annes_revenge.glb",
-      "rel": "models/voxel/content/queen_annes_revenge.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 53902716,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-433266e89bcb",
-      "path": "/models/voxel/content/t0_crossbow.glb",
-      "rel": "models/voxel/content/t0_crossbow.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13452308,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-b7046c6dd4ac",
-      "path": "/models/voxel/content/warning_bell.glb",
-      "rel": "models/voxel/content/warning_bell.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4656872,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-851de98967e9",
-      "path": "/models/voxel/content/xyz_buildings_draft.glb",
-      "rel": "models/voxel/content/xyz_buildings_draft.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2044760,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-1f3043d4c47e",
-      "path": "/models/voxel/maps/animal_company_lobby.glb",
-      "rel": "models/voxel/maps/animal_company_lobby.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 60448228,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-5432663fd96e",
-      "path": "/models/voxel/maps/awesome_realm_world.glb",
-      "rel": "models/voxel/maps/awesome_realm_world.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 359736068,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-54c0de00bf01",
-      "path": "/models/voxel/maps/dalaran_fantasy_island.glb",
-      "rel": "models/voxel/maps/dalaran_fantasy_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 133863356,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-211f99e94fcf",
-      "path": "/models/voxel/maps/dragon_head_cave.glb",
-      "rel": "models/voxel/maps/dragon_head_cave.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 59992992,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-e707f725c7ca",
-      "path": "/models/voxel/maps/faction_spawn_castle_town.glb",
-      "rel": "models/voxel/maps/faction_spawn_castle_town.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 462669824,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-3ff14e7e7277",
-      "path": "/models/voxel/maps/floating_islands_dwarves_haven.glb",
-      "rel": "models/voxel/maps/floating_islands_dwarves_haven.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 40158248,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-c827dbe7f903",
-      "path": "/models/voxel/maps/geonosis_arena.glb",
-      "rel": "models/voxel/maps/geonosis_arena.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 22881752,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f5ca613f7d97",
-      "path": "/models/voxel/maps/glowstone_mountain.glb",
-      "rel": "models/voxel/maps/glowstone_mountain.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21406036,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-a28142135b45",
-      "path": "/models/voxel/maps/glowstone_mountain_oriental.glb",
-      "rel": "models/voxel/maps/glowstone_mountain_oriental.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21511404,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-893b2375e100",
-      "path": "/models/voxel/maps/grotto_cavern_cave.glb",
-      "rel": "models/voxel/maps/grotto_cavern_cave.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 61162168,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f188dbbcc5f8",
-      "path": "/models/voxel/maps/koth_bundle.glb",
-      "rel": "models/voxel/maps/koth_bundle.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 66309016,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-50518351c245",
-      "path": "/models/voxel/maps/low_poly_canyon.glb",
-      "rel": "models/voxel/maps/low_poly_canyon.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 13239552,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-61deb0d53364",
-      "path": "/models/voxel/maps/pirat_bay.glb",
-      "rel": "models/voxel/maps/pirat_bay.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 26145944,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-4b8a78c5be84",
-      "path": "/models/voxel/maps/tower_koth.glb",
-      "rel": "models/voxel/maps/tower_koth.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21381320,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f89e363a87a2",
-      "path": "/models/voxel/tools/all_jade_stone_tools.glb",
-      "rel": "models/voxel/tools/all_jade_stone_tools.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 147692,
-      "category": "models/voxel/tools"
-    },
-    {
-      "id": "GO-3e3cc0da8104",
-      "path": "/models/voxel/vfx/energy_particle_stream.glb",
-      "rel": "models/voxel/vfx/energy_particle_stream.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 58584,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-919783c0997e",
-      "path": "/models/voxel/vfx/fire_hurricane.glb",
-      "rel": "models/voxel/vfx/fire_hurricane.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 1009656,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-2674a231eed9",
-      "path": "/models/voxel/vfx/kaens_spike.glb",
-      "rel": "models/voxel/vfx/kaens_spike.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 7247304,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-a94a464920bf",
-      "path": "/models/voxel/vfx/tornado_vortex.glb",
-      "rel": "models/voxel/vfx/tornado_vortex.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 173388,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-6631d45304b7",
-      "path": "/models/voxel/vfx/unstable_antimatter.glb",
-      "rel": "models/voxel/vfx/unstable_antimatter.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 5799344,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-84a909d5768a",
-      "path": "/models/voxel/vfx/wind_rasenshuriken.glb",
-      "rel": "models/voxel/vfx/wind_rasenshuriken.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 4071628,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-2bdb4ca971a9",
-      "path": "/models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
-      "rel": "models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "rar",
-      "bytes": 28874483,
-      "category": "models/voxel-only/buildings"
-    },
-    {
-      "id": "GO-698729e0b293",
-      "path": "/models/voxel-only/buildings/Voxel_Buildings.zip",
-      "rel": "models/voxel-only/buildings/Voxel_Buildings.zip",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "zip",
-      "bytes": 2387730,
-      "category": "models/voxel-only/buildings"
-    },
-    {
-      "id": "GO-49d77e1aa28e",
-      "path": "/models/warlords-era/animals/flying/crow.glb",
-      "rel": "models/warlords-era/animals/flying/crow.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 249760,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-61305c083f78",
-      "path": "/models/warlords-era/animals/flying/crow_baby.glb",
-      "rel": "models/warlords-era/animals/flying/crow_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 526960,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-0e90efc92f6f",
-      "path": "/models/warlords-era/animals/flying/eagle.glb",
-      "rel": "models/warlords-era/animals/flying/eagle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1467024,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-7562a605a144",
-      "path": "/models/warlords-era/animals/flying/eagle_baby.glb",
-      "rel": "models/warlords-era/animals/flying/eagle_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 399856,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-e2a96cbfde57",
-      "path": "/models/warlords-era/animals/flying/harpia.glb",
-      "rel": "models/warlords-era/animals/flying/harpia.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1728172,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-6202ed91329b",
-      "path": "/models/warlords-era/animals/flying/owl.glb",
-      "rel": "models/warlords-era/animals/flying/owl.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 755852,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-801f7157b156",
-      "path": "/models/warlords-era/animals/land/bear.glb",
-      "rel": "models/warlords-era/animals/land/bear.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1080844,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-6538dd456375",
-      "path": "/models/warlords-era/animals/land/bear_baby.glb",
-      "rel": "models/warlords-era/animals/land/bear_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 932392,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-c3657d596a0b",
-      "path": "/models/warlords-era/animals/land/boar.glb",
-      "rel": "models/warlords-era/animals/land/boar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1241448,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-0a1216b66c62",
-      "path": "/models/warlords-era/animals/land/deer.glb",
-      "rel": "models/warlords-era/animals/land/deer.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1974004,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-cc87465ba7c2",
-      "path": "/models/warlords-era/animals/land/deer_baby.glb",
-      "rel": "models/warlords-era/animals/land/deer_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1800592,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-18b243f59b1e",
-      "path": "/models/warlords-era/animals/land/doe.glb",
-      "rel": "models/warlords-era/animals/land/doe.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1946028,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-ef84a3c0c952",
-      "path": "/models/warlords-era/animals/land/fox.glb",
-      "rel": "models/warlords-era/animals/land/fox.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1424568,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-2071e9a1ebb9",
-      "path": "/models/warlords-era/animals/land/fox_baby.glb",
-      "rel": "models/warlords-era/animals/land/fox_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1254200,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-d624b6f30240",
-      "path": "/models/warlords-era/animals/land/horse.glb",
-      "rel": "models/warlords-era/animals/land/horse.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2506128,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-c1842f373bc8",
-      "path": "/models/warlords-era/animals/land/kangaroo_baby.glb",
-      "rel": "models/warlords-era/animals/land/kangaroo_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1287108,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-74fd88b68955",
-      "path": "/models/warlords-era/animals/land/wolf.glb",
-      "rel": "models/warlords-era/animals/land/wolf.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1173688,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-df5c6ebc3b49",
-      "path": "/models/warlords-era/animals/land/wolf_baby.glb",
-      "rel": "models/warlords-era/animals/land/wolf_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1202944,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-8e9a8bd856b3",
-      "path": "/models/warlords-era/animals/water/cavern_turtle.glb",
-      "rel": "models/warlords-era/animals/water/cavern_turtle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2116136,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-8e703b88c6b6",
-      "path": "/models/warlords-era/animals/water/sea_turtle.glb",
-      "rel": "models/warlords-era/animals/water/sea_turtle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 874436,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-5ee3e957be3a",
-      "path": "/models/warlords-era/animals/water/shark.glb",
-      "rel": "models/warlords-era/animals/water/shark.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 311272,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-113e9803d992",
-      "path": "/models/warlords-era/buildings/anglers_house.glb",
-      "rel": "models/warlords-era/buildings/anglers_house.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 36695064,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-4e07d26f73dc",
-      "path": "/models/warlords-era/buildings/archertower_modular.glb",
-      "rel": "models/warlords-era/buildings/archertower_modular.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11340540,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-f14065845f92",
-      "path": "/models/warlords-era/buildings/castle.glb",
-      "rel": "models/warlords-era/buildings/castle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8149460,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-aedf294f9dc6",
-      "path": "/models/warlords-era/buildings/entrance_to_fort.glb",
-      "rel": "models/warlords-era/buildings/entrance_to_fort.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 36020432,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-9be8c7023090",
-      "path": "/models/warlords-era/buildings/medieval_camp.glb",
-      "rel": "models/warlords-era/buildings/medieval_camp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2916800,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-8b4163ff798d",
-      "path": "/models/warlords-era/buildings/pirate_tavern.glb",
-      "rel": "models/warlords-era/buildings/pirate_tavern.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7078812,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-4ce83ca69576",
-      "path": "/models/warlords-era/buildings/skycastle.glb",
-      "rel": "models/warlords-era/buildings/skycastle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4035320,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-b288e2259542",
-      "path": "/models/warlords-era/buildings/smeltery.glb",
-      "rel": "models/warlords-era/buildings/smeltery.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 230230488,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-2fdfa07f8f9e",
-      "path": "/models/warlords-era/enemies/abyss_demon.glb",
-      "rel": "models/warlords-era/enemies/abyss_demon.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 8190616,
-      "category": "models/warlords-era/enemies"
-    },
-    {
-      "id": "GO-5c268a020a78",
-      "path": "/models/warlords-era/enemies/baphomet_ancient.glb",
-      "rel": "models/warlords-era/enemies/baphomet_ancient.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 4733864,
-      "category": "models/warlords-era/enemies"
-    },
-    {
-      "id": "GO-5d4be78cd141",
-      "path": "/models/warlords-era/nature/plants/grass.glb",
-      "rel": "models/warlords-era/nature/plants/grass.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 7747332,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-edb0229de47b",
-      "path": "/models/warlords-era/nature/plants/ivy.glb",
-      "rel": "models/warlords-era/nature/plants/ivy.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 30320996,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-38bb28f9efaa",
-      "path": "/models/warlords-era/nature/plants/plants_asset_set.glb",
-      "rel": "models/warlords-era/nature/plants/plants_asset_set.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 22428552,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-6cd18d0c37eb",
-      "path": "/models/warlords-era/nature/plants/stylized_plants_free.glb",
-      "rel": "models/warlords-era/nature/plants/stylized_plants_free.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 221528,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-deb47a4a19e5",
-      "path": "/models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
-      "rel": "models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 104036552,
-      "category": "models/warlords-era/nature/rocks"
-    },
-    {
-      "id": "GO-fec51271a52a",
-      "path": "/models/warlords-era/nature/rocks/stylized_rocks_70.glb",
-      "rel": "models/warlords-era/nature/rocks/stylized_rocks_70.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 69016308,
-      "category": "models/warlords-era/nature/rocks"
-    },
-    {
-      "id": "GO-df09f7ea6f80",
-      "path": "/models/warlords-era/nature/trees/autumn_forest.glb",
-      "rel": "models/warlords-era/nature/trees/autumn_forest.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 10289732,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-16a2d531acb4",
-      "path": "/models/warlords-era/nature/trees/redwood_lod.glb",
-      "rel": "models/warlords-era/nature/trees/redwood_lod.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 2862328,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-1f67e0810966",
-      "path": "/models/warlords-era/nature/trees/stylized_nature_vol1.glb",
-      "rel": "models/warlords-era/nature/trees/stylized_nature_vol1.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 3062908,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-cfb080e617b3",
-      "path": "/models/warlords-era/nature/vfx/cloud_ring.glb",
-      "rel": "models/warlords-era/nature/vfx/cloud_ring.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 7646052,
-      "category": "models/warlords-era/nature/vfx"
-    },
-    {
-      "id": "GO-4a5ccd4300fb",
-      "path": "/models/warlords-era/nature/vfx/thunderstorm.glb",
-      "rel": "models/warlords-era/nature/vfx/thunderstorm.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 12147044,
-      "category": "models/warlords-era/nature/vfx"
-    },
-    {
-      "id": "GO-8069939d9a4a",
-      "path": "/models/warlords-era/props/crates_and_barrels.glb",
-      "rel": "models/warlords-era/props/crates_and_barrels.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 1951268,
-      "category": "models/warlords-era/props"
-    },
-    {
-      "id": "GO-93147fc764f3",
-      "path": "/models/warlords-era/props/magic_ice_scroll.glb",
-      "rel": "models/warlords-era/props/magic_ice_scroll.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 8829936,
-      "category": "models/warlords-era/props"
-    },
-    {
-      "id": "GO-21d41a6f8d9e",
-      "path": "/models/warlords-era/units/knight_01.glb",
-      "rel": "models/warlords-era/units/knight_01.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 376304,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-d697ac43b4f1",
-      "path": "/models/warlords-era/units/knight_02.glb",
-      "rel": "models/warlords-era/units/knight_02.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 358456,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-9f5c0e5c3531",
-      "path": "/models/warlords-era/units/knight_03.glb",
-      "rel": "models/warlords-era/units/knight_03.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 350924,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-f204c091a848",
-      "path": "/models/warlords-era/units/skeleton.glb",
-      "rel": "models/warlords-era/units/skeleton.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 1002184,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-e541ec6c0688",
-      "path": "/models/warlords-era/units/skeleton_archer.glb",
-      "rel": "models/warlords-era/units/skeleton_archer.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 665112,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-bd70d245c102",
-      "path": "/models/warlords-era/vehicles/minecarts.glb",
-      "rel": "models/warlords-era/vehicles/minecarts.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2008808,
-      "category": "models/warlords-era/vehicles"
-    },
-    {
-      "id": "GO-84108aa8af5d",
-      "path": "/models/warlords-era/vehicles/steampunk_airship.glb",
-      "rel": "models/warlords-era/vehicles/steampunk_airship.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 34795396,
-      "category": "models/warlords-era/vehicles"
-    },
-    {
-      "id": "GO-b5cd8a1edd36",
-      "path": "/models/warlords-era/weapons/harpoon_gun.glb",
-      "rel": "models/warlords-era/weapons/harpoon_gun.glb",
-      "kind": "model",
-      "purpose": "weapon",
-      "ext": "glb",
-      "bytes": 127828,
-      "category": "models/warlords-era/weapons"
-    },
-    {
-      "id": "GO-93f7f7399be6",
-      "path": "/models/warlords-era/worlds/castle_eltz.glb",
-      "rel": "models/warlords-era/worlds/castle_eltz.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 163443404,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-8faaed97fd57",
-      "path": "/models/warlords-era/worlds/ice_world.glb",
-      "rel": "models/warlords-era/worlds/ice_world.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9429824,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-8ab8f16ad27c",
-      "path": "/models/warlords-era/worlds/low_poly_island.glb",
-      "rel": "models/warlords-era/worlds/low_poly_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 9230032,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-90234ce3d091",
-      "path": "/models/warlords-era/worlds/medieval_camp.glb",
-      "rel": "models/warlords-era/worlds/medieval_camp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2916800,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-1772226bc50b",
-      "path": "/models/warlords-era/worlds/pirate_island_pack.glb",
-      "rel": "models/warlords-era/worlds/pirate_island_pack.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 10657764,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-99de872ec2f7",
-      "path": "/models/warlords-era/worlds/tropical_island_small.glb",
-      "rel": "models/warlords-era/worlds/tropical_island_small.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 6696792,
-      "category": "models/warlords-era/worlds"
     },
     {
       "id": "GO-b9426a7a8ea7",
@@ -12090,16 +10670,6 @@
       "category": "models/weapons"
     },
     {
-      "id": "GO-9619b28883ca",
-      "path": "/models/weapons/my-brothers-keeper.prod.glb",
-      "rel": "models/weapons/my-brothers-keeper.prod.glb",
-      "kind": "model",
-      "purpose": "weapon",
-      "ext": "glb",
-      "bytes": 1326876,
-      "category": "models/weapons"
-    },
-    {
       "id": "GO-a76d167684cb",
       "path": "/models/weapons/pistol.glb",
       "rel": "models/weapons/pistol.glb",
@@ -12297,156 +10867,6 @@
       "purpose": "map",
       "ext": "glb",
       "bytes": 32823844,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-7e6192a52370",
-      "path": "/models/worlds/bridge_town.glb",
-      "rel": "models/worlds/bridge_town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1980992,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-ce1d62c28326",
-      "path": "/models/worlds/forest-map.glb",
-      "rel": "models/worlds/forest-map.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 26002032,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-b5d8e1aa9b0e",
-      "path": "/models/worlds/island_life.glb",
-      "rel": "models/worlds/island_life.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 450735736,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-db979c05988e",
-      "path": "/models/worlds/sailtest.glb",
-      "rel": "models/worlds/sailtest.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9636856,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-0ad251c60aa0",
-      "path": "/models/worlds/sky/dwarf-main-city.glb",
-      "rel": "models/worlds/sky/dwarf-main-city.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13553816,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-fd0104003292",
-      "path": "/models/worlds/sky/dwarf-winter-castle-town.glb",
-      "rel": "models/worlds/sky/dwarf-winter-castle-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13553816,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-207aa3450787",
-      "path": "/models/worlds/sky/elf-lord-temple.glb",
-      "rel": "models/worlds/sky/elf-lord-temple.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1141404,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-6ec4afdf07a5",
-      "path": "/models/worlds/sky/elf-sky-town.glb",
-      "rel": "models/worlds/sky/elf-sky-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1141404,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-c97aacac1864",
-      "path": "/models/worlds/sky/fantasy-floating-island.glb",
-      "rel": "models/worlds/sky/fantasy-floating-island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 75035600,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-270cbc82ce29",
-      "path": "/models/worlds/sky/floating-island-map.glb",
-      "rel": "models/worlds/sky/floating-island-map.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 8636684,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-5e6e9c814918",
-      "path": "/models/worlds/sky/floating-island-roots.glb",
-      "rel": "models/worlds/sky/floating-island-roots.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 44958132,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-a8fe5deabb92",
-      "path": "/models/worlds/sky/floating-town-hand-painted.glb",
-      "rel": "models/worlds/sky/floating-town-hand-painted.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17132656,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-324f3420e66e",
-      "path": "/models/worlds/sky/medieval-town.glb",
-      "rel": "models/worlds/sky/medieval-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15686288,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-34bc019e022c",
-      "path": "/models/worlds/small_island.glb",
-      "rel": "models/worlds/small_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 4925272,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-609ade1a6275",
-      "path": "/models/worlds/witch_hut_in_a_swamp.glb",
-      "rel": "models/worlds/witch_hut_in_a_swamp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11558652,
       "category": "models/worlds"
     },
     {
@@ -12916,7 +11336,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "js",
-      "bytes": 5538,
+      "bytes": 5735,
       "category": "root"
     },
     {
@@ -12928,36 +11348,6 @@
       "ext": "fbx",
       "bytes": 28064,
       "category": "root"
-    },
-    {
-      "id": "GO-f25e5abbadcb",
-      "path": "/ui/craftpix/part2/Action_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part2/Action_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 358400,
-      "category": "ui/craftpix/part2/Action_Bar"
-    },
-    {
-      "id": "GO-a840baa9e4d0",
-      "path": "/ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
-      "rel": "ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 99840,
-      "category": "ui/craftpix/part2/Battle_Time-Team_Stats"
-    },
-    {
-      "id": "GO-7f37693741cd",
-      "path": "/ui/craftpix/part2/Loading_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part2/Loading_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 8192,
-      "category": "ui/craftpix/part2/Loading_Bar"
     },
     {
       "id": "GO-184f2a2fbacf",
@@ -13137,16 +11527,6 @@
       "purpose": "unknown",
       "ext": "psd",
       "bytes": 4771705,
-      "category": "ui/craftpix/part3/ab3"
-    },
-    {
-      "id": "GO-402d00732451",
-      "path": "/ui/craftpix/part3/ab3/Thumbs.db",
-      "rel": "ui/craftpix/part3/ab3/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 119296,
       "category": "ui/craftpix/part3/ab3"
     },
     {
@@ -13330,26 +11710,6 @@
       "category": "ui/craftpix/part3/moba"
     },
     {
-      "id": "GO-f636375c7e61",
-      "path": "/ui/craftpix/part3/moba/Thumbs.db",
-      "rel": "ui/craftpix/part3/moba/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 59904,
-      "category": "ui/craftpix/part3/moba"
-    },
-    {
-      "id": "GO-2e69c2718e71",
-      "path": "/ui/craftpix/part3/progress/Thumbs.db",
-      "rel": "ui/craftpix/part3/progress/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 48640,
-      "category": "ui/craftpix/part3/progress"
-    },
-    {
       "id": "GO-a09b6db724a7",
       "path": "/ui/craftpix/part3/resources/coin.png",
       "rel": "ui/craftpix/part3/resources/coin.png",
@@ -13368,126 +11728,6 @@
       "ext": "png",
       "bytes": 39957,
       "category": "ui/craftpix/part3/resources"
-    },
-    {
-      "id": "GO-1949f4581986",
-      "path": "/ui/craftpix/part3/resources/Thumbs.db",
-      "rel": "ui/craftpix/part3/resources/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 236544,
-      "category": "ui/craftpix/part3/resources"
-    },
-    {
-      "id": "GO-8903da5ac015",
-      "path": "/ui/craftpix/part3/Thumbs.db",
-      "rel": "ui/craftpix/part3/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 332800,
-      "category": "ui/craftpix/part3"
-    },
-    {
-      "id": "GO-7f659b40a040",
-      "path": "/ui/craftpix/part4/Actions_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part4/Actions_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 318976,
-      "category": "ui/craftpix/part4/Actions_Bar"
-    },
-    {
-      "id": "GO-2aa9b93de425",
-      "path": "/ui/craftpix/part4/container/Thumbs.db",
-      "rel": "ui/craftpix/part4/container/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 93696,
-      "category": "ui/craftpix/part4/container"
-    },
-    {
-      "id": "GO-cd3b9c15707b",
-      "path": "/ui/craftpix/part4/Form_Elements/Thumbs.db",
-      "rel": "ui/craftpix/part4/Form_Elements/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 24576,
-      "category": "ui/craftpix/part4/Form_Elements"
-    },
-    {
-      "id": "GO-9537d3b0cc02",
-      "path": "/ui/craftpix/part4/Important_Message/Thumbs.db",
-      "rel": "ui/craftpix/part4/Important_Message/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 22016,
-      "category": "ui/craftpix/part4/Important_Message"
-    },
-    {
-      "id": "GO-3eb0a5f3b9ab",
-      "path": "/ui/craftpix/part4/Scales/Thumbs.db",
-      "rel": "ui/craftpix/part4/Scales/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 27648,
-      "category": "ui/craftpix/part4/Scales"
-    },
-    {
-      "id": "GO-633a26479050",
-      "path": "/ui/craftpix/part4/Side_Menu/Thumbs.db",
-      "rel": "ui/craftpix/part4/Side_Menu/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 36352,
-      "category": "ui/craftpix/part4/Side_Menu"
-    },
-    {
-      "id": "GO-94dd02bb614c",
-      "path": "/ui/craftpix/part4/Text_Container_1/Thumbs.db",
-      "rel": "ui/craftpix/part4/Text_Container_1/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 91136,
-      "category": "ui/craftpix/part4/Text_Container_1"
-    },
-    {
-      "id": "GO-c8eaa8761789",
-      "path": "/ui/craftpix/part4/Text_Indicators/Thumbs.db",
-      "rel": "ui/craftpix/part4/Text_Indicators/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 14336,
-      "category": "ui/craftpix/part4/Text_Indicators"
-    },
-    {
-      "id": "GO-83bfcc00d640",
-      "path": "/ui/craftpix/part4/Thumbs.db",
-      "rel": "ui/craftpix/part4/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 5632,
-      "category": "ui/craftpix/part4"
-    },
-    {
-      "id": "GO-918e20954a93",
-      "path": "/ui/craftpix/part5/scroll/Thumbs.db",
-      "rel": "ui/craftpix/part5/scroll/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 13312,
-      "category": "ui/craftpix/part5/scroll"
     },
     {
       "id": "GO-fd35ec4a955e",
@@ -13730,16 +11970,6 @@
       "category": "ui/craftpix/part5/spells"
     },
     {
-      "id": "GO-8b5c1e953cf8",
-      "path": "/ui/craftpix/part5/spells/Thumbs.db",
-      "rel": "ui/craftpix/part5/spells/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 259072,
-      "category": "ui/craftpix/part5/spells"
-    },
-    {
       "id": "GO-362b0f07d75f",
       "path": "/ui/craftpix/part5/talents/action_bar.png",
       "rel": "ui/craftpix/part5/talents/action_bar.png",
@@ -13930,16 +12160,6 @@
       "category": "ui/craftpix/part5/talents"
     },
     {
-      "id": "GO-cb7b191f5f74",
-      "path": "/ui/craftpix/part5/talents/Thumbs.db",
-      "rel": "ui/craftpix/part5/talents/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 144896,
-      "category": "ui/craftpix/part5/talents"
-    },
-    {
       "id": "GO-d3af2d5b9f11",
       "path": "/ui/craftpix/part5/tooltip_frame_bg.png",
       "rel": "ui/craftpix/part5/tooltip_frame_bg.png",
@@ -13948,26 +12168,6 @@
       "ext": "png",
       "bytes": 21448,
       "category": "ui/craftpix/part5"
-    },
-    {
-      "id": "GO-ece5ab8af24e",
-      "path": "/ui/craftpix/part7/Character_Window/Thumbs.db",
-      "rel": "ui/craftpix/part7/Character_Window/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 339968,
-      "category": "ui/craftpix/part7/Character_Window"
-    },
-    {
-      "id": "GO-a4e3022e4f44",
-      "path": "/ui/craftpix/part7/Notification_Window/Thumbs.db",
-      "rel": "ui/craftpix/part7/Notification_Window/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 187904,
-      "category": "ui/craftpix/part7/Notification_Window"
     },
     {
       "id": "GO-a66d0dedb83e",
@@ -14040,16 +12240,6 @@
       "category": "ui/craftpix/windows"
     },
     {
-      "id": "GO-ac7129ccfcef",
-      "path": "/ui/craftpix/windows/Thumbs.db",
-      "rel": "ui/craftpix/windows/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 110080,
-      "category": "ui/craftpix/windows"
-    },
-    {
       "id": "GO-555d6126f83d",
       "path": "/ui/craftpix/windows/window-PSD.psd",
       "rel": "ui/craftpix/windows/window-PSD.psd",
@@ -14086,7 +12276,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 2742,
+      "bytes": 2845,
       "category": "ui/grudge-ui"
     },
     {
@@ -14096,7 +12286,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 4695,
+      "bytes": 4927,
       "category": "ui/grudge-ui"
     },
     {
@@ -14106,7 +12296,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 139020,
+      "bytes": 139021,
       "category": "ui/grudge-ui"
     },
     {
@@ -16496,7 +14686,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 751,
+      "bytes": 777,
       "category": "root"
     },
     {
@@ -16506,7 +14696,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 105,
+      "bytes": 107,
       "category": "root"
     }
   ]

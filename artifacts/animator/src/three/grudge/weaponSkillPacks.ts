@@ -48,6 +48,15 @@ export interface SkillPack {
    * GrudgeAvatar / director one-shots use this when present.
    */
   animRole?: string;
+  /**
+   * Alias of {@link animRole} for grudge6 combat kits / playtests.
+   * Prefer this name when mapping hotbar → baked mixer role.
+   */
+  bakedRole?: string;
+  /** Cross-fade in when skill starts (seconds). */
+  blendIn?: number;
+  /** Cross-fade out / recover (seconds). */
+  blendOut?: number;
   /** Reach in metres for melee hit detection. */
   reach: number;
   /** Base damage before stat scaling. */
@@ -369,4 +378,15 @@ export function familyFromWeaponId(weaponId: string | null | undefined): WeaponF
 /** Primary attack skill (slot 1) for a weapon family. */
 export function primarySkill(family: WeaponFamily): SkillPack {
   return skillPackForFamily(family)[0]!;
+}
+
+/**
+ * Mixer role for a skill pack entry (baked grudge6 / director one-shot).
+ * Prefer bakedRole → animRole → slot-based skillN → attack.
+ */
+export function skillBakedRole(skill: SkillPack): string {
+  if (skill.bakedRole) return skill.bakedRole;
+  if (skill.animRole) return skill.animRole;
+  if (skill.slot >= 1 && skill.slot <= 4) return `skill${skill.slot}`;
+  return "attack";
 }

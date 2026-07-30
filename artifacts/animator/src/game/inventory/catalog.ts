@@ -2,41 +2,53 @@
  * Built-in material + consumable templates for bag / account inventory.
  * Extends content/items when present; materials use short ids (wood, ore, …)
  * matching Railway /api/account/resources.
+ *
+ * Icons: ObjectStore material shard → assets.grudge-studio.com/game-assets/icons/materials/*
+ * @see lib/objectStore.ts · info.grudge-studio.com/api/v1/icon-shards/material.json
  */
 
 import type { ItemTemplate } from "./types";
 import { MATERIAL_STACK_MAX } from "./types";
+import { materialIconPath, resolveIconUrl } from "../../lib/objectStore";
 
 const mat = (
   id: string,
   name: string,
-  icon: string,
+  /** ObjectStore material slug for icon (e.g. oak-log) or relative pack path */
+  iconOrMaterialSlug: string,
   tags: string[] = [],
-): ItemTemplate => ({
-  id,
-  kind: "material",
-  name,
-  rarity: "common",
-  maxStack: MATERIAL_STACK_MAX,
-  icon,
-  tags: ["harvest", ...tags],
-});
+): ItemTemplate => {
+  const isMaterialSlug = !iconOrMaterialSlug.includes("/") && !iconOrMaterialSlug.startsWith("http");
+  const iconPath = isMaterialSlug
+    ? materialIconPath(iconOrMaterialSlug)
+    : iconOrMaterialSlug;
+  const iconUrl = resolveIconUrl(iconPath) || iconPath;
+  return {
+    id,
+    kind: "material",
+    name,
+    rarity: "common",
+    maxStack: MATERIAL_STACK_MAX,
+    icon: iconUrl,
+    tags: ["harvest", ...tags],
+  };
+};
 
-/** Harvest materials — stack 100 in character bag. */
+/** Harvest materials — stack 100 in character bag. Icons from ObjectStore materials. */
 export const MATERIAL_TEMPLATES: Record<string, ItemTemplate> = {
-  wood: mat("wood", "Wood", "/icons/pack/misc/Slash_07.png", ["logging"]),
-  stone: mat("stone", "Stone", "/icons/pack/weapons/Hammer_01.png", ["mining"]),
-  fiber: mat("fiber", "Fiber", "/icons/pack/misc/Effect.png", ["gather"]),
-  ore: mat("ore", "Ore", "/icons/pack/weapons/Hammer_01.png", ["mining"]),
-  meat: mat("meat", "Meat", "/icons/pack/misc/Effect.png", ["skin"]),
-  hide: mat("hide", "Hide", "/icons/pack/misc/Effect.png", ["skin"]),
-  planks: mat("planks", "Planks", "/icons/pack/weapons/Axe_01.png", ["craft"]),
-  sticks: mat("sticks", "Sticks", "/icons/pack/misc/Slash_07.png", ["craft"]),
-  stone_brick: mat("stone_brick", "Stone Brick", "/icons/pack/weapons/Hammer_01.png", ["craft"]),
-  iron_ingot: mat("iron_ingot", "Iron Ingot", "/icons/pack/weapons/Hammer_01.png", ["craft"]),
+  wood: mat("wood", "Wood", "oak-log", ["logging"]),
+  stone: mat("stone", "Stone", "scrap-ore", ["mining"]),
+  fiber: mat("fiber", "Fiber", "cotton-thread", ["gather"]),
+  ore: mat("ore", "Ore", "iron-ore", ["mining"]),
+  meat: mat("meat", "Meat", "rawhide", ["skin"]),
+  hide: mat("hide", "Hide", "rawhide", ["skin"]),
+  planks: mat("planks", "Planks", "oak-plank", ["craft"]),
+  sticks: mat("sticks", "Sticks", "pine-log", ["craft"]),
+  stone_brick: mat("stone_brick", "Stone Brick", "scrap-ore", ["craft"]),
+  iron_ingot: mat("iron_ingot", "Iron Ingot", "iron-ingot", ["craft"]),
   coin: mat("coin", "Coin", "/ui/craftpix/part3/resources/coin.png", ["currency"]),
-  clay: mat("clay", "Clay", "/icons/pack/misc/Effect.png", ["dig"]),
-  coal: mat("coal", "Coal", "/icons/pack/weapons/Hammer_01.png", ["mining"]),
+  clay: mat("clay", "Clay", "scrap-ore", ["dig"]),
+  coal: mat("coal", "Coal", "ore_t1", ["mining"]),
 };
 
 export const CONSUMABLE_TEMPLATES: Record<string, ItemTemplate> = {

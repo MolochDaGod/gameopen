@@ -69,6 +69,87 @@ export class PhysicsWorld {
   }
 
   /**
+   * Static cuboid collider (harvest props, walls, crates). Centre + half-extents (SI m).
+   * Set `sensor: true` for tool-hit volumes that do not block the KCC.
+   */
+  addStaticCuboid(
+    center: { x: number; y: number; z: number },
+    halfExtents: { x: number; y: number; z: number },
+    opts?: { friction?: number; sensor?: boolean },
+  ): RAPIER.Collider | null {
+    const world = this.world;
+    if (!world) return null;
+    const body = world.createRigidBody(
+      RAPIER.RigidBodyDesc.fixed().setTranslation(center.x, center.y, center.z),
+    );
+    let desc = RAPIER.ColliderDesc.cuboid(
+      Math.max(0.05, halfExtents.x),
+      Math.max(0.05, halfExtents.y),
+      Math.max(0.05, halfExtents.z),
+    ).setFriction(opts?.friction ?? 0.75);
+    if (opts?.sensor) desc = desc.setSensor(true);
+    return world.createCollider(desc, body);
+  }
+
+  /**
+   * Static sphere collider (pinata debris sensors, pickups).
+   */
+  addStaticSphere(
+    center: { x: number; y: number; z: number },
+    radius: number,
+    opts?: { friction?: number; sensor?: boolean },
+  ): RAPIER.Collider | null {
+    const world = this.world;
+    if (!world) return null;
+    const body = world.createRigidBody(
+      RAPIER.RigidBodyDesc.fixed().setTranslation(center.x, center.y, center.z),
+    );
+    let desc = RAPIER.ColliderDesc.ball(Math.max(0.04, radius)).setFriction(
+      opts?.friction ?? 0.4,
+    );
+    if (opts?.sensor !== false) desc = desc.setSensor(true);
+    return world.createCollider(desc, body);
+  }
+
+  /**
+   * Static convex hull from world-space points (x,y,z interleaved Float32Array).
+   * Prefer for harvest props (trees/rocks) — cheaper than full trimesh, better than box.
+   * Falls back to null if hull fails (degenerate geometry).
+   */
+  addStaticConvexHull(
+    points: Float32Array,
+    opts?: { friction?: number; sensor?: boolean },
+  ): RAPIER.Collider | null {
+    const world = this.world;
+    if (!world || points.length < 9) return null;
+    try {
+      const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+      let desc = RAPIER.ColliderDesc.convexHull(points);
+      if (!desc) return null;
+      desc = desc.setFriction(opts?.friction ?? 0.7);
+      if (opts?.sensor) desc = desc.setSensor(true);
+      return world.createCollider(desc, body);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Remove a collider + its parent rigid body (if sole collider). */
+  removeCollider(collider: RAPIER.Collider | null | undefined): void {
+    const world = this.world;
+    if (!world || !collider) return;
+    try {
+      const body = collider.parent();
+      world.removeCollider(collider, true);
+      if (body && body.numColliders() === 0) {
+        world.removeRigidBody(body);
+      }
+    } catch {
+      /* already freed */
+    }
+  }
+
+  /**
    * Kinematic capsule rigid body + collider for a character at capsule **centre**.
    */
   makeCapsuleBody(

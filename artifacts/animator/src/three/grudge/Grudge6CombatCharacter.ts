@@ -34,6 +34,7 @@ import {
   type WeaponFamily,
   type SkillPack,
   skillPackForFamily,
+  skillBakedRole,
   familyFromAnimPack,
 } from "./weaponSkillPacks";
 import type { AnimPack } from "./anims";
@@ -67,6 +68,16 @@ export interface SkillResult {
   lungeSpeed: number;
   /** Duration the lunge applies (seconds). */
   lungeDuration: number;
+  /** Mixer role to play on baked grudge6 rig (attack / skill1 / overhead…). */
+  bakedRole: string;
+  /** Cross-fade into the skill clip. */
+  blendIn: number;
+  /** Apply Controller.dash for MM. */
+  useDash: boolean;
+  /** Projectile kind for Vfx.getsugaSlash / bolts. */
+  projectile: string;
+  castEffectId?: string;
+  impactEffectId?: string;
 }
 
 // ── Grudge6CombatCharacter class ──────────────────────────────────────────
@@ -307,11 +318,41 @@ export class Grudge6CombatCharacter {
       this.vfx.impact(impactPos, skill.vfxColor, scale);
     }
 
+    // Traveling slash / bolt projectiles (Getsuga family) when skill asks for them.
+    const proj = skill.projectile ?? "none";
+    if (proj === "slash_wave" || proj === "bolt" || proj === "arrow") {
+      const from = this.root.position.clone().add(new THREE.Vector3(0, 1.05, 0));
+      try {
+        if (typeof (this.vfx as { getsugaSlash?: Function }).getsugaSlash === "function") {
+          (this.vfx as { getsugaSlash: Function }).getsugaSlash(from, dir, {
+            tint: proj === "slash_wave" ? "blue" : undefined,
+            speed: proj === "arrow" ? 28 : 15,
+            range: skill.reach,
+            color: skill.vfxColor,
+          });
+        } else if (typeof (this.vfx as { slashWave?: Function }).slashWave === "function") {
+          (this.vfx as { slashWave: Function }).slashWave(from, dir, {
+            speed: 15,
+            range: skill.reach,
+            color: skill.vfxColor,
+          });
+        }
+      } catch {
+        /* Vfx host may not implement Getsuga yet */
+      }
+    }
+
     return {
       skill,
       lungeDir: dir,
       lungeSpeed: skill.lungeSpeed,
       lungeDuration: skill.lungeDuration,
+      bakedRole: skillBakedRole(skill),
+      blendIn: skill.blendIn ?? 0.1,
+      useDash: skill.useDash ?? skill.lungeSpeed > 0.5,
+      projectile: proj,
+      castEffectId: skill.castEffectId,
+      impactEffectId: skill.impactEffectId,
     };
   }
 

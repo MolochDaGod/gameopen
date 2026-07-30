@@ -299,8 +299,9 @@ export function AdminPanel({
           <Icon name="world-editor" size={16} /> Test Maps
         </h3>
         <p className="spar-count-label">
-          <b>Danger Room</b> combat · <b>Sailtest</b> dual islands + water/wind/sky ·{" "}
-          <b>Forest Map</b> harvest. Seed UUID on each deploy.
+          Combat · harvest · build · loco maps. Catalog REST{" "}
+          <code>/content/maps/danger-maps.json</code> · health <code>/api/health</code>. Loading curtain
+          while GLB + colliders bake. Seed UUID per map.
         </p>
         <div className="grid3">
           {TEST_WORLD_LIST.map((w) => (
