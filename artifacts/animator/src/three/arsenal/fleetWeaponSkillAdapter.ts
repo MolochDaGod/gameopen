@@ -40,6 +40,21 @@ function kindToCollider(kind: SkillKind): FleetWeaponSkill["collider"] {
   return { type: "capsule", radius: 0.45, halfHeight: 0.7, offset: [0, 1.0, 0.9] };
 }
 
+/** Samurai 2H clip roles (greatsword_samurai bake). */
+const SAMURAI_2H_ANIM_ROLES = [
+  "attack", // gs_samurai_combo_a
+  "skill1", // gs_samurai_combo_b
+  "skill2", // gs_samurai_dash_opener
+  "skill3", // gs_samurai_teleport_strike
+] as const;
+
+const SAMURAI_SLASH_VARIANTS: FleetSlashVariantId[] = [
+  "slashred",
+  "slashyellow",
+  "slashblue",
+  "slashpurple",
+];
+
 /** Convert one T0 skill row into a production fleet skill. */
 export function t0SkillToFleet(
   weaponId: string,
@@ -47,15 +62,35 @@ export function t0SkillToFleet(
   skill: T0SkillDef,
 ): FleetWeaponSkill {
   const role = skill.role;
-  const variant = slashVariantForStage(slot, {
-    finisher: role === "power",
-    kind: role === "power" ? "finisher" : role === "special" ? "heavy" : undefined,
-  }) as FleetSlashVariantId;
+  const isSamurai2h =
+    weaponId === "greatsword" ||
+    weaponId === "greataxe" ||
+    weaponId === "hammer2h" ||
+    weaponId === "scythe" ||
+    weaponId === "nodachi";
+
+  const variant = (
+    isSamurai2h
+      ? SAMURAI_SLASH_VARIANTS[slot] ?? "slashred"
+      : slashVariantForStage(slot, {
+          finisher: role === "power",
+          kind: role === "power" ? "finisher" : role === "special" ? "heavy" : undefined,
+        })
+  ) as FleetSlashVariantId;
 
   const projectile = kindToProjectile(skill.kind);
   if (projectile?.kind === "slash_wave") {
     projectile.slashVariant = variant;
+    if (isSamurai2h) {
+      projectile.speed = role === "power" ? 20 : role === "ranged" ? 18 : 15;
+      projectile.range = role === "power" ? 12 : 9;
+      projectile.contactRadius = 1.05;
+    }
   }
+
+  const animRole = isSamurai2h
+    ? SAMURAI_2H_ANIM_ROLES[slot] ?? "attack"
+    : "attack";
 
   return scaffoldWeaponSkill({
     id: `${weaponId}_slot${slot}_${skill.role}`,
@@ -63,20 +98,20 @@ export function t0SkillToFleet(
     slot,
     label: skill.label,
     role: skill.role,
-    animRole: "attack",
+    animRole,
     cooldown: skill.cooldown ?? 2.5,
     staminaCost: role === "power" ? 28 : role === "special" ? 20 : role === "ranged" ? 14 : 12,
-    damage: role === "power" ? 42 : role === "special" ? 28 : 18,
-    force: role === "power" ? 3 : 2,
+    damage: role === "power" ? 48 : role === "special" ? 34 : role === "ranged" ? 30 : 26,
+    force: role === "power" ? 3.5 : 2.2,
     castDuration: 0.2,
-    activeDuration: 0.25,
+    activeDuration: isSamurai2h ? 0.32 : 0.25,
     collider: kindToCollider(skill.kind),
-    castEffectId: skill.kind,
-    impactEffectId: skill.kind === "slash" ? "getsuga_slash" : skill.kind,
+    castEffectId: isSamurai2h ? "getsuga_slash" : skill.kind,
+    impactEffectId: skill.kind === "slash" || isSamurai2h ? "getsuga_slash" : skill.kind,
     projectile,
     aoeRadius: skill.kind === "nova" || skill.kind === "slam" ? 2.4 : undefined,
     iconUrl: skill.iconUrl,
-    tags: [skill.role, skill.kind],
+    tags: [skill.role, skill.kind, ...(isSamurai2h ? ["samurai", "2h", "getsuga"] : [])],
     attachToHand: "main",
   });
 }

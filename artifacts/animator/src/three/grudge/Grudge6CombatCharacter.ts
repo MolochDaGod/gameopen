@@ -266,16 +266,46 @@ export class Grudge6CombatCharacter {
     this.activeSkill = skill;
     this.transitionTo("attack");
 
-    // VFX: impact at tip of weapon reach.
+    // VFX at weapon reach — samurai 2H uses Getsuga / slash waves + arc.
     const dir = new THREE.Vector3(
       Math.sin(this.root.rotation.y),
       0,
       Math.cos(this.root.rotation.y),
+    ).normalize();
+    const origin = this.root.position.clone().add(new THREE.Vector3(0, 1.15, 0));
+    const impactPos = origin.clone().addScaledVector(dir, skill.reach * 0.75);
+    const scale = 0.55 + skill.damage / 90;
+    const kind = skill.effectKind ?? "impact";
+    const quat = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      dir,
     );
-    const impactPos = this.root.position.clone()
-      .addScaledVector(dir, skill.reach * 0.8);
-    impactPos.y += 1.0;
-    this.vfx.impact(impactPos, skill.vfxColor, 0.5 + skill.damage / 80);
+
+    try {
+      if (kind === "getsuga" || kind === "slashWave") {
+        this.vfx.slashWave(origin, dir, {
+          speed: 14 + skill.lungeSpeed * 0.4,
+          range: Math.max(6, skill.reach * 2.2),
+          color: skill.vfxColor,
+          variant: skill.slashVariant ?? "slashred",
+          contactRadius: 0.95,
+          followDuration: 0.08,
+          onHit: (p) => this.vfx.impact(p, skill.vfxColor, scale * 1.1),
+        });
+        this.vfx.slashArc(impactPos, quat, skill.vfxColor);
+      } else if (kind === "nova" || kind === "slam") {
+        this.vfx.aoeBlast(impactPos.clone().setY(0.35), skill.vfxColor, 2.0 + skill.reach * 0.25);
+        this.vfx.impact(impactPos, skill.vfxColor, scale * 1.3);
+      } else if (kind === "slash") {
+        this.vfx.slashArc(impactPos, quat, skill.vfxColor);
+        this.vfx.impact(impactPos, skill.vfxColor, scale);
+      } else {
+        this.vfx.impact(impactPos, skill.vfxColor, scale);
+      }
+    } catch (e) {
+      console.warn("[Grudge6CombatCharacter] skill VFX failed", e);
+      this.vfx.impact(impactPos, skill.vfxColor, scale);
+    }
 
     return {
       skill,

@@ -381,23 +381,29 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     ],
   },
   /**
-   * 2H sword — prod/anims/2h_melee GLB library (greatsword FBX bake).
+   * 2H sword / greatsword — **samurai** production bake (Bip001 JSON).
+   * Primary attack + skills 1–4 use gs_samurai_* clips with Getsuga/slash VFX.
+   * 2h_melee GLB paths remain as soft fallbacks via loadBakedClip candidates if needed.
    */
   twohand: {
-    idle: "2h_melee/great-sword-idle",
-    walk: "2h_melee/great-sword-walk",
-    run: "2h_melee/great-sword-run",
-    attack: "2h_melee/great-sword-slash",
+    idle: "greatsword_samurai/gs_samurai_idle_sword",
+    walk: "greatsword_samurai/gs_samurai_walk_sword",
+    run: "greatsword_samurai/gs_samurai_run_sword",
+    attack: "greatsword_samurai/gs_samurai_combo_a",
     extras: [
-      "2h_melee/great-sword-slash-2",
+      // Slot / skill mapping (see grudge6Runtime extras role normalize + SAMURAI_2H_SKILLS)
+      "greatsword_samurai/gs_samurai_combo_b", // skill1 / attack2
+      "greatsword_samurai/gs_samurai_dash_opener", // skill2
+      "greatsword_samurai/gs_samurai_teleport_strike", // skill3
+      "greatsword_samurai/gs_samurai_jump_sword", // skill4 / jump attack
+      "greatsword_samurai/gs_samurai_combo_a",
+      "greatsword_samurai/gs_samurai_jump",
+      "greatsword_samurai/gs_samurai_sword_on",
+      "greatsword_samurai/gs_samurai_sword_off",
+      // Soft fallbacks if samurai clip 404s
+      "2h_melee/great-sword-slash",
       "2h_melee/great-sword-overhead",
-      "2h_melee/great-sword-combo",
       "2h_melee/great-sword-blocking",
-      "2h_melee/great-sword-jump-attack",
-      "2h_melee/quick-slash",
-      "polearm/skill1",
-      "polearm/skill2",
-      "polearm/special",
     ],
   },
   /** Crossbow — longbow aim set until dedicated bake. */
@@ -445,8 +451,8 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
  * Explosive FREE only ships teaser Attack1 clips; full packs required for twohand/crossbow.
  */
 export const ANIM_PACK_FALLBACK: Partial<Record<AnimPack, AnimPack>> = {
-  // twohand has prod/anims/2h_melee — only fall back if those 404
-  twohand: "polearm",
+  // twohand now uses samurai bake; only fall back to samurai pack id if needed
+  twohand: "samurai",
   crossbow: "longbow",
   // rifle/pistol have prod packs — do not force unarmed
 };
@@ -525,14 +531,17 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
 export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
   const w = String(weaponId || "").toLowerCase();
   if (!w || w === "none") return "unarmed";
-  // 2H heavy — Explosive TwoHanded / Hammer (bake → twohand; runtime falls back polearm)
+  // 2H heavy — samurai anim pack (twohand SSOT = greatsword_samurai clips)
   if (
     w === "greatsword" ||
     w === "greataxe" ||
     w === "hammer2h" ||
-    w === "scythe"
+    w === "scythe" ||
+    w === "nodachi" ||
+    w === "two_hand_sword" ||
+    w === "2h_sword"
   ) {
-    return "twohand";
+    return "twohand"; // clips are samurai; alias also "samurai"
   }
   // Polearm / spear family — Madarame bake SSOT
   if (w === "spear" || w === "javelin" || w === "lance" || w === "halberd" || w === "polearm") {

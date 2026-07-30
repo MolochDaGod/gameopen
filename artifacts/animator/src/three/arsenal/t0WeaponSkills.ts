@@ -102,11 +102,12 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Run Slash", "slash", 55],
     ["power", "Blade Storm", "nova", 100],
   ]),
-  greatsword: kit("greatsword", "Great Sword", [
-    ["combo", "Two Hand Sword Combo", "slash", 70],
-    ["special", "Quick GS Slash", "slash", 85],
-    ["ranged", "Fire Tornado", "fireTornado", 40],
-    ["power", "Judgement", "slam", 100, "dash"],
+  // Samurai greatsword_samurai bake — Getsuga slash VFX on all 4 slots
+  greatsword: kit("greatsword", "Great Sword (Samurai)", [
+    ["combo", "Samurai Cleave", "slash", 75],
+    ["special", "Twin Combo", "slash", 88],
+    ["ranged", "Dash Opener", "slash", 95, "dash"],
+    ["power", "Teleport Strike", "slash", 100, "dash"],
   ]),
   axe: kit("axe", "Battle Axe", [
     ["combo", "Axe Combo", "slash", 70],
@@ -114,11 +115,11 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["ranged", "Axe Toss", "bolt", 55],
     ["power", "Earth Shatter", "slam", 100, "dash"],
   ]),
-  greataxe: kit("greataxe", "Battle Axe", [
-    ["combo", "Greataxe Combo", "slash", 70],
-    ["special", "Dual Weapon Combo", "slash", 85],
-    ["ranged", "Fire Tornado", "fireTornado", 40],
-    ["power", "Execute", "slam", 100, "dash"],
+  greataxe: kit("greataxe", "Battle Axe (Samurai)", [
+    ["combo", "Samurai Cleave", "slash", 75],
+    ["special", "Twin Combo", "slash", 88],
+    ["ranged", "Dash Opener", "slash", 95, "dash"],
+    ["power", "Teleport Strike", "slash", 100, "dash"],
   ]),
   // greataxe LMB uses Documents greataxe.fbx → great-axe-combo
   dagger: kit("dagger", "Daggers", [

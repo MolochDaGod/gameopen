@@ -5,14 +5,17 @@
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
+    "prodAnimsRoot": "prod/anims",
+    "prodAnimsCdn": "https://assets.grudge-studio.com/prod/anims",
     "mixamoRoot": "anim",
     "integrity": "sha256",
     "stripPositionTracks": true,
     "skeleton": "Bip001",
     "notes": [
-      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal.",
-      "If pack missing/incomplete, use fallbackPack (still Bip001 baked).",
-      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Verify SHA on bake input; ship baked JSON.",
+      "Danger heroes: preset mesh_ids only (gear preset weapons) — load baked anims for that weapon family, never equip extra weapon meshes at runtime.",
+      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal (climb/swim/dodge/roll/harvest/block).",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked) then prod/anims CDN.",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON or prod/anims GLB libraries.",
       "Never load locomotion/running (banned run-to-roll)."
     ]
   },
@@ -20,17 +23,41 @@
     "pack": "traversal",
     "roles": {
       "jump": "locomotion/jump",
-      "dodge": "locomotion/dodging",
-      "dodgeF": "longbow/standing dodge forward",
-      "dodgeL": "longbow/standing dodge left",
-      "dodgeR": "longbow/standing dodge right"
+      "dodge": "locomotion/dodge_back",
+      "dodgeF": "locomotion/dodge_fwd",
+      "dodgeL": "locomotion/dodge_l",
+      "dodgeR": "locomotion/dodge_r",
+      "roll": "roll_dodge/dodging-back",
+      "crawl": "locomotion/crawl",
+      "swim": "locomotion/swim",
+      "swimFast": "locomotion/swim_fast",
+      "tread": "swim/treading",
+      "climb": "locomotion/climbup_1m",
+      "climbUp": "climb/up",
+      "mantle": "climb/to_top",
+      "hang": "climb/hang_idle",
+      "wallRun": "climb/wall_run",
+      "harvest": "locomotion/plant_seed",
+      "block": "block/standing-block-idle",
+      "parry": "block/parry"
     },
-    "alwaysLoadWithWeapon": true
+    "alwaysLoadWithWeapon": true,
+    "notes": [
+      "Sprint is NOT a bake path — clone pack.run + SPRINT_LOCO_MULT. locomotion/running is BANNED run-to-roll.",
+      "crawl/climb/swim Mixamo under public/anim/* → bake to anims/baked/* before production."
+    ]
   },
   "roleContract": {
     "required": ["idle", "walk", "run", "attack"],
     "recommended": ["sprint", "jump", "dodge", "skill1", "skill2", "skill3", "skill4"],
-    "optional": ["hurt", "death", "block", "parry", "cast"]
+    "optional": ["hurt", "death", "block", "parry", "cast", "crawl", "swim", "climb", "mantle", "hang"],
+    "neverAliasToAttack": ["jump", "dodge", "roll", "sprint", "crawl", "swim", "climb", "hurt", "death", "block", "parry"]
+  },
+  "namingCorrections": {
+    "locomotion/running": "BANNED — run-to-roll transition, not sprint",
+    "sprint": "Runtime role only: clone of verified run cycle × 1.75 timeScale",
+    "polearm/run": "Do not use as gait — Madarame full take ~5s; use torch run / standing run",
+    "locomotion/walking": "BANNED tip/fall on Arena GLB kits — use Standing Walk Forward"
   },
   "weapons": {
     "none": {
@@ -157,25 +184,36 @@
       "inheritsFrom": "spear"
     },
     "greatsword": {
-      "label": "2H Greatsword",
+      "label": "2H Greatsword (Samurai)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "liveRoles": {
-        "idle": "twohand/idle",
-        "walk": "twohand/walk",
-        "run": "twohand/run",
-        "attack": "twohand/attack"
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "greatsword_samurai/gs_samurai_teleport_strike",
+        "skill4": "greatsword_samurai/gs_samurai_jump_sword",
+        "jump": "greatsword_samurai/gs_samurai_jump"
       },
       "liveWhenIncomplete": {
-        "note": "twohand bake missing → polearm roles live until bake",
-        "idle": "polearm/idle",
-        "walk": "polearm/walk",
-        "run": "polearm/run",
-        "attack": "polearm/attack",
-        "skill1": "polearm/skill1",
-        "skill2": "polearm/skill2",
-        "skill3": "polearm/skill3",
-        "skill4": "polearm/skill4"
+        "note": "samurai bake missing → 2h_melee GLB then polearm",
+        "idle": "2h_melee/great-sword-idle",
+        "walk": "2h_melee/great-sword-walk",
+        "run": "2h_melee/great-sword-run",
+        "attack": "2h_melee/great-sword-slash",
+        "skill1": "2h_melee/great-sword-combo",
+        "skill2": "2h_melee/great-sword-overhead",
+        "skill3": "2h_melee/great-sword-jump-attack",
+        "skill4": "2h_melee/quick-slash"
+      },
+      "effects": {
+        "attack": { "kind": "getsuga", "variant": "slashred" },
+        "skill1": { "kind": "slashWave", "variant": "slashyellow" },
+        "skill2": { "kind": "getsuga", "variant": "slashblue" },
+        "skill3": { "kind": "getsuga", "variant": "slashpurple" }
       },
       "mixamoSources": [
         "anim/greatsword/great-sword-idle.fbx",
@@ -183,25 +221,30 @@
         "anim/greatsword/great-sword-slash.fbx",
         "anim/greatsword/great-sword-combo.fbx"
       ],
-      "skillSlots": ["gs_cleave", "gs_whirlwind", "gs_bladestorm", "gs_apocalypse"]
+      "skillSlots": [
+        "gs_samurai_cleave",
+        "gs_samurai_twin",
+        "gs_samurai_dash",
+        "gs_samurai_teleport"
+      ]
     },
     "greataxe": {
-      "label": "2H Greataxe",
+      "label": "2H Greataxe (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword",
       "mixamoSources": ["anim/greataxe/great-axe-combo.fbx"]
     },
     "hammer2h": {
-      "label": "2H War Hammer",
+      "label": "2H War Hammer (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword"
     },
     "scythe": {
-      "label": "Reaper Scythe",
+      "label": "Reaper Scythe (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword"
     },
     "bow": {

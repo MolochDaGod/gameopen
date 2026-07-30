@@ -184,25 +184,36 @@
       "inheritsFrom": "spear"
     },
     "greatsword": {
-      "label": "2H Greatsword",
+      "label": "2H Greatsword (Samurai)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "liveRoles": {
-        "idle": "twohand/idle",
-        "walk": "twohand/walk",
-        "run": "twohand/run",
-        "attack": "twohand/attack"
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "greatsword_samurai/gs_samurai_teleport_strike",
+        "skill4": "greatsword_samurai/gs_samurai_jump_sword",
+        "jump": "greatsword_samurai/gs_samurai_jump"
       },
       "liveWhenIncomplete": {
-        "note": "twohand bake missing → polearm roles live until bake",
-        "idle": "polearm/idle",
-        "walk": "polearm/walk",
-        "run": "polearm/run",
-        "attack": "polearm/attack",
-        "skill1": "polearm/skill1",
-        "skill2": "polearm/skill2",
-        "skill3": "polearm/skill3",
-        "skill4": "polearm/skill4"
+        "note": "samurai bake missing → 2h_melee GLB then polearm",
+        "idle": "2h_melee/great-sword-idle",
+        "walk": "2h_melee/great-sword-walk",
+        "run": "2h_melee/great-sword-run",
+        "attack": "2h_melee/great-sword-slash",
+        "skill1": "2h_melee/great-sword-combo",
+        "skill2": "2h_melee/great-sword-overhead",
+        "skill3": "2h_melee/great-sword-jump-attack",
+        "skill4": "2h_melee/quick-slash"
+      },
+      "effects": {
+        "attack": { "kind": "getsuga", "variant": "slashred" },
+        "skill1": { "kind": "slashWave", "variant": "slashyellow" },
+        "skill2": { "kind": "getsuga", "variant": "slashblue" },
+        "skill3": { "kind": "getsuga", "variant": "slashpurple" }
       },
       "mixamoSources": [
         "anim/greatsword/great-sword-idle.fbx",
@@ -210,25 +221,30 @@
         "anim/greatsword/great-sword-slash.fbx",
         "anim/greatsword/great-sword-combo.fbx"
       ],
-      "skillSlots": ["gs_cleave", "gs_whirlwind", "gs_bladestorm", "gs_apocalypse"]
+      "skillSlots": [
+        "gs_samurai_cleave",
+        "gs_samurai_twin",
+        "gs_samurai_dash",
+        "gs_samurai_teleport"
+      ]
     },
     "greataxe": {
-      "label": "2H Greataxe",
+      "label": "2H Greataxe (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword",
       "mixamoSources": ["anim/greataxe/great-axe-combo.fbx"]
     },
     "hammer2h": {
-      "label": "2H War Hammer",
+      "label": "2H War Hammer (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword"
     },
     "scythe": {
-      "label": "Reaper Scythe",
+      "label": "Reaper Scythe (Samurai anims)",
       "animPack": "twohand",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "greatsword"
     },
     "bow": {

@@ -20,6 +20,17 @@ export type WeaponFamily =
   | "longbow"     // Bow — ranged physical
   | "unarmed";    // Kick / striker
 
+/** Combat VFX kind for skill cast / impact. */
+export type SkillEffectKind =
+  | "impact"
+  | "slash"
+  | "slashWave"
+  | "getsuga"
+  | "nova"
+  | "slam";
+
+export type SlashVariantId = "slashred" | "slashblue" | "slashpurple" | "slashyellow";
+
 export interface SkillPack {
   /** Matches `animKey` in content/skills/*.json. */
   animKey: string;
@@ -27,8 +38,16 @@ export interface SkillPack {
   slot: 1 | 2 | 3 | 4;
   /** Human-readable label. */
   label: string;
-  /** FBX clip path (relative to `public/`) for full rig animation. */
+  /**
+   * Baked clip path (relative to public/) — prefer anims/baked or prod/anims.
+   * Mixamo FBX is authoring only (not on Vercel).
+   */
   clipPath: string;
+  /**
+   * Clip role on the loaded mixer (attack / skill1 / skill2 / …).
+   * GrudgeAvatar / director one-shots use this when present.
+   */
+  animRole?: string;
   /** Reach in metres for melee hit detection. */
   reach: number;
   /** Base damage before stat scaling. */
@@ -41,6 +60,12 @@ export interface SkillPack {
   vfxColor: number;
   /** Skill cooldown (seconds). 0 = primary (no CD). */
   cooldown: number;
+  /** Production combat VFX kind (Getsuga / arc / nova). */
+  effectKind?: SkillEffectKind;
+  /** Slash mesh variant for getsuga / slashWave. */
+  slashVariant?: SlashVariantId;
+  /** Optional fleet impact effect id. */
+  impactEffectId?: string;
 }
 
 // ── Sword pack ───────────────────────────────────────────────────────────────
@@ -80,41 +105,64 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
   },
 ] as const;
 
-// ── Axe / greatsword pack (Madarame polearm bake — same-origin baked JSON) ────
-export const AXE_SKILLS: readonly SkillPack[] = [
+/**
+ * 2H Greatsword / Samurai — production greatsword_samurai bake + Getsuga/slash VFX.
+ * Slot map mirrors combat-map.json:
+ *   1 combo_a · 2 combo_b · 3 dash_opener · 4 teleport_strike
+ */
+export const SAMURAI_2H_SKILLS: readonly SkillPack[] = [
   {
-    animKey: "axe_primary",
+    animKey: "gs_samurai_cleave",
     slot: 1,
-    label: "Heavy Strike",
-    clipPath: "anims/baked/polearm/attack.json",
-    reach: 2.2, damage: 28, lungeSpeed: 4.5, lungeDuration: 0.30,
-    vfxColor: 0xff8c44, cooldown: 0,
+    label: "Samurai Cleave",
+    clipPath: "anims/baked/greatsword_samurai/gs_samurai_combo_a.json",
+    animRole: "attack",
+    reach: 2.6, damage: 32, lungeSpeed: 5.0, lungeDuration: 0.28,
+    vfxColor: 0xff6060, cooldown: 0,
+    effectKind: "getsuga",
+    slashVariant: "slashred",
+    impactEffectId: "getsuga_slash",
   },
   {
-    animKey: "axe_secondary",
+    animKey: "gs_samurai_twin",
     slot: 2,
-    label: "Overhead Slam",
-    clipPath: "anims/baked/polearm/overhead.json",
-    reach: 2.5, damage: 38, lungeSpeed: 5.0, lungeDuration: 0.35,
-    vfxColor: 0xff6020, cooldown: 2.0,
+    label: "Twin Combo",
+    clipPath: "anims/baked/greatsword_samurai/gs_samurai_combo_b.json",
+    animRole: "skill1",
+    reach: 2.8, damage: 40, lungeSpeed: 4.5, lungeDuration: 0.32,
+    vfxColor: 0xffd040, cooldown: 2.2,
+    effectKind: "slashWave",
+    slashVariant: "slashyellow",
+    impactEffectId: "getsuga_slash",
   },
   {
-    animKey: "axe_ability",
+    animKey: "gs_samurai_dash",
     slot: 3,
-    label: "Cleave Combo",
-    clipPath: "anims/baked/polearm/attack5.json",
-    reach: 2.8, damage: 42, lungeSpeed: 2.0, lungeDuration: 0.45,
-    vfxColor: 0xff4400, cooldown: 5.0,
+    label: "Dash Opener",
+    clipPath: "anims/baked/greatsword_samurai/gs_samurai_dash_opener.json",
+    animRole: "skill2",
+    reach: 3.4, damage: 38, lungeSpeed: 11.0, lungeDuration: 0.36,
+    vfxColor: 0x80e0ff, cooldown: 5.0,
+    effectKind: "getsuga",
+    slashVariant: "slashblue",
+    impactEffectId: "getsuga_slash",
   },
   {
-    animKey: "axe_ultimate",
+    animKey: "gs_samurai_teleport",
     slot: 4,
-    label: "Berserker Rush",
-    clipPath: "anims/baked/polearm/special.json",
-    reach: 3.0, damage: 55, lungeSpeed: 9.0, lungeDuration: 0.42,
-    vfxColor: 0xff2200, cooldown: 10.0,
+    label: "Teleport Strike",
+    clipPath: "anims/baked/greatsword_samurai/gs_samurai_teleport_strike.json",
+    animRole: "skill3",
+    reach: 3.8, damage: 58, lungeSpeed: 14.0, lungeDuration: 0.40,
+    vfxColor: 0xc080ff, cooldown: 10.0,
+    effectKind: "getsuga",
+    slashVariant: "slashpurple",
+    impactEffectId: "getsuga_slash",
   },
 ] as const;
+
+/** @deprecated alias — heavy 2H uses samurai pack */
+export const AXE_SKILLS = SAMURAI_2H_SKILLS;
 
 // ── Spear (Madarame): 1_1 base · 1_5 lunge · skill2_1 rush/AoE · ultimate ───
 export const SPEAR_SKILLS: readonly SkillPack[] = [
@@ -264,9 +312,9 @@ export const STRIKER_SKILLS: readonly SkillPack[] = [
 export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
   switch (family) {
     case "sword":     return SWORD_SKILLS;
-    case "greatsword":return AXE_SKILLS;
-    case "axe":       return AXE_SKILLS;
-    case "mace":      return AXE_SKILLS;
+    case "greatsword":return SAMURAI_2H_SKILLS;
+    case "axe":       return SAMURAI_2H_SKILLS;
+    case "mace":      return SAMURAI_2H_SKILLS;
     case "spear":     return SPEAR_SKILLS;
     case "magic":     return MAGIC_SKILLS;
     case "longbow":   return LONGBOW_SKILLS;
@@ -281,6 +329,8 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
     case "twohand":
     case "2h_melee":
     case "2h":
+    case "samurai":
+    case "greatsword_samurai":
       return "greatsword";
     case "crossbow":
       return "longbow"; // same ranged family until dedicated family ships
@@ -288,7 +338,6 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
     case "gun":
       return "longbow"; // ranged VFX path; T0 skills still use rifle kit by weaponId
     case "sword_shield":
-    case "samurai":
       return "sword";
     case "polearm":
       return "spear";

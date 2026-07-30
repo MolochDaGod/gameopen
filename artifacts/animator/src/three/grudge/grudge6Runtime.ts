@@ -534,9 +534,12 @@ export async function loadGrudge6CombatRig(
         else if (/skill[-_]?(\d+)/i.test(stem)) {
           const sm = stem.match(/skill[-_]?(\d+)/i);
           if (sm) role = `skill${sm[1]}`;
-        } else if (/gs_samurai_combo_b|combo_b/i.test(stem)) role = "skill1";
+        } else if (/gs_samurai_combo_a/i.test(stem)) role = clips.has("attack") ? "attack2" : "attack";
+        else if (/gs_samurai_combo_b|combo_b/i.test(stem)) role = "skill1";
         else if (/gs_samurai_dash|dash_opener/i.test(stem)) role = "skill2";
         else if (/teleport_strike/i.test(stem)) role = "skill3";
+        else if (/gs_samurai_jump_sword/i.test(stem)) role = "skill4";
+        else if (/gs_samurai_jump$/i.test(stem) && !clips.has("jump")) role = "jump";
         else if (/charged-pistol|pistol-whip/i.test(stem)) role = clips.has("skill1") ? "skill2" : "skill1";
         else if (/reloading|reload/i.test(stem)) role = "reload";
         else if (/firing|gunplay|fire/i.test(stem) && !clips.has("attack")) role = "attack";

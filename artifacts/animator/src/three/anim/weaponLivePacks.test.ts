@@ -12,7 +12,7 @@ describe("weaponLivePacks", () => {
   it("maps core weapons to packs", () => {
     expect(liveAnimPackForWeapon("sword")).toBe("sword_shield");
     expect(liveAnimPackForWeapon("spear")).toBe("polearm");
-    expect(liveAnimPackForWeapon("greatsword")).toBe("twohand");
+    expect(liveAnimPackForWeapon("greatsword")).toBe("twohand"); // clips = samurai
     expect(liveAnimPackForWeapon("bow")).toBe("longbow");
     expect(liveAnimPackForWeapon("crossbow")).toBe("crossbow");
     expect(liveAnimPackForWeapon("rifle")).toBe("rifle");
@@ -35,12 +35,14 @@ describe("weaponLivePacks", () => {
     expect(rels.some((r) => r.role === "attack")).toBe(true);
   });
 
-  it("greatsword has incomplete fallbacks to polearm", () => {
+  it("greatsword uses samurai bake with 2h_melee incomplete fallbacks", () => {
     const def = getWeaponLiveDef("greatsword");
-    expect(def.fallbackPack).toBe("polearm");
-    expect(def.liveWhenIncomplete?.attack).toMatch(/polearm/);
+    expect(def.animPack).toBe("twohand");
+    expect(def.fallbackPack).toBe("samurai");
+    expect(def.liveRoles?.attack).toMatch(/greatsword_samurai|gs_samurai/);
+    expect(def.liveWhenIncomplete?.attack).toMatch(/2h_melee|great-sword/);
     const rels = liveBakeRelsForWeapon("greatsword");
-    expect(rels.some((r) => !r.preferred && r.bakeRel.includes("polearm"))).toBe(true);
+    expect(rels.some((r) => r.preferred && r.bakeRel.includes("samurai"))).toBe(true);
   });
 
   it("summary covers many weapons", () => {

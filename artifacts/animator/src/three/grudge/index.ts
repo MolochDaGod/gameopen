@@ -69,6 +69,7 @@ export {
   familyFromWeaponId,
   familyFromAnimPack,
   skillPackForFamily,
+  SAMURAI_2H_SKILLS,
 } from "./weaponSkillPacks";
 export {
   powerOfTenScale,
