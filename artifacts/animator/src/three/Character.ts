@@ -123,88 +123,57 @@ export class Character {
   }
 
   /**
-   * Load rotation-only Bip001 JSON under /anims/baked and bind to this skeleton.
-   * Fills missing idle/walk/run/attack/jump/mobility so combat blend + controller
-   * work even when the GLB shipped with few or poorly named clips.
+   * Fleet SSOT hydrate — full loco + combat + climb/swim for any skinned GLB.
+   * @see fleetAvatarHydrate.ts
    */
   private async hydrateFleetBakedRoles(): Promise<void> {
     if (!this.model || !this.mixer) return;
-    const hasSkinned = (() => {
-      let ok = false;
-      this.model!.traverse((o) => {
-        const s = o as THREE.SkinnedMesh;
-        if (s.isSkinnedMesh && s.skeleton?.bones?.length) ok = true;
-      });
-      return ok;
-    })();
-    if (!hasSkinned) return;
-
     try {
-      const { loadBakedClip, MOBILITY_CLIPS } = await import("./grudge/anims");
-      const { rematchClipToSkeleton } = await import("./grudge/skeleton");
-
-      // Prefer sword_shield combat pack as universal Danger Room base; fall back magic walk.
-      const core: Array<{ role: AnimRole; rel: string }> = [
-        { role: "idle", rel: "sword_shield/sword and shield idle" },
-        { role: "walk", rel: "magic/Standing Walk Forward" },
-        { role: "run", rel: "sword_shield/sword and shield run" },
-        { role: "attack", rel: "sword_shield/sword and shield attack" },
-        { role: "jump", rel: "locomotion/jump" },
-        { role: "hurt", rel: "polearm/hurt" },
-      ];
-      // Only fill roles we don't already have a usable clip for
-      const need = (role: AnimRole) => !this.roleClip.has(role);
-
-      const register = (role: string, clip: THREE.AnimationClip) => {
-        if (!this.mixer) return;
-        // Never overwrite a native GLB role that already maps cleanly
-        if (this.roleClip.has(role as AnimRole)) return;
-        const bound = rematchClipToSkeleton(this.model!, clip);
-        const action = this.mixer.clipAction(filterBindableTracks(this.model!, bound));
-        this.actions.set(role, action);
-        this.actions.set(bound.name, action);
-        this.roleClip.set(role as AnimRole, role);
-      };
-
-      await Promise.all(
-        core.map(async ({ role, rel }) => {
-          if (!need(role)) return;
-          try {
-            const clip = await loadBakedClip(rel);
-            register(role, clip);
-          } catch {
-            /* optional host / CDN miss */
-          }
-        }),
+      const { hydrateFleetAvatarRoles, applyRoleAliases, missingFleetRoles } = await import(
+        "./fleetAvatarHydrate"
       );
-
-      // Sprint = run clone (never locomotion/running roll)
-      if (!this.roleClip.has("sprint") && this.roleClip.has("run")) {
-        this.roleClip.set("sprint", this.roleClip.get("run")!);
-      }
-
-      // Mobility climb/swim/hang
-      await Promise.all(
-        MOBILITY_CLIPS.map(async ({ role, bakeRel }) => {
-          if (this.actions.has(role)) return;
-          try {
-            const clip = await loadBakedClip(bakeRel);
-            register(role, clip);
-          } catch {
-            /* bake optional until deployed */
+      await hydrateFleetAvatarRoles({
+        model: this.model,
+        mixer: this.mixer,
+        logId: this.def.id,
+        hasRole: (role) => this.roleClip.has(role as AnimRole),
+        register: (role, clip) => {
+          if (!this.mixer || this.roleClip.has(role as AnimRole)) return;
+          const action = this.mixer.clipAction(clip);
+          this.actions.set(role, action);
+          this.actions.set(clip.name, action);
+          this.roleClip.set(role as AnimRole, role);
+        },
+      });
+      applyRoleAliases(
+        (name) => this.actions.has(name),
+        (role, actionKey) => {
+          if (this.roleClip.has(role as AnimRole)) return;
+          if (this.actions.has(actionKey)) {
+            this.roleClip.set(role as AnimRole, actionKey);
+          } else if (this.roleClip.has(actionKey as AnimRole)) {
+            this.roleClip.set(role as AnimRole, this.roleClip.get(actionKey as AnimRole)!);
           }
-        }),
+        },
+        (role) => this.roleClip.has(role as AnimRole),
       );
-
-      // Rebuild loco blend with new actions
-      this.locoBlend = new LocomotionBlend((id) => this.actions.get(id) ?? null);
-
+      this.locoBlend = new LocomotionBlend((id) => {
+        const key = this.roleClip.get(id as AnimRole) ?? id;
+        return this.actions.get(key) ?? this.actions.get(id) ?? null;
+      });
+      const miss = missingFleetRoles((r) => this.roleClip.has(r as AnimRole));
       console.info(
-        `[Character] ${this.def.id} fleet bake hydrate roles=${[...this.roleClip.keys()].join(",")}`,
+        `[Character] ${this.def.id} fleet hydrate roles=${[...this.roleClip.keys()].join(",")}` +
+          (miss.length ? ` MISSING=${miss.join(",")}` : " OK"),
       );
     } catch (e) {
       console.warn(`[Character] ${this.def.id} fleet bake hydrate skipped`, e);
     }
+  }
+
+  /** Controller climb/swim surface hint (GLB uses baked roles; no separate mode set). */
+  setTraversalMode(_mode: "ground" | "climb" | "swim"): void {
+    // no-op — locomotion roles drive pose; keeps Avatar parity with Explorer
   }
 
   /** Enable/disable foot-to-ground IK (terrain plant). */

@@ -1846,6 +1846,18 @@ export class Studio {
     this.character = next;
     this.character.setBlendTime(this.params.blendTime);
     this.character.setShowSkeleton(this.params.showSkeleton);
+    // Fleet role audit — every character must answer controller locomotion/climb/swim/combat
+    try {
+      const { missingFleetRoles } = await import("./fleetAvatarHydrate");
+      const miss = missingFleetRoles((r) => this.character!.hasRole(r as import("./types").AnimRole));
+      if (miss.length) {
+        console.warn(`[Studio] character ${id} missing fleet roles: ${miss.join(",")}`);
+      } else {
+        console.info(`[Studio] character ${id} fleet roles OK (loco/climb/swim/combat)`);
+      }
+    } catch {
+      /* optional */
+    }
     // Terrain foot IK — Character + GrudgeAvatar (flat y=0 Danger Room floor).
     if (typeof (next as { setFootIk?: (on: boolean) => void }).setFootIk === "function") {
       (next as { setFootIk: (on: boolean) => void }).setFootIk(true);
