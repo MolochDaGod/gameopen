@@ -295,7 +295,7 @@ export async function ensureGrudge6Materials(
   const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
   const needsAtlas =
     allowAtlasRebind &&
-    (pipeline === "fbx-atlas" || mapRatio < 0.35 || withMap === 0);
+    (pipeline === "fbx-atlas" || mapRatio < 0.35 || mappedMeshes === 0);
 
   if (needsAtlas) {
     const mat = await rebindRaceAtlas(model, raceId);
@@ -515,12 +515,39 @@ export async function loadGrudge6CombatRig(
     loadRole("attack", pack.attack),
   ]);
 
-  // Pack extras (polearm combo / skills from Madarame bake, etc.)
+  // Pack extras (weapon skill one-shots only — never swap mesh weapons)
   if (pack.extras?.length) {
     await Promise.all(
       pack.extras.map(async (rel) => {
-        const role = rel.split("/").pop() || rel;
+        const stem = (rel.split("/").pop() || rel).replace(/\.(json|glb)$/i, "");
+        // Normalize prod stems → combat roles (skill1, attack2, block, …)
+        let role = stem;
+        const mAttack = stem.match(/attack[-_]?(\d+)/i);
+        if (mAttack) role = mAttack[1] === "1" ? "attack" : `attack${mAttack[1]}`;
+        else if (/block[-_]?idle/i.test(stem)) role = "blockIdle";
+        else if (/block/i.test(stem) && !/impact|react/i.test(stem)) role = "block";
+        else if (/combo/i.test(stem)) role = clips.has("combo") ? stem : "combo";
+        else if (/slash/i.test(stem) && !clips.has("slash")) role = "slash";
+        else if (/thrust/i.test(stem) && !clips.has("thrust")) role = "thrust";
+        else if (/overhead/i.test(stem) && !clips.has("overhead")) role = "overhead";
+        else if (/parry/i.test(stem)) role = "parry";
+        else if (/skill[-_]?(\d+)/i.test(stem)) {
+          const sm = stem.match(/skill[-_]?(\d+)/i);
+          if (sm) role = `skill${sm[1]}`;
+        } else if (/gs_samurai_combo_b|combo_b/i.test(stem)) role = "skill1";
+        else if (/gs_samurai_dash|dash_opener/i.test(stem)) role = "skill2";
+        else if (/teleport_strike/i.test(stem)) role = "skill3";
+        else if (/charged-pistol|pistol-whip/i.test(stem)) role = clips.has("skill1") ? "skill2" : "skill1";
+        else if (/reloading|reload/i.test(stem)) role = "reload";
+        else if (/firing|gunplay|fire/i.test(stem) && !clips.has("attack")) role = "attack";
         // Don't overwrite core roles already loaded
+        if (clips.has(role) && role !== stem) {
+          // still store under stem for Studio name lists
+          if (!clips.has(stem)) {
+            await loadRole(stem, rel);
+          }
+          return;
+        }
         if (clips.has(role)) return;
         await loadRole(role, rel);
       }),
@@ -544,9 +571,22 @@ export async function loadGrudge6CombatRig(
     clips.set("jumpAway", clips.get("jump")!);
     roles.set("jumpAway", "jumpAway");
   }
-  if (!clips.has("mantle") && clips.has("jump")) {
-    clips.set("mantle", clips.get("jump")!);
+  if (!clips.has("mantle") && (clips.has("climb") || clips.has("jump"))) {
+    clips.set("mantle", (clips.get("climb") || clips.get("jump"))!);
     roles.set("mantle", "mantle");
+  }
+  // Climb / swim aliases for controller state names
+  if (!clips.has("climbing") && clips.has("climb")) {
+    clips.set("climbing", clips.get("climb")!);
+    roles.set("climbing", "climbing");
+  }
+  if (!clips.has("swimming") && clips.has("swim")) {
+    clips.set("swimming", clips.get("swim")!);
+    roles.set("swimming", "swimming");
+  }
+  if (!clips.has("crouch") && clips.has("crawl")) {
+    clips.set("crouch", clips.get("crawl")!);
+    roles.set("crouch", "crouch");
   }
 
   // Sprint from true run cycle only (time-scale applied by AnimationDirector /

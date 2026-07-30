@@ -5,14 +5,17 @@
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
+    "prodAnimsRoot": "prod/anims",
+    "prodAnimsCdn": "https://assets.grudge-studio.com/prod/anims",
     "mixamoRoot": "anim",
     "integrity": "sha256",
     "stripPositionTracks": true,
     "skeleton": "Bip001",
     "notes": [
-      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal.",
-      "If pack missing/incomplete, use fallbackPack (still Bip001 baked).",
-      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Verify SHA on bake input; ship baked JSON.",
+      "Danger heroes: preset mesh_ids only (gear preset weapons) — load baked anims for that weapon family, never equip extra weapon meshes at runtime.",
+      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal (climb/swim/dodge/roll/harvest/block).",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked) then prod/anims CDN.",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON or prod/anims GLB libraries.",
       "Never load locomotion/running (banned run-to-roll)."
     ]
   },
@@ -20,18 +23,23 @@
     "pack": "traversal",
     "roles": {
       "jump": "locomotion/jump",
-      "dodge": "locomotion/dodging",
-      "dodgeF": "longbow/standing dodge forward",
-      "dodgeL": "longbow/standing dodge left",
-      "dodgeR": "longbow/standing dodge right",
+      "dodge": "locomotion/dodge_back",
+      "dodgeF": "locomotion/dodge_fwd",
+      "dodgeL": "locomotion/dodge_l",
+      "dodgeR": "locomotion/dodge_r",
+      "roll": "roll_dodge/dodging-back",
       "crawl": "locomotion/crawl",
-      "swim": "swim/swimming",
+      "swim": "locomotion/swim",
+      "swimFast": "locomotion/swim_fast",
       "tread": "swim/treading",
-      "climb": "climb/climbing",
+      "climb": "locomotion/climbup_1m",
       "climbUp": "climb/up",
       "mantle": "climb/to_top",
       "hang": "climb/hang_idle",
-      "wallRun": "climb/wall_run"
+      "wallRun": "climb/wall_run",
+      "harvest": "locomotion/plant_seed",
+      "block": "block/standing-block-idle",
+      "parry": "block/parry"
     },
     "alwaysLoadWithWeapon": true,
     "notes": [

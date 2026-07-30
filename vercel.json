@@ -127,6 +127,14 @@
       "destination": "https://grudge-arena.grudge-studio.com/anims/baked/:path*"
     },
     {
+      "source": "/prod/anims/:path*",
+      "destination": "https://assets.grudge-studio.com/prod/anims/:path*"
+    },
+    {
+      "source": "/prod/gltf/:path*",
+      "destination": "https://assets.grudge-studio.com/prod/gltf/:path*"
+    },
+    {
       "source": "/cdn/assets/characters/:path*",
       "destination": "https://grudge-arena.grudge-studio.com/cdn/assets/characters/:path*"
     },

@@ -22,6 +22,9 @@ export type { AnimPack, LoadoutClips } from "./anims";
 export {
   ANIM_PACK_CLIPS,
   ANIM_PACK_FALLBACK,
+  ANIM_PACK_LABELS,
+  CHOOSABLE_ANIM_PACKS,
+  PROD_ANIMS_CDN,
   BANNED_LOCOMOTION_CLIPS,
   SPRINT_CLIP,
   SPRINT_LOCO_MULT,
@@ -35,6 +38,16 @@ export {
   toRotationOnlyClip,
   loadBakedClip,
 } from "./anims";
+
+export type { CombatStyleId, CombatStyleDef } from "./combatStyles";
+export {
+  COMBAT_STYLES,
+  getCombatStyle,
+  listCombatStyles,
+  loadStoredCombatStyle,
+  storeCombatStyle,
+  animPackForCombatStyle,
+} from "./combatStyles";
 
 // Fleet anim DB + state machine (loco / combat / harvest / swim / climb / mantle)
 export {

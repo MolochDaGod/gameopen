@@ -47,6 +47,15 @@ describe("grudge6 locomotion pack SSOT", () => {
     );
   });
 
+  it("samurai pack is choosable and uses greatsword_samurai production bake", () => {
+    expect(ANIM_PACK_CLIPS.samurai).toBeTruthy();
+    expect(ANIM_PACK_CLIPS.samurai.attack).toBe("greatsword_samurai/gs_samurai_combo_a");
+    expect(ANIM_PACK_CLIPS.samurai.run).toContain("gs_samurai_run");
+    expect(ANIM_PACK_CLIPS.samurai.idle).toContain("gs_samurai_idle");
+    expect(ANIM_PACK_CLIPS.samurai.extras?.length).toBeGreaterThan(6);
+    expect(ANIM_PACK_CLIPS.samurai.extras).toContain("polearm/special");
+  });
+
   it("uses torch run forward for unarmed (arena parity)", () => {
     expect(ANIM_PACK_CLIPS.unarmed.run).toBe(
       "uploads_2026_06/locomotion/torch run forward",

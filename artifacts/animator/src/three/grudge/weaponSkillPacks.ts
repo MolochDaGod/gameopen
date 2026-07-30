@@ -49,7 +49,8 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_slash",
     slot: 1,
     label: "Slash",
-    clipPath: "anim/sword/outward-slash.fbx",
+    // Production: baked / prod/anims only (no FBX on Vercel)
+    clipPath: "anims/baked/sword_shield/sword and shield attack.json",
     reach: 1.8, damage: 18, lungeSpeed: 3.5, lungeDuration: 0.22,
     vfxColor: 0xe8d9a0, cooldown: 0,
   },
@@ -57,7 +58,7 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_two_hit",
     slot: 2,
     label: "Twin Slash",
-    clipPath: "anim/sword/one-hand-sword-combo.fbx",
+    clipPath: "anims/baked/polearm/combo.json",
     reach: 1.9, damage: 26, lungeSpeed: 4.0, lungeDuration: 0.28,
     vfxColor: 0xffe8b0, cooldown: 1.5,
   },
@@ -65,7 +66,7 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_spin_high",
     slot: 3,
     label: "Spin High",
-    clipPath: "anim/sword/sword-and-shield-attack-2.fbx",
+    clipPath: "anims/baked/polearm/overhead.json",
     reach: 2.4, damage: 34, lungeSpeed: 2.0, lungeDuration: 0.45,
     vfxColor: 0xffd080, cooldown: 4.0,
   },
@@ -73,7 +74,7 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_dash",
     slot: 4,
     label: "Slash Advance",
-    clipPath: "anim/sword/slash-advance.fbx",
+    clipPath: "anims/baked/polearm/special.json",
     reach: 3.2, damage: 28, lungeSpeed: 8.0, lungeDuration: 0.35,
     vfxColor: 0x80e0ff, cooldown: 6.0,
   },
@@ -157,7 +158,7 @@ export const MAGIC_SKILLS: readonly SkillPack[] = [
     animKey: "magic_bolt",
     slot: 1,
     label: "Arcane Bolt",
-    clipPath: "anim/magic/standing-1h-magic-attack-01.fbx",
+    clipPath: "anims/baked/magic/standing 1h cast spell 01.json",
     reach: 8.0, damage: 22, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0xb98cff, cooldown: 0,
   },
@@ -165,7 +166,7 @@ export const MAGIC_SKILLS: readonly SkillPack[] = [
     animKey: "magic_nova",
     slot: 2,
     label: "Arcane Nova",
-    clipPath: "anim/magic/standing-1h-magic-attack-02.fbx",
+    clipPath: "anims/baked/magic/staffattack.json",
     reach: 4.0, damage: 35, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0xd4aaff, cooldown: 3.0,
   },
@@ -173,7 +174,7 @@ export const MAGIC_SKILLS: readonly SkillPack[] = [
     animKey: "magic_area",
     slot: 3,
     label: "Area Burst",
-    clipPath: "anim/magic/standing-2h-magic-area-attack-01.fbx",
+    clipPath: "anims/baked/polearm/skill1.json",
     reach: 5.0, damage: 48, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0x8844ff, cooldown: 6.0,
   },
@@ -181,7 +182,7 @@ export const MAGIC_SKILLS: readonly SkillPack[] = [
     animKey: "magic_cast",
     slot: 4,
     label: "Grand Casting",
-    clipPath: "anim/magic/casting-spell.fbx",
+    clipPath: "anims/baked/polearm/special.json",
     reach: 10.0, damage: 65, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0x6600ff, cooldown: 12.0,
   },
@@ -193,7 +194,7 @@ export const LONGBOW_SKILLS: readonly SkillPack[] = [
     animKey: "bow_shot",
     slot: 1,
     label: "Quick Shot",
-    clipPath: "anim/bow/shooting-arrow.fbx",
+    clipPath: "anims/baked/longbow/standing aim recoil.json",
     reach: 12.0, damage: 20, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0x70ff90, cooldown: 0,
   },
@@ -201,7 +202,7 @@ export const LONGBOW_SKILLS: readonly SkillPack[] = [
     animKey: "bow_overdraw",
     slot: 2,
     label: "Overdraw",
-    clipPath: "anim/bow/standing-aim-overdraw.fbx",
+    clipPath: "anims/baked/longbow/overdraw.json",
     reach: 18.0, damage: 38, lungeSpeed: 0, lungeDuration: 0,
     vfxColor: 0x40ffa0, cooldown: 4.0,
   },
@@ -209,7 +210,7 @@ export const LONGBOW_SKILLS: readonly SkillPack[] = [
     animKey: "bow_dodge",
     slot: 3,
     label: "Dive & Fire",
-    clipPath: "anim/bow/standing-dive-forward.fbx",
+    clipPath: "anims/baked/longbow/standing dodge forward.json",
     reach: 8.0, damage: 28, lungeSpeed: 6.0, lungeDuration: 0.3,
     vfxColor: 0x20e060, cooldown: 5.0,
   },
@@ -217,7 +218,7 @@ export const LONGBOW_SKILLS: readonly SkillPack[] = [
     animKey: "bow_kick",
     slot: 4,
     label: "Melee Kick",
-    clipPath: "anim/bow/standing-melee-kick.fbx",
+    clipPath: "anims/baked/polearm/attack.json",
     reach: 1.8, damage: 22, lungeSpeed: 5.5, lungeDuration: 0.25,
     vfxColor: 0xffaa44, cooldown: 4.0,
   },
@@ -229,7 +230,7 @@ export const STRIKER_SKILLS: readonly SkillPack[] = [
     animKey: "striker_kick",
     slot: 1,
     label: "Quick Kick",
-    clipPath: "anim/striker/quick-kick.fbx",
+    clipPath: "anims/baked/unarmed/punching.json",
     reach: 1.6, damage: 14, lungeSpeed: 4.0, lungeDuration: 0.20,
     vfxColor: 0xff7a1e, cooldown: 0,
   },
@@ -237,7 +238,7 @@ export const STRIKER_SKILLS: readonly SkillPack[] = [
     animKey: "striker_combo",
     slot: 2,
     label: "Punch Combo",
-    clipPath: "anim/striker/punch-combo.fbx",
+    clipPath: "anims/baked/polearm/combo.json",
     reach: 1.8, damage: 22, lungeSpeed: 3.5, lungeDuration: 0.30,
     vfxColor: 0xff5500, cooldown: 2.0,
   },
@@ -245,7 +246,7 @@ export const STRIKER_SKILLS: readonly SkillPack[] = [
     animKey: "striker_flip",
     slot: 3,
     label: "Flip Kick",
-    clipPath: "anim/striker/flip_kick.fbx",
+    clipPath: "anims/baked/polearm/attack5.json",
     reach: 2.2, damage: 32, lungeSpeed: 6.0, lungeDuration: 0.38,
     vfxColor: 0xff3300, cooldown: 4.0,
   },
@@ -253,7 +254,7 @@ export const STRIKER_SKILLS: readonly SkillPack[] = [
     animKey: "striker_uppercut",
     slot: 4,
     label: "Knee Uppercut",
-    clipPath: "anim/striker/knee-jabs-to-uppercut.fbx",
+    clipPath: "anims/baked/polearm/special.json",
     reach: 1.9, damage: 40, lungeSpeed: 2.0, lungeDuration: 0.45,
     vfxColor: 0xffd44d, cooldown: 7.0,
   },
@@ -287,6 +288,7 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
     case "gun":
       return "longbow"; // ranged VFX path; T0 skills still use rifle kit by weaponId
     case "sword_shield":
+    case "samurai":
       return "sword";
     case "polearm":
       return "spear";
@@ -296,6 +298,8 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
       return "magic";
     case "unarmed":
       return "unarmed";
+    case "pistol":
+      return "longbow"; // ranged VFX; clips from pistol pack via animPack
     default:
       return "sword";
   }

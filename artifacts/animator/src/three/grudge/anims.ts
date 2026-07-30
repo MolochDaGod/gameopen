@@ -23,8 +23,13 @@ export type AnimPack =
   | "twohand"
   | "crossbow"
   | "rifle"
-  /** Katana / iaijutsu feel — retargeted Bip001 from sword + Madarame skills. */
+  /** Sidearm / pistol loco + gunplay (prod/anims/pistol). */
+  | "pistol"
+  /** Katana / iaijutsu feel — retargeted Bip001 greatsword_samurai bake. */
   | "samurai";
+
+/** Production anim CDN (ObjectStore packages:prod:anims). */
+export const PROD_ANIMS_CDN = "https://assets.grudge-studio.com/prod/anims";
 
 export interface LoadoutClips {
   idle: string;
@@ -281,51 +286,54 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     attack: "magic/standing 1h cast spell 01",
   },
   sword_shield: {
+    // Prefer same-origin JSON; loadBakedClip also tries prod/anims GLB roles.
     idle: "sword_shield/sword and shield idle",
-    // No dedicated sword walk bake — use clean magic forward walk cycle.
     walk: "magic/Standing Walk Forward",
     run: "sword_shield/sword and shield run",
     attack: "sword_shield/sword and shield attack",
     extras: [
-      "sword_shield/sword and shield attack",
-      "sword_shield/sword and shield block",
+      // Preset knight weapon skills only (no extra weapon mesh swaps)
+      "sword_shield/sword-and-shield-attack-2",
+      "sword_shield/sword-and-shield-attack-3",
+      "sword_shield/sword-and-shield-attack-4",
+      "sword_shield/sword-and-shield-attack-5",
+      "sword_shield/sword-and-shield-block",
+      "sword_shield/sword-and-shield-block-idle",
+      "sword_shield/one-hand-sword-combo",
       "polearm/slash",
       "polearm/thrust",
       "polearm/overhead",
       "polearm/combo",
       "polearm/skill1",
       "polearm/skill2",
+      "block/parry",
+      "block/left-block",
+      "block/right-block",
     ],
   },
   /**
-   * Samurai — player-facing combat style (retargeted Bip001).
-   * Loco from sword_shield / torch run; attacks & skills from Madarame slash set
-   * (iaijutsu / thrust / overhead / special) already baked under polearm/*.
+   * Samurai — production greatsword_samurai Bip001 JSON (retargeted).
+   * Paths resolve via prod/anims/greatsword_samurai/* first.
    */
   samurai: {
-    idle: "sword_shield/sword and shield idle",
-    walk: "magic/Standing Walk Forward",
-    run: "sword_shield/sword and shield run",
-    attack: "polearm/slash",
+    idle: "greatsword_samurai/gs_samurai_idle",
+    walk: "greatsword_samurai/gs_samurai_walk",
+    run: "greatsword_samurai/gs_samurai_run",
+    attack: "greatsword_samurai/gs_samurai_combo_a",
     extras: [
-      "polearm/slash",
-      "polearm/thrust",
-      "polearm/overhead",
-      "polearm/combo",
-      "polearm/attack",
-      "polearm/attack2",
-      "polearm/attack3",
-      "polearm/attack4",
-      "polearm/attack5",
+      "greatsword_samurai/gs_samurai_combo_b",
+      "greatsword_samurai/gs_samurai_dash_opener",
+      "greatsword_samurai/gs_samurai_teleport_strike",
+      "greatsword_samurai/gs_samurai_jump",
+      "greatsword_samurai/gs_samurai_sword_on",
+      "greatsword_samurai/gs_samurai_sword_off",
+      "greatsword_samurai/gs_samurai_idle_sword",
+      "greatsword_samurai/gs_samurai_walk_sword",
+      "greatsword_samurai/gs_samurai_run_sword",
+      // skill aliases filled by aliasCombatRoles from attack when missing
       "polearm/skill1",
       "polearm/skill2",
-      "polearm/skill3",
-      "polearm/skill4",
       "polearm/special",
-      "polearm/power",
-      "polearm/debut",
-      "sword_shield/sword and shield attack",
-      "sword_shield/sword and shield block",
     ],
   },
   longbow: {
@@ -333,15 +341,22 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     walk: "longbow/standing walk forward",
     run: "longbow/standing run forward",
     attack: "longbow/standing aim recoil",
+    extras: [
+      "longbow/draw",
+      "longbow/overdraw",
+      "longbow/recoil",
+      "longbow/equip",
+      "longbow/disarm",
+      "longbow/idle",
+      "longbow/aim-idle",
+      "longbow/run-forward",
+      "longbow/walk-forward",
+    ],
   },
   /**
-   * Spear / 2H polearm — baked from Madarame (`ikkaku_madarame.glb`).
-   * Same-origin: public/anims/baked/polearm/*.json
-   * attack1_1..5 → attack..attack5 · skill1–4 for hotbar · special = bankai
+   * Spear / 2H polearm — Madarame Bip001 bake (same-origin + prod mirror).
    */
   polearm: {
-    // Madarame polearm/* locomotion dumps are ~5s full takes (not stride cycles).
-    // Keep polearm idle/attack/skills; walk/run use proven standing cycles.
     idle: "polearm/idle",
     walk: "magic/Standing Walk Forward",
     run: "uploads_2026_06/locomotion/torch run forward",
@@ -366,26 +381,26 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     ],
   },
   /**
-   * 2H sword / greataxe / hammer — ExplosiveLLC TwoHanded + Hammer (after bake).
-   * Until twohand/*.json ships, loaders should fall back via {@link resolveAnimPackClips}.
+   * 2H sword — prod/anims/2h_melee GLB library (greatsword FBX bake).
    */
   twohand: {
-    idle: "twohand/idle",
-    walk: "twohand/walk",
-    run: "twohand/run",
-    attack: "twohand/attack",
+    idle: "2h_melee/great-sword-idle",
+    walk: "2h_melee/great-sword-walk",
+    run: "2h_melee/great-sword-run",
+    attack: "2h_melee/great-sword-slash",
     extras: [
-      "twohand/attack2",
-      "twohand/attack3",
-      "twohand/skill1",
-      "twohand/skill2",
-      "twohand/skill3",
-      "twohand/skill4",
-      "twohand/overhead",
-      "twohand/power",
+      "2h_melee/great-sword-slash-2",
+      "2h_melee/great-sword-overhead",
+      "2h_melee/great-sword-combo",
+      "2h_melee/great-sword-blocking",
+      "2h_melee/great-sword-jump-attack",
+      "2h_melee/quick-slash",
+      "polearm/skill1",
+      "polearm/skill2",
+      "polearm/special",
     ],
   },
-  /** Crossbow Warrior pack (ExplosiveLLC) — bake before enabling in combat. */
+  /** Crossbow — longbow aim set until dedicated bake. */
   crossbow: {
     idle: "crossbow/idle",
     walk: "crossbow/walk",
@@ -393,13 +408,35 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     attack: "crossbow/shoot",
     extras: ["crossbow/aim", "crossbow/reload", "crossbow/skill1", "crossbow/skill2"],
   },
-  /** Rifle / gun — from Open Mixamo anim/rifle bake (not Explosive FREE). */
+  /** Rifle — prod/anims/rifle JSON (Bip001 retargeted). */
   rifle: {
-    idle: "rifle/idle",
-    walk: "rifle/walk",
-    run: "rifle/run",
-    attack: "rifle/fire",
-    extras: ["rifle/aim", "rifle/reload", "rifle/skill1", "rifle/skill2"],
+    idle: "rifle/rifle-aiming-idle",
+    walk: "rifle/walking",
+    run: "rifle/rifle-run",
+    attack: "rifle/firing-rifle",
+    extras: [
+      "rifle/reloading",
+      "rifle/rifle-jump",
+      "rifle/hit-reaction",
+      "rifle/downrange-aiming-idle",
+      "rifle/strafe-left",
+      "rifle/strafe-right",
+    ],
+  },
+  /** Pistol — prod/anims/pistol GLB library. */
+  pistol: {
+    idle: "pistol/idle",
+    walk: "pistol/walk-forward",
+    run: "pistol/run-forward",
+    attack: "pistol/gunplay",
+    extras: [
+      "pistol/charged-pistol",
+      "pistol/pistol-whip",
+      "pistol/drawing-gun",
+      "pistol/pistol-jump",
+      "pistol/strafe-left",
+      "pistol/strafe-right",
+    ],
   },
 };
 
@@ -408,10 +445,10 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
  * Explosive FREE only ships teaser Attack1 clips; full packs required for twohand/crossbow.
  */
 export const ANIM_PACK_FALLBACK: Partial<Record<AnimPack, AnimPack>> = {
+  // twohand has prod/anims/2h_melee — only fall back if those 404
   twohand: "polearm",
   crossbow: "longbow",
-  rifle: "unarmed",
-  // Samurai is self-contained from existing bakes — no fallback needed
+  // rifle/pistol have prod packs — do not force unarmed
 };
 
 /**
@@ -426,11 +463,12 @@ export function resolveAnimPackClips(pack: AnimPack): {
 } {
   // Prefer fallback pack when we know full bake is not shipped yet
   // (Explosive FREE teasers only — see docs/EXPLOSIVE_WARRIOR_PACK_REVIEW.md).
-  const forceFb = ANIM_PACK_FALLBACK[pack];
-  if (forceFb && (pack === "twohand" || pack === "crossbow" || pack === "rifle")) {
-    // Still expose intended pack name for logging; clips from fallback until bake lands
-    const fbClips = ANIM_PACK_CLIPS[forceFb];
-    if (fbClips) return { pack: forceFb, clips: fbClips, fallbackFrom: pack };
+  // Prefer intended pack clips (prod CDN fills gaps). Only force-fallback crossbow.
+  if (pack === "crossbow") {
+    const forceFb = ANIM_PACK_FALLBACK.crossbow;
+    if (forceFb && ANIM_PACK_CLIPS[forceFb]) {
+      return { pack: forceFb, clips: ANIM_PACK_CLIPS[forceFb]!, fallbackFrom: pack };
+    }
   }
   const clips = ANIM_PACK_CLIPS[pack];
   if (clips) return { pack, clips };
@@ -448,11 +486,11 @@ export function resolveAnimPackClips(pack: AnimPack): {
  */
 export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "jump", rel: "locomotion/jump" },
-  { role: "dodge", rel: "locomotion/dodging" },
-  { role: "dodgeF", rel: "longbow/standing dodge forward" },
-  { role: "dodgeB", rel: "locomotion/dodging" },
-  { role: "dodgeL", rel: "longbow/standing dodge left" },
-  { role: "dodgeR", rel: "longbow/standing dodge right" },
+  { role: "dodge", rel: "locomotion/dodge_back" },
+  { role: "dodgeF", rel: "locomotion/dodge_fwd" },
+  { role: "dodgeB", rel: "locomotion/dodge_back" },
+  { role: "dodgeL", rel: "locomotion/dodge_l" },
+  { role: "dodgeR", rel: "locomotion/dodge_r" },
   // Studio alias names (hyphen / underscore)
   { role: "standing-dodge-forward", rel: "longbow/standing dodge forward" },
   { role: "standing_dodge_forward", rel: "longbow/standing dodge forward" },
@@ -460,14 +498,24 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "standing_dodge_left", rel: "longbow/standing dodge left" },
   { role: "standing-dodge-right", rel: "longbow/standing dodge right" },
   { role: "standing_dodge_right", rel: "longbow/standing dodge right" },
-  { role: "standing-dodge-backward", rel: "locomotion/dodging" },
-  { role: "standing_dodge_backward", rel: "locomotion/dodging" },
-  { role: "dodge_forward", rel: "longbow/standing dodge forward" },
-  { role: "dodge_left", rel: "longbow/standing dodge left" },
-  { role: "dodge_right", rel: "longbow/standing dodge right" },
-  { role: "dodge_backward", rel: "locomotion/dodging" },
-  // Mobility (bake when ready; loaders soft-fail → procedural / jump fallback)
+  { role: "standing-dodge-backward", rel: "locomotion/dodge_back" },
+  { role: "standing_dodge_backward", rel: "locomotion/dodge_back" },
+  { role: "dodge_forward", rel: "locomotion/dodge_fwd" },
+  { role: "dodge_left", rel: "locomotion/dodge_l" },
+  { role: "dodge_right", rel: "locomotion/dodge_r" },
+  { role: "dodge_backward", rel: "locomotion/dodge_back" },
+  // Mobility SSOT (bake plan + prod/anims fallbacks via loadBakedClip candidates)
   ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
+  // Production CDN packages (roll/harvest/block + climbup alias)
+  { role: "roll", rel: "roll_dodge/dodging-back" },
+  { role: "climbAlt", rel: "locomotion/climbup_1m" },
+  { role: "swimFast", rel: "locomotion/swim_fast" },
+  { role: "fall", rel: "locomotion/fall_in" },
+  { role: "harvest", rel: "locomotion/plant_seed" },
+  { role: "plant", rel: "harvest/plant-tree" },
+  { role: "block", rel: "block/standing-block-idle" },
+  { role: "parry", rel: "block/parry" },
+  { role: "blockHit", rel: "block/block-react-large" },
 ];
 
 /**
@@ -494,13 +542,19 @@ export function animPackForWeapon(weaponId: string | null | undefined): AnimPack
   // Crossbow — Explosive Crossbow pack when baked; else longbow aim set
   if (w === "crossbow") return "crossbow";
   if (w === "bow" || w === "longbow") return "longbow";
-  // Guns — Open Mixamo rifle bake when present
+  // Sidearm vs long gun (separate baked packs)
+  if (w === "pistol" || w === "revolver" || w === "handgun") {
+    return "pistol";
+  }
   if (
     w === "rifle" ||
     w === "hunter-rifle" ||
     w === "shotgun" ||
-    w === "pistol" ||
-    w === "gunblade"
+    w === "gunblade" ||
+    w === "assault_rifle" ||
+    w === "ak74u" ||
+    w === "smg" ||
+    w === "gun"
   ) {
     return "rifle";
   }
@@ -523,11 +577,15 @@ export function asAnimPack(value: string): AnimPack {
     greatsword: "twohand",
     greataxe: "twohand",
     gun: "rifle",
+    handgun: "pistol",
+    revolver: "pistol",
     bow: "longbow",
     katana: "samurai",
     iaijutsu: "samurai",
+    greatsword_samurai: "samurai",
     knight: "sword_shield",
     spearman: "polearm",
+    spear: "polearm",
     striker: "unarmed",
     mage: "magic",
     archer: "longbow",
@@ -548,6 +606,7 @@ export const ANIM_PACK_LABELS: Record<AnimPack, string> = {
   twohand: "Berserker / 2H",
   crossbow: "Crossbow",
   rifle: "Gunner / Rifle",
+  pistol: "Pistol / Sidearm",
 };
 
 /** Packs offered as explicit player choices (retargeted / ready). */
@@ -560,6 +619,7 @@ export const CHOOSABLE_ANIM_PACKS: AnimPack[] = [
   "longbow",
   "twohand",
   "rifle",
+  "pistol",
 ];
 
 /**
@@ -601,24 +661,67 @@ export function bakedClipUrl(rel: string, baseOverride?: string): string {
   return `${FLEET_ASSET_HOSTS.r2}/${path}`;
 }
 
-/** Ordered hosts for baked Bip001 JSON clips. */
+/**
+ * Map logical pack folder → production CDN pack id under prod/anims/.
+ */
+function prodAnimPackId(pack: string): string {
+  const p = pack.toLowerCase();
+  if (p === "samurai" || p === "greatsword_samurai") return "greatsword_samurai";
+  if (p === "twohand" || p === "2h" || p === "2h_melee") return "2h_melee";
+  if (p === "spear") return "spear";
+  return pack;
+}
+
+/**
+ * Candidate URLs for a clip rel like `sword_shield/sword and shield idle`
+ * or `pistol/idle` or `2h_melee/great-sword-idle`.
+ *
+ * Order: same-origin baked JSON → prod CDN JSON → prod CDN GLB → arena → R2.
+ * Heroes use baked anims only (no Mixamo FBX on Vercel).
+ */
 export function bakedClipCandidates(rel: string, baseOverride?: string): string[] {
-  const path = `anims/baked/${rel}.json`;
+  const clean = String(rel || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\.json$/i, "")
+    .replace(/\.glb$/i, "");
+  const parts = clean.split("/").filter(Boolean);
+  const pack = parts[0] || "";
+  const file = parts.slice(1).join("/") || pack;
+  const fileSlug = file.replace(/\s+/g, "-");
+  const fileUnderscore = file.replace(/\s+/g, "_");
+  const prodPack = prodAnimPackId(pack);
+
   const urls: string[] = [];
-  // Same-origin first (Open ships remade loco packs under public/anims/baked/).
+  const bakedJson = `anims/baked/${clean}.json`;
+
+  // Same-origin first (Open vercel rewrites → arena/public)
   if (typeof window !== "undefined" && window.location?.origin) {
-    urls.push(`${window.location.origin}/${path}`);
-    // Vite base / relative
-    urls.push(`/${path}`);
+    urls.push(`${window.location.origin}/${bakedJson}`);
+    urls.push(`/${bakedJson}`);
   } else {
-    urls.push(`/${path}`);
+    urls.push(`/${bakedJson}`);
   }
   if (baseOverride) {
-    urls.push(`${baseOverride.replace(/\/+$/, "")}/${path}`);
+    urls.push(`${baseOverride.replace(/\/+$/, "")}/${bakedJson}`);
   }
-  // Arena CDN (historical SSOT) then fleet hosts
-  urls.push(`${FLEET_ASSET_HOSTS.arena}/${path}`);
-  urls.push(...resolveGrudgeAssetCandidates(path));
+
+  // Production packages (JSON tracks + GLB animation libraries)
+  const prodBase = PROD_ANIMS_CDN.replace(/\/+$/, "");
+  if (prodPack && file) {
+    for (const stem of [file, fileSlug, fileUnderscore]) {
+      if (!stem) continue;
+      urls.push(`${prodBase}/${prodPack}/${stem}.json`);
+      urls.push(`${prodBase}/${prodPack}/${stem}.glb`);
+    }
+    // Same-origin proxy for prod if configured
+    urls.push(`/prod/anims/${prodPack}/${fileSlug}.json`);
+    urls.push(`/prod/anims/${prodPack}/${fileSlug}.glb`);
+  }
+
+  // Arena CDN (historical) then fleet hosts
+  urls.push(`${FLEET_ASSET_HOSTS.arena}/${bakedJson}`);
+  urls.push(...resolveGrudgeAssetCandidates(bakedJson));
   return [...new Set(urls)];
 }
 
@@ -630,7 +733,25 @@ export function toRotationOnlyClip(clip: THREE.AnimationClip): THREE.AnimationCl
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
 
+/** Load first animation from a production GLB anim library (FBX→GLB bake). */
+async function loadClipFromGlbUrl(url: string): Promise<THREE.AnimationClip> {
+  const { sharedGltfLoader } = await import("../loaders/gltf");
+  const loader = sharedGltfLoader();
+  const gltf = await loader.loadAsync(url);
+  const list = gltf.animations ?? [];
+  if (!list.length) {
+    throw new Error(`GLB has no animations: ${url}`);
+  }
+  // Prefer named clip matching URL stem
+  const stem = url.split("/").pop()?.replace(/\.glb$/i, "") ?? "";
+  const named =
+    list.find((c) => c.name && stem && c.name.toLowerCase().includes(stem.slice(0, 12))) ??
+    list[0]!;
+  return toRotationOnlyClip(named);
+}
+
 // Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip (multi-host).
+// Supports JSON track packs and prod/anims/*.glb animation libraries.
 export async function loadBakedClip(rel: string, baseOverride?: string): Promise<THREE.AnimationClip> {
   if (isBannedLocomotionClip(rel)) {
     throw assetLoadError(
@@ -643,6 +764,16 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
   let lastErr: unknown;
   for (const url of bakedClipCandidates(rel, baseOverride)) {
     try {
+      if (/\.glb(\?|$)/i.test(url)) {
+        const clip = await loadClipFromGlbUrl(url);
+        if (isNonLoopingLocoClip(clip, rel)) {
+          lastErr = new Error(`non-looping loco GLB ${rel} dur=${clip.duration.toFixed(2)}`);
+          continue;
+        }
+        clip.name = clip.name || rel.split("/").pop() || rel;
+        return clip;
+      }
+
       const res = await fetch(url, { mode: "cors" });
       if (!res.ok) {
         lastErr = assetLoadError(`${url} (HTTP ${res.status})`);
@@ -652,6 +783,11 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
       if (ct.includes("text/html")) {
         lastErr = assetLoadError(`HTML fake-200 ${url}`);
         continue;
+      }
+      // Some CDN keys may return binary mislabeled — sniff
+      if (ct.includes("model/gltf") || ct.includes("octet-stream")) {
+        const clip = await loadClipFromGlbUrl(url);
+        return clip;
       }
       const json = (await res.json()) as THREE.AnimationClipJSON;
       const clip = toRotationOnlyClip(THREE.AnimationClip.parse(json));
@@ -666,5 +802,5 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
       lastErr = err;
     }
   }
-  throw assetLoadError(`anims/baked/${rel}.json`, lastErr);
+  throw assetLoadError(`anims/baked|prod/anims/${rel}`, lastErr);
 }
