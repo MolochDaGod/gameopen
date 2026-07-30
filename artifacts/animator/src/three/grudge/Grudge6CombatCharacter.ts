@@ -109,6 +109,14 @@ export class Grudge6CombatCharacter {
   private flashT = 0;
   private meshMaterials: THREE.MeshStandardMaterial[] = [];
 
+  // ── Hellfire chain projectile hit probe (ranged-melee) ───────────────────
+  /** Latest chain tip world position (for external damage systems). */
+  readonly lastChainTip = new THREE.Vector3();
+  lastChainRadius = 0;
+  lastChainDamage = 0;
+  /** Optional host callback when chain lands (Studio / AI damage apply). */
+  onChainHit: ((tip: THREE.Vector3, damage: number, skill: SkillPack) => void) | null = null;
+
   constructor(
     scene: THREE.Scene,
     /**
@@ -293,7 +301,35 @@ export class Grudge6CombatCharacter {
     );
 
     try {
-      if (kind === "getsuga" || kind === "slashWave") {
+      if (kind === "chain" || skill.projectile === "hellfire_chain") {
+        // Ranged-melee: extending hellfire chain weapon mesh + flame aura
+        const from = this.root.position.clone().add(new THREE.Vector3(0, 1.1, 0));
+        const hand = this.findHandWorld();
+        if (hand) from.copy(hand);
+        this.vfx.hellfireChain(from, dir, {
+          range: Math.max(4, skill.reach),
+          color: skill.vfxColor,
+          variant: skill.slashVariant ?? "slashred",
+          chainPathRole: skill.chainPathRole ?? skill.bakedRole ?? "chain_throw",
+          damage: skill.damage,
+          extendTime: 0.18 + skill.reach * 0.02,
+          holdTime: 0.1,
+          dissipateTime: 0.26,
+          contactRadius: 0.55 + skill.damage * 0.004,
+          onPathTick: (tip, radius) => {
+            // Lightweight trail damage read for AI / hit probes
+            this.lastChainTip?.copy(tip);
+            this.lastChainRadius = radius;
+            this.lastChainDamage = skill.damage * 0.35;
+          },
+          onHit: (tip, dmgScale) => {
+            this.lastChainTip?.copy(tip);
+            this.lastChainRadius = 0.9;
+            this.lastChainDamage = skill.damage * dmgScale;
+            this.onChainHit?.(tip, skill.damage * dmgScale, skill);
+          },
+        });
+      } else if (kind === "getsuga" || kind === "slashWave") {
         this.vfx.slashWave(origin, dir, {
           speed: 14 + skill.lungeSpeed * 0.4,
           range: Math.max(6, skill.reach * 2.2),
@@ -361,6 +397,21 @@ export class Grudge6CombatCharacter {
    */
   triggerPrimaryAttack(): SkillResult | null {
     return this.triggerSkill(1);
+  }
+
+  /** Prefer R hand bone world position for chain muzzle; else chest height. */
+  private findHandWorld(): THREE.Vector3 | null {
+    if (!this.mesh) return null;
+    let hand: THREE.Object3D | null = null;
+    this.mesh.traverse((o) => {
+      if (hand) return;
+      const n = o.name.replace(/_/g, " ");
+      if (/Bip001 R Hand|mixamorigRightHand|RightHand/i.test(n)) hand = o;
+    });
+    if (!hand) return null;
+    const p = new THREE.Vector3();
+    (hand as THREE.Object3D).getWorldPosition(p);
+    return p;
   }
 
   /**

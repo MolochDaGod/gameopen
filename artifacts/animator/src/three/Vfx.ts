@@ -13,6 +13,11 @@ import {
   slashVariantForColor,
   type SlashVariantId,
 } from "./fx/slashProjectileVariants";
+import {
+  createHellfireChainProjectile,
+  type ChainProjectileOpts,
+} from "./fx/hellfireChainProjectile";
+import { loadHellfireChainPath, CHAIN_FX_BY_ROLE } from "./fx/hellfireChainPath";
 
 /** Which 4-stop palette the flame system currently uses. */
 export type FireTheme = "fire" | "chi";
@@ -3274,6 +3279,72 @@ export class Vfx {
         onHit?.(p);
       },
     });
+  }
+
+  /**
+   * Hellfire chain — ranged-melee **extending weapon mesh** (procedural links)
+   * with flame-aura energy shaders (slashred/blue/purple/yellow kits).
+   *
+   * Path shape optionally from Ghost Rider bake samples (`chainPathRole`).
+   * Tip is the damage probe; on land: short fireAura + quick dissipate.
+   */
+  hellfireChain(
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    opts: ChainProjectileOpts & {
+      /** GR role / fx key — loads path samples async (chain_throw, megachain_slam…). */
+      chainPathRole?: string;
+      /** Base damage scale passed to onHit second arg (1 = full). */
+      damage?: number;
+    } = {},
+  ) {
+    if (this.disposed) return;
+
+    const color = opts.color ?? 0xff6020;
+    const variant = opts.variant ?? "slashred";
+    const range = opts.range ?? 6;
+    const damage = opts.damage ?? 1;
+
+    const spawn = (path: Awaited<ReturnType<typeof loadHellfireChainPath>>) => {
+      if (this.disposed) return;
+      const proj = createHellfireChainProjectile(from, dir, {
+        ...opts,
+        range,
+        color,
+        variant,
+        path,
+        onPathTick: (tip, radius) => {
+          opts.onPathTick?.(tip, radius);
+        },
+        onHit: (tip, scale) => {
+          // Quick dissipate impact — fire aura style, short life
+          this.fireAura(tip, 0.7 * scale, "fire", { groundOnly: true, life: 0.32 });
+          this.impact(tip, color, 0.7);
+          this.burst(tip, color, 12, 2.0);
+          this.auraRing(new THREE.Vector3(tip.x, 0.05, tip.z), color, 0.9, 0.28);
+          opts.onHit?.(tip, scale * damage);
+        },
+      });
+
+      this.add({
+        obj: proj.root,
+        age: 0,
+        life: proj.life,
+        geos: proj.geos,
+        mats: proj.mats,
+        shared: false,
+        update: (e, dt) => {
+          proj.update(e.age, dt);
+        },
+      });
+    };
+
+    const role = opts.chainPathRole;
+    if (role && (CHAIN_FX_BY_ROLE[role] || role.includes("/"))) {
+      void loadHellfireChainPath(role).then((p) => spawn(p));
+    } else {
+      spawn(null);
+    }
   }
 
   /**

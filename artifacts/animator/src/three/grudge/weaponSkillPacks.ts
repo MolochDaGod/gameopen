@@ -18,7 +18,8 @@ export type WeaponFamily =
   | "spear"       // Spear / lance
   | "magic"       // Staff / tome — ranged spells
   | "longbow"     // Bow — ranged physical
-  | "unarmed";    // Kick / striker
+  | "unarmed"     // Kick / striker
+  | "chain";      // Hellfire chain — ranged-melee extending projectile
 
 /** Combat VFX kind for skill cast / impact. */
 export type SkillEffectKind =
@@ -27,9 +28,20 @@ export type SkillEffectKind =
   | "slashWave"
   | "getsuga"
   | "nova"
-  | "slam";
+  | "slam"
+  /** Extending hellfire chain mesh projectile (ranged-melee). */
+  | "chain";
 
 export type SlashVariantId = "slashred" | "slashblue" | "slashpurple" | "slashyellow";
+
+/** Traveling projectile kind spawned on skill fire. */
+export type SkillProjectileKind =
+  | "none"
+  | "slash_wave"
+  | "bolt"
+  | "arrow"
+  /** Extending chain weapon mesh + flame aura (Ghost Rider path). */
+  | "hellfire_chain";
 
 export interface SkillPack {
   /** Matches `animKey` in content/skills/*.json. */
@@ -69,12 +81,23 @@ export interface SkillPack {
   vfxColor: number;
   /** Skill cooldown (seconds). 0 = primary (no CD). */
   cooldown: number;
-  /** Production combat VFX kind (Getsuga / arc / nova). */
+  /** Production combat VFX kind (Getsuga / arc / nova / chain). */
   effectKind?: SkillEffectKind;
-  /** Slash mesh variant for getsuga / slashWave. */
+  /** Slash mesh variant for getsuga / slashWave / chain flame kit. */
   slashVariant?: SlashVariantId;
   /** Optional fleet impact effect id. */
   impactEffectId?: string;
+  /** Optional cast telegraph effect id. */
+  castEffectId?: string;
+  /**
+   * Traveling projectile spawned with the skill.
+   * `hellfire_chain` = extending chain weapon mesh + flame aura, quick dissipate.
+   */
+  projectile?: SkillProjectileKind;
+  /** GR path sample role for hellfire_chain (chain_throw, megachain_slam…). */
+  chainPathRole?: string;
+  /** Apply Controller.dash for MM (default: lungeSpeed > 0.5). */
+  useDash?: boolean;
 }
 
 // ── Sword pack ───────────────────────────────────────────────────────────────
@@ -205,8 +228,9 @@ export const SHARED_FINISHER_SKILLS: readonly SkillPack[] = [
 ] as const;
 
 /**
- * Ranged-melee chain (Ghost Rider body + hellfire path, never mesh stretch).
- * Flame ribbon follows fx/*_chain_path.json samples from R Hand.
+ * Ranged-melee hellfire chain — **extending weapon mesh** projectile.
+ * Body anim from Ghost Rider bake; Vfx.hellfireChain grows chain links +
+ * flame-aura energy (color variants), tip damages, quick dissipate on land.
  */
 export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
   {
@@ -216,11 +240,14 @@ export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
     clipPath: "anims/baked/ghost_rider/chain_throw.json",
     animRole: "chain_throw",
     bakedRole: "chain_throw",
-    reach: 6.0, damage: 28, lungeSpeed: 2.0, lungeDuration: 0.2,
+    reach: 6.0, damage: 28, lungeSpeed: 1.2, lungeDuration: 0.15,
     vfxColor: 0xff6020, cooldown: 0,
-    effectKind: "slashWave",
+    effectKind: "chain",
     slashVariant: "slashred",
-    impactEffectId: "fireball",
+    projectile: "hellfire_chain",
+    chainPathRole: "chain_throw",
+    castEffectId: "fire_aura",
+    impactEffectId: "hellfire_chain_path",
   },
   {
     animKey: "chain_stab",
@@ -229,11 +256,14 @@ export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
     clipPath: "anims/baked/ghost_rider/chain_stab_hyper.json",
     animRole: "chain_stab",
     bakedRole: "chain_stab",
-    reach: 5.5, damage: 42, lungeSpeed: 8.0, lungeDuration: 0.35,
-    vfxColor: 0xff8020, cooldown: 2.5,
-    effectKind: "getsuga",
-    slashVariant: "slashred",
-    impactEffectId: "fire_aura",
+    reach: 5.5, damage: 42, lungeSpeed: 4.0, lungeDuration: 0.22,
+    vfxColor: 0x4aa8ff, cooldown: 2.5,
+    effectKind: "chain",
+    slashVariant: "slashblue",
+    projectile: "hellfire_chain",
+    chainPathRole: "chain_stab",
+    castEffectId: "fire_aura",
+    impactEffectId: "hellfire_chain_path",
   },
   {
     animKey: "chain_spin",
@@ -242,11 +272,14 @@ export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
     clipPath: "anims/baked/ghost_rider/chain_spin.json",
     animRole: "chain_spin",
     bakedRole: "chain_spin",
-    reach: 3.5, damage: 38, lungeSpeed: 1.0, lungeDuration: 0.4,
-    vfxColor: 0xffa040, cooldown: 5.0,
-    effectKind: "slashWave",
+    reach: 3.8, damage: 38, lungeSpeed: 0.5, lungeDuration: 0.2,
+    vfxColor: 0xffe08a, cooldown: 5.0,
+    effectKind: "chain",
     slashVariant: "slashyellow",
-    impactEffectId: "fire_aura",
+    projectile: "hellfire_chain",
+    chainPathRole: "chain_spin",
+    castEffectId: "fire_aura",
+    impactEffectId: "hellfire_chain_path",
   },
   {
     animKey: "megachain_firequake",
@@ -255,10 +288,14 @@ export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
     clipPath: "anims/baked/ghost_rider/megachain_slam.json",
     animRole: "megachain_slam",
     bakedRole: "megachain_slam",
-    reach: 4.5, damage: 72, lungeSpeed: 2.0, lungeDuration: 0.55,
-    vfxColor: 0xff4010, cooldown: 12.0,
-    effectKind: "nova",
-    impactEffectId: "fire_aura",
+    reach: 7.5, damage: 72, lungeSpeed: 1.5, lungeDuration: 0.35,
+    vfxColor: 0xb070ff, cooldown: 12.0,
+    effectKind: "chain",
+    slashVariant: "slashpurple",
+    projectile: "hellfire_chain",
+    chainPathRole: "megachain_slam",
+    castEffectId: "inferno",
+    impactEffectId: "hellfire_chain_path",
   },
 ] as const;
 
@@ -310,10 +347,13 @@ export const MACE_SKILLS: readonly SkillPack[] = [
     clipPath: "anims/baked/ghost_rider/megachain_slam.json",
     animRole: "megachain_slam",
     bakedRole: "megachain_slam",
-    reach: 3.5, damage: 62, lungeSpeed: 2.0, lungeDuration: 0.5,
+    reach: 5.5, damage: 62, lungeSpeed: 2.0, lungeDuration: 0.4,
     vfxColor: 0xff4010, cooldown: 10.0,
-    effectKind: "nova",
-    impactEffectId: "fire_aura",
+    effectKind: "chain",
+    slashVariant: "slashred",
+    projectile: "hellfire_chain",
+    chainPathRole: "megachain_slam",
+    impactEffectId: "hellfire_chain_path",
   },
 ] as const;
 
@@ -468,6 +508,7 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
     case "greatsword":return SAMURAI_2H_SKILLS;
     case "axe":       return SAMURAI_2H_SKILLS;
     case "mace":      return MACE_SKILLS;
+    case "chain":     return CHAIN_RANGED_MELEE_SKILLS;
     case "spear":     return SPEAR_SKILLS;
     case "magic":     return MAGIC_SKILLS;
     case "longbow":   return LONGBOW_SKILLS;
@@ -487,6 +528,10 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
       return "greatsword";
     case "hammer":
       return "mace";
+    case "chain":
+    case "hellfire_chain":
+    case "ghost_rider":
+      return "chain";
     case "crossbow":
       return "longbow"; // same ranged family until dedicated family ships
     case "rifle":
@@ -522,6 +567,15 @@ export function familyFromWeaponId(weaponId: string | null | undefined): WeaponF
     w === "hammer"
   ) {
     return "mace";
+  }
+  if (
+    w === "chain" ||
+    w === "whip" ||
+    w === "hellfire_chain" ||
+    w === "chainwhip" ||
+    w.includes("chain")
+  ) {
+    return "chain";
   }
   if (w === "greatsword" || w === "greataxe") return "greatsword";
   if (w === "axe") return "axe";

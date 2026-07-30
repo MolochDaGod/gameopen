@@ -94,10 +94,32 @@ Copied to `client/public/anims/baked/` for Open deploy.
 | `CHAIN_RANGED_MELEE_SKILLS` | throw / stab / spin / megachain |
 | `SHARED_FINISHER_SKILLS` | reusable quake + megachain defs |
 
+## Chain as ranged-melee projectile (extending weapon mesh)
+
+| Piece | Detail |
+|-------|--------|
+| API | `Vfx.hellfireChain(from, dir, opts)` |
+| Mesh | Procedural tube + link spheres + tip — **grows** along aim (learned GR tip curve) |
+| Look | Flame-aura energy shader (`createSlashEnergyMaterial`) — slashred/blue/purple/yellow |
+| Damage | `onPathTick` while extending; `onHit` on land with **quick dissipate** (~0.28s fireAura) |
+| Skills | `CHAIN_RANGED_MELEE_SKILLS` + mace slot 4; family `"chain"` |
+| Preview | Sandbox / catalog `hellfire_chain_path` |
+
+```ts
+vfx.hellfireChain(hand, aimDir, {
+  range: 6,
+  variant: "slashred", // or slashblue / purple / yellow
+  chainPathRole: "chain_throw",
+  damage: 28,
+  dissipateTime: 0.28,
+  onHit: (tip, scale) => applyDamage(tip, 28 * scale),
+});
+```
+
 ## What we refuse
 
 - Ghost Rider character mesh / face / coat  
-- Scaling weapon meshes to “reach”  
+- Stretching **player weapon GLBs** to fake length (we spawn a dedicated chain mesh instead)  
 - Using run-to-roll uploads as sprint (unchanged ban list)  
 
 ## Related sources (not baked here)

@@ -3351,6 +3351,37 @@ export class Studio {
               );
             },
           );
+        } else if (fx.projectile.kind === "hellfire_chain") {
+          // Extending hellfire chain weapon mesh — ranged-melee, flame aura colors
+          const contactR = fx.projectile.contactRadius ?? 0.6;
+          const chainDmg = strike.damage * dmgMul;
+          const applyChainHit = (p: THREE.Vector3, radius: number, scale: number) => {
+            const dmg = chainDmg * scale;
+            this.targets.playerHit(
+              p,
+              radius,
+              {
+                force: 2,
+                damage: dmg,
+                poiseDamage: Math.round(8 * scale * 3),
+              },
+              1,
+              this.sparCtx,
+            );
+            this.campEnemies?.damageInRadius(p, radius, dmg);
+            this.raiderBoats?.damageInRadius(p, radius, dmg);
+          };
+          this.vfx.hellfireChain(muzzle, projDir, {
+            range: fx.projectile.range,
+            color: fx.projectile.color,
+            variant: fx.projectile.variant ?? "slashred",
+            chainPathRole: fx.projectile.chainPathRole ?? "chain_throw",
+            damage: chainDmg,
+            contactRadius: contactR,
+            dissipateTime: 0.28,
+            onPathTick: (p, radius) => applyChainHit(p, radius, 0.28),
+            onHit: (p, scale) => applyChainHit(p, contactR * 1.2, scale),
+          });
         }
       }
 
