@@ -11,7 +11,8 @@
     "test": "vitest run --config vitest.config.ts",
     "test:playtest": "vitest run --config vitest.config.ts src/playtest/",
     "bake:mobility": "node scripts/bake-mobility-p1.mjs",
-    "bake:dual-wield": "node scripts/bake-dual-wield-glb.mjs"
+    "bake:dual-wield": "node scripts/bake-dual-wield-glb.mjs",
+    "bake:2h-hammer": "node tools/bake-2h-hammer-glb.mjs --target=both"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",

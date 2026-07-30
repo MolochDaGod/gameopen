@@ -170,8 +170,62 @@ export const SAMURAI_2H_SKILLS: readonly SkillPack[] = [
   },
 ] as const;
 
-/** @deprecated alias — heavy 2H uses samurai pack */
+/** @deprecated alias — heavy 2H blades use samurai pack (not blunt mace) */
 export const AXE_SKILLS = SAMURAI_2H_SKILLS;
+
+/**
+ * 2H mace / war-hammer — SC_SC bake under anims/baked/twohand_hammer/*
+ * (2hweaponhammerretarget.glb). Separate from samurai blades.
+ */
+export const MACE_SKILLS: readonly SkillPack[] = [
+  {
+    animKey: "mace_jab",
+    slot: 1,
+    label: "Hammer Jab",
+    clipPath: "anims/baked/twohand_hammer/attack.json",
+    animRole: "attack",
+    bakedRole: "attack",
+    reach: 2.0, damage: 26, lungeSpeed: 3.8, lungeDuration: 0.28,
+    vfxColor: 0xc8a070, cooldown: 0,
+    effectKind: "slam",
+    impactEffectId: "blunt_impact",
+  },
+  {
+    animKey: "mace_charge",
+    slot: 2,
+    label: "Charge Strike",
+    clipPath: "anims/baked/twohand_hammer/attack-charge.json",
+    animRole: "skill1",
+    bakedRole: "attack2",
+    reach: 2.4, damage: 40, lungeSpeed: 6.5, lungeDuration: 0.42,
+    vfxColor: 0xe0b070, cooldown: 2.5,
+    effectKind: "slam",
+    impactEffectId: "blunt_impact",
+  },
+  {
+    animKey: "mace_sweep",
+    slot: 3,
+    label: "180° Sweep",
+    clipPath: "anims/baked/twohand_hammer/attack-sweep.json",
+    animRole: "skill2",
+    bakedRole: "attack3",
+    reach: 2.8, damage: 48, lungeSpeed: 1.5, lungeDuration: 0.55,
+    vfxColor: 0xffc060, cooldown: 5.0,
+    effectKind: "slashWave",
+    slashVariant: "slashyellow",
+  },
+  {
+    animKey: "mace_summon",
+    slot: 4,
+    label: "Crow Burst",
+    clipPath: "anims/baked/twohand_hammer/skill-summon.json",
+    animRole: "skill3",
+    bakedRole: "skill2",
+    reach: 3.2, damage: 55, lungeSpeed: 0, lungeDuration: 0,
+    vfxColor: 0x8060a0, cooldown: 10.0,
+    effectKind: "nova",
+  },
+] as const;
 
 // ── Spear (Madarame): 1_1 base · 1_5 lunge · skill2_1 rush/AoE · ultimate ───
 export const SPEAR_SKILLS: readonly SkillPack[] = [
@@ -323,7 +377,7 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
     case "sword":     return SWORD_SKILLS;
     case "greatsword":return SAMURAI_2H_SKILLS;
     case "axe":       return SAMURAI_2H_SKILLS;
-    case "mace":      return SAMURAI_2H_SKILLS;
+    case "mace":      return MACE_SKILLS;
     case "spear":     return SPEAR_SKILLS;
     case "magic":     return MAGIC_SKILLS;
     case "longbow":   return LONGBOW_SKILLS;
@@ -341,6 +395,8 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
     case "samurai":
     case "greatsword_samurai":
       return "greatsword";
+    case "hammer":
+      return "mace";
     case "crossbow":
       return "longbow"; // same ranged family until dedicated family ships
     case "rifle":
@@ -367,8 +423,18 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
 export function familyFromWeaponId(weaponId: string | null | undefined): WeaponFamily {
   const w = String(weaponId || "").toLowerCase();
   if (w === "spear" || w === "javelin" || w === "lance" || w === "halberd") return "spear";
-  if (w === "greatsword" || w === "greataxe" || w === "hammer2h") return "greatsword";
-  if (w === "axe" || w === "mace" || w === "hammer") return "axe";
+  if (
+    w === "hammer2h" ||
+    w === "mace2h" ||
+    w === "maul" ||
+    w === "warhammer" ||
+    w === "mace" ||
+    w === "hammer"
+  ) {
+    return "mace";
+  }
+  if (w === "greatsword" || w === "greataxe") return "greatsword";
+  if (w === "axe") return "axe";
   if (w.startsWith("staff") || w === "wand") return "magic";
   if (w === "bow" || w === "longbow" || w === "crossbow") return "longbow";
   if (w === "none" || w === "unarmed" || w === "fist") return "unarmed";

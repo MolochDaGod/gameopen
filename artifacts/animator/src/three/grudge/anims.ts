@@ -26,7 +26,9 @@ export type AnimPack =
   /** Sidearm / pistol loco + gunplay (prod/anims/pistol). */
   | "pistol"
   /** Katana / iaijutsu feel — retargeted Bip001 greatsword_samurai bake. */
-  | "samurai";
+  | "samurai"
+  /** 2H mace / war-hammer — SC_SC_* from 2hweaponhammerretarget.glb → Bip001. */
+  | "hammer";
 
 /** Production anim CDN (ObjectStore packages:prod:anims). */
 export const PROD_ANIMS_CDN = "https://assets.grudge-studio.com/prod/anims";
@@ -419,6 +421,34 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     ],
   },
   /**
+   * 2H mace / war-hammer — not swords. SC_SC_Jab / ChargeStrike / 180x2Sweep /
+   * SummonCrows from 2hweaponhammerretarget.glb (rotation-only, weapon chain off).
+   */
+  hammer: {
+    idle: "twohand_hammer/idle",
+    walk: "twohand_hammer/walk",
+    run: "uploads_2026_06/locomotion/torch run forward",
+    attack: "twohand_hammer/attack",
+    extras: [
+      "twohand_hammer/attack1",
+      "twohand_hammer/attack2",
+      "twohand_hammer/attack3",
+      "twohand_hammer/jab",
+      "twohand_hammer/charge",
+      "twohand_hammer/sweep",
+      "twohand_hammer/skill",
+      "twohand_hammer/skill2",
+      "twohand_hammer/skill-summon",
+      "twohand_hammer/hit",
+      "twohand_hammer/backstep",
+      "twohand_hammer/dodgeB",
+      "twohand_hammer/step-left",
+      "twohand_hammer/step-right",
+      "twohand_hammer/jump",
+      "twohand_hammer/land",
+    ],
+  },
+  /**
    * 2H sword / greatsword — **samurai** production bake (Bip001 JSON).
    * Primary attack + skills 1–4 use gs_samurai_* clips with Getsuga/slash VFX.
    * 2h_melee GLB paths remain as soft fallbacks via loadBakedClip candidates if needed.
@@ -571,11 +601,23 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
 export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
   const w = String(weaponId || "").toLowerCase();
   if (!w || w === "none") return "unarmed";
-  // 2H heavy — samurai anim pack (twohand SSOT = greatsword_samurai clips)
+  // Blunt 2H / mace / war-hammer — dedicated SC_SC bake (NOT samurai blades)
+  if (
+    w === "hammer2h" ||
+    w === "mace2h" ||
+    w === "maul" ||
+    w === "warhammer" ||
+    w === "war_hammer" ||
+    (w.includes("hammer") && w.includes("2h")) ||
+    w === "mace" ||
+    w === "hammer"
+  ) {
+    return "hammer";
+  }
+  // 2H heavy blades — samurai anim pack (twohand SSOT = greatsword_samurai clips)
   if (
     w === "greatsword" ||
     w === "greataxe" ||
-    w === "hammer2h" ||
     w === "scythe" ||
     w === "nodachi" ||
     w === "two_hand_sword" ||
@@ -607,7 +649,7 @@ export function animPackForWeapon(weaponId: string | null | undefined): AnimPack
   ) {
     return "rifle";
   }
-  if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer" || w === "shield") {
+  if (w === "sword" || w === "axe" || w === "dagger" || w === "shield") {
     return "sword_shield";
   }
   // Katana / samurai weapons
@@ -640,6 +682,12 @@ export function asAnimPack(value: string): AnimPack {
     archer: "longbow",
     gunner: "rifle",
     berserker: "twohand",
+    hammer: "hammer",
+    hammer2h: "hammer",
+    mace: "hammer",
+    mace2h: "hammer",
+    maul: "hammer",
+    warhammer: "hammer",
   };
   return alias[value] ?? "unarmed";
 }
@@ -653,6 +701,7 @@ export const ANIM_PACK_LABELS: Record<AnimPack, string> = {
   magic: "Mage / Staff",
   longbow: "Archer / Longbow",
   twohand: "Berserker / 2H",
+  hammer: "2H Mace / War Hammer",
   crossbow: "Crossbow",
   rifle: "Gunner / Rifle",
   pistol: "Pistol / Sidearm",
@@ -663,6 +712,7 @@ export const CHOOSABLE_ANIM_PACKS: AnimPack[] = [
   "samurai",
   "sword_shield",
   "polearm",
+  "hammer",
   "unarmed",
   "magic",
   "longbow",

@@ -66,6 +66,7 @@ export { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 export {
   SPEAR_SKILLS,
   AXE_SKILLS,
+  MACE_SKILLS,
   familyFromWeaponId,
   familyFromAnimPack,
   skillPackForFamily,

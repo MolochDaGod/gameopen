@@ -581,18 +581,16 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
   },
 
   // -------------------------------------------------------------- hammer2h (2h)
-  // Two-handed maul: heavy alternating swings into an overhead slam, with a
-  // whirling maul special. The most ponderous of the roster — pure impact.
+  // Two-handed maul / mace — primary consumer of 2hweaponhammerretarget bake
+  // (SC_SC_Jab / ChargeStrike / 180x2Sweep → grudge6 AnimPack "hammer").
+  // Explorer FBX fallbacks until mixamo JSON hydrate is wired in Character.
   hammer2h: {
     loco: { ...TWO_HAND_MELEE_LOCO },
     actions: {
-      // Dedicated heavy maul swing opener (new batch) — was a borrowed greatsword
-      // slash; gives the 2h-hammer its own ponderous committed cleave.
       attack1: "animations/greatsword/heavy-weapon-swing",
-      attack2: "animations/greatsword/great-sword-slash-2",
-      attack3: "animations/greatsword/great-sword-jump-attack",
-      // 2H skill: Dual Weapon Combo flurry.
-      skill: "animations/knife/dual-weapon-combo",
+      attack2: "animations/greatsword/great-sword-overhead",
+      attack3: "animations/greatsword/great-sword-high-spin-attack",
+      skill: "animations/greatsword/great-sword-jump-attack",
       dualWeaponCombo: "animations/knife/dual-weapon-combo",
       dashAttack: "animations/sword/great-sword-slide-attack",
       stab: "animations/greatsword/great-sword-jump-attack",
@@ -600,6 +598,7 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       blockIdle: "animations/greatsword/great-sword-blocking-2",
       death: "animations/greatsword/two-handed-sword-death",
       hit: "animations/greatsword/great-sword-impact",
+      dodgeB: "animations/extra/jump-away",
       turnL: "animations/greatsword/great-sword-turn",
       turnR: "animations/greatsword/great-sword-turn-2",
     },
