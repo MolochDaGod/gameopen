@@ -117,12 +117,115 @@ export const DUAL_WIELD_CLIPS: ReadonlyArray<{
   { role: "hurt", bakeRel: "dual_wield/hurt", loop: false, kind: "hit" },
   { role: "hitfly", bakeRel: "dual_wield/hitfly", loop: false, kind: "hit" },
   { role: "death", bakeRel: "dual_wield/death", loop: false, kind: "hit" },
+  // Dodge: dual_wield rolls kept as soft fallback — fleet SSOT is Ghost Rider
+  // locomotion/roll_* (see GHOST_RIDER_CLIPS + TRAVERSAL_CLIPS end overrides).
   { role: "dodgeF", bakeRel: "dual_wield/dodgeF", loop: false, kind: "dodge" },
   { role: "dodgeB", bakeRel: "dual_wield/dodgeB", loop: false, kind: "dodge" },
   { role: "dodgeL", bakeRel: "dual_wield/dodgeL", loop: false, kind: "dodge" },
   { role: "dodgeR", bakeRel: "dual_wield/dodgeR", loop: false, kind: "dodge" },
   { role: "block", bakeRel: "dual_wield/block", loop: true, kind: "block" },
   { role: "kick", bakeRel: "dual_wield/kick", loop: false, kind: "kick" },
+];
+
+/**
+ * Ghost Rider PS2 (2007) — **animations only** (Marvel mesh discarded).
+ * Baked Bip001 under anims/baked/ghost_rider/* + shared rolls in locomotion/*.
+ *
+ * Stretch policy: source scale≈identity; chain “stretch” is Bone19–24 position
+ * curves → hellfire path FX (never weapon mesh scale). See fx/*_chain_path.json.
+ */
+export const GHOST_RIDER_CLIPS: ReadonlyArray<{
+  role: string;
+  bakeRel: string;
+  loop: boolean;
+  kind: "dodge" | "finisher" | "chain" | "fire" | "loco" | "hit" | "ultimate";
+  /** Optional flame path sample (relative to /anims/baked/). */
+  chainFxRel?: string;
+}> = [
+  // Shared dodge rolls (also locomotion/roll_* for Controller + every pack)
+  { role: "dodgeF", bakeRel: "locomotion/dodge_fwd", loop: false, kind: "dodge" },
+  { role: "dodgeB", bakeRel: "locomotion/dodge_back", loop: false, kind: "dodge" },
+  { role: "dodgeL", bakeRel: "locomotion/dodge_l", loop: false, kind: "dodge" },
+  { role: "dodgeR", bakeRel: "locomotion/dodge_r", loop: false, kind: "dodge" },
+  { role: "roll", bakeRel: "locomotion/roll_forward", loop: false, kind: "dodge" },
+  { role: "roll_forward", bakeRel: "locomotion/roll_forward", loop: false, kind: "dodge" },
+  { role: "roll_back", bakeRel: "locomotion/roll_back", loop: false, kind: "dodge" },
+  { role: "roll_left", bakeRel: "locomotion/roll_left", loop: false, kind: "dodge" },
+  { role: "roll_right", bakeRel: "locomotion/roll_right", loop: false, kind: "dodge" },
+  { role: "landRoll", bakeRel: "locomotion/land_roll", loop: false, kind: "dodge" },
+  // Combo finisher (quakesmash) — use on many melee + ranged-melee enders
+  {
+    role: "combo_finisher",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  {
+    role: "quakesmash",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  {
+    role: "finisher",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  // Mega chain slam ultimate — body anim + animated chain path → flame
+  {
+    role: "megachain_slam",
+    bakeRel: "ghost_rider/megachain_slam",
+    loop: false,
+    kind: "ultimate",
+    chainFxRel: "ghost_rider/fx/megachain_slam_chain_path",
+  },
+  {
+    role: "ultimate",
+    bakeRel: "ghost_rider/megachain_slam",
+    loop: false,
+    kind: "ultimate",
+    chainFxRel: "ghost_rider/fx/megachain_slam_chain_path",
+  },
+  // Ranged-melee chain toolkit
+  {
+    role: "chain_throw",
+    bakeRel: "ghost_rider/chain_throw",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_throw_chain_path",
+  },
+  {
+    role: "chain_stab",
+    bakeRel: "ghost_rider/chain_stab_hyper",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_stab_hyper_chain_path",
+  },
+  {
+    role: "chain_spin",
+    bakeRel: "ghost_rider/chain_spin",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_spin_chain_path",
+  },
+  {
+    role: "forward_chain_slam",
+    bakeRel: "ghost_rider/forward_chain_slam",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/forward_chain_slam_chain_path",
+  },
+  {
+    role: "fireball",
+    bakeRel: "ghost_rider/fireball",
+    loop: false,
+    kind: "fire",
+    chainFxRel: "ghost_rider/fx/fireball_chain_path",
+  },
 ];
 
 export const MOBILITY_CLIPS: ReadonlyArray<{
@@ -149,6 +252,7 @@ export const MOBILITY_CLIPS: ReadonlyArray<{
   // Fall / land / dive (bow pack has proven fall loops)
   { role: "jumpAir", bakeRel: "longbow/fall-a-loop", mixamoRel: "anim/bow/fall-a-loop.fbx", loop: true },
   { role: "land", bakeRel: "longbow/fall-a-land", mixamoRel: "anim/bow/fall-a-land-to-standing-idle-01.fbx", loop: false },
+  // Ghost Rider roll → landRoll (shared for every hero)
   { role: "landRoll", bakeRel: "locomotion/land_roll", mixamoRel: "anim/striker/roll.fbx", loop: false },
   { role: "dive", bakeRel: "longbow/standing-dive-forward", mixamoRel: "anim/bow/standing-dive-forward.fbx", loop: false },
   // Hit / knockback hybrid ragdoll (prefer clip + impulse over full multi-body)
@@ -560,6 +664,7 @@ export function resolveAnimPackClips(pack: AnimPack): {
  */
 export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "jump", rel: "locomotion/jump" },
+  // Ghost Rider rolls are fleet SSOT for dodge (see end-of-list overrides)
   { role: "dodge", rel: "locomotion/dodge_back" },
   { role: "dodgeF", rel: "locomotion/dodge_fwd" },
   { role: "dodgeB", rel: "locomotion/dodge_back" },
@@ -582,8 +687,12 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
   // Dual-wield melee dash / attacks / hits (dual_wieldingandothers.glb → Bip001)
   ...DUAL_WIELD_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
-  // Production CDN packages (roll/harvest/block + climbup alias)
-  { role: "roll", rel: "roll_dodge/dodging-back" },
+  // Ghost Rider (anim only) — finishers / chain / roll aliases.
+  // Note: TRAVERSAL load is first-wins (`if clips.has(role) return`); early dodge_*
+  // rows already point at locomotion/dodge_* (GR rolls). GHOST_RIDER fills missing roles only.
+  ...GHOST_RIDER_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
+  // Prefer GR land/roll over legacy roll_dodge (only if roll not already set)
+  { role: "roll", rel: "locomotion/roll_forward" },
   { role: "climbAlt", rel: "locomotion/climbup_1m" },
   { role: "swimFast", rel: "locomotion/swim_fast" },
   { role: "fall", rel: "locomotion/fall_in" },

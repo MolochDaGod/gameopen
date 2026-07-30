@@ -174,8 +174,97 @@ export const SAMURAI_2H_SKILLS: readonly SkillPack[] = [
 export const AXE_SKILLS = SAMURAI_2H_SKILLS;
 
 /**
+ * Shared combo finisher + chain ultimate from Ghost Rider bake (mesh discarded).
+ * Use quakesmash on many melee / ranged-melee enders; megachain with flame path FX.
+ */
+export const SHARED_FINISHER_SKILLS: readonly SkillPack[] = [
+  {
+    animKey: "combo_finisher_quake",
+    slot: 3,
+    label: "Quake Smash",
+    clipPath: "anims/baked/ghost_rider/quakesmash.json",
+    animRole: "combo_finisher",
+    bakedRole: "quakesmash",
+    reach: 2.6, damage: 44, lungeSpeed: 4.0, lungeDuration: 0.28,
+    vfxColor: 0xff7030, cooldown: 4.0,
+    effectKind: "slam",
+    impactEffectId: "frost_wave",
+  },
+  {
+    animKey: "megachain_firequake",
+    slot: 4,
+    label: "Mega Chain Firequake",
+    clipPath: "anims/baked/ghost_rider/megachain_slam.json",
+    animRole: "megachain_slam",
+    bakedRole: "megachain_slam",
+    reach: 4.5, damage: 72, lungeSpeed: 2.0, lungeDuration: 0.55,
+    vfxColor: 0xff4010, cooldown: 12.0,
+    effectKind: "nova",
+    impactEffectId: "fire_aura",
+  },
+] as const;
+
+/**
+ * Ranged-melee chain (Ghost Rider body + hellfire path, never mesh stretch).
+ * Flame ribbon follows fx/*_chain_path.json samples from R Hand.
+ */
+export const CHAIN_RANGED_MELEE_SKILLS: readonly SkillPack[] = [
+  {
+    animKey: "chain_throw",
+    slot: 1,
+    label: "Chain Throw",
+    clipPath: "anims/baked/ghost_rider/chain_throw.json",
+    animRole: "chain_throw",
+    bakedRole: "chain_throw",
+    reach: 6.0, damage: 28, lungeSpeed: 2.0, lungeDuration: 0.2,
+    vfxColor: 0xff6020, cooldown: 0,
+    effectKind: "slashWave",
+    slashVariant: "slashred",
+    impactEffectId: "fireball",
+  },
+  {
+    animKey: "chain_stab",
+    slot: 2,
+    label: "Hyper Chain Stab",
+    clipPath: "anims/baked/ghost_rider/chain_stab_hyper.json",
+    animRole: "chain_stab",
+    bakedRole: "chain_stab",
+    reach: 5.5, damage: 42, lungeSpeed: 8.0, lungeDuration: 0.35,
+    vfxColor: 0xff8020, cooldown: 2.5,
+    effectKind: "getsuga",
+    slashVariant: "slashred",
+    impactEffectId: "fire_aura",
+  },
+  {
+    animKey: "chain_spin",
+    slot: 3,
+    label: "Chain Spin",
+    clipPath: "anims/baked/ghost_rider/chain_spin.json",
+    animRole: "chain_spin",
+    bakedRole: "chain_spin",
+    reach: 3.5, damage: 38, lungeSpeed: 1.0, lungeDuration: 0.4,
+    vfxColor: 0xffa040, cooldown: 5.0,
+    effectKind: "slashWave",
+    slashVariant: "slashyellow",
+    impactEffectId: "fire_aura",
+  },
+  {
+    animKey: "megachain_firequake",
+    slot: 4,
+    label: "Mega Chain Firequake",
+    clipPath: "anims/baked/ghost_rider/megachain_slam.json",
+    animRole: "megachain_slam",
+    bakedRole: "megachain_slam",
+    reach: 4.5, damage: 72, lungeSpeed: 2.0, lungeDuration: 0.55,
+    vfxColor: 0xff4010, cooldown: 12.0,
+    effectKind: "nova",
+    impactEffectId: "fire_aura",
+  },
+] as const;
+
+/**
  * 2H mace / war-hammer — SC_SC bake under anims/baked/twohand_hammer/*
- * (2hweaponhammerretarget.glb). Separate from samurai blades.
+ * (2hweaponhammerretarget.glb). Slot 3/4 reuse GR quakesmash + megachain.
  */
 export const MACE_SKILLS: readonly SkillPack[] = [
   {
@@ -203,27 +292,28 @@ export const MACE_SKILLS: readonly SkillPack[] = [
     impactEffectId: "blunt_impact",
   },
   {
-    animKey: "mace_sweep",
+    animKey: "mace_quake_finisher",
     slot: 3,
-    label: "180° Sweep",
-    clipPath: "anims/baked/twohand_hammer/attack-sweep.json",
-    animRole: "skill2",
-    bakedRole: "attack3",
-    reach: 2.8, damage: 48, lungeSpeed: 1.5, lungeDuration: 0.55,
+    label: "Quake Smash",
+    clipPath: "anims/baked/ghost_rider/quakesmash.json",
+    animRole: "combo_finisher",
+    bakedRole: "quakesmash",
+    reach: 2.8, damage: 48, lungeSpeed: 1.5, lungeDuration: 0.45,
     vfxColor: 0xffc060, cooldown: 5.0,
-    effectKind: "slashWave",
-    slashVariant: "slashyellow",
+    effectKind: "slam",
+    impactEffectId: "frost_wave",
   },
   {
-    animKey: "mace_summon",
+    animKey: "mace_firequake",
     slot: 4,
-    label: "Crow Burst",
-    clipPath: "anims/baked/twohand_hammer/skill-summon.json",
-    animRole: "skill3",
-    bakedRole: "skill2",
-    reach: 3.2, damage: 55, lungeSpeed: 0, lungeDuration: 0,
-    vfxColor: 0x8060a0, cooldown: 10.0,
+    label: "Firequake Slam",
+    clipPath: "anims/baked/ghost_rider/megachain_slam.json",
+    animRole: "megachain_slam",
+    bakedRole: "megachain_slam",
+    reach: 3.5, damage: 62, lungeSpeed: 2.0, lungeDuration: 0.5,
+    vfxColor: 0xff4010, cooldown: 10.0,
     effectKind: "nova",
+    impactEffectId: "fire_aura",
   },
 ] as const;
 
