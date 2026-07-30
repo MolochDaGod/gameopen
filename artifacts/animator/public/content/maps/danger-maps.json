@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "updated": "2026-07-30",
+  "origin": "open.grudge-studio.com",
+  "rest": {
+    "catalog": "/content/maps/danger-maps.json",
+    "health": "/api/health",
+    "objectstore": "https://info.grudge-studio.com/api/v1/"
+  },
+  "bestPractices": "docs/DANGER_MAPS_BEST_PRACTICES.md",
+  "biomeKeys": "artifacts/animator/src/three/maps/biomeMeshKeys.ts",
+  "stack": {
+    "three": "r185",
+    "physics": "@workspace/grudge-physics Rapier",
+    "layers": "GamePlayLayers",
+    "harvest": "pinata + UUIDs",
+    "build": "CampBuild + BuildGridOverlay",
+    "playerDb": "Railway Postgres",
+    "catalogDb": "ObjectStore D1",
+    "binaries": "R2 / public models",
+    "loaders": "loadGltfFirst multi-key chains from biomeMeshKeys"
+  },
+  "maps": [
+    {
+      "id": "danger-room",
+      "testWorldId": "danger-room",
+      "name": "Danger Room",
+      "kind": "combat",
+      "bake": "runtime",
+      "defaultMode": "combat",
+      "assets": [],
+      "approxMb": 0,
+      "layers": [
+        "player",
+        "monster",
+        "boss",
+        "ui"
+      ],
+      "features": [
+        "spar",
+        "weapon skills"
+      ],
+      "deploy": "live"
+    },
+    {
+      "id": "forest-mountains",
+      "testWorldId": "forest-mountains",
+      "name": "Forest Mountains",
+      "kind": "harvest",
+      "bake": "partial",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/maps/forest_mountains/forest_mountains.glb"
+      ],
+      "cdnFallbacks": [
+        "models/worlds/forest-map.glb",
+        "models/voxel/maps/glowstone_mountain.glb"
+      ],
+      "approxMb": 11.2,
+      "layers": [
+        "terrain",
+        "harvest",
+        "player"
+      ],
+      "features": [
+        "hrvl/hrvi",
+        "convex bake",
+        "toon",
+        "pinata",
+        "mountain biome"
+      ],
+      "deploy": "live-spa"
+    },
+    {
+      "id": "tropical-harvest",
+      "testWorldId": "tropical-harvest",
+      "name": "Tropical Harvest",
+      "kind": "harvest",
+      "bake": "cdn",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/warlords-era/worlds/tropical_island_small.glb"
+      ],
+      "cdnFallbacks": [
+        "models/maps/tropical/tropical_island_dry.glb",
+        "models/warlords-era/worlds/low_poly_island.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "harvest"
+      ],
+      "features": [
+        "geometric ore",
+        "toon",
+        "pinata",
+        "cdn-fallback"
+      ],
+      "deploy": "cdn-fallback"
+    },
+    {
+      "id": "shipwreck-island",
+      "testWorldId": "shipwreck-island",
+      "name": "Shipwreck Island",
+      "kind": "mixed",
+      "bake": "runtime",
+      "defaultMode": "build",
+      "assets": [
+        "models/maps/shipwreck/shipwreck_island.glb"
+      ],
+      "cdnFallbacks": [
+        "models/voxel/maps/pirat_bay.glb",
+        "models/worlds/sailtest.glb"
+      ],
+      "approxMb": 1,
+      "layers": [
+        "terrain",
+        "climb",
+        "swim",
+        "harvest",
+        "vehicle",
+        "claim"
+      ],
+      "features": [
+        "build grid",
+        "loco Q&A",
+        "coast biome"
+      ],
+      "deploy": "live-spa"
+    },
+    {
+      "id": "arena",
+      "testWorldId": "arena",
+      "name": "Arena",
+      "kind": "build",
+      "bake": "runtime",
+      "defaultMode": "build",
+      "assets": [
+        "models/maps/arena/arena.glb"
+      ],
+      "cdnFallbacks": [
+        "models/voxel/maps/geonosis_arena.glb"
+      ],
+      "approxMb": 18.5,
+      "layers": [
+        "terrain",
+        "harvest",
+        "climb",
+        "solid"
+      ],
+      "features": [
+        "build grid",
+        "combat"
+      ],
+      "deploy": "live-spa"
+    },
+    {
+      "id": "pirate-village",
+      "testWorldId": "pirate-village",
+      "name": "Pirate Village",
+      "kind": "loco",
+      "bake": "runtime",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/maps/pirate/village.glb",
+        "models/maps/pirate/palm_trees.glb",
+        "models/maps/pirate/date_palm.glb"
+      ],
+      "cdnFallbacks": [
+        "models/warlords-era/worlds/pirate_island_pack.glb"
+      ],
+      "approxMb": 19,
+      "layers": [
+        "terrain",
+        "swim",
+        "climb",
+        "harvest"
+      ],
+      "features": [
+        "orc scale"
+      ],
+      "deploy": "live-spa"
+    },
+    {
+      "id": "sailtest",
+      "testWorldId": "sailtest",
+      "name": "Sailtest",
+      "kind": "sail",
+      "bake": "cdn",
+      "defaultMode": "build",
+      "assets": [
+        "models/worlds/sailtest.glb"
+      ],
+      "cdnFallbacks": [
+        "models/worlds/small_island.glb",
+        "models/worlds/breeze-island.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "swim",
+        "vehicle"
+      ],
+      "features": [
+        "wind",
+        "wing sail"
+      ],
+      "deploy": "live-cdn"
+    },
+    {
+      "id": "forest-map",
+      "testWorldId": "forest-map",
+      "name": "Forest Map",
+      "kind": "harvest",
+      "bake": "cdn",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/worlds/forest-map.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "harvest"
+      ],
+      "features": [
+        "Warlords nature",
+        "forest biome"
+      ],
+      "deploy": "live-cdn"
+    },
+    {
+      "id": "island-life",
+      "testWorldId": "island-life",
+      "name": "Island Life",
+      "kind": "mixed",
+      "bake": "cdn",
+      "defaultMode": "build",
+      "assets": [
+        "models/worlds/sailtest.glb"
+      ],
+      "cdnFallbacks": [
+        "models/worlds/island_life.glb",
+        "models/worlds/small_island.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "swim",
+        "monster"
+      ],
+      "features": [
+        "tribes",
+        "cdn-fallback"
+      ],
+      "deploy": "cdn-fallback"
+    },
+    {
+      "id": "fabled-zone",
+      "testWorldId": "fabled-zone",
+      "name": "Fabled Main Town",
+      "kind": "town",
+      "bake": "cdn",
+      "defaultMode": "combat",
+      "assets": [
+        "models/warlords-era/worlds/pirate_island_pack.glb"
+      ],
+      "cdnFallbacks": [
+        "models/worlds/fabled-zone.glb",
+        "models/warlords-era/worlds/medieval_camp.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "npc",
+        "claim"
+      ],
+      "features": [
+        "sky towns",
+        "cdn-fallback"
+      ],
+      "deploy": "cdn-fallback"
+    },
+    {
+      "id": "ice-world",
+      "testWorldId": "ice-world",
+      "name": "Ice World",
+      "kind": "harvest",
+      "bake": "cdn",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/warlords-era/worlds/ice_world.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "harvest"
+      ],
+      "features": [
+        "ice biome"
+      ],
+      "deploy": "live-cdn"
+    },
+    {
+      "id": "plains-fields",
+      "testWorldId": "plains-fields",
+      "name": "Plains Fields",
+      "kind": "build",
+      "bake": "cdn",
+      "defaultMode": "build",
+      "assets": [
+        "models/packs/fields_near_the_city_of_amida.glb",
+        "models/packs/low_poly_farm.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "harvest"
+      ],
+      "features": [
+        "plains biome"
+      ],
+      "deploy": "live-cdn"
+    },
+    {
+      "id": "desert-canyon",
+      "testWorldId": "desert-canyon",
+      "name": "Desert Canyon",
+      "kind": "harvest",
+      "bake": "cdn",
+      "defaultMode": "harvest",
+      "assets": [
+        "models/voxel/maps/low_poly_canyon.glb",
+        "models/voxel/maps/glowstone_mountain.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "harvest"
+      ],
+      "features": [
+        "desert biome"
+      ],
+      "deploy": "live-cdn"
+    },
+    {
+      "id": "volcanic-standin",
+      "testWorldId": "volcanic-standin",
+      "name": "Volcanic Stand-in",
+      "kind": "mixed",
+      "bake": "cdn",
+      "defaultMode": "combat",
+      "assets": [
+        "models/voxel/maps/geonosis_arena.glb",
+        "models/voxel/maps/low_poly_canyon.glb"
+      ],
+      "approxMb": 0,
+      "layers": [
+        "terrain",
+        "monster",
+        "player"
+      ],
+      "features": [
+        "volcanic stand-in"
+      ],
+      "deploy": "live-cdn"
+    }
+  ]
+}

@@ -31,9 +31,142 @@ export interface LoadoutClips {
   walk: string;
   run: string;
   attack: string;
+  /**
+   * Sprint is NEVER a separate banned upload (locomotion/running = run-to-roll).
+   * Runtime clones `run` and applies {@link SPRINT_LOCO_MULT}. Optional bake
+   * target for a true faster cycle once Mixamo sprint is retargeted.
+   */
+  sprint?: string;
   /** Optional extra roles loaded for weapon skills (combo / skill1–4). */
   extras?: string[];
 }
+
+/** Cross-fade / lock timings for gait and skill layers (seconds). */
+export const ANIM_BLEND = {
+  loco: 0.14,
+  sprintIn: 0.12,
+  attackIn: 0.08,
+  attackOut: 0.16,
+  skillIn: 0.1,
+  skillOut: 0.18,
+  dashOverlay: 0.06,
+  hurt: 0.08,
+  traversal: 0.12,
+} as const;
+
+/**
+ * Shared mobility beyond jump/dodge — Mixamo authoring under public/anim/{climb,swim}/.
+ * Bake targets: /anims/baked/{rel}.json (Bip001). Until bake lands, status=placeholder
+ * and SurfaceLocomotion falls back (jump/dodge or procedural).
+ */
+export type MobilityRole =
+  | "crawl"
+  | "crouchWalk"
+  | "swim"
+  | "tread"
+  | "swimExit"
+  | "climb"
+  | "climbUp"
+  | "climbDown"
+  | "hang"
+  | "mantle"
+  | "wallRun"
+  | "grab"
+  | "jumpAir"
+  | "land"
+  | "landRoll"
+  | "dive"
+  | "hurt"
+  | "hitfly"
+  | "getUp";
+
+export const MOBILITY_CLIPS: ReadonlyArray<{
+  role: MobilityRole;
+  /** Preferred baked path (after bake pipeline). */
+  bakeRel: string;
+  /** Mixamo authoring FBX under public/anim (not live on Vercel). */
+  mixamoRel: string;
+  loop: boolean;
+}> = [
+  // Authoring sources on disk (not cycles — need proper crouch-walk bake later).
+  { role: "crawl", bakeRel: "locomotion/crawl", mixamoRel: "anim/reactions/running-crawl.fbx", loop: true },
+  { role: "crouchWalk", bakeRel: "locomotion/crouch_walk", mixamoRel: "anim/rifle/idle-crouching.fbx", loop: true },
+  { role: "swim", bakeRel: "swim/swimming", mixamoRel: "anim/swim/swimming.fbx", loop: true },
+  { role: "tread", bakeRel: "swim/treading", mixamoRel: "anim/swim/treading-water.fbx", loop: true },
+  { role: "swimExit", bakeRel: "swim/to_edge", mixamoRel: "anim/swim/swimming-to-edge.fbx", loop: false },
+  { role: "climb", bakeRel: "climb/climbing", mixamoRel: "anim/climb/climbing.fbx", loop: true },
+  { role: "climbUp", bakeRel: "climb/up", mixamoRel: "anim/climb/climbing-up-wall.fbx", loop: true },
+  { role: "climbDown", bakeRel: "climb/down", mixamoRel: "anim/climb/climbing-down-wall.fbx", loop: true },
+  { role: "hang", bakeRel: "climb/hang_idle", mixamoRel: "anim/climb/hanging-idle.fbx", loop: true },
+  { role: "mantle", bakeRel: "climb/to_top", mixamoRel: "anim/climb/climbing-to-top.fbx", loop: false },
+  { role: "wallRun", bakeRel: "climb/wall_run", mixamoRel: "anim/climb/wall-run.fbx", loop: true },
+  { role: "grab", bakeRel: "climb/jump_to_hang", mixamoRel: "anim/climb/jump-to-freehang.fbx", loop: false },
+  // Fall / land / dive (bow pack has proven fall loops)
+  { role: "jumpAir", bakeRel: "longbow/fall-a-loop", mixamoRel: "anim/bow/fall-a-loop.fbx", loop: true },
+  { role: "land", bakeRel: "longbow/fall-a-land", mixamoRel: "anim/bow/fall-a-land-to-standing-idle-01.fbx", loop: false },
+  { role: "landRoll", bakeRel: "locomotion/land_roll", mixamoRel: "anim/striker/roll.fbx", loop: false },
+  { role: "dive", bakeRel: "longbow/standing-dive-forward", mixamoRel: "anim/bow/standing-dive-forward.fbx", loop: false },
+  // Hit / knockback hybrid ragdoll (prefer clip + impulse over full multi-body)
+  { role: "hurt", bakeRel: "polearm/hurt", mixamoRel: "anim/reactions/react-small-from-front.fbx", loop: false },
+  { role: "hitfly", bakeRel: "polearm/hitfly", mixamoRel: "anim/reactions/hit-fly.fbx", loop: false },
+  { role: "getUp", bakeRel: "polearm/getup", mixamoRel: "anim/reactions/get-up.fbx", loop: false },
+];
+
+/**
+ * Fall speed thresholds (m/s, SI) for land vs landRoll vs ragdoll hybrid.
+ * Heavy knockback uses hitfly + impulse when force ≥ HEAVY_KB_FORCE.
+ */
+export const IMPACT_LOCO = {
+  /** Soft land clip if |vertical| below this on ground contact. */
+  softLandSpeed: 6,
+  /** Use landRoll if impact speed above this. */
+  hardLandSpeed: 11,
+  /** Dive into water if airborne over water and vertical below -this. */
+  diveEnterSpeed: 4,
+  /** Epicfight / Controller force that triggers hitfly hybrid ragdoll. */
+  heavyKbForce: 22,
+  /** Hit blend-in seconds. */
+  hurtBlendIn: 0.08,
+  hitflyBlendIn: 0.06,
+} as const;
+
+/** Roles that must never be filled by aliasing pack.attack (breaks mobility). */
+export const NEVER_ALIAS_TO_ATTACK = new Set([
+  "idle",
+  "walk",
+  "run",
+  "sprint",
+  "jump",
+  "jumpAway",
+  "jumpAir",
+  "land",
+  "landRoll",
+  "dive",
+  "dodge",
+  "dodgeF",
+  "dodgeB",
+  "dodgeL",
+  "dodgeR",
+  "roll",
+  "crawl",
+  "crouchWalk",
+  "swim",
+  "tread",
+  "swimExit",
+  "climb",
+  "climbUp",
+  "climbDown",
+  "hang",
+  "mantle",
+  "wallRun",
+  "grab",
+  "hurt",
+  "hitfly",
+  "getUp",
+  "death",
+  "block",
+  "parry",
+]);
 
 /**
  * HARD BAN — never use these as walk / run / sprint locomotion.
@@ -333,6 +466,8 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "dodge_left", rel: "longbow/standing dodge left" },
   { role: "dodge_right", rel: "longbow/standing dodge right" },
   { role: "dodge_backward", rel: "locomotion/dodging" },
+  // Mobility (bake when ready; loaders soft-fail → procedural / jump fallback)
+  ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
 ];
 
 /**
@@ -428,14 +563,34 @@ export const CHOOSABLE_ANIM_PACKS: AnimPack[] = [
 ];
 
 /**
- * @deprecated Do not load this for sprint. It points at the banned run-to-roll
- * upload. Runtime **clones pack.run** for sprint (arena parity).
- * Kept only so old imports compile; never pass to loadBakedClip for gait.
+ * @deprecated NAME LIE — this path is **run-to-roll**, not a sprint cycle.
+ * Do not load for sprint/run/walk. Runtime clones pack `run` and scales with
+ * {@link SPRINT_LOCO_MULT}. Kept only so old imports compile.
  */
 export const SPRINT_CLIP = "locomotion/running";
 
 /** Playback scale for sprint band vs run (matches arena SPRINT_LOCO_MULT). */
 export const SPRINT_LOCO_MULT = 1.75;
+
+/**
+ * True if a human label / file stem is a fake "sprint" that is actually roll
+ * or run-to-roll (naming errors in uploads and Mixamo folders).
+ */
+export function isFakeSprintName(name: string): boolean {
+  const n = String(name || "").toLowerCase().replace(/\\/g, "/");
+  if (isBannedLocomotionClip(n)) return true;
+  // Mixamo folders often mislabel transitions as sprint
+  if (/crouch[-_\s]?to[-_\s]?sprint|crouched[-_\s]?to[-_\s]?sprint/.test(n)) return true;
+  if (/sprint/.test(n) && /roll|tumble|dive|somersault|crawl/.test(n)) return true;
+  if (n.includes("run") && n.includes("roll")) return true;
+  if (n.includes("locomotion/running")) return true;
+  return false;
+}
+
+/** Resolve which clip role to play for a weapon skill slot (1–4). */
+export function skillSlotToClipRole(slot: 1 | 2 | 3 | 4): string {
+  return (`skill${slot}` as const);
+}
 
 // Build the primary URL for a baked clip (R2 default; loaders try all hosts).
 export function bakedClipUrl(rel: string, baseOverride?: string): string {

@@ -264,6 +264,19 @@ export class Controller {
   private justWallJumped = false;
   private justWallRunStart = false;
   private justWallRunEnd = false;
+  /** Climb-hold mode (pegs / freehang) — separate from sprint wall-run. */
+  private climbActive = false;
+  private climbVerticalGrab = false;
+  private climbWantMantle = false;
+  /** Host injects climb-wall proximity (ClimbWallSystem holds). */
+  private climbProbe:
+    | ((pos: THREE.Vector3) => {
+        near: boolean;
+        wallNormal?: THREE.Vector3;
+        atTop?: boolean;
+        canGrab?: boolean;
+      } | null)
+    | null = null;
   /** Min height (m) above floor before wall-run can start. */
   private readonly WALL_RUN_MIN_Y = 0.4;
   /** Probe reach for wall contact (m). */
@@ -777,6 +790,28 @@ export class Controller {
     return this.wallRunActive;
   }
 
+  /** True while on climb holds / freehang (not sprint wall-run). */
+  get isClimbing(): boolean {
+    return this.climbActive;
+  }
+
+  /**
+   * Host wires ClimbWallSystem: returns near/top/grab for current feet position.
+   * Call once after climb walls load.
+   */
+  setClimbProbe(
+    fn:
+      | ((pos: THREE.Vector3) => {
+          near: boolean;
+          wallNormal?: THREE.Vector3;
+          atTop?: boolean;
+          canGrab?: boolean;
+        } | null)
+      | null,
+  ): void {
+    this.climbProbe = fn;
+  }
+
   /** Outward normal of the wall we're on (or last wall). */
   getWallNormal(out = new THREE.Vector3()): THREE.Vector3 {
     return out.copy(this.wallNormal);
@@ -810,6 +845,136 @@ export class Controller {
     this.wallRunActive = false;
     this.wallRunElapsed = 0;
     if (notify) this.justWallRunEnd = true;
+  }
+
+  /**
+   * Climb-hold intent: F near wall, or auto when probe says near holds.
+   * Space releases. Top-row → mantle flag for one-shot.
+   */
+  private updateClimbIntent(sprinting: boolean): void {
+    const pos = this.character.root.position;
+    const probe = this.climbProbe?.(pos) ?? null;
+    const wall = this.probeWall(this.WALL_PROBE + 0.2);
+    const nearWall = !!(wall && wall.dist < this.WALL_PROBE + 0.15);
+    const nearHolds = !!(probe?.near);
+    const canGrab = !!(probe?.canGrab ?? nearWall);
+    const wantGrab =
+      this.input.down("KeyF") ||
+      this.input.down("KeyE") ||
+      (nearHolds && !this.grounded && this.vertical > 0.2);
+
+    // Release climb (Space while climbing drops off; land on ground clears)
+    if (this.climbActive) {
+      if (this.input.down("Space") && !this.climbWantMantle) {
+        this.climbActive = false;
+        this.climbVerticalGrab = false;
+        this.climbWantMantle = false;
+        this.vertical = 1.2; // small hop off wall
+      } else if (this.grounded && !nearHolds && !wantGrab) {
+        this.climbActive = false;
+        this.climbVerticalGrab = false;
+        this.climbWantMantle = false;
+      }
+    }
+
+    // Enter freehang / climb
+    if (!this.climbActive && !this.wallRunActive && !sprinting && canGrab && wantGrab) {
+      this.climbActive = true;
+      this.climbVerticalGrab = true;
+      this.vertical = 0;
+      if (probe?.wallNormal) this.wallNormal.copy(probe.wallNormal);
+      else if (wall) this.wallNormal.copy(wall.normal);
+    }
+
+    if (this.climbActive) {
+      this.climbWantMantle = !!(probe?.atTop);
+      this.climbVerticalGrab =
+        !this.input.down("KeyW") &&
+        !this.input.down("ArrowUp") &&
+        Math.abs(this.input.moveY) < 0.15;
+      if (probe?.wallNormal) this.wallNormal.copy(probe.wallNormal);
+      else if (wall) this.wallNormal.copy(wall.normal);
+    }
+  }
+
+  /** Peg climb motion: W/S vertical, A/D along wall; gravity off. */
+  private updateClimbMove(dt: number, move: THREE.Vector3, mag: number): void {
+    if (!this.climbActive) return;
+    const pos = this.character.root.position;
+    this.vertical = 0;
+    this.grounded = false;
+
+    const n = this.wallNormal;
+    const climb =
+      this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2
+        ? 2.4
+        : this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2
+          ? -2.0
+          : 0;
+    pos.y += climb * dt;
+    pos.y = Math.max(0.05, pos.y);
+
+    const tangent = new THREE.Vector3(-n.z, 0, n.x);
+    let along = 0;
+    if (mag > 0.06) along = move.x * tangent.x + move.z * tangent.z;
+    const side = along >= 0 ? 1 : -1;
+    if (Math.abs(along) > 0.08) {
+      const lat = this.params.moveSpeed * 0.55 * this.speedMult;
+      pos.x += tangent.x * side * lat * dt * Math.abs(along);
+      pos.z += tangent.z * side * lat * dt * Math.abs(along);
+    }
+    // Stick to wall
+    pos.x -= n.x * 0.04;
+    pos.z -= n.z * 0.04;
+    pos.x = THREE.MathUtils.clamp(pos.x, -this.bound, this.bound);
+    pos.z = THREE.MathUtils.clamp(pos.z, -this.bound, this.bound);
+    this.wantFacing = Math.atan2(-n.x, -n.z);
+    this.smoothedSpeed = climb !== 0 ? 0.55 : 0.1;
+
+    // Mantle one-shot at top
+    if (this.climbWantMantle && climb > 0 && this.character.hasRole("mantle")) {
+      this.character.playRoleOnce("mantle", 0.12);
+      this.climbActive = false;
+      this.climbVerticalGrab = false;
+      this.climbWantMantle = false;
+      this.vertical = 2.2;
+      this.grounded = false;
+    }
+  }
+
+  private applyClimbLocomotionAnim(): void {
+    const c = this.character;
+    if (this.wallRunActive && c.hasRole("wallRun")) {
+      c.playRole("wallRun");
+      c.setLocomotionRate?.(1);
+      return;
+    }
+    if (this.climbWantMantle && c.hasRole("mantle")) {
+      // one-shot handled in updateClimbMove
+      return;
+    }
+    if (this.climbVerticalGrab && c.hasRole("hang")) {
+      c.playRole("hang");
+      c.setLocomotionRate?.(1);
+      return;
+    }
+    const up =
+      this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2;
+    const down =
+      this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2;
+    if (up && c.hasRole("climbUp")) {
+      c.playRole("climbUp");
+      c.setLocomotionRate?.(1);
+    } else if (down && c.hasRole("climbDown")) {
+      c.playRole("climbDown");
+      c.setLocomotionRate?.(1);
+    } else if (c.hasRole("climb")) {
+      c.playRole("climb");
+      c.setLocomotionRate?.(0.85);
+    } else if (c.hasRole("hang")) {
+      c.playRole("hang");
+    }
+    c.setTraversalMode?.("climb");
   }
 
   /**
@@ -1445,11 +1610,19 @@ export class Controller {
       pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       moving = false;
     } else {
-      // Attempt / maintain wall-run before free air locomotion
-      this.updateWallRun(dt, sprinting, move, mag);
+      // Climb holds (F-grab) then sprint wall-run before free air locomotion
+      if (this.climbActive) {
+        this.updateClimbMove(dt, move, mag);
+        this.velocity.set(0, 0, 0);
+        moving = true;
+      } else {
+        this.updateWallRun(dt, sprinting, move, mag);
+      }
       if (this.wallRunActive) {
         this.velocity.set(0, 0, 0);
         moving = true; // keep loco blend "running"
+      } else if (this.climbActive) {
+        /* climb moved already */
       } else if (moving) {
         move.normalize();
         // Edge / cliff probe: cancel planar velocity that would walk off a drop.
@@ -1592,8 +1765,8 @@ export class Controller {
       // Free-flight Y (no gravity) — Space up / Ctrl down already in this.vertical
       pos.y = Math.max(0.08, pos.y + this.vertical * dt);
       this.grounded = false;
-    } else if (this.wallRunActive) {
-      // Gravity suspended while wall-running (climb handled in updateWallRun).
+    } else if (this.wallRunActive || this.climbActive) {
+      // Gravity suspended while wall-running / hold-climbing.
       this.vertical = 0;
       this.grounded = false;
     } else {
@@ -1712,27 +1885,31 @@ export class Controller {
     this.smoothedSpeed += (targetSpeed - this.smoothedSpeed) * Math.min(1, 10 * dt);
     if (
       !this.character.isOneShotActive &&
-      this.grounded &&
       !this.isBusy &&
       !this.hoverActive &&
       !(this.animDirector?.isOverridePlaying)
     ) {
-      if (this.character.setLocomotion) {
-        // Speed 0..1 + explicit sprint flag so grudge6 uses run-clone @ 1.75×
-        // (never locomotion/running roll). GLB Character ignores sprint flag.
-        this.character.setLocomotion(this.smoothedSpeed, sprinting);
-      } else if (sprinting && this.character.hasRole("sprint")) {
-        this.character.playRole("sprint");
-        this.character.setLocomotionRate(1.75);
-      } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
-        this.character.playRole("run");
-        this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);
-      } else if (this.smoothedSpeed > 0.06) {
-        this.character.playRole("walk");
-        this.character.setLocomotionRate(0.8 + this.smoothedSpeed);
-      } else {
-        this.character.playRole("idle");
-        this.character.setLocomotionRate(1);
+      // Climb / hang / wall-run: baked mobility roles (anims/baked/climb/*)
+      if (this.climbActive || this.wallRunActive) {
+        this.applyClimbLocomotionAnim();
+      } else if (this.grounded) {
+        if (this.character.setLocomotion) {
+          // Speed 0..1 + explicit sprint flag so grudge6 uses run-clone @ 1.75×
+          // (never locomotion/running roll). GLB Character ignores sprint flag.
+          this.character.setLocomotion(this.smoothedSpeed, sprinting);
+        } else if (sprinting && this.character.hasRole("sprint")) {
+          this.character.playRole("sprint");
+          this.character.setLocomotionRate(1.75);
+        } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
+          this.character.playRole("run");
+          this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);
+        } else if (this.smoothedSpeed > 0.06) {
+          this.character.playRole("walk");
+          this.character.setLocomotionRate(0.8 + this.smoothedSpeed);
+        } else {
+          this.character.playRole("idle");
+          this.character.setLocomotionRate(1);
+        }
       }
     }
 
@@ -1756,6 +1933,13 @@ export class Controller {
           return null;
         });
       const hasWater = Number.isFinite(this.waterBand.top);
+      // Climb probe (hold walls) before surface resolve
+      this.updateClimbIntent(sprinting);
+      const climbWall =
+        this.climbActive || this.climbVerticalGrab
+          ? { dist: 0.15 }
+          : wall;
+
       this.surfaceState = resolveSurfaceLocomotion({
         feetY: feet.y,
         x: feet.x,
@@ -1773,8 +1957,11 @@ export class Controller {
               return null;
             }
           : undefined,
-        wallHit: wall,
-        wantWallRun: sprinting && !this.grounded,
+        wallHit: climbWall,
+        wantWallRun: sprinting && !this.grounded && !this.climbActive,
+        wantClimb: this.climbActive || this.climbVerticalGrab,
+        verticalGrab: this.climbVerticalGrab,
+        wantMantle: this.climbWantMantle,
         airborne: !this.grounded,
         vehicle: this.vehicleKind,
         vehicleId: this.vehicleId,

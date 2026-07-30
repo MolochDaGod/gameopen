@@ -1,0 +1,70 @@
+﻿{
+  "version": 1,
+  "updated": "2026-07-29",
+  "description": "Priority bake queue: Mixamo public/anim → Bip001 JSON under public/anims/baked. Strip position tracks. Reject run-to-roll and tip-walk.",
+  "policy": {
+    "skeleton": "Bip001",
+    "stripPositionTracks": true,
+    "maxLocoDurationSec": 1.45,
+    "maxPelvisLoopError": 0.08,
+    "bannedAsGait": [
+      "locomotion/running",
+      "uploads_2026_06/locomotion/running",
+      "locomotion/walking",
+      "polearm/run",
+      "polearm/walk"
+    ],
+    "sprintRule": "Never bake a separate sprint from locomotion/running. Clone verified run cycle; timeScale 1.75."
+  },
+  "priority": [
+    {
+      "id": "P0-sword-core",
+      "targets": [
+        { "bakeRel": "sword_shield/sword and shield idle", "mixamo": "anim/sword/sword-and-shield-idle.fbx" },
+        { "bakeRel": "sword_shield/sword and shield attack", "mixamo": "anim/sword/sword-and-shield-attack.fbx" },
+        { "bakeRel": "sword_shield/sword and shield block", "mixamo": "anim/sword/sword-and-shield-block.fbx" },
+        { "bakeRel": "sword_shield/sword and shield run", "mixamo": "anim/sword/sword-and-shield-run.fbx", "role": "run", "verifyLoop": true }
+      ]
+    },
+    {
+      "id": "P0-magic-idle-attack",
+      "targets": [
+        { "bakeRel": "magic/standing idle", "mixamo": "anim/magic/standing-2h-magic.fbx" },
+        { "bakeRel": "magic/standing 1h cast spell 01", "mixamo": "anim/magic/standing-1h-cast-spell-01.fbx" }
+      ]
+    },
+    {
+      "id": "P0-unarmed-attack",
+      "targets": [
+        { "bakeRel": "unarmed/punching", "mixamo": "anim/striker/punch-combo.fbx" }
+      ]
+    },
+    {
+      "id": "P1-mobility",
+      "targets": [
+        { "bakeRel": "locomotion/crawl", "mixamo": "anim/base/crouched-walking.fbx", "role": "crawl", "verifyLoop": true },
+        { "bakeRel": "swim/swimming", "mixamo": "anim/swim/swimming.fbx", "role": "swim", "verifyLoop": true },
+        { "bakeRel": "swim/treading", "mixamo": "anim/swim/treading-water.fbx", "role": "tread", "verifyLoop": true },
+        { "bakeRel": "climb/climbing", "mixamo": "anim/climb/climbing.fbx", "role": "climb", "verifyLoop": true },
+        { "bakeRel": "climb/up", "mixamo": "anim/climb/climbing-up-wall.fbx", "role": "climbUp" },
+        { "bakeRel": "climb/to_top", "mixamo": "anim/climb/climbing-to-top.fbx", "role": "mantle" },
+        { "bakeRel": "climb/hang_idle", "mixamo": "anim/climb/hanging-idle.fbx", "role": "hang" },
+        { "bakeRel": "climb/wall_run", "mixamo": "anim/climb/wall-run.fbx", "role": "wallRun" }
+      ]
+    },
+    {
+      "id": "P2-sword-skills-mm",
+      "targets": [
+        { "bakeRel": "sword_shield/skill_combo", "mixamo": "anim/sword/one-hand-sword-combo.fbx", "role": "skill2" },
+        { "bakeRel": "sword_shield/skill_dash", "mixamo": "anim/sword/slash-advance.fbx", "role": "skill1" },
+        { "bakeRel": "sword_shield/skill_spin", "mixamo": "anim/sword/sword-and-shield-attack-2.fbx", "role": "overhead" }
+      ]
+    }
+  ],
+  "controllerWiring": {
+    "gait": ["idle", "walk", "run", "sprint=clone(run)*1.75"],
+    "dash": "Controller.dash + dodgeF/L/R clips + MM lungeSpeed from SkillPack",
+    "skills": "play bakedRole with blendIn; useDash → dash; projectile slash_wave → Vfx.getsugaSlash",
+    "surface": "AnimStateMachine surface swim|climb|crawl → MOBILITY_CLIPS roles"
+  }
+}

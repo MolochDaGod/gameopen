@@ -73,6 +73,15 @@ export interface ResolveSurfaceInput {
   wallHit?: { dist: number } | null;
   /** Player requesting sprint / wall-run. */
   wantWallRun?: boolean;
+  /**
+   * Host climb intent: near climb holds / ladder / F-grab on wall.
+   * Takes priority over ground when wallHit is present (not wall-run sprint).
+   */
+  wantClimb?: boolean;
+  /** Ledge grab / freehang (hands on lip) — anim verticalGrab path. */
+  verticalGrab?: boolean;
+  /** Near top of climb face — host mantle / climbing-to-top. */
+  wantMantle?: boolean;
   /** Airborne (not grounded). */
   airborne?: boolean;
   /** Explicit vehicle from inventory / mount system. */
@@ -134,7 +143,7 @@ export function resolveSurfaceLocomotion(
     return pack("mount", vehicle, surfaceY, waterY, waterDepthM, false, vehicleId);
   }
 
-  // 2) Wall-run (airborne + wall + sprint intent)
+  // 2) Wall-run (airborne + wall + sprint intent) — before climb so Shift run wins
   if (
     input.wantWallRun &&
     input.airborne &&
@@ -152,7 +161,25 @@ export function resolveSurfaceLocomotion(
     );
   }
 
-  // 3) Water bands
+  // 3) Climb / mantle (hold mesh, ladder, F-grab) — host wantClimb + wall
+  if (
+    input.wantClimb &&
+    input.wallHit &&
+    input.wallHit.dist < LOCOMOTION.wallProbe * 1.35
+  ) {
+    // Mantle is anim-layer; surface still climb so gravity/IK stay vertical
+    return pack(
+      "climb",
+      "none",
+      surfaceY,
+      waterY,
+      waterDepthM,
+      true,
+      null,
+    );
+  }
+
+  // 4) Water bands
   if (waterY != null && waterDepthM >= wade) {
     // deep enough to swim (past wade)
     return pack("swim", "none", surfaceY, waterY, waterDepthM, false, null);
@@ -161,8 +188,7 @@ export function resolveSurfaceLocomotion(
     return pack("wade", "none", surfaceY, waterY, waterDepthM, false, null);
   }
 
-  // 4) Climb reserved for mantle / ladder hosts (ledge hit → host sets climb)
-  // Default ground
+  // 5) Default ground
   return pack("ground", "none", surfaceY, waterY, waterDepthM, false, null);
 }
 

@@ -6,8 +6,11 @@ import {
   ANIM_PACK_CLIPS,
   BANNED_LOCOMOTION_CLIPS,
   TRAVERSAL_CLIPS,
+  MOBILITY_CLIPS,
+  NEVER_ALIAS_TO_ATTACK,
   isBannedLocomotionClip,
   isBadLocoClipName,
+  isFakeSprintName,
   SPRINT_CLIP,
 } from "./anims";
 
@@ -91,5 +94,29 @@ describe("grudge6 locomotion pack SSOT", () => {
         expect(isBannedLocomotionClip(t.rel)).toBe(false);
       }
     }
+  });
+
+  it("includes mobility roles crawl/climb/swim for controller surfaces", () => {
+    const roles = new Set(MOBILITY_CLIPS.map((m) => m.role));
+    expect(roles.has("crawl")).toBe(true);
+    expect(roles.has("swim")).toBe(true);
+    expect(roles.has("climb")).toBe(true);
+    expect(roles.has("mantle")).toBe(true);
+    for (const m of MOBILITY_CLIPS) {
+      expect(m.mixamoRel.startsWith("anim/")).toBe(true);
+      expect(m.bakeRel.length).toBeGreaterThan(3);
+    }
+  });
+
+  it("never aliases mobility/defense onto attack", () => {
+    for (const r of ["jump", "dodge", "sprint", "crawl", "swim", "climb", "hurt", "block"]) {
+      expect(NEVER_ALIAS_TO_ATTACK.has(r)).toBe(true);
+    }
+    expect(NEVER_ALIAS_TO_ATTACK.has("skill1")).toBe(false);
+  });
+
+  it("treats locomotion/running as fake sprint (run-to-roll)", () => {
+    expect(isFakeSprintName("locomotion/running")).toBe(true);
+    expect(isFakeSprintName("uploads_2026_06/locomotion/torch run forward")).toBe(false);
   });
 });

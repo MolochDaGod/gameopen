@@ -26,6 +26,14 @@ const PACK_RELS = [
   "unarmed/attack.json",
   "polearm/idle.json",
   "polearm/attack.json",
+  // P0–P2 mobility (climb/hang/mantle/swim) — same-origin after deploy
+  "climb/climbing.json",
+  "climb/up.json",
+  "climb/hang_idle.json",
+  "climb/to_top.json",
+  "climb/wall_run.json",
+  "swim/swimming.json",
+  "swim/treading.json",
 ];
 
 async function headOk(url) {

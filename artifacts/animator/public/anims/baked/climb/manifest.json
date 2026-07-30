@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "updated": "2026-07-30",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": [
+    {
+      "bakeRel": "climb/climbing",
+      "ok": true,
+      "duration": 3.8333332538604736,
+      "tracks": 20,
+      "bytes": 229468
+    },
+    {
+      "bakeRel": "climb/up",
+      "ok": true,
+      "duration": 2,
+      "tracks": 20,
+      "bytes": 120998
+    },
+    {
+      "bakeRel": "climb/down",
+      "ok": true,
+      "duration": 2,
+      "tracks": 20,
+      "bytes": 120834
+    },
+    {
+      "bakeRel": "climb/to_top",
+      "ok": true,
+      "duration": 4,
+      "tracks": 20,
+      "bytes": 239929
+    },
+    {
+      "bakeRel": "climb/hang_idle",
+      "ok": true,
+      "duration": 2.3333332538604736,
+      "tracks": 16,
+      "bytes": 105365
+    },
+    {
+      "bakeRel": "climb/jump_to_hang",
+      "ok": true,
+      "duration": 2.4666666984558105,
+      "tracks": 16,
+      "bytes": 117460
+    },
+    {
+      "bakeRel": "climb/stand_to_hang",
+      "ok": true,
+      "duration": 1.7000000476837158,
+      "tracks": 16,
+      "bytes": 80855
+    },
+    {
+      "bakeRel": "climb/wall_run",
+      "ok": true,
+      "duration": 0.9333333373069763,
+      "tracks": 16,
+      "bytes": 46680
+    },
+    {
+      "bakeRel": "climb/freehang_climb",
+      "ok": true,
+      "duration": 3.866666555404663,
+      "tracks": 16,
+      "bytes": 173418
+    },
+    {
+      "bakeRel": "swim/swimming",
+      "ok": true,
+      "duration": 4.5333333015441895,
+      "tracks": 20,
+      "bytes": 258391
+    },
+    {
+      "bakeRel": "swim/treading",
+      "ok": true,
+      "duration": 3,
+      "tracks": 20,
+      "bytes": 146163
+    },
+    {
+      "bakeRel": "swim/to_edge",
+      "ok": true,
+      "duration": 5,
+      "tracks": 20,
+      "bytes": 299614
+    }
+  ]
+}

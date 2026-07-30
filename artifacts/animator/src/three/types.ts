@@ -14,7 +14,18 @@ export type AnimRole =
   | "jump"
   | "death"
   | "hurt"
-  | "block";
+  | "block"
+  /** Mobility (baked anims/baked/climb|swim) */
+  | "swim"
+  | "tread"
+  | "swimExit"
+  | "climb"
+  | "climbUp"
+  | "climbDown"
+  | "hang"
+  | "mantle"
+  | "wallRun"
+  | "grab";
 
 export type WeaponId =
   | "none"

@@ -20,6 +20,14 @@ import {
   type TestWorldId,
 } from "./testWorlds";
 import { SailEnvironment } from "./SailEnvironment";
+import { loadTropicalHarvestTestMap } from "./maps/tropicalIslandHarvest";
+import { loadPirateVillageMap } from "./maps/pirateVillageMap";
+import { loadShipwreckIslandMap } from "./maps/shipwreckIslandMap";
+import { loadArenaMap } from "./maps/arenaMap";
+import { loadForestMountainsMap } from "./maps/forestMountainsMap";
+import { createTerrainHeightSampler } from "./brawler/survivalEnvironment";
+import { upgradeMapPresentation } from "./materials/toonStyle";
+import { getMapRegistryEntry } from "./maps/mapRegistry";
 
 export type HarvestNodeKind = "wood" | "ore" | "flower" | "forage" | "skin" | "mine";
 
@@ -109,6 +117,47 @@ function cloneIsolated(src: THREE.Object3D, scale = 1): THREE.Object3D {
   return wrap;
 }
 
+/** Map map-loader harvest kinds onto ForestWorld HarvestNodeKind. */
+function mapHarvestKind(kind: string | undefined): HarvestNodeKind {
+  switch ((kind || "").toLowerCase()) {
+    case "wood":
+      return "wood";
+    case "ore":
+    case "mine":
+      return "ore";
+    case "flower":
+      return "flower";
+    case "skin":
+      return "skin";
+    case "food":
+    case "fiber":
+    case "loot":
+    case "forage":
+      return "forage";
+    default:
+      return "ore";
+  }
+}
+
+/** Map tool names to activity tools used by harvest mode. */
+function mapHarvestTool(tool: string | undefined): string {
+  switch ((tool || "").toLowerCase()) {
+    case "axe":
+    case "chop":
+      return "chop";
+    case "pick":
+    case "mine":
+      return "mine";
+    case "hand":
+    case "gather":
+      return "gather";
+    case "forage":
+      return "forage";
+    default:
+      return tool || "gather";
+  }
+}
+
 function ringPositions(
   count: number,
   radius: number,
@@ -131,6 +180,14 @@ export class ForestWorld {
   private harvestNodes: HarvestNode[] = [];
   private activeId: TestWorldId | null = null;
   private sailEnv: SailEnvironment | null = null;
+  /** Water band from pirate (or other) mesh sensors — for Controller.setWaterBand. */
+  private waterBand: { top: number; bottom: number } | null = null;
+  /** L0 height sampler for outdoor mesh floors (beach / landscape). */
+  private heightAt: ((x: number, z: number) => number | null) | null = null;
+  /** Suggested room half-extent after load (SI metres). */
+  private boundHalf = 16;
+  /** Ground meshes for build-grid raycast. */
+  private groundMeshes: THREE.Mesh[] = [];
   private readonly scene: THREE.Scene;
   private readonly cbs: ForestWorldCallbacks;
 
@@ -155,6 +212,24 @@ export class ForestWorld {
     return this.sailEnv;
   }
 
+  getWaterBand(): { top: number; bottom: number } | null {
+    return this.waterBand;
+  }
+
+  getGroundHeightAt(): ((x: number, z: number) => number | null) | null {
+    return this.heightAt;
+  }
+
+  /** Half-extent for Controller.setRoomBound after outdoor load. */
+  getBoundHalf(): number {
+    return this.boundHalf;
+  }
+
+  /** Ground / nav meshes for BuildGridOverlay raycast. */
+  getGroundMeshes(): THREE.Mesh[] {
+    return this.groundMeshes;
+  }
+
   clear() {
     if (this.terrain) {
       this.group.remove(this.terrain);
@@ -165,6 +240,11 @@ export class ForestWorld {
     }
     this.harvestNodes = [];
     this.activeId = null;
+    this.waterBand = null;
+    this.heightAt = null;
+    this.boundHalf = 16;
+    this.groundMeshes = [];
+    (this as unknown as { _forestMountainsMap?: unknown })._forestMountainsMap = null;
     if (this.sailEnv) {
       this.sailEnv.dispose();
       this.sailEnv = null;
@@ -173,6 +253,7 @@ export class ForestWorld {
 
   /**
    * Load outdoor map. danger-room → clear outdoor only.
+   * Local loco QA maps (tropical / pirate / shipwreck / arena) use dedicated loaders.
    */
   async load(def: TestWorldDef): Promise<boolean> {
     this.clear();
@@ -183,10 +264,34 @@ export class ForestWorld {
       return true;
     }
 
+    if (def.id === "tropical-harvest") {
+      return this.loadTropicalHarvestLocal(def);
+    }
+    if (def.id === "pirate-village") {
+      return this.loadPirateVillageLocal(def);
+    }
+    if (def.id === "shipwreck-island") {
+      return this.loadShipwreckLocal(def);
+    }
+    if (def.id === "arena") {
+      return this.loadArenaLocal(def);
+    }
+    if (def.id === "forest-mountains") {
+      const ok = await this.loadForestMountainsLocal(def);
+      if (ok) return true;
+      // SPA forest_mountains missing → CDN mountain chain (forest-map / glowstone)
+      this.cbs.flash?.("Forest Mountains SPA miss — CDN mountain fallback…", 1.0);
+    }
+
+    // ice / plains / desert / volcanic / CDN biomes use generic loadGltfFirst(meshKeys)
     try {
       const { scene, url } = await loadGltfFirst(def.meshKeys, sharedGltfLoader(), {
         prepMaterials: true,
       });
+      // Grudge6-parity presentation for CDN maps flagged toonStyle
+      if (getMapRegistryEntry(def.id)?.toonStyle) {
+        upgradeMapPresentation(scene, { toon: true });
+      }
       // Fit loosely — keep author scale for forest; island already handled in camp
       scene.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(scene);
@@ -210,6 +315,17 @@ export class ForestWorld {
       this.group.add(scene);
       this.terrain = scene;
 
+      // Bound from footprint
+      scene.updateMatrixWorld(true);
+      const bb = new THREE.Box3().setFromObject(scene);
+      if (Number.isFinite(bb.min.x)) {
+        const hx = Math.max(24, (bb.max.x - bb.min.x) * 0.55);
+        const hz = Math.max(24, (bb.max.z - bb.min.z) * 0.55);
+        this.boundHalf = Math.min(def.sailing ? 200 : 120, Math.max(hx, hz));
+      } else {
+        this.boundHalf = def.sailing ? 120 : 60;
+      }
+
       // Sailtest: Sky + water + wind + sand (islands near sea level)
       if (def.sailing) {
         this.sailEnv = new SailEnvironment(this.scene);
@@ -222,6 +338,24 @@ export class ForestWorld {
         });
         this.sailEnv.seatIslandsNearWater(scene, 0.1);
         await this.sailEnv.retouchTerrain(scene);
+        const wy = this.sailEnv.waterSurfaceY;
+        this.waterBand = { top: wy + 0.05, bottom: wy - 2.2 };
+      }
+
+      // Height sampler from large terrain meshes
+      {
+        const terrainMeshes: THREE.Mesh[] = [];
+        scene.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh || !m.visible) return;
+          const b = new THREE.Box3().setFromObject(m);
+          const s = new THREE.Vector3();
+          b.getSize(s);
+          if (s.x > 8 && s.z > 8) terrainMeshes.push(m);
+        });
+        this.heightAt = terrainMeshes.length
+          ? createTerrainHeightSampler(terrainMeshes.slice(0, 48))
+          : null;
       }
 
       if (def.natureReplace || def.harvestScatter) {
@@ -379,6 +513,371 @@ export class ForestWorld {
       /* pack optional */
     }
     void def;
+  }
+
+  /**
+   * Tropical island: styled textures, geometric ore chunks (Valheim mine),
+   * palms/wood scatter, beach ground. Water/sky stripped.
+   */
+  private async loadTropicalHarvestLocal(def: TestWorldDef): Promise<boolean> {
+    try {
+      const map = await loadTropicalHarvestTestMap({
+        preferDry: true,
+        meshKeys: def.meshKeys,
+        scatter: true,
+        seed: 42,
+        oreCount: 18,
+      });
+      upgradeMapPresentation(map.root, { toon: true });
+      map.root.userData.testWorldId = def.id;
+      map.root.userData.uuid = def.uuid;
+      map.root.userData.seed = def.seed;
+      map.root.userData.tropicalStyle = true;
+      this.group.add(map.root);
+      this.terrain = map.root;
+      this.waterBand = null; // intentionally no water
+
+      // Center XZ, already grounded by loader
+      map.root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(map.root);
+      if (Number.isFinite(box.min.x)) {
+        const cx = (box.min.x + box.max.x) / 2;
+        const cz = (box.min.z + box.max.z) / 2;
+        map.root.position.x -= cx;
+        map.root.position.z -= cz;
+        map.root.updateMatrixWorld(true);
+      }
+      const box2 = new THREE.Box3().setFromObject(map.root);
+      const halfX = Math.max(20, (box2.max.x - box2.min.x) * 0.55);
+      const halfZ = Math.max(20, (box2.max.z - box2.min.z) * 0.55);
+      this.boundHalf = Math.min(90, Math.max(halfX, halfZ));
+
+      // Ground height from beach + large meshes
+      const terrainMeshes: THREE.Mesh[] = [];
+      map.root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh || o.userData.excluded) return;
+        if (o.userData.gameLayer === "ground" || /beach/i.test(o.name)) {
+          terrainMeshes.push(m);
+        }
+      });
+      if (!terrainMeshes.length && map.terrain) {
+        map.terrain.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh && !o.userData.excluded) terrainMeshes.push(m);
+        });
+      }
+      this.heightAt = terrainMeshes.length
+        ? createTerrainHeightSampler(terrainMeshes)
+        : null;
+      this.groundMeshes = terrainMeshes.slice();
+
+      // Prefer geometric ore + wood scatter; also register tagged island rocks
+      const sources: THREE.Object3D[] = [...map.instances];
+      map.root.traverse((o) => {
+        if (
+          o.userData.harvest &&
+          !o.userData.generativeInstance &&
+          !sources.includes(o)
+        ) {
+          sources.push(o);
+        }
+      });
+
+      let i = 0;
+      let oreN = 0;
+      for (const inst of sources) {
+        const h = inst.userData.harvest as {
+          kind?: string;
+          tool?: string;
+          hp?: number;
+          materialId?: string;
+        } | undefined;
+        if (!h) continue;
+        const matId =
+          h.materialId ||
+          inst.userData.harvestMaterialId ||
+          inst.userData.oreVein ||
+          undefined;
+        const id = `trop_${i++}_${matId || h.kind || "node"}`;
+        inst.userData.harvestId = id;
+        inst.userData.harvestable = true;
+        if (matId) {
+          inst.userData.harvestMaterialId = matId;
+          if (inst.userData.harvest && typeof inst.userData.harvest === "object") {
+            (inst.userData.harvest as { materialId?: string }).materialId = String(matId);
+          }
+        }
+        if (h.kind === "ore" || inst.userData.geometricOre) oreN++;
+        const world = new THREE.Vector3();
+        inst.getWorldPosition(world);
+        this.harvestNodes.push({
+          id,
+          kind: mapHarvestKind(h.kind),
+          tool: mapHarvestTool(h.tool),
+          position: world,
+          mesh: inst,
+          remaining: Math.max(1, Math.ceil((h.hp ?? 40) / 20)),
+        });
+      }
+
+      // Soft tropical fill light (sand haze)
+      try {
+        const hemi = new THREE.HemisphereLight(0xc8e8ff, 0xc4a574, 0.45);
+        hemi.name = "TropicalHemi";
+        map.root.add(hemi);
+      } catch {
+        /* ignore */
+      }
+
+      this.cbs.flash?.(
+        `TROPICAL · ${this.harvestNodes.length} harvest · ${oreN} ore (geometric) · tex ${map.textureKit?.rocksBig ? "RocksBig" : "fallback"} · dry beach`,
+        1.8,
+      );
+      return true;
+    } catch (err) {
+      console.warn("[ForestWorld] tropical-harvest load failed", err);
+      this.cbs.flash?.("Tropical Harvest load failed", 1.2);
+      return false;
+    }
+  }
+
+  /**
+   * Pirate village ×4 for 2 m orc — palms, water band, harvest, climb ladder.
+   */
+  private async loadPirateVillageLocal(def: TestWorldDef): Promise<boolean> {
+    try {
+      const map = await loadPirateVillageMap();
+      map.root.userData.testWorldId = def.id;
+      map.root.userData.uuid = def.uuid;
+      map.root.userData.seed = def.seed;
+      this.group.add(map.root);
+      this.terrain = map.root;
+      this.waterBand = {
+        top: map.waterBand.top,
+        bottom: map.waterBand.bottom,
+      };
+
+      map.root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(map.root);
+      if (Number.isFinite(box.min.x)) {
+        const cx = (box.min.x + box.max.x) / 2;
+        const cz = (box.min.z + box.max.z) / 2;
+        map.root.position.x -= cx;
+        map.root.position.z -= cz;
+        map.root.updateMatrixWorld(true);
+      }
+      const box2 = new THREE.Box3().setFromObject(map.root);
+      const halfX = Math.max(16, (box2.max.x - box2.min.x) * 0.55);
+      const halfZ = Math.max(16, (box2.max.z - box2.min.z) * 0.55);
+      this.boundHalf = Math.min(80, Math.max(halfX, halfZ));
+
+      const terrainMeshes =
+        map.navSources.length > 0
+          ? map.navSources
+          : (() => {
+              const out: THREE.Mesh[] = [];
+              map.root.traverse((o) => {
+                const m = o as THREE.Mesh;
+                if (m.isMesh && (o.userData.gameLayer === "ground" || /Landscape|Stairs|Sand/i.test(o.name))) {
+                  out.push(m);
+                }
+              });
+              return out;
+            })();
+      this.heightAt = terrainMeshes.length
+        ? createTerrainHeightSampler(terrainMeshes)
+        : null;
+
+      let i = 0;
+      for (const inst of map.harvestables) {
+        const h = inst.userData.harvest as { kind?: string; tool?: string; hp?: number } | undefined;
+        if (!h) continue;
+        const id = `pirate_${i++}_${h.kind ?? "node"}`;
+        inst.userData.harvestId = id;
+        inst.userData.harvestable = true;
+        const world = new THREE.Vector3();
+        inst.getWorldPosition(world);
+        this.harvestNodes.push({
+          id,
+          kind: mapHarvestKind(h.kind),
+          tool: mapHarvestTool(h.tool),
+          position: world,
+          mesh: inst,
+          remaining: Math.max(1, Math.ceil((h.hp ?? 40) / 20)),
+        });
+      }
+
+      this.groundMeshes = terrainMeshes.slice();
+      this.cbs.flash?.(
+        `PIRATE VILLAGE · scale ${map.scale} · ${this.harvestNodes.length} harvest · water [${this.waterBand.bottom.toFixed(1)}, ${this.waterBand.top.toFixed(1)}] · climb ${map.climbables.length}`,
+        1.8,
+      );
+      return true;
+    } catch (err) {
+      console.warn("[ForestWorld] pirate-village load failed", err);
+      this.cbs.flash?.("Pirate Village load failed — check models/maps/pirate/", 1.4);
+      return false;
+    }
+  }
+
+  /**
+   * Shipwreck island — climb ladders, swim water, harvest palms/rock, ship vehicle, build grid.
+   */
+  private async loadShipwreckLocal(def: TestWorldDef): Promise<boolean> {
+    try {
+      const map = await loadShipwreckIslandMap({ scale: 1 });
+      upgradeMapPresentation(map.root, { toon: true });
+      map.root.userData.testWorldId = def.id;
+      map.root.userData.uuid = def.uuid;
+      map.root.userData.seed = def.seed;
+      this.group.add(map.root);
+      this.terrain = map.root;
+      this.waterBand = map.waterBand;
+      this.boundHalf = map.boundHalf;
+      this.groundMeshes = map.navSources.slice();
+      this.heightAt = map.navSources.length
+        ? createTerrainHeightSampler(map.navSources)
+        : null;
+
+      let i = 0;
+      for (const inst of map.harvestables) {
+        const h = inst.userData.harvest as { kind?: string; tool?: string; hp?: number } | undefined;
+        if (!h) continue;
+        const id = `wreck_${i++}_${h.kind ?? "node"}`;
+        inst.userData.harvestId = id;
+        inst.userData.harvestable = true;
+        const world = new THREE.Vector3();
+        inst.getWorldPosition(world);
+        this.harvestNodes.push({
+          id,
+          kind: mapHarvestKind(h.kind),
+          tool: mapHarvestTool(h.tool),
+          position: world,
+          mesh: inst,
+          remaining: Math.max(1, Math.ceil((h.hp ?? 40) / 20)),
+        });
+      }
+
+      this.cbs.flash?.(
+        `SHIPWRECK · harvest ${this.harvestNodes.length} · climb ${map.climbables.length} · swim ${map.swim.length} · ship ${map.vehicles.length} · build ground ${map.navSources.length}`,
+        1.8,
+      );
+      return true;
+    } catch (err) {
+      console.warn("[ForestWorld] shipwreck-island load failed", err);
+      this.cbs.flash?.("Shipwreck Island load failed — models/maps/shipwreck/", 1.4);
+      return false;
+    }
+  }
+
+  /**
+   * Fantasy arena — combat sand/grass, rock harvest, stairs climb, 1 m build grid.
+   */
+  private async loadArenaLocal(def: TestWorldDef): Promise<boolean> {
+    try {
+      const map = await loadArenaMap({ scale: 1 });
+      upgradeMapPresentation(map.root, { toon: true });
+      map.root.userData.testWorldId = def.id;
+      map.root.userData.uuid = def.uuid;
+      map.root.userData.seed = def.seed;
+      this.group.add(map.root);
+      this.terrain = map.root;
+      this.waterBand = null;
+      this.boundHalf = map.boundHalf;
+      this.groundMeshes = map.navSources.slice();
+      this.heightAt = map.navSources.length
+        ? createTerrainHeightSampler(map.navSources)
+        : null;
+
+      let i = 0;
+      for (const inst of map.harvestables) {
+        const h = inst.userData.harvest as { kind?: string; tool?: string; hp?: number } | undefined;
+        if (!h) continue;
+        const id = `arena_${i++}_${h.kind ?? "node"}`;
+        inst.userData.harvestId = id;
+        inst.userData.harvestable = true;
+        const world = new THREE.Vector3();
+        inst.getWorldPosition(world);
+        this.harvestNodes.push({
+          id,
+          kind: mapHarvestKind(h.kind),
+          tool: mapHarvestTool(h.tool),
+          position: world,
+          mesh: inst,
+          remaining: Math.max(1, Math.ceil((h.hp ?? 40) / 20)),
+        });
+      }
+
+      this.cbs.flash?.(
+        `ARENA · ground ${map.ground.length} · harvest ${this.harvestNodes.length} · climb ${map.climbables.length} · snap ${map.buildSnapM}m build grid`,
+        1.8,
+      );
+      return true;
+    } catch (err) {
+      console.warn("[ForestWorld] arena load failed", err);
+      this.cbs.flash?.("Arena load failed — models/maps/arena/arena.glb", 1.4);
+      return false;
+    }
+  }
+
+  /**
+   * Dense forest mountains — geometry-classified harvest zone with UUIDs + heightmap.
+   */
+  private async loadForestMountainsLocal(def: TestWorldDef): Promise<boolean> {
+    try {
+      const map = await loadForestMountainsMap({
+        scale: 1,
+        worldSeed: def.seed,
+        maxHarvest: 200,
+      });
+      upgradeMapPresentation(map.root, { toon: true });
+      map.root.userData.testWorldId = def.id;
+      map.root.userData.uuid = def.uuid;
+      map.root.userData.seed = def.seed;
+      map.root.userData.forestMountains = true;
+      map.root.userData.harvestManifest = {
+        worldSeed: map.worldSeed,
+        stats: map.stats,
+        defs: map.defs.map((d) => d.defId),
+      };
+      this.group.add(map.root);
+      this.terrain = map.root;
+      this.waterBand = null;
+      this.boundHalf = map.boundHalf;
+      this.groundMeshes = map.terrain.slice();
+      this.heightAt = map.heightAt;
+
+      for (const n of map.harvestNodes) {
+        this.harvestNodes.push({
+          id: n.instanceId,
+          kind: mapHarvestKind(n.kind === "forage" ? "forage" : n.kind),
+          tool: mapHarvestTool(n.tool),
+          position: n.position.clone(),
+          mesh: n.mesh,
+          remaining: Math.max(1, Math.ceil(n.maxHp / 20)),
+        });
+      }
+
+      // Stash full map for bake / raycast tools
+      (this as unknown as { _forestMountainsMap?: typeof map })._forestMountainsMap = map;
+
+      this.cbs.flash?.(
+        `FOREST MTNS · terrain ${map.stats.terrainCount} · wood ${map.stats.wood} · ore ${map.stats.ore} · forage ${map.stats.forage} · UUID harvest nodes`,
+        2.0,
+      );
+      return true;
+    } catch (err) {
+      console.warn("[ForestWorld] forest-mountains load failed", err);
+      this.cbs.flash?.("Forest Mountains load failed — models/maps/forest_mountains/", 1.4);
+      return false;
+    }
+  }
+
+  /** Full forest mountains result after load (for bake / Q&A). */
+  getForestMountainsMap(): import("./maps/forestMountainsMap").ForestMountainsMapResult | null {
+    return (this as unknown as { _forestMountainsMap?: import("./maps/forestMountainsMap").ForestMountainsMapResult })
+      ._forestMountainsMap ?? null;
   }
 
   /** Raycast harvest nodes (for LMB select in harvest mode). */

@@ -11,6 +11,8 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import {
   ANIM_PACK_CLIPS,
   TRAVERSAL_CLIPS,
+  MOBILITY_CLIPS,
+  NEVER_ALIAS_TO_ATTACK,
   SPRINT_LOCO_MULT,
   asAnimPack,
   loadBakedClip,
@@ -690,6 +692,7 @@ export async function loadGrudge6CombatRig(
 
   // Player-style skill slot aliases (F/1–4 + AI skill swings) → attack when
   // dedicated skill clips are not baked yet. Keeps weapon skills animating.
+  // NEVER alias mobility / defense / hurt onto attack (sprint-was-roll class bugs).
   if (clips.has("attack")) {
     const atk = clips.get("attack")!;
     const skillAliases = [
@@ -708,19 +711,30 @@ export async function loadGrudge6CombatRig(
       "overhead",
       "thrust",
       "slash",
-      "dodge",
-      "parry",
-      "block",
-      "hurt",
-      "death",
-      "jump",
     ];
     for (const name of skillAliases) {
-      if (!clips.has(name)) {
+      if (!clips.has(name) && !NEVER_ALIAS_TO_ATTACK.has(name)) {
         clips.set(name, atk);
         roles.set(name, name);
       }
     }
+  }
+
+  // Soft-load mobility (crawl/climb/swim) — fail quietly until bake pipeline ships JSON.
+  await Promise.all(
+    MOBILITY_CLIPS.map(async ({ role, bakeRel }) => {
+      if (clips.has(role)) return;
+      try {
+        await loadRole(role, bakeRel);
+      } catch {
+        /* placeholder until bake */
+      }
+    }),
+  );
+
+  // Mantle prefers climb-to-top when present; else keep jump alias from above.
+  if (clips.has("climb") && !clips.has("mantle")) {
+    // mantle may already be set from MOBILITY_CLIPS loadRole
   }
 
   if (!clips.has("idle")) {

@@ -74,7 +74,7 @@ const frame = sm.tick({
 | longbow | partial ready | walk/run/dodge |
 | unarmed / magic / sword_shield | partial | some placeholder |
 | twohand / crossbow / rifle | missing bake | fallbacks polearm/longbow/unarmed |
-| swim / climb / harvest | Mixamo source | needs Bip001 bake for grudge6 |
+| swim / climb / harvest | **climb+swim baked 2026-07-30** | `anims/baked/climb/*` · `swim/*` via `npm run anims:bake:mobility` |
 
 ## Bake pipeline
 
@@ -88,11 +88,13 @@ Banned loco: `locomotion/running` (run-to-roll) — listed in `bannedBakeRels`.
 
 ## Host integration checklist
 
-- [ ] Studio: on SurfaceLocomotion change → `AnimStateMachine.tick`  
-- [ ] GrudgeAvatar: load `db.bakeRelsForWeaponPack(pack)`  
+- [x] Studio: climb probe → Controller `wantClimb` / hang / mantle (P0 2026-07-30)  
+- [x] GrudgeAvatar / grudge6Runtime: `MOBILITY_CLIPS` load bakeRels  
 - [ ] Harvest LMB: `requestAction({ kind: "harvest", tool })`  
-- [ ] Wall/tree/boat probe: set `verticalGrab` or surface `climb`/`mantle`  
+- [x] Wall holds: F grab · surface climb · top mantle  
 - [ ] Weapon skill F/1–4: `requestAction({ kind: "skill", slot })`  
+- [ ] Full AnimStateMachine.tick unified path (roles still via playRole)  
+- [ ] R2 upload climb/swim bakes for non-Open games (P1 ops)  
 
 ## Files
 

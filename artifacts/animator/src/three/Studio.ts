@@ -4,6 +4,7 @@ import { asRoomPresetId, loadRoomPreset, ROOM_PRESETS, type RoomPresetId } from 
 import { DUNGEON_MAPS, loadDungeonMap } from "./DungeonMaps";
 import { addStudioLights, STUDIO_FOG, STUDIO_TONE_MAPPING_EXPOSURE } from "./studioLighting";
 import { DjBooth } from "./DjBooth";
+import { ClimbWallSystem, dangerRoomClimbFaces } from "./climb/ClimbWallSystem";
 import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
@@ -126,6 +127,16 @@ import { staffHoverTheme } from "./arsenal/staffHover";
 import { CampBuildSystem } from "./camp/CampBuildSystem";
 import { getPlaceable } from "./camp/placeables";
 import { ForestWorld } from "./ForestWorld";
+import {
+  PinataHarvestSystem,
+  normalizeHarvestTool,
+  DANGER_RESPAWN_SEC,
+} from "./harvest/pinataHarvest";
+import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
+import { ForestHarvestBake } from "./harvest/forestHarvestBake";
+import { BuildGridOverlay } from "./build/BuildGridOverlay";
+import { WingBackRig } from "./equipment/WingBackRig";
+import { loadCampClaimState, ensureDemoRoster } from "../lib/campClaimPersist";
 import {
   loadTestWorldId,
   saveTestWorldId,
@@ -504,6 +515,8 @@ export class Studio {
   private sound: SoundSettings = loadSound();
   private room: DangerRoom;
   private djBooth: DjBooth | null = null;
+  /** Invisible climb-hold meshes on three walls (opposite DJ + left/right). */
+  private climbWalls: ClimbWallSystem | null = null;
   private vfx: Vfx;
   private targets: CombatTargets;
   /** The Danger Room sparring population, stashed while inside the dungeon. */
@@ -587,10 +600,10 @@ export class Studio {
   private mounted: MountedWeapon | null = null;
   /**
    * Racalvin (gunslinger): dual living Brothers Keeper swords —
-   * sheathed X on back, orbit while moving, floating slash on attack.
+   * Z put-away X on back, drawn in hand bones, spline projectile + attack trails.
    */
   private livingSwords: LivingTwinSwords | null = null;
-  /** Throttle for ambient green/purple hot-hands on Racalvin. */
+  /** Throttle for attack-only green/purple hot-hands on Racalvin. */
   private racalvinHandFxT = 0;
   /** Independent off-hand piece (Tower Shield) mounted alongside the main weapon. */
   private mountedOff: MountedWeapon | null = null;
@@ -839,6 +852,18 @@ export class Studio {
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
+  /** Pinata break + magnet absorb into character bag (Warlords harvest). */
+  private pinataHarvest: PinataHarvestSystem | null = null;
+  /** Rapier colliders for harvest nodes (from pinata plans). */
+  private harvestPhysicsBake: HarvestPhysicsBake | null = null;
+  /** Dense forest mountains convex/trimesh bake. */
+  private forestHarvestBake: ForestHarvestBake | null = null;
+  /** Virtual camp-worker stand point for pinata magnet (near selected node). */
+  private harvestUnitAbsorbPos: THREE.Vector3 | null = null;
+  /** 1 m SI build grid + ground raycast for ghost placement. */
+  private buildGrid: BuildGridOverlay | null = null;
+  /** Back-slot wing pack (parachute / glide / flight / ocean sail). */
+  private wingRig: WingBackRig | null = null;
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
   /** Hellmaw / volcanic / boss-event world boss (Shadow Flame Mantis + Ash Ghasts). */
@@ -1133,10 +1158,27 @@ export class Studio {
     // dark base set just above). The matching ambient bed is applied once the
     // sound system exists, below.
     this.applyRoomAtmosphere(true);
-    // Resident DJ in the lit alcove above the door (scenery; loads async).
+    // Resident Racalvin disc_jockey in the enlarged cove above the door (async).
     this.djBooth = new DjBooth(this.room.djBoothAnchor);
     this.scene.add(this.djBooth.group);
     void this.djBooth.load().catch((err) => console.warn("[Studio] DJ booth load failed", err));
+    // Climb skill walls: opposite DJ + L/R — mesh invisible, holds for IK/path AI.
+    this.climbWalls = new ClimbWallSystem();
+    this.scene.add(this.climbWalls.group);
+    void this.climbWalls
+      .load(dangerRoomClimbFaces(this.room.half, this.room.height))
+      .then(() => {
+        const r = this.climbWalls?.review;
+        if (r) {
+          console.info(
+            `[Studio] climb walls ready · ${r.holdCount} holds on ${r.walls.join(",")}`,
+            r.notes,
+          );
+        }
+        // Wire controller climb probe once player controller exists (or on next attach)
+        this.wireClimbProbeToController();
+      })
+      .catch((err) => console.warn("[Studio] climb wall load failed", err));
     this.scene.add(this.remoteRoot);
     this.scene.add(this.ale.overlay);
     this.vfx = new Vfx(this.scene, this.camera);
@@ -1186,6 +1228,28 @@ export class Studio {
     this.forestWorld = new ForestWorld(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
     });
+    this.pinataHarvest = new PinataHarvestSystem(this.scene, {
+      flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.9),
+      getCharacterId: () =>
+        (typeof window !== "undefined" &&
+          (window as unknown as { __grudgeCharId?: string }).__grudgeCharId) ||
+        this.characterId ||
+        "explorer",
+      getUnitAbsorbPos: () => this.harvestUnitAbsorbPos,
+      isUnitAbsorbing: () => !!this.harvestUnitAbsorbPos,
+      onBreak: () => {
+        // Refresh Rapier solids after node removed
+        this.rebakeHarvestPhysics();
+      },
+      onRespawn: () => {
+        this.rebakeHarvestPhysics();
+      },
+    });
+    this.pinataHarvest.setDefaultRespawnSec(DANGER_RESPAWN_SEC);
+    this.harvestPhysicsBake = new HarvestPhysicsBake();
+    this.forestHarvestBake = new ForestHarvestBake();
+    this.buildGrid = new BuildGridOverlay(this.scene, { snapM: 1, halfExtent: 32 });
+    this.buildGrid.setVisible(false);
     const campCbs = {
       flash: (msg: string, t?: number) => this.setCombatFlash(msg, t ?? 0.9),
       onKill: (_e: unknown, xp: number, buffId: string | null) => {
@@ -1436,12 +1500,111 @@ export class Studio {
       }
       this.physics = physics;
       this.playerKcc = playerKcc;
+      this.harvestPhysicsBake?.setPhysics(physics);
+      this.forestHarvestBake?.setPhysics(physics);
       this.applyDangerRoomCollision();
       this.locationBag.setLocation(dangerRoomLocation());
       void this.loadRuntimeScripts();
+      // If outdoor map already loaded before physics, bake harvest colliders now
+      this.rebakeHarvestPhysics();
     } catch (err) {
       console.error("[Studio] physics init failed", err);
     }
+  }
+
+  /**
+   * Load wing GLB once and parent to spine. Default stowed (back circle only).
+   * Call equipBackWing(itemId) for parachute/glide/flight/sail.
+   */
+  private async ensureWingRigAttached(): Promise<void> {
+    if (!this.character) return;
+    if (!this.wingRig) {
+      this.wingRig = new WingBackRig();
+      const ok = await this.wingRig.load({ toon: true });
+      if (!ok) {
+        this.wingRig = null;
+        return;
+      }
+    }
+    this.wingRig.attachToCharacter(this.character.root);
+    // Default: visible pack circle on back (stowed)
+    this.wingRig.equipBackItem("back_wing_pack");
+  }
+
+  /** Equip / change back-slot wing mode (parachute, glider, flight, sail deploy). */
+  equipBackWing(itemId: string | null) {
+    if (!this.wingRig?.isReady) {
+      void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
+      return;
+    }
+    this.wingRig.equipBackItem(itemId);
+    this.setCombatFlash(
+      itemId ? `BACK · ${itemId.replace(/_/g, " ").toUpperCase()}` : "BACK · cleared",
+      0.8,
+    );
+  }
+
+  getWingMode(): string {
+    return this.wingRig?.getMode() ?? "none";
+  }
+
+  /** Bake / re-bake pinata + forest-mountain harvest colliders into Rapier PhysicsWorld. */
+  private rebakeHarvestPhysics() {
+    if (!this.physics) return;
+    // Dense forest mountains: convex hull harvest + terrain trimesh
+    const fm = this.forestWorld?.getForestMountainsMap?.() ?? null;
+    if (fm && this.forestHarvestBake) {
+      this.forestHarvestBake.setPhysics(this.physics);
+      const n = this.forestHarvestBake.bake(fm, { maxHarvest: 160 });
+      if (n > 0) {
+        console.info("[Studio] forest mountains colliders baked:", n);
+      }
+    }
+    if (!this.harvestPhysicsBake || !this.pinataHarvest) return;
+    this.harvestPhysicsBake.setPhysics(this.physics);
+    const plans = this.pinataHarvest.colliderPlans();
+    const n = this.harvestPhysicsBake.bake(plans, { max: 140 });
+    if (n > 0) {
+      console.info("[Studio] harvest Rapier colliders baked:", n);
+    }
+  }
+
+  /**
+   * Camp unit vacuum: if claim roster has harvest-capable units and a harvest
+   * node is selected, magnet pinata chunks to a stand point near the node
+   * (unit "works" the node). Otherwise magnet to player.
+   */
+  private updateHarvestUnitAbsorbTarget() {
+    if (this.activityMode !== "harvest") {
+      this.harvestUnitAbsorbPos = null;
+      return;
+    }
+    const charId =
+      (typeof window !== "undefined" &&
+        (window as unknown as { __grudgeCharId?: string }).__grudgeCharId) ||
+      this.characterId ||
+      "explorer";
+    let claim = loadCampClaimState(charId);
+    claim = ensureDemoRoster(claim);
+    const workers = claim.units.filter(
+      (u) =>
+        u.level > 0 &&
+        (u.professions?.Logging ||
+          u.professions?.Mining ||
+          u.professions?.Forester ||
+          u.professions?.Miner ||
+          /archer|soldier|worker|gather/i.test(u.name + u.type)),
+    );
+    if (!workers.length || !this.harvestSelectPos) {
+      this.harvestUnitAbsorbPos = null;
+      return;
+    }
+    // Stand just beside selected harvest node (unit vacuum target)
+    const p = this.harvestSelectPos.clone();
+    p.y = (this.character?.root.position.y ?? 0) + 0.2;
+    // Offset so chunks don't pile inside the stump
+    p.x += 0.9;
+    this.harvestUnitAbsorbPos = p;
   }
 
   /** Current Warlords WorldLocation (for HUD / multiplayer / AI tools). */
@@ -1639,20 +1802,29 @@ export class Studio {
         grudge ? `grudge6 ${grudge.raceId}/${grudge.presetId}` : "catalog",
         err,
       );
-      // Grudge6 race FBX/CDN can fail; fall back to Explorer (procedural Mixamo
-      // skeleton — does not require Mixamo FBX on Vercel after loader fix).
+      // Grudge6 race mesh/CDN can fail: try catalog Character (fleet bake hydrate),
+      // then Explorer procedural (always playable).
       if (!grudge) return;
       next.dispose();
       if (this.disposed || token !== this.loadToken) return;
-      const exDef = getCharacter("explorer");
-      next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
+      const catalogFallback = getCharacter("gunslinger"); // racalvin — skinned + bake hydrate
       try {
+        next = new Character(catalogFallback);
         await next.load();
+        id = catalogFallback.id;
+        console.warn("[Studio] grudge6 failed — using catalog Character + fleet bakes", catalogFallback.id);
       } catch (err2) {
-        console.error("[Studio] fallback character load failed", err2);
-        return;
+        console.error("[Studio] catalog Character fallback failed", err2);
+        const exDef = getCharacter("explorer");
+        next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
+        try {
+          await next.load();
+          id = exDef.id;
+        } catch (err3) {
+          console.error("[Studio] Explorer fallback failed", err3);
+          return;
+        }
       }
-      id = exDef.id;
     }
     // Discard stale loads — only the most recent selection may commit.
     if (this.disposed || token !== this.loadToken) {
@@ -1690,12 +1862,16 @@ export class Studio {
     this.character.root.visible = !this.spectating;
     this.scene.add(this.character.root);
     this.characterId = id;
+    // Back-slot wing pack (circle stowed · deploy parachute/glide/flight/sail)
+    void this.ensureWingRigAttached();
     if (!this.controller) {
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
     } else {
       // Rebind controller to the new character.
       this.controller = new Controller(this.character, this.camera, this.input, this.params);
     }
+    // Climb holds → surface mode (F grab / freehang / mantle)
+    this.wireClimbProbeToController();
     // Activity-aware TPS (combat action cam vs Minecraft harvest/build shoulder)
     this.applyActivityCamera(this.activityMode);
     // Free-aim reticle split: mouse → crosshair offset + residual camera look.
@@ -1899,7 +2075,7 @@ export class Studio {
 
   /**
    * Attach / detach dual living Brothers Keeper swords for Racalvin.
-   * Sheathed X on spine, orbit while moving, floating slash on attack.
+   * Start put-away (X on back); draw on attack; Z toggles sheath.
    */
   private async syncLivingSwords(characterId: string): Promise<void> {
     if (characterId !== "gunslinger") {
@@ -1921,15 +2097,21 @@ export class Studio {
         this.livingSwords = null;
         return;
       }
-      // Spine lookup walks the full character root (model is private on Character)
-      this.livingSwords.attach(ch.root, ch.root);
+      // Hand bones for drawn rest / return IK; spine for sheath anchor
+      this.livingSwords.attach(ch.root, ch.root, {
+        right: ch.rightHand,
+        left: ch.leftHand,
+      });
       this.bindLivingSwordCallbacks();
       // Unmount hand weapons if any — living swords are the only blades
       if (this.mounted) {
         unmountWeapon(this.mounted);
         this.mounted = null;
       }
-      console.info("[Studio] Living twin swords armed (Brothers Keeper · projectile/AOE/tornado)");
+      console.info(
+        "[Studio] Living twin swords armed (Brothers Keeper · spline projectile · Z put-away)",
+        this.livingSwords.getEntities().map((e) => e.uuid),
+      );
     } catch (err) {
       console.warn("[Studio] living swords failed", err);
     }
@@ -1970,6 +2152,9 @@ export class Studio {
           },
         });
         this.pulseRacalvinHotHands(true);
+      },
+      onHandFx: (intensity, burst) => {
+        if (burst || intensity > 0.2) this.pulseRacalvinHotHands(burst);
       },
     });
   }
@@ -2088,13 +2273,16 @@ export class Studio {
   }
 
   /**
-   * Hot-hands style aura in green + purple (Vfx.hotHandsArcane).
-   * Ambient smolder on both hands; burst=true for attack/signature.
+   * Hot-hands aura (green + purple). Only meaningful during attacks —
+   * intensity scales with living-sword attack energy (near-zero when idle).
    */
   private pulseRacalvinHotHands(burst = false): void {
     if (!this.character || this.characterId !== "gunslinger") return;
+    const energy = this.livingSwords?.getHandFxIntensity() ?? (burst ? 1 : 0);
+    if (!burst && energy < 0.06) return;
     const { right, left } = this.racalvinHandWorld();
-    this.vfx.hotHandsArcane(right, left, burst ? 1.15 : 0.78, burst);
+    const scale = burst ? 1.15 : 0.25 + energy * 0.9;
+    this.vfx.hotHandsArcane(right, left, scale, burst);
   }
 
   /**
@@ -10115,7 +10303,7 @@ export class Studio {
       }
     }
     this.character?.update(dt);
-    // Living twin swords: orbit while moving, sheathe when idle, animate strikes
+    // Living twin swords: hand grip when drawn, X-back when put away, spline attacks
     if (this.livingSwords) {
       let sp = 0;
       const c = this.controller as unknown as {
@@ -10127,20 +10315,30 @@ export class Studio {
       if (c?.state && typeof c.state.speed === "number") sp = c.state.speed;
       else if (c?.velocity) sp = Math.hypot(c.velocity.x, c.velocity.z);
       else if (typeof c?.isMoving === "function") sp = c.isMoving() ? 1 : 0;
-      // Input WASD also counts as "moving" for orbit style
       if (sp < 0.05 && this.input) {
         const inp = this.input as { keys?: Record<string, boolean> };
         const k = inp.keys || {};
         if (k.KeyW || k.KeyA || k.KeyS || k.KeyD || k.ArrowUp || k.ArrowDown) sp = 1;
       }
       this.livingSwords.moving = sp > 0.08;
+      // Keep hand bone refs fresh after retarget / skin updates
+      if (this.character) {
+        this.livingSwords.setHands(
+          this.character.rightHand,
+          this.character.leftHand,
+        );
+      }
       this.livingSwords.update(dt);
     }
-    // Racalvin: continuous green/purple hot-hands on both palms (idle smolder)
-    if (this.characterId === "gunslinger" && this.character) {
+    // Racalvin: hand FX + trails only while attack energy is up (not idle smolder)
+    if (
+      this.characterId === "gunslinger" &&
+      this.character &&
+      this.livingSwords?.isAttackFxActive()
+    ) {
       this.racalvinHandFxT -= dt;
       if (this.racalvinHandFxT <= 0) {
-        this.racalvinHandFxT = 0.14;
+        this.racalvinHandFxT = 0.1;
         this.pulseRacalvinHotHands(false);
       }
     }
@@ -10243,6 +10441,29 @@ export class Studio {
     this.telegraphs.update(dt);
     // Sailtest water / wind
     this.forestWorld?.update(dt);
+    // Pinata debris magnet → bag absorb (player or camp unit worker)
+    if (this.pinataHarvest) {
+      if (this.character) this.pinataHarvest.setPlayerPos(this.character.root.position);
+      this.updateHarvestUnitAbsorbTarget();
+      this.pinataHarvest.update(dt);
+    }
+    // Wing pack anim + air assist (parachute / glide / flight / sail)
+    if (this.wingRig) {
+      this.wingRig.update(dt);
+      if (this.controller && this.character) {
+        const airborne = !this.controller.isGrounded;
+        const fwd = this.controller.forward();
+        const wind =
+          this.testWorldId === "sailtest" && this.forestWorld?.sail
+            ? this.forestWorld.sail.windVelocity(0.5)
+            : undefined;
+        // Controller exposes velocity via internal fields — use applyImpulse path lightly
+        const vel = (this.controller as unknown as { velocity?: THREE.Vector3 }).velocity;
+        if (vel && airborne) {
+          this.wingRig.applyAirAssist(vel, fwd, true, wind ?? undefined);
+        }
+      }
+    }
     // Light wind assist when sailing map + character near water surface
     if (this.testWorldId === "sailtest" && this.forestWorld?.sail && this.character && this.controller) {
       const y = this.character.root.position.y;
@@ -10295,8 +10516,16 @@ export class Studio {
       this.campBuild.update(dt, this.character?.root.position, hostiles);
     }
     if (this.campBuild?.isGhostActive && this.character) {
-      // Mouse / free-aim ground assist preferred; fall back to body-forward ghost
-      const aim = this.buildAimGroundPoint();
+      // Island build grid raycast (nav ground) → 1 m snap; fallback body-forward
+      let aim: THREE.Vector3 | null = null;
+      if (this.buildGrid && this.activityMode === "build") {
+        const origin = this.character.root.position.clone();
+        origin.y += 1.2;
+        const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+        const hit = this.buildGrid.raycastFromCharacter(origin, fwd, 48);
+        aim = hit.point;
+      }
+      if (!aim) aim = this.buildAimGroundPoint();
       if (aim) {
         this.campBuild.updateGhost(aim);
       } else {
@@ -10307,6 +10536,12 @@ export class Studio {
         place.y = 0;
         this.campBuild.updateGhost(place);
       }
+    } else if (this.buildGrid?.isVisible && this.character && this.activityMode === "build") {
+      // Keep grid cursor live even without ghost (planning)
+      const origin = this.character.root.position.clone();
+      origin.y += 1.2;
+      const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
+      this.buildGrid.raycastFromCharacter(origin, fwd, 48);
     }
     this.updatePending(dt);
     // Advance data-driven abilities here (same `dt`, adjacent to updatePending)
@@ -11242,9 +11477,11 @@ export class Studio {
       }
       // Minecraft-like third person: over-shoulder crosshair, mid body look-at
       this.applyActivityCamera(mode);
+      this.buildGrid?.setVisible(mode === "build");
     } else if (mode === "combat") {
       // Leaving build → cancel place ghost
       if (prev === "build") this.campBuild?.cancelGhost?.();
+      this.buildGrid?.setVisible(false);
       // Restore Danger Room combat — same stack as always (no new systems).
       this.restoreDangerRoomCombatMode(prev);
       this.applyActivityCamera("combat");
@@ -11256,7 +11493,11 @@ export class Studio {
     this.aimNdcY = THREE.MathUtils.clamp(this.aimNdcY, -max, max);
     // Short centre flash; persistent mode is the top-centre ModeBanner
     this.setCombatFlash(
-      mode === "combat" ? "COMBAT · Q mode · 1–4 skills · RMB lock" : `${MODE_LABEL[mode]} · shoulder TPS`,
+      mode === "combat"
+        ? "COMBAT · Q mode · 1–4 skills · RMB lock"
+        : mode === "build"
+          ? "BUILD · 1 m grid · ghost R rotate · LMB place · RMB continue"
+          : `${MODE_LABEL[mode]} · shoulder TPS`,
       0.7,
     );
   }
@@ -11328,9 +11569,14 @@ export class Studio {
     this.controller?.setViewMode(this.viewMode);
   }
 
+  /** Optional map-load progress for HelpersLoadScreen / REST tools. */
+  onMapLoadProgress: ((p: { stage: string; progress: number; mapId: string }) => void) | null =
+    null;
+
   /**
-   * Switch test map: Danger Room (combat) · Sailtest (island) · Forest Map (harvest).
+   * Switch test map: Danger Room (combat) · outdoor harvest/build/loco maps.
    * Persists selection; applies fog + default activity mode.
+   * Emits onMapLoadProgress for loading curtains (best practice).
    */
   async setTestWorld(id: TestWorldId): Promise<boolean> {
     const def = TEST_WORLDS[id];
@@ -11338,12 +11584,120 @@ export class Studio {
     this.testWorldId = id;
     saveTestWorldId(id);
 
+    const progress = (stage: string, progress: number) => {
+      this.onMapLoadProgress?.({ stage, progress, mapId: id });
+    };
+    progress("start", 0.08);
+    progress("dispose_prev", 0.15);
+
     // Do NOT load small_island under camp on sailtest — SAILTEST.glb is the dual-island mesh.
     // Camp placeables still use seedSandboxClaim for build rights.
 
     if (this.forestWorld) {
+      progress("load_glb", 0.35);
       const ok = await this.forestWorld.load(def);
-      if (!ok && def.kind !== "combat") return false;
+      if (!ok && def.kind !== "combat") {
+        progress("failed", 1);
+        return false;
+      }
+    }
+    progress("classify_bake", 0.72);
+
+    // Pinata: clear + re-register harvest meshes for break/absorb + Rapier bake
+    this.pinataHarvest?.clear();
+    this.harvestPhysicsBake?.clear();
+    this.forestHarvestBake?.clear();
+    if (this.pinataHarvest && def.kind !== "combat") {
+      this.pinataHarvest.setGroundSampler(
+        this.forestWorld?.getGroundHeightAt?.() ?? null,
+      );
+      // Home-island-scale maps: long respawn; Danger QA maps: fast
+      const longRespawn =
+        id === "island-life" || id === "fabled-zone" || id === "sailtest";
+      this.pinataHarvest.setDefaultRespawnSec(
+        longRespawn ? 4 * 60 * 60 : DANGER_RESPAWN_SEC,
+      );
+      let registered = 0;
+      for (const n of this.forestWorld?.nodes ?? []) {
+        const matId =
+          n.mesh.userData.harvestMaterialId ||
+          n.mesh.userData.harvest?.materialId ||
+          n.mesh.userData.oreVein ||
+          undefined;
+        this.pinataHarvest.registerMesh(n.mesh, {
+          id: n.id,
+          kind: n.kind,
+          tool: n.tool,
+          materialId: matId ? String(matId) : undefined,
+          hp: Math.max(
+            20,
+            n.mesh.userData.harvest?.hp ?? (n.remaining || 2) * 20,
+          ),
+        });
+        registered++;
+      }
+      this.rebakeHarvestPhysics();
+      // Build grid: ground raycast targets from map
+      if (this.buildGrid) {
+        const grounds = this.forestWorld?.getGroundMeshes?.() ?? [];
+        this.buildGrid.setGroundMeshes(grounds);
+        this.buildGrid.setHalfExtent(Math.max(16, this.forestWorld?.getBoundHalf?.() ?? 32));
+        this.buildGrid.setSnap(1);
+        this.buildGrid.setVisible(def.defaultMode === "build" || def.kind === "build_arena");
+      }
+      if (registered > 0) {
+        const colliders = this.harvestPhysicsBake?.count() ?? 0;
+        this.setCombatFlash(
+          `PINATA · ${registered} nodes · ${colliders} colliders · respawn ${longRespawn ? "4h" : `${DANGER_RESPAWN_SEC}s`}`,
+          1.2,
+        );
+      }
+    } else if (this.buildGrid) {
+      this.buildGrid.setGroundMeshes([]);
+      this.buildGrid.setVisible(false);
+    }
+
+    // Outdoor / loco-QA maps: hide combat chamber shell so GLB terrain is the stage.
+    // Combat danger-room keeps walls/floor/DJ. Bounds + water + ground height follow map.
+    const outdoor =
+      def.kind !== "combat" &&
+      (def.meshKeys?.length ||
+        id === "tropical-harvest" ||
+        id === "pirate-village" ||
+        id === "sailtest" ||
+        id === "forest-map" ||
+        id === "island-life" ||
+        id === "fabled-zone" ||
+        id === "bridge-town-docks");
+    if (this.room?.group) {
+      this.room.group.visible = !outdoor;
+    }
+    if (def.kind === "combat") {
+      this.controller?.setRoomBound(this.room?.half ?? 16);
+      this.controller?.clearWaterBand();
+      this.controller?.setGroundHeightAt(null);
+    } else {
+      const half = this.forestWorld?.getBoundHalf?.() ?? (id === "fabled-zone" ? 500 : 80);
+      this.controller?.setRoomBound(Math.max(24, half));
+      const wb = this.forestWorld?.getWaterBand?.() ?? null;
+      if (wb) this.controller?.setWaterBand(wb.top, wb.bottom);
+      else if (this.forestWorld?.sail) {
+        const wy = this.forestWorld.sail.waterSurfaceY;
+        this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
+      } else {
+        this.controller?.clearWaterBand();
+      }
+      const gh = this.forestWorld?.getGroundHeightAt?.() ?? null;
+      this.controller?.setGroundHeightAt(gh);
+      // Seat player feet on terrain if sampler present
+      if (gh && this.character) {
+        const p = this.character.root.position.clone();
+        const y = gh(p.x, p.z);
+        if (y != null && Number.isFinite(y)) {
+          p.y = y;
+          this.controller?.blinkTo(p);
+        }
+      }
     }
 
     // Voxel / outdoor camp enemies
@@ -11373,11 +11727,11 @@ export class Studio {
         eventTags: ["boss_event", "volcanic", "hellmaw"],
         origin: base.clone().setY(0),
       });
-    } else if (def.kind !== "combat" && this.campEnemies) {
+    } else if (def.kind !== "combat" && def.kind !== "loco_qa" && this.campEnemies) {
       const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
       void this.campEnemies.spawnVoxelCamp(center);
       // Forest / outdoor maps: still allow boss if event tags request it
-      if (id === "forest-map" || def.kind === "harvest") {
+      if (id === "forest-map" || def.kind === "harvest_forest") {
         void this.volcanoBoss?.spawnIfAllowed({
           sectorId: "s",
           archetype: "boss",
@@ -11408,6 +11762,7 @@ export class Studio {
     }
 
     if (def.defaultMode) this.setActivityMode(def.defaultMode);
+    progress("ready", 1);
     this.setCombatFlash(
       `MAP · ${def.name} · ${def.uuid.slice(0, 8)}… · seed ${def.seed}`,
       1.5,
@@ -11474,15 +11829,44 @@ export class Studio {
     if (this.activityMode === "harvest") {
       // Prefer selected forest/sailtest harvest node (tool-matched)
       const nodeId = this.harvestSelectNodeId;
-      const node = nodeId ? this.forestWorld?.harvestNode(nodeId) : null;
-      const tool = node?.tool || id;
-      // Character bag (3×3) — prefer fleet window id, else Studio characterId
+      const toolNorm = normalizeHarvestTool(id);
       const bagChar =
         (typeof window !== "undefined" &&
           (window as unknown as { __grudgeCharId?: string }).__grudgeCharId) ||
         this.characterId ||
         "explorer";
-      applyHarvestYield(tool, undefined, undefined, bagChar);
+      let forestNode = nodeId ? this.forestWorld?.harvestNode(nodeId) ?? null : null;
+      const tool = forestNode?.tool || id;
+
+      // Ensure pinata registration for selected node, then HP-stage hit
+      if (nodeId && this.pinataHarvest) {
+        if (!this.pinataHarvest.getNode(nodeId) && forestNode) {
+          this.pinataHarvest.registerMesh(forestNode.mesh, {
+            id: forestNode.id,
+            kind: forestNode.kind,
+            tool: forestNode.tool,
+            hp: Math.max(20, (forestNode.remaining || 2) * 20),
+          });
+        }
+        if (this.pinataHarvest.getNode(nodeId)) {
+          const power = 10 + Math.floor(Math.random() * 6);
+          const res = this.pinataHarvest.hitForestNode(nodeId, toolNorm, power);
+          // On break, chunks magnetize into bag; partial hits still chip yield
+          if (res.hit && !res.broken) {
+            applyHarvestYield(tool, undefined, undefined, bagChar);
+          }
+          if (res.broken) {
+            forestNode = this.forestWorld?.harvestNode(nodeId) ?? forestNode;
+          }
+        } else {
+          applyHarvestYield(tool, undefined, undefined, bagChar);
+          if (forestNode) this.forestWorld?.harvestNode(nodeId!);
+        }
+      } else {
+        applyHarvestYield(tool, undefined, undefined, bagChar);
+        if (nodeId) forestNode = this.forestWorld?.harvestNode(nodeId) ?? forestNode;
+      }
+
       // Anim database: harvest roles (chop/gather/mine) → clip; fallback attack
       const toolRole =
         tool === "wood" || tool === "axe" || /chop|wood/i.test(String(tool))
@@ -11506,17 +11890,17 @@ export class Studio {
       const at = this.harvestSelectPos?.clone().setY(0.5) ?? origin;
       this.vfx.burst(at, 0x7ee7a8, 16, 2.4);
       this.vfx.castAura(at, 0x7ee7a8);
-      if (node) {
+      if (forestNode) {
         this.setCombatFlash(
-          `HARVEST · ${node.kind.toUpperCase()} · ${tool} · left ${node.remaining}`,
+          `HARVEST · ${forestNode.kind.toUpperCase()} · ${tool} · left ${forestNode.remaining}`,
           0.65,
         );
-        if (node.remaining <= 0) {
+        if (forestNode.remaining <= 0) {
           this.harvestSelectNodeId = null;
           this.harvestSelectPos = null;
         }
       } else {
-        this.setCombatFlash(`HARVEST · ${tool.toUpperCase()} · bag +yield`, 0.5);
+        this.setCombatFlash(`HARVEST · ${String(tool).toUpperCase()} · bag +yield`, 0.5);
       }
       return;
     }
@@ -11716,11 +12100,18 @@ export class Studio {
     else if (code === "KeyG") this.evade();
     // KeyM = suit up into / exit the Exo-Armour Mech.
     else if (code === "KeyM") this.toggleMech();
-    // KeyZ = straight stab: a dash into an extended main-hand thrust, blade
-    // classes only (sword + knife); no-ops otherwise. KeyT's motion-attack moved
-    // to the middle mouse button (M3); see onMouseDown.
+    // KeyZ = put living twin swords away (Racalvin) OR straight stab (blade classes).
+    // KeyT's motion-attack moved to the middle mouse button (M3); see onMouseDown.
     else if (code === "KeyZ") {
-      if (this.activityMode === "combat") this.stab();
+      if (this.activityMode === "combat") {
+        if (this.characterId === "gunslinger" && this.livingSwords) {
+          const away = this.livingSwords.togglePutAway();
+          this.setCombatFlash(away ? "SWORDS SHEATHED" : "SWORDS DRAWN", 0.45);
+          if (!away) this.pulseRacalvinHotHands(false);
+        } else {
+          this.stab();
+        }
+      }
     }
     // KeyT = Stomp finisher: a leaping execution that only fires when a
     // knocked-down (fallen) enemy is within reach; no-ops otherwise.
@@ -14008,6 +14399,8 @@ export class Studio {
     if (this.mounted) unmountWeapon(this.mounted);
     this.character?.dispose();
     this.djBooth?.dispose();
+    this.climbWalls?.dispose();
+    this.climbWalls = null;
     this.room.dispose();
     this.sfx?.dispose();
     this.vfx.dispose();
@@ -14041,5 +14434,30 @@ export class Studio {
     this.postfx?.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
+  }
+
+  /**
+   * Toggle climb-hold debug spheres (review peg layout for IK skill build).
+   * Returns whether debug is now visible.
+   */
+  toggleClimbHoldDebug(): boolean {
+    return this.climbWalls?.toggleDebug() ?? false;
+  }
+
+  /** Climb wall asset review summary (holds, walls, source URL). */
+  getClimbWallReview() {
+    return this.climbWalls?.review ?? null;
+  }
+
+  getClimbWallSystem(): ClimbWallSystem | null {
+    return this.climbWalls;
+  }
+
+  /** Bind ClimbWallSystem holds → Controller climb/grab probe (P0–P2 surface). */
+  wireClimbProbeToController(): void {
+    const walls = this.climbWalls;
+    const ctrl = this.controller;
+    if (!walls || !ctrl) return;
+    ctrl.setClimbProbe((pos) => walls.probeNear(pos, 1.45));
   }
 }

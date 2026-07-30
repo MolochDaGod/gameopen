@@ -21,7 +21,8 @@ artifacts/animator/public/models/warlords-era/**
 artifacts/animator/public/models/worlds/**
 artifacts/animator/public/models/battle/**
 artifacts/animator/public/models/packs/**
-artifacts/animator/public/models/maps/**
+# Tropical island only (~70MB×2) — other Danger maps ship with SPA (see exceptions below)
+artifacts/animator/public/models/maps/tropical/**
 artifacts/animator/public/models/kenney/**
 artifacts/animator/public/models/**/*.glb
 artifacts/animator/public/models/**/*.fbx
@@ -39,6 +40,51 @@ artifacts/animator/public/models/**/*.fbx
 !artifacts/animator/public/anim/**
 !artifacts/animator/public/anim/**/*.glb
 !artifacts/animator/public/anim/**/*.fbx
+
+# EXCEPTION: Danger Room outdoor maps + wing (parent dirs must not be fully ignored —
+# maps/** ban was removed for that reason; only tropical/** stays banned).
+!artifacts/animator/public/models/maps/shipwreck/
+!artifacts/animator/public/models/maps/shipwreck/**
+!artifacts/animator/public/models/maps/shipwreck/**/*.glb
+!artifacts/animator/public/models/maps/forest_mountains/
+!artifacts/animator/public/models/maps/forest_mountains/**
+!artifacts/animator/public/models/maps/forest_mountains/**/*.glb
+!artifacts/animator/public/models/maps/arena/
+!artifacts/animator/public/models/maps/arena/**
+!artifacts/animator/public/models/maps/arena/**/*.glb
+!artifacts/animator/public/models/maps/pirate/
+!artifacts/animator/public/models/maps/pirate/**
+!artifacts/animator/public/models/maps/pirate/**/*.glb
+!artifacts/animator/public/models/equipment/
+!artifacts/animator/public/models/equipment/wing_animated.glb
+# Danger Room: Racalvin disc_jockey show + climbingwall hold mesh
+!artifacts/animator/public/models/dj/
+!artifacts/animator/public/models/dj/**
+!artifacts/animator/public/models/dj/**/*.glb
+!artifacts/animator/public/models/maps/climbing/
+!artifacts/animator/public/models/maps/climbing/**
+!artifacts/animator/public/models/maps/climbing/**/*.glb
+!artifacts/animator/dist/public/models/dj/
+!artifacts/animator/dist/public/models/dj/**
+!artifacts/animator/dist/public/models/dj/**/*.glb
+!artifacts/animator/dist/public/models/maps/climbing/
+!artifacts/animator/dist/public/models/maps/climbing/**
+!artifacts/animator/dist/public/models/maps/climbing/**/*.glb
+# dist/ (local prebuilt / rare) — same allowlist
+!artifacts/animator/dist/public/models/maps/shipwreck/
+!artifacts/animator/dist/public/models/maps/shipwreck/**
+!artifacts/animator/dist/public/models/maps/shipwreck/**/*.glb
+!artifacts/animator/dist/public/models/maps/forest_mountains/
+!artifacts/animator/dist/public/models/maps/forest_mountains/**
+!artifacts/animator/dist/public/models/maps/forest_mountains/**/*.glb
+!artifacts/animator/dist/public/models/maps/arena/
+!artifacts/animator/dist/public/models/maps/arena/**
+!artifacts/animator/dist/public/models/maps/arena/**/*.glb
+!artifacts/animator/dist/public/models/maps/pirate/
+!artifacts/animator/dist/public/models/maps/pirate/**
+!artifacts/animator/dist/public/models/maps/pirate/**/*.glb
+!artifacts/animator/dist/public/models/equipment/
+!artifacts/animator/dist/public/models/equipment/wing_animated.glb
 
 # Dev / reports
 reports/

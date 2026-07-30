@@ -35,21 +35,26 @@ export class DangerRoom {
   readonly doorPos = new THREE.Vector3(0, 0, this.half - 0.2);
   private doorGlow: THREE.MeshBasicMaterial[] = [];
 
-  // --- DJ alcove (a lit cut-out above the door for the resident DJ) ---
-  /** Window opening half-width in the +Z wall above the door. */
-  private readonly djWinHalfW = 3.6;
+  // --- DJ alcove (large cove for Racalvin disc_jockey show + cages / lights) ---
+  /** Window opening half-width in the +Z wall above the door (wide cove). */
+  private readonly djWinHalfW = 5.4;
   /** Window opening bottom / top in the +Z wall (above the 4.2m door lintel). */
-  private readonly djWinBottom = 4.9;
-  private readonly djWinTop = 9.4;
+  private readonly djWinBottom = 4.6;
+  private readonly djWinTop = 12.2;
   /** Floor height of the recessed booth platform (flush with the window sill). */
-  private readonly djFloorY = 4.9;
-  /** How far the alcove is recessed behind the +Z wall plane. */
-  private readonly djDepth = 3.0;
+  private readonly djFloorY = 4.6;
+  /** How far the alcove is recessed behind the +Z wall plane (deeper stage). */
+  private readonly djDepth = 5.2;
   /**
    * World anchor where the DJ stands on the alcove platform, facing -Z into the
-   * room. {@link DjBooth} places the booth + character relative to this.
+   * room. {@link DjBooth} places disc_jockey + effects relative to this.
    */
-  readonly djBoothAnchor = new THREE.Vector3(0, this.djFloorY, this.half + this.djDepth * 0.62);
+  readonly djBoothAnchor = new THREE.Vector3(0, this.djFloorY, this.half + this.djDepth * 0.55);
+  /**
+   * Opposite wall (-Z) climb skill face — world plane centre for climbingwall.glb.
+   * DJ is on +Z; climb review mesh is on the far wall.
+   */
+  readonly climbWallOppositeAnchor = new THREE.Vector3(0, this.height * 0.42, -this.half + 0.08);
   /** Pulsing club lights/emissives in the alcove (animated in {@link update}). */
   private djGlow: { mat: THREE.MeshBasicMaterial; base: number; speed: number; phase: number }[] = [];
   private djLights: { light: THREE.PointLight; base: number; speed: number; phase: number }[] = [];
@@ -568,17 +573,20 @@ export class DangerRoom {
       this.group.add(strip);
     }
 
-    // Pulsing coloured spots lighting the booth.
-    const lightDefs: [number, number][] = [
-      [0xff2bd6, -winHW * 0.6],
-      [0x29e0ff, winHW * 0.6],
+    // Pulsing coloured spots lighting the larger Racalvin cove (still see room BG).
+    const lightDefs: [number, number, number][] = [
+      [0xff2bd6, -winHW * 0.7, 9],
+      [0x29e0ff, winHW * 0.7, 9],
+      [0xffaa33, 0, 7],
+      [0xaa66ff, -winHW * 0.25, 6],
+      [0x44ffcc, winHW * 0.25, 6],
     ];
     for (let i = 0; i < lightDefs.length; i++) {
-      const [color, lx] = lightDefs[i];
-      const light = new THREE.PointLight(color, 6, 14, 2);
-      light.position.set(lx, ceilY - 0.4, (front + back) / 2);
+      const [color, lx, base] = lightDefs[i];
+      const light = new THREE.PointLight(color, base, 18, 2);
+      light.position.set(lx, ceilY - 0.35, (front + back) / 2 + (i % 2 === 0 ? -0.4 : 0.3));
       this.group.add(light);
-      this.djLights.push({ light, base: 6, speed: 2.5 + i, phase: Math.random() * Math.PI * 2 });
+      this.djLights.push({ light, base, speed: 2.2 + i * 0.35, phase: Math.random() * Math.PI * 2 });
     }
   }
 

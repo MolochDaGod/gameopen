@@ -110,12 +110,101 @@ export class Character {
     }
     this.autoMapClips();
 
+    // Fleet SSOT: overlay Bip001 baked combat + climb/swim packs so "old" GLB
+    // heroes (racalvin, custom kits) get the same skeleton anim set as grudge6.
+    await this.hydrateFleetBakedRoles();
+
     this.model.updateMatrixWorld(true);
     this.findHands();
     this.footGrounder.bind(this.model);
     // Flat Danger Room floor at y=0; hosts may swap terrain sampler later.
     this.footGrounder.setEnabled(true);
     this.playRole("idle", 0);
+  }
+
+  /**
+   * Load rotation-only Bip001 JSON under /anims/baked and bind to this skeleton.
+   * Fills missing idle/walk/run/attack/jump/mobility so combat blend + controller
+   * work even when the GLB shipped with few or poorly named clips.
+   */
+  private async hydrateFleetBakedRoles(): Promise<void> {
+    if (!this.model || !this.mixer) return;
+    const hasSkinned = (() => {
+      let ok = false;
+      this.model!.traverse((o) => {
+        const s = o as THREE.SkinnedMesh;
+        if (s.isSkinnedMesh && s.skeleton?.bones?.length) ok = true;
+      });
+      return ok;
+    })();
+    if (!hasSkinned) return;
+
+    try {
+      const { loadBakedClip, MOBILITY_CLIPS } = await import("./grudge/anims");
+      const { rematchClipToSkeleton } = await import("./grudge/skeleton");
+
+      // Prefer sword_shield combat pack as universal Danger Room base; fall back magic walk.
+      const core: Array<{ role: AnimRole; rel: string }> = [
+        { role: "idle", rel: "sword_shield/sword and shield idle" },
+        { role: "walk", rel: "magic/Standing Walk Forward" },
+        { role: "run", rel: "sword_shield/sword and shield run" },
+        { role: "attack", rel: "sword_shield/sword and shield attack" },
+        { role: "jump", rel: "locomotion/jump" },
+        { role: "hurt", rel: "polearm/hurt" },
+      ];
+      // Only fill roles we don't already have a usable clip for
+      const need = (role: AnimRole) => !this.roleClip.has(role);
+
+      const register = (role: string, clip: THREE.AnimationClip) => {
+        if (!this.mixer) return;
+        // Never overwrite a native GLB role that already maps cleanly
+        if (this.roleClip.has(role as AnimRole)) return;
+        const bound = rematchClipToSkeleton(this.model!, clip);
+        const action = this.mixer.clipAction(filterBindableTracks(this.model!, bound));
+        this.actions.set(role, action);
+        this.actions.set(bound.name, action);
+        this.roleClip.set(role as AnimRole, role);
+      };
+
+      await Promise.all(
+        core.map(async ({ role, rel }) => {
+          if (!need(role)) return;
+          try {
+            const clip = await loadBakedClip(rel);
+            register(role, clip);
+          } catch {
+            /* optional host / CDN miss */
+          }
+        }),
+      );
+
+      // Sprint = run clone (never locomotion/running roll)
+      if (!this.roleClip.has("sprint") && this.roleClip.has("run")) {
+        this.roleClip.set("sprint", this.roleClip.get("run")!);
+      }
+
+      // Mobility climb/swim/hang
+      await Promise.all(
+        MOBILITY_CLIPS.map(async ({ role, bakeRel }) => {
+          if (this.actions.has(role)) return;
+          try {
+            const clip = await loadBakedClip(bakeRel);
+            register(role, clip);
+          } catch {
+            /* bake optional until deployed */
+          }
+        }),
+      );
+
+      // Rebuild loco blend with new actions
+      this.locoBlend = new LocomotionBlend((id) => this.actions.get(id) ?? null);
+
+      console.info(
+        `[Character] ${this.def.id} fleet bake hydrate roles=${[...this.roleClip.keys()].join(",")}`,
+      );
+    } catch (e) {
+      console.warn(`[Character] ${this.def.id} fleet bake hydrate skipped`, e);
+    }
   }
 
   /** Enable/disable foot-to-ground IK (terrain plant). */
@@ -149,6 +238,13 @@ export class Character {
       ["death", /death|die|dead|defeat|ko\b/i],
       ["hurt", /hurt|damage|flinch|stagger|impact|recoil/i],
       ["block", /block|guard|parry|defen[cs]e|shield/i],
+      ["climb", /climb(?!ing.?to.?top)/i],
+      ["climbUp", /climb.*up|up.*wall/i],
+      ["climbDown", /climb.*down|down.*wall/i],
+      ["hang", /hang|freehang/i],
+      ["mantle", /mantle|climb.*top|to.?top/i],
+      ["wallRun", /wall.?run/i],
+      ["swim", /swim/i],
     ];
     const names = [...this.actions.keys()];
     for (const [role, re] of roleKeywords) {

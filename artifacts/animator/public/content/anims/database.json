@@ -1,83 +1,114 @@
 {
   "version": 1,
-  "updated": "2026-07-25",
+  "updated": "2026-07-30",
   "description": "Grudge Open animation database — all packs, roles, bake paths, surface bindings. SSOT for AnimDatabase API + bake readiness.",
   "packs": {
     "unarmed": {
       "label": "Unarmed / Striker",
       "skeleton": "Bip001",
-      "sources": ["baked", "mixamo_fbx", "explosive"],
+      "sources": [
+        "baked",
+        "mixamo_fbx",
+        "explosive"
+      ],
       "fallbackPack": null
     },
     "sword_shield": {
       "label": "1H Sword + Shield",
       "skeleton": "Bip001",
-      "sources": ["baked", "mixamo_fbx"],
+      "sources": [
+        "baked",
+        "mixamo_fbx"
+      ],
       "fallbackPack": "magic"
     },
     "longbow": {
       "label": "Longbow / Archer",
       "skeleton": "Bip001",
-      "sources": ["baked", "mixamo_fbx"],
+      "sources": [
+        "baked",
+        "mixamo_fbx"
+      ],
       "fallbackPack": "magic"
     },
     "magic": {
       "label": "Staff / Magic",
       "skeleton": "Bip001",
-      "sources": ["baked", "mixamo_fbx"],
+      "sources": [
+        "baked",
+        "mixamo_fbx"
+      ],
       "fallbackPack": null
     },
     "polearm": {
       "label": "Spear / Polearm (Madarame)",
       "skeleton": "Bip001",
-      "sources": ["baked"],
+      "sources": [
+        "baked"
+      ],
       "fallbackPack": null
     },
     "twohand": {
       "label": "2H Sword / Axe / Hammer",
       "skeleton": "Bip001",
-      "sources": ["explosive", "mixamo_fbx"],
+      "sources": [
+        "explosive",
+        "mixamo_fbx"
+      ],
       "fallbackPack": "polearm",
       "note": "Bake Explosive TwoHanded + Hammer; until then runtime uses polearm"
     },
     "crossbow": {
       "label": "Crossbow",
       "skeleton": "Bip001",
-      "sources": ["explosive"],
+      "sources": [
+        "explosive"
+      ],
       "fallbackPack": "longbow",
       "note": "Paid Explosive Crossbow pack required for full set"
     },
     "rifle": {
       "label": "Rifle / Gun",
       "skeleton": "Bip001",
-      "sources": ["mixamo_fbx"],
+      "sources": [
+        "mixamo_fbx"
+      ],
       "fallbackPack": "unarmed",
       "note": "Bake public/anim/rifle + pistol"
     },
     "traversal": {
       "label": "Shared jump/dodge/mantle",
       "skeleton": "Bip001",
-      "sources": ["baked", "mixamo_fbx"],
+      "sources": [
+        "baked",
+        "mixamo_fbx"
+      ],
       "fallbackPack": null
     },
     "swim": {
       "label": "Swimming",
       "skeleton": "mixamorig",
-      "sources": ["mixamo_fbx"],
+      "sources": [
+        "mixamo_fbx"
+      ],
       "fallbackPack": "traversal",
       "note": "Bake to Bip001 when ready; Explorer uses Mixamo FBX when pack present"
     },
     "climb": {
       "label": "Climb / hang / wall-run / mantle",
       "skeleton": "mixamorig",
-      "sources": ["mixamo_fbx"],
+      "sources": [
+        "mixamo_fbx"
+      ],
       "fallbackPack": "traversal",
       "note": "Vertical grab: freehang, climb-up, wall-run, climbing-to-top"
     },
     "harvest": {
       "label": "Harvest / farming tools",
       "skeleton": "mixamorig",
-      "sources": ["mixamo_fbx"],
+      "sources": [
+        "mixamo_fbx"
+      ],
       "fallbackPack": "unarmed",
       "note": "Chop/mine use attack role until harvest bake exists"
     }
@@ -91,9 +122,17 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.idle"],
-      "surfaces": ["ground", "wade"],
-      "weapons": ["none", "*"],
+      "states": [
+        "loco.idle"
+      ],
+      "surfaces": [
+        "ground",
+        "wade"
+      ],
+      "weapons": [
+        "none",
+        "*"
+      ],
       "priority": 100
     },
     {
@@ -104,9 +143,16 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.walk"],
-      "surfaces": ["ground", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "loco.walk"
+      ],
+      "surfaces": [
+        "ground",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 50
     },
     {
@@ -117,9 +163,16 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.run", "loco.sprint"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "loco.run",
+        "loco.sprint"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 50
     },
     {
@@ -130,9 +183,16 @@
       "source": "baked",
       "status": "placeholder",
       "loop": false,
-      "states": ["combat.attack", "activity.harvest"],
-      "surfaces": ["ground"],
-      "weapons": ["none"],
+      "states": [
+        "combat.attack",
+        "activity.harvest"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "none"
+      ],
       "priority": 80,
       "note": "punching.json may be missing — load falls back to fight_idle until bake"
     },
@@ -144,9 +204,19 @@
       "source": "baked",
       "status": "placeholder",
       "loop": true,
-      "states": ["loco.idle"],
-      "surfaces": ["ground"],
-      "weapons": ["staff", "staffFire", "staffIce", "wand", "tome"],
+      "states": [
+        "loco.idle"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "staff",
+        "staffFire",
+        "staffIce",
+        "wand",
+        "tome"
+      ],
       "priority": 100
     },
     {
@@ -157,9 +227,16 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.walk"],
-      "surfaces": ["ground", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "loco.walk"
+      ],
+      "surfaces": [
+        "ground",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90
     },
     {
@@ -170,9 +247,15 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.run"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "loco.run"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90
     },
     {
@@ -183,9 +266,17 @@
       "source": "baked",
       "status": "placeholder",
       "loop": false,
-      "states": ["combat.attack", "combat.skill1"],
-      "surfaces": ["ground"],
-      "weapons": ["staff", "wand"],
+      "states": [
+        "combat.attack",
+        "combat.skill1"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "staff",
+        "wand"
+      ],
       "priority": 80
     },
     {
@@ -196,9 +287,16 @@
       "source": "baked",
       "status": "placeholder",
       "loop": true,
-      "states": ["loco.idle"],
-      "surfaces": ["ground"],
-      "weapons": ["sword", "shield"],
+      "states": [
+        "loco.idle"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "sword",
+        "shield"
+      ],
       "priority": 100
     },
     {
@@ -209,9 +307,15 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.run"],
-      "surfaces": ["ground"],
-      "weapons": ["sword"],
+      "states": [
+        "loco.run"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "sword"
+      ],
       "priority": 100
     },
     {
@@ -222,9 +326,15 @@
       "source": "baked",
       "status": "placeholder",
       "loop": false,
-      "states": ["combat.attack"],
-      "surfaces": ["ground"],
-      "weapons": ["sword"],
+      "states": [
+        "combat.attack"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "sword"
+      ],
       "priority": 100
     },
     {
@@ -235,9 +345,17 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.walk"],
-      "surfaces": ["ground"],
-      "weapons": ["bow", "longbow", "crossbow"],
+      "states": [
+        "loco.walk"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "bow",
+        "longbow",
+        "crossbow"
+      ],
       "priority": 100
     },
     {
@@ -248,9 +366,17 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.run"],
-      "surfaces": ["ground"],
-      "weapons": ["bow", "longbow", "crossbow"],
+      "states": [
+        "loco.run"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "bow",
+        "longbow",
+        "crossbow"
+      ],
       "priority": 100
     },
     {
@@ -261,9 +387,18 @@
       "source": "baked",
       "status": "placeholder",
       "loop": false,
-      "states": ["combat.attack", "combat.skill1"],
-      "surfaces": ["ground"],
-      "weapons": ["bow", "longbow", "crossbow"],
+      "states": [
+        "combat.attack",
+        "combat.skill1"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "bow",
+        "longbow",
+        "crossbow"
+      ],
       "priority": 100
     },
     {
@@ -274,9 +409,18 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.idle"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword", "greataxe", "hammer2h"],
+      "states": [
+        "loco.idle"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword",
+        "greataxe",
+        "hammer2h"
+      ],
       "priority": 100
     },
     {
@@ -287,9 +431,18 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.walk"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword", "greataxe", "hammer2h"],
+      "states": [
+        "loco.walk"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword",
+        "greataxe",
+        "hammer2h"
+      ],
       "priority": 100
     },
     {
@@ -300,9 +453,19 @@
       "source": "baked",
       "status": "ready",
       "loop": true,
-      "states": ["loco.run", "loco.sprint"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword", "greataxe", "hammer2h"],
+      "states": [
+        "loco.run",
+        "loco.sprint"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword",
+        "greataxe",
+        "hammer2h"
+      ],
       "priority": 100
     },
     {
@@ -313,9 +476,18 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["combat.attack"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword", "greataxe", "hammer2h"],
+      "states": [
+        "combat.attack"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword",
+        "greataxe",
+        "hammer2h"
+      ],
       "priority": 100,
       "lockSec": 0.9
     },
@@ -327,9 +499,16 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["combat.skill1"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword"],
+      "states": [
+        "combat.skill1"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword"
+      ],
       "priority": 100
     },
     {
@@ -340,9 +519,16 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["combat.skill2"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword"],
+      "states": [
+        "combat.skill2"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword"
+      ],
       "priority": 100
     },
     {
@@ -353,9 +539,16 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["combat.skill3"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword"],
+      "states": [
+        "combat.skill3"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword"
+      ],
       "priority": 100
     },
     {
@@ -366,9 +559,16 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["combat.skill4"],
-      "surfaces": ["ground"],
-      "weapons": ["spear", "greatsword"],
+      "states": [
+        "combat.skill4"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "spear",
+        "greatsword"
+      ],
       "priority": 100
     },
     {
@@ -379,9 +579,17 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["traversal.jump"],
-      "surfaces": ["ground", "wade", "wallRun"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.jump"
+      ],
+      "surfaces": [
+        "ground",
+        "wade",
+        "wallRun"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100
     },
     {
@@ -392,9 +600,15 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["traversal.dodge"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.dodge"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100
     },
     {
@@ -405,9 +619,15 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["traversal.dodge"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.dodge"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90
     },
     {
@@ -418,9 +638,15 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["traversal.dodge"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.dodge"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90
     },
     {
@@ -431,9 +657,15 @@
       "source": "baked",
       "status": "ready",
       "loop": false,
-      "states": ["traversal.dodge"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.dodge"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90
     },
     {
@@ -443,13 +675,21 @@
       "sourceRel": "anim/swim/swimming.fbx",
       "bakeRel": "swim/swimming",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["loco.swim"],
-      "surfaces": ["swim"],
-      "weapons": ["*"],
+      "states": [
+        "loco.swim"
+      ],
+      "surfaces": [
+        "swim"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "swim/tread",
@@ -458,13 +698,22 @@
       "sourceRel": "anim/swim/treading-water.fbx",
       "bakeRel": "swim/treading",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["loco.tread"],
-      "surfaces": ["swim", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "loco.tread"
+      ],
+      "surfaces": [
+        "swim",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "swim/exit",
@@ -473,13 +722,22 @@
       "sourceRel": "anim/swim/swimming-to-edge.fbx",
       "bakeRel": "swim/to_edge",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": false,
-      "states": ["loco.swim"],
-      "surfaces": ["swim", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "loco.swim"
+      ],
+      "surfaces": [
+        "swim",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 80,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "climb/climb",
@@ -488,13 +746,22 @@
       "sourceRel": "anim/climb/climbing.fbx",
       "bakeRel": "climb/climbing",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.climb"],
-      "surfaces": ["climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.climb"
+      ],
+      "surfaces": [
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake", "vertical_grab"]
+      "tags": [
+        "needs_bake",
+        "vertical_grab"
+      ]
     },
     {
       "id": "climb/climbUp",
@@ -503,13 +770,25 @@
       "sourceRel": "anim/climb/climbing-up-wall.fbx",
       "bakeRel": "climb/up",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.climbUp"],
-      "surfaces": ["climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.climbUp"
+      ],
+      "surfaces": [
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake", "vertical_grab", "wall", "tree", "boat"]
+      "tags": [
+        "needs_bake",
+        "vertical_grab",
+        "wall",
+        "tree",
+        "boat"
+      ]
     },
     {
       "id": "climb/climbDown",
@@ -518,13 +797,21 @@
       "sourceRel": "anim/climb/climbing-down-wall.fbx",
       "bakeRel": "climb/down",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.climbDown"],
-      "surfaces": ["climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.climbDown"
+      ],
+      "surfaces": [
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "climb/hang",
@@ -533,13 +820,24 @@
       "sourceRel": "anim/climb/hanging-idle.fbx",
       "bakeRel": "climb/hang_idle",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.hang"],
-      "surfaces": ["climb", "mantle"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.hang"
+      ],
+      "surfaces": [
+        "climb",
+        "mantle"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake", "vertical_grab", "freehang"]
+      "tags": [
+        "needs_bake",
+        "vertical_grab",
+        "freehang"
+      ]
     },
     {
       "id": "climb/grab",
@@ -548,13 +846,26 @@
       "sourceRel": "anim/climb/jump-to-freehang.fbx",
       "bakeRel": "climb/jump_to_hang",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": false,
-      "states": ["traversal.hang"],
-      "surfaces": ["climb", "mantle"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.hang"
+      ],
+      "surfaces": [
+        "climb",
+        "mantle"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake", "vertical_grab", "wall", "boat", "tree"]
+      "tags": [
+        "needs_bake",
+        "vertical_grab",
+        "wall",
+        "boat",
+        "tree"
+      ]
     },
     {
       "id": "climb/standToHang",
@@ -563,13 +874,21 @@
       "sourceRel": "anim/climb/stand-to-freehang.fbx",
       "bakeRel": "climb/stand_to_hang",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": false,
-      "states": ["traversal.hang"],
-      "surfaces": ["climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.hang"
+      ],
+      "surfaces": [
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 90,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "climb/mantle",
@@ -578,13 +897,26 @@
       "sourceRel": "anim/climb/climbing-to-top.fbx",
       "bakeRel": "climb/to_top",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": false,
-      "states": ["traversal.mantle"],
-      "surfaces": ["mantle", "climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.mantle"
+      ],
+      "surfaces": [
+        "mantle",
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake", "ledge", "boat", "wall", "tree"]
+      "tags": [
+        "needs_bake",
+        "ledge",
+        "boat",
+        "wall",
+        "tree"
+      ]
     },
     {
       "id": "climb/wallRun",
@@ -593,13 +925,21 @@
       "sourceRel": "anim/climb/wall-run.fbx",
       "bakeRel": "climb/wall_run",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.wallRun"],
-      "surfaces": ["wallRun"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.wallRun"
+      ],
+      "surfaces": [
+        "wallRun"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 100,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "climb/freehangClimb",
@@ -608,13 +948,23 @@
       "sourceRel": "anim/climb/freehang-climb.fbx",
       "bakeRel": "climb/freehang_climb",
       "source": "mixamo_fbx",
-      "status": "placeholder",
+      "status": "ready",
       "loop": true,
-      "states": ["traversal.climb", "traversal.hang"],
-      "surfaces": ["climb"],
-      "weapons": ["*"],
+      "states": [
+        "traversal.climb",
+        "traversal.hang"
+      ],
+      "surfaces": [
+        "climb"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 95,
-      "tags": ["needs_bake", "vertical_grab"]
+      "tags": [
+        "needs_bake",
+        "vertical_grab"
+      ]
     },
     {
       "id": "harvest/chop",
@@ -625,11 +975,21 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["activity.harvestChop", "activity.harvest"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "activity.harvestChop",
+        "activity.harvest"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 80,
-      "tags": ["needs_bake", "wood"]
+      "tags": [
+        "needs_bake",
+        "wood"
+      ]
     },
     {
       "id": "harvest/gather",
@@ -640,11 +1000,22 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["activity.harvestGather", "activity.harvest"],
-      "surfaces": ["ground", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "activity.harvestGather",
+        "activity.harvest"
+      ],
+      "surfaces": [
+        "ground",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 80,
-      "tags": ["needs_bake", "forage"]
+      "tags": [
+        "needs_bake",
+        "forage"
+      ]
     },
     {
       "id": "harvest/plant",
@@ -655,11 +1026,21 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["activity.harvest", "activity.build"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "activity.harvest",
+        "activity.build"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 70,
-      "tags": ["needs_bake", "farm"]
+      "tags": [
+        "needs_bake",
+        "farm"
+      ]
     },
     {
       "id": "harvest/pull",
@@ -670,11 +1051,19 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["activity.harvest"],
-      "surfaces": ["ground"],
-      "weapons": ["*"],
+      "states": [
+        "activity.harvest"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 70,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "harvest/water",
@@ -685,11 +1074,20 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["activity.harvest"],
-      "surfaces": ["ground", "wade"],
-      "weapons": ["*"],
+      "states": [
+        "activity.harvest"
+      ],
+      "surfaces": [
+        "ground",
+        "wade"
+      ],
+      "weapons": [
+        "*"
+      ],
       "priority": 70,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     },
     {
       "id": "twohand/attack",
@@ -700,12 +1098,23 @@
       "source": "explosive",
       "status": "missing",
       "loop": false,
-      "states": ["combat.attack"],
-      "surfaces": ["ground"],
-      "weapons": ["greatsword", "greataxe", "hammer2h"],
+      "states": [
+        "combat.attack"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "greatsword",
+        "greataxe",
+        "hammer2h"
+      ],
       "priority": 100,
       "lockSec": 0.9,
-      "tags": ["needs_bake", "explosive"]
+      "tags": [
+        "needs_bake",
+        "explosive"
+      ]
     },
     {
       "id": "crossbow/shoot",
@@ -715,12 +1124,22 @@
       "source": "explosive",
       "status": "missing",
       "loop": false,
-      "states": ["combat.attack"],
-      "surfaces": ["ground"],
-      "weapons": ["crossbow"],
+      "states": [
+        "combat.attack"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "crossbow"
+      ],
       "priority": 100,
       "lockSec": 0.8,
-      "tags": ["needs_bake", "explosive", "buy_pack"]
+      "tags": [
+        "needs_bake",
+        "explosive",
+        "buy_pack"
+      ]
     },
     {
       "id": "rifle/fire",
@@ -731,11 +1150,22 @@
       "source": "mixamo_fbx",
       "status": "placeholder",
       "loop": false,
-      "states": ["combat.attack"],
-      "surfaces": ["ground"],
-      "weapons": ["rifle", "hunter-rifle", "shotgun", "pistol"],
+      "states": [
+        "combat.attack"
+      ],
+      "surfaces": [
+        "ground"
+      ],
+      "weapons": [
+        "rifle",
+        "hunter-rifle",
+        "shotgun",
+        "pistol"
+      ],
       "priority": 80,
-      "tags": ["needs_bake"]
+      "tags": [
+        "needs_bake"
+      ]
     }
   ],
   "bannedBakeRels": [

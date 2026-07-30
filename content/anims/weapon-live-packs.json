@@ -23,14 +23,33 @@
       "dodge": "locomotion/dodging",
       "dodgeF": "longbow/standing dodge forward",
       "dodgeL": "longbow/standing dodge left",
-      "dodgeR": "longbow/standing dodge right"
+      "dodgeR": "longbow/standing dodge right",
+      "crawl": "locomotion/crawl",
+      "swim": "swim/swimming",
+      "tread": "swim/treading",
+      "climb": "climb/climbing",
+      "climbUp": "climb/up",
+      "mantle": "climb/to_top",
+      "hang": "climb/hang_idle",
+      "wallRun": "climb/wall_run"
     },
-    "alwaysLoadWithWeapon": true
+    "alwaysLoadWithWeapon": true,
+    "notes": [
+      "Sprint is NOT a bake path — clone pack.run + SPRINT_LOCO_MULT. locomotion/running is BANNED run-to-roll.",
+      "crawl/climb/swim Mixamo under public/anim/* → bake to anims/baked/* before production."
+    ]
   },
   "roleContract": {
     "required": ["idle", "walk", "run", "attack"],
     "recommended": ["sprint", "jump", "dodge", "skill1", "skill2", "skill3", "skill4"],
-    "optional": ["hurt", "death", "block", "parry", "cast"]
+    "optional": ["hurt", "death", "block", "parry", "cast", "crawl", "swim", "climb", "mantle", "hang"],
+    "neverAliasToAttack": ["jump", "dodge", "roll", "sprint", "crawl", "swim", "climb", "hurt", "death", "block", "parry"]
+  },
+  "namingCorrections": {
+    "locomotion/running": "BANNED — run-to-roll transition, not sprint",
+    "sprint": "Runtime role only: clone of verified run cycle × 1.75 timeScale",
+    "polearm/run": "Do not use as gait — Madarame full take ~5s; use torch run / standing run",
+    "locomotion/walking": "BANNED tip/fall on Arena GLB kits — use Standing Walk Forward"
   },
   "weapons": {
     "none": {

@@ -1,206 +1,219 @@
 import * as THREE from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { loadFbxFirst, loadGltfFirst } from "./assets";
+import { loadGltfFirst } from "./assets";
 import { sharedGltfLoader } from "./loaders/gltf";
-import { CHARACTER_HEIGHT_M } from "./types";
-import { loadSkeletonSource } from "./explorer/loader";
-import {
-  findSkinnedMesh,
-  makeRetargetSource,
-  skeletonBoneNames,
-  retargetLibraryClip,
-} from "./retargetLibrary";
-import { buildRetargetNameMap } from "./retargetMap";
 import type { MusicPulse } from "./audio/CombatSfx";
 
-/** Beats per musical phrase (a chord's worth) — the cadence on which the DJ
- *  re-decides idle vs dance, so switches land on phrase boundaries. */
+/** Beats per phrase — DJ re-picks show clip on boundaries. */
 const DANCE_PHRASE_BEATS = 8;
 
 /**
- * The resident DJ in the alcove above the Danger Room door: Racalvin the Pirate
- * King stands behind a booth, idling to his own native clip and bursting into a
- * retargeted hip-hop dance (fist pumps included) every now and then.
+ * Racalvin disc-jockey show piece for the Danger Room cove.
  *
- * Self-contained scenery actor — it owns its models, mixer and dance timer, and
- * is fully disposable. The hip-hop FBX is authored on the shared `mixamorig*`
- * skeleton, so it is driven onto Racalvin's own rig through the unified runtime
- * retarget pipeline ({@link retargetLibraryClip}), the same path the Danger Room
- * fighter uses to play the FBX library on a real GLB rig.
+ * Loads `models/dj/disc_jockey.glb` (native clips: idle, noticing player,
+ * music playing, swing, change discs, towerup, defeated). Larger cove in
+ * {@link DangerRoom} gives room for cages, lights, and VFX while backgrounds
+ * stay visible through the alcove window.
+ *
+ * Fallback keys keep older racalvin + booth assets if the new pack is missing.
  */
 export class DjBooth {
   readonly group = new THREE.Group();
 
   private mixer: THREE.AnimationMixer | null = null;
-  private idleAction: THREE.AnimationAction | null = null;
-  private danceAction: THREE.AnimationAction | null = null;
+  private actions = new Map<string, THREE.AnimationAction>();
   private current: THREE.AnimationAction | null = null;
-
-  /** Loaded model roots, tracked for disposal. */
   private roots: THREE.Object3D[] = [];
-
-  /** Whether the DJ is currently in his dance burst (vs idling). */
   private dancing = false;
-  /** Last musical phrase index acted on, so we re-decide once per phrase. */
   private lastPhrase = -1;
-
-  /** Cancels late async work if disposed mid-load. */
   private disposed = false;
+  /** Source URL that loaded (for debug HUD). */
+  sourceUrl = "";
 
   constructor(
     private readonly anchor: THREE.Vector3,
-    /** Facing yaw (radians); Racalvin's def uses modelYaw = PI to face -Z. */
+    /** Facing yaw (radians); default faces into the room (-Z). */
     private readonly facing = Math.PI,
   ) {
     this.group.position.copy(anchor);
+    this.group.name = "DjBoothRacalvin";
   }
 
-  /** Load the booth + DJ and wire up animation. Safe to await; no-op if disposed. */
   async load(): Promise<void> {
     const gltfLoader = sharedGltfLoader();
-    const fbxLoader = new FBXLoader();
+    // Primary: full disc_jockey show pack. Fallbacks: legacy booth + racalvin.
+    const primary = await loadGltfFirst(
+      [
+        "models/dj/disc_jockey.glb",
+        "models/disc_jockey.glb",
+        "models/racalvin.glb",
+      ],
+      gltfLoader,
+      { prepMaterials: true },
+    ).catch(() => null);
 
-    // Mixamo dance FBX is stripped from Vercel (.vercelignore **/*.fbx) — optional.
-    const danceFbxP = loadFbxFirst(
-      "anim/animations/extra/hip-hop-dancing.fbx",
-      fbxLoader,
-      { sameOriginOnly: true },
-    )
-      .then((r) => r.group)
-      .catch(() => null);
-    const [djGltf, boothGltf, danceFbx, skelSource] = await Promise.all([
-      loadGltfFirst("models/racalvin.glb", gltfLoader),
-      loadGltfFirst("models/dj-booth.glb", gltfLoader),
-      danceFbxP,
-      loadSkeletonSource(),
-    ]);
     if (this.disposed) {
-      this.disposeObject(djGltf.scene);
-      this.disposeObject(boothGltf.scene);
-      if (danceFbx) this.disposeObject(danceFbx);
-      this.disposeObject(skelSource);
+      if (primary) this.disposeObject(primary.scene);
+      return;
+    }
+    if (!primary) {
+      console.warn("[DjBooth] no disc_jockey / racalvin GLB found");
       return;
     }
 
-    // --- Booth (scenery prop) in front of the DJ, toward the window (-Z). ---
-    const booth = boothGltf.scene;
-    this.normalize(booth, 1.25);
-    booth.position.set(0, 0, -1.0);
-    booth.rotation.y = this.facing;
-    booth.traverse((o) => {
-      const m = o as THREE.Mesh;
-      if (m.isMesh) m.castShadow = false;
+    this.sourceUrl = primary.url;
+    const root = primary.scene;
+    root.name = "RacalvinDiscJockey";
+
+    // disc_jockey authored large / uneven — fit to ~2.0 m visual height in cove
+    // but allow wider footprint for decks/cages (cove is ~10 m wide after expand).
+    this.normalizeToCove(root, {
+      targetHeight: 2.05,
+      maxFootprintXZ: 6.5,
     });
-    this.group.add(booth);
-    this.roots.push(booth);
+    root.rotation.y = this.facing;
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+        m.frustumCulled = true;
+      }
+    });
+    this.group.add(root);
+    this.roots.push(root);
 
-    // --- DJ (Racalvin) standing behind the booth. ---
-    const dj = djGltf.scene;
-    this.normalize(dj, CHARACTER_HEIGHT_M);
-    dj.rotation.y = this.facing;
-    this.group.add(dj);
-    this.roots.push(dj);
-
-    const target = findSkinnedMesh(dj);
-    this.mixer = new THREE.AnimationMixer(dj);
-
-    // Native idle clip from Racalvin's own GLB (binds by node name as-is).
-    const idleClip =
-      djGltf.animations.find((c) => /idle/i.test(c.name)) ?? djGltf.animations[0] ?? null;
-    if (idleClip) {
-      this.idleAction = this.mixer.clipAction(idleClip);
-      this.idleAction.play();
-      this.current = this.idleAction;
+    this.mixer = new THREE.AnimationMixer(root);
+    const clips = primary.animations ?? [];
+    for (const clip of clips) {
+      const action = this.mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      this.actions.set(clip.name.toLowerCase(), action);
     }
 
-    // Hip-hop dance: retarget the mixamorig FBX onto Racalvin's rig (optional pack).
-    const rawDance = danceFbx?.animations?.[0] ?? null;
-    if (target && rawDance) {
-      const source = makeRetargetSource(skelSource);
-      if (source) {
-        const map = buildRetargetNameMap(skeletonBoneNames(target.skeleton));
-        if (Object.keys(map.names).length > 0) {
-          try {
-            const danceClip = retargetLibraryClip(target, source, rawDance, map, "dj-dance");
-            target.skeleton.pose(); // restore bind pose after baking
-            this.danceAction = this.mixer.clipAction(danceClip);
-            this.danceAction.setLoop(THREE.LoopRepeat, Infinity);
-          } catch (err) {
-            console.warn("[DjBooth] dance retarget failed", err);
-          }
+    // Optional separate booth prop if we only got bare racalvin character.
+    if (/racalvin/i.test(primary.url) && !/disc_jockey/i.test(primary.url)) {
+      try {
+        const boothGltf = await loadGltfFirst("models/dj-booth.glb", gltfLoader, {
+          prepMaterials: true,
+        });
+        if (!this.disposed) {
+          const booth = boothGltf.scene;
+          this.normalizeToCove(booth, { targetHeight: 1.25, maxFootprintXZ: 3 });
+          booth.position.set(0, 0, -1.2);
+          booth.rotation.y = this.facing;
+          this.group.add(booth);
+          this.roots.push(booth);
+        } else {
+          this.disposeObject(boothGltf.scene);
         }
+      } catch {
+        /* booth optional */
       }
     }
 
-    // The skeleton-source scene was only needed for retargeting.
-    this.disposeObject(skelSource);
+    const idle = this.pickAction(["idle", "music playing", "noticing player"]);
+    if (idle) {
+      idle.play();
+      this.current = idle;
+    }
   }
 
   /**
-   * Advance the mixer and drive the idle⇄dance switching off the live music
-   * bed (`music`) rather than a private timer. The dance speeds up with the
-   * music's energy, and once per musical phrase the DJ re-rolls whether to
-   * dance with a probability that climbs with intensity — so he bursts into the
-   * groove when the room heats up and mostly idles when it's calm. When no music
-   * pulse is available yet (audio still gated behind a gesture) he simply idles.
+   * Drive native show clips from the live music bed.
+   * Calm → idle / noticing · heated → music playing / swing · peaks → change discs.
    */
   update(dt: number, music: MusicPulse | null = null): void {
     if (!this.mixer) return;
     this.mixer.update(dt);
+    if (this.actions.size === 0) return;
+    if (!music) return;
 
-    if (!this.danceAction) return; // retarget unavailable → idle only
-    if (!music) return; // no live music yet → DJ waits, idling
-
-    // Ride the beat: the dance tempo tracks the music's energy so the fist
-    // pumps quicken with the set instead of running at a fixed speed.
-    this.danceAction.timeScale = 0.9 + music.intensity * 0.6;
-
-    // Re-decide once per phrase boundary so switches land musically.
     const phrase = Math.floor(music.beat / DANCE_PHRASE_BEATS);
     if (phrase === this.lastPhrase) return;
     this.lastPhrase = phrase;
 
-    // Chance of dancing rises with intensity (small floor so he still grooves
-    // to a calm set, near-certain at peak combat).
-    const danceChance = 0.25 + music.intensity * 0.7;
-    const wantDance = Math.random() < danceChance;
-    if (wantDance && !this.dancing) {
-      this.fadeTo(this.danceAction);
-      this.dancing = true;
-    } else if (!wantDance && this.dancing && this.idleAction) {
-      this.fadeTo(this.idleAction);
-      this.dancing = false;
+    const intensity = music.intensity;
+    let want: string[];
+    if (intensity > 0.72) {
+      want = ["change discs 1", "change discs 2", "towerup", "swing", "music playing"];
+    } else if (intensity > 0.4) {
+      want = ["music playing", "swing", "idle"];
+    } else if (intensity > 0.15) {
+      want = ["noticing player", "idle", "music playing"];
+    } else {
+      want = ["idle", "noticing player"];
     }
+
+    const next = this.pickAction(want);
+    if (!next) return;
+    if (this.current === next) {
+      next.timeScale = 0.85 + intensity * 0.55;
+      return;
+    }
+    next.timeScale = 0.85 + intensity * 0.55;
+    this.fadeTo(next);
+    this.dancing = intensity > 0.35;
   }
 
-  /** Crossfade the active action to `to` over a short blend. */
+  private pickAction(names: string[]): THREE.AnimationAction | null {
+    for (const n of names) {
+      const key = n.toLowerCase();
+      const hit = this.actions.get(key);
+      if (hit) return hit;
+      // fuzzy: clip name contains token
+      for (const [k, a] of this.actions) {
+        if (k.includes(key) || key.includes(k)) return a;
+      }
+    }
+    // first available
+    return this.actions.values().next().value ?? null;
+  }
+
   private fadeTo(to: THREE.AnimationAction): void {
     if (this.current === to) return;
     to.reset().setEffectiveWeight(1).play();
-    if (this.current) this.current.crossFadeTo(to, 0.4, false);
+    if (this.current) this.current.crossFadeTo(to, 0.45, false);
     this.current = to;
   }
 
   /**
-   * Fit `obj` to `targetHeight` metres, recentre on X/Z and drop its base to
-   * y=0 (so positioning is by feet/base) — mirrors the Character GLB normalise.
+   * Fit showpiece into the cove: height target, then cap XZ footprint so decks
+   * / cages don't punch through side walls.
    */
-  private normalize(obj: THREE.Object3D, targetHeight: number): void {
+  private normalizeToCove(
+    obj: THREE.Object3D,
+    opts: { targetHeight: number; maxFootprintXZ: number },
+  ): void {
+    obj.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj);
+    if (!Number.isFinite(box.min.x)) return;
     const size = box.getSize(new THREE.Vector3());
-    if (size.y > 1e-4) obj.scale.setScalar(targetHeight / size.y);
+    let s = 1;
+    if (size.y > 1e-4) s = opts.targetHeight / size.y;
+    // Cap wild authored extents (disc_jockey accessor noise can be huge)
+    const maxDim = Math.max(size.x, size.y, size.z) * s;
+    if (maxDim > 12) s *= 8 / maxDim;
+    obj.scale.setScalar(s);
+    obj.updateMatrixWorld(true);
     const box2 = new THREE.Box3().setFromObject(obj);
-    const center = box2.getCenter(new THREE.Vector3());
+    const size2 = box2.getSize(new THREE.Vector3());
+    const foot = Math.max(size2.x, size2.z);
+    if (foot > opts.maxFootprintXZ && foot > 1e-4) {
+      obj.scale.multiplyScalar(opts.maxFootprintXZ / foot);
+      obj.updateMatrixWorld(true);
+    }
+    const box3 = new THREE.Box3().setFromObject(obj);
+    const center = box3.getCenter(new THREE.Vector3());
     obj.position.x -= center.x;
     obj.position.z -= center.z;
-    obj.position.y -= box2.min.y;
+    obj.position.y -= box3.min.y;
   }
 
   private disposeObject(obj: THREE.Object3D): void {
     obj.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
-      const mat = (m as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else if (mat) mat.dispose();
     });
@@ -210,6 +223,7 @@ export class DjBooth {
     this.disposed = true;
     this.mixer?.stopAllAction();
     this.mixer = null;
+    this.actions.clear();
     for (const r of this.roots) this.disposeObject(r);
     this.roots = [];
     this.group.clear();

@@ -48,6 +48,103 @@
       "notes": "Chicken-gun forest base — nature stripped + Warlords scatter"
     },
     {
+      "id": "world_tropical_island_small",
+      "r2Key": "models/warlords-era/worlds/tropical_island_small.glb",
+      "category": "world_terrain",
+      "role": "tropical_biome",
+      "testWorldId": "tropical-harvest",
+      "contentType": "model/gltf-binary",
+      "notes": "Production tropical fallback when SPA tropical (~69MB) not deployed"
+    },
+    {
+      "id": "world_low_poly_island",
+      "r2Key": "models/warlords-era/worlds/low_poly_island.glb",
+      "category": "world_terrain",
+      "role": "island_fallback",
+      "contentType": "model/gltf-binary",
+      "notes": "Warlords low-poly island — tropical/sail fallback"
+    },
+    {
+      "id": "world_pirate_island_pack",
+      "r2Key": "models/warlords-era/worlds/pirate_island_pack.glb",
+      "category": "world_terrain",
+      "role": "pirate_coast",
+      "testWorldId": "fabled-zone",
+      "contentType": "model/gltf-binary",
+      "notes": "Fabled missing → pirate pack stand-in; pirate-village CDN fallback"
+    },
+    {
+      "id": "world_ice_world",
+      "r2Key": "models/warlords-era/worlds/ice_world.glb",
+      "category": "world_terrain",
+      "role": "ice_biome",
+      "testWorldId": "ice-world",
+      "contentType": "model/gltf-binary",
+      "notes": "Ice biome lab"
+    },
+    {
+      "id": "world_medieval_camp",
+      "r2Key": "models/warlords-era/worlds/medieval_camp.glb",
+      "category": "world_terrain",
+      "role": "camp_town",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "biome_glowstone_mountain",
+      "r2Key": "models/voxel/maps/glowstone_mountain.glb",
+      "category": "world_terrain",
+      "role": "mountain_desert",
+      "testWorldId": "desert-canyon",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "biome_low_poly_canyon",
+      "r2Key": "models/voxel/maps/low_poly_canyon.glb",
+      "category": "world_terrain",
+      "role": "desert_canyon",
+      "testWorldId": "desert-canyon",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "biome_geonosis_arena",
+      "r2Key": "models/voxel/maps/geonosis_arena.glb",
+      "category": "world_terrain",
+      "role": "volcanic_standin",
+      "testWorldId": "volcanic-standin",
+      "contentType": "model/gltf-binary",
+      "notes": "No dedicated volcanic island mesh on R2"
+    },
+    {
+      "id": "biome_pirat_bay",
+      "r2Key": "models/voxel/maps/pirat_bay.glb",
+      "category": "world_terrain",
+      "role": "coast",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "plains_amida_fields",
+      "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
+      "category": "world_terrain",
+      "role": "plains",
+      "testWorldId": "plains-fields",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "plains_low_poly_farm",
+      "r2Key": "models/packs/low_poly_farm.glb",
+      "category": "world_terrain",
+      "role": "plains_farm",
+      "testWorldId": "plains-fields",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "id": "nature_tropical_plants",
+      "r2Key": "models/nature/stylized/biome/tropical_plants.glb",
+      "category": "nature",
+      "role": "tropical_plants",
+      "contentType": "model/gltf-binary"
+    },
+    {
       "id": "nature_vegetation",
       "r2Key": "models/nature/stylized/biome/nature_vegetation.glb",
       "category": "nature",
