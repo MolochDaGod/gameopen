@@ -244,6 +244,7 @@ import { SKILL_KIND_ICON } from "./icons";
 import { PLAYER_HEADBUTT_PAYLOAD, PLAYER_HEAVY_PAYLOAD, PLAYER_STOMP_PAYLOAD, SparringCombat } from "./SparringCombat";
 import { isDefended, outcomeForceScale } from "./combatModel";
 import type { AttackPayload, DefensiveResult } from "@workspace/epicfight";
+import { HtmlOverlaySystem } from "./overlays";
 import { RemoteAvatar } from "./RemoteAvatar";
 import type { DangerClient } from "../net/DangerClient";
 import {
@@ -870,6 +871,11 @@ export class Studio {
   private rHoldArmed = false;
   /** Free-mouse was forced open for radial mouse-aim (restore is optional). */
   private radialForcedFreeMouse = false;
+  /**
+   * CSS2D HTML overlays — damage/heal floats, blood flashes, building plates,
+   * enter/exit chips (threejs-html-overlays dual-renderer pattern).
+   */
+  private htmlOverlays: HtmlOverlaySystem | null = null;
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
@@ -1150,6 +1156,8 @@ export class Studio {
     // Correct output colour space for sRGB albedo maps (prevents washed / muddy kits).
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(this.renderer.domElement);
+    // CSS2D world overlays (damage numbers, interact chips) — sibling of WebGL.
+    this.htmlOverlays = new HtmlOverlaySystem(container, this.scene, this.camera);
     // KTX2 + texture anisotropy: bind ASAP so first character/VFX loads decode well.
     void Promise.all([
       import("./loaders/gltf"),
@@ -1225,10 +1233,35 @@ export class Studio {
     this.campBuild = new CampBuildSystem(this.scene, {
       flash: (msg, t) => this.setCombatFlash(msg, t ?? 0.8),
       getPlayerPos: () => this.character?.root.position.clone() ?? new THREE.Vector3(),
+      onPlaced: (s) => {
+        // World HTML nameplate above buildings / placeables
+        const def = getPlaceable(s.placeableId);
+        const at = new THREE.Vector3(s.x, s.y, s.z);
+        this.htmlOverlays?.setBuildingLabel(
+          s.instanceId,
+          at,
+          def?.name ?? s.placeableId.replace(/_/g, " "),
+          def?.category?.replace(/_/g, " "),
+        );
+        if (def?.behavior === "door" || def?.behavior === "gate") {
+          this.htmlOverlays?.setPortalChip(
+            s.instanceId,
+            at,
+            def.behavior === "gate" ? "Open gate" : "Open door",
+            { kind: "enter", keyHint: "E" },
+          );
+        } else if (def?.behavior === "workbench") {
+          this.htmlOverlays?.setInteractChip(s.instanceId, at, def.name, {
+            kind: "building",
+            keyHint: "E",
+          });
+        }
+      },
       onAreaDamage: (pos, _radius, damage, kind) => {
         // Visual + flash; towers/traps apply pressure cue (full dummy HP hook later)
         this.vfx.burst(pos.clone().setY(pos.y + 0.6), kind === "tower" ? 0xffaa44 : 0xff5555, 14, 2.4);
         this.vfx.impact(pos.clone().setY(pos.y + 0.4), kind === "tower" ? 0xffcc66 : 0xff6666, 1.1);
+        this.htmlOverlays?.floatDamage(pos.clone().setY(pos.y + 1.2), damage, false);
         this.setCombatFlash(
           kind === "tower" ? `TOWER HIT · ${damage}` : `TRAP · ${damage}`,
           0.35,
@@ -1746,6 +1779,8 @@ export class Studio {
   private renderFrame(dt: number) {
     if (this.postfx) this.postfx.render(dt);
     else this.renderer.render(this.scene, this.camera);
+    // CSS2D after WebGL so labels track the same camera matrix this frame.
+    this.htmlOverlays?.render();
   }
 
   /** Spell/weapon cast: kick HDR bloom so ShaderMaterial fire/soul/dragon read. */
@@ -4366,11 +4401,30 @@ export class Studio {
           this.setCombatFlash("CRIT!", 0.9);
           this.vfx.fireAura(pos, 1.25, this.fireThemeApplied);
           this.vfx.impact(pos, 0xff6040, 1.6);
+          this.htmlOverlays?.floatDamage(pos, result.damageDealt || 1, true);
           break;
         case "hit":
           this.vfx.fireAura(pos, 0.8, this.fireThemeApplied, { groundOnly: true });
           this.vfx.impact(pos, 0xff8060, 1.05);
+          if (result.damageDealt > 0) {
+            this.htmlOverlays?.floatDamage(pos, result.damageDealt, false);
+          }
           break;
+      }
+      // World-space outcome text (enemy as defender against player swing)
+      if (
+        result.outcome === "blockStop" &&
+        result.defenderReaction !== "stunned" &&
+        result.damageDealt <= 0
+      ) {
+        this.htmlOverlays?.floatNumber(pos, 0, "block");
+      } else if (
+        result.outcome === "dodgeEvade" ||
+        result.outcome === "dodgePunish" ||
+        result.outcome === "deflect" ||
+        result.outcome === "perfectParry"
+      ) {
+        this.htmlOverlays?.floatNumber(pos, 0, "miss");
       }
     };
     this.targets.onEnemyState = (pos, state) => {
@@ -4497,6 +4551,19 @@ export class Studio {
     this.lastIncomingSkill = !!isSkill;
     const hadParrySession = !!this.parrySession;
     const result = this.sparring.resolvePlayerDefense(payload, chest);
+
+    // Player-as-defender floating numbers (incoming damage / block / miss)
+    if (result.damageDealt > 0) {
+      this.htmlOverlays?.floatDamage(chest, result.damageDealt, result.outcome === "crit");
+    } else if (isDefended(result.outcome)) {
+      const kind =
+        result.outcome === "blockStop" || result.outcome === "deflect"
+          ? "block"
+          : result.outcome === "perfectParry"
+            ? "block"
+            : "miss";
+      this.htmlOverlays?.floatNumber(chest, 0, kind);
+    }
 
     // Failed / late parry → full damage already applied; slow stamina recover 2s
     if (
@@ -10064,6 +10131,7 @@ export class Studio {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.postfx?.setSize(w, h);
+    this.htmlOverlays?.setSize(w, h);
   }
 
   /**
@@ -10138,6 +10206,7 @@ export class Studio {
     // Prefer live CPT RAC / radio pulse so the booth dances to real tracks.
     this.djBooth?.update(dt, this.sfx?.getMusicPulse() ?? null);
     // Interaction prompts: door portal, camp claim flag, or placeable interact
+    // + world-space CSS2D chips (enter/exit/claim) for production HTML overlays.
     this.doorPrompt = false;
     this.claimInteractPrompt = false;
     if (
@@ -10149,9 +10218,36 @@ export class Studio {
       const pos = this.character.root.position;
       if (this.room.nearDoor(pos)) {
         this.doorPrompt = true;
-      } else if (this.nearClaimFlag(pos)) {
-        this.claimInteractPrompt = true;
+        const doorAt = pos.clone();
+        // Prefer room door world point when available
+        const doorPos =
+          (this.room as { doorWorldPos?: () => THREE.Vector3 | null }).doorWorldPos?.() ??
+          null;
+        const anchor = doorPos?.clone() ?? doorAt.clone().add(new THREE.Vector3(0, 0, -2));
+        this.htmlOverlays?.setPortalChip("danger-door", anchor, "Enter dungeon", {
+          kind: "enter",
+          keyHint: "E",
+          onClick: () => this.handleKey("KeyE"),
+        });
+      } else {
+        this.htmlOverlays?.clearWorldLabel("portal:danger-door");
       }
+      if (this.nearClaimFlag(pos)) {
+        this.claimInteractPrompt = true;
+        // Place chip slightly above player feet toward claim (approx)
+        const claimAt = pos.clone();
+        claimAt.y = 0;
+        this.htmlOverlays?.setInteractChip("claim-flag", claimAt, "Open camp claim", {
+          kind: "claim",
+          keyHint: "E",
+          onClick: () => this.onClaimFlagInteract?.(),
+        });
+      } else {
+        this.htmlOverlays?.clearInteractChip("claim-flag");
+      }
+    } else {
+      this.htmlOverlays?.clearWorldLabel("portal:danger-door");
+      this.htmlOverlays?.clearInteractChip("claim-flag");
     }
     if (this.controller && this.character) {
       // Free-mouse / unlocked: aim follows OS cursor (soft-lock select under cursor).
@@ -10866,6 +10962,7 @@ export class Studio {
     // do NOT regen it locally — the CombatController handles regen internally.
 
     this.vfx.update(dt);
+    this.htmlOverlays?.update(dt);
     // Network snapshot cadence must stay real-time so slow-mo (a local tuning
     // tool) never throttles outbound multiplayer reports — drive it off `raw`.
     this.updateNet(raw);
@@ -12026,7 +12123,24 @@ export class Studio {
       this.vfx?.castSwirl?.(core, 0x9affc0, 0.7, 0.8);
       this.vfx?.auraRing?.(core, GREEN, 1.2, 0.7);
       this.vfx?.burst?.(base.clone().setY(base.y + 0.4), 0xa8ffd0, 28, 4);
+      if (h > 0) this.htmlOverlays?.floatHeal(core, h);
+      if (s > 0) this.htmlOverlays?.floatNumber(core, s, "stamina");
     }
+  }
+
+  /** Public HTML overlay API for camp buildings, portals, interact chips. */
+  get htmlWorldOverlays(): HtmlOverlaySystem | null {
+    return this.htmlOverlays;
+  }
+
+  /** Label a placed structure (nameplate above building). */
+  labelBuilding(id: string, worldPos: THREE.Vector3, name: string, sub?: string) {
+    this.htmlOverlays?.setBuildingLabel(id, worldPos, name, sub);
+  }
+
+  /** Clear all building labels (map swap / camp clear). */
+  clearBuildingLabels() {
+    this.htmlOverlays?.clearWorldLabels("building:");
   }
 
   private pickRadialByIndex(i: number) {
@@ -13931,6 +14045,7 @@ export class Studio {
         this.vfx.nova(core, 0x88ffb0);
         this.vfx.burst(base.clone().setY(base.y + 0.4), 0xa8ffd0, 44, 5);
         this.vfx.shockwave(ground, GREEN, 1.6, 0.55);
+        this.htmlOverlays?.floatHeal(core, heal);
       },
     });
 
@@ -14717,6 +14832,8 @@ export class Studio {
     }
     this.pending.length = 0;
     this.abilities.cancelAll();
+    this.htmlOverlays?.dispose();
+    this.htmlOverlays = null;
     this.scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (mesh.isMesh) {

@@ -1,0 +1,223 @@
+/**
+ * World-space HTML overlays (CSS2D) — damage/heal floats, interact chips,
+ * building plates, enter/exit markers. Root is pointer-events:none;
+ * interactive chips re-enable pointer-events:auto.
+ */
+
+.gxo-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 6;
+  font-family: "Cinzel", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Floating combat / heal numbers (pooled) ─────────────────────── */
+.gxo-float {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 0 #000,
+    0 0 10px rgba(0, 0, 0, 0.85),
+    0 2px 8px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  will-change: transform, opacity;
+  pointer-events: none;
+  user-select: none;
+}
+.gxo-float.is-live {
+  opacity: 1;
+}
+.gxo-float.kind-damage {
+  color: #ff6b5a;
+  font-size: 20px;
+}
+.gxo-float.kind-crit {
+  color: #ffd060;
+  font-size: 28px;
+  text-shadow:
+    0 0 12px rgba(255, 160, 40, 0.9),
+    0 2px 0 #4a2000,
+    0 0 18px rgba(0, 0, 0, 0.8);
+}
+.gxo-float.kind-heal {
+  color: #66ffaa;
+  font-size: 20px;
+}
+.gxo-float.kind-block {
+  color: #9ec8ff;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+}
+.gxo-float.kind-miss {
+  color: #b0c0d0;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+.gxo-float.kind-stamina {
+  color: #7fd0ff;
+  font-size: 17px;
+}
+
+/* ── Blood / 2D hit flash (screen-space, short life) ──────────────── */
+.gxo-blood {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%) scale(0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 40% 40%, rgba(180, 20, 30, 0.95), transparent 55%),
+    radial-gradient(circle at 65% 55%, rgba(90, 0, 10, 0.7), transparent 50%);
+  opacity: 0;
+  filter: blur(0.5px);
+  will-change: transform, opacity;
+}
+.gxo-blood.is-live {
+  opacity: 0.92;
+}
+
+/* ── Persistent world labels ─────────────────────────────────────── */
+.gxo-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  max-width: 220px;
+  text-align: center;
+}
+.gxo-label-title {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f0e6c8;
+  background: rgba(8, 10, 18, 0.78);
+  border: 1px solid rgba(232, 201, 106, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 200px;
+}
+.gxo-label-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(200, 210, 230, 0.85);
+  text-shadow: 0 1px 4px #000;
+}
+.gxo-label.kind-building .gxo-label-title {
+  border-color: rgba(127, 176, 255, 0.45);
+  color: #c8dcff;
+}
+.gxo-label.kind-portal .gxo-label-title,
+.gxo-label.kind-enter .gxo-label-title {
+  border-color: rgba(126, 231, 168, 0.55);
+  color: #b8ffd0;
+  box-shadow: 0 0 14px rgba(80, 200, 120, 0.25);
+}
+.gxo-label.kind-exit .gxo-label-title {
+  border-color: rgba(255, 140, 100, 0.5);
+  color: #ffc8b0;
+}
+.gxo-label.kind-npc .gxo-label-title {
+  border-color: rgba(180, 160, 255, 0.45);
+  color: #e0d4ff;
+}
+.gxo-label.kind-hostile .gxo-label-title {
+  border-color: rgba(255, 90, 90, 0.55);
+  color: #ffb0a8;
+}
+
+/* Interactive chips (E to enter, claim, building UI) */
+.gxo-chip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -120%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff3d6;
+  background: rgba(8, 6, 16, 0.78);
+  border: 1px solid rgba(255, 196, 96, 0.55);
+  box-shadow:
+    0 0 18px rgba(255, 170, 60, 0.35),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: gxo-chip-pulse 1.4s ease-in-out infinite;
+  user-select: none;
+}
+.gxo-chip:hover {
+  filter: brightness(1.12);
+  border-color: rgba(255, 220, 140, 0.85);
+}
+.gxo-chip-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  font-weight: 900;
+  color: #1a1208;
+  background: linear-gradient(180deg, #ffe08a, #e0a040);
+  box-shadow: 0 1px 0 #8a6020;
+}
+.gxo-chip.kind-enter,
+.gxo-chip.kind-portal {
+  border-color: rgba(126, 231, 168, 0.6);
+  box-shadow: 0 0 16px rgba(80, 200, 120, 0.35);
+}
+.gxo-chip.kind-exit {
+  border-color: rgba(255, 140, 100, 0.55);
+}
+.gxo-chip.kind-building {
+  border-color: rgba(127, 176, 255, 0.55);
+  box-shadow: 0 0 14px rgba(100, 150, 255, 0.3);
+}
+.gxo-chip.kind-claim {
+  border-color: rgba(232, 201, 106, 0.65);
+}
+
+@keyframes gxo-chip-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(255, 170, 60, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(255, 190, 80, 0.55);
+  }
+}
+
+/* Distance fade helpers (set via inline opacity) */
+.gxo-fade {
+  transition: opacity 0.12s linear;
+}

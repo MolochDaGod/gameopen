@@ -427,7 +427,7 @@ export const R3F_STACK_TOOLS: ToolDef[] = [
   {
     icon: "skill-vfx-lab",
     label: "HTML Overlays",
-    hint: "drei Html, CSS2D labels, diegetic UI",
+    hint: "CSS2D damage/heal floats, blood, building + enter/exit chips (Danger)",
     stack: "r3f",
     action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "html" }) },
   },
