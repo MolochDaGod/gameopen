@@ -45,6 +45,9 @@ export const PRODUCTION_SURFACES = {
   rts: "https://rts-grudge.vercel.app",
   wcs: "https://warlord-crafting-suite.vercel.app",
   water: "https://water.grudge-studio.com/island",
+  multiverse: "https://multiverse.grudge-studio.com",
+  multiverseFallback: "https://grudge-multiverse.vercel.app",
+  metaverse: "https://metaverse.grudge-studio.com",
   mineLoader: FLEET.mineLoader,
   mineLoaderApi: FLEET.mineLoaderApi,
 
