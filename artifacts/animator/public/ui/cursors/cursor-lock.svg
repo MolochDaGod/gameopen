@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <!-- Tiny lock badge for HUD (not hotspot cursor) -->
+  <rect x="4" y="8" width="12" height="9" rx="1.5" fill="#1a2030" stroke="#6fe0ff" stroke-width="1.2"/>
+  <path d="M7 8 V6 a3 3 0 0 1 6 0 v2" fill="none" stroke="#6fe0ff" stroke-width="1.3" stroke-linecap="round"/>
+  <circle cx="10" cy="12.5" r="1.2" fill="#6fe0ff"/>
+</svg>

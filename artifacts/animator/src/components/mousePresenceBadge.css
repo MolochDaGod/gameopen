@@ -1,0 +1,52 @@
+.mouse-presence-badge {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e8f0ff;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(110, 180, 255, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  user-select: none;
+  backdrop-filter: blur(8px);
+}
+
+.mouse-presence-badge img {
+  display: block;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 3px rgba(110, 200, 255, 0.5));
+}
+
+.mouse-presence-badge--shell {
+  border-color: rgba(200, 180, 100, 0.45);
+  color: #ffe9b8;
+}
+
+.mouse-presence-badge--ui {
+  border-color: rgba(110, 224, 255, 0.5);
+  color: #b8f0ff;
+}
+
+.mouse-presence-badge--play-free {
+  border-color: rgba(126, 224, 160, 0.5);
+  color: #c8ffd8;
+}
+
+/* Phone: tuck under safe area, smaller */
+@media (max-width: 640px) {
+  .mouse-presence-badge {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    font-size: 10px;
+    padding: 4px 8px 4px 6px;
+  }
+}

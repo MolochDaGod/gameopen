@@ -4,8 +4,9 @@
  * Presence layers (see `pointerPresence.ts`):
  *   play-locked → OS cursor hidden; Crosshair owns aim
  *   play-free   → custom free-aim / soft lock cursor (no pointer lock)
- *   ui / shell  → UI arrow + hover hand on [data-cursor="interact"]
+ *   ui / shell  → visible game mouse (PNG/SVG) + hover hand on interactables
  *
+ * Assets: public/ui/cursors/*  (craftpix normal + cyber + SVG fallbacks)
  * Mount once near the app root. Three.js scenes can call setPlayPointerCtx /
  * setCursorCtx for mesh hovers (doors, nodes, NPCs).
  */
@@ -78,7 +79,18 @@ export function CursorManager({ children }: Props) {
   useEffect(() => {
     const sync = () => applyPointerBodyClass(getPointerPresence());
     sync();
-    return subscribePointerPresence(sync);
+    const unsub = subscribePointerPresence(sync);
+    // Re-apply after pointer-lock change (browser may reset cursor)
+    const onLock = () => {
+      requestAnimationFrame(sync);
+    };
+    document.addEventListener("pointerlockchange", onLock);
+    window.addEventListener("focus", onLock);
+    return () => {
+      unsub();
+      document.removeEventListener("pointerlockchange", onLock);
+      window.removeEventListener("focus", onLock);
+    };
   }, []);
 
   // Hover over [data-cursor] — UI hand vs default UI arrow

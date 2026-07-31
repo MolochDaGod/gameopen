@@ -43,6 +43,7 @@ import type {
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { CursorManager } from "./components/CursorManager";
+import { MousePresenceBadge } from "./components/MousePresenceBadge";
 import { heroFromLocation } from "./lib/annihilateHero";
 import {
   resolveDangerPlayable,
@@ -2033,18 +2034,22 @@ export default function App() {
 
   // Wrap any mode's content in the persistent shell (launcher + toolbox + AI).
   // Fleet account/mode/hero strip lives IN the shell header — never a second fixed bar.
+  // CursorManager: visible game mouse when unlocked (shell/ui/free); hide when aim-locked.
   const shell = (content: React.ReactNode) => (
-    <AppShell
-      mode={mode}
-      onNavigate={navigate}
-      assistant={shellAssistant}
-      hideAssistant={mode === "ledmask"}
-      onToolLaunch={onToolLaunch}
-      music={toolboxMusic}
-      showFleetStrip={mode !== "doors"}
-    >
-      {content}
-    </AppShell>
+    <CursorManager>
+      <MousePresenceBadge />
+      <AppShell
+        mode={mode}
+        onNavigate={navigate}
+        assistant={shellAssistant}
+        hideAssistant={mode === "ledmask"}
+        onToolLaunch={onToolLaunch}
+        music={toolboxMusic}
+        showFleetStrip={mode !== "doors"}
+      >
+        {content}
+      </AppShell>
+    </CursorManager>
   );
 
   const panelsOpen =
@@ -2705,7 +2710,6 @@ export default function App() {
   ];
 
   return shell(
-    <CursorManager>
     <div
       className={`studio ${isMobile ? "touch" : ""}${
         hudEditor.config.theme !== "default" ? " hud-themed" : ""
@@ -2714,11 +2718,13 @@ export default function App() {
     >
       <div
         className={`canvas-mount${
-          (mode === "danger" || mode === "play") && !panelsOpen && !equipOpen && !systemsOpen
+          /* Immersive aim-lock only when no UI overlay and not free-mouse */
+          (mode === "danger" || mode === "play") && !uiOverlayOpen && !freeMouse
             ? " immersive"
             : ""
         }${
-          (mode === "danger" || mode === "play") && (freeMouse || uiOverlayOpen)
+          /* Unlocked mouse: menus, editors, bag, free-mouse sticky */
+          freeMouse || uiOverlayOpen || (mode !== "danger" && mode !== "play")
             ? " free-mouse"
             : ""
         }`}
@@ -3315,6 +3321,5 @@ export default function App() {
         </>
       )}
     </div>
-    </CursorManager>
   );
 }
