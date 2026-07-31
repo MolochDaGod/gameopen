@@ -37,8 +37,8 @@ export type PracticeTargetDef = {
 export const PRACTICE_TARGET_DEFS: readonly PracticeTargetDef[] = [
   {
     id: "practice_dummy",
-    // Same-origin public/ (not /models/props — that rewrites to R2 CDN and 404s)
-    file: "danger-room/targets/the_practice_dummy.glb",
+    // Same-origin under /ui/* (allowlisted; /models/props rewrites to R2 CDN)
+    file: "ui/training-targets/the_practice_dummy.glb",
     name: "Practice Dummy",
     maxHealth: 150,
     activePos: [-10.5, 0, -3.5],
@@ -48,7 +48,7 @@ export const PRACTICE_TARGET_DEFS: readonly PracticeTargetDef[] = [
   },
   {
     id: "boss_tester",
-    file: "danger-room/targets/free_dummy_monster.glb",
+    file: "ui/training-targets/free_dummy_monster.glb",
     name: "Boss Tester",
     maxHealth: 900,
     activePos: [-10.5, 0, 3.5],
