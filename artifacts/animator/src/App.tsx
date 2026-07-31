@@ -1856,7 +1856,7 @@ export default function App() {
     [brush, veSel, veTree, veStats],
   );
 
-  /** Toolbox grid launcher — same actions as controll lab (mode / dock / HUD / equip). */
+  /** Toolbox grid launcher — modes / docks / HUD / equip / external (Grok Builder stacks). */
   const onToolLaunch = useCallback(
     (tool: ToolDef) => {
       const { action } = tool;
@@ -1890,6 +1890,16 @@ export default function App() {
           navigate("editor");
           requestDressingPanel(action.id);
           break;
+        case "external": {
+          const url = action.url;
+          if (!url) break;
+          if (action.newTab === false) {
+            window.location.assign(url);
+          } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+          break;
+        }
         default:
           break;
       }
