@@ -604,14 +604,17 @@ export default function App() {
           { isVoxelCharacter },
         ]) => {
           const loadout = loadoutFromCharacter(ch);
-          // Explorer (cube + Avatar face) when user chose explorer, voxel head, or
-          // avatarId=explorer — Mine-Loader style playable box controller path.
-          // Otherwise fleet grudge6 race kit (mesh_ids + atlas).
-          const preferExplorer =
-            loadout.avatarId === "explorer" ||
-            loadout.avatarId?.startsWith("avatar-") ||
-            isVoxelCharacter(ch);
-          const avatarId = preferExplorer ? "explorer" : loadout.avatarId || raceAvatar;
+          // Explorer cube body ONLY for true voxel/Mine-Loader characters.
+          // Stale saveData.open.avatarId:"explorer" from Avatar Edit must NOT
+          // override grudge6 / RTS_TOON warlords heroes (mesh+atlas+Bip001 packs).
+          const preferExplorer = isVoxelCharacter(ch);
+          const avatarId = preferExplorer
+            ? "explorer"
+            : raceAvatar.startsWith("grudge:")
+              ? raceAvatar
+              : loadout.avatarId?.startsWith("grudge:")
+                ? loadout.avatarId
+                : raceAvatar;
           setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
           // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
           void resolveCharacterEquipmentVisual(ch).then((vis) => {

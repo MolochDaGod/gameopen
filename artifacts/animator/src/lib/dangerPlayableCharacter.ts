@@ -22,6 +22,7 @@ import { resolveRaceId, resolvePresetId, grudgeAvatarId } from "./raceModel";
 import { getPreset, type RaceId, type PresetId } from "../three/grudge";
 import { familyFromAnimPack, type WeaponFamily } from "../three/grudge/weaponSkillPacks";
 import type { AnimPack } from "../three/grudge/anims";
+import { resolveCharacterEquipmentVisualSync } from "./characterEquipmentMesh";
 
 export type PlayableSource = "url-hero" | "url-are" | "fleet-character" | "default";
 
@@ -119,20 +120,31 @@ export function parseAreQuery(
 export function playableFromFleetCharacter(
   ch: GrudgeCharacter,
 ): DangerPlayableCharacter {
-  const raceId = resolveRaceId(ch.raceId);
-  const classKey = String(
+  // Prefer full equipment visual (mesh_ids / gear_preset / class) — never ignore account kit.
+  // Lazy import-safe: sync resolver is pure and does not hit network.
+  let raceId = resolveRaceId(ch.raceId);
+  let classKey = String(
     (ch as { classId?: string }).classId ||
       (ch as { class?: string }).class ||
       "warrior",
   )
     .toLowerCase()
     .replace(/\s+/g, "_");
-  const presetId =
+  let presetId: PresetId =
     CLASS_TO_PRESET[classKey] ?? resolvePresetId(classKey) ?? resolvePresetId(ch.classId);
+  let meshIds: string[] = [...getPreset(raceId, presetId).visibleMeshes];
+
+  try {
+    const vis = resolveCharacterEquipmentVisualSync(ch);
+    raceId = vis.raceId;
+    presetId = vis.presetId;
+    if (vis.meshIds?.length >= 2) meshIds = [...vis.meshIds];
+    classKey = String(presetId);
+  } catch {
+    /* keep class preset meshes */
+  }
+
   const heroToken = `fleet_${ch.id.slice(0, 8)}_${raceId}_${classKey}`;
-  // mesh_ids: sync path uses gear preset; async resolveCharacterEquipmentVisual in App.
-  const preset = getPreset(raceId, presetId);
-  const meshIds = [...preset.visibleMeshes];
   const spec = buildSpec(raceId, classKey, presetId, heroToken, meshIds);
   return {
     source: "fleet-character",

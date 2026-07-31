@@ -430,20 +430,18 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     attack: "magic/standing 1h cast spell 01",
   },
   sword_shield: {
-    // Prefer same-origin JSON; loadBakedClip also tries prod/anims GLB roles.
-    idle: "sword_shield/sword and shield idle",
+    // Open deploy currently ships sword_shield/run only — idle/attack fall back
+    // to magic / dual_wield Bip001 bakes so knights never T-pose in Danger Room.
+    // When full sword_shield JSON pack is on CDN, prefer those paths again.
+    idle: "magic/standing idle",
     walk: "magic/Standing Walk Forward",
     run: "sword_shield/sword and shield run",
-    attack: "sword_shield/sword and shield attack",
+    attack: "dual_wield/attack",
     extras: [
-      // Preset knight weapon skills only (no extra weapon mesh swaps)
-      "sword_shield/sword-and-shield-attack-2",
-      "sword_shield/sword-and-shield-attack-3",
-      "sword_shield/sword-and-shield-attack-4",
-      "sword_shield/sword-and-shield-attack-5",
-      "sword_shield/sword-and-shield-block",
-      "sword_shield/sword-and-shield-block-idle",
-      "sword_shield/one-hand-sword-combo",
+      "dual_wield/attack2",
+      "dual_wield/attack3",
+      "dual_wield/combo",
+      "dual_wield/block",
       "polearm/slash",
       "polearm/thrust",
       "polearm/overhead",
@@ -453,6 +451,9 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "block/parry",
       "block/left-block",
       "block/right-block",
+      // Prefer sword_shield attack clips when present on CDN
+      "sword_shield/sword and shield attack",
+      "sword_shield/sword and shield idle",
     ],
   },
   /**

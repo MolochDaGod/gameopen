@@ -79,10 +79,22 @@ export function loadoutFromCharacter(ch: GrudgeCharacter | null | undefined): Op
       ? (b.mesh_ids as unknown[]).filter((x): x is string => typeof x === "string")
       : undefined;
 
+  // Strip stale Avatar-Edit mistake: avatarId "explorer" on warlords race chars
+  // (forces cube body in Danger). Modular head uses voxelLook only.
+  let avatarId = typeof b.avatarId === "string" ? b.avatarId : undefined;
+  if (avatarId === "explorer" || avatarId?.startsWith("avatar-")) {
+    const race = String(
+      (ch as { raceId?: string } | null | undefined)?.raceId || b.raceId || "",
+    ).toLowerCase();
+    if (/human|orc|elf|dwarf|undead|barb|wk|western|high|kingdom|brb|dwf|ud/i.test(race)) {
+      avatarId = undefined;
+    }
+  }
+
   return {
     weaponId,
     offHand,
-    avatarId: typeof b.avatarId === "string" ? b.avatarId : undefined,
+    avatarId,
     meshIds,
     gearPresetId: typeof b.gearPresetId === "string" ? b.gearPresetId : undefined,
     slotIcons:

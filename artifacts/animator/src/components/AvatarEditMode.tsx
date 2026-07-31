@@ -284,9 +284,12 @@ export function AvatarEditMode({ onExit }: Props) {
       } catch {
         /* ignore */
       }
+      // NEVER set avatarId:"explorer" here — that hijacks grudge6 / RTS_TOON
+      // warlords heroes into the procedural cube body in Danger Room.
+      // Modular head lives under voxelLook only; mesh body stays grudge:{race}:{preset}.
       const ch = gameSession.snapshot.characters.find((c) => c.id === charId) ?? null;
       void import("../lib/characterLoadout").then(({ scheduleCharacterLoadoutSave }) => {
-        scheduleCharacterLoadoutSave(charId, ch, { voxelLook, avatarId: "explorer" }, (saveData) => {
+        scheduleCharacterLoadoutSave(charId, ch, { voxelLook }, (saveData) => {
           gameSession.patchCharacter(charId, { saveData });
         });
       });

@@ -123,18 +123,43 @@ export function isVoxelCharacter(ch: GrudgeCharacter | null | undefined): boolea
       ch.config?.renderPipeline ||
       "",
   ).toLowerCase();
+  // grudge6 / Toon RTS race kits are NEVER "voxel body" — even if a cube head
+  // look was saved under saveData.open.voxelLook for modular faces.
+  if (
+    pipeline === "grudge6" ||
+    pipeline === "rts_toon" ||
+    pipeline === "toon_rts" ||
+    pipeline === "fbx-atlas"
+  ) {
+    return false;
+  }
   if (pipeline === "sprite2d" || pipeline === "voxel" || pipeline === "cube") return true;
 
   const open = openBlob(ch);
-  if (open.voxel === true || open.kind === "voxel" || open.avatarKind === "voxel") return true;
-  if (open.avatarHead === true || typeof open.avatarHeadId === "string") return true;
+  // Explicit modular-head-only saves must not force Explorer cube body.
+  const look = open.voxelLook as Record<string, unknown> | undefined;
+  if (look?.kind === "avatarEdit" && pipeline !== "voxel" && pipeline !== "cube") {
+    // Avatar Edit head on a Warlords/grudge6 character = face only.
+    // Body remains grudge race kit unless avatarId/baseId is explicitly explorer.
+  } else {
+    if (open.voxel === true || open.kind === "voxel" || open.avatarKind === "voxel") return true;
+  }
+  // Do NOT treat avatarHead alone as full voxel body (legacy mistake).
+  if (open.avatarKind === "cube-head" || open.bodyPipeline === "explorer") return true;
 
   const avatarId = String(open.avatarId || ch.config?.avatarId || "");
+  // Stale avatarId:"explorer" from old Avatar Edit saves — ignore when race is a fleet warlords race
+  const race = String(ch.raceId || "").toLowerCase();
+  const warlordsRace =
+    /human|orc|elf|dwarf|undead|barb|wk|western|high-elf|kingdom|brb|dwf|ud/i.test(race);
+  if (avatarId === "explorer" && warlordsRace && pipeline !== "voxel") {
+    return false;
+  }
   if (avatarId.startsWith("avatar-") || avatarId.includes("voxel") || avatarId.includes("cube-head")) {
     return true;
   }
   const baseId = String(ch.config?.baseId || open.baseId || "");
-  if (/voxel|cube|explorer-head|ledmask/i.test(baseId)) return true;
+  if (/voxel|cube|explorer-head|ledmask/i.test(baseId) && !warlordsRace) return true;
 
   return false;
 }

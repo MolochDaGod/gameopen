@@ -293,9 +293,11 @@ export async function ensureGrudge6Materials(
   });
 
   const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
+  // GLB modular kits often ship with sparse maps on hidden wardrobe meshes;
+  // rebind Toon RTS atlas whenever coverage is poor so heroes aren't yellow/grey.
   const needsAtlas =
     allowAtlasRebind &&
-    (pipeline === "fbx-atlas" || mapRatio < 0.35 || mappedMeshes === 0);
+    (pipeline === "fbx-atlas" || mapRatio < 0.55 || mappedMeshes === 0);
 
   if (needsAtlas) {
     const mat = await rebindRaceAtlas(model, raceId);
@@ -444,9 +446,11 @@ export async function loadGrudge6CombatRig(
   const roles = new Map<string, string>();
 
   const SAFE_LOCO_FALLBACK: Record<string, string> = {
+    idle: "magic/standing idle",
     walk: "magic/Standing Walk Forward",
     run: "uploads_2026_06/locomotion/torch run forward",
     sprint: "uploads_2026_06/locomotion/torch run forward",
+    attack: "dual_wield/attack",
   };
 
   const isLocoRole = (role: string) => role === "walk" || role === "run" || role === "sprint";
