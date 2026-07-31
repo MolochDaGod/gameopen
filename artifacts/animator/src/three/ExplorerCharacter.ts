@@ -535,6 +535,9 @@ export class ExplorerCharacter implements Avatar {
   playClipOnce(name: string): number {
     if (!this.animator) return 0;
     this.lastClip = name;
+    // Animation Creator / AI-authored clips registered via addClip.
+    const custom = this.customClips.get(name);
+    if (custom) return this.playExternalClip(custom, false);
     const a = this.animator;
     switch (name) {
       case "attack":
@@ -648,6 +651,11 @@ export class ExplorerCharacter implements Avatar {
   previewClip(name: string): number {
     const a = this.animator;
     if (!a) return 0;
+    const custom = this.customClips.get(name);
+    if (custom) {
+      this.lastClip = name;
+      return this.playExternalClip(custom, true);
+    }
     // Dressing Room library preview: play the resolved catalog clip for this
     // verb + equipped weapon (same path as {@link resolvePreviewClipId} so the
     // Animations tab label always matches motion). Fall back across classes /
@@ -714,12 +722,26 @@ export class ExplorerCharacter implements Avatar {
     ].includes(role);
   }
 
+  /** Clips authored in Animation Creator (`dangerroom:customclips`) or AI worker. */
+  private customClips = new Map<string, THREE.AnimationClip>();
+
+  /**
+   * Register an authored AnimationClip so Clips panel / slot binding can play it.
+   * Used by Studio.injectCustomClips after character spawn.
+   */
+  addClip(name: string, clip: THREE.AnimationClip): void {
+    const clean = name.trim();
+    if (!clean || !clip) return;
+    this.customClips.set(clean, clip);
+  }
+
   hasClip(name: string): boolean {
-    return (VERBS as readonly string[]).includes(name);
+    return this.customClips.has(name) || (VERBS as readonly string[]).includes(name);
   }
 
   clipNames(): string[] {
-    return [...VERBS];
+    const custom = [...this.customClips.keys()];
+    return custom.length ? [...VERBS, ...custom] : [...VERBS];
   }
 
   currentClipName(): string {

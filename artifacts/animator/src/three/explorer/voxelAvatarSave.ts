@@ -45,11 +45,50 @@ function asHat(v: unknown): CharacterLook["hat"] {
   return "none";
 }
 
-/** Validate / normalise a raw object into a save blob. */
+/**
+ * Validate / normalise a raw object into a wardrobe body look.
+ * Also accepts Avatar Edit fleet payload: `{ kind: "avatarEdit", head: { race, … } }`.
+ */
 export function sanitizeVoxelAvatar(raw: unknown): VoxelAvatarSave | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   const base = DEFAULT_LOOK;
+
+  // Avatar Edit modular head save — derive body skin from head race kit defaults.
+  if (o.kind === "avatarEdit" && o.head && typeof o.head === "object") {
+    const head = o.head as Record<string, unknown>;
+    const race = typeof head.race === "string" ? head.race : "human";
+    const raceSkin: Record<string, string> = {
+      human: "#c98c5a",
+      barbarian: "#b87a4a",
+      orc: "#5a8f4a",
+      undead: "#8a9a8a",
+      dwarf: "#b07050",
+      elf: "#d4a574",
+    };
+    const skinFromHead =
+      typeof head.skin === "number"
+        ? `#${(head.skin >>> 0).toString(16).padStart(6, "0").slice(-6)}`
+        : typeof head.skin === "string"
+          ? asHex(head.skin, raceSkin[race] ?? base.skin)
+          : raceSkin[race] ?? base.skin;
+    return {
+      version: 1,
+      skin: skinFromHead,
+      shirt: asHex(o.shirt, base.shirt),
+      pants: asHex(o.pants, base.pants),
+      boot: asHex(o.boot, "#2a2a32"),
+      eye: asHex(o.eye, "#15151b"),
+      hat: asHat(o.hat),
+      hatColor: asHex(o.hatColor, base.hatColor),
+      cape: o.cape === true,
+      capeColor: asHex(o.capeColor, base.capeColor ?? "#1a1e2b"),
+      ledShell: typeof o.ledShell === "string" ? (o.ledShell as ShellId) : undefined,
+      characterId: typeof o.characterId === "string" ? o.characterId : undefined,
+      updatedAt: typeof o.updatedAt === "number" ? o.updatedAt : Date.now(),
+    };
+  }
+
   return {
     version: 1,
     skin: asHex(o.skin, base.skin),

@@ -46,3 +46,28 @@ export {
   type WeaponLiveDef,
   type LiveRoleStatus,
 } from "./weaponLivePacks";
+
+/** Frame-based Animation Creator + AI clip contract (zip animator tools). */
+export { AnimEditor, type AnimEditorState, type BoneInfo, type FrameInfo } from "./AnimEditor";
+export {
+  buildAnimationClip,
+  listStoredClips,
+  saveStoredClip,
+  getStoredClip,
+  deleteStoredClip,
+  totalDuration,
+  CUSTOM_CLIP_VERSION,
+  type ClipFrame,
+  type StoredClip,
+  type QuatTuple as ClipQuatTuple,
+} from "./clipStore";
+export {
+  normalizeAiClip,
+  MAX_FRAMES,
+  POSABLE_BONE_SET,
+  type AiClip,
+  type AiClipFrame,
+  type NormalizeResult,
+  type QuatTuple as AiQuatTuple,
+} from "./aiClipContract";
+export { POSABLE_BONES } from "./posableBones";

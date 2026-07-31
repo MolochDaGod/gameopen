@@ -110,6 +110,9 @@ import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
 import { AvatarEditMode } from "./components/AvatarEditMode";
+import { AnimEditorUI, type AnimApi } from "./components/AnimEditorUI";
+import { AiAnimatorPanel } from "./components/AiAnimatorPanel";
+import { AnimEditor, type AnimEditorState } from "./three/anim/AnimEditor";
 import { CampfireLobby } from "./components/CampfireLobby";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
@@ -127,6 +130,7 @@ import {
   saveMap,
   type StoredMapMeta,
 } from "./three/voxel/mapStore";
+import "./components/animCreator.css";
 import type { CreatePostPayload } from "@workspace/api-client-react";
 import type { SceneDescriptor } from "./three/editor/types";
 import { DangerClient } from "./net/DangerClient";
@@ -740,6 +744,10 @@ export default function App() {
   /** Set when returning to the editor from a play session (re-loads the map). */
   const cameFromPlayRef = useRef(false);
 
+  // Animation Creator (frame pose editor + optional AI panel).
+  const animRef = useRef<AnimEditor | null>(null);
+  const [animState, setAnimState] = useState<AnimEditorState | null>(null);
+
   // Multi-map persistence state.
   const [mapsOpen, setMapsOpen] = useState(false);
   // Starting-map template picker (shown on a fresh editor entry + via "New").
@@ -1067,6 +1075,26 @@ export default function App() {
       setVeSel(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  // Animation Creator — same engine for /anim and /anim-ai (AI panel overlays).
+  useEffect(() => {
+    if ((mode !== "anim" && mode !== "anim-ai") || !mountRef.current) return;
+    let editor: AnimEditor | null = null;
+    try {
+      editor = new AnimEditor(mountRef.current);
+      editor.onState = (s) => setAnimState(s);
+      animRef.current = editor;
+      setAnimState(editor.getState());
+    } catch (err) {
+      console.error("[Animator] failed to start Animation Creator", err);
+      setWebglError(true);
+    }
+    return () => {
+      editor?.dispose();
+      animRef.current = null;
+      setAnimState(null);
+    };
   }, [mode]);
 
   // Engine-side keyboard shortcuts (jump / skills) + panel toggles. Danger only.
@@ -2201,6 +2229,56 @@ export default function App() {
             else setMode("doors");
           }}
         />,
+      ),
+    );
+  }
+
+  if (mode === "anim" || mode === "anim-ai") {
+    const ed = animRef.current;
+    const animApi: AnimApi | null = ed
+      ? {
+          selectBone: (n) => ed.selectBone(n),
+          setGizmoSpace: (s) => ed.setGizmoSpace(s),
+          addFrame: () => ed.addFrame(),
+          duplicateFrame: (i) => ed.duplicateFrame(i),
+          deleteFrame: (i) => ed.deleteFrame(i),
+          moveFrame: (i, d) => ed.moveFrame(i, d),
+          setActiveFrame: (i) => ed.setActiveFrame(i),
+          setFrameDuration: (i, s) => ed.setFrameDuration(i, s),
+          resetBone: () => ed.resetBone(),
+          resetFrame: () => ed.resetFrame(),
+          undo: () => ed.undo(),
+          togglePlay: () => ed.togglePlay(),
+          setScrub: (t) => ed.setScrub(t),
+          save: (n) => ed.save(n),
+          loadClip: (n) => ed.loadClip(n),
+          deleteSaved: (n) => ed.deleteSaved(n),
+          newClip: () => ed.newClip(),
+          getClip: () => ed.getClip(),
+          loadFrames: (f) => ed.loadFrames(f),
+          applyMotion: (req) => ed.applyMotion(req),
+        }
+      : null;
+    return shell(
+      withScreenTheme(
+        <div className="studio anim-creator-shell" style={{ position: "relative", width: "100%", height: "100%" }}>
+          <div ref={mountRef} className="viewport" style={{ position: "absolute", inset: 0 }} />
+          {animState && animApi && (
+            <AnimEditorUI
+              state={animState}
+              api={animApi}
+              onExit={() => setMode("doors")}
+            />
+          )}
+          {mode === "anim-ai" && animApi && (
+            <AiAnimatorPanel api={animApi} ready={!!animState?.ready} />
+          )}
+          {webglError && (
+            <div className="ae-loading">
+              <p>WebGL unavailable — Animation Creator needs a GPU context.</p>
+            </div>
+          )}
+        </div>
       ),
     );
   }

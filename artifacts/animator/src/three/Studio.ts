@@ -7,6 +7,7 @@ import { DjBooth } from "./DjBooth";
 import { ClimbWallSystem, dangerRoomClimbFaces } from "./climb/ClimbWallSystem";
 import { Character } from "./Character";
 import { ExplorerCharacter } from "./ExplorerCharacter";
+import { buildAnimationClip, listStoredClips } from "./anim/clipStore";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
@@ -1970,12 +1971,27 @@ export class Studio {
     this.applyModelYaw();
     // Racalvin living twin swords (Brothers Keeper mesh)
     void this.syncLivingSwords(id);
+    // Animation Creator clips (localStorage) → Danger Room / Dressing Room slots.
+    this.injectCustomClips();
     this.onCharacterLoaded?.(id);
     // Kick-style characters that declare `kickClips` get extra FBX clips injected
     // after commit (Tera-kasi pulls flip_kick/backflip/roll). The Striker declares
     // none and stays native-only, so this is a no-op for it.
     if (def.meleeStyle === "kick") {
       void this.loadKickClips(id);
+    }
+  }
+
+  /**
+   * Load every clip authored in Animation Creator / AI Animator and register it
+   * on the active character so clipNames() / hasClip() / playClipOnce surface them.
+   */
+  private injectCustomClips(): void {
+    const char = this.character as { addClip?: (n: string, c: THREE.AnimationClip) => void } | null;
+    if (!char?.addClip) return;
+    for (const stored of listStoredClips()) {
+      const clip = buildAnimationClip(stored);
+      if (clip) char.addClip(stored.name, clip);
     }
   }
 

@@ -260,14 +260,37 @@ export function AvatarEditMode({ onExit }: Props) {
       savePlayerHeadForLobbySlot(slot, cfg, charId);
       setSavedToCharacter(true);
       notice(`Saved to lobby seat ${slot + 1} — return to Lobby to see it`);
-      return;
+    } else {
+      savePlayerHeadConfig(cfg);
+      if (charId) {
+        savePlayerHeadForLobbySlot(0, cfg, charId);
+      }
+      setSavedToCharacter(true);
+      notice("Saved — Explorer / campfire / lobby seats wear this head");
     }
-    savePlayerHeadConfig(cfg);
+    // Fleet SSOT: mirror head + avatar code into saveData.open.voxelLook
+    // so Open / GRUDOX / Wardrobe reload the same cube modular look.
     if (charId) {
-      savePlayerHeadForLobbySlot(0, cfg, charId);
+      const voxelLook = {
+        kind: "avatarEdit",
+        version: 1 as const,
+        head: cfg,
+        code: encodeConfig(cfg),
+        race: cfg.race,
+        updatedAt: Date.now(),
+      };
+      try {
+        localStorage.setItem("avatarEdit:voxelLook:v1", JSON.stringify(voxelLook));
+      } catch {
+        /* ignore */
+      }
+      const ch = gameSession.snapshot.characters.find((c) => c.id === charId) ?? null;
+      void import("../lib/characterLoadout").then(({ scheduleCharacterLoadoutSave }) => {
+        scheduleCharacterLoadoutSave(charId, ch, { voxelLook, avatarId: "explorer" }, (saveData) => {
+          gameSession.patchCharacter(charId, { saveData });
+        });
+      });
     }
-    setSavedToCharacter(true);
-    notice("Saved — Explorer / campfire / lobby seats wear this head");
   }, [cfg, notice]);
 
   const copyCode = useCallback(() => {

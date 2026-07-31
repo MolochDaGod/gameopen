@@ -14,7 +14,7 @@ Related: production-wiring skill · [OPEN_PRODUCT.md](./OPEN_PRODUCT.md) · [CHA
 | Character row (id, race, class, level, equipment) | **Railway** `characters` | `GET /api/characters?era=warlords` |
 | Custom 2D portrait | `characters.avatar_url` | Prefer over type PNG |
 | 3D modular look | `characters.model_3d` | Danger Room / grudge6 meshes |
-| Open-only prefs | `saveData.open` / config | avatarId, voxel head URL, loadout |
+| Open-only prefs | `saveData.open` / config | avatarId, voxelLook (Avatar Edit head), loadout |
 | Account profile pic | `accounts.avatar_url` | FleetBar / social only — **not** hero portrait |
 | Race definition art | `races.portrait_path` + ObjectStore | Catalog / create UI |
 | Type PNGs (per model) | Open `public/races/*.png` (+ optional `races/portraits/{race}_{class}.png`) | Fallback when no DB avatar |
@@ -54,7 +54,7 @@ UI: `<CharacterAvatar character={ch} />` — always use this, not hard-coded rac
 | `model_3d.renderPipeline` | `grudge6` \| `vrm` \| `sprite2d` / voxel → portrait branch |
 | `model_3d.baseModelId` | Race kit key (WK_/ELF_/…) for meshes |
 | `equipment` + mesh_ids | Equipment panel / 3D only |
-| `save_data.open` | Open loadout, avatarId, voxel head snapshot URL |
+| `save_data.open` | Open loadout, avatarId, `voxelLook` (Avatar Edit `{ kind, head, code, race }`) |
 
 **Do:**
 - Store permanent portrait URLs on **CDN or Railway-backed storage**, then set `avatar_url`.

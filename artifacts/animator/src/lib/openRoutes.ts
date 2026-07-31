@@ -28,6 +28,10 @@ export type AppMode =
   | "rooms"
   | "ledmask"
   | "avatar"
+  /** Frame-based Animation Creator (pose → clip library). */
+  | "anim"
+  /** Animation Creator + AI skeleton-mover panel. */
+  | "anim-ai"
   | "characters"
   | "minegrudge"
   /** Mine-Loader Realms in-app collection surface (SSO canvas). */
@@ -237,11 +241,44 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["avatar-edit", "head", "cube-head", "modular-head"],
     cabinets: ["avatar"],
     title: "Avatar Editor",
-    blurb: "Cube modular head builder — races, hair, eyes, gear colors.",
+    blurb:
+      "Cube modular head builder — 6 races, hats, export PNG/code, save to character / fleet voxelLook.",
     group: "create",
     poster: "avatar",
     tags: ["Avatar", "Create"],
     accent: "#c9a0ff",
+  },
+  {
+    mode: "anim",
+    slug: "anim",
+    aliases: [
+      "anim-creator",
+      "animation-creator",
+      "clip-creator",
+      "pose-editor",
+      "animcreator",
+    ],
+    cabinets: ["anim", "anim-creator", "clip-creator"],
+    title: "Animation Creator",
+    blurb:
+      "Frame-based pose editor — Mixamo rig, bone gizmo, timeline, save clips for Danger Room slots.",
+    group: "create",
+    poster: "dressing",
+    tags: ["Anim", "Create"],
+    accent: "#c79bff",
+  },
+  {
+    mode: "anim-ai",
+    slug: "anim-ai",
+    aliases: ["ai-animator", "ai-anim", "skeleton-mover", "ale-anim"],
+    cabinets: ["anim-ai", "ai-animator"],
+    title: "AI Animator",
+    blurb:
+      "Prompt → motion clips (root motion optional) with AI worker + local edit/preview on the same rig.",
+    group: "create",
+    poster: "dressing",
+    tags: ["AI", "Anim"],
+    accent: "#5eead4",
   },
   {
     mode: "characters",

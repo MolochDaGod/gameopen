@@ -1,0 +1,30 @@
+name = "anim-ai-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+workers_dev = true
+
+# Workers AI binding — gives the Worker `env.AI.run(model, ...)` with no API key.
+[ai]
+binding = "AI"
+
+# D1 — fleet anim_clips (Grudge account)
+[[d1_databases]]
+binding = "DB"
+database_name = "anim_clips"
+database_id = "7ca78921-f8c5-4f25-bc54-c2b49f34f695"
+
+# R2 overflow for large clip JSON
+[[r2_buckets]]
+binding = "CLIPS"
+bucket_name = "anim-clips"
+
+[vars]
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+# Vision model for pose-from-image (Workers AI)
+VISION_MODEL = "@cf/llava-hf/llava-1.5-7b-hf"
+# Open + GRUDOX + local + workers.dev
+ALLOWED_ORIGINS = "*"
+
+# SHARED_TOKEN — optional secret. Empty = open (fleet tools). Set with:
+#   wrangler secret put SHARED_TOKEN
+
