@@ -177,6 +177,11 @@
   color: #e8eaf6;
   background: rgba(110, 231, 183, 0.06);
 }
+.gs-tab-hk {
+  opacity: 0.55;
+  font-size: 0.85em;
+  font-weight: 600;
+}
 .gs-tab.active {
   color: #6ee7b7;
   border-color: rgba(110, 231, 183, 0.35);

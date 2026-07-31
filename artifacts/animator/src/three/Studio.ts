@@ -576,6 +576,10 @@ export class Studio {
   private baseBgColor = new THREE.Color(Studio.FOG_BASE_COLOR);
   /** Set while the player stands at the door portal (drives the HUD prompt). */
   private doorPrompt = false;
+  /** Standing near planted claim flag — HUD shows E interact. */
+  private claimInteractPrompt = false;
+  /** Optional host callback when player presses E at claim flag (open camp UI). */
+  onClaimFlagInteract: (() => void) | null = null;
   /** Guards against re-triggering the async dungeon load. */
   private enteringDungeon = false;
   /** The active played voxel map (null unless launched from the Voxel Editor). */
@@ -10124,13 +10128,22 @@ export class Studio {
     this.room.update(t);
     // Prefer live CPT RAC / radio pulse so the booth dances to real tracks.
     this.djBooth?.update(dt, this.sfx?.getMusicPulse() ?? null);
-    // Door portal prompt: lit only in the Danger Room while standing at the arch.
-    this.doorPrompt =
+    // Interaction prompts: door portal, camp claim flag, or placeable interact
+    this.doorPrompt = false;
+    this.claimInteractPrompt = false;
+    if (
       !this.inDungeon &&
       !this.enteringDungeon &&
       !this.inArena &&
-      this.character != null &&
-      this.room.nearDoor(this.character.root.position);
+      this.character != null
+    ) {
+      const pos = this.character.root.position;
+      if (this.room.nearDoor(pos)) {
+        this.doorPrompt = true;
+      } else if (this.nearClaimFlag(pos)) {
+        this.claimInteractPrompt = true;
+      }
+    }
     if (this.controller && this.character) {
       // Free-mouse / unlocked: aim follows OS cursor (soft-lock select under cursor).
       this.syncFreeMouseAim();
@@ -11010,10 +11023,12 @@ export class Studio {
       slots: this.getSlotBindings(),
       statuses: this.status.views(),
       prompt: this.doorPrompt
-        ? "Hit E to Enter"
-        : this.inDungeon
-          ? "Hit E to Leave"
-          : null,
+        ? "Press E · Enter portal"
+        : this.claimInteractPrompt
+          ? "Press E · Claim flag"
+          : this.inDungeon
+            ? "Press E · Leave dungeon"
+            : null,
       inDungeon: this.inDungeon,
       arena: this.arenaMatch?.isActive ? this.arenaMatch.state() : null,
       mech: this.mech.isPiloted
@@ -12117,6 +12132,19 @@ export class Studio {
     return this.campBuild?.hasClaim ?? false;
   }
 
+  /** True when player is within interact range of a planted claim flag (~3.5 m). */
+  nearClaimFlag(pos: THREE.Vector3): boolean {
+    const camp = this.campBuild;
+    if (!camp?.hasClaim) return false;
+    for (const s of camp.structures) {
+      if (s.placeableId !== "claim_flag") continue;
+      const dx = s.x - pos.x;
+      const dz = s.z - pos.z;
+      if (dx * dx + dz * dz <= 3.5 * 3.5) return true;
+    }
+    return false;
+  }
+
   /** Wire keyboard skill/jump shortcuts that need engine-side actions. */
   handleKey(code: string) {
     if (code === "Escape" && this.campBuild?.isGhostActive) {
@@ -12183,6 +12211,12 @@ export class Studio {
       // Camp interact first: doors / gates / workbenches near player
       const pp = this.character?.root.position;
       if (pp && this.campBuild?.tryInteract(pp)) {
+        return;
+      }
+      // Planted claim flag → open camp claim UI (host)
+      if (pp && this.nearClaimFlag(pp)) {
+        this.onClaimFlagInteract?.();
+        this.setCombatFlash("CLAIM FLAG · CAMP", 0.6);
         return;
       }
       // Harvest skin channel when in harvest mode; forcefield in combat.

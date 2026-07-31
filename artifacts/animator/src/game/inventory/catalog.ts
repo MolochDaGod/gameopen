@@ -74,6 +74,17 @@ export const CONSUMABLE_TEMPLATES: Record<string, ItemTemplate> = {
     stamina: 30,
     tags: ["drink"],
   },
+  /** Deploy claim flag ghost from bag (RMB → Deploy · or E near flag after plant). */
+  itm_claim_flag: {
+    id: "itm_claim_flag",
+    kind: "tool",
+    name: "Claim Flag",
+    description: "Deploy from bag to plant a camp claim. Walk up and press E to open camp UI.",
+    rarity: "uncommon",
+    maxStack: 5,
+    icon: "/icons/camp/flag.png",
+    tags: ["camp", "claim", "deploy", "placeable:claim_flag"],
+  },
 };
 
 /** Sample gear for loadout slots (main / side / mount / boat). */

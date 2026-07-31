@@ -91,12 +91,13 @@ export type SystemsTabId =
   | "tabProfessions"
   | "tabMastery";
 
-/** Right-side main panel tabs (production Open shell). */
-const TABS: Array<{ id: SystemsTabId; label: string }> = [
-  { id: "tabEquipment", label: "Equipment" },
+/** Right-side main panel tabs (production Open shell).
+ *  I → Equipment · K → Wpn Skills · Class Skills = class tree tab. */
+const TABS: Array<{ id: SystemsTabId; label: string; hotkey?: string }> = [
+  { id: "tabEquipment", label: "Equipment", hotkey: "I" },
   { id: "tabInventory", label: "Inventory" },
-  { id: "tabClassSkills", label: "Skills" },
-  { id: "tabWeaponSkills", label: "Wpn Skills" },
+  { id: "tabClassSkills", label: "Class Skills" },
+  { id: "tabWeaponSkills", label: "Weapon Skills", hotkey: "K" },
   { id: "tabCrafting", label: "Crafting" },
   { id: "tabRooms", label: "Rooms" },
   { id: "tabGuild", label: "Guild" },
@@ -167,6 +168,11 @@ export function GrudgeSystemsPanel({
     setState(loaded);
     setActiveSkillProgress(characterId, loaded.skillProgress);
   }, [characterId]);
+
+  // Hotkeys I / K open specific tabs — re-sync when host remounts with initialTab
+  useEffect(() => {
+    if (initialTab) setTab(initialTab);
+  }, [initialTab]);
 
   // Keep weapon tab selection in sync with equipped weapon
   useEffect(() => {
@@ -361,9 +367,11 @@ export function GrudgeSystemsPanel({
               type="button"
               className={`gs-tab cx-menu-tab${tab === t.id ? " active" : ""}`}
               data-tab={t.id}
+              title={t.hotkey ? `Hotkey ${t.hotkey}` : undefined}
               onClick={() => setTab(t.id)}
             >
               {t.label}
+              {t.hotkey ? <span className="gs-tab-hk"> [{t.hotkey}]</span> : null}
             </button>
           ))}
         </nav>

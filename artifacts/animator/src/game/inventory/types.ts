@@ -155,6 +155,7 @@ export interface DepositContext {
 
 /** RMB context actions on a bag item. */
 export type BagItemAction =
+  | "deploy"
   | "use"
   | "equip"
   | "unequip"
@@ -190,11 +191,17 @@ export function emptyKeptLoadout(): CharacterKeptLoadout {
 }
 
 export function newCharacterBag(characterId: string): CharacterBagState {
+  const slots = emptyBagSlots(DEFAULT_BAG_SLOTS);
+  // Starter: claim flag so camp can be deployed from inventory without grinding.
+  slots[0] = {
+    index: 0,
+    item: newItemInstance("itm_claim_flag", 1, { bound: true }),
+  };
   return {
     characterId: characterId || "local",
     cols: DEFAULT_BAG_COLS,
     rows: DEFAULT_BAG_ROWS,
-    slots: emptyBagSlots(DEFAULT_BAG_SLOTS),
+    slots,
     kept: emptyKeptLoadout(),
     consumableHotkeys: [null, null, null, null],
     updatedAt: Date.now(),

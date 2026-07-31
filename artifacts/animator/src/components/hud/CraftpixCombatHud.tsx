@@ -325,9 +325,11 @@ export function CraftpixCombatHud({ hud, onOpenProduction }: CraftpixCombatHudPr
   return (
     <div className="cx-hud cx-combat-hud" data-mode="combat">
       <div className="cx-combat-bar" role="toolbar" aria-label="Combat action bar">
-        {/* Left HP globe — Part_2 */}
+        {/* Left HP globe — Diablo-style circular liquid orb */}
         <div className="cx-globe cx-globe-hp" title={`HP ${Math.round(hud.health)}/${hud.maxHealth}`}>
-          <div className="cx-globe-fill hp" style={{ height: `${hpPct}%` }} />
+          <div className="cx-globe-well">
+            <div className="cx-globe-fill hp" style={{ height: `${hpPct}%` }} />
+          </div>
           <div className="cx-globe-overlay" />
           <span className="cx-globe-label">
             {Math.round(hud.health)}
@@ -404,16 +406,18 @@ export function CraftpixCombatHud({ hud, onOpenProduction }: CraftpixCombatHudPr
           </div>
         </div>
 
-        {/* Right SP globe */}
+        {/* Right mana/stamina globe — circular blue liquid (D3-style) */}
         <div
           className="cx-globe cx-globe-sp"
-          title={`SP ${Math.round(hud.stamina)}/${hud.maxStamina}`}
+          title={`Mana ${Math.round(hud.stamina)}/${hud.maxStamina}`}
         >
-          <div className="cx-globe-fill sp" style={{ height: `${spPct}%` }} />
+          <div className="cx-globe-well">
+            <div className="cx-globe-fill sp" style={{ height: `${spPct}%` }} />
+          </div>
           <div className="cx-globe-overlay" />
           <span className="cx-globe-label">
             {Math.round(hud.stamina)}
-            <small>SP</small>
+            <small>MP</small>
           </span>
         </div>
       </div>

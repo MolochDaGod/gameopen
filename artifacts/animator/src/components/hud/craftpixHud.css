@@ -1010,46 +1010,117 @@
   z-index: 12;
 }
 
-/* Globes — Part_2 empty + fill; fill height = % resource */
+/* Globes — Diablo 3 style circular resource orbs (no square fills).
+   Liquid rises from bottom inside a hard circular clip. Optional craftpix
+   ab3 fills when present; pure CSS fallback always circular. */
 .cx-globe {
   position: relative;
-  width: 72px;
-  height: 72px;
-  flex: 0 0 72px;
+  width: 78px;
+  height: 78px;
+  flex: 0 0 78px;
   border-radius: 50%;
   overflow: hidden;
-  background: url("/ui/craftpix/part2/Action_Bar/ab1_globe_empty_left.png") center / cover no-repeat;
-  box-shadow: 0 0 0 2px rgba(40, 28, 12, 0.8);
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 240, 200, 0.22), transparent 42%),
+    radial-gradient(circle at 50% 55%, #1a1210 0%, #070608 70%);
+  box-shadow:
+    0 0 0 2px #3a2810,
+    0 0 0 4px #c9a04a,
+    0 0 0 5px #2a1c0a,
+    inset 0 0 14px rgba(0, 0, 0, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.55);
 }
 .cx-globe-sp {
-  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_globe_empty_right.png");
+  background:
+    radial-gradient(circle at 32% 28%, rgba(180, 220, 255, 0.2), transparent 42%),
+    radial-gradient(circle at 50% 55%, #0e1520 0%, #06080e 70%);
+  box-shadow:
+    0 0 0 2px #1a2840,
+    0 0 0 4px #6a9ad0,
+    0 0 0 5px #0e1828,
+    inset 0 0 14px rgba(0, 0, 0, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.55);
+}
+/* Circular well that holds the liquid — hard clip kills any square bleed */
+.cx-globe-well {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.65));
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
 }
 .cx-globe-fill {
   position: absolute;
-  left: 10%;
-  right: 10%;
-  bottom: 12%;
-  max-height: 76%;
-  border-radius: 0 0 50% 50% / 0 0 40% 40%;
-  transition: height 120ms linear;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  /* height set inline as % of well */
+  transition: height 140ms linear;
+  border-radius: 0;
   z-index: 0;
 }
 .cx-globe-fill.hp {
   background:
-    url("/ui/craftpix/part2/Action_Bar/ab1_globe_fill_ORANGE.png") center bottom / cover no-repeat,
-    linear-gradient(0deg, #8a1810, #e84830);
+    url("/ui/craftpix/part3/ab3/ab3_stat_fill_red_left.png") center bottom / 140% auto no-repeat,
+    linear-gradient(
+      180deg,
+      rgba(255, 120, 90, 0.95) 0%,
+      #e03020 18%,
+      #a01010 55%,
+      #4a0606 100%
+    );
+  box-shadow:
+    inset 0 2px 0 rgba(255, 200, 160, 0.45),
+    0 -4px 12px rgba(255, 40, 20, 0.35);
 }
 .cx-globe-fill.sp {
   background:
-    url("/ui/craftpix/part2/Action_Bar/ab1_globe_fill_TOXIC-GREEN.png") center bottom / cover no-repeat,
-    linear-gradient(0deg, #186040, #48d080);
+    url("/ui/craftpix/part3/ab3/ab3_stat_fill_blue_right.png") center bottom / 140% auto no-repeat,
+    linear-gradient(
+      180deg,
+      rgba(140, 200, 255, 0.95) 0%,
+      #2a78e0 18%,
+      #1048a0 55%,
+      #06183a 100%
+    );
+  box-shadow:
+    inset 0 2px 0 rgba(180, 220, 255, 0.45),
+    0 -4px 12px rgba(40, 120, 255, 0.35);
+}
+/* Soft meniscus / liquid top edge */
+.cx-globe-fill::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: -6px;
+  height: 14px;
+  border-radius: 50%;
+  background: inherit;
+  filter: brightness(1.15);
+  opacity: 0.9;
+  pointer-events: none;
 }
 .cx-globe-overlay {
   position: absolute;
   inset: 0;
-  background: url("/ui/craftpix/part2/Action_Bar/ab1_globe_border_overlay.png") center / cover no-repeat;
+  border-radius: 50%;
   pointer-events: none;
   z-index: 1;
+  background:
+    url("/ui/craftpix/part3/ab3/ab3_stat_overlay_left.png") center / cover no-repeat,
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.22), transparent 38%);
+  mix-blend-mode: soft-light;
+  opacity: 0.92;
+}
+.cx-globe-sp .cx-globe-overlay {
+  background:
+    url("/ui/craftpix/part3/ab3/ab3_stat_overlay_right.png") center / cover no-repeat,
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.2), transparent 38%);
 }
 .cx-globe-label {
   position: absolute;
@@ -1059,17 +1130,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   color: #fff8e8;
-  text-shadow: 0 1px 3px #000, 0 0 6px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 3px #000, 0 0 8px rgba(0, 0, 0, 0.9);
   line-height: 1.05;
   pointer-events: none;
 }
 .cx-globe-label small {
   font-size: 8px;
-  letter-spacing: 0.12em;
-  opacity: 0.85;
+  letter-spacing: 0.14em;
+  opacity: 0.9;
   font-weight: 700;
 }
 

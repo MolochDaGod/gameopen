@@ -462,6 +462,14 @@ export default function App() {
   const [systemsOpen, setSystemsOpen] = useState(false);
   const systemsOpenRef = useRef(false);
   systemsOpenRef.current = systemsOpen;
+  /** Main panel tab when opened via I (character) or K (weapon skills). */
+  const [systemsTab, setSystemsTab] = useState<
+    | "tabEquipment"
+    | "tabInventory"
+    | "tabClassSkills"
+    | "tabWeaponSkills"
+    | "tabCharacter"
+  >("tabEquipment");
   /** Camp claim flag hub (units / buildings / farm / tame / defensives / upgrades). */
   const [claimFlagOpen, setClaimFlagOpen] = useState(false);
   const claimFlagOpenRef = useRef(false);
@@ -511,24 +519,48 @@ export default function App() {
     document.exitPointerLock?.();
   }, []);
 
+  /** Main panel (I) — character sheet tabs; optional start tab. */
+  const openSystems = useCallback(
+    (
+      tab:
+        | "tabEquipment"
+        | "tabInventory"
+        | "tabClassSkills"
+        | "tabWeaponSkills"
+        | "tabCharacter" = "tabEquipment",
+    ) => {
+      setSystemsTab(tab);
+      setSystemsOpen(true);
+      setEquipOpen(false);
+      setClaimFlagOpen(false);
+      setBagOpen(false);
+      setHarvestUiOpen(false);
+      document.exitPointerLock?.();
+    },
+    [],
+  );
+
   const toggleSystems = useCallback(() => {
     setSystemsOpen((v) => {
       const next = !v;
       if (next) {
+        setSystemsTab("tabEquipment");
         setEquipOpen(false);
         setClaimFlagOpen(false);
+        setBagOpen(false);
         document.exitPointerLock?.();
       }
       return next;
     });
   }, []);
 
-  /** Claim flag camp hub (B) — build rights UI, not quick-craft. */
+  /** Claim flag camp hub — plant from bag / B near flag / E interact. */
   const openClaimFlag = useCallback(() => {
     setClaimFlagOpen(true);
     setEquipOpen(false);
     setSystemsOpen(false);
     setHarvestUiOpen(false);
+    setBagOpen(false);
     document.exitPointerLock?.();
   }, []);
 
@@ -539,6 +571,7 @@ export default function App() {
         setEquipOpen(false);
         setSystemsOpen(false);
         setHarvestUiOpen(false);
+        setBagOpen(false);
         document.exitPointerLock?.();
       }
       return next;
@@ -912,6 +945,14 @@ export default function App() {
       setCharacterId(spec.studioAvatarId);
       if (bootWeapon) setWeaponId(bootWeapon as WeaponId);
       applyDangerPlayableToStudio(studio, playable);
+      // Claim flag E interact → open camp hub
+      studio.onClaimFlagInteract = () => {
+        setClaimFlagOpen(true);
+        setSystemsOpen(false);
+        setEquipOpen(false);
+        setBagOpen(false);
+        document.exitPointerLock?.();
+      };
       // Async fleet mesh_ids (equipment bag) when source is fleet
       if (playable.source === "fleet-character") {
         applyFleetLoadoutRef.current();
@@ -1127,36 +1168,22 @@ export default function App() {
       if (e.repeat) return;
       if (e.code === "KeyI") {
         e.preventDefault();
-        // Harvest/build: character bag · Combat: full equipment paperdoll
-        const harvestMode =
-          hud?.activityMode === "harvest" || hud?.activityMode === "build";
-        if (harvestMode || bagOpenRef.current) {
-          const next = !bagOpenRef.current;
-          setBagOpen(next);
-          if (next) {
-            setEquipOpen(false);
-            setSystemsOpen(false);
-            setClaimFlagOpen(false);
-            document.exitPointerLock?.();
-            refreshDeposit();
-            refreshBagMeta();
-          }
+        // Main Panel (character sheet) — Equipment default; bag via Inventory tab
+        if (systemsOpenRef.current && systemsTab === "tabEquipment") {
+          setSystemsOpen(false);
         } else {
-          const next = !equipOpenRef.current;
-          setEquipOpen(next);
-          if (next) {
-            setSystemsOpen(false);
-            setClaimFlagOpen(false);
-            setBagOpen(false);
-            document.exitPointerLock?.();
-          }
+          openSystems("tabEquipment");
         }
         return;
       }
-      // K = grudge6 Creator systems / skillbook tabs
+      // K = weapon skill trees (also a Main Panel tab)
       if (e.code === "KeyK") {
         e.preventDefault();
-        toggleSystems();
+        if (systemsOpenRef.current && systemsTab === "tabWeaponSkills") {
+          setSystemsOpen(false);
+        } else {
+          openSystems("tabWeaponSkills");
+        }
         return;
       }
       // B = camp claim flag hub (units / buildings / farm / tame / upgrades)
@@ -1291,34 +1318,20 @@ export default function App() {
       if (e.repeat) return;
       if (e.code === "KeyI") {
         e.preventDefault();
-        const harvestMode =
-          hud?.activityMode === "harvest" || hud?.activityMode === "build";
-        if (harvestMode || bagOpenRef.current) {
-          const next = !bagOpenRef.current;
-          setBagOpen(next);
-          if (next) {
-            setEquipOpen(false);
-            setSystemsOpen(false);
-            setClaimFlagOpen(false);
-            document.exitPointerLock?.();
-            refreshDeposit();
-            refreshBagMeta();
-          }
+        if (systemsOpenRef.current && systemsTab === "tabEquipment") {
+          setSystemsOpen(false);
         } else {
-          const next = !equipOpenRef.current;
-          setEquipOpen(next);
-          if (next) {
-            setSystemsOpen(false);
-            setClaimFlagOpen(false);
-            setBagOpen(false);
-            document.exitPointerLock?.();
-          }
+          openSystems("tabEquipment");
         }
         return;
       }
       if (e.code === "KeyK") {
         e.preventDefault();
-        toggleSystems();
+        if (systemsOpenRef.current && systemsTab === "tabWeaponSkills") {
+          setSystemsOpen(false);
+        } else {
+          openSystems("tabWeaponSkills");
+        }
         return;
       }
       if (e.code === "KeyB") {
@@ -2862,6 +2875,10 @@ export default function App() {
             onConsume={(heal, stamina, name) => {
               studioRef.current?.flashMessage?.(`${name} · +${heal}HP +${stamina}SP`, 1.4);
             }}
+            onDeployPlaceable={(placeableId) => {
+              setBagOpen(false);
+              studioRef.current?.beginPlacePlaceable(placeableId);
+            }}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
@@ -3096,6 +3113,10 @@ export default function App() {
             onConsume={(heal, stamina, name) => {
               studioRef.current?.flashMessage?.(`${name} · +${heal}HP +${stamina}SP`, 1.4);
             }}
+            onDeployPlaceable={(placeableId) => {
+              setBagOpen(false);
+              studioRef.current?.beginPlacePlaceable(placeableId);
+            }}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
@@ -3292,13 +3313,15 @@ export default function App() {
           )}
           {systemsOpen && (
             <GrudgeSystemsPanel
+              key={`sys-${systemsTab}`}
               characterName={hud?.character ?? characterId}
               characterId={gameSession.snapshot.selectedCharacterId || characterId}
               weapon={hud?.weapon ?? weaponId}
               hud={hud}
+              initialTab={systemsTab}
               onClose={() => setSystemsOpen(false)}
               onOpenEquipment={() => {
-                setSystemsOpen(false);
+                setSystemsTab("tabEquipment");
                 setEquipOpen(true);
               }}
               onOpenCrafting={() => {
@@ -3307,7 +3330,6 @@ export default function App() {
               }}
               onPlayPve={() => {
                 setSystemsOpen(false);
-                /* already in danger — just close panel for solo PvE */
               }}
               onOpenLobby={() => {
                 setSystemsOpen(false);

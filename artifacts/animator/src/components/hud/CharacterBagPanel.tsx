@@ -31,6 +31,8 @@ export interface CharacterBagPanelProps {
   onFlash?: (msg: string) => void;
   /** Apply heal/stamina from consumable use. */
   onConsume?: (heal: number, stamina: number, name: string) => void;
+  /** Deploy placeable from bag (e.g. claim flag → ghost place). */
+  onDeployPlaceable?: (placeableId: string) => void;
 }
 
 export function CharacterBagPanel({
@@ -41,6 +43,7 @@ export function CharacterBagPanel({
   onBagChange,
   onFlash,
   onConsume,
+  onDeployPlaceable,
 }: CharacterBagPanelProps) {
   const [bag, setBag] = useState<CharacterBagState>(() => loadCharacterBag(characterId));
   const [menu, setMenu] = useState<{
@@ -131,7 +134,24 @@ export function CharacterBagPanel({
       return;
     }
     if (action === "equip") {
-      onFlash?.(`Equip ${tpl.name} — open Loadout (I) for paperdoll`);
+      onFlash?.(`Equip ${tpl.name} — open Main Panel (I) for equipment`);
+      return;
+    }
+    if (action === "deploy") {
+      const placeTag = tpl.tags?.find((t) => t.startsWith("placeable:"));
+      const placeableId = placeTag?.slice("placeable:".length) || "claim_flag";
+      if (onDeployPlaceable) {
+        // Consume one flag from bag when starting ghost place
+        const { bag: next, removed } = removeFromSlot(bag, index, 1);
+        if (removed) {
+          commit(next);
+          onClose();
+          onDeployPlaceable(placeableId);
+          onFlash?.(`Deploy ${tpl.name} — LMB place · R rotate · Esc cancel · E open camp`);
+        }
+      } else {
+        onFlash?.("Cannot deploy here");
+      }
       return;
     }
   };
@@ -140,8 +160,11 @@ export function CharacterBagPanel({
     const tpl = getItemTemplate(item.templateId);
     const acts: BagItemAction[] = ["inspect"];
     if (tpl.kind === "consumable") acts.unshift("use");
+    if (tpl.tags?.some((t) => t.startsWith("placeable:") || t === "claim")) {
+      acts.unshift("deploy");
+    }
     if (tpl.kind === "weapon" || tpl.kind === "equipment" || tpl.kind === "tool") {
-      acts.push("equip");
+      if (!tpl.tags?.includes("claim")) acts.push("equip");
     }
     if (tpl.kind === "material" || tpl.kind === "consumable") acts.push("deposit");
     acts.push("drop");
@@ -298,6 +321,7 @@ export function CharacterBagPanel({
           {actionsFor(bag.slots[menu.index]!.item!).map((a) => (
             <li key={a}>
               <button type="button" role="menuitem" onClick={() => runAction(menu.index, a)}>
+                {a === "deploy" && "Deploy (place)"}
                 {a === "use" && "Use"}
                 {a === "equip" && "Equip"}
                 {a === "deposit" && "Deposit to account"}
