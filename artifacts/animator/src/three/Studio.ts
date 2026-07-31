@@ -228,8 +228,11 @@ import {
   defaultToolForMode,
   MODE_BLURB,
   MODE_LABEL,
+  modeFromRadialId,
+  nextCombatHarvest,
   nextMode,
   RADIAL_BY_MODE,
+  toolSkillsFor,
   type PlayerActivityMode,
 } from "./playerMode";
 import type { StaffElement } from "./types";
@@ -853,14 +856,18 @@ export class Studio {
   /** Seconds remaining of Smash-style tumble / ragdoll (for combat context). */
   private tumbleT = 0;
   /**
-   * Activity mode: combat · harvest · build. **Q** cycles.
-   * **X** always dodges. Hold **Tab** opens radial options for the mode.
+   * Activity mode: combat · harvest · build.
+   * Hold **Q** = mode radial · Hold **R** (harvest) = tool radial · Hold **Tab** = options.
+   * **X** always dodges. **J/H/V** = bag utility (handled by App + fallback combat).
    */
   private activityMode: import("./playerMode").PlayerActivityMode = "combat";
   private activityTool = "attack";
   private radialOpen = false;
+  private radialKind: import("./playerMode").RadialKind = "none";
   private radialHoldT = 0;
   private tabHoldArmed = false;
+  private qHoldArmed = false;
+  private rHoldArmed = false;
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
@@ -10703,15 +10710,35 @@ export class Studio {
         this.skillChainPart = 0;
       }
     }
-    // Hold Tab → open radial after a short press threshold (quick tap = cycle target).
-    if (this.tabHoldArmed && this.input.down("Tab")) {
+    // Hold Tab / Q / R → open radial after short press threshold.
+    const arming =
+      (this.tabHoldArmed && this.input.down("Tab")) ||
+      (this.qHoldArmed && this.input.down("KeyQ")) ||
+      (this.rHoldArmed && this.input.down("KeyR"));
+    if (arming) {
       this.radialHoldT += dt;
       if (this.radialHoldT >= 0.18 && !this.radialOpen) {
-        this.radialOpen = true;
+        if (this.qHoldArmed) {
+          this.radialKind = "mode";
+          this.radialOpen = true;
+        } else if (this.rHoldArmed && this.activityMode === "harvest") {
+          this.radialKind = "tool";
+          this.radialOpen = true;
+        } else if (this.tabHoldArmed) {
+          this.radialKind = "options";
+          this.radialOpen = true;
+        }
       }
-    } else if (!this.input.down("Tab") && this.radialOpen && !this.tabHoldArmed) {
-      // Safety close if key state desyncs
-      this.radialOpen = false;
+    } else if (
+      this.radialOpen &&
+      !this.tabHoldArmed &&
+      !this.qHoldArmed &&
+      !this.rHoldArmed &&
+      !this.input.down("Tab") &&
+      !this.input.down("KeyQ") &&
+      !this.input.down("KeyR")
+    ) {
+      // Safety close only when no arming keys remain (UI may keep open for mouse aim)
     }
     if (this.tumbleT > 0) {
       this.tumbleT = Math.max(0, this.tumbleT - dt);
@@ -11012,6 +11039,7 @@ export class Studio {
       activityMode: this.activityMode,
       activityTool: this.activityTool,
       radialOpen: this.radialOpen,
+      radialKind: this.radialOpen ? this.radialKind : "none",
       hurt: this.hurt,
       // Suppress free-roam "Respawning…" overlay during arena (result UI owns it).
       defeated: this.defeated && !this.arenaMatch?.isActive,
@@ -11585,8 +11613,11 @@ export class Studio {
     this.activityMode = mode;
     this.activityTool = defaultToolForMode(mode);
     this.radialOpen = false;
+    this.radialKind = "none";
     this.harvestMoveActive = false;
     this.tabHoldArmed = false;
+    this.qHoldArmed = false;
+    this.rHoldArmed = false;
     this.radialHoldT = 0;
 
     if (mode === "harvest" || mode === "build") {
@@ -11900,20 +11931,42 @@ export class Studio {
     return TEST_WORLDS[this.testWorldId]?.uuid ?? "";
   }
 
-  /** Open/close radial options wheel (hold Tab). */
-  setRadialOpen(open: boolean) {
+  /** Open/close radial options wheel. */
+  setRadialOpen(open: boolean, kind: import("./playerMode").RadialKind = "options") {
     this.radialOpen = open;
+    this.radialKind = open ? kind : "none";
   }
 
-  /** Select a radial tool for the current activity mode (public for HUD wheel). */
+  /**
+   * Radial commit (public for HUD wheel).
+   * · mode radial → setActivityMode(combat|harvest)
+   * · tool radial → equip harvest tool
+   * · options → activity tool / combat shortcuts
+   */
   selectActivityTool(id: string) {
-    this.activityTool = id;
+    const kind = this.radialKind;
     this.radialOpen = false;
+    this.radialKind = "none";
     this.tabHoldArmed = false;
+    this.qHoldArmed = false;
+    this.rHoldArmed = false;
     this.radialHoldT = 0;
+
+    // Mode switch (hold Q)
+    if (kind === "mode" || id.startsWith("mode_")) {
+      const m = modeFromRadialId(id);
+      if (m) {
+        this.setActivityMode(m);
+        this.setCombatFlash(MODE_LABEL[m], 0.45);
+      }
+      return;
+    }
+
+    // Harvest tool equip (hold R) or options tool pick
+    this.activityTool = id;
     this.setCombatFlash(id.replace(/_/g, " ").toUpperCase(), 0.4);
-    // Immediate combat shortcuts from the wheel
-    if (this.activityMode === "combat") {
+    // Immediate combat shortcuts from the options wheel
+    if (this.activityMode === "combat" && kind === "options") {
       if (id === "dodge") this.performTimedDodgeRoll();
       else if (id === "parry") this.doParry();
       else if (id === "heavy") this.doHeavyAttack();
@@ -11927,13 +11980,34 @@ export class Studio {
   /** Cancel radial without changing tool. */
   cancelRadial() {
     this.radialOpen = false;
+    this.radialKind = "none";
     this.tabHoldArmed = false;
+    this.qHoldArmed = false;
+    this.rHoldArmed = false;
     this.radialHoldT = 0;
   }
 
   private pickRadialByIndex(i: number) {
+    // Harvest: 1–4 fire equipped tool skills (left HUD slots 2–5)
+    if (this.activityMode === "harvest") {
+      this.runHarvestToolSkill(i);
+      return;
+    }
     const opt = RADIAL_BY_MODE[this.activityMode][i];
     if (opt) this.selectActivityTool(opt.id);
+  }
+
+  /**
+   * Fire a tool-specific harvest skill (slots 2–5 / keys 1–4).
+   * Uses the same harvest swing pipeline with a skill-tagged flash.
+   */
+  runHarvestToolSkill(skillIndex: number) {
+    if (this.activityMode !== "harvest") return;
+    const skills = toolSkillsFor(this.activityTool);
+    const sk = skills[skillIndex];
+    if (!sk) return;
+    this.setCombatFlash(`${sk.label.toUpperCase()} · ${this.activityTool}`, 0.55);
+    this.runActivityTool(this.activityTool);
   }
 
   /**
@@ -12162,6 +12236,12 @@ export class Studio {
       this.setCombatFlash("Rotate ghost 45°", 0.35);
       return;
     }
+    // Harvest: hold R arms tool radial (commit in update / keyup)
+    if (code === "KeyR" && this.activityMode === "harvest" && !this.campBuild?.isGhostActive) {
+      this.rHoldArmed = true;
+      this.radialHoldT = 0;
+      return;
+    }
     // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C + Alt+Space Getsuga) ──
     // Bare keys stay combat (C parry, G evade, T stomp, V kick, B camera, F skill).
     // Alt alone (no VFX letter) = combat slide.
@@ -12224,14 +12304,14 @@ export class Studio {
       else this.forceFieldGuard();
     }
     else if (code === "KeyQ") {
-      // Mode swap: Combat ↔ Harvest ↔ Build (SSOT — not weapon swap).
-      // Shift+Q in combat: swap main ↔ side arm when dual arsenal is loaded.
+      // Shift+Q in combat: swap main ↔ side arm. Bare Q: arm hold-mode radial.
       if (this.input.down("ShiftLeft") || this.input.down("ShiftRight")) {
         if (this.activityMode === "combat") this.swapCombatArsenal();
-        else this.cycleActivityMode();
-      } else {
-        this.cycleActivityMode();
+        else this.setActivityMode(nextCombatHarvest(this.activityMode));
+        return;
       }
+      this.qHoldArmed = true;
+      this.radialHoldT = 0;
     }
     else if (code === "KeyX") {
       // Elden Ring–style timed dodge roll (directional roll + ~0.5s i-frames).
@@ -12259,15 +12339,17 @@ export class Studio {
     else if (code === "KeyT") {
       if (this.activityMode === "combat") this.stomp();
     }
+    // J / H / V = bag utility slots (App consumes when assigned).
+    // Fallback combat toys when the slot is empty:
     else if (code === "KeyV") {
       if (this.activityMode === "combat") this.utilityKick();
     }
-    // KeyH = throw a bomb (quick-draw overhand throw → arcing grenade → AoE blast).
     else if (code === "KeyH") {
       if (this.activityMode === "combat") this.throwBomb();
     }
-    // KeyJ = drink a heal potion (quick-draw use → restore HP). No-op at full HP.
-    else if (code === "KeyJ") this.healPotion();
+    else if (code === "KeyJ") {
+      if (this.activityMode === "combat") this.healPotion();
+    }
     // KeyC = timed parry (success: rebound + stun + uppercut dash knock-up).
     else if (code === "KeyC") {
       if (this.activityMode === "combat") this.doParry();
@@ -12341,12 +12423,11 @@ export class Studio {
     this.setCombatFlash(sandboxLabelForEffect(effectId), 0.7);
   }
 
-  /** Keyup path for F (gun reload vs hold-discharge) + Tab radial / cycle. */
+  /** Keyup path for F (gun reload vs hold-discharge) + Tab/Q/R radial holds. */
   handleKeyUp(code: string) {
     if (code === "Tab") {
-      if (this.radialOpen) {
+      if (this.radialOpen && this.radialKind === "options") {
         // Leave wheel open until UI commits (pointer release) or Esc/cancel.
-        // Tab release alone does not force-close so players can aim with the mouse.
         this.tabHoldArmed = false;
         return;
       }
@@ -12355,7 +12436,38 @@ export class Studio {
         this.cycleTarget();
       }
       this.tabHoldArmed = false;
-      this.radialHoldT = 0;
+      if (!this.radialOpen) this.radialHoldT = 0;
+      return;
+    }
+    if (code === "KeyQ") {
+      if (this.radialOpen && this.radialKind === "mode") {
+        // Leave open for mouse aim; release does not cancel.
+        this.qHoldArmed = false;
+        return;
+      }
+      if (this.qHoldArmed && this.radialHoldT < 0.18) {
+        // Quick tap Q: toggle combat ↔ harvest (build via Tab / setActivityMode).
+        this.setActivityMode(nextCombatHarvest(this.activityMode));
+      }
+      this.qHoldArmed = false;
+      if (!this.radialOpen) this.radialHoldT = 0;
+      return;
+    }
+    if (code === "KeyR") {
+      if (this.radialOpen && this.radialKind === "tool") {
+        this.rHoldArmed = false;
+        return;
+      }
+      // Quick tap R in harvest: re-swing current tool; combat heavy is on keydown.
+      if (
+        this.rHoldArmed &&
+        this.radialHoldT < 0.18 &&
+        this.activityMode === "harvest"
+      ) {
+        this.runActivityTool(this.activityTool);
+      }
+      this.rHoldArmed = false;
+      if (!this.radialOpen) this.radialHoldT = 0;
       return;
     }
     if (code !== "KeyF") return;

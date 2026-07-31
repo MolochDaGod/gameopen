@@ -36,6 +36,7 @@ function cloneKept(kept: CharacterKeptLoadout | undefined): CharacterKeptLoadout
 }
 
 function cloneBag(bag: CharacterBagState): CharacterBagState {
+  const hk = bag.consumableHotkeys ?? [];
   return {
     ...bag,
     slots: bag.slots.map((s) => ({
@@ -43,7 +44,8 @@ function cloneBag(bag: CharacterBagState): CharacterBagState {
       item: s.item ? { ...s.item } : null,
     })),
     kept: cloneKept(bag.kept),
-    consumableHotkeys: bag.consumableHotkeys.map((h) => (h ? { ...h } : null)),
+    // Always 3 utility slots (J / H / V)
+    consumableHotkeys: [0, 1, 2].map((i) => (hk[i] ? { ...hk[i]! } : null)),
     updatedAt: Date.now(),
   };
 }
@@ -207,7 +209,21 @@ export function swapSlots(
   return next;
 }
 
-/** Drag consumable from bag index → hotkey 0–3. */
+/**
+ * Items that can sit on J / H / V utility slots:
+ * consumables, deployables (claim flag / placeables), mounts, boats.
+ */
+export function canAssignUtilityHotkey(templateId: string): boolean {
+  const tpl = getItemTemplate(templateId);
+  if (tpl.kind === "consumable") return true;
+  if (tpl.kind === "mount" || tpl.kind === "boat") return true;
+  const tags = tpl.tags ?? [];
+  if (tags.includes("deploy") || tags.some((t) => t.startsWith("placeable:"))) return true;
+  if (tpl.kind === "tool" && (tags.includes("camp") || tags.includes("claim"))) return true;
+  return false;
+}
+
+/** Drag bag item → utility hotkey 0–2 (J / H / V). */
 export function assignConsumableHotkey(
   bag: CharacterBagState,
   bagIndex: number,
@@ -216,46 +232,110 @@ export function assignConsumableHotkey(
   const next = cloneBag(bag);
   const slot = next.slots[bagIndex];
   if (!slot?.item) return next;
-  const tpl = getItemTemplate(slot.item.templateId);
-  if (tpl.kind !== "consumable") return next;
-  if (hotkeyIndex < 0 || hotkeyIndex >= next.consumableHotkeys.length) return next;
+  if (!canAssignUtilityHotkey(slot.item.templateId)) return next;
+  // Ensure length 3 (J H V)
+  while (next.consumableHotkeys.length < 3) next.consumableHotkeys.push(null);
+  if (hotkeyIndex < 0 || hotkeyIndex >= 3) return next;
   next.consumableHotkeys[hotkeyIndex] = { ...slot.item };
   next.updatedAt = Date.now();
   return next;
 }
 
-/** Use one consumable from hotkey; decrements bag stack if matching. */
+export type UtilityUseAction = "use" | "deploy" | "summon" | "none";
+
+export type UtilityUseResult = {
+  bag: CharacterBagState;
+  used: ItemInstance | null;
+  action: UtilityUseAction;
+  heal: number;
+  stamina: number;
+  /** placeable id when action is deploy (e.g. claim_flag) */
+  placeableId?: string;
+  /** kept loadout slot when summoning mount/boat */
+  summonSlot?: KeptLoadoutSlotId;
+};
+
+/** Use one utility slot (J/H/V); consumables decrement bag, deployables keep stack until placed. */
 export function useConsumableHotkey(
   bag: CharacterBagState,
   hotkeyIndex: number,
-): {
-  bag: CharacterBagState;
-  used: ItemInstance | null;
-  heal: number;
-  stamina: number;
-} {
+): UtilityUseResult {
   const next = cloneBag(bag);
+  while (next.consumableHotkeys.length < 3) next.consumableHotkeys.push(null);
+  const empty: UtilityUseResult = {
+    bag: next,
+    used: null,
+    action: "none",
+    heal: 0,
+    stamina: 0,
+  };
   const hk = next.consumableHotkeys[hotkeyIndex];
-  if (!hk) return { bag: next, used: null, heal: 0, stamina: 0 };
+  if (!hk) return empty;
   const tpl = getItemTemplate(hk.templateId);
-  // Consume from bag first matching stack
+  const tags = tpl.tags ?? [];
+
+  // Deployable / placeable — do not consume until place commits (caller begins ghost)
+  if (
+    tags.includes("deploy") ||
+    tags.some((t) => t.startsWith("placeable:")) ||
+    (tpl.kind === "tool" && (tags.includes("camp") || tags.includes("claim")))
+  ) {
+    const placeableId =
+      tags.find((t) => t.startsWith("placeable:"))?.slice("placeable:".length) ||
+      (hk.templateId === "itm_claim_flag" ? "claim_flag" : undefined);
+    return {
+      bag: next,
+      used: { ...hk },
+      action: "deploy",
+      heal: 0,
+      stamina: 0,
+      placeableId,
+    };
+  }
+
+  // Mount / boat — equip into kept loadout (summon)
+  if (tpl.kind === "mount" || tpl.kind === "boat") {
+    const summonSlot: KeptLoadoutSlotId = tpl.kind === "mount" ? "mount" : "boat";
+    return {
+      bag: next,
+      used: { ...hk },
+      action: "summon",
+      heal: 0,
+      stamina: 0,
+      summonSlot,
+    };
+  }
+
+  // Consumable — consume from bag stack
   const idx = next.slots.findIndex((s) => s.item?.templateId === hk.templateId);
   if (idx < 0) {
     next.consumableHotkeys[hotkeyIndex] = null;
-    return { bag: next, used: null, heal: 0, stamina: 0 };
+    return { ...empty, bag: next };
   }
   const { bag: after, removed } = removeFromSlot(next, idx, 1);
-  if (!removed) return { bag: after, used: null, heal: 0, stamina: 0 };
-  // Refresh hotkey qty
+  if (!removed) return { ...empty, bag: after };
   const left = countInBag(after, hk.templateId);
-  after.consumableHotkeys[hotkeyIndex] =
-    left > 0 ? { ...hk, qty: left } : null;
+  after.consumableHotkeys[hotkeyIndex] = left > 0 ? { ...hk, qty: left } : null;
   return {
     bag: after,
     used: removed,
+    action: "use",
     heal: tpl.heal ?? 0,
     stamina: tpl.stamina ?? 0,
   };
+}
+
+/** Clear a utility hotkey binding (does not remove bag stack). */
+export function clearUtilityHotkey(
+  bag: CharacterBagState,
+  hotkeyIndex: number,
+): CharacterBagState {
+  const next = cloneBag(bag);
+  while (next.consumableHotkeys.length < 3) next.consumableHotkeys.push(null);
+  if (hotkeyIndex < 0 || hotkeyIndex >= 3) return next;
+  next.consumableHotkeys[hotkeyIndex] = null;
+  next.updatedAt = Date.now();
+  return next;
 }
 
 /** Flatten bag items for deposit (all materials + optionals). */

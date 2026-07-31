@@ -40,6 +40,8 @@ interface Props {
   /** Radial wheel: commit tool selection. */
   onRadialSelect?: (id: string) => void;
   onRadialCancel?: () => void;
+  /** Harvest left slots 2–5: fire tool skill index 0–3. */
+  onToolSkill?: (skillIndex: number) => void;
   /** Open full harvest production shell (craft / codex / maps / trees). */
   onOpenProduction?: () => void;
   /** Open character 3×3 bag. */
@@ -47,6 +49,8 @@ interface Props {
   canDeposit?: boolean;
   bagOccupied?: number;
   bagCapacity?: number;
+  /** J / H / V bag utility bindings for harvest HUD right wing. */
+  utilitySlots?: (import("../game/inventory").ItemInstance | null)[];
 }
 
 /** Merge a panel's edit binding onto its base className + inline style. */
@@ -1023,11 +1027,13 @@ export function Hud({
   onArenaReturn,
   onRadialSelect,
   onRadialCancel,
+  onToolSkill,
   onOpenProduction,
   onOpenBag,
   canDeposit,
   bagOccupied,
   bagCapacity,
+  utilitySlots,
 }: Props) {
   if (!hud) return null;
 
@@ -1040,13 +1046,14 @@ export function Hud({
   const quickSlots = edit?.config.quickSlots ?? defaultQuickSlots();
   const showTightBar = tight && !isHarvestBuild && !hud.mech;
   const showClassicCombat = !isHarvestBuild && (!tight || !!hud.mech);
+  const radialKind = hud.radialKind && hud.radialKind !== "none" ? hud.radialKind : "options";
 
   return (
     <>
       {/* Fire-tinted pulsing rim while the Striker hovers */}
       {hud.hovering && <div className="hover-vignette" />}
 
-      {/* Mode banner — top centre, above class skills / vitals (Q cycle) */}
+      {/* Mode banner — top centre, above class skills / vitals (hold Q) */}
       <ModeBanner mode={mode} tool={hud.activityTool ?? ""} />
 
       {/* Combat key legend — hide under tight layout (slots carry keys) */}
@@ -1059,7 +1066,14 @@ export function Hud({
       <RadialMenu
         open={!!hud.radialOpen}
         mode={mode}
-        selectedId={hud.activityTool ?? "attack"}
+        kind={radialKind}
+        selectedId={
+          radialKind === "mode"
+            ? mode === "harvest"
+              ? "mode_harvest"
+              : "mode_combat"
+            : hud.activityTool ?? "attack"
+        }
         onSelect={(id) => onRadialSelect?.(id)}
         onCancel={() => onRadialCancel?.()}
       />
@@ -1118,11 +1132,13 @@ export function Hud({
           hud={hud}
           mode={mode}
           onSelectTool={(id) => onRadialSelect?.(id)}
+          onToolSkill={onToolSkill}
           onOpenProduction={onOpenProduction}
           onOpenBag={onOpenBag}
           canDeposit={canDeposit}
           bagOccupied={bagOccupied}
           bagCapacity={bagCapacity}
+          utilitySlots={utilitySlots}
         />
       ) : showTightBar ? (
         <>

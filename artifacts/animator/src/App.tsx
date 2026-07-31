@@ -67,11 +67,17 @@ import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
 import { ClassSkillBar } from "./components/ClassSkillBar";
 import {
   loadCharacterBag,
+  saveCharacterBag,
   resolveDepositContext,
   type DepositContext,
   harvestIntoBag,
   applyDeathBagDrop,
   DEFAULT_BAG_SLOTS,
+  useConsumableHotkey,
+  equipBagToKept,
+  getItemTemplate,
+  UTILITY_HOTKEY_CODES,
+  type ItemInstance,
 } from "./game/inventory";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
@@ -581,10 +587,70 @@ export default function App() {
   const activeCharacterId =
     gameSession.snapshot.selectedCharacterId || characterId || "local";
 
+  const [utilitySlots, setUtilitySlots] = useState<(ItemInstance | null)[]>([
+    null,
+    null,
+    null,
+  ]);
+
   const refreshBagMeta = useCallback(() => {
     const b = loadCharacterBag(activeCharacterId);
     setBagOccupied(b.slots.filter((s) => s.item).length);
+    const hk = b.consumableHotkeys ?? [];
+    setUtilitySlots([hk[0] ?? null, hk[1] ?? null, hk[2] ?? null]);
   }, [activeCharacterId]);
+
+  /**
+   * J / H / V bag utility: use consumable, start deploy ghost, or equip mount/boat.
+   * Returns true when a bound item was handled (skip Studio combat fallbacks).
+   */
+  const tryUseUtilityHotkey = useCallback(
+    (code: string): boolean => {
+      const idx = (UTILITY_HOTKEY_CODES as readonly string[]).indexOf(code);
+      if (idx < 0) return false;
+      const bag = loadCharacterBag(activeCharacterId);
+      const bound = bag.consumableHotkeys?.[idx];
+      if (!bound) return false;
+      const res = useConsumableHotkey(bag, idx);
+      if (res.action === "none" || !res.used) return false;
+      saveCharacterBag(res.bag);
+      refreshBagMeta();
+      const name = getItemTemplate(res.used.templateId).name;
+      if (res.action === "use") {
+        studioRef.current?.flashMessage?.(
+          `${name} · +${res.heal}HP +${res.stamina}SP`,
+          1.4,
+        );
+        // Heal via combat potion path when heal > 0 (visual + HP)
+        if (res.heal > 0) studioRef.current?.handleKey?.("KeyJ");
+        return true;
+      }
+      if (res.action === "deploy" && res.placeableId) {
+        document.exitPointerLock?.();
+        studioRef.current?.setFreeMouseMode?.(true);
+        studioRef.current?.beginPlacePlaceable(res.placeableId);
+        studioRef.current?.flashMessage?.(`Deploy ${name}`, 1.2);
+        return true;
+      }
+      if (res.action === "summon" && res.summonSlot) {
+        // Equip from bag stack matching template into kept loadout
+        const bagIdx = res.bag.slots.findIndex(
+          (s) => s.item?.templateId === res.used!.templateId,
+        );
+        if (bagIdx >= 0) {
+          const equipped = equipBagToKept(res.bag, bagIdx, res.summonSlot);
+          if (equipped.ok) {
+            saveCharacterBag(equipped.bag);
+            refreshBagMeta();
+          }
+        }
+        studioRef.current?.flashMessage?.(`Summon ${name}`, 1.2);
+        return true;
+      }
+      return true;
+    },
+    [activeCharacterId, refreshBagMeta],
+  );
 
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {
@@ -1221,6 +1287,10 @@ export default function App() {
         toggleDangerPanel("admin");
         return;
       }
+      // J / H / V — bag utility (consumable / deployable / mount)
+      if (e.code === "KeyJ" || e.code === "KeyH" || e.code === "KeyV") {
+        if (tryUseUtilityHotkey(e.code)) return;
+      }
       // Free mouse vs locked aim (does not steal admin Backquote)
       if (e.code === "F8" || e.code === "Backslash") {
         e.preventDefault();
@@ -1272,8 +1342,15 @@ export default function App() {
     const onKeyUp = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
-      // Tab radial release is handled here (Studio also listens for F hold-charge).
-      if (e.code === "Tab") studioRef.current?.handleKeyUp(e.code);
+      // Hold release: Tab options · Q mode · R harvest tools · F gun charge.
+      if (
+        e.code === "Tab" ||
+        e.code === "KeyQ" ||
+        e.code === "KeyR" ||
+        e.code === "KeyF"
+      ) {
+        studioRef.current?.handleKeyUp(e.code);
+      }
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKeyUp);
@@ -1292,6 +1369,7 @@ export default function App() {
     refreshBagMeta,
     applyFreeMouse,
     dangerDock,
+    tryUseUtilityHotkey,
   ]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
@@ -1380,12 +1458,23 @@ export default function App() {
         studioRef.current?.flashMessage?.("AIM LOCK · crosshair on", 1.2);
         return;
       }
+      // J / H / V — bag utility slots (consumable / deployable / mount)
+      if (e.code === "KeyJ" || e.code === "KeyH" || e.code === "KeyV") {
+        if (tryUseUtilityHotkey(e.code)) return;
+      }
       studioRef.current?.handleKey(e.code);
     };
     const onKeyUp = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
-      if (e.code === "Tab") studioRef.current?.handleKeyUp(e.code);
+      if (
+        e.code === "Tab" ||
+        e.code === "KeyQ" ||
+        e.code === "KeyR" ||
+        e.code === "KeyF"
+      ) {
+        studioRef.current?.handleKeyUp(e.code);
+      }
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKeyUp);
@@ -1393,7 +1482,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse]);
+  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse, tryUseUtilityHotkey]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
   // joystick/look-pad own input. Re-applies whenever the breakpoint flips.
@@ -2848,6 +2937,7 @@ export default function App() {
             onArenaReturn={onArenaReturn}
             onRadialSelect={(id) => studioRef.current?.selectActivityTool(id)}
             onRadialCancel={() => studioRef.current?.cancelRadial()}
+            onToolSkill={(i) => studioRef.current?.runHarvestToolSkill(i)}
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
@@ -2864,6 +2954,7 @@ export default function App() {
             canDeposit={depositCtx.canDeposit}
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
+            utilitySlots={utilitySlots}
           />
           <CharacterBagPanel
             open={bagOpen}
@@ -3086,6 +3177,7 @@ export default function App() {
             onArenaReturn={onArenaReturn}
             onRadialSelect={(id) => studioRef.current?.selectActivityTool(id)}
             onRadialCancel={() => studioRef.current?.cancelRadial()}
+            onToolSkill={(i) => studioRef.current?.runHarvestToolSkill(i)}
             onOpenProduction={() => {
               setHarvestUiOpen(true);
               document.exitPointerLock?.();
@@ -3102,6 +3194,7 @@ export default function App() {
             canDeposit={depositCtx.canDeposit}
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
+            utilitySlots={utilitySlots}
           />
           <CharacterBagPanel
             open={bagOpen}

@@ -1,15 +1,25 @@
 /**
- * Hold-to-open radial options wheel — mode-aware combat / harvest / build tools.
+ * Hold-to-open radial options wheel — mode / harvest tools / combat options.
  * Pointer angle picks a wedge; release commits the selection.
+ *
+ * · kind=mode  → hold Q (↑ combat · ↓ harvest)
+ * · kind=tool  → hold R in harvest (all tools)
+ * · kind=options → hold Tab (mode-specific actions)
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { PlayerActivityMode, RadialOption } from "../three/playerMode";
-import { MODE_COLOR, MODE_LABEL, RADIAL_BY_MODE } from "../three/playerMode";
+import type { PlayerActivityMode, RadialKind, RadialOption } from "../three/playerMode";
+import {
+  MODE_COLOR,
+  MODE_LABEL,
+  radialOptionsFor,
+} from "../three/playerMode";
 import "./radialMenu.css";
 
 export interface RadialMenuProps {
   open: boolean;
   mode: PlayerActivityMode;
+  /** Which radial: mode (Q) · tool (R harvest) · options (Tab). */
+  kind?: RadialKind;
   /** Currently selected tool id (persists after close). */
   selectedId: string;
   /** Live hover index while open (−1 = none). */
@@ -33,13 +43,17 @@ function angleToIndex(deg: number, n: number): number {
 export function RadialMenu({
   open,
   mode,
+  kind = "options",
   selectedId,
   onHover,
   onSelect,
   onCancel,
   hint,
 }: RadialMenuProps) {
-  const options = RADIAL_BY_MODE[mode];
+  const options = useMemo(
+    () => radialOptionsFor(kind === "none" ? "options" : kind, mode),
+    [kind, mode],
+  );
   const n = options.length;
   const [hover, setHover] = useState<number>(-1);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -49,10 +63,16 @@ export function RadialMenu({
       setHover(-1);
       return;
     }
-    // Start on currently selected tool
+    // Mode radial: start on current mode wedge
+    if (kind === "mode") {
+      const want = mode === "harvest" ? "mode_harvest" : "mode_combat";
+      const idx = options.findIndex((o) => o.id === want);
+      setHover(idx >= 0 ? idx : 0);
+      return;
+    }
     const idx = options.findIndex((o) => o.id === selectedId);
     setHover(idx >= 0 ? idx : 0);
-  }, [open, selectedId, mode, options]);
+  }, [open, selectedId, mode, options, kind]);
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
@@ -114,10 +134,24 @@ export function RadialMenu({
     });
   }, [options, n, hover, selectedId]);
 
-  if (!open) return null;
+  if (!open || n === 0) return null;
 
-  const accent = MODE_COLOR[mode];
+  const accent =
+    kind === "mode"
+      ? "#e8c96a"
+      : kind === "tool"
+        ? MODE_COLOR.harvest
+        : MODE_COLOR[mode];
   const focus = hover >= 0 ? options[hover] : options.find((o) => o.id === selectedId) ?? options[0];
+  const title =
+    kind === "mode" ? "MODE" : kind === "tool" ? "TOOLS" : MODE_LABEL[mode];
+  const tip =
+    hint ??
+    (kind === "mode"
+      ? "↑ Combat · ↓ Harvest · release to select · Esc cancel"
+      : kind === "tool"
+        ? "Move mouse to tool · release to equip · Esc cancel"
+        : "Release to select · Esc cancel · 1–8 quick");
 
   return (
     <div
@@ -127,7 +161,7 @@ export function RadialMenu({
       onPointerUp={commit}
       onContextMenu={(e) => e.preventDefault()}
       role="menu"
-      aria-label={`${MODE_LABEL[mode]} options`}
+      aria-label={title}
     >
       <div className="radial-backdrop" />
       <div className="radial-wheel" style={{ ["--radial-accent" as string]: accent }}>
@@ -182,10 +216,10 @@ export function RadialMenu({
         ))}
         <div className="radial-center">
           <span className="radial-mode" style={{ color: accent }}>
-            {MODE_LABEL[mode]}
+            {title}
           </span>
           <span className="radial-focus">{focus?.glyph} {focus?.label}</span>
-          <span className="radial-tip">{hint ?? "Release to select · Esc cancel · 1–8 quick"}</span>
+          <span className="radial-tip">{tip}</span>
         </div>
       </div>
     </div>

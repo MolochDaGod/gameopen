@@ -41,9 +41,13 @@ export function loadCharacterBag(characterId: string): CharacterBagState {
         ...parsed,
         characterId: characterId || parsed.characterId || "local",
         kept: parsed.kept || emptyKeptLoadout(),
-        consumableHotkeys: parsed.consumableHotkeys?.length
-          ? parsed.consumableHotkeys
-          : [null, null, null, null],
+        // J / H / V utility slots (length 3). Trim legacy 4-slot consumable bars.
+        consumableHotkeys: (() => {
+          const rawHk = parsed.consumableHotkeys ?? [];
+          const three: (typeof rawHk)[number][] = [null, null, null];
+          for (let i = 0; i < 3; i++) three[i] = rawHk[i] ?? null;
+          return three;
+        })(),
       }),
     );
     // Persist migration to v2

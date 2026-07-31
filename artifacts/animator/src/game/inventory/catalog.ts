@@ -56,34 +56,36 @@ export const CONSUMABLE_TEMPLATES: Record<string, ItemTemplate> = {
     id: "itm_ration_01",
     kind: "consumable",
     name: "Field Ration",
-    description: "Restore a little health.",
+    description: "Restore a little health. Bind to J/H/V from bag.",
     rarity: "common",
     maxStack: MATERIAL_STACK_MAX,
-    icon: "/icons/pack/misc/Effect.png",
+    // WCS / ObjectStore pack icon (info + assets CDN)
+    icon: resolveIconUrl("icons/pack/misc/Effect.png") || "/icons/pack/misc/Effect.png",
     heal: 25,
-    tags: ["food"],
+    tags: ["food", "utility"],
   },
   itm_water_01: {
     id: "itm_water_01",
     kind: "consumable",
     name: "Waterskin",
-    description: "Restore stamina.",
+    description: "Restore stamina. Bind to J/H/V from bag.",
     rarity: "common",
     maxStack: MATERIAL_STACK_MAX,
-    icon: "/icons/pack/misc/Effect.png",
+    icon: resolveIconUrl("icons/pack/misc/Effect.png") || "/icons/pack/misc/Effect.png",
     stamina: 30,
-    tags: ["drink"],
+    tags: ["drink", "utility"],
   },
-  /** Deploy claim flag ghost from bag (RMB → Deploy · or E near flag after plant). */
+  /** Deploy claim flag ghost from bag (RMB → Deploy · J/H/V · E near flag after plant). */
   itm_claim_flag: {
     id: "itm_claim_flag",
     kind: "tool",
     name: "Claim Flag",
-    description: "Deploy from bag to plant a camp claim. Walk up and press E to open camp UI.",
+    description:
+      "Deploy from bag or J/H/V to plant a camp claim. Walk up and press E to open camp UI.",
     rarity: "uncommon",
     maxStack: 5,
     icon: "/icons/camp/flag.png",
-    tags: ["camp", "claim", "deploy", "placeable:claim_flag"],
+    tags: ["camp", "claim", "deploy", "placeable:claim_flag", "utility"],
   },
 };
 

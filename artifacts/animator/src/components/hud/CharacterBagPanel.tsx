@@ -246,35 +246,61 @@ export function CharacterBagPanel({
           })}
         </div>
 
-        <div className="cbag-hotkeys" aria-label="Consumable hotkeys">
-          <span className="cbag-hotkeys-label">Consumables · drag bag → slot</span>
+        <div className="cbag-hotkeys" aria-label="Utility slots J H V">
+          <span className="cbag-hotkeys-label">
+            J · H · V · drag bag → consumable / deployable / mount
+          </span>
           <div className="cbag-hotkey-row">
-            {bag.consumableHotkeys.map((hk, i) => {
+            {(["J", "H", "V"] as const).map((keyLabel, i) => {
+              const hk = bag.consumableHotkeys[i] ?? null;
               const tpl = hk ? getItemTemplate(hk.templateId) : null;
               return (
                 <button
-                  key={i}
+                  key={keyLabel}
                   type="button"
                   className={"cbag-hotkey" + (hk ? " has-item" : "")}
-                  title={hk ? `${tpl?.name} (use)` : `Consumable ${i + 1}`}
+                  title={
+                    hk
+                      ? `${tpl?.name} (${keyLabel}) · click to use`
+                      : `${keyLabel} · drop consumable, claim flag, or mount`
+                  }
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => {
                     if (dragFrom == null) return;
-                    commit(assignConsumableHotkey(bag, dragFrom, i));
+                    const before = bag.consumableHotkeys[i]?.templateId ?? null;
+                    const next = assignConsumableHotkey(bag, dragFrom, i);
+                    const after = next.consumableHotkeys[i]?.templateId ?? null;
+                    if (after && after !== before) {
+                      commit(next);
+                      onFlash?.(`Bound to ${keyLabel}`);
+                    } else if (!after) {
+                      onFlash?.("Only consumables, deployables, mounts");
+                    } else {
+                      commit(next);
+                      onFlash?.(`Bound to ${keyLabel}`);
+                    }
                     setDragFrom(null);
-                    onFlash?.(`Bound consumable to hotkey ${i + 1}`);
                   }}
                   onClick={() => {
                     if (!hk) return;
                     const res = useConsumableHotkey(bag, i);
                     commit(res.bag);
-                    if (res.used) {
-                      onConsume?.(res.heal, res.stamina, getItemTemplate(res.used.templateId).name);
-                      onFlash?.(`Used ${getItemTemplate(res.used.templateId).name}`);
+                    if (!res.used) return;
+                    const name = getItemTemplate(res.used.templateId).name;
+                    if (res.action === "deploy" && res.placeableId) {
+                      onDeployPlaceable?.(res.placeableId);
+                      onFlash?.(`Deploy ${name}`);
+                      return;
+                    }
+                    if (res.action === "use") {
+                      onConsume?.(res.heal, res.stamina, name);
+                      onFlash?.(`Used ${name}`);
+                    } else if (res.action === "summon") {
+                      onFlash?.(`Summon ${name}`);
                     }
                   }}
                 >
-                  <span className="cbag-hotkey-key">{i + 1}</span>
+                  <span className="cbag-hotkey-key">{keyLabel}</span>
                   {hk && tpl && (
                     <>
                       <img src={tpl.icon || "/icons/pack/misc/Effect.png"} alt="" />
@@ -306,8 +332,8 @@ export function CharacterBagPanel({
           </button>
           <p className="cbag-hint">
             Account inventory is shared across characters, islands, instances. Bag holds gear
-            swaps, drops, harvest (×100), mission items. RMB = options · LMB drag to consumable
-            hotkeys.
+            swaps, drops, harvest (×100), mission items. RMB = options · drag to J/H/V for
+            consumables, claim flag, mounts.
           </p>
         </footer>
       </div>

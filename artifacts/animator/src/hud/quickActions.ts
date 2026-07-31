@@ -3,11 +3,13 @@
 // hudConfig / Hud.tsx / playerMode legends.
 //
 // Keybind SSOT (Danger Room / Open combat):
-//   Q = activity mode cycle (combat ↔ harvest ↔ build)
+//   Hold Q = mode radial (↑ combat · ↓ harvest) · tap Q toggles combat↔harvest
 //   Shift+Q = swap main ↔ side arm (combat only)
+//   Hold R (harvest) = tool radial · combat R = heavy
+//   J / H / V = bag utility (consumable / deployable / mount)
 //   RMB = toggle hard FOCUS (face+lock) / soft lock
 //   LMB = attack/combo in FOCUS · select target in soft lock
-//   C = parry · X = roll · E = forcefield guard · R = heavy · F / 1–4 skills
+//   C = parry · X = roll · E = forcefield guard · F / 1–4 skills
 
 import type { IconName } from "../three/icons";
 
@@ -130,14 +132,14 @@ export function clampQuickSlots(raw: unknown): QuickSlots {
 
 /** Short footer legend used by Hud / mode chip (always matches Studio keys). */
 export const COMBAT_KEY_LEGEND =
-  "RMB focus/soft · LMB atk/select · X roll · C parry · E guard · F/1–4 · Q mode · F8 free mouse · F9 lock aim · P prod";
+  "Hold Q mode · J/H/V bag · RMB focus · LMB atk · X roll · C parry · E guard · F/1–4 · F8 free mouse · P prod";
 
 export const COMBAT_KEY_CHIPS: readonly string[] = [
+  "Hold Q: Mode",
+  "J/H/V: Bag use",
   "RMB: Focus",
   "LMB: Atk / Select",
   "X: Roll",
   "C: Parry",
-  "E: Guard",
   "R: Heavy",
-  "J: Heal",
 ];

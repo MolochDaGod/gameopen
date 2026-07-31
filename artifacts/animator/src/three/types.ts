@@ -1086,13 +1086,15 @@ export interface HudSnapshot {
   blocking: boolean;
   /**
    * Activity mode: combat (fight) · harvest (gather) · build (place).
-   * **Q** cycles. **X** dodge always. Hold **Tab** for radial options.
+   * Hold **Q** mode radial · Hold **R** harvest tools · Hold **Tab** options.
    */
   activityMode: "combat" | "harvest" | "build";
   /** Selected radial tool id for the current mode. */
   activityTool: string;
-  /** True while the radial options wheel is open (hold Tab). */
+  /** True while a radial wheel is open. */
   radialOpen: boolean;
+  /** Which radial is open: mode (hold Q) · tool (hold R harvest) · options (Tab). */
+  radialKind: "none" | "mode" | "tool" | "options";
   /** Counts down briefly after the player takes a hit (drives a hurt vignette). */
   hurt: number;
   /** True while the player is downed and waiting to respawn. */

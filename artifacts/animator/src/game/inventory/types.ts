@@ -129,10 +129,19 @@ export interface CharacterBagState {
    * Never dropped on death; swappable with bag / account equip.
    */
   kept: CharacterKeptLoadout;
-  /** Hotkey consumable bars (1–4 drag targets outside combat bar). */
+  /**
+   * Utility quick slots — J / H / V (bag → place consumables, deployables, mounts).
+   * Length always 3. Legacy name `consumableHotkeys` kept for save migration.
+   */
   consumableHotkeys: (ItemInstance | null)[];
   updatedAt: number;
 }
+
+/** Keyboard codes for bag utility slots (index 0=J, 1=H, 2=V). */
+export const UTILITY_HOTKEY_KEYS = ["J", "H", "V"] as const;
+export type UtilityHotkeyKey = (typeof UTILITY_HOTKEY_KEYS)[number];
+export const UTILITY_HOTKEY_COUNT = UTILITY_HOTKEY_KEYS.length;
+export const UTILITY_HOTKEY_CODES = ["KeyJ", "KeyH", "KeyV"] as const;
 
 /** Shared account vault — materials as qty map + optional unique gear. */
 export interface AccountInventoryState {
@@ -203,7 +212,7 @@ export function newCharacterBag(characterId: string): CharacterBagState {
     rows: DEFAULT_BAG_ROWS,
     slots,
     kept: emptyKeptLoadout(),
-    consumableHotkeys: [null, null, null, null],
+    consumableHotkeys: [null, null, null],
     updatedAt: Date.now(),
   };
 }
