@@ -228,6 +228,63 @@ export class GrudgeAvatar implements Avatar {
         this.roleClip.set("death", "idle");
       }
 
+      // Fleet SSOT: ensure climb/swim/loco/combat roles exist (re-hydrate gaps)
+      try {
+        const { hydrateFleetAvatarRoles, applyRoleAliases, missingFleetRoles } = await import(
+          "../fleetAvatarHydrate"
+        );
+        await hydrateFleetAvatarRoles({
+          model: this.model,
+          mixer: this.mixer,
+          logId: `grudge6:${this.raceId}/${this.presetId}`,
+          hasRole: (role) => this.roleClip.has(role as import("../types").AnimRole) || this.actions.has(role),
+          register: (role, clip) => {
+            if (!this.mixer) return;
+            // Overwrite allowed for dual_wield dash/hurt/skill roles
+            const action = this.mixer.clipAction(clip);
+            this.actions.set(role, action);
+            this.actions.set(clip.name, action);
+            this.roleClip.set(role as import("../types").AnimRole, role);
+          },
+        });
+        applyRoleAliases(
+          (n) => this.actions.has(n),
+          (role, key) => {
+            if (this.roleClip.has(role as import("../types").AnimRole)) return;
+            if (this.actions.has(key)) this.roleClip.set(role as import("../types").AnimRole, key);
+          },
+          (r) => this.roleClip.has(r as import("../types").AnimRole),
+        );
+        // Refresh AnimationDirector clip map with new roles
+        if (this.mixer) {
+          try {
+            const clipMap = new Map<string, THREE.AnimationClip>();
+            for (const [role, actionKey] of this.roleClip) {
+              const act = this.actions.get(actionKey) || this.actions.get(role);
+              if (act) clipMap.set(role, act.getClip());
+            }
+            for (const [name, act] of this.actions) {
+              if (!clipMap.has(name)) clipMap.set(name, act.getClip());
+            }
+            this.director = new AnimationDirector(
+              this.mixer,
+              clipsFromRoleMap(clipMap),
+              { fade: this.blendTime },
+            );
+          } catch (e) {
+            console.warn("[GrudgeAvatar] director rebuild after hydrate failed", e);
+          }
+        }
+        const miss = missingFleetRoles(
+          (r) => this.roleClip.has(r as import("../types").AnimRole) || this.actions.has(r),
+        );
+        if (miss.length) {
+          console.warn(`[GrudgeAvatar] still missing fleet roles: ${miss.join(",")}`);
+        }
+      } catch (e) {
+        console.warn("[GrudgeAvatar] fleet hydrate gap-fill failed", e);
+      }
+
       this.model.updateMatrixWorld(true);
       // uMMORPG sockets: prefer R_hand_container / L_hand_container over raw hands
       this.sockets = resolveSkeletonSockets(this.model);
@@ -277,6 +334,11 @@ export class GrudgeAvatar implements Avatar {
     this.leftHand = findHandBone(group, "L");
     this.findArmBones(group);
     this.holder.rotation.y = this.modelYaw;
+  }
+
+  /** Controller surface hint — baked roles drive pose (parity with Character). */
+  setTraversalMode(_mode: "ground" | "climb" | "swim"): void {
+    /* no-op */
   }
 
   clipNames(): string[] {

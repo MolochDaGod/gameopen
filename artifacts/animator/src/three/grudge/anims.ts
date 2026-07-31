@@ -26,7 +26,9 @@ export type AnimPack =
   /** Sidearm / pistol loco + gunplay (prod/anims/pistol). */
   | "pistol"
   /** Katana / iaijutsu feel — retargeted Bip001 greatsword_samurai bake. */
-  | "samurai";
+  | "samurai"
+  /** 2H mace / war-hammer — SC_SC_* from 2hweaponhammerretarget.glb → Bip001. */
+  | "hammer";
 
 /** Production anim CDN (ObjectStore packages:prod:anims). */
 export const PROD_ANIMS_CDN = "https://assets.grudge-studio.com/prod/anims";
@@ -85,6 +87,147 @@ export type MobilityRole =
   | "hitfly"
   | "getUp";
 
+/**
+ * Dual-wield / PC_B melee pack from dual_wieldingandothers.glb
+ * (Bip001 bake: anims/baked/dual_wield/*). Rotation-only, hip Y/XZ stripped.
+ * Use for dash, attacks, flinch, dodge on grudge6 + Explorer.
+ */
+export const DUAL_WIELD_CLIPS: ReadonlyArray<{
+  role: string;
+  bakeRel: string;
+  loop: boolean;
+  kind: "dash" | "attack" | "hit" | "dodge" | "block" | "loco" | "kick";
+}> = [
+  { role: "sword_dash_attack", bakeRel: "dual_wield/sword_dash_attack", loop: false, kind: "dash" },
+  { role: "dash", bakeRel: "dual_wield/dash", loop: false, kind: "dash" },
+  { role: "attack", bakeRel: "dual_wield/attack", loop: false, kind: "attack" },
+  { role: "attack2", bakeRel: "dual_wield/attack2", loop: false, kind: "attack" },
+  { role: "attack3", bakeRel: "dual_wield/attack3", loop: false, kind: "attack" },
+  { role: "attack4", bakeRel: "dual_wield/attack4", loop: false, kind: "attack" },
+  { role: "attack5", bakeRel: "dual_wield/attack5", loop: false, kind: "attack" },
+  { role: "skill1", bakeRel: "dual_wield/skill1", loop: false, kind: "dash" },
+  { role: "skill2", bakeRel: "dual_wield/skill2", loop: false, kind: "attack" },
+  { role: "skill3", bakeRel: "dual_wield/skill3", loop: false, kind: "attack" },
+  { role: "skill4", bakeRel: "dual_wield/skill4", loop: false, kind: "attack" },
+  { role: "overhead", bakeRel: "dual_wield/overhead", loop: false, kind: "attack" },
+  { role: "slash", bakeRel: "dual_wield/slash", loop: false, kind: "attack" },
+  { role: "thrust", bakeRel: "dual_wield/thrust", loop: false, kind: "dash" },
+  { role: "special", bakeRel: "dual_wield/special", loop: false, kind: "attack" },
+  { role: "combo", bakeRel: "dual_wield/combo", loop: false, kind: "attack" },
+  { role: "hurt", bakeRel: "dual_wield/hurt", loop: false, kind: "hit" },
+  { role: "hitfly", bakeRel: "dual_wield/hitfly", loop: false, kind: "hit" },
+  { role: "death", bakeRel: "dual_wield/death", loop: false, kind: "hit" },
+  // Dodge: dual_wield rolls kept as soft fallback — fleet SSOT is Ghost Rider
+  // locomotion/roll_* (see GHOST_RIDER_CLIPS + TRAVERSAL_CLIPS end overrides).
+  { role: "dodgeF", bakeRel: "dual_wield/dodgeF", loop: false, kind: "dodge" },
+  { role: "dodgeB", bakeRel: "dual_wield/dodgeB", loop: false, kind: "dodge" },
+  { role: "dodgeL", bakeRel: "dual_wield/dodgeL", loop: false, kind: "dodge" },
+  { role: "dodgeR", bakeRel: "dual_wield/dodgeR", loop: false, kind: "dodge" },
+  { role: "block", bakeRel: "dual_wield/block", loop: true, kind: "block" },
+  { role: "kick", bakeRel: "dual_wield/kick", loop: false, kind: "kick" },
+];
+
+/**
+ * Ghost Rider PS2 (2007) — **animations only** (Marvel mesh discarded).
+ * Baked Bip001 under anims/baked/ghost_rider/* + shared rolls in locomotion/*.
+ *
+ * Stretch policy: source scale≈identity; chain “stretch” is Bone19–24 position
+ * curves → hellfire path FX (never weapon mesh scale). See fx/*_chain_path.json.
+ */
+export const GHOST_RIDER_CLIPS: ReadonlyArray<{
+  role: string;
+  bakeRel: string;
+  loop: boolean;
+  kind: "dodge" | "finisher" | "chain" | "fire" | "loco" | "hit" | "ultimate";
+  /** Optional flame path sample (relative to /anims/baked/). */
+  chainFxRel?: string;
+}> = [
+  // Shared dodge rolls (also locomotion/roll_* for Controller + every pack)
+  { role: "dodgeF", bakeRel: "locomotion/dodge_fwd", loop: false, kind: "dodge" },
+  { role: "dodgeB", bakeRel: "locomotion/dodge_back", loop: false, kind: "dodge" },
+  { role: "dodgeL", bakeRel: "locomotion/dodge_l", loop: false, kind: "dodge" },
+  { role: "dodgeR", bakeRel: "locomotion/dodge_r", loop: false, kind: "dodge" },
+  { role: "roll", bakeRel: "locomotion/roll_forward", loop: false, kind: "dodge" },
+  { role: "roll_forward", bakeRel: "locomotion/roll_forward", loop: false, kind: "dodge" },
+  { role: "roll_back", bakeRel: "locomotion/roll_back", loop: false, kind: "dodge" },
+  { role: "roll_left", bakeRel: "locomotion/roll_left", loop: false, kind: "dodge" },
+  { role: "roll_right", bakeRel: "locomotion/roll_right", loop: false, kind: "dodge" },
+  { role: "landRoll", bakeRel: "locomotion/land_roll", loop: false, kind: "dodge" },
+  // Combo finisher (quakesmash) — use on many melee + ranged-melee enders
+  {
+    role: "combo_finisher",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  {
+    role: "quakesmash",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  {
+    role: "finisher",
+    bakeRel: "ghost_rider/quakesmash",
+    loop: false,
+    kind: "finisher",
+    chainFxRel: "ghost_rider/fx/quakesmash_chain_path",
+  },
+  // Mega chain slam ultimate — body anim + animated chain path → flame
+  {
+    role: "megachain_slam",
+    bakeRel: "ghost_rider/megachain_slam",
+    loop: false,
+    kind: "ultimate",
+    chainFxRel: "ghost_rider/fx/megachain_slam_chain_path",
+  },
+  {
+    role: "ultimate",
+    bakeRel: "ghost_rider/megachain_slam",
+    loop: false,
+    kind: "ultimate",
+    chainFxRel: "ghost_rider/fx/megachain_slam_chain_path",
+  },
+  // Ranged-melee chain toolkit
+  {
+    role: "chain_throw",
+    bakeRel: "ghost_rider/chain_throw",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_throw_chain_path",
+  },
+  {
+    role: "chain_stab",
+    bakeRel: "ghost_rider/chain_stab_hyper",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_stab_hyper_chain_path",
+  },
+  {
+    role: "chain_spin",
+    bakeRel: "ghost_rider/chain_spin",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/chain_spin_chain_path",
+  },
+  {
+    role: "forward_chain_slam",
+    bakeRel: "ghost_rider/forward_chain_slam",
+    loop: false,
+    kind: "chain",
+    chainFxRel: "ghost_rider/fx/forward_chain_slam_chain_path",
+  },
+  {
+    role: "fireball",
+    bakeRel: "ghost_rider/fireball",
+    loop: false,
+    kind: "fire",
+    chainFxRel: "ghost_rider/fx/fireball_chain_path",
+  },
+];
+
 export const MOBILITY_CLIPS: ReadonlyArray<{
   role: MobilityRole;
   /** Preferred baked path (after bake pipeline). */
@@ -109,6 +252,7 @@ export const MOBILITY_CLIPS: ReadonlyArray<{
   // Fall / land / dive (bow pack has proven fall loops)
   { role: "jumpAir", bakeRel: "longbow/fall-a-loop", mixamoRel: "anim/bow/fall-a-loop.fbx", loop: true },
   { role: "land", bakeRel: "longbow/fall-a-land", mixamoRel: "anim/bow/fall-a-land-to-standing-idle-01.fbx", loop: false },
+  // Ghost Rider roll → landRoll (shared for every hero)
   { role: "landRoll", bakeRel: "locomotion/land_roll", mixamoRel: "anim/striker/roll.fbx", loop: false },
   { role: "dive", bakeRel: "longbow/standing-dive-forward", mixamoRel: "anim/bow/standing-dive-forward.fbx", loop: false },
   // Hit / knockback hybrid ragdoll (prefer clip + impulse over full multi-body)
@@ -381,6 +525,34 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     ],
   },
   /**
+   * 2H mace / war-hammer — not swords. SC_SC_Jab / ChargeStrike / 180x2Sweep /
+   * SummonCrows from 2hweaponhammerretarget.glb (rotation-only, weapon chain off).
+   */
+  hammer: {
+    idle: "twohand_hammer/idle",
+    walk: "twohand_hammer/walk",
+    run: "uploads_2026_06/locomotion/torch run forward",
+    attack: "twohand_hammer/attack",
+    extras: [
+      "twohand_hammer/attack1",
+      "twohand_hammer/attack2",
+      "twohand_hammer/attack3",
+      "twohand_hammer/jab",
+      "twohand_hammer/charge",
+      "twohand_hammer/sweep",
+      "twohand_hammer/skill",
+      "twohand_hammer/skill2",
+      "twohand_hammer/skill-summon",
+      "twohand_hammer/hit",
+      "twohand_hammer/backstep",
+      "twohand_hammer/dodgeB",
+      "twohand_hammer/step-left",
+      "twohand_hammer/step-right",
+      "twohand_hammer/jump",
+      "twohand_hammer/land",
+    ],
+  },
+  /**
    * 2H sword / greatsword — **samurai** production bake (Bip001 JSON).
    * Primary attack + skills 1–4 use gs_samurai_* clips with Getsuga/slash VFX.
    * 2h_melee GLB paths remain as soft fallbacks via loadBakedClip candidates if needed.
@@ -492,6 +664,7 @@ export function resolveAnimPackClips(pack: AnimPack): {
  */
 export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "jump", rel: "locomotion/jump" },
+  // Ghost Rider rolls are fleet SSOT for dodge (see end-of-list overrides)
   { role: "dodge", rel: "locomotion/dodge_back" },
   { role: "dodgeF", rel: "locomotion/dodge_fwd" },
   { role: "dodgeB", rel: "locomotion/dodge_back" },
@@ -512,8 +685,14 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "dodge_backward", rel: "locomotion/dodge_back" },
   // Mobility SSOT (bake plan + prod/anims fallbacks via loadBakedClip candidates)
   ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
-  // Production CDN packages (roll/harvest/block + climbup alias)
-  { role: "roll", rel: "roll_dodge/dodging-back" },
+  // Dual-wield melee dash / attacks / hits (dual_wieldingandothers.glb → Bip001)
+  ...DUAL_WIELD_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
+  // Ghost Rider (anim only) — finishers / chain / roll aliases.
+  // Note: TRAVERSAL load is first-wins (`if clips.has(role) return`); early dodge_*
+  // rows already point at locomotion/dodge_* (GR rolls). GHOST_RIDER fills missing roles only.
+  ...GHOST_RIDER_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
+  // Prefer GR land/roll over legacy roll_dodge (only if roll not already set)
+  { role: "roll", rel: "locomotion/roll_forward" },
   { role: "climbAlt", rel: "locomotion/climbup_1m" },
   { role: "swimFast", rel: "locomotion/swim_fast" },
   { role: "fall", rel: "locomotion/fall_in" },
@@ -531,11 +710,23 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
 export function animPackForWeapon(weaponId: string | null | undefined): AnimPack | null {
   const w = String(weaponId || "").toLowerCase();
   if (!w || w === "none") return "unarmed";
-  // 2H heavy — samurai anim pack (twohand SSOT = greatsword_samurai clips)
+  // Blunt 2H / mace / war-hammer — dedicated SC_SC bake (NOT samurai blades)
+  if (
+    w === "hammer2h" ||
+    w === "mace2h" ||
+    w === "maul" ||
+    w === "warhammer" ||
+    w === "war_hammer" ||
+    (w.includes("hammer") && w.includes("2h")) ||
+    w === "mace" ||
+    w === "hammer"
+  ) {
+    return "hammer";
+  }
+  // 2H heavy blades — samurai anim pack (twohand SSOT = greatsword_samurai clips)
   if (
     w === "greatsword" ||
     w === "greataxe" ||
-    w === "hammer2h" ||
     w === "scythe" ||
     w === "nodachi" ||
     w === "two_hand_sword" ||
@@ -567,7 +758,7 @@ export function animPackForWeapon(weaponId: string | null | undefined): AnimPack
   ) {
     return "rifle";
   }
-  if (w === "sword" || w === "axe" || w === "dagger" || w === "mace" || w === "hammer" || w === "shield") {
+  if (w === "sword" || w === "axe" || w === "dagger" || w === "shield") {
     return "sword_shield";
   }
   // Katana / samurai weapons
@@ -600,6 +791,12 @@ export function asAnimPack(value: string): AnimPack {
     archer: "longbow",
     gunner: "rifle",
     berserker: "twohand",
+    hammer: "hammer",
+    hammer2h: "hammer",
+    mace: "hammer",
+    mace2h: "hammer",
+    maul: "hammer",
+    warhammer: "hammer",
   };
   return alias[value] ?? "unarmed";
 }
@@ -613,6 +810,7 @@ export const ANIM_PACK_LABELS: Record<AnimPack, string> = {
   magic: "Mage / Staff",
   longbow: "Archer / Longbow",
   twohand: "Berserker / 2H",
+  hammer: "2H Mace / War Hammer",
   crossbow: "Crossbow",
   rifle: "Gunner / Rifle",
   pistol: "Pistol / Sidearm",
@@ -623,6 +821,7 @@ export const CHOOSABLE_ANIM_PACKS: AnimPack[] = [
   "samurai",
   "sword_shield",
   "polearm",
+  "hammer",
   "unarmed",
   "magic",
   "longbow",

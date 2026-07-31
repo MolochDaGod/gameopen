@@ -34,6 +34,7 @@ import {
   type WeaponFamily,
   type SkillPack,
   skillPackForFamily,
+  skillBakedRole,
   familyFromAnimPack,
 } from "./weaponSkillPacks";
 import type { AnimPack } from "./anims";
@@ -67,6 +68,16 @@ export interface SkillResult {
   lungeSpeed: number;
   /** Duration the lunge applies (seconds). */
   lungeDuration: number;
+  /** Mixer role to play on baked grudge6 rig (attack / skill1 / overhead…). */
+  bakedRole: string;
+  /** Cross-fade into the skill clip. */
+  blendIn: number;
+  /** Apply Controller.dash for MM. */
+  useDash: boolean;
+  /** Projectile kind for Vfx.getsugaSlash / bolts. */
+  projectile: string;
+  castEffectId?: string;
+  impactEffectId?: string;
 }
 
 // ── Grudge6CombatCharacter class ──────────────────────────────────────────
@@ -97,6 +108,14 @@ export class Grudge6CombatCharacter {
   // ── Flash ────────────────────────────────────────────────────────────────
   private flashT = 0;
   private meshMaterials: THREE.MeshStandardMaterial[] = [];
+
+  // ── Hellfire chain projectile hit probe (ranged-melee) ───────────────────
+  /** Latest chain tip world position (for external damage systems). */
+  readonly lastChainTip = new THREE.Vector3();
+  lastChainRadius = 0;
+  lastChainDamage = 0;
+  /** Optional host callback when chain lands (Studio / AI damage apply). */
+  onChainHit: ((tip: THREE.Vector3, damage: number, skill: SkillPack) => void) | null = null;
 
   constructor(
     scene: THREE.Scene,
@@ -282,7 +301,35 @@ export class Grudge6CombatCharacter {
     );
 
     try {
-      if (kind === "getsuga" || kind === "slashWave") {
+      if (kind === "chain" || skill.projectile === "hellfire_chain") {
+        // Ranged-melee: extending hellfire chain weapon mesh + flame aura
+        const from = this.root.position.clone().add(new THREE.Vector3(0, 1.1, 0));
+        const hand = this.findHandWorld();
+        if (hand) from.copy(hand);
+        this.vfx.hellfireChain(from, dir, {
+          range: Math.max(4, skill.reach),
+          color: skill.vfxColor,
+          variant: skill.slashVariant ?? "slashred",
+          chainPathRole: skill.chainPathRole ?? skill.bakedRole ?? "chain_throw",
+          damage: skill.damage,
+          extendTime: 0.18 + skill.reach * 0.02,
+          holdTime: 0.1,
+          dissipateTime: 0.26,
+          contactRadius: 0.55 + skill.damage * 0.004,
+          onPathTick: (tip, radius) => {
+            // Lightweight trail damage read for AI / hit probes
+            this.lastChainTip?.copy(tip);
+            this.lastChainRadius = radius;
+            this.lastChainDamage = skill.damage * 0.35;
+          },
+          onHit: (tip, dmgScale) => {
+            this.lastChainTip?.copy(tip);
+            this.lastChainRadius = 0.9;
+            this.lastChainDamage = skill.damage * dmgScale;
+            this.onChainHit?.(tip, skill.damage * dmgScale, skill);
+          },
+        });
+      } else if (kind === "getsuga" || kind === "slashWave") {
         this.vfx.slashWave(origin, dir, {
           speed: 14 + skill.lungeSpeed * 0.4,
           range: Math.max(6, skill.reach * 2.2),
@@ -307,11 +354,41 @@ export class Grudge6CombatCharacter {
       this.vfx.impact(impactPos, skill.vfxColor, scale);
     }
 
+    // Traveling slash / bolt projectiles (Getsuga family) when skill asks for them.
+    const proj = skill.projectile ?? "none";
+    if (proj === "slash_wave" || proj === "bolt" || proj === "arrow") {
+      const from = this.root.position.clone().add(new THREE.Vector3(0, 1.05, 0));
+      try {
+        if (typeof (this.vfx as { getsugaSlash?: Function }).getsugaSlash === "function") {
+          (this.vfx as { getsugaSlash: Function }).getsugaSlash(from, dir, {
+            tint: proj === "slash_wave" ? "blue" : undefined,
+            speed: proj === "arrow" ? 28 : 15,
+            range: skill.reach,
+            color: skill.vfxColor,
+          });
+        } else if (typeof (this.vfx as { slashWave?: Function }).slashWave === "function") {
+          (this.vfx as { slashWave: Function }).slashWave(from, dir, {
+            speed: 15,
+            range: skill.reach,
+            color: skill.vfxColor,
+          });
+        }
+      } catch {
+        /* Vfx host may not implement Getsuga yet */
+      }
+    }
+
     return {
       skill,
       lungeDir: dir,
       lungeSpeed: skill.lungeSpeed,
       lungeDuration: skill.lungeDuration,
+      bakedRole: skillBakedRole(skill),
+      blendIn: skill.blendIn ?? 0.1,
+      useDash: skill.useDash ?? skill.lungeSpeed > 0.5,
+      projectile: proj,
+      castEffectId: skill.castEffectId,
+      impactEffectId: skill.impactEffectId,
     };
   }
 
@@ -320,6 +397,21 @@ export class Grudge6CombatCharacter {
    */
   triggerPrimaryAttack(): SkillResult | null {
     return this.triggerSkill(1);
+  }
+
+  /** Prefer R hand bone world position for chain muzzle; else chest height. */
+  private findHandWorld(): THREE.Vector3 | null {
+    if (!this.mesh) return null;
+    let hand: THREE.Object3D | null = null;
+    this.mesh.traverse((o) => {
+      if (hand) return;
+      const n = o.name.replace(/_/g, " ");
+      if (/Bip001 R Hand|mixamorigRightHand|RightHand/i.test(n)) hand = o;
+    });
+    if (!hand) return null;
+    const p = new THREE.Vector3();
+    (hand as THREE.Object3D).getWorldPosition(p);
+    return p;
   }
 
   /**

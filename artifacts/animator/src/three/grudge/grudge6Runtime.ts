@@ -695,6 +695,28 @@ export async function loadGrudge6CombatRig(
     alias("special", "sig4");
   }
 
+  // 2H hammer / mace — SC_SC jab / charge / sweep / summon role aliases
+  if (animPack === "hammer") {
+    const alias = (from: string, to: string) => {
+      if (!clips.has(to) && clips.has(from)) {
+        clips.set(to, clips.get(from)!);
+        roles.set(to, to);
+      }
+    };
+    alias("attack", "attack1");
+    alias("attack", "jab");
+    alias("attack2", "charge");
+    alias("attack2", "skill1");
+    alias("attack3", "sweep");
+    alias("attack3", "skill");
+    alias("attack3", "skill2");
+    alias("skill2", "skill3");
+    alias("skill-summon", "skill4");
+    alias("skill-summon", "special");
+    alias("backstep", "dodgeB");
+    alias("hit", "hurt");
+  }
+
   // Optional skill / cast / defense aliases — best-effort, never block load.
   // Magic kits load a dedicated cast clip; other packs alias cast → attack.
   if (animPack === "magic") {

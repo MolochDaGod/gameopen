@@ -44,13 +44,14 @@ export type MeleeStrikeFxProfile = {
   swingAura: boolean;
   /** Deploy a short projectile along swing dir on impact. */
   projectile?: {
-    kind: "slash_wave" | "bolt" | "none";
+    kind: "slash_wave" | "bolt" | "hellfire_chain" | "none";
     speed: number;
     range: number;
     color: number;
     /**
      * Production slash variant: slashred | slashblue | slashpurple | slashyellow.
      * Drives ice-bow energy shader palette + pattern (flame-aura class).
+     * Also selects hellfire chain flame kit colors.
      */
     variant?: "slashred" | "slashblue" | "slashpurple" | "slashyellow";
     /**
@@ -60,6 +61,8 @@ export type MeleeStrikeFxProfile = {
     contactRadius?: number;
     /** Seconds the projectile sticks to the weapon edge before free flight. */
     followDuration?: number;
+    /** Ghost Rider path role for hellfire_chain extension curve. */
+    chainPathRole?: string;
   };
   /** Ground AoE on connect (radius m). 0 = none. */
   aoeRadius: number;
@@ -411,6 +414,141 @@ const POLEARM: MeleeStrikeFxProfile[] = [
   },
 ];
 
+/**
+ * Hellfire chain — ranged-melee: each swing extends a chain weapon mesh with
+ * flame-aura colors (red/blue/yellow/purple). Damage on tip path + land.
+ */
+const CHAIN: MeleeStrikeFxProfile[] = [
+  {
+    id: "chain_throw",
+    kind: "light",
+    arcIndex: 0,
+    arc: arcParams({
+      rotate: 0,
+      scale: 0.75,
+      direction: 0,
+      bend: 0.15,
+      thickness: 0.7,
+      particles: 6,
+      colorHex: 0xff6020,
+    }),
+    trailColor: 0xff6020,
+    trailWindow: 0.42,
+    swingAura: true,
+    projectile: {
+      kind: "hellfire_chain",
+      speed: 14,
+      range: 6,
+      color: 0xff6020,
+      variant: "slashred",
+      contactRadius: 0.55,
+      chainPathRole: "chain_throw",
+    },
+    aoeRadius: 0.4,
+    aoeColor: 0xff6020,
+    knockback: 2.2,
+    knockUp: 0.3,
+    fireAuraScale: 0.85,
+    forceTier: 1,
+  },
+  {
+    id: "chain_stab",
+    kind: "mid",
+    arcIndex: 1,
+    arc: arcParams({
+      rotate: -8,
+      scale: 0.95,
+      direction: 5,
+      bend: 0.05,
+      thickness: 0.85,
+      particles: 10,
+      colorHex: 0x4aa8ff,
+    }),
+    trailColor: 0x4aa8ff,
+    trailWindow: 0.48,
+    swingAura: true,
+    projectile: {
+      kind: "hellfire_chain",
+      speed: 16,
+      range: 5.5,
+      color: 0x4aa8ff,
+      variant: "slashblue",
+      contactRadius: 0.6,
+      chainPathRole: "chain_stab",
+    },
+    aoeRadius: 0.7,
+    aoeColor: 0x4aa8ff,
+    knockback: 2.8,
+    knockUp: 0.9,
+    fireAuraScale: 0.95,
+    forceTier: 2,
+  },
+  {
+    id: "chain_spin",
+    kind: "heavy",
+    arcIndex: 2,
+    arc: arcParams({
+      rotate: 25,
+      scale: 1.15,
+      direction: 20,
+      bend: 0.35,
+      thickness: 1.0,
+      particles: 14,
+      colorHex: 0xffe08a,
+    }),
+    trailColor: 0xffe08a,
+    trailWindow: 0.55,
+    swingAura: true,
+    projectile: {
+      kind: "hellfire_chain",
+      speed: 12,
+      range: 4.2,
+      color: 0xffe08a,
+      variant: "slashyellow",
+      contactRadius: 0.7,
+      chainPathRole: "chain_spin",
+    },
+    aoeRadius: 1.1,
+    aoeColor: 0xffc060,
+    knockback: 3.2,
+    knockUp: 1.4,
+    fireAuraScale: 1.05,
+    forceTier: 2,
+  },
+  {
+    id: "chain_firequake",
+    kind: "finisher",
+    arcIndex: 3,
+    arc: arcParams({
+      rotate: 15,
+      scale: 1.35,
+      direction: 12,
+      bend: 0.2,
+      thickness: 1.2,
+      particles: 18,
+      colorHex: 0xb070ff,
+    }),
+    trailColor: 0xb070ff,
+    trailWindow: 0.6,
+    swingAura: true,
+    projectile: {
+      kind: "hellfire_chain",
+      speed: 11,
+      range: 7.5,
+      color: 0xb070ff,
+      variant: "slashpurple",
+      contactRadius: 0.85,
+      chainPathRole: "megachain_slam",
+    },
+    aoeRadius: 1.6,
+    aoeColor: 0x9040e0,
+    knockback: 4.0,
+    knockUp: 3.2,
+    fireAuraScale: 1.35,
+    forceTier: 3,
+  },
+];
+
 /** Unarmed / blunt fallback. */
 const UNARMED: MeleeStrikeFxProfile[] = [
   {
@@ -563,6 +701,14 @@ function familyForWeapon(weaponId: WeaponId): MeleeStrikeFxProfile[] {
   const id = weaponId.toLowerCase();
   // WeaponGroup is unarmed|melee-1h|melee-2h|off-hand|ranged|magic — polearm/shield
   // are identified by id / catalog kind, not group enum.
+  if (
+    id.includes("chain") ||
+    id.includes("whip") ||
+    id === "hellfire_chain" ||
+    id.includes("flail")
+  ) {
+    return CHAIN;
+  }
   if (g === "melee-2h" || id.includes("great") || id.includes("hammer2h") || id.includes("greataxe"))
     return TWO_HAND;
   if (

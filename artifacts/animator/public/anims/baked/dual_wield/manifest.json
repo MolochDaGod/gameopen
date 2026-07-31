@@ -1,0 +1,319 @@
+{
+  "version": 1,
+  "updated": "2026-07-30",
+  "source": "dual wieldingandothers.glb",
+  "skeleton": "Bip001",
+  "policy": {
+    "rotationOnly": true,
+    "hipYxz": "controller",
+    "hands": "Bip001 L/R Hand",
+    "rematch": "rematchClipToSkeleton on grudge6 + Explorer"
+  },
+  "boneMap": {
+    "Bone0_09": "Bip001 Pelvis",
+    "Bone40_00": "Bip001 Spine",
+    "Bone38_019": "Bip001 Spine1",
+    "Bone39_020": "Bip001 Spine2",
+    "Bone26_032": "Bip001 Neck",
+    "Bone52_033": "Bip001 Head",
+    "Bone37_021": "Bip001 L Clavicle",
+    "Bone36_022": "Bip001 L UpperArm",
+    "Bone10_023": "Bip001 L Forearm",
+    "Bone11_025": "Bip001 L Hand",
+    "Bone6_035": "Bip001 R Clavicle",
+    "Bone7_036": "Bip001 R UpperArm",
+    "Bone17_037": "Bip001 R Forearm",
+    "Bone18_039": "Bip001 R Hand",
+    "Bone28_011": "Bip001 L Thigh",
+    "Bone29_012": "Bip001 L Calf",
+    "Bone30_013": "Bip001 L Foot",
+    "Bone31_014": "Bip001 L Toe0",
+    "Bone32_015": "Bip001 R Thigh",
+    "Bone33_016": "Bip001 R Calf",
+    "Bone34_017": "Bip001 R Foot",
+    "Bone35_018": "Bip001 R Toe0"
+  },
+  "roles": [
+    {
+      "role": "sword_dash_attack",
+      "src": "PC_B_SwordLungeFwd",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/sword_dash_attack.json"
+    },
+    {
+      "role": "dash",
+      "src": "PC_B_SwordLungeFwd",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/dash.json"
+    },
+    {
+      "role": "attack",
+      "src": "PC_B_SwordSlash",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/attack.json"
+    },
+    {
+      "role": "attack2",
+      "src": "PC_B_SwordSlash2",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/attack2.json"
+    },
+    {
+      "role": "attack3",
+      "src": "PC_B_SwordSlice",
+      "ok": true,
+      "duration": 1.7999999523162842,
+      "tracks": 22,
+      "file": "dual_wield/attack3.json"
+    },
+    {
+      "role": "attack4",
+      "src": "PC_B_SwordSlice2",
+      "ok": true,
+      "duration": 3.633333444595337,
+      "tracks": 22,
+      "file": "dual_wield/attack4.json"
+    },
+    {
+      "role": "attack5",
+      "src": "PC_B_SwordUppercut",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/attack5.json"
+    },
+    {
+      "role": "skill1",
+      "src": "PC_B_SwordLungeFwd",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/skill1.json"
+    },
+    {
+      "role": "skill2",
+      "src": "PC_B_SliceDice",
+      "ok": true,
+      "duration": 2.0999999046325684,
+      "tracks": 22,
+      "file": "dual_wield/skill2.json"
+    },
+    {
+      "role": "skill3",
+      "src": "PC_B_Windmill",
+      "ok": true,
+      "duration": 2,
+      "tracks": 22,
+      "file": "dual_wield/skill3.json"
+    },
+    {
+      "role": "skill4",
+      "src": "PC_B_Figure_Eight",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/skill4.json"
+    },
+    {
+      "role": "overhead",
+      "src": "PC_B_SwordUppercut",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/overhead.json"
+    },
+    {
+      "role": "slash",
+      "src": "PC_B_SwordSlash",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/slash.json"
+    },
+    {
+      "role": "thrust",
+      "src": "PC_B_SwordLungeFwd",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/thrust.json"
+    },
+    {
+      "role": "special",
+      "src": "PC_B_DefendStrike",
+      "ok": true,
+      "duration": 0.36666667461395264,
+      "tracks": 22,
+      "file": "dual_wield/special.json"
+    },
+    {
+      "role": "combo",
+      "src": "PC_B_SwordSlash2",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/combo.json"
+    },
+    {
+      "role": "hurt",
+      "src": "PC_B_Flinch",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/hurt.json"
+    },
+    {
+      "role": "hit",
+      "src": "PC_B_Flinch",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/hit.json"
+    },
+    {
+      "role": "flinch",
+      "src": "PC_B_Flinch",
+      "ok": true,
+      "duration": 0.9666666388511658,
+      "tracks": 22,
+      "file": "dual_wield/flinch.json"
+    },
+    {
+      "role": "airFlinch",
+      "src": "PC_B_AirFlinch",
+      "ok": true,
+      "duration": 0.6666666865348816,
+      "tracks": 22,
+      "file": "dual_wield/airFlinch.json"
+    },
+    {
+      "role": "hitfly",
+      "src": "PC_GR_KnockDown",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/hitfly.json"
+    },
+    {
+      "role": "death",
+      "src": "PC_B_LargeDeath",
+      "ok": true,
+      "duration": 1.4666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/death.json"
+    },
+    {
+      "role": "death2",
+      "src": "PC_B_SmallDeath",
+      "ok": true,
+      "duration": 3.0999999046325684,
+      "tracks": 22,
+      "file": "dual_wield/death2.json"
+    },
+    {
+      "role": "dodgeF",
+      "src": "PC_B_Rollforward",
+      "ok": true,
+      "duration": 0.8666666746139526,
+      "tracks": 22,
+      "file": "dual_wield/dodgeF.json"
+    },
+    {
+      "role": "dodgeB",
+      "src": "PC_B_Rollback",
+      "ok": true,
+      "duration": 0.7666666507720947,
+      "tracks": 22,
+      "file": "dual_wield/dodgeB.json"
+    },
+    {
+      "role": "dodgeL",
+      "src": "PC_B_RollLeft",
+      "ok": true,
+      "duration": 0.7666666507720947,
+      "tracks": 22,
+      "file": "dual_wield/dodgeL.json"
+    },
+    {
+      "role": "dodgeR",
+      "src": "PC_B_RollRight",
+      "ok": true,
+      "duration": 0.7666666507720947,
+      "tracks": 22,
+      "file": "dual_wield/dodgeR.json"
+    },
+    {
+      "role": "kick",
+      "src": "PC_B_RoundhouseKick",
+      "ok": true,
+      "duration": 1.7999999523162842,
+      "tracks": 22,
+      "file": "dual_wield/kick.json"
+    },
+    {
+      "role": "kick2",
+      "src": "PC_B_DoubleKick",
+      "ok": true,
+      "duration": 1.6333333253860474,
+      "tracks": 22,
+      "file": "dual_wield/kick2.json"
+    },
+    {
+      "role": "flyingKick",
+      "src": "PC_B_FlyingKick1",
+      "ok": true,
+      "duration": 0.2666666805744171,
+      "tracks": 22,
+      "file": "dual_wield/flyingKick.json"
+    },
+    {
+      "role": "block",
+      "src": "PC_B_BlockStanceLoop",
+      "ok": true,
+      "duration": 1.0333333015441895,
+      "tracks": 22,
+      "file": "dual_wield/block.json"
+    },
+    {
+      "role": "idle",
+      "src": "PC_B_Idle",
+      "ok": true,
+      "duration": 1.9666666984558105,
+      "tracks": 22,
+      "file": "dual_wield/idle.json"
+    },
+    {
+      "role": "walk",
+      "src": "PC_B_Walk",
+      "ok": true,
+      "duration": 1.1666666269302368,
+      "tracks": 22,
+      "file": "dual_wield/walk.json"
+    },
+    {
+      "role": "run",
+      "src": "PC_B_Run",
+      "ok": true,
+      "duration": 0.7333333492279053,
+      "tracks": 22,
+      "file": "dual_wield/run.json"
+    },
+    {
+      "role": "jump",
+      "src": "PC_B_Jump1",
+      "ok": true,
+      "duration": 0.30000001192092896,
+      "tracks": 22,
+      "file": "dual_wield/jump.json"
+    }
+  ],
+  "missing": []
+}

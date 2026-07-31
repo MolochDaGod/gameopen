@@ -947,6 +947,7 @@ export class Controller {
     if (this.wallRunActive && c.hasRole("wallRun")) {
       c.playRole("wallRun");
       c.setLocomotionRate?.(1);
+      c.setTraversalMode?.("climb");
       return;
     }
     if (this.climbWantMantle && c.hasRole("mantle")) {
@@ -956,6 +957,7 @@ export class Controller {
     if (this.climbVerticalGrab && c.hasRole("hang")) {
       c.playRole("hang");
       c.setLocomotionRate?.(1);
+      c.setTraversalMode?.("climb");
       return;
     }
     const up =
@@ -975,6 +977,29 @@ export class Controller {
       c.playRole("hang");
     }
     c.setTraversalMode?.("climb");
+  }
+
+  /** Swim / deep wade: tread when still, swim when moving (any avatar with roles). */
+  private applySwimLocomotionAnim(): void {
+    const c = this.character;
+    c.setTraversalMode?.("swim");
+    const moving =
+      this.smoothedSpeed > 0.08 ||
+      this.input.down("KeyW") ||
+      this.input.down("KeyS") ||
+      this.input.down("KeyA") ||
+      this.input.down("KeyD") ||
+      Math.abs(this.input.moveX) > 0.1 ||
+      Math.abs(this.input.moveY) > 0.1;
+    if (moving && c.hasRole("swim")) {
+      c.playRole("swim");
+      c.setLocomotionRate?.(0.9 + this.smoothedSpeed * 0.3);
+    } else if (c.hasRole("tread")) {
+      c.playRole("tread");
+      c.setLocomotionRate?.(1);
+    } else if (c.hasRole("swim")) {
+      c.playRole("swim");
+    }
   }
 
   /**
@@ -1889,9 +1914,11 @@ export class Controller {
       !this.hoverActive &&
       !(this.animDirector?.isOverridePlaying)
     ) {
-      // Climb / hang / wall-run: baked mobility roles (anims/baked/climb/*)
+      // Climb / hang / wall-run / swim: baked mobility roles for ANY avatar
       if (this.climbActive || this.wallRunActive) {
         this.applyClimbLocomotionAnim();
+      } else if (this.surfaceState?.mode === "swim" || this.surfaceState?.mode === "wade") {
+        this.applySwimLocomotionAnim();
       } else if (this.grounded) {
         if (this.character.setLocomotion) {
           // Speed 0..1 + explicit sprint flag so grudge6 uses run-clone @ 1.75×

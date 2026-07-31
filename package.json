@@ -29,6 +29,7 @@
     "anims:verify:write": "node scripts/verify-anim-integrity.mjs --write",
     "anims:verify:strict": "node scripts/verify-anim-integrity.mjs --strict",
     "anims:bake:mobility": "npm --prefix artifacts/animator run bake:mobility",
+    "anims:bake:dual-wield": "npm --prefix artifacts/animator run bake:dual-wield",
     "ci:test": "npm --prefix artifacts/animator run test -- src/three/retargetMap.test.ts src/lib/annihilateHero.test.ts src/three/anim/AnimDatabase.test.ts src/three/anim/weaponLivePacks.test.ts src/three/climb/climbHolds.test.ts",
     "deploy:prod": "node scripts/vercel-build.mjs && npx vercel deploy --prod --yes",
     "verify:assets": "node scripts/verify-fleet-assets.mjs",

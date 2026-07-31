@@ -52,6 +52,15 @@ export const VFX_CATALOG: readonly VfxCatalogEntry[] = [
     tags: ["fire", "aura", "buff", "ring"],
   },
   {
+    id: "hellfire_chain_path",
+    name: "Hellfire Chain Path",
+    category: "fire",
+    color: 0xff4010,
+    description:
+      "Flame ribbon along weapon/chain path (Ghost Rider bake). Never stretch mesh — path samples from R Hand.",
+    tags: ["fire", "chain", "path", "ribbon", "ranged-melee", "ghost_rider"],
+  },
+  {
     id: "arcane_swirl",
     name: "Arcane Swirl",
     category: "arcane",

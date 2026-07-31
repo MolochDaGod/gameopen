@@ -462,9 +462,19 @@ export class ExplorerCharacter implements Avatar {
   // ---- locomotion (role/rate shims -> blend speed intent) ----
 
   playRole(role: AnimRole): void {
-    if (role === "run") this.locoSpeed = 1;
+    if (role === "run" || role === "sprint" || role === "wallRun") this.locoSpeed = 1;
     else if (role === "walk") this.locoSpeed = 0.5;
-    else if (role === "idle") this.locoSpeed = 0;
+    else if (role === "idle" || role === "hang" || role === "tread") this.locoSpeed = 0;
+    else if (role === "climb" || role === "climbUp" || role === "swim") this.locoSpeed = 0.7;
+    else if (role === "climbDown") this.locoSpeed = 0.4;
+    // Switch traversal set for climb/swim so loco blend uses TRAVERSAL_SETS
+    if (role === "climb" || role === "climbUp" || role === "climbDown" || role === "hang" || role === "wallRun") {
+      this.animator?.setMode("climb");
+    } else if (role === "swim" || role === "tread" || role === "swimExit") {
+      this.animator?.setMode("swim");
+    } else if (role === "idle" || role === "walk" || role === "run" || role === "sprint") {
+      this.animator?.setMode("ground");
+    }
   }
 
   setLocomotionRate(_rate: number): void {
@@ -490,6 +500,15 @@ export class ExplorerCharacter implements Avatar {
       case "block":
         this.animator.block(true);
         return 0;
+      case "mantle":
+        this.animator.setMode("climb");
+        return this.animator.playAction("mantle") || 0.8;
+      case "grab":
+        this.animator.setMode("climb");
+        return this.animator.playAction("jumpToFreehang") || this.animator.playAction("standToFreehang") || 0.6;
+      case "wallRun":
+        this.animator.setMode("climb");
+        return this.animator.playAction("wallRun") || 0.5;
       default:
         return 0;
     }
@@ -670,7 +689,29 @@ export class ExplorerCharacter implements Avatar {
   // ---- introspection ----
 
   hasRole(role: AnimRole): boolean {
-    return ["idle", "walk", "run", "attack", "jump", "death", "hurt", "block"].includes(role);
+    // Procedural Explorer owns ground loco + combat verbs; climb/swim via setTraversalMode
+    // and clipCatalog GLOBAL/TRAVERSAL — report true so Controller always finds a path.
+    return [
+      "idle",
+      "walk",
+      "run",
+      "sprint",
+      "attack",
+      "jump",
+      "death",
+      "hurt",
+      "block",
+      "climb",
+      "climbUp",
+      "climbDown",
+      "hang",
+      "mantle",
+      "wallRun",
+      "grab",
+      "swim",
+      "tread",
+      "swimExit",
+    ].includes(role);
   }
 
   hasClip(name: string): boolean {

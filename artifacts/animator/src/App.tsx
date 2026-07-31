@@ -1527,6 +1527,40 @@ export default function App() {
     studioRef.current?.setTimeScale(scale);
   }, []);
 
+  const onTestWorld = useCallback((id: TestWorldId) => {
+    setTestWorldId(id);
+    const studio = studioRef.current;
+    if (!studio) return;
+    // Best-practice load curtain: progress stages while GLB + bake run
+    setHelpersLoad({
+      visible: true,
+      label: `MAP · ${id.toUpperCase()}`,
+      progress: 0.1,
+    });
+    studio.onMapLoadProgress = (p) => {
+      setHelpersLoad({
+        visible: true,
+        label:
+          p.progress >= 1
+            ? p.stage === "failed"
+              ? `MAP FAIL · ${p.mapId}`
+              : `MAP READY · ${p.mapId}`
+            : `MAP · ${p.stage.replace(/_/g, " ").toUpperCase()}`,
+        progress: Math.min(0.98, Math.max(0.1, p.progress)),
+      });
+    };
+    void studio.setTestWorld(id).then((ok) => {
+      setHelpersLoad({
+        visible: true,
+        label: ok ? `MAP READY · ${id}` : `MAP FAIL · ${id}`,
+        progress: 1,
+      });
+      window.setTimeout(() => {
+        setHelpersLoad((s) => ({ ...s, visible: false, label: "LOADING" }));
+      }, 450);
+    });
+  }, []);
+
   // Whitelisted AI tool surface for the Danger Room — combat + anim + movement.
   const dangerAiTools = useMemo(
     () =>
@@ -1544,14 +1578,11 @@ export default function App() {
         onListClips: () => studioRef.current?.listAnimClips() ?? [],
         onTimeScale,
         getWeaponId: () => weaponId,
+        onTestWorld,
+        onEquipWing: (id) => studioRef.current?.equipBackWing(id),
       }),
-    [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId],
+    [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId, onTestWorld],
   );
-
-  const onTestWorld = useCallback((id: TestWorldId) => {
-    setTestWorldId(id);
-    void studioRef.current?.setTestWorld(id);
-  }, []);
 
   const onRoomPreset = useCallback((id: RoomPresetId) => {
     setRoomPreset(id);

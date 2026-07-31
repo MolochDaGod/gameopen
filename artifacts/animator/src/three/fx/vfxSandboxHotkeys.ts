@@ -111,6 +111,26 @@ export function deploySandboxVfx(vfx: Vfx, effectId: VfxEffectId | string, opts:
       vfx.castAura(cast, 0xff6a1e);
       break;
     }
+    case "hellfire_chain_path": {
+      // Extending hellfire chain projectile (ranged-melee weapon mesh + flame)
+      const dir = aim.clone().sub(cast);
+      if (dir.lengthSq() < 1e-4) dir.copy(fwd);
+      dir.normalize();
+      const muzzle = opts.weaponEdge?.()?.tip?.clone() ?? front;
+      vfx.castAura(cast, 0xff6020);
+      vfx.hellfireChain(muzzle, dir, {
+        range: 6.5,
+        variant: "slashred",
+        color: 0xff6020,
+        chainPathRole: "chain_throw",
+        damage: 28,
+        dissipateTime: 0.28,
+        onHit: (p) => {
+          hit?.(p);
+        },
+      });
+      break;
+    }
     case "fireball": {
       // Fireball (Alt+C)
       const dir = aim.clone().sub(cast);

@@ -12,7 +12,9 @@ import {
   resolveLiveAssetUrl,
   fetchAssetFirst,
   GRUDGE6_RACE_FBX,
+  GRUDGE6_RACE_GLB,
   GRUDGE6_TEX_PATHS,
+  grudge6RaceGlbForSlug,
 } from "./fleetAssetResolver";
 
 /**
@@ -31,7 +33,9 @@ export {
   resolveLiveAssetUrl,
   fetchAssetFirst,
   GRUDGE6_RACE_FBX,
+  GRUDGE6_RACE_GLB,
   GRUDGE6_TEX_PATHS,
+  grudge6RaceGlbForSlug,
 };
 
 /**
@@ -269,7 +273,7 @@ export const CHARACTERS: CharacterDef[] = [
     id: "gunslinger",
     name: "Racalvin the Pirate King",
     // Production GLB (self-contained clips). Not a live Meshy fetch — local/R2 only.
-    // Living twin swords: My Brothers Keeper mesh (orbit + floating slash + X on back).
+    // Living twin swords: Brothers Keeper (hand grip / Z sheath X-back / spline projectile).
     file: "models/racalvin.glb",
     scale: 1,
     // Locomotion roles pinned to baked clip names; autoMapClips() back-fills
@@ -771,89 +775,58 @@ export function weaponCombat(id: string): WeaponCombat {
 }
 
 /**
- * Fantasy Scene Creator / charactersgrudox race GLBs — playable roster source.
- * Files live under public/models/races/ (synced from
- * Fantasy-Scene-Creator/artifacts/charactersgrudox/public/models/races).
+ * Race roster — production SSOT is grudge6 modular kits (Bip001) on R2.
+ * Lab `models/races/*` remains a resolver fallback only.
  */
+/** Prefer Bip001 / hand containers; mixamorig last-resort only. */
+const RACE_HAND_BONE =
+  "R_hand_container|L_hand_container|Bip001.*R.*Hand|Bip001.*L.*Hand|Bip001 R Hand|Bip001 L Hand|Hand_R|Hand_L|mixamorigRightHand|mixamorigLeftHand";
+
+function raceCatalogDef(
+  id: string,
+  name: string,
+  raceSlug: string,
+  labFile: string,
+  skills: CharacterDef["signatureSkills"],
+): CharacterDef {
+  const g6 = grudge6RaceGlbForSlug(raceSlug) || labFile;
+  return {
+    id,
+    name,
+    file: g6,
+    scale: 1,
+    clips: {},
+    signatureSkills: skills,
+    handBone: RACE_HAND_BONE,
+    modelYaw: 0,
+  };
+}
+
 export const RACE_CHARACTERS: CharacterDef[] = [
-  {
-    id: "race-human",
-    name: "Human",
-    file: "models/races/human.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Slash", clip: "attack", kind: "slash" },
-      { label: "Charge", clip: "run", kind: "slam", mode: "dash" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
-  {
-    id: "race-orc",
-    name: "Orc",
-    file: "models/races/orc.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Cleave", clip: "attack", kind: "slash" },
-      { label: "War Cry", clip: "attack", kind: "nova" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
-  {
-    id: "race-high-elf",
-    name: "High Elf",
-    file: "models/races/high_elf.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Arcane Bolt", clip: "attack", kind: "bolt" },
-      { label: "Blink", clip: "run", kind: "slam", mode: "dash" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
-  {
-    id: "race-dwarf",
-    name: "Dwarf",
-    file: "models/races/dwarf.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Hammer", clip: "attack", kind: "slam" },
-      { label: "Fortify", clip: "attack", kind: "nova" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
-  {
-    id: "race-barbarian",
-    name: "Barbarian",
-    file: "models/races/barbarian.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Fury", clip: "attack", kind: "slash" },
-      { label: "Leap", clip: "jump", kind: "slam", mode: "dash" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
-  {
-    id: "race-undead",
-    name: "Undead",
-    file: "models/races/undead.glb",
-    scale: 1,
-    clips: {},
-    signatureSkills: [
-      { label: "Drain", clip: "attack", kind: "bolt" },
-      { label: "Bone Nova", clip: "attack", kind: "nova" },
-    ],
-    handBone: "R[ _]Hand|Hand_R|mixamorigRightHand",
-    modelYaw: 0,
-  },
+  raceCatalogDef("race-human", "Human", "human", "models/races/human.glb", [
+    { label: "Slash", clip: "attack", kind: "slash" },
+    { label: "Charge", clip: "run", kind: "slam", mode: "dash" },
+  ]),
+  raceCatalogDef("race-orc", "Orc", "orc", "models/races/orc.glb", [
+    { label: "Cleave", clip: "attack", kind: "slash" },
+    { label: "War Cry", clip: "attack", kind: "nova" },
+  ]),
+  raceCatalogDef("race-high-elf", "High Elf", "high-elf", "models/races/high_elf.glb", [
+    { label: "Arcane Bolt", clip: "attack", kind: "bolt" },
+    { label: "Blink", clip: "run", kind: "slam", mode: "dash" },
+  ]),
+  raceCatalogDef("race-dwarf", "Dwarf", "dwarf", "models/races/dwarf.glb", [
+    { label: "Hammer", clip: "attack", kind: "slam" },
+    { label: "Fortify", clip: "attack", kind: "nova" },
+  ]),
+  raceCatalogDef("race-barbarian", "Barbarian", "barbarian", "models/races/barbarian.glb", [
+    { label: "Fury", clip: "attack", kind: "slash" },
+    { label: "Leap", clip: "jump", kind: "slam", mode: "dash" },
+  ]),
+  raceCatalogDef("race-undead", "Undead", "undead", "models/races/undead.glb", [
+    { label: "Drain", clip: "attack", kind: "bolt" },
+    { label: "Bone Nova", clip: "attack", kind: "nova" },
+  ]),
 ];
 
 // Append race kit once (avoid double-push on HMR).
@@ -867,14 +840,17 @@ export function getCharacter(id: string): CharacterDef {
   // Fleet grudge6 avatar ids (`grudge:race:preset`) are not catalog rows.
   // Return a safe stub so modelYaw / tank flags don't inherit explorer defaults.
   if (id.startsWith("grudge:")) {
+    const parts = id.split(":");
+    const racePart = parts[1] || "human";
+    const g6 = grudge6RaceGlbForSlug(racePart) || "";
     return {
       id,
       name: id.replace(/^grudge:/, "").replace(/:/g, " "),
-      file: "",
+      file: g6,
       scale: 1,
       clips: {},
       signatureSkills: [],
-      handBone: "Bip001.*(R|L).*Hand",
+      handBone: RACE_HAND_BONE,
       modelYaw: 0,
     };
   }

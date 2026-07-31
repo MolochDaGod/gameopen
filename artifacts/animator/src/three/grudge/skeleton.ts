@@ -17,16 +17,52 @@ export function normalizeBoneKey(name: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+/**
+ * Canonical humanoid aliases so Bip001 bake tracks bind Mixamo Explorer bones
+ * and vice-versa (fleet SSOT: same roles, different name styles).
+ */
+const BIP001_MIXAMO_ALIASES: Array<[string, string]> = [
+  ["bip001pelvis", "mixamorighips"],
+  ["bip001spine", "mixamorigspine"],
+  ["bip001spine1", "mixamorigspine1"],
+  ["bip001spine2", "mixamorigspine2"],
+  ["bip001neck", "mixamorigneck"],
+  ["bip001head", "mixamorighead"],
+  ["bip001lclavicle", "mixamorigleftshoulder"],
+  ["bip001lupperarm", "mixamorigleftarm"],
+  ["bip001lforearm", "mixamorigleftforearm"],
+  ["bip001lhand", "mixamoriglefthand"],
+  ["bip001rclavicle", "mixamorigrightshoulder"],
+  ["bip001rupperarm", "mixamorigrightarm"],
+  ["bip001rforearm", "mixamorigrightforearm"],
+  ["bip001rhand", "mixamorigrighthand"],
+  ["bip001lthigh", "mixamorigleftupleg"],
+  ["bip001lcalf", "mixamorigleftleg"],
+  ["bip001lfoot", "mixamorigleftfoot"],
+  ["bip001ltoe0", "mixamoriglefttoebase"],
+  ["bip001rthigh", "mixamorigrightupleg"],
+  ["bip001rcalf", "mixamorigrightleg"],
+  ["bip001rfoot", "mixamorigrightfoot"],
+  ["bip001rtoe0", "mixamorigrighttoebase"],
+  // bare Mixamo
+  ["hips", "mixamorighips"],
+  ["lefthand", "mixamoriglefthand"],
+  ["righthand", "mixamorigrighthand"],
+];
+
 /** Alias map: spaced/underscore forms → actual scene bone name. */
 export function buildBoneNameLookup(root: THREE.Object3D): Map<string, string> {
   const lookup = new Map<string, string>();
+  const actualByKey = new Map<string, string>();
   root.traverse((node) => {
     const isBone = (node as THREE.Bone).isBone === true;
-    if (!isBone && !/bip001|container|hand|pelvis|spine/i.test(node.name)) return;
+    if (!isBone && !/bip001|mixamo|container|hand|pelvis|spine|hips/i.test(node.name)) return;
     const actual = node.name;
     if (!actual) return;
     lookup.set(actual, actual);
-    lookup.set(normalizeBoneKey(actual), actual);
+    const key = normalizeBoneKey(actual);
+    lookup.set(key, actual);
+    actualByKey.set(key, actual);
     if (actual.includes("_")) {
       const spaced = actual.replace(/^Bip001_/, "Bip001 ").replace(/_/g, " ");
       lookup.set(spaced, actual);
@@ -38,6 +74,20 @@ export function buildBoneNameLookup(root: THREE.Object3D): Map<string, string> {
       lookup.set(normalizeBoneKey(underscored), actual);
     }
   });
+  // Cross-link Bip001 ↔ Mixamo so dual_wield / sword_shield bakes drive Explorer
+  for (const [a, b] of BIP001_MIXAMO_ALIASES) {
+    const boneA = actualByKey.get(a);
+    const boneB = actualByKey.get(b);
+    if (boneA && !lookup.has(b)) lookup.set(b, boneA);
+    if (boneB && !lookup.has(a)) lookup.set(a, boneB);
+    // Also allow clip track "Bip001 R Hand" → mixamorigRightHand when skeleton is Mixamo
+    if (boneB) {
+      lookup.set(a, boneB);
+    }
+    if (boneA) {
+      lookup.set(b, boneA);
+    }
+  }
   return lookup;
 }
 
