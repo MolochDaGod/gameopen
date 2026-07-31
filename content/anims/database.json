@@ -22,6 +22,13 @@
       ],
       "fallbackPack": "magic"
     },
+    "samurai": {
+      "label": "Samurai (Retargeted)",
+      "skeleton": "Bip001",
+      "sources": ["baked", "mixamo_fbx"],
+      "fallbackPack": "sword_shield",
+      "note": "Player combat style: sword loco + Madarame slash/thrust/overhead/special"
+    },
     "longbow": {
       "label": "Longbow / Archer",
       "skeleton": "Bip001",

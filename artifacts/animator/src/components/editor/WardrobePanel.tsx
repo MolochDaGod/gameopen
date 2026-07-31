@@ -231,13 +231,21 @@ function VoxelCharacterSection({
 }
 
 /**
- * Character loader — spawn any catalog character (procedural rigs + GLB fighters)
- * or one of the six Grudge races (with a gear preset) into the Dressing Room.
+ * Character loader — catalog GLB fighters OR grudge6 races.
+ * Same deploy rules as Danger: 1.8 m, XZ pelvis, feet Y, Bip001 packs.
  */
 function CharacterLoader({ engine }: { engine: EditorScene }) {
   const [catId, setCatId] = useState<string>(CHARACTERS[0]?.id ?? "explorer");
   const [race, setRace] = useState<RaceId>(RACE_IDS[0]);
   const [preset, setPreset] = useState<PresetId>("warrior");
+  const [style, setStyle] = useState<string>(() => {
+    try {
+      return localStorage.getItem("grudge.open.combatStyle") || "auto";
+    } catch {
+      return "auto";
+    }
+  });
+  const [skel, setSkel] = useState(false);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return (
     <div className="ed-field">
@@ -252,7 +260,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         </select>
         <button
           className="ed-btn ed-tw"
-          title="Load this character"
+          title="Load catalog character (deploy SSOT)"
           onClick={() => void engine.loadCatalogCharacter(catId)}
         >
           <UserPlus size={14} />
@@ -275,11 +283,57 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         </select>
         <button
           className="ed-btn ed-tw"
-          title="Load this Grudge race"
+          title="Load grudge6 race (Danger stack)"
           onClick={() => void engine.loadGrudgeCharacter(race, preset)}
         >
           <UserPlus size={14} />
         </button>
+      </div>
+      <div className="ed-row" style={{ marginTop: 6 }}>
+        <select
+          className="ed-select"
+          value={style}
+          onChange={(e) => setStyle(e.target.value)}
+          title="Combat style — samurai / knight / spearman (same packs as Danger)"
+        >
+          <option value="auto">Style · Weapon default</option>
+          <option value="samurai">Style · Samurai</option>
+          <option value="knight">Style · Knight</option>
+          <option value="spearman">Style · Spearman</option>
+          <option value="berserker">Style · Berserker</option>
+          <option value="striker">Style · Striker</option>
+          <option value="mage">Style · Mage</option>
+          <option value="archer">Style · Archer</option>
+          <option value="gunner">Style · Gunner</option>
+        </select>
+        <button
+          className="ed-btn ed-tw"
+          title="Apply combat style to selected grudge hero"
+          onClick={() => {
+            try {
+              localStorage.setItem("grudge.open.combatStyle", style);
+            } catch {
+              /* */
+            }
+            void engine.applyGrudgeCombatStyle(style);
+          }}
+        >
+          Apply
+        </button>
+      </div>
+      <label className="ed-check" style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+        <input
+          type="checkbox"
+          checked={skel}
+          onChange={(e) => {
+            setSkel(e.target.checked);
+            engine.setShowSkeleton(e.target.checked);
+          }}
+        />
+        <span>Show skeleton (Bip001 / bones)</span>
+      </label>
+      <div className="ed-empty" style={{ padding: "6px 0 0", fontSize: 11, opacity: 0.75 }}>
+        Deploy SSOT: 1.8 m · feet on ground · XZ on pelvis · rotation-only anims · same packs as Danger.
       </div>
     </div>
   );

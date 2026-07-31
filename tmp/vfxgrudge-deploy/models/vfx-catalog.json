@@ -1,0 +1,318 @@
+﻿{
+    "name":  "grudge-vfx-library",
+    "host":  "https://vfxgrudge.puter.site",
+    "generatedAt":  "2026-07-29T10:46:17.7851309Z",
+    "notes":  [
+                  "Staff projectiles: models/vfx/orbs/orb-*.glb only",
+                  "Never load whole fireball.glb as a bolt",
+                  "Fantasy sandbox SPA at / ; this catalog drives /library.html"
+              ],
+    "effects":  [
+                    {
+                        "id":  "orb-fire",
+                        "name":  "Fire Orb",
+                        "path":  "models/vfx/orbs/orb-fire.glb",
+                        "tags":  [
+                                     "orb",
+                                     "projectile",
+                                     "anim"
+                                 ],
+                        "fitM":  0.5
+                    },
+                    {
+                        "id":  "orb-ember",
+                        "name":  "Ember Orb",
+                        "path":  "models/vfx/orbs/orb-ember.glb",
+                        "tags":  [
+                                     "orb",
+                                     "projectile"
+                                 ],
+                        "fitM":  0.5
+                    },
+                    {
+                        "id":  "orb-core",
+                        "name":  "Arcane Core Orb",
+                        "path":  "models/vfx/orbs/orb-core.glb",
+                        "tags":  [
+                                     "orb",
+                                     "projectile"
+                                 ],
+                        "fitM":  0.5
+                    },
+                    {
+                        "id":  "orb-flare",
+                        "name":  "Flare Orb",
+                        "path":  "models/vfx/orbs/orb-flare.glb",
+                        "tags":  [
+                                     "orb",
+                                     "projectile"
+                                 ],
+                        "fitM":  0.5
+                    },
+                    {
+                        "id":  "slash-blue",
+                        "name":  "Getsuga Blue",
+                        "path":  "models/vfx/slash/slashblue.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2.2
+                    },
+                    {
+                        "id":  "slash-red",
+                        "name":  "Getsuga Red",
+                        "path":  "models/vfx/slash/slashred.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2.2
+                    },
+                    {
+                        "id":  "slash-purple",
+                        "name":  "Getsuga Purple",
+                        "path":  "models/vfx/slash/slashpurple.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2.2
+                    },
+                    {
+                        "id":  "slash-yellow",
+                        "name":  "Getsuga Yellow",
+                        "path":  "models/vfx/slash/slashyellow.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2.2
+                    },
+                    {
+                        "id":  "light-of-slash",
+                        "name":  "Light of Slash",
+                        "path":  "models/vfx/light-of-slash.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "attack-slashes",
+                        "name":  "Attack Slashes",
+                        "path":  "models/vfx/attack-slashes.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "strawberry-strike",
+                        "name":  "Strawberry Strike",
+                        "path":  "models/vfx/strawberry-strike.glb",
+                        "tags":  [
+                                     "slash",
+                                     "melee",
+                                     "anim"
+                                 ],
+                        "fitM":  1.6
+                    },
+                    {
+                        "id":  "spell-glyph",
+                        "name":  "Spell Glyph",
+                        "path":  "models/vfx/spell-glyph.glb",
+                        "tags":  [
+                                     "cast",
+                                     "magic",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "chaos-glyph",
+                        "name":  "Chaos Glyph",
+                        "path":  "models/vfx/chaos-glyph.glb",
+                        "tags":  [
+                                     "cast",
+                                     "magic",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "energy-beam",
+                        "name":  "Energy Beam",
+                        "path":  "models/vfx/energy-beam.glb",
+                        "tags":  [
+                                     "cast",
+                                     "beam",
+                                     "anim"
+                                 ],
+                        "fitM":  2.5
+                    },
+                    {
+                        "id":  "light-beam",
+                        "name":  "Light Beam",
+                        "path":  "models/vfx/light-beam.glb",
+                        "tags":  [
+                                     "cast",
+                                     "beam",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "lightning",
+                        "name":  "Lightning",
+                        "path":  "models/vfx/lightning.glb",
+                        "tags":  [
+                                     "cast",
+                                     "magic",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "fire-tornado",
+                        "name":  "Fire Tornado",
+                        "path":  "models/vfx/stylized-fire-tornado.glb",
+                        "tags":  [
+                                     "aoe",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "meteor",
+                        "name":  "Meteor",
+                        "path":  "models/vfx/meteor.glb",
+                        "tags":  [
+                                     "projectile",
+                                     "anim"
+                                 ],
+                        "fitM":  1.8
+                    },
+                    {
+                        "id":  "dragon",
+                        "name":  "Dragon Bolt",
+                        "path":  "models/vfx/dragon.glb",
+                        "tags":  [
+                                     "projectile",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "soul",
+                        "name":  "Soul",
+                        "path":  "models/vfx/soul.glb",
+                        "tags":  [
+                                     "projectile",
+                                     "anim"
+                                 ],
+                        "fitM":  1
+                    },
+                    {
+                        "id":  "burst-laser",
+                        "name":  "Burst Laser",
+                        "path":  "models/vfx/burst-laser.glb",
+                        "tags":  [
+                                     "beam",
+                                     "anim"
+                                 ],
+                        "fitM":  1.6
+                    },
+                    {
+                        "id":  "explosion",
+                        "name":  "Explosion",
+                        "path":  "models/vfx/explosion.glb",
+                        "tags":  [
+                                     "aoe"
+                                 ],
+                        "fitM":  2.5
+                    },
+                    {
+                        "id":  "aoe-warning",
+                        "name":  "AoE Warning",
+                        "path":  "models/vfx/aoe-warning.glb",
+                        "tags":  [
+                                     "telegraph",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "ring-green",
+                        "name":  "Ring Green",
+                        "path":  "models/vfx/ring-green.glb",
+                        "tags":  [
+                                     "buff",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "ring-red",
+                        "name":  "Ring Red",
+                        "path":  "models/vfx/ring-red.glb",
+                        "tags":  [
+                                     "debuff",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "fireball-scene",
+                        "name":  "Fireball Demo Scene (not projectile)",
+                        "path":  "models/vfx/fireball.glb",
+                        "tags":  [
+                                     "demo",
+                                     "anim"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "casting-spell-fbx",
+                        "name":  "Casting Spell (FBX)",
+                        "path":  "models/casting-spell.fbx",
+                        "tags":  [
+                                     "cast",
+                                     "magic"
+                                 ],
+                        "fitM":  1.8
+                    },
+                    {
+                        "id":  "great-sword-slash-fbx",
+                        "name":  "Great Sword Slash (FBX)",
+                        "path":  "models/great-sword-slash.fbx",
+                        "tags":  [
+                                     "slash",
+                                     "melee"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "great-sword-cast-fbx",
+                        "name":  "Great Sword Casting (FBX)",
+                        "path":  "models/great-sword-casting.fbx",
+                        "tags":  [
+                                     "cast"
+                                 ],
+                        "fitM":  2
+                    },
+                    {
+                        "id":  "standing-2h-magic-fbx",
+                        "name":  "Standing 2H Magic (FBX)",
+                        "path":  "models/standing-2h-magic.fbx",
+                        "tags":  [
+                                     "cast",
+                                     "magic"
+                                 ],
+                        "fitM":  1.8
+                    }
+                ]
+}

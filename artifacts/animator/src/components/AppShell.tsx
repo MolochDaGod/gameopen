@@ -27,6 +27,7 @@ import { assetUrl } from "../lib/fleet";
 import { InstallAppButton } from "./InstallAppButton";
 import { ToolboxOverlay } from "./toolbox/ToolboxOverlay";
 import type { ToolDef } from "./toolbox/tools";
+import { FleetBar } from "./FleetBar";
 import "./appShell.css";
 import "./toolbox/toolbox.css";
 
@@ -113,6 +114,11 @@ interface Props {
   onToolLaunch?: (tool: ToolDef) => void;
   /** Music tab content (CPT RAC Station + volume mixer). */
   music?: ReactNode;
+  /**
+   * When true (default), show fleet account/mode/hero strip in the header.
+   * Library hub uses its own Steam chrome — pass false there via host.
+   */
+  showFleetStrip?: boolean;
   children: ReactNode;
 }
 
@@ -123,6 +129,7 @@ export function AppShell({
   hideAssistant,
   onToolLaunch,
   music,
+  showFleetStrip = true,
   children,
 }: Props) {
   const { deviceClass } = useDevice();
@@ -186,24 +193,35 @@ export function AppShell({
       ) : (
         <>
           <div className="shell-steam-bar" role="banner">
-            <button
-              className="shell-launcher"
-              onClick={() => {
-                setToolboxOpen(false);
-                setNavOpen((v) => !v);
-              }}
-              aria-haspopup="menu"
-              aria-expanded={navOpen}
-              title="Switch system"
-            >
-              <span className="shell-launcher-icon" style={{ color: current.tone }}>
-                {navOpen ? <X size={18} /> : current.mode === "doors" ? <Grid3x3 size={18} /> : current.icon}
-              </span>
-              <span className="shell-launcher-label">{current.label}</span>
-              <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
-            </button>
-            {toolboxBtn}
+            <div className="shell-steam-brand">
+              <span className="shell-steam-brand-name">Grudge Open</span>
+              <button
+                type="button"
+                className="shell-launcher"
+                onClick={() => {
+                  setToolboxOpen(false);
+                  setNavOpen((v) => !v);
+                }}
+                aria-haspopup="menu"
+                aria-expanded={navOpen}
+                title="Switch system / app"
+              >
+                <span className="shell-launcher-icon" style={{ color: current.tone }}>
+                  {navOpen ? <X size={18} /> : current.mode === "doors" ? <Grid3x3 size={18} /> : current.icon}
+                </span>
+                <span className="shell-launcher-label">{current.label}</span>
+                <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
+              </button>
+            </div>
+
+            {showFleetStrip && (
+              <div className="shell-steam-center">
+                <FleetBar variant="inline" />
+              </div>
+            )}
+
             <div className="shell-steam-actions">
+              {toolboxBtn}
               <InstallAppButton variant="pill" />
               <button
                 type="button"

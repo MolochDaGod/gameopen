@@ -738,22 +738,30 @@ export class BrawlerScene {
             const gltf = await this.loadGltf(path);
             if (this.disposed) return;
             const root = gltf.scene;
-            const box = new THREE.Box3().setFromObject(root);
-            const size = box.getSize(new THREE.Vector3());
-            root.scale.setScalar((PLAYER_HEIGHT_M * 0.9) / (size.y || 1));
-            root.updateMatrixWorld(true);
-            const b2 = new THREE.Box3().setFromObject(root);
-            root.position.y -= b2.min.y;
-            root.traverse((o) => {
-              const m = o as THREE.Mesh;
-              if (m.isMesh) {
-                m.castShadow = true;
-                m.receiveShadow = true;
-                m.userData.selectable = "hostile";
-              }
+            // Converted voxel pipeline: SI creature scale + anim brain (not ad-hoc Box3)
+            const { finalizeConvertedVoxelAsset } = await import(
+              "../voxel/convertedAssetPipeline"
+            );
+            const fin = finalizeConvertedVoxelAsset(root, {
+              name: path,
+              tags: ["enemy", "creature", "voxel"],
+              forceRole: "creature",
+              targetHeightM: PLAYER_HEIGHT_M * 0.9,
+              clips: gltf.animations ?? [],
+              ground: true,
+              attachMixer: false,
             });
             root.userData.selectable = "hostile";
+            root.userData.voxelAnimBrain = fin.animBrain;
+            root.userData.convertedRole = fin.role;
+            root.traverse((o) => {
+              const m = o as THREE.Mesh;
+              if (m.isMesh) m.userData.selectable = "hostile";
+            });
             this.enemyTemplates[i] = root as THREE.Group;
+            console.info(
+              `[BrawlerScene] voxel creature ${path} scale=${fin.scale.toFixed(3)} brain=${Object.keys(fin.animBrain).join(",")}`,
+            );
             break;
           } catch {
             /* try next */

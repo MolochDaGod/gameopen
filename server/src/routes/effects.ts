@@ -9,7 +9,12 @@ import { config } from "../lib/config.js";
 const LOCAL_EFFECTS = [
   { id: "attack-slashes", name: "Attack Slashes", glb: "models/vfx/attack-slashes.glb", kind: "melee" },
   { id: "lightning", name: "Lightning", glb: "models/vfx/lightning.glb", kind: "magic" },
-  { id: "fireball", name: "Fireball", glb: "models/vfx/fireball.glb", kind: "projectile" },
+  // Staff bolts = discrete orbs (never whole fireball demo scene)
+  { id: "orb-fire", name: "Fire Orb", glb: "models/vfx/orbs/orb-fire.glb", kind: "projectile" },
+  { id: "orb-ember", name: "Ember Orb", glb: "models/vfx/orbs/orb-ember.glb", kind: "projectile" },
+  { id: "orb-core", name: "Arcane Core Orb", glb: "models/vfx/orbs/orb-core.glb", kind: "projectile" },
+  { id: "orb-flare", name: "Flare Orb", glb: "models/vfx/orbs/orb-flare.glb", kind: "projectile" },
+  { id: "fireball-scene", name: "Fireball Demo Scene", glb: "models/vfx/fireball.glb", kind: "demo" },
   { id: "explosion", name: "Explosion", glb: "models/vfx/explosion.glb", kind: "aoe" },
   { id: "explosive-orb", name: "Explosive Orb", glb: "models/vfx/explosive-orb.glb", kind: "projectile" },
   { id: "energy-beam", name: "Energy Beam", glb: "models/vfx/energy-beam.glb", kind: "beam" },
@@ -26,6 +31,15 @@ const LOCAL_EFFECTS = [
   { id: "muzzle", name: "Muzzle Flash", glb: "models/vfx/muzzle.glb", kind: "gun" },
   { id: "strawberry-strike", name: "Strawberry Strike", glb: "models/vfx/strawberry-strike.glb", kind: "melee" },
   { id: "light-of-slash", name: "Light of Slash", glb: "models/vfx/light-of-slash.glb", kind: "melee" },
+  { id: "slash-red", name: "Getsuga Red", glb: "models/vfx/slash/slashred.glb", kind: "melee" },
+  { id: "slash-blue", name: "Getsuga Blue", glb: "models/vfx/slash/slashblue.glb", kind: "melee" },
+  { id: "slash-purple", name: "Getsuga Purple", glb: "models/vfx/slash/slashpurple.glb", kind: "melee" },
+  { id: "slash-yellow", name: "Getsuga Yellow", glb: "models/vfx/slash/slashyellow.glb", kind: "melee" },
+  { id: "fire-tornado", name: "Fire Tornado", glb: "models/vfx/stylized-fire-tornado.glb", kind: "aoe" },
+  { id: "meteor", name: "Meteor", glb: "models/vfx/meteor.glb", kind: "projectile" },
+  { id: "dragon", name: "Dragon Bolt", glb: "models/vfx/dragon.glb", kind: "projectile" },
+  { id: "soul", name: "Soul", glb: "models/vfx/soul.glb", kind: "projectile" },
+  { id: "burst-laser", name: "Burst Laser", glb: "models/vfx/burst-laser.glb", kind: "beam" },
 ] as const;
 
 const router = Router();

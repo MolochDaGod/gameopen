@@ -116,6 +116,16 @@ export function skillSlotMedia(
   opts?: { cdnUrl?: string | null },
 ): { iconUrl: string; localName: string } {
   const fromSlot = resolveSlotIconUrl(role, weaponId, { cdnUrl: opts?.cdnUrl });
+  // resolveSlotIconUrl already returns local /icons/skill_nobg or pack CDN URLs.
+  // Only re-resolve relative pack paths — never re-prefix skill_nobg onto R2 assets
+  // (assets.grudge-studio.com/icons/skill_nobg/* 404s).
+  if (
+    fromSlot.startsWith("http") ||
+    fromSlot.startsWith("/icons/skill_nobg/") ||
+    fromSlot.startsWith("/icons/")
+  ) {
+    return { iconUrl: fromSlot, localName: role };
+  }
   const abs = cdnIconUrl(fromSlot) || fromSlot;
   return { iconUrl: abs, localName: role };
 }

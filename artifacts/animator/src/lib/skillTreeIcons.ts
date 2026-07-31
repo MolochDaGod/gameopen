@@ -112,8 +112,11 @@ export function resolveCatalogIconPath(pathOrUrl: string): string | null {
     return `${SKILL_ICON_HOSTS[0]}/${p}`;
   }
 
-  // Pack / abilities / weapons → assets R2 (+ CDN_REMAP)
-  return cdnIconUrl(`/${p}`) || `${ASSETS_CDN}/${p}`;
+  // Pack / abilities / weapons → assets R2 (+ CDN_REMAP).
+  // cdnIconUrl now keeps skill_nobg off R2; safe for mixed paths.
+  const resolved = cdnIconUrl(`/${p}`);
+  if (resolved) return resolved;
+  return `${ASSETS_CDN}/${p}`;
 }
 
 function isSkillCatalogPath(rel: string): boolean {

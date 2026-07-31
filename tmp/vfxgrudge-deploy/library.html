@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grudge VFX Library — GLB pack</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b0d12; --panel:#141822; --line:#2a3344; --txt:#e8eef8; --mut:#8b97ab; --acc:#ff7a2f; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+    header { padding: 14px 18px; border-bottom: 1px solid var(--line); display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+    header h1 { font-size: 16px; margin:0; letter-spacing:.02em; }
+    header a { color: var(--acc); text-decoration:none; font-size:13px; }
+    header .note { color: var(--mut); font-size:12px; }
+    main { display:grid; grid-template-columns: 280px 1fr; height: calc(100vh - 54px); }
+    #list { overflow:auto; border-right:1px solid var(--line); background: var(--panel); padding:8px; }
+    .item { display:block; width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--txt); padding:8px 10px; border-radius:8px; cursor:pointer; margin-bottom:4px; }
+    .item:hover, .item.active { border-color: var(--line); background:#1b2230; }
+    .item .id { font-weight:600; font-size:13px; }
+    .item .meta { color:var(--mut); font-size:11px; margin-top:2px; }
+    .tag { display:inline-block; font-size:10px; padding:1px 6px; border-radius:999px; background:#243044; color:#9ec0ff; margin-right:4px; }
+    .tag.anim { background:#2a3a24; color:#9dffb0; }
+    .tag.slash { background:#3a2430; color:#ffb0c8; }
+    .tag.cast { background:#2a2840; color:#c8b0ff; }
+    .tag.orb { background:#3a2a18; color:#ffc48a; }
+    #view { position:relative; }
+    canvas { display:block; width:100%; height:100%; }
+    #hud { position:absolute; left:12px; bottom:12px; right:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; pointer-events:none; }
+    #hud > * { pointer-events:auto; }
+    button.ctrl { background:#1b2230; border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:12px; }
+    button.ctrl:hover { border-color: var(--acc); }
+    #status { color:var(--mut); font-size:12px; margin-left:auto; }
+    @media (max-width: 800px) { main { grid-template-columns: 1fr; grid-template-rows: 40% 1fr; } #list { border-right:0; border-bottom:1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grudge VFX Library</h1>
+    <a href="/">← Fantasy Sandbox</a>
+    <span class="note">Orbs · slash · magic cast · animated GLBs (SI-ish). Staff bolts use <code>models/vfx/orbs/*</code> — never whole fireball scene.</span>
+  </header>
+  <main>
+    <aside id="list"></aside>
+    <section id="view">
+      <div id="hud">
+        <button class="ctrl" id="btnPlay">Play / Pause anim</button>
+        <button class="ctrl" id="btnReset">Reset cam</button>
+        <span id="status">Loading catalog…</span>
+      </div>
+    </section>
+  </main>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const statusEl = document.getElementById('status');
+    const listEl = document.getElementById('list');
+    let catalog = { effects: [] };
+    let currentRoot = null;
+    let mixer = null;
+    let playing = true;
+    let clock = new THREE.Clock();
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0d12);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 200);
+    camera.position.set(2.2, 1.6, 2.8);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    document.getElementById('view').appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.6, 0);
+    controls.update();
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffe6c8, 1.2);
+    key.position.set(4, 8, 3);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x88aaff, 0.35);
+    fill.position.set(-3, 2, -2);
+    scene.add(fill);
+    const grid = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
+    scene.add(grid);
+
+    const loader = new GLTFLoader();
+
+    function resize() {
+      const el = document.getElementById('view');
+      const w = el.clientWidth, h = el.clientHeight;
+      camera.aspect = w / Math.max(1, h);
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function tagClass(tags = []) {
+      if (tags.includes('orb')) return 'orb';
+      if (tags.includes('slash') || tags.includes('melee')) return 'slash';
+      if (tags.includes('cast') || tags.includes('magic')) return 'cast';
+      if (tags.includes('anim')) return 'anim';
+      return '';
+    }
+
+    function renderList(activeId) {
+      listEl.innerHTML = '';
+      for (const e of catalog.effects) {
+        const btn = document.createElement('button');
+        btn.className = 'item' + (e.id === activeId ? ' active' : '');
+        const tags = (e.tags || []).map(t => `<span class="tag ${tagClass([t])}">${t}</span>`).join('');
+        btn.innerHTML = `<div class="id">${e.name}</div><div class="meta">${tags}${e.path}</div>`;
+        btn.onclick = () => loadEffect(e.id);
+        listEl.appendChild(btn);
+      }
+    }
+
+    async function loadEffect(id) {
+      const e = catalog.effects.find(x => x.id === id);
+      if (!e) return;
+      renderList(id);
+      statusEl.textContent = `Loading ${e.path}…`;
+      if (currentRoot) {
+        scene.remove(currentRoot);
+        currentRoot.traverse(o => {
+          if (o.geometry) o.geometry.dispose?.();
+          if (o.material) {
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            mats.forEach(m => m.dispose?.());
+          }
+        });
+        currentRoot = null;
+      }
+      mixer = null;
+      try {
+        const gltf = await loader.loadAsync(e.path);
+        const root = gltf.scene || gltf.scenes[0];
+        // Center + fit roughly to 1.5m
+        const box = new THREE.Box3().setFromObject(root);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        root.position.sub(center);
+        const maxDim = Math.max(size.x, size.y, size.z, 1e-4);
+        const target = e.fitM || 1.5;
+        root.scale.multiplyScalar(target / maxDim);
+        root.position.y += (size.y * (target / maxDim)) * 0.5;
+        scene.add(root);
+        currentRoot = root;
+        if (gltf.animations?.length) {
+          mixer = new THREE.AnimationMixer(root);
+          for (const clip of gltf.animations) {
+            const a = mixer.clipAction(clip);
+            a.play();
+          }
+          statusEl.textContent = `${e.name} · ${gltf.animations.length} anim · ${(maxDim).toFixed(2)} raw max`;
+        } else {
+          statusEl.textContent = `${e.name} · static · raw max ${maxDim.toFixed(2)}`;
+        }
+        location.hash = e.id;
+      } catch (err) {
+        statusEl.textContent = `Failed: ${e.path} — ${err.message || err}`;
+      }
+    }
+
+    document.getElementById('btnPlay').onclick = () => { playing = !playing; };
+    document.getElementById('btnReset').onclick = () => {
+      camera.position.set(2.2, 1.6, 2.8);
+      controls.target.set(0, 0.6, 0);
+      controls.update();
+    };
+
+    function tick() {
+      requestAnimationFrame(tick);
+      const dt = clock.getDelta();
+      if (playing && mixer) mixer.update(dt);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    tick();
+
+    try {
+      catalog = await (await fetch('/models/vfx-catalog.json')).json();
+      statusEl.textContent = `${catalog.effects.length} effects`;
+      renderList();
+      const want = (location.hash || '').replace(/^#/, '') || catalog.effects[0]?.id;
+      if (want) loadEffect(want);
+    } catch (err) {
+      statusEl.textContent = 'Catalog missing — deploy models/vfx-catalog.json';
+    }
+  </script>
+</body>
+</html>

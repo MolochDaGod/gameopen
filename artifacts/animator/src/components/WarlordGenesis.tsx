@@ -45,6 +45,8 @@ const INITIAL_STATE: WarlordGenesisState = {
   wave: 0,
   maxWaves: 4,
   kills: 0,
+  xp: 0,
+  buffId: null,
   bossHp: 200,
   bossMaxHp: 200,
   bossName: "Karate Warlord",
@@ -54,10 +56,14 @@ const INITIAL_STATE: WarlordGenesisState = {
 
 // ── component ─────────────────────────────────────────────────────────────────
 
-export function WarlordGenesis({ onExit }: Props) {
+export function WarlordGenesis({
+  onExit,
+  onOpenFullMoba,
+}: Props & { onOpenFullMoba?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef  = useRef<WarlordGenesisScene | null>(null);
   const [s, setS] = useState<WarlordGenesisState>(INITIAL_STATE);
+  const [bootError, setBootError] = useState<string | null>(null);
 
   // Pre-select fleet character race; normalize common race id aliases from Builder.
   const [selectedRace, setSelectedRace] = useState<string | null>(() => {
@@ -66,29 +72,64 @@ export function WarlordGenesis({ onExit }: Props) {
     const alias: Record<string, string> = {
       human: "human",
       western: "human",
+      "western-kingdoms": "human",
+      "western_kingdoms": "human",
+      wk: "human",
       orc: "orc",
+      orcs: "orc",
       undead: "undead",
       barbarian: "barbarian",
+      barbarians: "barbarian",
       dwarf: "dwarf",
+      dwarves: "dwarf",
       high_elf: "high_elf",
       highelf: "high_elf",
+      "high-elves": "high_elf",
       elf: "high_elf",
     };
     return alias[raw] ?? (RACE_CARDS.some((r) => r.id === raw) ? raw : null);
   });
   const characterName = gameSession.selectedCharacter()?.name ?? null;
 
+  // Ensure fleet roster / guest session is ready (empty select still playable)
+  useEffect(() => {
+    if (!gameSession.snapshot.ready) {
+      void gameSession.boot().catch(() => undefined);
+    }
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let scene: WarlordGenesisScene | null = null;
+    let cancelled = false;
     try {
-      scene = new WarlordGenesisScene(canvas, setS);
+      scene = new WarlordGenesisScene(canvas, (st) => {
+        if (!cancelled) setS(st);
+      });
       sceneRef.current = scene;
+      setBootError(null);
     } catch (err) {
       console.warn("[WarlordGenesis] scene init failed", err);
+      setBootError(err instanceof Error ? err.message : "WebGL init failed");
+      setS((prev) => ({
+        ...prev,
+        phase: "select",
+        hint: "3D failed to start — pick a race or open Full MOBA.",
+      }));
     }
+    // Safety: never leave UI stuck on loading if scene hangs
+    const hang = window.setTimeout(() => {
+      if (cancelled) return;
+      setS((prev) =>
+        prev.phase === "loading"
+          ? { ...prev, phase: "select", hint: "Choose your race to begin." }
+          : prev,
+      );
+    }, 12_000);
     return () => {
+      cancelled = true;
+      window.clearTimeout(hang);
       scene?.dispose();
       sceneRef.current = null;
     };
@@ -127,8 +168,13 @@ export function WarlordGenesis({ onExit }: Props) {
         <div style={loadingOverlay}>
           <div style={spinner} />
           <div style={{ marginTop: 14, color: "#9fb8da", fontSize: 14 }}>
-            Loading Warlord Genesis…
+            {s.hint || "Loading Warlord Genesis…"}
           </div>
+          {bootError && (
+            <div style={{ marginTop: 10, color: "#ff8a8a", fontSize: 12, maxWidth: 360 }}>
+              {bootError}
+            </div>
+          )}
         </div>
       )}
 
@@ -163,17 +209,34 @@ export function WarlordGenesis({ onExit }: Props) {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            style={{ ...startBtn, opacity: selectedRace ? 1 : 0.45, cursor: selectedRace ? "pointer" : "default" }}
-            disabled={!selectedRace}
-            onClick={handleStartCampaign}
-          >
-            ⚔ START CAMPAIGN
-          </button>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
+            <button
+              type="button"
+              style={{ ...startBtn, opacity: selectedRace ? 1 : 0.45, cursor: selectedRace ? "pointer" : "default" }}
+              disabled={!selectedRace}
+              onClick={handleStartCampaign}
+            >
+              ⚔ START CAMPAIGN
+            </button>
+            {onOpenFullMoba && (
+              <button
+                type="button"
+                style={{
+                  ...startBtn,
+                  background: "rgba(40, 90, 150, 0.35)",
+                  borderColor: "rgba(102,192,244,0.45)",
+                  color: "#8ec3ff",
+                }}
+                onClick={onOpenFullMoba}
+                title="3-lane MOBA SPA with fleet handoff"
+              >
+                Full MOBA ↗
+              </button>
+            )}
+          </div>
           <div style={{ marginTop: 14, color: "#8aa0bc", fontSize: 12, textAlign: "center", maxWidth: 420 }}>
-            WASD move · LMB melee · <b style={{ color: "#ffd24d" }}>E fire cannon</b> · third-person camera.
-            Skeleton warriors use unit-fixed scale (no 100×).
+            Native Open arena · WASD move · LMB melee · <b style={{ color: "#ffd24d" }}>E fire cannon</b>.
+            Full MOBA opens warlord-genesis.vercel.app with your fleet hero.
           </div>
         </div>
       )}

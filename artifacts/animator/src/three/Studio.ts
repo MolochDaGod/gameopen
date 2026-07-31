@@ -10,6 +10,13 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
 import { parseGrudgeAvatarId } from "../lib/raceModel";
+import {
+  animPackForCombatStyle,
+  getCombatStyle,
+  loadStoredCombatStyle,
+  storeCombatStyle,
+  type CombatStyleId,
+} from "./grudge/combatStyles";
 import { resolveHudPortrait } from "../lib/hudPortrait";
 import {
   isWeaponSkillSlotUnlocked,
@@ -1741,6 +1748,8 @@ export class Studio {
 
   /** Account / main-panel mesh_ids applied on next grudge6 spawn. */
   private pendingMeshIds: string[] | null = null;
+  /** Combat motion style (Samurai / Knight / …). `auto` follows weapon. */
+  private combatStyleId: CombatStyleId = loadStoredCombatStyle();
   private lastSpawnMeshKey = "";
   /** Mine-Loader-style body tints for procedural Explorer (tier armor). */
   private pendingExplorerTints: {
@@ -1786,9 +1795,11 @@ export class Studio {
     // (the active fleet character's race); anything else is a catalog rig.
     const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
+    const stylePack = animPackForCombatStyle(this.combatStyleId);
     let next: Avatar = grudge
       ? new GrudgeAvatar(grudge.raceId, grudge.presetId, {
           meshIds: this.pendingMeshIds || undefined,
+          animPack: stylePack || undefined,
         })
       : def.procedural
         ? new ExplorerCharacter(def)
@@ -2474,6 +2485,40 @@ export class Studio {
       return;
     }
     this.applyWeapon(id);
+  }
+
+  /** Current combat motion style (Admin picker). */
+  getCombatStyle(): CombatStyleId {
+    return this.combatStyleId;
+  }
+
+  /**
+   * Player choice: Samurai / Knight / Spearman / … retargeted packs.
+   * Reloads grudge6 anim director; Explorer keeps weapon-driven clips.
+   */
+  setCombatStyle(styleId: CombatStyleId | string): void {
+    const style = getCombatStyle(styleId);
+    this.combatStyleId = style.id;
+    storeCombatStyle(style.id);
+    const pack = animPackForCombatStyle(style.id);
+    if (this.character instanceof GrudgeAvatar) {
+      void this.character.setAnimPack(pack).then(() => {
+        // Refresh skill labels for the new pack
+        const t0 = t0SignatureSkills(this.weaponId);
+        if (t0.length && this.character?.def) {
+          const clips = style.skillClips;
+          this.character.def.signatureSkills = t0.map((s, i) => ({
+            label: s.label,
+            clip: (clips && clips[i]) || s.clip || "attack",
+            kind: s.kind,
+            mode: s.mode,
+          }));
+        }
+        this.setCombatFlash(`STYLE · ${style.label.toUpperCase()}`, 0.9);
+      });
+    } else {
+      this.setCombatFlash(`STYLE · ${style.label} (grudge6 heroes only)`, 1.2);
+    }
   }
 
   /**
@@ -5690,11 +5735,8 @@ export class Studio {
     {
       const wElement = getWeapon(this.weaponId).element;
       if (wElement && !(this.isIceStaff() && isSig)) {
-        const theme = ELEMENT_THEME[wElement];
-        if (theme.projectile === "laser" || wElement === "storm" || wElement === "fire") {
-          // Beam cast with element tint (storm launch / fire explode profiles)
-          return this.doStaffBeamCast(isSig ? signatureIndex! : undefined);
-        }
+        // Elemental staffs loose themed magic orbs (orb-*.glb) — not whole fireball scene.
+        // Beam stays available via dedicated staff kit slots (doStaffBeamCast).
         return this.doElementalCast(wElement, isSig ? signatureIndex! : undefined);
       }
     }
@@ -8447,6 +8489,12 @@ export class Studio {
         const from = muzzle();
         const to = picked ? picked.position.clone() : from.clone().addScaledVector(fwd, 16);
         switch (theme.projectile) {
+          case "orbFire":
+          case "orbEmber":
+          case "orbCore":
+          case "orbFlare":
+            this.vfx.castMagicOrbAt(theme.projectile, from, to, color, onHit);
+            break;
           case "dragon":
             this.vfx.castDragonAt(from, to, color, onHit);
             break;

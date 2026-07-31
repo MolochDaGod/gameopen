@@ -12,8 +12,19 @@ import type { StatusScope } from "../abilities/abilityTypes";
  * the two never drift. No `three` / engine imports keeps it unit-testable.
  */
 
-/** The travelling-effect family an element casts (maps to a `Vfx.cast*At` call). */
-export type ElementProjectile = "dragon" | "darkBlades" | "laser" | "soul";
+/**
+ * Travelling-effect family an element casts (maps to a `Vfx.cast*At` call).
+ * `orb*` = discrete staff orbs from models/vfx/orbs/ (never whole fireball.glb).
+ */
+export type ElementProjectile =
+  | "dragon"
+  | "darkBlades"
+  | "laser"
+  | "soul"
+  | "orbFire"
+  | "orbEmber"
+  | "orbCore"
+  | "orbFlare";
 
 export interface ElementTheme {
   /** Short school name shown in UI. */
@@ -32,9 +43,9 @@ export interface ElementTheme {
 
 /** The canonical element table — one entry per {@link StaffElement}. */
 export const ELEMENT_THEME: Record<StaffElement, ElementTheme> = {
-  fire: { label: "Fire", color: 0xff6a1e, status: "burning", scope: "hostile", projectile: "dragon", castClip: "magicAttack" },
-  ice: { label: "Ice", color: 0x9fdcff, status: "frozen", scope: "hostile", projectile: "darkBlades", castClip: "magicAttack" },
-  storm: { label: "Storm", color: 0xb070ff, status: "shocked", scope: "hostile", projectile: "laser", castClip: "magicAttack" },
-  nature: { label: "Nature", color: 0x6ee36e, status: "poisoned", scope: "hostile", projectile: "soul", castClip: "magicAttack" },
-  holy: { label: "Holy", color: 0xffe08a, status: "blessed", scope: "self", projectile: "soul", castClip: "magicArea" },
+  fire: { label: "Fire", color: 0xff6a1e, status: "burning", scope: "hostile", projectile: "orbFire", castClip: "magicAttack" },
+  ice: { label: "Ice", color: 0x9fdcff, status: "frozen", scope: "hostile", projectile: "orbCore", castClip: "magicAttack" },
+  storm: { label: "Storm", color: 0xb070ff, status: "shocked", scope: "hostile", projectile: "orbEmber", castClip: "magicAttack" },
+  nature: { label: "Nature", color: 0x6ee36e, status: "poisoned", scope: "hostile", projectile: "orbCore", castClip: "magicAttack" },
+  holy: { label: "Holy", color: 0xffe08a, status: "blessed", scope: "self", projectile: "orbFlare", castClip: "magicArea" },
 };

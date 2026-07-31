@@ -18,7 +18,18 @@ export const VOXEL_BLOCK_METERS = 1;
 /** Axis-aligned size of a mesh AABB in native file units. */
 export type NativeBounds = { x: number; y: number; z: number };
 
-export type AssetRole = "prop" | "map_chunk" | "structure" | "kit_module" | "unknown";
+export type AssetRole =
+  | "prop"
+  | "map_chunk"
+  | "structure"
+  | "kit_module"
+  /** Converted voxel / blocky playable character (SI ~1.8 m) */
+  | "character"
+  /** Boss / elite — taller than hero, never prop-crushed */
+  | "boss"
+  /** Animals, creeps, AI brain units */
+  | "creature"
+  | "unknown";
 
 export type AssetEvalInput = {
   /** File basename or catalog id, e.g. castle_eltz.glb */
@@ -53,7 +64,26 @@ const MAP_NAME_RE =
 
 /** Names that are small props even if large files (textures/atlases). */
 const PROP_NAME_RE =
-  /torch|barrel|crate|chest|bench|table|chair|fence|gate|hay|pumpkin|chicken|sword|axe|hammer|tool|icon|atlas|kit_wall|kit_floor/i;
+  /torch|barrel|crate|chest|bench|table|chair|fence|gate|hay|pumpkin|sword|axe|hammer|tool|icon|atlas|kit_wall|kit_floor/i;
+
+/** Voxel / converted character kits (fit to ~1.8 m human). */
+const CHARACTER_NAME_RE =
+  /character|hero|player|avatar|warlord|voxel.?char|steve|alex|npc_human|crew|sailor|pirate_human/i;
+
+/** Bosses — taller SI fit, never map-scale or prop-crush. */
+const BOSS_NAME_RE =
+  /boss|dragon|golem|titan|behemoth|lich|warlord.?boss|elite|raid|hellmaw|karate.?warlord|ogre.?king/i;
+
+/** Creatures / AI brain units / jungle creeps. */
+const CREATURE_NAME_RE =
+  /zombie|skeleton|creep|animal|wolf|bear|chicken|cow|pig|horse|spider|slime|goblin|orc.?foe|jungle|unit|mob|enemy|ai.?brain|minion/i;
+
+/** SI height targets for converted GLB roles (metres). */
+export const VOXEL_ROLE_HEIGHT_M: Record<"character" | "boss" | "creature", number> = {
+  character: 1.8,
+  boss: 2.6,
+  creature: 1.5,
+};
 
 /**
  * Classify a GLB for seed / editor placement.
@@ -79,6 +109,31 @@ export function evaluateAssetRole(input: AssetEvalInput): AssetEvalResult {
     // Kit pieces are authored at 1 unit = 1 block already
     return finish("kit_module", "building-kit module", 1, bounds);
   }
+
+  // Converted characters / bosses / creatures — height-fit, never map block grid
+  if (
+    tags.includes("character") ||
+    tags.includes("hero") ||
+    tags.includes("boss") ||
+    tags.includes("creature") ||
+    tags.includes("enemy") ||
+    BOSS_NAME_RE.test(name) ||
+    CHARACTER_NAME_RE.test(name) ||
+    CREATURE_NAME_RE.test(name)
+  ) {
+    const role: AssetRole = tags.includes("boss") || BOSS_NAME_RE.test(name)
+      ? "boss"
+      : tags.includes("character") || tags.includes("hero") || CHARACTER_NAME_RE.test(name)
+        ? "character"
+        : "creature";
+    const targetH = VOXEL_ROLE_HEIGHT_M[role];
+    const scale =
+      maxDim > 0.001
+        ? scalePropToHeight(bounds, targetH)
+        : 1;
+    return finish(role, `${role} SI height-fit → ${targetH} m`, scale, bounds);
+  }
+
   if (PROP_NAME_RE.test(name) && maxDim < 25 && bytes < 8_000_000) {
     return finish("prop", "prop-like name + modest size", 1, bounds);
   }
@@ -207,8 +262,103 @@ function finish(
     reason,
     scale: s,
     footprintBlocks: footprintAfterScale(bounds, s),
-    forbidPropHeightFit: role === "map_chunk" || role === "structure",
+    forbidPropHeightFit:
+      role === "map_chunk" || role === "structure" || role === "character" || role === "boss" || role === "creature",
   };
+}
+
+/**
+ * Clip name → AI brain / locomotion pattern for converted voxel characters & bosses.
+ * Used by Open combat AI, jungle camps, and brawler waves.
+ */
+export type VoxelAnimPattern =
+  | "idle"
+  | "walk"
+  | "run"
+  | "attack"
+  | "attack2"
+  | "hit"
+  | "death"
+  | "spawn"
+  | "roar"
+  | "cast"
+  | "unknown";
+
+const ANIM_PATTERN_RULES: Array<{ pattern: VoxelAnimPattern; re: RegExp }> = [
+  { pattern: "death", re: /death|die|dead|ko|fall/i },
+  { pattern: "hit", re: /hit|hurt|react|flinch|damage/i },
+  { pattern: "spawn", re: /spawn|appear|rise|emerge/i },
+  { pattern: "roar", re: /roar|scream|howl|taunt/i },
+  { pattern: "cast", re: /cast|spell|magic|channel/i },
+  { pattern: "attack2", re: /attack.?2|combo|heavy|skill|special/i },
+  { pattern: "attack", re: /attack|slash|bite|swing|melee|strike/i },
+  { pattern: "run", re: /run|sprint|chase/i },
+  { pattern: "walk", re: /walk|move|locomotion|patrol/i },
+  { pattern: "idle", re: /idle|stand|breath|rest|tpose|t-pose/i },
+];
+
+export function matchVoxelAnimPattern(clipName: string): VoxelAnimPattern {
+  for (const rule of ANIM_PATTERN_RULES) {
+    if (rule.re.test(clipName)) return rule.pattern;
+  }
+  return "unknown";
+}
+
+/**
+ * Build an AI brain anim table from clip names (converted GLB animations).
+ * Prefers first match per pattern; useful for DeckCrew / creep AI / bosses.
+ */
+export function buildVoxelAnimBrain(
+  clipNames: string[],
+): Partial<Record<VoxelAnimPattern, string>> {
+  const out: Partial<Record<VoxelAnimPattern, string>> = {};
+  for (const name of clipNames) {
+    const p = matchVoxelAnimPattern(name);
+    if (p === "unknown") continue;
+    if (!out[p]) out[p] = name;
+  }
+  return out;
+}
+
+/**
+ * Scale a converted voxel GLB into the world using role + optional measured bounds.
+ * Prefer this over ad-hoc Box3 height fits in scenes.
+ */
+export function scaleConvertedVoxelAsset(input: {
+  name: string;
+  bounds: NativeBounds;
+  tags?: string[];
+  forceRole?: AssetRole;
+  /** Override SI height for character/boss/creature */
+  targetHeightM?: number;
+}): AssetEvalResult {
+  if (input.forceRole === "map_chunk" || input.forceRole === "structure") {
+    return placementScaleForAsset({
+      name: input.name,
+      bounds: input.bounds,
+      tags: input.tags,
+      forceMap: true,
+    });
+  }
+  if (
+    input.forceRole === "character" ||
+    input.forceRole === "boss" ||
+    input.forceRole === "creature"
+  ) {
+    const h =
+      input.targetHeightM ??
+      VOXEL_ROLE_HEIGHT_M[input.forceRole];
+    const scale = scalePropToHeight(input.bounds, h);
+    return finish(input.forceRole, `forced ${input.forceRole} @ ${h}m`, scale, input.bounds);
+  }
+  return placementScaleForAsset(
+    {
+      name: input.name,
+      bounds: input.bounds,
+      tags: input.tags,
+    },
+    input.targetHeightM,
+  );
 }
 
 /** Catalog row for a seed-placeable map chunk (castle, island, fort). */

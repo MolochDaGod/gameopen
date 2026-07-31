@@ -53,7 +53,7 @@ describe("characterPortrait", () => {
     expect(p.paperRace).toBe("orc");
   });
 
-  it("uses race-class candidates for warlords-style heroes", () => {
+  it("uses shipped race PNG for warlords-style heroes (no phantom class paths)", () => {
     const p = resolveCharacterPortrait({
       id: "c2",
       name: "WK",
@@ -61,13 +61,14 @@ describe("characterPortrait", () => {
       classId: "knight",
     });
     expect(p.isVoxel).toBe(false);
-    expect(p.candidates.some((u) => u.includes("human_knight") || u.includes("human"))).toBe(
-      true,
-    );
+    expect(p.url).toMatch(/races\/human\.png/);
+    // Until portraits/human_knight.png ships, do not request it (console 404)
+    expect(p.url).not.toMatch(/human_knight/);
+    expect(p.candidates.some((u) => u.includes("human_knight"))).toBe(false);
     expect(p.url.length).toBeGreaterThan(0);
   });
 
-  it("routes voxel characters to voxel-head paths", () => {
+  it("routes voxel characters without requesting missing voxel art", () => {
     const p = resolveCharacterPortrait({
       id: "c3",
       name: "Blocky",
@@ -75,8 +76,8 @@ describe("characterPortrait", () => {
       saveData: { open: { kind: "voxel" } },
     });
     expect(p.isVoxel).toBe(true);
-    expect(
-      p.url.includes("voxel") || p.candidates.some((u) => u.includes("voxel")),
-    ).toBe(true);
+    // No voxel-head.png shipped yet → fall through to race PNG
+    expect(p.url).toMatch(/races\/human\.png/);
+    expect(p.candidates.some((u) => u.includes("voxel-head"))).toBe(false);
   });
 });

@@ -188,6 +188,10 @@ export const EMBED_FRIENDLY_HOSTS = [
   "play.grudge-studio.com",
   "forge.grudge-studio.com",
   "grudgewarlords.com",
+  /** Character customizer / Mixamo rig tool — Open library + in-app canvas */
+  "asset-rig-editor.vercel.app",
+  /** Asset ingest → bake → R2 → Forge handoff */
+  "grudge-pipeline.vercel.app",
 ] as const;
 
 /** Hosts that refuse iframes (pop-out or rewrite required). */

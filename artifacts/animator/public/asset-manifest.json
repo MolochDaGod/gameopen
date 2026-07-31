@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-27T22:49:11.996Z",
+  "generatedAt": "2026-07-29T02:43:53.064Z",
   "game": "gameopen",
   "count": 1648,
   "byKind": {
@@ -27,7 +27,7 @@
     "map": 26,
     "character": 8
   },
-  "totalBytes": 4133002536,
+  "totalBytes": 4133002803,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -7006,7 +7006,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 21069,
+      "bytes": 21336,
       "category": "content/anims"
     },
     {

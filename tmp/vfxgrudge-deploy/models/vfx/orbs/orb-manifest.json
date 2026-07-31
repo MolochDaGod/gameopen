@@ -1,0 +1,101 @@
+{
+  "source": "models/vfx/fireball.glb",
+  "note": "NEVER use whole fireball.glb as staff projectile — use these orbs",
+  "generatedAt": "2026-07-29T10:42:57.350Z",
+  "targetDiameterM": 0.45,
+  "method": "explicit cluster roots + center + SI scale on root + compact bin",
+  "orbs": [
+    {
+      "id": "orb-fire",
+      "label": "Fire Orb",
+      "element": "fire",
+      "file": "models/vfx/orbs/orb-fire.glb",
+      "nodeCount": 5,
+      "nodes": [
+        "Object_4",
+        "Object_6",
+        "Object_8",
+        "Object_10",
+        "Object_12"
+      ],
+      "bytes": 1552612,
+      "targetDiameterM": 0.45,
+      "sourceMaxDim": 88.716,
+      "bakedScale": 0.005072,
+      "staffUse": {
+        "projectileScale": 1,
+        "tipScale": 0.55,
+        "chargeScale": 0.8
+      }
+    },
+    {
+      "id": "orb-ember",
+      "label": "Ember Orb",
+      "element": "storm",
+      "file": "models/vfx/orbs/orb-ember.glb",
+      "nodeCount": 5,
+      "nodes": [
+        "Object_18",
+        "Object_22",
+        "Object_24",
+        "Object_26",
+        "Object_58"
+      ],
+      "bytes": 1552656,
+      "targetDiameterM": 0.45,
+      "sourceMaxDim": 88.716,
+      "bakedScale": 0.005072,
+      "staffUse": {
+        "projectileScale": 1,
+        "tipScale": 0.55,
+        "chargeScale": 0.8
+      }
+    },
+    {
+      "id": "orb-core",
+      "label": "Arcane Core Orb",
+      "element": "arcane",
+      "file": "models/vfx/orbs/orb-core.glb",
+      "nodeCount": 5,
+      "nodes": [
+        "Object_30",
+        "Object_34",
+        "Object_36",
+        "Object_50",
+        "Object_52"
+      ],
+      "bytes": 1552420,
+      "targetDiameterM": 0.45,
+      "sourceMaxDim": 88.716,
+      "bakedScale": 0.005072,
+      "staffUse": {
+        "projectileScale": 1,
+        "tipScale": 0.55,
+        "chargeScale": 0.8
+      }
+    },
+    {
+      "id": "orb-flare",
+      "label": "Flare Orb",
+      "element": "holy",
+      "file": "models/vfx/orbs/orb-flare.glb",
+      "nodeCount": 5,
+      "nodes": [
+        "Object_40",
+        "Object_44",
+        "Object_46",
+        "Object_48",
+        "Object_54"
+      ],
+      "bytes": 1552440,
+      "targetDiameterM": 0.45,
+      "sourceMaxDim": 88.716,
+      "bakedScale": 0.005072,
+      "staffUse": {
+        "projectileScale": 1,
+        "tipScale": 0.55,
+        "chargeScale": 0.8
+      }
+    }
+  ]
+}

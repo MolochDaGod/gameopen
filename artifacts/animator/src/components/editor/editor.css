@@ -15,14 +15,38 @@
   font-family: inherit;
 }
 
-/* ── menubar shell (pro overhaul) ─────────────────────────────────────────── */
+/* ── menubar shell — sits under unified AppShell header (no overlap) ──────── */
 .ed-menubar-wrap {
   position: absolute;
-  top: 8px;
+  /* Clear shell-steam-bar height + safe area */
+  top: calc(var(--shell-header-h, 48px) + env(safe-area-inset-top, 0px) + 6px);
   left: 8px;
   right: 8px;
   pointer-events: auto;
-  z-index: 1100;
+  z-index: 700;
+}
+/* Compact bar: overflow tools live in dropdown menus, not a second top row */
+.ed-menubar-wrap .tm-bar {
+  height: 40px;
+  min-height: 40px;
+  overflow: visible;
+}
+.ed-menubar-wrap .tm-right {
+  gap: 4px;
+  flex-wrap: nowrap;
+  max-width: min(42vw, 420px);
+  overflow: visible;
+}
+/* Icon-only when space is tight — labels on hover via title */
+@media (max-width: 1100px) {
+  .ed-menubar-wrap .tm-btn span:not(.tm-trigger-icon) {
+    /* keep short labels; long mixer stays */
+  }
+  .ed-menubar-wrap .tm-right .tm-btn span:last-child {
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 .ed-menu-fields {
   display: flex;

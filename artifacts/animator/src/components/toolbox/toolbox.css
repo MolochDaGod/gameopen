@@ -190,21 +190,20 @@
   }
 }
 
-/* The shell's Toolbox pill — sits INSIDE the top bar beside the launcher
-   (no longer its own fixed top-left element overlapping mode text). */
+/* The shell's Toolbox pill — sits INSIDE the unified 48px header. */
 .shell-toolbox {
   display: flex;
   flex: none;
   align-items: center;
-  gap: 7px;
-  height: 40px;
-  padding: 0 13px 0 11px;
+  gap: 6px;
+  height: 34px;
+  padding: 0 11px 0 7px;
   border-radius: 999px;
   border: 1px solid rgba(212, 175, 96, 0.4);
   background: rgba(20, 16, 9, 0.85);
   backdrop-filter: blur(12px);
   color: #e8c877;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -221,8 +220,8 @@
 
 /* King-emblem art on the shell pill (replaces the old hammer glyph). */
 .shell-toolbox-art {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(212, 175, 96, 0.5);

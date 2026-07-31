@@ -45,6 +45,20 @@ import {
   SWORD_VOLLEY_LANDING_DIST,
 } from "./colliderVfxFrame";
 import type { PresetId, RaceId } from "../grudge";
+import {
+  animPackForCombatStyle,
+  loadStoredCombatStyle,
+  type CombatStyleId,
+} from "../grudge/combatStyles";
+import type { AnimPack } from "../grudge/anims";
+import {
+  deployCharacterModel,
+  findDeployModel,
+  reGroundAfterAnimSample,
+  diagnoseCharacterLook,
+} from "../characterDeploy";
+import { restoreCharacterMaterials } from "../fitCharacterHeight";
+import { stripPositionTracks } from "../clipTracks";
 import type { FireFxParams } from "../fxSettings";
 import type { SlashFxParams } from "../slashSettings";
 import type {
@@ -2020,7 +2034,11 @@ export class EditorScene {
    * (Explorer / Gunslinger) go through the animation-library rig path so they get
    * the full clip library + weapon arsenal; GLB fighters (Sensei / Brute /
    * Striker / Tera-Kasi) are streamed as dressable models with their baked clips
-   * exposed in the Animations panel. Normalises height to ~1.8m, feet on floor.
+   * exposed in the Animations panel.
+   *
+   * **Same SSOT as Danger Room** (grudge-character-correctness):
+   * restore materials → deployCharacterModel (1.8 m, XZ pelvis, feet Y, face +Z)
+   * → stripPositionTracks on clips → re-ground after anim sample.
    */
   async loadCatalogCharacter(charId: string): Promise<void> {
     const def = getCharacter(charId);
@@ -2038,20 +2056,29 @@ export class EditorScene {
         return;
       }
       const root = gltf.scene;
-      root.traverse((n) => {
-        const mesh = n as THREE.Mesh;
-        if (mesh.isMesh) mesh.castShadow = true;
-        n.frustumCulled = false;
+      root.userData.importPipeline = "glb-baked";
+      root.userData.importUrl = def.file;
+      // Materials + SI deploy (XZ hips, feet on y=0) — never pelvis-as-feet only
+      restoreCharacterMaterials(root, { neutralizeMetal: true });
+      const deploy = deployCharacterModel(root, {
+        targetHeightM: CHARACTER_HEIGHT_M,
+        authorScale: def.scale ?? 1,
+        facePlusZ: "auto",
+        groundY: 0,
       });
-      // Normalise to the canonical fighter height with feet on the floor (mirrors Character.load).
-      const box = new THREE.Box3().setFromObject(root);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const s = size.y > 0.001 ? (CHARACTER_HEIGHT_M / size.y) * def.scale : def.scale;
-      root.scale.setScalar(s);
-      const box2 = new THREE.Box3().setFromObject(root);
-      root.position.y -= box2.min.y;
-      root.rotation.y = def.modelYaw ?? 0;
+      // Optional author yaw on top of art-forward (catalog modelYaw)
+      if (def.modelYaw) {
+        root.rotation.y += def.modelYaw;
+        root.updateWorldMatrix(true, true);
+      }
+      const look = diagnoseCharacterLook(root);
+      if (!look.ok) {
+        console.warn("[EditorScene] catalog deploy look", def.id, look.errors, look.warnings);
+      }
+      console.info(
+        `[EditorScene] catalog deploy ${def.id} h=${deploy.heightM.toFixed(3)} ` +
+          `feetΔy=${deploy.groundDeltaY.toFixed(3)} pelvis=${deploy.pelvis?.name ?? "—"}`,
+      );
       this.scene.add(root);
       const rootId = this.registerSubtree(root, {
         kind: "model",
@@ -2071,7 +2098,10 @@ export class EditorScene {
         this.disposeObject3D(root);
         return;
       }
-      this.registerImportedClips(rootId, root, [...(gltf.animations ?? []), ...libClips]);
+      // Rotation-only on grounded kits — hip/root position tracks cause hip-float
+      const baked = (gltf.animations ?? []).map((c) => stripPositionTracks(c));
+      const retargeted = libClips.map((c) => stripPositionTracks(c));
+      this.registerImportedClips(rootId, root, [...baked, ...retargeted]);
       this.select(rootId);
     } catch (err) {
       console.error("[EditorScene] catalog character load failed", err);
@@ -2442,16 +2472,26 @@ export class EditorScene {
 
   /**
    * Stream a customizable Grudge race character (FBX + gear preset + body atlas +
-   * baked Bip001 clips) from the asset host, drop it into the scene, register its
-   * subtree so it's selectable/gizmo-able, and expose its clips for preview. The
-   * character idles until Play mode hands it to the Controller. Returns its root
-   * node id, or null on failure.
+   * baked Bip001 clips) — **same stack as Danger Room GrudgeAvatar**:
+   * equip → SI fit → atlas → XZ pelvis → feet Y → anim pack (style-aware) → director.
+   * Clips surface in the Animations panel; skeleton toggle uses Avatar API.
    */
-  async loadGrudgeCharacter(raceId: RaceId, presetId: PresetId): Promise<string | null> {
+  async loadGrudgeCharacter(
+    raceId: RaceId,
+    presetId: PresetId,
+    opts?: { animPack?: AnimPack | string },
+  ): Promise<string | null> {
     const token = ++this.grudgeToken;
     this.busy = true;
     this.emit();
-    const avatar = new GrudgeAvatar(raceId, presetId);
+    // Combat style from Danger Admin (samurai / knight / …) when no explicit pack
+    const stylePack =
+      opts?.animPack ||
+      animPackForCombatStyle(loadStoredCombatStyle() as CombatStyleId) ||
+      undefined;
+    const avatar = new GrudgeAvatar(raceId, presetId, {
+      animPack: stylePack || undefined,
+    });
     try {
       await avatar.load();
     } catch (err) {
@@ -2469,7 +2509,22 @@ export class EditorScene {
       }
       return null;
     }
+    // GrudgeAvatar already deployed model-local (feet Y=0, XZ pelvis). Root at origin.
     avatar.root.position.set(0, 0, 0);
+    // Post-idle re-ground (same as Danger after pose sample)
+    const model = findDeployModel(avatar.root);
+    if (model) {
+      reGroundAfterAnimSample(model, 0);
+      const look = diagnoseCharacterLook(model);
+      if (!look.ok) {
+        console.warn("[EditorScene] grudge look", raceId, look.errors, look.warnings);
+      } else {
+        console.info(
+          `[EditorScene] grudge ready ${raceId}/${presetId} pack=${avatar.getAnimPack() ?? "?"} ` +
+            `h=${look.heightM.toFixed(3)} feetY=${look.feetMinY.toFixed(3)}`,
+        );
+      }
+    }
     this.scene.add(avatar.root);
     const rootId = this.registerSubtree(avatar.root, {
       kind: "model",
@@ -2478,10 +2533,61 @@ export class EditorScene {
       baseName: avatar.def.name,
     });
     this.grudge.set(rootId, avatar);
+    // Register clip names for Animations panel (played via GrudgeAvatar API)
+    const clipNames = avatar.clipNames();
+    if (clipNames.length) {
+      // Empty AnimationClip stubs — previewImportedClip routes to avatar.playClipOnce
+      this.importedAnims.set(rootId, {
+        mixer: new THREE.AnimationMixer(avatar.root),
+        clips: clipNames.map((n) => new THREE.AnimationClip(n, 1, [])),
+      });
+    }
     this.busy = false;
     this.select(rootId);
     this.emit();
     return rootId;
+  }
+
+  /**
+   * Apply combat style (Samurai / Knight / …) to the selected grudge hero and
+   * refresh Animations panel clip list — same rules as Danger setCombatStyle.
+   */
+  async applyGrudgeCombatStyle(styleId: CombatStyleId | string): Promise<void> {
+    const id =
+      (this.selectedId && this.grudge.has(this.selectedId) && this.selectedId) ||
+      [...this.grudge.keys()][0];
+    if (!id) {
+      this.notify("Load a Grudge race character first.", "info");
+      return;
+    }
+    const avatar = this.grudge.get(id)!;
+    const pack = animPackForCombatStyle(styleId);
+    this.busy = true;
+    this.emit();
+    try {
+      await avatar.setAnimPack(pack);
+      const names = avatar.clipNames();
+      this.importedAnims.set(id, {
+        mixer: new THREE.AnimationMixer(avatar.root),
+        clips: names.map((n) => new THREE.AnimationClip(n, 1, [])),
+      });
+      const model = findDeployModel(avatar.root);
+      if (model) reGroundAfterAnimSample(model, 0);
+      this.notify(`Combat style · ${String(styleId)}`, "info");
+    } catch (e) {
+      console.warn("[EditorScene] combat style swap failed", e);
+      this.notify("Couldn't apply combat style.", "warn");
+    } finally {
+      this.busy = false;
+      this.emit();
+    }
+  }
+
+  /** Skeleton helper on selected grudge / catalog avatar (debug bones). */
+  setShowSkeleton(show: boolean): void {
+    for (const a of this.grudge.values()) a.setShowSkeleton(show);
+    this.rig?.setShowSkeleton?.(show);
+    this.emit();
   }
 
   /** Dispose + unregister one grudge character (stopping Play mode if it drives it). */
@@ -2489,6 +2595,8 @@ export class EditorScene {
     const avatar = this.grudge.get(rootId);
     if (!avatar) return;
     if (this.playAvatar === avatar) this.stopPlay();
+    this.importedAnims.delete(rootId);
+    if (this.importedPlaying?.startsWith(`${rootId}::`)) this.importedPlaying = null;
     this.unregisterSubtree(rootId);
     this.scene.remove(avatar.root);
     avatar.dispose();
@@ -3523,16 +3631,43 @@ export class EditorScene {
 
   /** Play one clip from an imported model (stops any other imported clip first). */
   previewImportedClip(rootId: string, clipName: string): void {
+    // Grudge6 / Danger path — use AnimationDirector one-shot + re-ground feet
+    const grudge = this.grudge.get(rootId);
+    if (grudge) {
+      this.haltImported();
+      const dur = grudge.playClipOnce(clipName, 0.12);
+      this.importedPlaying = `${rootId}::${clipName}`;
+      // After pose lands, re-sit soles (position-track / hip-float guard)
+      const model = findDeployModel(grudge.root);
+      if (model) {
+        const t = Math.min(0.2, Math.max(0.05, dur * 0.15));
+        window.setTimeout(() => {
+          if (this.disposed) return;
+          reGroundAfterAnimSample(model, 0);
+        }, t * 1000);
+      }
+      this.emit();
+      return;
+    }
     const entry = this.importedAnims.get(rootId);
     if (!entry) return;
     const clip = entry.clips.find((c) => c.name === clipName);
     if (!clip) return;
     this.haltImported();
-    const action = entry.mixer.clipAction(clip);
+    // Always strip residual position tracks before play (catalog/retarget safety)
+    const safe = stripPositionTracks(clip);
+    const action = entry.mixer.clipAction(safe);
     action.reset();
+    action.setLoop(THREE.LoopRepeat, Infinity);
     action.play();
     this.importedAction = action;
     this.importedPlaying = `${rootId}::${clipName}`;
+    // Re-ground after first frame sample (XZ hips / feet Y SSOT)
+    const rootObj = this.find(rootId)?.object;
+    window.setTimeout(() => {
+      if (this.disposed || !rootObj) return;
+      reGroundAfterAnimSample(rootObj, 0);
+    }, 50);
     this.emit();
   }
 
@@ -3549,6 +3684,12 @@ export class EditorScene {
       this.importedAction = null;
     }
     for (const a of this.importedAnims.values()) a.mixer.stopAllAction();
+    // Grudge one-shots return to idle (same as Danger after attack)
+    if (this.importedPlaying) {
+      const rootId = this.importedPlaying.split("::")[0];
+      const g = rootId ? this.grudge.get(rootId) : null;
+      g?.playRole("idle", 0.12);
+    }
     this.importedPlaying = null;
     if (this.rigImportedPlaying) {
       this.rig?.stopExternalClip();

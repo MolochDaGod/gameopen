@@ -434,11 +434,11 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
           </div>
         )}
 
-        {/* Clips that rode in on imported GLB/FBX models */}
+        {/* Catalog GLB + grudge6 Bip001 packs (Danger SSOT — XZ/feet/rotation-only) */}
         {hasImported && (
           <div className="ed-imported-clips">
             <div className="ed-label" style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Imported clips</span>
+              <span>Character clips (Bip001 / retargeted)</span>
               {snap.importedPlaying && (
                 <button className="ed-tw" title="Stop" onClick={() => engine.stopImportedClip()}>
                   ◼

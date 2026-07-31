@@ -85,6 +85,17 @@ Voxel Editor maps in gameopen should eventually **push** to Mine-Loader world AP
 6. If world: `launch: "mine-loader"` + `engines: ["mine-loader"]`.  
 7. Register domain CORS / vercel rewrites per grudge-fleet skill.
 
+### Fleet tools / development asset apps
+
+| Tool | Open library id | Live URL |
+|------|-----------------|----------|
+| **Asset Rig Editor** | `asset-rig-editor` | https://asset-rig-editor.vercel.app/ |
+| Studio Forge | `forge-editor` | https://forge.grudge-studio.com/ |
+| Dressing Room | `dressing-room` | native Open editor |
+| Worldbuilder | `voxel-editor` | native Open voxel |
+
+**Asset Rig Editor** is registered as an **app + tool + dev asset pipeline** (tags: Tool, App, Dev, Assets, Rig). Launch = external / in-app embed (`asset-rig-editor.vercel.app` is on `EMBED_FRIENDLY_HOSTS`).
+
 ---
 
 ## Poster / icon generation checklist

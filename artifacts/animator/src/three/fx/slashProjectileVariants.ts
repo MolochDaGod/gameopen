@@ -34,6 +34,11 @@ export type SlashVariantDef = {
   fallbackModelPath: string;
   /** Tags for skill / element mapping */
   tags: string[];
+  /**
+   * Projectile awareness (see fx/projectileAim.ts):
+   * faceOn = crescent faces target (default Getsuga) — not flat board sides.
+   */
+  faceMode?: "faceOn" | "edgeLead";
 };
 
 /** Canonical production catalog — four colored Getsuga / slash-wave projectiles. */
@@ -49,6 +54,7 @@ export const SLASH_VARIANTS: Record<SlashVariantId, SlashVariantDef> = {
     modelPath: "models/vfx/slash/slashred.glb",
     fallbackModelPath: "models/vfx/stylized_ice_bow.glb",
     tags: ["fire", "physical", "finisher", "heavy"],
+    faceMode: "faceOn",
   },
   slashblue: {
     id: "slashblue",
@@ -61,6 +67,7 @@ export const SLASH_VARIANTS: Record<SlashVariantId, SlashVariantDef> = {
     modelPath: "models/vfx/slash/slashblue.glb",
     fallbackModelPath: "models/vfx/stylized_ice_bow.glb",
     tags: ["ice", "frost", "getsuga", "mid"],
+    faceMode: "faceOn",
   },
   slashpurple: {
     id: "slashpurple",
@@ -73,6 +80,7 @@ export const SLASH_VARIANTS: Record<SlashVariantId, SlashVariantDef> = {
     modelPath: "models/vfx/slash/slashpurple.glb",
     fallbackModelPath: "models/vfx/stylized_ice_bow.glb",
     tags: ["arcane", "shadow", "dark", "magic"],
+    faceMode: "faceOn",
   },
   slashyellow: {
     id: "slashyellow",
@@ -85,6 +93,7 @@ export const SLASH_VARIANTS: Record<SlashVariantId, SlashVariantDef> = {
     modelPath: "models/vfx/slash/slashyellow.glb",
     fallbackModelPath: "models/vfx/stylized_ice_bow.glb",
     tags: ["holy", "lightning", "light", "finisher"],
+    faceMode: "faceOn",
   },
 };
 

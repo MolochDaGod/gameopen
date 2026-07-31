@@ -28,7 +28,9 @@ describe("productionSystemsPattern", () => {
   it("maps critical surfaces to load patterns + cinema ids", () => {
     expect(SURFACE_LOAD_PLAN.doors?.pattern).toBe("cinema_backdrop");
     expect(SURFACE_LOAD_PLAN.characters?.cinemaId).toBe("char_select_establish");
-    expect(SURFACE_LOAD_PLAN.lobby?.pattern).toBe("cinema_flow");
+    // Lobby owns one CampfireLobbyScene — no ProductionCinema dungeon gate
+    expect(SURFACE_LOAD_PLAN.lobby?.pattern).toBe("spa_instant");
+    expect(SURFACE_LOAD_PLAN.lobby?.cinemaId).toBeUndefined();
     expect(SURFACE_LOAD_PLAN.danger?.pattern).toBe("boot_gate");
     expect(SURFACE_LOAD_PLAN.home_island?.criticalMeshes?.length).toBeGreaterThan(0);
   });

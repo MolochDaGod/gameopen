@@ -1,20 +1,61 @@
 /* =========================================================================
-   Unified app shell: Steam-inspired top bar + system nav (sheet / popover).
-   Overlays every mode; sits above the touch-control layer (z 600) so it stays
-   reachable on phones, and respects device safe-areas.
+   Unified app shell: ONE stable top header (app name + menus + account).
+   CSS var --shell-header-h is used by Danger menubar / docks so nothing stacks.
    ========================================================================= */
+
+:root {
+  --shell-header-h: 48px;
+  --shell-header-gap: 4px;
+}
 
 .shell-steam-bar {
   position: fixed;
-  top: max(8px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 710;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 720;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: calc(var(--shell-header-h) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 12px 0 12px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(12, 16, 24, 0.97) 0%, rgba(10, 14, 22, 0.94) 100%);
+  border-bottom: 1px solid rgba(102, 192, 244, 0.18);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.shell-steam-brand {
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: calc(100vw - 16px);
-  pointer-events: none;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.shell-steam-brand-name {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8ec3ff;
+  white-space: nowrap;
+}
+
+.shell-steam-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.shell-steam-center::-webkit-scrollbar {
+  display: none;
 }
 
 /* Library hub: toolbox alone, top-left (launcher chrome is owned by GameLibrary). */
@@ -22,11 +63,121 @@
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
   left: max(10px, env(safe-area-inset-left));
-  z-index: 710;
+  z-index: 720;
   pointer-events: none;
 }
 .shell-toolbox-float > * {
   pointer-events: auto;
+}
+
+/* ── Fleet account strip (inline inside shell header) ───────────────────── */
+.fleet-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+}
+.fleet-bar--fixed {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  z-index: 50;
+  flex-wrap: wrap;
+  max-width: min(520px, 92vw);
+  pointer-events: auto;
+}
+.fleet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(20, 28, 42, 0.85);
+  border: 1px solid rgba(79, 195, 255, 0.2);
+  color: #cfe0fa;
+  flex-shrink: 0;
+}
+.fleet-user {
+  color: #8ec3ff;
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fleet-meta {
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.fleet-wallet {
+  font-size: 10px;
+  opacity: 0.65;
+  color: #9fe8a0;
+  font-family: ui-monospace, monospace;
+  cursor: default;
+}
+.fleet-label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5d80a8;
+  white-space: nowrap;
+}
+.fleet-select {
+  background: transparent;
+  border: none;
+  color: #eaf4ff;
+  font-size: 12px;
+  padding: 2px 2px;
+  cursor: pointer;
+  max-width: 140px;
+  outline: none;
+}
+.fleet-select option {
+  background: #0a0e1a;
+  color: #eaf4ff;
+}
+.fleet-link,
+.fleet-btn {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(79, 195, 255, 0.28);
+  color: #cfe0fa;
+  border-radius: 7px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.fleet-btn--primary,
+.fleet-link {
+  background: rgba(40, 90, 150, 0.4);
+  border-color: rgba(102, 192, 244, 0.4);
+}
+.fleet-btn--ghost {
+  opacity: 0.85;
+}
+.fleet-btn:hover,
+.fleet-link:hover {
+  border-color: rgba(140, 200, 255, 0.55);
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .fleet-chip--account .fleet-wallet,
+  .fleet-chip--account .fleet-meta {
+    display: none;
+  }
+  .shell-steam-brand-name {
+    display: none;
+  }
 }
 
 .shell-toolbox.on {
@@ -43,13 +194,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .shell-library-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 40px;
+  height: 34px;
   padding: 0 12px;
   border-radius: 999px;
   border: 1px solid rgba(102, 192, 244, 0.28);
@@ -73,7 +226,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 40px;
+  height: 34px;
   padding: 0 12px 0 10px;
   border-radius: 999px;
   border: 1px solid rgba(102, 192, 244, 0.28);
@@ -135,11 +288,11 @@
   overflow: hidden;
 }
 
-/* Desktop / tablet: a dropdown under the launcher. */
+/* Desktop / tablet: a dropdown under the unified header. */
 .shell-nav.popover {
-  top: calc(max(8px, env(safe-area-inset-top)) + 52px);
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(var(--shell-header-h, 48px) + env(safe-area-inset-top, 0px) + 6px);
+  left: 12px;
+  transform: none;
   width: 360px;
   max-width: calc(100vw - 24px);
   max-height: min(72vh, 640px);

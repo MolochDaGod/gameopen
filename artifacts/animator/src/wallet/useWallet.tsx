@@ -35,6 +35,9 @@ import {
   isMobileDevice,
   getDeeplinkToPhantom,
   waitForPhantomExtension,
+  humanizePhantomError,
+  connectInjectedSolanaFallback,
+  signMessageInjectedFallback,
 } from "./phantom";
 
 /** What the connect/link pipeline is currently doing. */
@@ -73,18 +76,7 @@ const WalletContext = createContext<WalletState | null>(null);
 
 /** Surface a readable message out of unknown SDK / fetch failures. */
 function errorMessage(err: unknown): string {
-  if (err instanceof Error) {
-    // Server responses come back as {error} JSON strings in the message body.
-    try {
-      const parsed = JSON.parse(err.message) as { error?: string };
-      if (parsed?.error) return parsed.error;
-    } catch {
-      /* not JSON — use as-is */
-    }
-    if (/reject|denied|cancel/i.test(err.message)) return "Request was cancelled in Phantom.";
-    return err.message;
-  }
-  return "Something went wrong. Please try again.";
+  return humanizePhantomError(err);
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -106,19 +98,45 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   });
   const linkedWallet = isSignedIn ? (walletQuery.data?.wallet ?? null) : null;
 
-  // Silently resume an existing Phantom session on mount (never prompts).
+  // Resume injected session only — never autoConnect Auth2 (that caused 400s).
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const hasExt = await waitForPhantomExtension(800);
+        if (!hasExt || cancelled) return;
         const sdk = getPhantom();
-        await sdk.autoConnect();
+        // Injected-only resume; ignore Auth2 errors completely
+        try {
+          await sdk.autoConnect();
+        } catch {
+          /* Auth2/auto may fail — fall through to silent address read */
+        }
         if (cancelled) return;
-        const addresses = await sdk.getAddresses();
-        const sol = addresses.find((a) => a.addressType === "Solana");
-        if (sol) setConnectedAddress(sol.address);
+        try {
+          const addresses = await sdk.getAddresses();
+          const sol = addresses.find(
+            (a) =>
+              (a as { addressType?: string }).addressType === "Solana" ||
+              (a as { addressType?: string }).addressType === "solana",
+          );
+          if (sol?.address) {
+            setConnectedAddress(sol.address);
+            return;
+          }
+        } catch {
+          /* */
+        }
+        // window.solana trusted connect (no popup)
+        const w = window as unknown as {
+          phantom?: { solana?: { isConnected?: boolean; publicKey?: { toBase58(): string } } };
+        };
+        const inj = w.phantom?.solana;
+        if (inj?.isConnected && inj.publicKey) {
+          setConnectedAddress(inj.publicKey.toBase58());
+        }
       } catch {
-        /* no prior session — stay disconnected */
+        /* no prior session */
       }
     })();
     return () => {
@@ -136,39 +154,62 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setError(null);
     setNeedsInstall(false);
     try {
-      const sdk = getPhantom();
-
-      // 1. Make sure Phantom is reachable in this browser.
+      // 1. Extension required for injected connect (avoids Auth2 /login/start 400)
       setPhase("connecting");
-      const hasExtension = await waitForPhantomExtension(1200);
+      const hasExtension = await waitForPhantomExtension(2000);
       if (!hasExtension) {
         if (isMobileDevice()) {
-          // Reopen this page inside Phantom's in-app browser.
           window.location.href = getDeeplinkToPhantom("grudge-studio");
           return;
         }
         setNeedsInstall(true);
+        setError("Install the Phantom browser extension to connect (embedded Auth2 is disabled).");
         return;
       }
 
-      // 2. Connect (Phantom shows its approval popup).
-      await sdk.connect({ provider: "injected" });
-      const addresses = await sdk.getAddresses();
-      const sol = addresses.find((a) => a.addressType === "Solana");
-      if (!sol) throw new Error("No Solana address available in this wallet.");
-      setConnectedAddress(sol.address);
+      // 2. Connect via SDK injected provider, with window.solana fallback
+      let address: string | null = null;
+      try {
+        const sdk = getPhantom();
+        await sdk.connect({ provider: "injected" });
+        const addresses = await sdk.getAddresses();
+        const sol = addresses.find(
+          (a) =>
+            String((a as { addressType?: string }).addressType || "").toLowerCase() ===
+            "solana",
+        );
+        address = sol?.address ?? null;
+      } catch (sdkErr) {
+        // Never surface raw Auth2 400 if we can recover via inject
+        console.warn("[wallet] SDK connect failed, trying window.phantom.solana", sdkErr);
+        address = await connectInjectedSolanaFallback();
+        if (!address) throw sdkErr;
+      }
+      if (!address) {
+        address = await connectInjectedSolanaFallback();
+      }
+      if (!address) throw new Error("No Solana address available in this wallet.");
+      setConnectedAddress(address);
 
       // 3. Ownership proof + account link (needs a signed-in account).
       if (!isSignedIn) return;
 
       setPhase("signing");
-      const { message } = await createWalletNonce({ address: sol.address });
-      const signed = await sdk.solana.signMessage(message);
+      const { message } = await createWalletNonce({ address });
+      let sigBytes: Uint8Array | null = null;
+      try {
+        const sdk = getPhantom();
+        const signed = await sdk.solana.signMessage(message);
+        sigBytes = signed.signature;
+      } catch {
+        sigBytes = await signMessageInjectedFallback(message);
+      }
+      if (!sigBytes) throw new Error("Could not sign message in Phantom.");
 
       setPhase("linking");
       await linkWallet({
-        address: sol.address,
-        signature: encodeSignature(signed.signature),
+        address,
+        signature: encodeSignature(sigBytes),
       });
       await refreshLink();
     } catch (err) {

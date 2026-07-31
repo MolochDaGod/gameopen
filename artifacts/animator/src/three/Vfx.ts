@@ -13,6 +13,14 @@ import {
   slashVariantForColor,
   type SlashVariantId,
 } from "./fx/slashProjectileVariants";
+import {
+  makeArcCurve,
+  measureMeshAxes,
+  orientProjectile,
+  resolveAimDir,
+  resolveAimPoint,
+  steerToward,
+} from "./fx/projectileAim";
 
 /** Which 4-stop palette the flame system currently uses. */
 export type FireTheme = "fire" | "chi";
@@ -99,8 +107,20 @@ const MODEL_VFX = {
   slashpurple: ["models/vfx/slash/slashpurple.glb", 2.2],
   slashyellow: ["models/vfx/slash/slashyellow.glb", 2.2],
   iceBow: ["models/vfx/stylized_ice_bow.glb", 2.2],
+  /**
+   * Staff magic orbs — discrete extracts from fireball.glb demo scene.
+   * NEVER load whole fireball.glb as a projectile (multi-ball lineup).
+   * SI diameter ~0.45 m baked into each GLB root scale.
+   */
+  orbFire: ["models/vfx/orbs/orb-fire.glb", 0.45],
+  orbEmber: ["models/vfx/orbs/orb-ember.glb", 0.45],
+  orbCore: ["models/vfx/orbs/orb-core.glb", 0.45],
+  orbFlare: ["models/vfx/orbs/orb-flare.glb", 0.45],
+  /** Demo scene only — not a staff bolt. Kept for sandbox gallery. */
   fireball: ["models/vfx/fireball.glb", 1.1],
   lightOfSlash: ["models/vfx/light-of-slash.glb", 2.4],
+  strawberryStrike: ["models/vfx/strawberry-strike.glb", 1.6],
+  attackSlashes: ["models/vfx/attack-slashes.glb", 2.0],
 } as const satisfies Record<string, readonly [string, number]>;
 
 /** Which turret chassis a deploy should use. */
@@ -483,7 +503,11 @@ export class Vfx {
     }
     this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1]);
     this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
-    this.ensureModel(MODEL_VFX.fireball[0], MODEL_VFX.fireball[1]);
+    // Staff bolts: discrete orbs (not whole fireball demo scene)
+    for (const id of ["orbFire", "orbEmber", "orbCore", "orbFlare"] as const) {
+      const [path, size] = MODEL_VFX[id];
+      this.ensureModel(path, size);
+    }
   }
 
   private add(e: Effect) {
@@ -653,8 +677,11 @@ export class Vfx {
     }
     const { obj, mats } = this.cloneModelInstance(tpl);
     obj.position.copy(from);
-    if (opts.align) obj.quaternion.setFromUnitVectors(opts.align.clone().normalize(), velocity);
-    else obj.lookAt(from.clone().add(velocity));
+    if (opts.align) {
+      obj.quaternion.setFromUnitVectors(opts.align.clone().normalize(), velocity);
+    } else {
+      orientProjectile(obj, from, velocity, { faceMode: "edgeLead" });
+    }
     this.addTrail(obj, opts.color);
     const life = opts.range / opts.speed;
     let hit = opts.onHit;
@@ -687,6 +714,51 @@ export class Vfx {
       range: 24,
       onHit: (p) => {
         this.blastImpact(p, color, 1.3);
+        onHit?.(p);
+      },
+    });
+  }
+
+  /**
+   * Staff magic orb projectile — uses discrete orb-*.glb (never whole fireball scene).
+   * @param kind MODEL_VFX orb key
+   */
+  castMagicOrb(
+    kind: "orbFire" | "orbEmber" | "orbCore" | "orbFlare",
+    from: THREE.Vector3,
+    dir: THREE.Vector3,
+    color = THEME.fireDragon,
+    onHit?: (p: THREE.Vector3) => void,
+  ) {
+    this.flyModel(kind, from, dir, {
+      color,
+      speed: 22,
+      range: 26,
+      // Spherical orbs: lookAt is fine; still use +Z basis via edgeLead default
+      align: new THREE.Vector3(0, 0, 1),
+      onHit: (p) => {
+        this.blastImpact(p, color, 1.15);
+        this.shockwave(p.clone().setY(p.y * 0.1 + 0.04), color, 1.2, 0.28);
+        onHit?.(p);
+      },
+    });
+  }
+
+  castMagicOrbAt(
+    kind: "orbFire" | "orbEmber" | "orbCore" | "orbFlare",
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    color = THEME.fireDragon,
+    onHit?: (p: THREE.Vector3) => void,
+  ) {
+    // Arc toward target chest (intelligence) instead of a flat straight line
+    this.flyModelSpline(kind, from, to, {
+      color,
+      speed: 22,
+      arc: Math.min(2.4, from.distanceTo(to) * 0.2),
+      onHit: (p) => {
+        this.blastImpact(p, color, 1.15);
+        this.shockwave(p.clone().setY(0.05), color, 1.2, 0.28);
         onHit?.(p);
       },
     });
@@ -732,12 +804,11 @@ export class Vfx {
     this.shockwave(new THREE.Vector3(start.x, 0.04, start.z), color, 1.6, 0.35);
 
     const [path, size] = MODEL_VFX.fireTornado;
-    // Prefer glTF pack; try glb alt if present
+    // Prefer tornado GLB/glTF; never use whole fireball demo scene as the funnel.
     const tpl =
       this.ensureModel(path, size, [
         "models/vfx/stylized-fire-tornado/scene.gltf",
-        "models/vfx/fireball.glb",
-      ]) || this.ensureModel("models/vfx/fireball.glb", 1.2);
+      ]) || this.ensureModel(MODEL_VFX.orbFire[0], 0.9);
 
     const life = range / speed;
     let tickAcc = 0;
@@ -1845,7 +1916,6 @@ export class Vfx {
     this.addTrail(obj, opts.color, { width: 0.28 });
     const life = dist / (opts.speed ?? 22);
     const tangent = new THREE.Vector3();
-    const ahead = new THREE.Vector3();
     let hit = opts.onHit;
     this.add({
       obj,
@@ -1858,7 +1928,10 @@ export class Vfx {
         const t = Math.min(1, e.age / e.life);
         curve.getPoint(t, obj.position);
         curve.getTangent(t, tangent);
-        obj.lookAt(ahead.copy(obj.position).add(tangent));
+        if (tangent.lengthSq() < 1e-8) tangent.set(0, 0, 1);
+        else tangent.normalize();
+        // +Z-forward basis (not lookAt −Z) so mesh authoring aligns with slashes/orbs
+        orientProjectile(obj, obj.position, tangent, { faceMode: "edgeLead" });
         if (opts.spin) obj.rotateZ(opts.spin * dt);
         if (e.age + dt >= e.life && hit) {
           hit(to.clone());
@@ -2956,26 +3029,22 @@ export class Vfx {
    * Orient a Getsuga root so local +Z faces the target / travel direction and
    * local +Y stays world-up (vertical crescent plane faces the target).
    */
+  /**
+   * Orient a slash projectile so the **crescent face** reads toward the target
+   * (not the flat board-side). SSOT: `fx/projectileAim.ts`.
+   */
   private orientSlashProjectile(
     root: THREE.Object3D,
     pos: THREE.Vector3,
     travel: THREE.Vector3,
+    meshAxes?: { thin: THREE.Vector3; mid: THREE.Vector3; long: THREE.Vector3 } | null,
   ) {
-    const f = travel.clone();
-    if (f.lengthSq() < 1e-8) f.set(0, 0, 1);
-    f.normalize();
-    const worldUp = new THREE.Vector3(0, 1, 0);
-    const right = new THREE.Vector3().crossVectors(worldUp, f);
-    if (right.lengthSq() < 1e-8) {
-      // Travel nearly vertical — pick a stable side axis
-      right.set(1, 0, 0);
-    } else {
-      right.normalize();
-    }
-    const up = new THREE.Vector3().crossVectors(f, right).normalize();
-    // Basis: X = right, Y = up, Z = forward (toward target)
-    root.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, f));
-    root.position.copy(pos);
+    orientProjectile(root, pos, travel, {
+      faceMode: "faceOn",
+      localThin: meshAxes?.thin,
+      localMid: meshAxes?.mid,
+      localLong: meshAxes?.long,
+    });
   }
 
   /**
@@ -2987,17 +3056,7 @@ export class Vfx {
     dir: THREE.Vector3,
     aim?: THREE.Vector3 | null,
   ): THREE.Vector3 {
-    const out = aim ? aim.clone().sub(from) : dir.clone();
-    if (out.lengthSq() < 1e-8) out.copy(dir);
-    if (out.lengthSq() < 1e-8) out.set(0, 0, 1);
-    const flat = Math.hypot(out.x, out.z);
-    if (flat > 1e-4) {
-      const pitch = Math.atan2(out.y, flat);
-      const cPitch = THREE.MathUtils.clamp(pitch, -0.4, 0.35);
-      const cos = Math.cos(cPitch);
-      out.set((out.x / flat) * cos, Math.sin(cPitch), (out.z / flat) * cos);
-    }
-    return out.normalize();
+    return resolveAimDir(from, dir, { aim, maxPitch: 0.35, minPitch: -0.4 });
   }
 
   /**
@@ -3028,8 +3087,8 @@ export class Vfx {
 
   /**
    * Production Getsuga: loads `models/vfx/slash/{slashred|slashblue|slashpurple|slashyellow}.glb`,
-   * applies flame-aura energy shader, orients the curve face-on toward the target,
-   * trails the weapon briefly, then flies as a slash projectile.
+   * applies energy shader, **arcs toward the aim target**, and keeps the crescent
+   * **face-on** (not flat board-side) via `projectileAim.orientProjectile`.
    */
   getsugaSlash(
     from: THREE.Vector3,
@@ -3046,6 +3105,10 @@ export class Vfx {
       followWeapon?: () => { base: THREE.Vector3; tip: THREE.Vector3 } | null;
       followDuration?: number;
       tickEvery?: number;
+      /** Arc height as fraction of distance (default 0.16). */
+      arcHeightFrac?: number;
+      /** Lateral curve (m); gives intelligent non-straight path. */
+      arcLateral?: number;
       onPathTick?: (p: THREE.Vector3, radius: number) => void;
       onHit?: (p: THREE.Vector3) => void;
       tint?: "ice" | "blue" | "purple" | "yellow" | "red";
@@ -3073,9 +3136,15 @@ export class Vfx {
 
     const start = from.clone();
     start.y = Math.max(0.95, from.y);
-    // Flight dir always toward aim target when provided (curve faces that way)
-    const aimPoint = opts.aim?.clone() ?? start.clone().add(dir.clone().setY(0).normalize().multiplyScalar(range));
+    // Intelligent aim: hostile chest if provided, else dir × range
+    const aimPoint = resolveAimPoint(start, dir, range, opts.aim ?? null, 0.25);
     const velocity = this.getsugaAimDir(start, dir, aimPoint);
+    // Arc end = aim point (clamped to range so short swings still read)
+    const endTarget = (() => {
+      const d = aimPoint.distanceTo(start);
+      if (d <= range * 1.15) return aimPoint.clone();
+      return start.clone().addScaledVector(velocity, range);
+    })();
 
     // Named production asset first: slashred/blue/purple/yellow
     const modelKey = variantId as keyof typeof MODEL_VFX;
@@ -3093,8 +3162,16 @@ export class Vfx {
       this.ensureModel(MODEL_VFX.iceBow[0], MODEL_VFX.iceBow[1], [MODEL_VFX.lightOfSlash[0]]) ||
       this.ensureModel(MODEL_VFX.lightOfSlash[0], MODEL_VFX.lightOfSlash[1]);
 
-    // Root carries world pose (toward target). Mesh is a child with local
-    // correction so the bow/crescent curve sits vertical and faces +Z (target).
+    // Measure thin/long axes so we face the crescent at the target (not flat sides)
+    let meshAxes: { thin: THREE.Vector3; mid: THREE.Vector3; long: THREE.Vector3 } | null = null;
+    if (tpl) {
+      try {
+        meshAxes = measureMeshAxes(tpl);
+      } catch {
+        meshAxes = null;
+      }
+    }
+
     const root = new THREE.Group();
     root.name = `slashProj:${vdef.id}`;
     const mats: THREE.Material[] = [];
@@ -3123,14 +3200,10 @@ export class Vfx {
       });
     };
 
-    /**
-     * Local mesh layout: ice-bow limbs form a C in the plane that faces the target.
-     * +Z on root = toward target; crescent plane ≈ local XY (face-on to enemy).
-     */
+    // Mesh sits under root; orientation is entirely on root (face-on via axes).
+    // Do NOT apply legacy (0, π/2, π/2) — that showed flat sides of the ice-bow.
     const meshLocal = new THREE.Group();
     meshLocal.name = `slashMesh:${vdef.id}`;
-    // Bow mesh: stand vertical and face travel (+Z). Tuned for stylized_ice_bow topology.
-    meshLocal.rotation.set(0, Math.PI / 2, Math.PI / 2);
 
     if (tpl) {
       const mesh = tpl.clone(true);
@@ -3138,7 +3211,6 @@ export class Vfx {
       applyEnergyShader(mesh);
       meshLocal.add(mesh);
     } else {
-      // Procedural vertical crescent facing +Z (toward target)
       const energy = createSlashEnergyMaterial({
         core: vdef.core,
         mid: vdef.mid,
@@ -3151,33 +3223,47 @@ export class Vfx {
       });
       energyMats.push(energy);
       mats.push(energy);
-      // Torus arc in XY plane → face-on when looking along -Z (from target back to caster)
+      // Torus in XY (thin axis Z) → faceOn maps thin→travel so arc faces target
       const arcGeo = new THREE.TorusGeometry(0.95, 0.13, 10, 36, Math.PI * 1.2);
       const arc = new THREE.Mesh(arcGeo, energy);
-      // Torus default is in XY; rotate so opening faces +Z slightly
-      arc.rotation.x = 0;
-      const coreGeo = new THREE.BoxGeometry(1.5, 0.22, 0.35);
+      const coreGeo = new THREE.BoxGeometry(1.5, 0.22, 0.12);
       const core = new THREE.Mesh(coreGeo, energy);
-      meshLocal.rotation.set(0, 0, 0);
       meshLocal.add(arc, core);
       geos = [arcGeo, coreGeo];
+      meshAxes = {
+        thin: new THREE.Vector3(0, 0, 1),
+        mid: new THREE.Vector3(1, 0, 0),
+        long: new THREE.Vector3(0, 1, 0),
+      };
     }
     root.add(meshLocal);
-    this.orientSlashProjectile(root, start, velocity);
+    this.orientSlashProjectile(root, start, velocity, meshAxes);
     root.scale.setScalar(growFrom);
 
     this.addTrail(root, color, { width: 0.5, segments: 30 });
     this.burst(start.clone(), color, 10, 1.8, { spread: 0.28 });
     this.auraRing(new THREE.Vector3(start.x, 0.06, start.z), color, 0.9, 0.28);
 
-    const life = followDur + range / speed;
+    // Intelligent arc path toward aim (not a flat straight board-flight)
+    const pathDist = Math.max(0.5, start.distanceTo(endTarget));
+    const flyLife = pathDist / speed;
+    const life = followDur + flyLife;
+    const curve = makeArcCurve(start, endTarget, {
+      heightFrac: opts.arcHeightFrac ?? 0.16,
+      minHeight: 0.4,
+      maxHeight: 2.8,
+      lateral: opts.arcLateral ?? 0.35,
+      lane: (variantId.charCodeAt(variantId.length - 1) % 2) * 2 - 1,
+    });
+    const tangent = new THREE.Vector3();
     let tickAcc = 0;
     let hit = opts.onHit;
     const pathTick = opts.onPathTick;
     const followWeapon = opts.followWeapon;
     let released = false;
-    // Soft-home: keep a nudge toward original aim so the curve stays target-facing
-    const home = aimPoint.clone();
+    const home = endTarget.clone();
+    // Sample curve only after release; while following weapon use live orient
+    let flyAge = 0;
 
     this.add({
       obj: root,
@@ -3191,34 +3277,29 @@ export class Vfx {
           const edge = followWeapon();
           if (edge) {
             const mid = edge.base.clone().lerp(edge.tip, 0.72);
-            // Prefer aim-facing over pure blade-along so the crescent already points at target
             const toTarget = home.clone().sub(mid);
             if (toTarget.lengthSq() > 1e-5) {
               toTarget.normalize();
               velocity.lerp(toTarget, 0.55).normalize();
-            } else {
-              const along = edge.tip.clone().sub(edge.base);
-              if (along.lengthSq() > 1e-5) {
-                along.y = 0;
-                if (along.lengthSq() > 1e-5) velocity.lerp(along.normalize(), 0.35).normalize();
-              }
             }
-            this.orientSlashProjectile(root, mid, velocity);
+            this.orientSlashProjectile(root, mid, velocity, meshAxes);
           } else {
             released = true;
           }
         } else {
           released = true;
-          // Mild home while flying so the slash stays pointed at the target
-          if (e.age < life * 0.65) {
-            const toHome = home.clone().sub(root.position);
-            if (toHome.lengthSq() > 0.25) {
-              toHome.normalize();
-              velocity.lerp(toHome, 0.08).normalize();
-            }
+          flyAge += dt;
+          const u = Math.min(1, flyAge / Math.max(1e-4, flyLife));
+          curve.getPoint(u, root.position);
+          curve.getTangent(u, tangent);
+          if (tangent.lengthSq() < 1e-8) tangent.copy(velocity);
+          else tangent.normalize();
+          // Soft re-home tangent toward live aim for the first 60% of flight
+          if (u < 0.6) {
+            steerToward(tangent, root.position, home, dt, 1.6);
           }
-          root.position.addScaledVector(velocity, speed * dt);
-          this.orientSlashProjectile(root, root.position, velocity);
+          velocity.copy(tangent);
+          this.orientSlashProjectile(root, root.position, velocity, meshAxes);
         }
 
         const t = Math.min(1, e.age / life);
@@ -3256,23 +3337,18 @@ export class Vfx {
     });
   }
 
-  /** Classic fireball GLB projectile (sandbox C / skill fireball). */
+  /**
+   * Sandbox C / skill fireball — discrete fire orb (never whole fireball.glb scene).
+   */
   castFireball(
     from: THREE.Vector3,
     dir: THREE.Vector3,
     color = 0xff6a1e,
     onHit?: (p: THREE.Vector3) => void,
   ) {
-    this.flyModel("fireball", from, dir, {
-      color,
-      speed: 18,
-      range: 16,
-      spin: 6,
-      onHit: (p) => {
-        this.blastImpact(p, color, 1.2);
-        this.fireAura(p, 0.95);
-        onHit?.(p);
-      },
+    this.castMagicOrb("orbFire", from, dir, color, (p) => {
+      this.fireAura(p, 0.95);
+      onHit?.(p);
     });
   }
 

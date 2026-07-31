@@ -330,6 +330,7 @@ export class WarlordGenesisScene {
    */
   private normalizeChar(root: THREE.Object3D, targetHeight = 1.8) {
     restoreCharacterMaterials(root, { neutralizeMetal: true });
+    // SI height fit (converted voxel + grudge6) — always sync so spawn uses final scale
     fitCharacterHeight(root, targetHeight, 1);
     root.traverse((o) => {
       const m = o as THREE.Mesh;

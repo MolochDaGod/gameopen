@@ -150,23 +150,55 @@ function absOrPublic(path: string): string {
   return publicUrl(path.replace(/^\//, ""));
 }
 
+/**
+ * Race PNGs actually under `public/races/*.png` (deployed).
+ * Do not invent paths — first <img src> 404s show up in the console.
+ */
+export const SHIPPED_RACE_PNG = new Set<string>([
+  "human",
+  "orc",
+  "elf",
+  "dwarf",
+  "barbarian",
+  "undead",
+]);
+
+/**
+ * Optional race×class portraits under `public/races/portraits/{stem}_{preset}.png`.
+ * Only list files that exist in the repo — empty until art is shipped.
+ * Keys: `{paperRace}_{preset}` e.g. `human_knight`, `orc_warrior`.
+ */
+export const SHIPPED_RACE_CLASS_PORTRAITS = new Set<string>([
+  // e.g. "human_knight" when races/portraits/human_knight.png lands
+]);
+
+/** Static voxel-head art that exists under public/ (none yet → use race PNG). */
+export const SHIPPED_VOXEL_PORTRAITS = new Set<string>([
+  // e.g. "races/voxel-head.png"
+]);
+
 function raceClassPortraitPaths(paper: PaperRaceKey, preset: PresetId): string[] {
   const stem = paperRacePngStem(paper);
-  // Preferred layout for per-model-type PNGs:
+  // Preferred layout for per-model-type PNGs (only if shipped):
   //   races/portraits/{race}_{class}.png  e.g. human_knight.png
-  //   races/{race}-{class}.png
-  //   races/{race}_{class}.png
-  return [
-    `races/portraits/${stem}_${preset}.png`,
-    `races/portraits/${stem}-${preset}.png`,
-    `races/${stem}_${preset}.png`,
-    `races/${stem}-${preset}.png`,
-  ];
+  const keys = [`${stem}_${preset}`, `${stem}-${preset}`];
+  const out: string[] = [];
+  for (const key of keys) {
+    if (!SHIPPED_RACE_CLASS_PORTRAITS.has(key.replace(/-/g, "_")) && !SHIPPED_RACE_CLASS_PORTRAITS.has(key)) {
+      continue;
+    }
+    out.push(`races/portraits/${key}.png`);
+    out.push(`races/${key}.png`);
+  }
+  return out;
 }
 
 function racePortraitPaths(paper: PaperRaceKey): string[] {
   const stem = paperRacePngStem(paper);
-  return [`races/${stem}.png`, `races/portraits/${stem}.png`];
+  if (SHIPPED_RACE_PNG.has(stem)) {
+    return [`races/${stem}.png`];
+  }
+  return ["races/human.png"];
 }
 
 function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
@@ -180,14 +212,16 @@ function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
     "headSnapshot",
   ]);
   if (snap) out.push(snap);
-  // Canonical static art for cube / voxel heads
-  out.push(
+  // Only paths that exist under public/ — avoid console 404 spam
+  for (const p of [
     "races/portraits/voxel-head.png",
     "races/voxel-head.png",
     "avatar/voxel-head.png",
     "races/portraits/voxel.png",
     "races/voxel.png",
-  );
+  ]) {
+    if (SHIPPED_VOXEL_PORTRAITS.has(p)) out.push(p);
+  }
   return out;
 }
 
@@ -243,21 +277,19 @@ export function resolveCharacterPortrait(
     for (const p of voxelPortraitPaths(ch)) candidates.push(absOrPublic(p));
     if (kind === "default") kind = "voxel-head";
   } else {
-    // 4) Race×class type PNGs (per character model type)
-    for (const p of raceClassPortraitPaths(paperRace, presetId)) {
+    // 4) Race×class type PNGs (only shipped files — no phantom 404s)
+    const classPaths = raceClassPortraitPaths(paperRace, presetId);
+    for (const p of classPaths) {
       candidates.push(publicUrl(p));
     }
-    if (kind === "default") kind = "race-class";
+    if (kind === "default" && classPaths.length > 0) kind = "race-class";
   }
 
-  // 5) Race PNG (always available for warlords-style cast)
+  // 5) Race PNG (shipped under public/races/{stem}.png)
   for (const p of racePortraitPaths(paperRace)) {
     candidates.push(publicUrl(p));
   }
-  if (kind === "default" || kind === "race-class") {
-    // keep race-class if we already set it; else race
-    if (kind === "default") kind = "race";
-  }
+  if (kind === "default") kind = "race";
 
   // 6) CDN fallbacks
   for (const p of cdnFallbacks(paperRace)) candidates.push(p);

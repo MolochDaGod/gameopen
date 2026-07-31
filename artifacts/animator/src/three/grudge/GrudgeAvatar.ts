@@ -20,7 +20,7 @@ import {
 } from "../ummorpg/animationDirector";
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
-import { SPRINT_LOCO_MULT } from "./anims";
+import { SPRINT_LOCO_MULT, type AnimPack, asAnimPack } from "./anims";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -99,11 +99,20 @@ export class GrudgeAvatar implements Avatar {
 
   /** Account / main-panel mesh_ids (child visibility). Empty → class gear preset. */
   private meshIds: string[] | null = null;
+  /** Combat style pack override (samurai / knight / …). Null = class preset. */
+  private animPackOverride: AnimPack | null = null;
+  /** Live pack after load (for HUD). */
+  private liveAnimPack: AnimPack | null = null;
 
-  constructor(raceId: RaceId, presetId: PresetId, opts?: { meshIds?: string[] }) {
+  constructor(
+    raceId: RaceId,
+    presetId: PresetId,
+    opts?: { meshIds?: string[]; animPack?: AnimPack | string },
+  ) {
     this.raceId = raceId;
     this.presetId = presetId;
     if (opts?.meshIds?.length) this.meshIds = opts.meshIds.slice();
+    if (opts?.animPack) this.animPackOverride = asAnimPack(String(opts.animPack));
     const race = RACE_ASSETS[raceId];
     const preset = getPreset(raceId, presetId);
     this.root.add(this.holder);
@@ -146,14 +155,48 @@ export class GrudgeAvatar implements Avatar {
     return this.meshIds;
   }
 
+  getAnimPack(): AnimPack | null {
+    return this.liveAnimPack;
+  }
+
+  /**
+   * Switch combat motion style (Samurai / Knight / Spearman / …) without leaving Danger.
+   * Reloads baked pack clips + director; keeps race mesh_ids.
+   */
+  async setAnimPack(pack: AnimPack | string | null): Promise<void> {
+    this.animPackOverride = pack ? asAnimPack(String(pack)) : null;
+    if (!this.model && !this.mixer) {
+      // Not loaded yet — pack applied on next load()
+      return;
+    }
+    await this.load();
+  }
+
   async load(): Promise<void> {
     // PRODUCTION PATH — same stack as grudge-arena Danger Room:
     // skinned race mesh (Bip001) + atlas rebind + mesh_ids equip + baked anim packs.
     // Static 30characters roster is LAST RESORT only (T-pose / no combat anims).
     try {
+      // Tear down previous rig when reloading (combat style swap)
+      if (this.mixer) {
+        this.director?.dispose();
+        this.director = null;
+        this.mixer.stopAllAction();
+        this.mixer = null;
+      }
+      if (this.model) {
+        this.holder.clear();
+        this.model = null;
+      }
+      this.actions.clear();
+      this.roleClip.clear();
+      this.current = null;
+      this.oneShot = null;
+
       const rig = await loadGrudge6CombatRig(this.raceId, this.presetId, {
         meshIds: this.meshIds || undefined,
         rebindAtlas: true,
+        animPack: this.animPackOverride || undefined,
       });
       if (this.disposed) {
         rig.mixer.stopAllAction();
@@ -161,6 +204,7 @@ export class GrudgeAvatar implements Avatar {
       }
       this.model = rig.model;
       this.mixer = rig.mixer;
+      this.liveAnimPack = rig.animPack;
       this.holder.add(rig.root);
 
       // Register clips under role names so playRole / setLocomotion work.

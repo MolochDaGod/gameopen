@@ -185,58 +185,41 @@ export const CINEMA_CHAR_SELECT_ESTABLISH: CinemaManifest = {
   location: { pin: "ethereal_campfire", tags: ["characters", "lobby"] },
 };
 
-/** Multiplayer lobby establish. */
+/**
+ * Lobby establish (catalog only — **do not mount as a second WebGL scene**).
+ *
+ * Product SSOT: /lobby and /characters own **one** scene =
+ * {@link CampfireLobbyScene} (Ethereal Falls 4-seat campfire).
+ *
+ * NEVER load dungeon/arena shells here — that stacked a second full render
+ * over the campfire (conflict reported on open.grudge-studio.com/lobby).
+ * Assets empty: short caption beats only if a host still gates on this id.
+ */
 export const CINEMA_LOBBY: CinemaManifest = {
   id: "lobby_establish",
   title: "The Lobby — Establish",
   surface: "lobby",
-  durationSec: 8,
+  durationSec: 0.01,
   loop: false,
-  skippableAfterSec: 0.5,
+  skippableAfterSec: 0,
   post: "mystical",
-  background: 0x070a12,
-  fogDensity: 0.055,
-  torch: true,
+  background: 0x060c14,
+  fogDensity: 0,
+  torch: false,
   embers: false,
-  assets: [
-    {
-      meshKeys: [...CINEMA_ARENA_MESHES],
-      kind: "shell",
-      heightM: 8,
-      position: [0, 0, -6],
-    },
-    {
-      meshKeys: [...CINEMA_HERO_MESHES],
-      kind: "character",
-      heightM: CHARACTER_HEIGHT_M,
-      position: [0, 0, 1.2],
-      rotationY: Math.PI,
-    },
-  ],
+  // Empty — real world is CampfireLobbyScene only
+  assets: [],
   beats: [
     {
       t: 0,
-      hold: 2.8,
-      cam: { pos: [6, 3.2, 8], look: [0, 1.5, -2], fov: 40 },
-      caption: "THE LOBBY",
-      sub: "Matchmaking · parties · spar",
-    },
-    {
-      t: 2.8,
-      hold: 2.6,
-      cam: { pos: [-4.5, 2.0, 5], look: [0, 1.4, 0], fov: 42 },
-      caption: "BRING YOUR HERO",
-      sub: "Roster from /characters",
-    },
-    {
-      t: 5.4,
-      hold: 2.6,
-      cam: { pos: [0.5, 1.6, 4.2], look: [0, 1.3, 0], fov: 44 },
-      caption: "READY UP",
-      sub: "open.grudge-studio.com/lobby",
+      hold: 0.01,
+      cam: { pos: [0, 3, 8], look: [0, 1.2, 0], fov: 40 },
+      caption: "",
+      sub: "",
     },
   ],
   transitionTo: null,
+  location: { pin: "ethereal_campfire", tags: ["lobby", "characters"] },
 };
 
 /** Home island arrival cinema. */

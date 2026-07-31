@@ -134,11 +134,12 @@ export const SURFACE_LOAD_PLAN: Record<
     notes: "Landing → roster cinema",
   },
   lobby: {
-    pattern: "cinema_flow",
-    cinemaId: "lobby_establish",
+    // ONE scene: CampfireLobbyScene (Ethereal Falls) — never dungeon/arena establish
+    pattern: "spa_instant",
+    cinemaId: undefined,
     rest: ["health", "charactersWarlords"],
-    criticalMeshes: ["models/arena-war-zone.glb", "models/racalvin.glb"],
-    notes: "Establish then multiplayer lobby (arena-war-zone — instarena dead)",
+    criticalMeshes: ["models/racalvin.glb"],
+    notes: "Ethereal Falls campfire only — no ProductionCinema dungeon shell",
   },
   danger: {
     pattern: "boot_gate",

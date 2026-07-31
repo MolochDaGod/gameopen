@@ -10,7 +10,13 @@ import {
   resolvePresetId,
 } from "./raceModel";
 import type { RaceId, PresetId } from "../three/grudge";
-import { fleetRaceToPaper, paperRacePngStem, type PaperRaceKey } from "./characterPortrait";
+import {
+  fleetRaceToPaper,
+  paperRacePngStem,
+  SHIPPED_RACE_CLASS_PORTRAITS,
+  SHIPPED_RACE_PNG,
+  type PaperRaceKey,
+} from "./characterPortrait";
 
 export interface HudPortrait {
   url: string;
@@ -20,15 +26,25 @@ export interface HudPortrait {
 
 function racePaths(paper: PaperRaceKey, preset: PresetId): string[] {
   const stem = paperRacePngStem(paper);
-  return [
-    publicUrl(`races/portraits/${stem}_${preset}.png`),
-    publicUrl(`races/portraits/${stem}-${preset}.png`),
-    publicUrl(`races/${stem}_${preset}.png`),
-    publicUrl(`races/${stem}.png`),
+  const out: string[] = [];
+  // Race×class only when file is known shipped (avoids console 404s)
+  for (const key of [`${stem}_${preset}`, `${stem}-${preset}`]) {
+    const canon = key.replace(/-/g, "_");
+    if (SHIPPED_RACE_CLASS_PORTRAITS.has(canon) || SHIPPED_RACE_CLASS_PORTRAITS.has(key)) {
+      out.push(publicUrl(`races/portraits/${key}.png`));
+      out.push(publicUrl(`races/${key}.png`));
+    }
+  }
+  if (SHIPPED_RACE_PNG.has(stem)) {
+    out.push(publicUrl(`races/${stem}.png`));
+  }
+  // CDN last-resort only (may 404 — after same-origin race PNG)
+  out.push(
     `${FLEET.assets}/portraits/${stem}.png`,
     `${FLEET.assets}/races/${stem}.png`,
     publicUrl("races/human.png"),
-  ];
+  );
+  return out;
 }
 
 /**

@@ -82,9 +82,12 @@ interface Props {
   open: boolean;
   characterId: string;
   weaponId: WeaponId;
+  /** Combat motion style (Samurai / Knight / … retargeted packs). */
+  combatStyleId?: string;
   difficulty: Difficulty;
   onCharacter: (id: string) => void;
   onWeapon: (id: WeaponId) => void;
+  onCombatStyle?: (id: string) => void;
   onDifficulty: (d: Difficulty) => void;
   onSpawn: (weaponId: WeaponId, faction: Faction) => void;
   onSpawnBoss: (weaponId: WeaponId) => void;
@@ -127,9 +130,11 @@ export function AdminPanel({
   open,
   characterId,
   weaponId,
+  combatStyleId = "auto",
   difficulty,
   onCharacter,
   onWeapon,
+  onCombatStyle,
   onDifficulty,
   onSpawn,
   onSpawnBoss,
@@ -191,6 +196,41 @@ export function AdminPanel({
             >
               <Icon name={WEAPON_ICON[w.id]} size={20} />
               {w.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <h3>
+          <Icon name="clip-library" size={16} /> Combat Style
+        </h3>
+        <p className="muted" style={{ fontSize: 12, margin: "0 0 8px", opacity: 0.75 }}>
+          Retargeted Bip001 packs — Samurai, Knight, Madarame spear, and more. Independent of mesh race.
+        </p>
+        <div className="grid2">
+          {(
+            [
+              ["auto", "Weapon Default", "equip"],
+              ["samurai", "Samurai", "attack"],
+              ["knight", "Knight", "defend"],
+              ["spearman", "Spearman", "charge"],
+              ["berserker", "Berserker", "siege"],
+              ["striker", "Striker", "move"],
+              ["mage", "Mage", "skill-slot"],
+              ["archer", "Archer", "scout"],
+              ["gunner", "Gunner", "ambush"],
+            ] as const
+          ).map(([id, label, icon]) => (
+            <button
+              key={id}
+              type="button"
+              title={label}
+              className={`opt opt-icon ${combatStyleId === id ? "active" : ""}`}
+              onClick={() => onCombatStyle?.(id)}
+            >
+              <Icon name={icon} size={20} />
+              {label}
             </button>
           ))}
         </div>

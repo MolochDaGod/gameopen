@@ -156,22 +156,69 @@ const CDN_REMAP: Record<string, string> = {
   "icons/pack/misc/ChaosCircle.png": "icons/pack/misc/Chaos_2.png",
 };
 
+/**
+ * Resolve icon path → absolute URL.
+ *
+ * Hard rules:
+ *  - `icons/skill_nobg/*` ships on Open same-origin + info ObjectStore — NEVER
+ *    assets.grudge-studio.com (R2 404s for skill_nobg).
+ *  - pack / weapons / abilities → assets R2 (with CDN_REMAP).
+ *  - Local `/icons/...` skill_nobg stays same-origin.
+ */
 export function cdnIconUrl(pathOrUrl: string | undefined | null): string | null {
   if (!pathOrUrl) return null;
   let p = String(pathOrUrl).trim();
   if (!p) return null;
+
   if (/^https?:\/\//i.test(p)) {
-    // Already absolute — still apply remap if path suffix known
-    const idx = p.indexOf("/icons/");
-    if (idx >= 0) {
-      const rel = p.slice(idx + 1);
+    try {
+      const u = new URL(p);
+      const rel = u.pathname.replace(/^\//, "");
+      // Fix wrong R2 host for skill catalog art
+      if (isSkillNobgPath(rel)) {
+        return skillNobgUrl(rel);
+      }
       if (CDN_REMAP[rel]) return `${CDN}/${CDN_REMAP[rel]}`;
+      // assets host + known-broken remap only for pack paths
+      if (u.hostname.includes("assets.grudge-studio") && CDN_REMAP[rel]) {
+        return `${CDN}/${CDN_REMAP[rel]}`;
+      }
+    } catch {
+      /* keep p */
     }
     return p;
   }
+
   p = p.replace(/^\//, "");
+  if (isSkillNobgPath(p)) {
+    return skillNobgUrl(p);
+  }
   if (CDN_REMAP[p]) p = CDN_REMAP[p];
   return `${CDN}/${p}`;
+}
+
+/** CraftPix / skill tree art — not on R2 assets CDN. */
+function isSkillNobgPath(rel: string): boolean {
+  const r = rel.replace(/^\//, "").toLowerCase();
+  return (
+    r.startsWith("icons/skill_nobg/") ||
+    r.startsWith("icons/skills/") ||
+    r.startsWith("icons/skill/")
+  );
+}
+
+/**
+ * Same-origin first for warrior set (public/icons/skill_nobg).
+ * Other skill_nobg packs → info ObjectStore (200; R2 404).
+ */
+function skillNobgUrl(rel: string): string {
+  const clean = rel.replace(/^\//, "");
+  const file = clean.split("/").pop() || "";
+  // Warrior set is vendored under Open public/
+  if (/^Warriorskill_\d+_nobg\.png$/i.test(file)) {
+    return `/icons/skill_nobg/${file}`;
+  }
+  return `${WARRIOR_SKILL_HOST}/${clean}`;
 }
 
 export type SlotIconRole = "primary" | "fskill" | "sig1" | "sig2" | "sig3" | "sig4" | "heavy";
@@ -191,7 +238,8 @@ export function resolveSlotIconUrl(
     // Allow explicit good catalog URLs that already point at skill_nobg warrior
     if (opts?.cdnUrl && /Warriorskill_|skill_nobg\/Warrior/i.test(opts.cdnUrl)) {
       const u = cdnIconUrl(opts.cdnUrl);
-      if (u) return u;
+      // Never return assets.grudge-studio.com/skill_nobg (404)
+      if (u && !u.includes("assets.grudge-studio.com/icons/skill")) return u;
     }
     return warriorSkillUrl(warriorRoleIndex(weapon, role));
   }
@@ -201,7 +249,7 @@ export function resolveSlotIconUrl(
     if (u && isWarriorMeleeWeapon(weapon) && /Slash_07|Flow\.png|Effect\.png|Electro\.png/i.test(u)) {
       return warriorSkillUrl(warriorRoleIndex(weapon, role));
     }
-    if (u) return u;
+    if (u && !/assets\.grudge-studio\.com\/icons\/skill_?nobg/i.test(u)) return u;
   }
   if (role === "primary") {
     // Keep weapon silhouette for LMB; sword/dagger still get clean pack weapon art

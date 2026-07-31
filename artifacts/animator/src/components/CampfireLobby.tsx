@@ -264,6 +264,10 @@ function arcadeUrl(path: string): string {
   return `https://open.grudge-studio.com${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * Ethereal Falls 4-seat campfire — **sole** WebGL owner for /lobby and /characters.
+ * Do not wrap this in ProductionCinema / CinemaFlowGate with dungeon shells.
+ */
 export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);

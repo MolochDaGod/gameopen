@@ -60,4 +60,26 @@ describe("mapAssetScale", () => {
   it("scaleForMapChunkId rascals uses pitch", () => {
     expect(scaleForMapChunkId("rascals_retreat")).toBeCloseTo(125);
   });
+
+  it("classifies voxel zombie as creature with SI height scale", () => {
+    const r = evaluateAssetRole({
+      name: "voxel-zombie-1.glb",
+      bounds: { x: 1, y: 2, z: 0.5 },
+      tags: ["enemy", "voxel"],
+    });
+    expect(r.role).toBe("creature");
+    expect(r.forbidPropHeightFit).toBe(true);
+    // Already ~2m tall → scale near 1.5/2 or 1.5 target for creature
+    expect(r.scale).toBeGreaterThan(0.5);
+    expect(r.scale).toBeLessThan(2);
+  });
+
+  it("classifies boss dragon with taller SI fit", () => {
+    const r = evaluateAssetRole({
+      name: "dragon_boss.glb",
+      bounds: { x: 4, y: 5, z: 6 },
+    });
+    expect(r.role).toBe("boss");
+    expect(r.scale).toBeCloseTo(2.6 / 5, 2);
+  });
 });
