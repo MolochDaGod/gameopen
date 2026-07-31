@@ -336,11 +336,6 @@ export class GrudgeAvatar implements Avatar {
     this.holder.rotation.y = this.modelYaw;
   }
 
-  /** Controller surface hint — baked roles drive pose (parity with Character). */
-  setTraversalMode(_mode: "ground" | "climb" | "swim"): void {
-    /* no-op */
-  }
-
   clipNames(): string[] {
     return [...this.actions.keys()];
   }
