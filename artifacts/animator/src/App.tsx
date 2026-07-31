@@ -113,6 +113,7 @@ import { AvatarEditMode } from "./components/AvatarEditMode";
 import { AnimEditorUI, type AnimApi } from "./components/AnimEditorUI";
 import { AiAnimatorPanel } from "./components/AiAnimatorPanel";
 import { AnimEditor, type AnimEditorState } from "./three/anim/AnimEditor";
+import { UiStudioMode } from "./components/UiStudioMode";
 import { CampfireLobby } from "./components/CampfireLobby";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
@@ -1890,12 +1891,7 @@ export default function App() {
       const { action } = tool;
       switch (action.kind) {
         case "mode": {
-          const m = action.mode;
-          if (m === "avatar") {
-            navigate("avatar" as Mode);
-          } else {
-            navigate(m as Mode);
-          }
+          navigate(action.mode as Mode);
           break;
         }
         case "danger-panel":
@@ -2279,6 +2275,25 @@ export default function App() {
             </div>
           )}
         </div>
+      ),
+    );
+  }
+
+  if (mode === "ui") {
+    let initialPack = "open";
+    try {
+      const q = new URLSearchParams(window.location.search);
+      initialPack =
+        q.get("pack") ||
+        sessionStorage.getItem("grudge.ui.pack") ||
+        "open";
+      if (q.get("pack")) sessionStorage.setItem("grudge.ui.pack", q.get("pack")!);
+    } catch {
+      /* ignore */
+    }
+    return shell(
+      withScreenTheme(
+        <UiStudioMode onExit={() => setMode("doors")} initialPack={initialPack} />,
       ),
     );
   }

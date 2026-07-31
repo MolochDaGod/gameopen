@@ -63,7 +63,11 @@ export type ShellMode =
   | "voxgrudge-native"
   | "account"
   | "realms"
-  | "minegrudge";
+  | "minegrudge"
+  | "avatar"
+  | "anim"
+  | "anim-ai"
+  | "ui";
 
 interface NavItem {
   mode: ShellMode;
@@ -85,6 +89,10 @@ const NAV: NavItem[] = [
   { mode: "voxel",            label: "Worldbuilder",    hint: "Map editor · Danger Play", icon: <GameIcon name="worldbuilder" tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Create" },
   { mode: "voxgrudge-native", label: "VoxGrudge",       hint: "Open voxel world",     icon: <GameIcon name="explore"         tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Play" },
   { mode: "editor",           label: "Dressing Room",   hint: "Equip & preview",      icon: <GameIcon name="equip"           tone="#ffb24d" />,          tone: "#ffb24d", group: "Create" },
+  { mode: "ui",               label: "Create UI",       hint: "HUD · menus · packs",  icon: <GameIcon name="hud-settings"    tone="#4ade80" />,          tone: "#4ade80", group: "Create" },
+  { mode: "avatar",           label: "Avatar Edit",     hint: "Cube modular head",    icon: <GameIcon name="inventory"       tone="#c9a0ff" />,          tone: "#c9a0ff", group: "Create" },
+  { mode: "anim",             label: "Anim Creator",    hint: "Pose · clips",         icon: <GameIcon name="animation-editor" tone="#c79bff" />,         tone: "#c79bff", group: "Create" },
+  { mode: "anim-ai",          label: "AI Animator",     hint: "Chat → motion",        icon: <GameIcon name="ai-worker"       tone="#5eead4" />,          tone: "#5eead4", group: "Create" },
   { mode: "lobby",            label: "Lobby",           hint: "4 heroes · campfire",  icon: <GameIcon name="inventory"       tone="#5fe0ff" />,          tone: "#5fe0ff", group: "Community" },
   { mode: "rooms",            label: "Rooms",           hint: "MP rooms & maps",      icon: <GameIcon name="inventory"       tone="#9d8bff" />,          tone: "#9d8bff", group: "Community" },
   { mode: "realms",           label: "Realms",          hint: "Mine-Loader worlds",   icon: <GameIcon name="explore"         tone="#7ee0a0" />,          tone: "#7ee0a0", group: "Community" },

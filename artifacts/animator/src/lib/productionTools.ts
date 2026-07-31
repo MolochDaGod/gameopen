@@ -34,6 +34,11 @@ export const PRODUCTION_SURFACES = {
   grokBuilderAgent: "https://grok-builder.vercel.app/?panel=agent",
 
   forge: "https://forge.grudge-studio.com",
+  /** HYDRA UI kit — HUD / menus / settings / game-ui packs for all editors */
+  ui: "https://ui.grudge-studio.com",
+  uiStudio: "https://ui.grudge-studio.com/studio",
+  uiGames: "https://ui.grudge-studio.com/games",
+  uiAssets: "https://ui.grudge-studio.com/assets",
   foundry: "https://character.grudge-studio.com",
   client: "https://client.grudge-studio.com",
   coder: "https://coder.grudge-studio.com",

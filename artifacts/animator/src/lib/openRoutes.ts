@@ -32,6 +32,11 @@ export type AppMode =
   | "anim"
   /** Animation Creator + AI skeleton-mover panel. */
   | "anim-ai"
+  /**
+   * Create UI — embeds ui.grudge-studio.com (HUD / menus / settings / packs).
+   * Fleet SSOT for chrome used by Open (GRUDOX launcher), Forge (3D deploy), games.
+   */
+  | "ui"
   | "characters"
   | "minegrudge"
   /** Mine-Loader Realms in-app collection surface (SSO canvas). */
@@ -279,6 +284,26 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     poster: "dressing",
     tags: ["AI", "Anim"],
     accent: "#5eead4",
+  },
+  {
+    mode: "ui",
+    slug: "ui",
+    aliases: [
+      "create-ui",
+      "ui-studio",
+      "hud-editor",
+      "game-ui",
+      "hydra",
+      "ui-kit",
+    ],
+    cabinets: ["ui", "create-ui", "hud"],
+    title: "Create UI",
+    blurb:
+      "ui.grudge-studio.com — build HUD, menus, settings, fleet packs; AI wires chrome to game assets.",
+    group: "create",
+    poster: "dressing",
+    tags: ["UI", "HUD", "Create"],
+    accent: "#4ade80",
   },
   {
     mode: "characters",

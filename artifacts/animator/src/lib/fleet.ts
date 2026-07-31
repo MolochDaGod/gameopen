@@ -48,6 +48,8 @@ export const FLEET = {
   /** Production tool surfaces (builders / editors) — full map in productionTools.ts */
   grokBuilder: "https://grok-builder.vercel.app",
   forge: "https://forge.grudge-studio.com",
+  /** Game UI / HUD kits + studio (chrome for Open, Forge, GRUDOX, all games) */
+  ui: "https://ui.grudge-studio.com",
   foundry: "https://character.grudge-studio.com",
   client: "https://client.grudge-studio.com",
   coder: "https://coder.grudge-studio.com",

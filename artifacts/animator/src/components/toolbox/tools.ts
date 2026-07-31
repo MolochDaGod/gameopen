@@ -22,7 +22,10 @@ export type ToolMode =
   | "editor"
   | "lobby"
   | "ledmask"
-  | "avatar";
+  | "avatar"
+  | "anim"
+  | "anim-ai"
+  | "ui";
 
 /** Danger Room dock panel ids (App's DANGER_PANEL_METAS). */
 export type DangerPanelId = "admin" | "editor" | "anim" | "animdbg";
@@ -57,6 +60,7 @@ export interface ToolDef {
 /** @deprecated Prefer PRODUCTION_SURFACES / grokBuilderUrl — kept for external importers. */
 export const GROK_BUILDER = PRODUCTION_SURFACES.grokBuilder;
 export const FORGE_URL = PRODUCTION_SURFACES.forge;
+export const UI_STUDIO_URL = PRODUCTION_SURFACES.uiStudio;
 export const THREE_DOCS = PRODUCTION_SURFACES.threeDocs;
 export const RAPIER_DOCS = PRODUCTION_SURFACES.rapierDocs;
 export const R3F_DOCS = PRODUCTION_SURFACES.r3fDocs;
@@ -135,9 +139,9 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   },
   {
     icon: "hud-settings",
-    label: "HUD Settings",
-    hint: "HUD layout, theme, dual HUD panels",
-    action: { kind: "hud-edit" },
+    label: "Create UI",
+    hint: "ui.grudge-studio.com — HUD, menus, settings, fleet packs + AI wiring",
+    action: { kind: "mode", mode: "ui" },
   },
   {
     icon: "building-kit",
