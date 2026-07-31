@@ -5,6 +5,10 @@ import { RAPIER } from "./PhysicsSystem";
 import { HealthBar } from "./HealthBar";
 
 /**
+ * @deprecated Danger Room no longer mounts heavy bags.
+ * Production training uses {@link PracticeTargets} (practice dummy + boss tester GLBs).
+ * This module remains for VoxelArena physics-bag authoring only if referenced there.
+ *
  * Free-standing punching bags for the Danger Room — hittable training targets.
  *
  * The bag GLB is a COMPLETE cantilever stand: a weighted base plate, an angled

@@ -245,6 +245,7 @@ import { PLAYER_HEADBUTT_PAYLOAD, PLAYER_HEAVY_PAYLOAD, PLAYER_STOMP_PAYLOAD, Sp
 import { isDefended, outcomeForceScale } from "./combatModel";
 import type { AttackPayload, DefensiveResult } from "@workspace/epicfight";
 import { HtmlOverlaySystem } from "./overlays";
+import { PracticeTargets } from "./PracticeTargets";
 import { RemoteAvatar } from "./RemoteAvatar";
 import type { DangerClient } from "../net/DangerClient";
 import {
@@ -876,6 +877,13 @@ export class Studio {
    * enter/exit chips (threejs-html-overlays dual-renderer pattern).
    */
   private htmlOverlays: HtmlOverlaySystem | null = null;
+  /**
+   * Practice Dummy + Boss Tester GLBs (side lane). Power on/off via E near them.
+   * Replaces legacy heavy punching bags.
+   */
+  private practiceTargets: PracticeTargets | null = null;
+  /** Throttle for practice-target interact chip refresh. */
+  private practiceChipT = 0;
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
@@ -1561,8 +1569,53 @@ export class Studio {
       void this.loadRuntimeScripts();
       // If outdoor map already loaded before physics, bake harvest colliders now
       this.rebakeHarvestPhysics();
+      // Practice Dummy + Boss Tester (side lane) — replaces heavy bags
+      void this.ensurePracticeTargets();
     } catch (err) {
       console.error("[Studio] physics init failed", err);
+      // Still load targets without physics (hit spheres only)
+      void this.ensurePracticeTargets();
+    }
+  }
+
+  /** Load side-lane practice dummies (once). */
+  private async ensurePracticeTargets() {
+    if (this.practiceTargets?.isLoaded || this.disposed) return;
+    if (!this.practiceTargets) {
+      this.practiceTargets = new PracticeTargets(this.scene, {
+        flash: (msg, t) => this.setCombatFlash(msg, t ?? 1.1),
+        onStateChange: () => this.syncPracticeTargetOverlays(),
+      });
+    }
+    try {
+      await this.practiceTargets.load();
+      this.syncPracticeTargetOverlays();
+    } catch (err) {
+      console.warn("[Studio] practice targets load failed", err);
+    }
+  }
+
+  /** World-space E chips for each practice target. */
+  private syncPracticeTargetOverlays() {
+    if (!this.practiceTargets || !this.htmlOverlays) return;
+    const pp = this.character?.root.position;
+    for (const st of this.practiceTargets.listStates(pp)) {
+      const label = st.on
+        ? `${st.name} · ON · ${Math.round(st.health)} HP · E off`
+        : `${st.name} · OFF · E power on`;
+      this.htmlOverlays.setInteractChip(
+        `practice:${st.id}`,
+        st.position,
+        label,
+        {
+          keyHint: "E",
+          kind: st.on ? "hostile" : "interact",
+          onClick: () => {
+            this.practiceTargets?.toggle(st.id);
+            this.syncPracticeTargetOverlays();
+          },
+        },
+      );
     }
   }
 
@@ -1741,8 +1794,15 @@ export class Studio {
     this.controller.setCollision(this.playerKcc, spawn, { keepRoomBounds: true });
   }
 
-  /** Knock any authored arena training bags inside `radius` of `center` (melee/skill impacts). */
+  /**
+   * Knock practice targets / arena bags inside `radius` of `center` (melee/skill impacts).
+   * Practice Dummy + Boss Tester (powered ON only) take damage; 0 HP → offline + corner.
+   */
   private hitBags(center: THREE.Vector3, radius: number, force: number, damage = 0) {
+    const hit = this.practiceTargets?.blast(center, radius, force, damage);
+    if (hit && hit.damage > 0 && hit.hitPos) {
+      this.htmlOverlays?.floatDamage(hit.hitPos, hit.damage, hit.critHint);
+    }
     this.arena?.blastBags(center, radius, force, damage);
   }
 
@@ -1954,7 +2014,8 @@ export class Studio {
     // on every character swap. The dungeon/arena KCC ignores this when active.
     this.controller.setObstacles(() => {
       const npcs = this.targets instanceof Targets ? this.targets.obstacleCircles() : [];
-      return [...this.room.obstacles, ...npcs];
+      const practice = this.practiceTargets?.obstacleCircles() ?? [];
+      return [...this.room.obstacles, ...npcs, ...practice];
     });
     // Re-apply shared Danger Room KCC after controller recreate (character swap).
     if (!this.inDungeon && !this.inArena) this.applyDangerRoomCollision();
@@ -10962,6 +11023,19 @@ export class Studio {
     // do NOT regen it locally — the CombatController handles regen internally.
 
     this.vfx.update(dt);
+    // Practice Dummy / Boss Tester health bars + hit flash
+    if (this.practiceTargets) {
+      this.practiceTargets.update(
+        dt,
+        this.camera,
+        this.character?.root.position,
+      );
+      this.practiceChipT -= dt;
+      if (this.practiceChipT <= 0) {
+        this.practiceChipT = 0.35;
+        this.syncPracticeTargetOverlays();
+      }
+    }
     this.htmlOverlays?.update(dt);
     // Network snapshot cadence must stay real-time so slow-mo (a local tuning
     // tool) never throttles outbound multiplayer reports — drive it off `raw`.
@@ -12448,6 +12522,15 @@ export class Studio {
       const pp = this.character?.root.position;
       if (pp && this.campBuild?.tryInteract(pp)) {
         return;
+      }
+      // Practice Dummy / Boss Tester — power on/off
+      if (pp && this.practiceTargets) {
+        const tid = this.practiceTargets.nearestInteract(pp);
+        if (tid) {
+          this.practiceTargets.toggle(tid);
+          this.syncPracticeTargetOverlays();
+          return;
+        }
       }
       // Planted claim flag → open camp claim UI (host)
       if (pp && this.nearClaimFlag(pp)) {
@@ -14832,6 +14915,8 @@ export class Studio {
     }
     this.pending.length = 0;
     this.abilities.cancelAll();
+    this.practiceTargets?.dispose();
+    this.practiceTargets = null;
     this.htmlOverlays?.dispose();
     this.htmlOverlays = null;
     this.scene.traverse((o) => {
