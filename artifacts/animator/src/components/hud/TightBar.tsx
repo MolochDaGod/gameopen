@@ -172,9 +172,28 @@ export interface TightBarProps {
   slots?: QuickSlots;
   bind?: HudPanelBinding;
   portraitFallback?: ReactNode;
+  /**
+   * J / H / V bag utility bindings (index 0=J heal slot, 1=H bomb slot, 2=V kick slot).
+   * When bound, overlay bag item icon over the default combat fallback.
+   */
+  utilitySlots?: Array<{ templateId: string; qty: number; icon?: string; name?: string } | null>;
 }
 
-export function TightBar({ hud, slots, bind, portraitFallback }: TightBarProps) {
+/** Map combat quick-action id → utility hotkey index (J=0, H=1, V=2). */
+function utilityIndexForAction(id: QuickActionId): number | null {
+  if (id === "heal") return 0; // J
+  if (id === "bomb") return 1; // H
+  if (id === "kick") return 2; // V
+  return null;
+}
+
+export function TightBar({
+  hud,
+  slots,
+  bind,
+  portraitFallback,
+  utilitySlots,
+}: TightBarProps) {
   const quickSlots = slots?.length ? slots : defaultQuickSlots();
   const slotByName = (slot: string): SlotBinding | undefined =>
     hud.slots.find((s) => s.slot === slot);
@@ -203,16 +222,32 @@ export function TightBar({ hud, slots, bind, portraitFallback }: TightBarProps) 
           );
         }
         const r = resolveQuickAction(id, hud, slotByName);
-        const onCd = r.cd > 0 && r.cdMax > 0;
+        const uIdx = utilityIndexForAction(id);
+        const bagItem = uIdx != null ? utilitySlots?.[uIdx] : null;
+        const name = bagItem?.name ?? r.name;
+        const iconUrl = bagItem?.icon || r.iconUrl;
+        const onCd = !bagItem && r.cd > 0 && r.cdMax > 0;
         const frac = onCd ? Math.max(0, Math.min(1, r.cd / r.cdMax)) : 0;
         return (
           <div
             key={`${id}-${i}`}
-            className={`tb-slot ${r.accent ? "tb-accent" : ""} ${onCd ? "on-cd" : "ready"}`}
+            className={`tb-slot ${r.accent || bagItem ? "tb-accent" : ""} ${onCd ? "on-cd" : "ready"}`}
             style={style}
-            title={r.keyLabel ? `${r.name} — ${r.keyLabel}` : r.name}
+            title={
+              bagItem
+                ? `${name} ×${bagItem.qty} — ${r.keyLabel} (bag)`
+                : r.keyLabel
+                  ? `${r.name} — ${r.keyLabel}`
+                  : r.name
+            }
           >
-            <Icon name={r.icon} src={r.iconUrl} fallbackName={r.icon} size={30} title={r.name} />
+            <Icon
+              name={r.icon}
+              src={iconUrl}
+              fallbackName={r.icon}
+              size={30}
+              title={name}
+            />
             {onCd && (
               <div
                 className="tb-sweep"
@@ -222,6 +257,11 @@ export function TightBar({ hud, slots, bind, portraitFallback }: TightBarProps) 
               />
             )}
             {onCd && <span className="tb-cd">{r.cd.toFixed(1)}</span>}
+            {bagItem && bagItem.qty > 1 && (
+              <span className="tb-cd" style={{ bottom: 2, top: "auto" }}>
+                {bagItem.qty}
+              </span>
+            )}
             <span className="tb-key">{r.keyLabel}</span>
           </div>
         );

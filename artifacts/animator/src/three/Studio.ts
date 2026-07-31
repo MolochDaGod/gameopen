@@ -868,6 +868,8 @@ export class Studio {
   private tabHoldArmed = false;
   private qHoldArmed = false;
   private rHoldArmed = false;
+  /** Free-mouse was forced open for radial mouse-aim (restore is optional). */
+  private radialForcedFreeMouse = false;
   /** Claim flag / structure placeable ghosts (build mode + Camp UI). */
   private campBuild: CampBuildSystem | null = null;
   private forestWorld: ForestWorld | null = null;
@@ -10711,6 +10713,8 @@ export class Studio {
       }
     }
     // Hold Tab / Q / R → open radial after short press threshold.
+    // Pointer-lock freezes clientX/Y in many browsers — free mouse so radial
+    // mouse-aim (HTML overlay) works (threejs-html-overlays best practice).
     const arming =
       (this.tabHoldArmed && this.input.down("Tab")) ||
       (this.qHoldArmed && this.input.down("KeyQ")) ||
@@ -10720,25 +10724,15 @@ export class Studio {
       if (this.radialHoldT >= 0.18 && !this.radialOpen) {
         if (this.qHoldArmed) {
           this.radialKind = "mode";
-          this.radialOpen = true;
+          this.openRadialForMouse();
         } else if (this.rHoldArmed && this.activityMode === "harvest") {
           this.radialKind = "tool";
-          this.radialOpen = true;
+          this.openRadialForMouse();
         } else if (this.tabHoldArmed) {
           this.radialKind = "options";
-          this.radialOpen = true;
+          this.openRadialForMouse();
         }
       }
-    } else if (
-      this.radialOpen &&
-      !this.tabHoldArmed &&
-      !this.qHoldArmed &&
-      !this.rHoldArmed &&
-      !this.input.down("Tab") &&
-      !this.input.down("KeyQ") &&
-      !this.input.down("KeyR")
-    ) {
-      // Safety close only when no arming keys remain (UI may keep open for mouse aim)
     }
     if (this.tumbleT > 0) {
       this.tumbleT = Math.max(0, this.tumbleT - dt);
@@ -11612,13 +11606,8 @@ export class Studio {
     const prev = this.activityMode;
     this.activityMode = mode;
     this.activityTool = defaultToolForMode(mode);
-    this.radialOpen = false;
-    this.radialKind = "none";
+    this.closeRadialState();
     this.harvestMoveActive = false;
-    this.tabHoldArmed = false;
-    this.qHoldArmed = false;
-    this.rHoldArmed = false;
-    this.radialHoldT = 0;
 
     if (mode === "harvest" || mode === "build") {
       // Leave combat focus stance; tools use free-aim soft select
@@ -11647,10 +11636,10 @@ export class Studio {
     // Short centre flash; persistent mode is the top-centre ModeBanner
     this.setCombatFlash(
       mode === "combat"
-        ? "COMBAT · Q mode · 1–4 skills · RMB lock"
+        ? "COMBAT · Hold Q mode · J/H/V bag · 1–4 skills · RMB lock"
         : mode === "build"
-          ? "BUILD · 1 m grid · ghost R rotate · LMB place · RMB continue"
-          : `${MODE_LABEL[mode]} · shoulder TPS`,
+          ? "BUILD · Hold Q mode · Tab placeables · LMB place · J/H/V deploy"
+          : `HARVEST · Hold R tools · skills 1–4 · J/H/V bag · I bag · P craft`,
       0.7,
     );
   }
@@ -11933,8 +11922,43 @@ export class Studio {
 
   /** Open/close radial options wheel. */
   setRadialOpen(open: boolean, kind: import("./playerMode").RadialKind = "options") {
-    this.radialOpen = open;
-    this.radialKind = open ? kind : "none";
+    if (open) {
+      this.radialKind = kind;
+      this.openRadialForMouse();
+    } else {
+      this.closeRadialState();
+    }
+  }
+
+  /**
+   * Open radial with free mouse so DOM clientX/Y aim works under pointer-lock.
+   * @see threejs-html-overlays — HTML overlays need real pointer coords.
+   */
+  private openRadialForMouse() {
+    this.radialOpen = true;
+    if (!this.freeMouseMode) {
+      this.radialForcedFreeMouse = true;
+      this.setFreeMouseMode(true);
+    }
+    try {
+      document.exitPointerLock?.();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private closeRadialState() {
+    this.radialOpen = false;
+    this.radialKind = "none";
+    this.tabHoldArmed = false;
+    this.qHoldArmed = false;
+    this.rHoldArmed = false;
+    this.radialHoldT = 0;
+    // Leave free-mouse on so player can click canvas to re-lock (browser gesture).
+    // F9 also re-locks. Do not auto pointer-lock without a user gesture.
+    if (this.radialForcedFreeMouse) {
+      this.radialForcedFreeMouse = false;
+    }
   }
 
   /**
@@ -11945,12 +11969,7 @@ export class Studio {
    */
   selectActivityTool(id: string) {
     const kind = this.radialKind;
-    this.radialOpen = false;
-    this.radialKind = "none";
-    this.tabHoldArmed = false;
-    this.qHoldArmed = false;
-    this.rHoldArmed = false;
-    this.radialHoldT = 0;
+    this.closeRadialState();
 
     // Mode switch (hold Q)
     if (kind === "mode" || id.startsWith("mode_")) {
@@ -11979,12 +11998,35 @@ export class Studio {
 
   /** Cancel radial without changing tool. */
   cancelRadial() {
-    this.radialOpen = false;
-    this.radialKind = "none";
-    this.tabHoldArmed = false;
-    this.qHoldArmed = false;
-    this.rHoldArmed = false;
-    this.radialHoldT = 0;
+    this.closeRadialState();
+  }
+
+  /**
+   * Apply bag consumable heal/stamina without re-binding KeyJ combat potion.
+   * Uses CombatController heal so HP syncs with sparring/PvP authority.
+   */
+  applyBagConsumable(heal: number, stamina: number) {
+    if (this.defeated) return;
+    const h = Math.max(0, Math.floor(heal));
+    const s = Math.max(0, Math.floor(stamina));
+    if (h > 0) {
+      try {
+        this.sparring?.healPlayer?.(h);
+      } catch {
+        this.health = Math.min(this.maxHealth, this.health + h);
+      }
+    }
+    if (s > 0) {
+      this.stamina = Math.min(this.maxStamina, this.stamina + s);
+    }
+    if ((h > 0 || s > 0) && this.character) {
+      const base = this.character.root.position.clone();
+      const core = base.clone().setY(base.y + 1);
+      const GREEN = 0x66ffaa;
+      this.vfx?.castSwirl?.(core, 0x9affc0, 0.7, 0.8);
+      this.vfx?.auraRing?.(core, GREEN, 1.2, 0.7);
+      this.vfx?.burst?.(base.clone().setY(base.y + 0.4), 0xa8ffd0, 28, 4);
+    }
   }
 
   private pickRadialByIndex(i: number) {

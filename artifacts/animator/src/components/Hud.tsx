@@ -26,6 +26,7 @@ import {
   rightWingSlots,
   type QuickActionId,
 } from "../hud/quickActions";
+import { getItemTemplate } from "../game/inventory";
 import { ArenaMinimapHud } from "./ArenaMinimapHud";
 import "./hud/tightBar.css";
 
@@ -1147,6 +1148,16 @@ export function Hud({
             slots={quickSlots}
             bind={bindOf(edit, "tightbar")}
             portraitFallback={<Icon name={WEAPON_ICON[hud.weapon]} size={44} />}
+            utilitySlots={(utilitySlots ?? []).map((it) => {
+              if (!it) return null;
+              const tpl = getItemTemplate(it.templateId);
+              return {
+                templateId: it.templateId,
+                qty: it.qty,
+                icon: tpl.icon,
+                name: tpl.name,
+              };
+            })}
           />
           <div className="cx-combat-poise-float tb-poise-float">
             <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />
@@ -1154,7 +1165,11 @@ export function Hud({
         </>
       ) : (
         <div {...applyBind(bindOf(edit, "vitals"), "cx-combat-bind")}>
-          <CraftpixCombatHud hud={hud} onOpenProduction={onOpenProduction} />
+          <CraftpixCombatHud
+            hud={hud}
+            onOpenProduction={onOpenProduction}
+            utilitySlots={utilitySlots}
+          />
           <div className="cx-combat-poise-float">
             <PoiseBar value={hud.poise} max={hud.maxPoise} crit={hud.critWindow > 0} />
             <CombatStateChip state={hud.combatState} critWindow={hud.critWindow} />

@@ -22,12 +22,15 @@ import {
   rightWingSlots,
   type QuickActionId,
 } from "../../hud/quickActions";
+import { getItemTemplate } from "../../game/inventory";
 import "./craftpixHud.css";
 
 export interface CraftpixCombatHudProps {
   hud: HudSnapshot;
   /** Optional production shell open */
   onOpenProduction?: () => void;
+  /** J / H / V bag utility bindings for right-wing heal/bomb/kick slots. */
+  utilitySlots?: Array<import("../../game/inventory").ItemInstance | null>;
 }
 
 type TipState = {
@@ -198,7 +201,11 @@ function CombatSlot({
   );
 }
 
-export function CraftpixCombatHud({ hud, onOpenProduction }: CraftpixCombatHudProps) {
+export function CraftpixCombatHud({
+  hud,
+  onOpenProduction,
+  utilitySlots,
+}: CraftpixCombatHudProps) {
   const [tip, setTip] = useState<TipState>(null);
   const slotByName = useCallback(
     (slot: string) => hud.slots?.find((s) => s.slot === slot),
@@ -291,15 +298,19 @@ export function CraftpixCombatHud({ hud, onOpenProduction }: CraftpixCombatHudPr
     }
     const pres = wingPresentation(id, hud, slotByName);
     const { cd, cdMax } = wingCooldown(id, hud);
+    // J/H/V bag overlay on heal / bomb / kick when assigned
+    const uIdx = id === "heal" ? 0 : id === "bomb" ? 1 : id === "kick" ? 2 : null;
+    const bag = uIdx != null ? utilitySlots?.[uIdx] : null;
+    const tpl = bag ? getItemTemplate(bag.templateId) : null;
     return {
       id,
       keyLabel: pres.key,
-      name: pres.name,
+      name: tpl?.name ?? pres.name,
       icon: pres.icon,
-      iconUrl: pres.iconUrl,
-      cd,
-      cdMax,
-      accent: id === "dodge" || id === "parry",
+      iconUrl: tpl?.icon || pres.iconUrl,
+      cd: bag ? 0 : cd,
+      cdMax: bag ? 0 : cdMax,
+      accent: id === "dodge" || id === "parry" || !!bag,
     };
   });
 

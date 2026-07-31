@@ -88,12 +88,19 @@ export function RadialMenu({
         onHover?.(null);
         return;
       }
+      // Mode radial: pure vertical axis (↑ combat · ↓ harvest)
+      if (kind === "mode" && n === 2) {
+        const i = dy < 0 ? 0 : 1;
+        setHover(i);
+        onHover?.(options[i]?.id ?? null);
+        return;
+      }
       const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
       const i = angleToIndex(deg, n);
       setHover(i);
       onHover?.(options[i]?.id ?? null);
     },
-    [open, n, options, onHover],
+    [open, n, options, onHover, kind],
   );
 
   const commit = useCallback(() => {
@@ -107,6 +114,19 @@ export function RadialMenu({
         e.preventDefault();
         onCancel?.();
       }
+      // Mode radial: ↑ combat · ↓ harvest (matches hold-Q fleet UX)
+      if (kind === "mode") {
+        if (e.code === "ArrowUp" || e.code === "KeyW") {
+          e.preventDefault();
+          onSelect("mode_combat");
+          return;
+        }
+        if (e.code === "ArrowDown" || e.code === "KeyS") {
+          e.preventDefault();
+          onSelect("mode_harvest");
+          return;
+        }
+      }
       // Number keys 1–8 pick wedges
       if (e.code.startsWith("Digit")) {
         const d = Number(e.code.slice(5));
@@ -118,7 +138,7 @@ export function RadialMenu({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, n, options, onSelect, onCancel]);
+  }, [open, n, options, onSelect, onCancel, kind]);
 
   const wedges = useMemo(() => {
     const slice = 360 / n;

@@ -517,15 +517,7 @@ export default function App() {
     setBagOpen(false);
   }, [mode]);
 
-  /** Creator-class systems / skillbook panel (K). Defined early for key handlers. */
-  const openSystems = useCallback(() => {
-    setSystemsOpen(true);
-    setEquipOpen(false);
-    setClaimFlagOpen(false);
-    document.exitPointerLock?.();
-  }, []);
-
-  /** Main panel (I) — character sheet tabs; optional start tab. */
+  /** Main panel (I/K) — character sheet tabs; optional start tab. */
   const openSystems = useCallback(
     (
       tab:
@@ -617,12 +609,11 @@ export default function App() {
       refreshBagMeta();
       const name = getItemTemplate(res.used.templateId).name;
       if (res.action === "use") {
+        studioRef.current?.applyBagConsumable?.(res.heal, res.stamina);
         studioRef.current?.flashMessage?.(
           `${name} · +${res.heal}HP +${res.stamina}SP`,
           1.4,
         );
-        // Heal via combat potion path when heal > 0 (visual + HP)
-        if (res.heal > 0) studioRef.current?.handleKey?.("KeyJ");
         return true;
       }
       if (res.action === "deploy" && res.placeableId) {
@@ -658,7 +649,17 @@ export default function App() {
       nearCamp: false,
       onBoat: false,
     };
-    setDepositCtx(resolveDepositContext(probe));
+    // DepositProbeInput requires feet x/y/z; zone flags drive illumination.
+    setDepositCtx(
+      resolveDepositContext({
+        x: 0,
+        y: 0,
+        z: 0,
+        insideClaim: !!probe.insideClaim,
+        nearCamp: !!probe.nearCamp,
+        onBoat: !!probe.onBoat,
+      }),
+    );
   }, []);
 
   useEffect(() => {
