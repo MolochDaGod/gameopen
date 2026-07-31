@@ -2,13 +2,13 @@
 
 **Canonical live origin:** [open.grudge-studio.com](https://open.grudge-studio.com)
 
-**Product:** Steam-like collection shell — **library**, **in-app canvas**, **games**, **accounts**, **saves**, **characters**, **editors**, **Mine-Loader Realms**, **Warlord Genesis**, GRUDOX arcade. One origin; fleet SSO; Railway characters / `saveData.open`.
+**Product:** Steam-like collection shell — **library**, **in-app canvas**, **arcade**, **accounts**, **saves**, **characters**, **editors**, **Mine-Loader Realms**, **Warlord Genesis**, GRUDOX arcade. One origin; fleet SSO; Railway characters / `saveData.open`.
 
-**Production tools:** in-app **Toolbox** (Tools � Three.js � Rapier � R3F � Create � Music) + [Grok Builder](https://grok-builder.vercel.app/?panel=modes). Guide: [docs/PRODUCTION_TOOLS.md](docs/PRODUCTION_TOOLS.md) � code: `artifacts/animator/src/lib/productionTools.ts`.
+**Production tools:** in-app **Toolbox** (Tools / Three.js / Rapier / R3F / Create / Music) + [Grok Builder](https://grok-builder.vercel.app/?panel=modes). Guide: [`docs/PRODUCTION_TOOLS.md`](docs/PRODUCTION_TOOLS.md) / code: `artifacts/animator/src/lib/productionTools.ts`.
 
-Full map: [`docs/OPEN_PRODUCT.md`](docs/OPEN_PRODUCT.md) · collection rules: [`docs/OPEN_COLLECTION_CONSOLIDATION.md`](docs/OPEN_COLLECTION_CONSOLIDATION.md)
+Full map: [`docs/OPEN_PRODUCT.md`](docs/OPEN_PRODUCT.md) / collection rules: [`docs/OPEN_COLLECTION_CONSOLIDATION.md`](docs/OPEN_COLLECTION_CONSOLIDATION.md)
 
-**Replaces** the legacy Animator lab at [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) — do not ship new features there. Ingest: `npm run ingest:rapier` · [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
+**Replaces** the legacy Animator lab at [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) - do not ship new features there. Ingest: `npm run ingest:rapier` / [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
 
 | Surface | Platform | Role |
 |---------|----------|------|
