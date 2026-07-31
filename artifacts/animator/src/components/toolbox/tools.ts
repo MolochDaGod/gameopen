@@ -5,8 +5,13 @@
  *  3) Create tab → Grok Builder deep links for games / modes / edits
  *
  * Every button does something real — mode switch, dock panel, HUD, external builder, or docs.
+ * Production URL SSOT: `lib/productionTools.ts` · docs/PRODUCTION_TOOLS.md
  */
 import type { IconName } from "../../three/icons";
+import {
+  PRODUCTION_SURFACES,
+  grokBuilderUrl,
+} from "../../lib/productionTools";
 
 /** Mirrors App's `Mode` union (kept local to avoid a component import cycle). */
 export type ToolMode =
@@ -49,18 +54,15 @@ export interface ToolDef {
   stack?: "three" | "rapier" | "r3f" | "create";
 }
 
-export const GROK_BUILDER = "https://grok-builder.vercel.app";
-export const FORGE_URL = "https://forge.grudge-studio.com";
-export const THREE_DOCS = "https://threejs.org/docs/";
-export const RAPIER_DOCS = "https://rapier.rs/docs/user_guides/javascript/getting_started_js";
-export const R3F_DOCS = "https://docs.pmnd.rs/react-three-fiber/getting-started/introduction";
+/** @deprecated Prefer PRODUCTION_SURFACES / grokBuilderUrl — kept for external importers. */
+export const GROK_BUILDER = PRODUCTION_SURFACES.grokBuilder;
+export const FORGE_URL = PRODUCTION_SURFACES.forge;
+export const THREE_DOCS = PRODUCTION_SURFACES.threeDocs;
+export const RAPIER_DOCS = PRODUCTION_SURFACES.rapierDocs;
+export const R3F_DOCS = PRODUCTION_SURFACES.r3fDocs;
 
-function gb(path = "", params?: Record<string, string>): string {
-  const u = new URL(GROK_BUILDER + (path.startsWith("/") ? path : path ? `/${path}` : ""));
-  if (params) {
-    for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
-  }
-  return u.toString();
+function gb(params?: Record<string, string>): string {
+  return grokBuilderUrl(params);
 }
 
 /** All 25 tools in sprite-sheet (row-major) order — live Open launchers. */
@@ -227,63 +229,63 @@ export const THREEJS_STACK_TOOLS: ToolDef[] = [
     label: "Scene + SI Scale",
     hint: "SI metres, 1.8 m human, dispose, color management r185+",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "scene" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "scene" }) },
   },
   {
     icon: "camera",
     label: "Cameras & Controls",
     hint: "Orbit / Map / Fly / TransformControls arbitration",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "camera" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "camera" }) },
   },
   {
     icon: "animator",
     label: "Animation System",
     hint: "AnimationMixer, SkeletonUtils.clone, cross-fade, one-shots",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "animation" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "animation" }) },
   },
   {
     icon: "asset-manager",
     label: "Loaders & I/O",
     hint: "GLTF/Draco/meshopt/KTX2 — fleet CDN + ObjectStore index",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "assets", focus: "loaders" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "assets", focus: "loaders" }) },
   },
   {
     icon: "vfx-editor",
     label: "Materials & TSL",
     hint: "PBR, ShaderMaterial, TSL nodes, WebGPU path",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "materials" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "materials" }) },
   },
   {
     icon: "skill-vfx-lab",
     label: "Post & Cinema",
     hint: "EffectComposer, bloom, cinema beats, letterbox",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "cinema" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "cinema" }) },
   },
   {
     icon: "building-kit",
     label: "Instancing & LOD",
     hint: "InstancedMesh, frustum cull, grass/trees/VFX batches",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "instancing" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "instancing" }) },
   },
   {
     icon: "foot-planting",
     label: "Helpers",
     hint: "AxesHelper, Box3Helper, Grid, SkeletonHelper, light helpers",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "helpers", helpers: "1" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "helpers", helpers: "1" }) },
   },
   {
     icon: "scriptable-skills",
     label: "Scripts & Beats",
     hint: "Gameplay scripts, timeline beats, event bus patterns",
     stack: "three",
-    action: { kind: "external", url: gb("", { stack: "three", panel: "modes", focus: "scripts" }) },
+    action: { kind: "external", url: gb({ stack: "three", panel: "modes", focus: "scripts" }) },
   },
   {
     icon: "clip-library",
@@ -301,42 +303,42 @@ export const RAPIER_STACK_TOOLS: ToolDef[] = [
     label: "World + Step",
     hint: "Fixed 1/60 step, SI gravity −9.81, world snapshot",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "world", physics: "1" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "world", physics: "1" }) },
   },
   {
     icon: "parkour",
     label: "Character CCT",
     hint: "Kinematic character controller — slide, climb, snap",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "cct", mode: "parkour" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "cct", mode: "parkour" }) },
   },
   {
     icon: "weapon-mesh",
     label: "Colliders",
     hint: "Cuboid / ball / capsule / trimesh / convex hull",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "colliders", mode: "physics-lab" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "colliders", mode: "physics-lab" }) },
   },
   {
     icon: "combat-pad",
     label: "Joints & Ragdoll",
     hint: "Fixed/spherical/revolute joints, chains, ragdolls",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "joints", mode: "physics-lab" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "joints", mode: "physics-lab" }) },
   },
   {
     icon: "movement-pad",
     label: "Scene Queries",
     hint: "Raycast, shape cast, intersection, proximity",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "queries" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "queries" }) },
   },
   {
     icon: "loadout-card",
     label: "Collision Layers",
     hint: "Default / Terrain / Player / NPC / Item / Projectile / Trigger",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "layers" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "layers" }) },
   },
   {
     icon: "anim-test",
@@ -345,7 +347,7 @@ export const RAPIER_STACK_TOOLS: ToolDef[] = [
     stack: "rapier",
     action: {
       kind: "external",
-      url: gb("", { stack: "rapier", panel: "modes", focus: "debug", physics: "1", physDebug: "1" }),
+      url: gb({ stack: "rapier", panel: "modes", focus: "debug", physics: "1", physDebug: "1" }),
     },
   },
   {
@@ -353,14 +355,14 @@ export const RAPIER_STACK_TOOLS: ToolDef[] = [
     label: "Instanced Bodies",
     hint: "Crowd dynamics, debris, harvest fragments",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "instances", mode: "physics-lab" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "instances", mode: "physics-lab" }) },
   },
   {
     icon: "scriptable-skills",
     label: "Triggers & Events",
     hint: "Sensor volumes, collision events, win zones",
     stack: "rapier",
-    action: { kind: "external", url: gb("", { stack: "rapier", panel: "modes", focus: "triggers", mode: "arena" }) },
+    action: { kind: "external", url: gb({ stack: "rapier", panel: "modes", focus: "triggers", mode: "arena" }) },
   },
   {
     icon: "clip-library",
@@ -378,21 +380,21 @@ export const R3F_STACK_TOOLS: ToolDef[] = [
     label: "Canvas Shell",
     hint: "Canvas, dpr, shadows, AdaptiveDpr, color space, tone map",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "canvas" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "canvas" }) },
   },
   {
     icon: "draggable-dock",
     label: "Hooks & Store",
     hint: "useFrame, useThree, zustand scene store, imperatives",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "hooks" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "hooks" }) },
   },
   {
     icon: "camera",
     label: "Drei Controls",
     hint: "OrbitControls, TransformControls, Html, Environment",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "drei" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "drei" }) },
   },
   {
     icon: "physics",
@@ -401,7 +403,7 @@ export const R3F_STACK_TOOLS: ToolDef[] = [
     stack: "r3f",
     action: {
       kind: "external",
-      url: gb("", { stack: "r3f", panel: "modes", focus: "rapier-bridge", physics: "1" }),
+      url: gb({ stack: "r3f", panel: "modes", focus: "rapier-bridge", physics: "1" }),
     },
   },
   {
@@ -409,28 +411,28 @@ export const R3F_STACK_TOOLS: ToolDef[] = [
     label: "useAnimations",
     hint: "drei useAnimations, shared skeleton crowds, DetachedBindMode",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "useAnimations" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "useAnimations" }) },
   },
   {
     icon: "asset-manager",
     label: "Suspense Assets",
     hint: "useGLTF, useTexture, preload, dispose on unmount",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "assets", focus: "suspense" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "assets", focus: "suspense" }) },
   },
   {
     icon: "skill-vfx-lab",
     label: "HTML Overlays",
     hint: "drei Html, CSS2D labels, diegetic UI",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "html" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "html" }) },
   },
   {
     icon: "building-kit",
     label: "Performance",
     hint: "AdaptiveEvents, instances, BVH, frame budget",
     stack: "r3f",
-    action: { kind: "external", url: gb("", { stack: "r3f", panel: "modes", focus: "perf", stats: "1" }) },
+    action: { kind: "external", url: gb({ stack: "r3f", panel: "modes", focus: "perf", stats: "1" }) },
   },
   {
     icon: "world-editor",
@@ -455,70 +457,70 @@ export const CREATE_STACK_TOOLS: ToolDef[] = [
     label: "Grok Builder",
     hint: "Full agentic editor — games, modes, edits, fleet assets",
     stack: "create",
-    action: { kind: "external", url: gb("", { panel: "modes" }) },
+    action: { kind: "external", url: gb({ panel: "modes" }) },
   },
   {
     icon: "combat-pad",
     label: "New Arena Mode",
     hint: "Sparring arena template + triggers + loadout pad",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "arena", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "arena", panel: "agent" }) },
   },
   {
     icon: "parkour",
     label: "New Parkour Mode",
     hint: "Platform course + CCT movement sandbox",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "parkour", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "parkour", panel: "agent" }) },
   },
   {
     icon: "building-kit",
     label: "Pirate Lobby",
     hint: "Fleet pirate-islands lobby mesh + open-world pad",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "pirate-lobby", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "pirate-lobby", panel: "agent" }) },
   },
   {
     icon: "physics",
     label: "Physics Lab Mode",
     hint: "Dynamic bodies, joints playground, debug draw",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "physics-lab", panel: "modes", physDebug: "1" }) },
+    action: { kind: "external", url: gb({ mode: "physics-lab", panel: "modes", physDebug: "1" }) },
   },
   {
     icon: "harvest" as IconName,
     label: "Survival Mode",
     hint: "Harvest pads, resource nodes, day-cycle ready",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "survival", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "survival", panel: "agent" }) },
   },
   {
     icon: "siege" as IconName,
     label: "RTS Skirmish",
     hint: "Top-down pad, unit placeholders, command feel",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "rts-skirmish", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "rts-skirmish", panel: "agent" }) },
   },
   {
     icon: "scriptable-skills",
     label: "Creative Sandbox",
     hint: "Empty SI ground + agent — invent any mode",
     stack: "create",
-    action: { kind: "external", url: gb("", { mode: "sandbox", panel: "agent" }) },
+    action: { kind: "external", url: gb({ mode: "sandbox", panel: "agent" }) },
   },
   {
     icon: "vfx-editor",
     label: "Edit Scene JSON",
     hint: "Import/export scene + game package for fleet",
     stack: "create",
-    action: { kind: "external", url: gb("", { panel: "modes", focus: "export" }) },
+    action: { kind: "external", url: gb({ panel: "modes", focus: "export" }) },
   },
   {
     icon: "ai-worker",
     label: "Ask Grok to Build",
     hint: "Agent chat — describe a game, modes, edits",
     stack: "create",
-    action: { kind: "external", url: gb("", { panel: "agent" }) },
+    action: { kind: "external", url: gb({ panel: "agent" }) },
   },
 ];
 

@@ -45,6 +45,15 @@ export const FLEET = {
   /** Mine-Loader SPA edge */
   mineLoader: "https://mine.grudge-studio.com",
   arena: "https://grudge-arena.grudge-studio.com",
+  /** Production tool surfaces (builders / editors) — full map in productionTools.ts */
+  grokBuilder: "https://grok-builder.vercel.app",
+  forge: "https://forge.grudge-studio.com",
+  foundry: "https://character.grudge-studio.com",
+  client: "https://client.grudge-studio.com",
+  coder: "https://coder.grudge-studio.com",
+  warstrat: "https://warlord-genesis.vercel.app",
+  rts: "https://rts-grudge.vercel.app",
+  wcs: "https://warlord-crafting-suite.vercel.app",
 } as const;
 
 /**

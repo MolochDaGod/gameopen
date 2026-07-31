@@ -96,6 +96,17 @@ Open client: `VITE_AI_URL` + animator `ai/` surfaces (danger tools, companion, p
 
 ---
 
+## 4b. Production tools (Toolbox + Grok Builder)
+
+| Tool | URL | Notes |
+|------|-----|--------|
+| **Open Toolbox** | open.grudge-studio.com (in-app) | Tools · Three.js · Rapier · R3F · Create · Music |
+| **Grok Builder** | https://grok-builder.vercel.app | Modes, agent, export production `.game.json` |
+| Code SSOT | `artifacts/animator/src/lib/productionTools.ts` | Surface URLs + health targets |
+| Full guide | [`PRODUCTION_TOOLS.md`](./PRODUCTION_TOOLS.md) | Deep-links, package format, deploy |
+
+---
+
 ## 5. Editors & deployments by era
 
 ### Voxel era → **GRUDOX + Mine-Loader + VoxGrudge**
@@ -150,6 +161,7 @@ Open client: `VITE_AI_URL` + animator `ai/` surfaces (danger tools, companion, p
 | Project | Platform | Domain(s) |
 |---------|----------|-----------|
 | gameopen | Vercel | open.grudge-studio.com, gameopen.vercel.app |
+| grok-builder | Vercel | grok-builder.vercel.app |
 | open CF worker | Cloudflare | open.grudge-studio.com proxy |
 | grudox CF worker | Cloudflare | grudox / carrier |
 | grudge-api | Railway | characters DB |

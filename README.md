@@ -4,6 +4,8 @@
 
 **Product:** Steam-like collection shell — **library**, **in-app canvas**, **games**, **accounts**, **saves**, **characters**, **editors**, **Mine-Loader Realms**, **Warlord Genesis**, GRUDOX arcade. One origin; fleet SSO; Railway characters / `saveData.open`.
 
+**Production tools:** in-app **Toolbox** (Tools � Three.js � Rapier � R3F � Create � Music) + [Grok Builder](https://grok-builder.vercel.app/?panel=modes). Guide: [docs/PRODUCTION_TOOLS.md](docs/PRODUCTION_TOOLS.md) � code: `artifacts/animator/src/lib/productionTools.ts`.
+
 Full map: [`docs/OPEN_PRODUCT.md`](docs/OPEN_PRODUCT.md) · collection rules: [`docs/OPEN_COLLECTION_CONSOLIDATION.md`](docs/OPEN_COLLECTION_CONSOLIDATION.md)
 
 **Replaces** the legacy Animator lab at [threejs-rapier-react-three-controll.vercel.app](https://threejs-rapier-react-three-controll.vercel.app/) — do not ship new features there. Ingest: `npm run ingest:rapier` · [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).
@@ -14,10 +16,12 @@ Full map: [`docs/OPEN_PRODUCT.md`](docs/OPEN_PRODUCT.md) · collection rules: [`
 | Client SPA | **Vercel** | Animator build (`artifacts/animator`) |
 | API | **Railway** | Health, effects, co-op helpers |
 | Characters / wallet | **GrudgeBuilder Postgres** | `/api/characters`, `/api/wallet` |
-| Catalog (D1+R2) | **ObjectStore** | Definition JSON (not character state) |
-| Binaries | **R2** | `assets.grudge-studio.com/gameopen/*` |
+| Catalogs | **info.grudge-studio.com** | Definition JSON (not character state) |
+| Binaries | **R2** | `assets.grudge-studio.com` |
 | Auth | **Grudge ID** | `id.grudge-studio.com` |
 | AI | **ai.grudge-studio.com** | Companion dock |
+| Create / modes | **Grok Builder** | `grok-builder.vercel.app` (Toolbox Create tab) |
+| Map editor | **Forge** | `forge.grudge-studio.com` |
 | Voxel worlds | **Mine-Loader** | Realms SPA + 1× world API |
 
 **Macro stack / D1 / AI handoff:** [`docs/OPEN_STACK.md`](docs/OPEN_STACK.md)
@@ -91,7 +95,7 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 
 | Path | Surface |
 |------|---------|
-| `/` | Hub (door select) |
+| `/` | Hub (door select) + **Toolbox** (production tools) |
 | `/danger` | Danger Room combat lab |
 | `/annihilate-demo` | Danger Room + grudge6 hero boot (`?hero=elf_worge`) |
 | `/play` | Play authored map |
