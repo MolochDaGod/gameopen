@@ -40,18 +40,17 @@ const PLAYER_MELEE_REACH = 2.8;
 const INTERACT_RANGE = 3.0;
 const ACID_AOE = MIMIC_ATTACKS.acid.aoeRadius; // 3 m
 /**
- * Map candidates for the Mimic test dungeon.
- * NOTE: `vol.glb` is known-broken in three GLTFLoader (skin joints → isBone crash)
- * and must NOT be first. Prefer playable arena maps that parse cleanly.
+ * Map candidates — **volcano + mimic asset first** (product intent).
+ * `vol.glb` shipped with a broken glTF skin (joints all null → isBone crash);
+ * local public/models/vol.glb is repaired (skins stripped; mimic is procedural).
+ * Arena/dungeon substitutes are last-resort only.
  */
 const MAP_MESH_KEYS = [
-  "models/dungeon.glb",
-  "models/minecraft-kit.glb",
-  "models/chicken-gun-town.glb",
-  "models/arena-war-zone.glb",
-  // Last resort — often fails parse; keep for when repaired on R2
   "models/vol.glb",
   "models/worlds/vol.glb",
+  // Fallback only if volcano CDN/path missing
+  "models/dungeon.glb",
+  "models/minecraft-kit.glb",
 ] as const;
 const PLAYER_WEAPON: WeaponId = "sword";
 
@@ -234,11 +233,10 @@ export class MimicDungeon {
       this.player.add(av.root);
       av.root.position.set(0, 0, 0);
       // Art-forward: grudge6 kits face +Z; parent yaw steers facing.
-      // If the mesh still looks sideways, setModelYaw(±π/2) is the next knob.
       if (typeof av.setModelYaw === "function") {
         av.setModelYaw(0);
       }
-      // Ground feet after load (hip tracks / AABB) then idle
+      // Ground feet on y=0 relative to player group (world Y from ground ray)
       try {
         const { reGroundAfterAnimSample, findDeployModel } = await import("../characterDeploy");
         const model = findDeployModel?.(av.root) ?? av.root;
@@ -246,7 +244,16 @@ export class MimicDungeon {
       } catch {
         /* optional */
       }
-      av.playRole?.("idle", 0);
+      // Sample idle once so bind-pose float is corrected after mixer attaches
+      try {
+        av.playRole?.("idle", 0);
+        av.update?.(1 / 30);
+        const { reGroundAfterAnimSample, findDeployModel } = await import("../characterDeploy");
+        const model = findDeployModel?.(av.root) ?? av.root;
+        reGroundAfterAnimSample(model, 0);
+      } catch {
+        av.playRole?.("idle", 0);
+      }
       av.setLocomotion?.(0, false);
 
       // Mount sword on hand sockets (Danger Room arsenal path)
@@ -335,7 +342,7 @@ export class MimicDungeon {
 
     if (!gltf) {
       console.error("[MimicDungeon] all map candidates failed", errors);
-      this.loadNote = "Map GLBs failed — arena floor (dungeon/minecraft/vol)";
+      this.loadNote = "Volcano map failed — temporary arena (check models/vol.glb)";
       this.buildArenaFallback();
       this.spawnMimicFallback();
       this.finishSetup();
@@ -344,7 +351,16 @@ export class MimicDungeon {
     }
     if (this.disposed) return;
     const root = gltf.scene;
-    this.loadNote = `Map loaded · ${usedKey.split("/").pop()}`;
+    const isVolcano = /vol\.glb/i.test(usedKey);
+    this.loadNote = isVolcano
+      ? `Volcano scene · ${usedKey.split("/").pop()}`
+      : `Map fallback · ${usedKey.split("/").pop()}`;
+
+    // Volcanic mood when the real asset is up
+    if (isVolcano) {
+      this.scene.background = new THREE.Color(0x140a08);
+      this.scene.fog = new THREE.FogExp2(0x1a0c08, 0.014);
+    }
 
     // Auto-scale to a playable footprint (~34–48 m), like the Dungeon loader.
     const box = new THREE.Box3().setFromObject(root);
