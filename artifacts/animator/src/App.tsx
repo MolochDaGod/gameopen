@@ -23,6 +23,7 @@ import { loadControls } from "./three/controlsSettings";
 import { ROOM_PRESETS, ROOM_PRESET_LIST, asRoomPresetId, loadRoomPreset, saveRoomPreset, type RoomPresetId } from "./three/RoomPresets";
 import {
   loadTestWorldId,
+  TEST_WORLD_LIST,
   type TestWorldId,
 } from "./three/testWorlds";
 import { loadSound, type SoundSettings } from "./three/soundSettings";
@@ -802,6 +803,8 @@ export default function App() {
     progress?: number;
   }>({ visible: false, label: "LOADING" });
   const [dockOpen, setDockOpen] = useState(false);
+  /** In-play test map picker (TEST_WORLDS). */
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
   /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
@@ -1666,7 +1669,15 @@ export default function App() {
   const onTestWorld = useCallback((id: TestWorldId) => {
     setTestWorldId(id);
     const studio = studioRef.current;
-    if (!studio) return;
+    if (!studio) {
+      // Persist selection even before Studio mounts (start screen)
+      try {
+        localStorage.setItem("open:testWorld:v1", id);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     // Best-practice load curtain: progress stages while GLB + bake run
     setHelpersLoad({
       visible: true,
@@ -1696,6 +1707,17 @@ export default function App() {
       }, 450);
     });
   }, []);
+
+  const dangerMapOptions = useMemo(
+    () =>
+      TEST_WORLD_LIST.map((w) => ({
+        id: w.id,
+        name: w.name,
+        blurb: w.blurb,
+        kind: w.kind,
+      })),
+    [],
+  );
 
   // Whitelisted AI tool surface for the Danger Room — combat + anim + movement.
   const dangerAiTools = useMemo(
@@ -3072,8 +3094,13 @@ export default function App() {
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={true}
               warmDetail="Map play · same combat stack"
+              testWorldId={testWorldId}
+              mapOptions={dangerMapOptions}
+              onTestWorld={onTestWorld}
               onEnter={() => {
                 setDangerStartOpen(false);
+                // Ensure selected outdoor / loco map is applied
+                void studioRef.current?.setTestWorld(testWorldId);
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
                   studioRef.current?.flashMessage?.(
@@ -3122,6 +3149,47 @@ export default function App() {
 
           {!dangerStartOpen && (
             <>
+              <button
+                type="button"
+                className={`fx-toggle map-toggle ${mapPickerOpen ? "on" : ""}`}
+                title="Playable maps · climb / swim / combat / harvest"
+                onClick={() => setMapPickerOpen((v) => !v)}
+              >
+                MAP
+              </button>
+              {mapPickerOpen && (
+                <div className="danger-map-picker" role="dialog" aria-label="Test maps">
+                  <div className="danger-map-picker-head">
+                    <span>Playable maps</span>
+                    <button type="button" onClick={() => setMapPickerOpen(false)}>
+                      ×
+                    </button>
+                  </div>
+                  <div className="danger-map-picker-grid">
+                    {dangerMapOptions.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={
+                          "danger-map-picker-item" +
+                          (testWorldId === m.id ? " is-active" : "")
+                        }
+                        title={m.blurb}
+                        onClick={() => {
+                          onTestWorld(m.id);
+                          setMapPickerOpen(false);
+                        }}
+                      >
+                        <span className="danger-map-picker-kind">{m.kind.replace(/_/g, " ")}</span>
+                        <span className="danger-map-picker-name">{m.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="danger-map-picker-foot">
+                    Also Admin → Test Maps · current: {testWorldId}
+                  </p>
+                </div>
+              )}
               <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
                 FX
               </button>
@@ -3298,7 +3366,7 @@ export default function App() {
             />
           </TipProvider>
 
-          {/* Start gate: ENTER → pointer lock; room preset + fleet warmup */}
+          {/* Start gate: ENTER → pointer lock; maps + room preset + fleet warmup */}
           {dangerStartOpen && !isMobile && (
             <DangerStartScreen
               characterLabel={(() => {
@@ -3324,11 +3392,15 @@ export default function App() {
                 blurb: p.blurb,
               }))}
               onRoomPreset={onRoomPreset}
+              testWorldId={testWorldId}
+              mapOptions={dangerMapOptions}
+              onTestWorld={onTestWorld}
               onOpenAccount={() => navigate("account")}
               onEnter={() => {
                 setDangerStartOpen(false);
-                // Ensure selected arena is applied before combat
+                // Chamber skin + selected outdoor/loco map
                 studioRef.current?.setRoomPreset(roomPreset);
+                void studioRef.current?.setTestWorld(testWorldId);
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
                   studioRef.current?.flashMessage?.(
@@ -3345,7 +3417,7 @@ export default function App() {
                   document.body.requestPointerLock?.();
                 }
                 studioRef.current?.flashMessage?.(
-                  "DANGER · F8 free mouse · RMB focus · LMB attack · X roll",
+                  "DANGER · F8 free mouse · maps in Admin · Hold Q mode",
                   1.8,
                 );
               }}
@@ -3378,6 +3450,47 @@ export default function App() {
 
           {!panelsOpen && !dangerStartOpen && (
             <>
+              <button
+                type="button"
+                className={`fx-toggle map-toggle ${mapPickerOpen ? "on" : ""}`}
+                title="Playable maps · climb / swim / combat / harvest"
+                onClick={() => setMapPickerOpen((v) => !v)}
+              >
+                MAP
+              </button>
+              {mapPickerOpen && (
+                <div className="danger-map-picker" role="dialog" aria-label="Test maps">
+                  <div className="danger-map-picker-head">
+                    <span>Playable maps</span>
+                    <button type="button" onClick={() => setMapPickerOpen(false)}>
+                      ×
+                    </button>
+                  </div>
+                  <div className="danger-map-picker-grid">
+                    {dangerMapOptions.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={
+                          "danger-map-picker-item" +
+                          (testWorldId === m.id ? " is-active" : "")
+                        }
+                        title={m.blurb}
+                        onClick={() => {
+                          onTestWorld(m.id);
+                          setMapPickerOpen(false);
+                        }}
+                      >
+                        <span className="danger-map-picker-kind">{m.kind.replace(/_/g, " ")}</span>
+                        <span className="danger-map-picker-name">{m.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="danger-map-picker-foot">
+                    Also Admin → Test Maps · current: {testWorldId}
+                  </p>
+                </div>
+              )}
               <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
                 FX
               </button>

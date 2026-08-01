@@ -27,6 +27,103 @@
     0 24px 64px rgba(0, 0, 0, 0.55),
     0 0 48px rgba(40, 140, 255, 0.12);
   text-align: center;
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+}
+
+.danger-start-card--wide {
+  width: min(720px, 96vw);
+}
+
+/* ── Playable test maps (TEST_WORLDS) ─────────────────────────────── */
+.danger-start-maps {
+  margin: 0 0 14px;
+  text-align: left;
+}
+.danger-start-maps-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+.danger-start-maps-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba(120, 200, 255, 0.85);
+  text-transform: uppercase;
+}
+.danger-start-maps-hint {
+  font-size: 10px;
+  font-family: "Inter", system-ui, sans-serif;
+  color: rgba(160, 190, 220, 0.55);
+}
+.danger-start-maps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 7px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+}
+.danger-start-map {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(100, 160, 220, 0.16);
+  background: rgba(0, 0, 0, 0.32);
+  color: rgba(210, 230, 255, 0.92);
+  cursor: pointer;
+  font-family: "Inter", system-ui, sans-serif;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+  min-height: 72px;
+}
+.danger-start-map:hover {
+  border-color: rgba(80, 200, 255, 0.45);
+  background: rgba(20, 40, 70, 0.45);
+}
+.danger-start-map.is-active {
+  border-color: rgba(62, 233, 255, 0.65);
+  background: rgba(20, 60, 90, 0.55);
+  box-shadow: 0 0 16px rgba(40, 180, 255, 0.2);
+}
+.danger-start-map-kind {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(100, 210, 180, 0.85);
+}
+.danger-start-map.is-active .danger-start-map-kind {
+  color: #3ee9ff;
+}
+.danger-start-map-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e8f4ff;
+  line-height: 1.2;
+}
+.danger-start-map-blurb {
+  font-size: 10px;
+  line-height: 1.3;
+  color: rgba(160, 190, 220, 0.62);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.danger-start-presets-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
 }
 
 .danger-start-kicker {
