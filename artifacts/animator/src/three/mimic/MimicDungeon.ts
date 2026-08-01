@@ -39,10 +39,19 @@ const MELEE_REACH = 2.4;
 const PLAYER_MELEE_REACH = 2.8;
 const INTERACT_RANGE = 3.0;
 const ACID_AOE = MIMIC_ATTACKS.acid.aoeRadius; // 3 m
-const VOL_MESH_KEYS = [
+/**
+ * Map candidates for the Mimic test dungeon.
+ * NOTE: `vol.glb` is known-broken in three GLTFLoader (skin joints → isBone crash)
+ * and must NOT be first. Prefer playable arena maps that parse cleanly.
+ */
+const MAP_MESH_KEYS = [
+  "models/dungeon.glb",
+  "models/minecraft-kit.glb",
+  "models/chicken-gun-town.glb",
+  "models/arena-war-zone.glb",
+  // Last resort — often fails parse; keep for when repaired on R2
   "models/vol.glb",
   "models/worlds/vol.glb",
-  "models/maps/vol/vol.glb",
 ] as const;
 const PLAYER_WEAPON: WeaponId = "sword";
 
@@ -224,7 +233,19 @@ export class MimicDungeon {
       this.avatar = av;
       this.player.add(av.root);
       av.root.position.set(0, 0, 0);
-      // Idle so first paint is not dead T-pose
+      // Art-forward: grudge6 kits face +Z; parent yaw steers facing.
+      // If the mesh still looks sideways, setModelYaw(±π/2) is the next knob.
+      if (typeof av.setModelYaw === "function") {
+        av.setModelYaw(0);
+      }
+      // Ground feet after load (hip tracks / AABB) then idle
+      try {
+        const { reGroundAfterAnimSample, findDeployModel } = await import("../characterDeploy");
+        const model = findDeployModel?.(av.root) ?? av.root;
+        reGroundAfterAnimSample(model, 0);
+      } catch {
+        /* optional */
+      }
       av.playRole?.("idle", 0);
       av.setLocomotion?.(0, false);
 
@@ -242,14 +263,13 @@ export class MimicDungeon {
         console.warn("[MimicDungeon] weapon mount failed — combat still works", werr);
       }
 
-      this.loadNote = "Hero ready · sword + skills 1–4";
+      const clips = av.clipNames?.() ?? [];
+      this.loadNote =
+        clips.length > 0
+          ? `Hero ready · sword + skills 1–4 · ${clips.length} clips`
+          : "Hero mesh ready · anim clips missing (check /anims/baked)";
       this.emit();
-      console.info(
-        "[MimicDungeon] GrudgeAvatar ready",
-        av.def?.name,
-        "clips:",
-        av.clipNames?.()?.slice(0, 12) ?? [],
-      );
+      console.info("[MimicDungeon] GrudgeAvatar ready", av.def?.name, "clips:", clips.slice(0, 16));
     } catch (err) {
       console.error("[MimicDungeon] GrudgeAvatar load failed", err);
       this.loadNote = "Hero load failed — check grudge6 race GLB + anim packs";
@@ -298,14 +318,25 @@ export class MimicDungeon {
   }
 
   private async load() {
-    let gltf;
-    try {
-      gltf = await this.loadGltf([...VOL_MESH_KEYS]);
-      this.loadNote = "Volcano scene loaded";
-    } catch (err) {
-      console.error("[MimicDungeon] vol.glb load failed all candidates", err);
-      this.loadNote = "vol.glb missing — procedural floor (upload models/vol.glb)";
-      this.buildFallbackGround();
+    let gltf: Awaited<ReturnType<MimicDungeon["loadGltf"]>> | null = null;
+    let usedKey = "";
+    const errors: string[] = [];
+    for (const key of MAP_MESH_KEYS) {
+      try {
+        gltf = await this.loadGltf(key);
+        usedKey = key;
+        break;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`${key}: ${msg.slice(0, 80)}`);
+        console.warn("[MimicDungeon] map candidate failed", key, msg);
+      }
+    }
+
+    if (!gltf) {
+      console.error("[MimicDungeon] all map candidates failed", errors);
+      this.loadNote = "Map GLBs failed — arena floor (dungeon/minecraft/vol)";
+      this.buildArenaFallback();
       this.spawnMimicFallback();
       this.finishSetup();
       this.emit();
@@ -313,19 +344,21 @@ export class MimicDungeon {
     }
     if (this.disposed) return;
     const root = gltf.scene;
+    this.loadNote = `Map loaded · ${usedKey.split("/").pop()}`;
 
-    // Auto-scale to a playable footprint (~34 u), like the Dungeon loader.
+    // Auto-scale to a playable footprint (~34–48 m), like the Dungeon loader.
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.z) || 1;
     if (maxDim > 300) root.scale.setScalar(0.01);
-    else if (maxDim > 0.001 && maxDim < 34) root.scale.setScalar(34 / maxDim);
+    else if (maxDim > 80) root.scale.setScalar(48 / maxDim);
+    else if (maxDim > 0.001 && maxDim < 28) root.scale.setScalar(36 / maxDim);
     root.updateMatrixWorld(true);
 
-    // Separate the real Mimic creature (from barrel) from the static Vol environment.
+    // Separate the real Mimic creature (from barrel) from the static environment.
     let creatureRoot = this.findMimicRoot(root);
 
-    // Best-practice pass: shadows + sRGB base maps; collect ground meshes.
+    // Best-practice pass: shadows + sRGB base maps; lift pure-black materials.
     root.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
@@ -334,7 +367,12 @@ export class MimicDungeon {
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mm of mats) {
         const std = mm as THREE.MeshStandardMaterial;
-        if (std.map) std.map.colorSpace = THREE.SRGBColorSpace;
+        if (std?.map) std.map.colorSpace = THREE.SRGBColorSpace;
+        // Prevent "black void" materials on unlit/emissive-only map chunks
+        if (std?.color && std.color.getHex() === 0x000000 && !std.map && !std.emissiveMap) {
+          std.color.setHex(0x2a3040);
+          std.roughness = 0.92;
+        }
       }
     });
 
@@ -349,12 +387,12 @@ export class MimicDungeon {
 
     // Pull the creature out into the mimic pose group (posed procedurally).
     if (creatureRoot) {
+      // Detach from map graph so we don't double-transform
+      creatureRoot.parent?.remove(creatureRoot);
       this.mimicModel = creatureRoot;
       this.mimicPose.add(creatureRoot);
       creatureRoot.position.set(0, 0, 0);
       creatureRoot.rotation.set(0, 0, 0);
-      // Normalise the creature to ~1.6 m tall and record its materials for the
-      // telegraph emissive flash.
       const cbox = new THREE.Box3().setFromObject(creatureRoot);
       const csize = cbox.getSize(new THREE.Vector3());
       const cs = 1.6 / (csize.y || 1);
@@ -369,7 +407,7 @@ export class MimicDungeon {
         const mats = Array.isArray(m.material) ? m.material : [m.material];
         for (const mm of mats) {
           const std = mm as THREE.MeshStandardMaterial;
-          if (std.emissive) {
+          if (std?.emissive) {
             this.mimicMats.push(std);
             this.mimicBaseEmissive.push(std.emissive.clone());
           }
@@ -385,9 +423,15 @@ export class MimicDungeon {
       }
     });
 
+    // If the map has almost no floor area, pad with an arena underlay
+    if (this.groundMeshes.length < 2) {
+      this.buildArenaFallback(true);
+    }
+
     this.scene.add(root);
     if (!this.mimicModel) this.spawnMimicFallback();
     this.finishSetup();
+    this.emit();
   }
 
   private isDescendant(node: THREE.Object3D, ancestor: THREE.Object3D): boolean {
@@ -399,15 +443,83 @@ export class MimicDungeon {
     return false;
   }
 
+  /**
+   * Playable dungeon arena when map GLBs fail (broken vol.glb isBone, etc.).
+   * Not an empty black circle — walls, pillars, floor, torch lights.
+   * @param underlayOnly when true, only add a large ground plane under a sparse map
+   */
+  private buildArenaFallback(underlayOnly = false) {
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x2a3142,
+      roughness: 0.92,
+      metalness: 0.05,
+    });
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: 0x1c2230,
+      roughness: 0.88,
+      metalness: 0.08,
+    });
+    const accent = new THREE.MeshStandardMaterial({
+      color: 0x3d4a62,
+      roughness: 0.75,
+      emissive: 0x1a2840,
+      emissiveIntensity: 0.15,
+    });
+
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(22, 56), floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    floor.name = "mimic_arena_floor";
+    this.scene.add(floor);
+    this.groundMeshes.push(floor);
+
+    if (underlayOnly) return;
+
+    // Ring wall segments
+    const wallH = 3.2;
+    const wallR = 20;
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const seg = new THREE.Mesh(new THREE.BoxGeometry(10.5, wallH, 0.55), wallMat);
+      seg.position.set(Math.sin(a) * wallR, wallH * 0.5, Math.cos(a) * wallR);
+      seg.rotation.y = a;
+      seg.castShadow = true;
+      seg.receiveShadow = true;
+      this.scene.add(seg);
+    }
+
+    // Pillars around arena
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      const p = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 4.2, 10), accent);
+      p.position.set(Math.sin(a) * 12, 2.1, Math.cos(a) * 12);
+      p.castShadow = true;
+      this.scene.add(p);
+      const light = new THREE.PointLight(0xffaa66, 1.1, 14, 2);
+      light.position.set(Math.sin(a) * 12, 3.4, Math.cos(a) * 12);
+      this.scene.add(light);
+    }
+
+    // Center dais (mimic spawn)
+    const dais = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 0.35, 24), accent);
+    dais.position.y = 0.15;
+    dais.receiveShadow = true;
+    dais.castShadow = true;
+    this.scene.add(dais);
+    this.groundMeshes.push(dais);
+
+    // Soft fill light so arena is not a black void
+    const fill = new THREE.PointLight(0x88aaff, 0.55, 40, 2);
+    fill.position.set(0, 8, 0);
+    this.scene.add(fill);
+
+    this.scene.background = new THREE.Color(0x0c1018);
+    this.scene.fog = new THREE.FogExp2(0x0c1018, 0.018);
+  }
+
+  /** @deprecated use buildArenaFallback */
   private buildFallbackGround() {
-    const g = new THREE.Mesh(
-      new THREE.CircleGeometry(30, 48),
-      new THREE.MeshStandardMaterial({ color: 0x1a1e28, roughness: 0.96 }),
-    );
-    g.rotation.x = -Math.PI / 2;
-    g.receiveShadow = true;
-    this.scene.add(g);
-    this.groundMeshes.push(g);
+    this.buildArenaFallback(false);
   }
 
   /** Procedural fallback mimic (a fanged barrel) if the GLB creature isn't found. */
