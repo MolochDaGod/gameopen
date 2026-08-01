@@ -171,6 +171,8 @@ export async function hydrateExplorerFleetBakes(opts: {
       "hammer",
       "axe",
       "knife",
+      "pistol",
+      "ranged",
     ] as WeaponClass[]);
 
   for (const w of weapons) {

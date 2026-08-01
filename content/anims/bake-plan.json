@@ -59,6 +59,24 @@
         { "bakeRel": "sword_shield/skill_dash", "mixamo": "anim/sword/slash-advance.fbx", "role": "skill1" },
         { "bakeRel": "sword_shield/skill_spin", "mixamo": "anim/sword/sword-and-shield-attack-2.fbx", "role": "overhead" }
       ]
+    },
+    {
+      "id": "P1-rifle-pistol-farm",
+      "note": "Ingested from user zips (grudge6gun, pistol, farming, 8-way, magic loco). Bake: scripts/bake-gun-farm-loco.mjs",
+      "targets": [
+        { "bakeRel": "rifle/rifle-aiming-idle", "mixamo": "anim/rifle/rifle-aiming-idle.fbx" },
+        { "bakeRel": "rifle/walking", "mixamo": "anim/rifle/walking.fbx", "role": "walk", "verifyLoop": true },
+        { "bakeRel": "rifle/rifle-run", "mixamo": "anim/rifle/rifle-run.fbx", "role": "run", "verifyLoop": true },
+        { "bakeRel": "rifle/firing-rifle", "mixamo": "anim/rifle/firing-rifle.fbx" },
+        { "bakeRel": "rifle/reloading", "mixamo": "anim/rifle/reloading.fbx" },
+        { "bakeRel": "pistol/idle", "mixamo": "anim/pistol/idle.fbx" },
+        { "bakeRel": "pistol/walk-forward", "mixamo": "anim/pistol/walk-forward.fbx", "role": "walk", "verifyLoop": true },
+        { "bakeRel": "pistol/run-forward", "mixamo": "anim/pistol/run-forward.fbx", "role": "run", "verifyLoop": true },
+        { "bakeRel": "pistol/gunplay", "mixamo": "anim/pistol/gunplay.fbx" },
+        { "bakeRel": "harvest/dig-and-plant-seeds", "mixamo": "anim/farming/dig-and-plant-seeds.fbx" },
+        { "bakeRel": "harvest/watering", "mixamo": "anim/farming/watering.fbx" },
+        { "bakeRel": "locomotion/crouch_walk", "mixamo": "anim/loco-8way/walk-crouching-forward.fbx", "role": "crouchWalk", "verifyLoop": true }
+      ]
     }
   ],
   "controllerWiring": {

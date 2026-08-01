@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-01T06:48:05.138Z",
+  "generatedAt": "2026-08-01T07:06:01.329Z",
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
@@ -118,7 +118,8 @@
       },
       "harvest": {
         "bakeRel": "locomotion/plant_seed",
-        "status": "missing"
+        "status": "ready",
+        "sha256": "b3f11b0e4c3c20ebe5e1714a08bb3bf77098b437a4fd6bc01dfbfc8dd5e261d2"
       },
       "block": {
         "bakeRel": "block/standing-block-idle",
@@ -187,7 +188,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "uploads_2026_06/locomotion/torch run forward",
@@ -247,7 +248,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -321,7 +322,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -395,7 +396,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -469,7 +470,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -522,7 +523,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -568,7 +569,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -1321,17 +1322,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1376,17 +1377,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1431,17 +1432,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1486,17 +1487,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1541,17 +1542,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1596,17 +1597,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1651,17 +1652,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1706,17 +1707,17 @@
         "idle": {
           "bakeRel": "magic/standing idle",
           "status": "ready",
-          "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c"
+          "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f"
         },
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "magic/Standing Run Forward",
           "status": "ready",
-          "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d"
+          "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322"
         },
         "attack": {
           "bakeRel": "magic/standing 1h cast spell 01",
@@ -1755,32 +1756,48 @@
     "rifle": {
       "label": "Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
-      "status": "degraded",
+      "fallbackPack": "longbow",
+      "status": "ready",
       "liveRoles": {
         "idle": {
-          "bakeRel": "unarmed/fight_idle",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+          "bakeRel": "rifle/rifle-aiming-idle",
+          "status": "ready",
+          "sha256": "3b4cb0f7d82c48c5b98b76d893f81819a204da3c421c4c714728edc5b05fe19c"
         },
         "walk": {
-          "bakeRel": "magic/Standing Walk Forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "bakeRel": "rifle/walking",
+          "status": "ready",
+          "sha256": "cc0edd2ad4b788fd4c94a0dbed2ec5f4735333c8bc87821b18f7d6477b9e070e"
         },
         "run": {
-          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+          "bakeRel": "rifle/rifle-run",
+          "status": "ready",
+          "sha256": "064ebab3b742af8ca63cc92684acdf6814914183b2305456efea626d81ee8b8c"
         },
         "attack": {
-          "bakeRel": "polearm/attack",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill1": {
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill2": {
+          "bakeRel": "rifle/reloading",
+          "status": "ready",
+          "sha256": "58565838287d093caff8ecabc0cab54d0ae28ba9dedcf5c76da820063bdc8bcb"
+        },
+        "jump": {
+          "bakeRel": "rifle/rifle-jump",
+          "status": "ready",
+          "sha256": "6b9e5c48701681e6743c42f9a9e2c9c8da3d8f3c52a07e81c939f78f0af5c1a7"
+        },
+        "hurt": {
+          "bakeRel": "rifle/hit-reaction",
+          "status": "ready",
+          "sha256": "fa2b70c61bbaa14d3e4687b5d56429189de886d400875d1840a78f0f4ff68744"
         }
       },
       "missingRoles": [],
@@ -1791,27 +1808,41 @@
         "rifle_snipe"
       ],
       "mixamoSources": [
-        "anim/rifle/idle.fbx",
-        "anim/rifle/idle-aiming.fbx",
-        "anim/rifle/run-forward.fbx"
+        "anim/rifle/rifle-aiming-idle.fbx",
+        "anim/rifle/walking.fbx",
+        "anim/rifle/rifle-run.fbx",
+        "anim/rifle/firing-rifle.fbx",
+        "anim/rifle/reloading.fbx"
       ],
       "mixamoIntegrity": [
         {
-          "sourceRel": "anim/rifle/idle.fbx",
-          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
-          "bytes": 198881,
+          "sourceRel": "anim/rifle/rifle-aiming-idle.fbx",
+          "sha256": "a60432f27e526a5b546c05515981ad68b24f0581d49672dff877605e0a044dc0",
+          "bytes": 247697,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/idle-aiming.fbx",
-          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
-          "bytes": 196609,
+          "sourceRel": "anim/rifle/walking.fbx",
+          "sha256": "565e23fd287312c34640806460f873a3380f1ebeef98eab744eee74e86c06b60",
+          "bytes": 169473,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/run-forward.fbx",
-          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
-          "bytes": 176209,
+          "sourceRel": "anim/rifle/rifle-run.fbx",
+          "sha256": "fa3091293b13134b56c6cd0be779a631ab147d352c2326bbb019e6fa642acf2a",
+          "bytes": 142897,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/firing-rifle.fbx",
+          "sha256": "3aa9664f50488a3c156270b5901016c2033e152cb4ac00aa3ec8dd6597a9e90c",
+          "bytes": 145857,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/reloading.fbx",
+          "sha256": "59f93a07960a3a052b01803f6ea0c9f702f1e9edc6ebff74282ebf0f1ea506da",
+          "bytes": 256545,
           "status": "present"
         }
       ]
@@ -1819,32 +1850,48 @@
     "hunter-rifle": {
       "label": "Sniper Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
-      "status": "degraded",
+      "fallbackPack": "longbow",
+      "status": "ready",
       "liveRoles": {
         "idle": {
-          "bakeRel": "unarmed/fight_idle",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+          "bakeRel": "rifle/rifle-aiming-idle",
+          "status": "ready",
+          "sha256": "3b4cb0f7d82c48c5b98b76d893f81819a204da3c421c4c714728edc5b05fe19c"
         },
         "walk": {
-          "bakeRel": "magic/Standing Walk Forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "bakeRel": "rifle/walking",
+          "status": "ready",
+          "sha256": "cc0edd2ad4b788fd4c94a0dbed2ec5f4735333c8bc87821b18f7d6477b9e070e"
         },
         "run": {
-          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+          "bakeRel": "rifle/rifle-run",
+          "status": "ready",
+          "sha256": "064ebab3b742af8ca63cc92684acdf6814914183b2305456efea626d81ee8b8c"
         },
         "attack": {
-          "bakeRel": "polearm/attack",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill1": {
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill2": {
+          "bakeRel": "rifle/reloading",
+          "status": "ready",
+          "sha256": "58565838287d093caff8ecabc0cab54d0ae28ba9dedcf5c76da820063bdc8bcb"
+        },
+        "jump": {
+          "bakeRel": "rifle/rifle-jump",
+          "status": "ready",
+          "sha256": "6b9e5c48701681e6743c42f9a9e2c9c8da3d8f3c52a07e81c939f78f0af5c1a7"
+        },
+        "hurt": {
+          "bakeRel": "rifle/hit-reaction",
+          "status": "ready",
+          "sha256": "fa2b70c61bbaa14d3e4687b5d56429189de886d400875d1840a78f0f4ff68744"
         }
       },
       "missingRoles": [],
@@ -1855,27 +1902,41 @@
         "sniper_kill"
       ],
       "mixamoSources": [
-        "anim/rifle/idle.fbx",
-        "anim/rifle/idle-aiming.fbx",
-        "anim/rifle/run-forward.fbx"
+        "anim/rifle/rifle-aiming-idle.fbx",
+        "anim/rifle/walking.fbx",
+        "anim/rifle/rifle-run.fbx",
+        "anim/rifle/firing-rifle.fbx",
+        "anim/rifle/reloading.fbx"
       ],
       "mixamoIntegrity": [
         {
-          "sourceRel": "anim/rifle/idle.fbx",
-          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
-          "bytes": 198881,
+          "sourceRel": "anim/rifle/rifle-aiming-idle.fbx",
+          "sha256": "a60432f27e526a5b546c05515981ad68b24f0581d49672dff877605e0a044dc0",
+          "bytes": 247697,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/idle-aiming.fbx",
-          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
-          "bytes": 196609,
+          "sourceRel": "anim/rifle/walking.fbx",
+          "sha256": "565e23fd287312c34640806460f873a3380f1ebeef98eab744eee74e86c06b60",
+          "bytes": 169473,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/run-forward.fbx",
-          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
-          "bytes": 176209,
+          "sourceRel": "anim/rifle/rifle-run.fbx",
+          "sha256": "fa3091293b13134b56c6cd0be779a631ab147d352c2326bbb019e6fa642acf2a",
+          "bytes": 142897,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/firing-rifle.fbx",
+          "sha256": "3aa9664f50488a3c156270b5901016c2033e152cb4ac00aa3ec8dd6597a9e90c",
+          "bytes": 145857,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/reloading.fbx",
+          "sha256": "59f93a07960a3a052b01803f6ea0c9f702f1e9edc6ebff74282ebf0f1ea506da",
+          "bytes": 256545,
           "status": "present"
         }
       ]
@@ -1883,32 +1944,48 @@
     "shotgun": {
       "label": "Shotgun",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
-      "status": "degraded",
+      "fallbackPack": "longbow",
+      "status": "ready",
       "liveRoles": {
         "idle": {
-          "bakeRel": "unarmed/fight_idle",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+          "bakeRel": "rifle/rifle-aiming-idle",
+          "status": "ready",
+          "sha256": "3b4cb0f7d82c48c5b98b76d893f81819a204da3c421c4c714728edc5b05fe19c"
         },
         "walk": {
-          "bakeRel": "magic/Standing Walk Forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "bakeRel": "rifle/walking",
+          "status": "ready",
+          "sha256": "cc0edd2ad4b788fd4c94a0dbed2ec5f4735333c8bc87821b18f7d6477b9e070e"
         },
         "run": {
-          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+          "bakeRel": "rifle/rifle-run",
+          "status": "ready",
+          "sha256": "064ebab3b742af8ca63cc92684acdf6814914183b2305456efea626d81ee8b8c"
         },
         "attack": {
-          "bakeRel": "polearm/attack",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill1": {
+          "bakeRel": "rifle/firing-rifle",
+          "status": "ready",
+          "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69"
+        },
+        "skill2": {
+          "bakeRel": "rifle/reloading",
+          "status": "ready",
+          "sha256": "58565838287d093caff8ecabc0cab54d0ae28ba9dedcf5c76da820063bdc8bcb"
+        },
+        "jump": {
+          "bakeRel": "rifle/rifle-jump",
+          "status": "ready",
+          "sha256": "6b9e5c48701681e6743c42f9a9e2c9c8da3d8f3c52a07e81c939f78f0af5c1a7"
+        },
+        "hurt": {
+          "bakeRel": "rifle/hit-reaction",
+          "status": "ready",
+          "sha256": "fa2b70c61bbaa14d3e4687b5d56429189de886d400875d1840a78f0f4ff68744"
         }
       },
       "missingRoles": [],
@@ -1919,60 +1996,85 @@
         "shotgun_knockback"
       ],
       "mixamoSources": [
-        "anim/rifle/idle.fbx",
-        "anim/rifle/idle-aiming.fbx",
-        "anim/rifle/run-forward.fbx"
+        "anim/rifle/rifle-aiming-idle.fbx",
+        "anim/rifle/walking.fbx",
+        "anim/rifle/rifle-run.fbx",
+        "anim/rifle/firing-rifle.fbx",
+        "anim/rifle/reloading.fbx"
       ],
       "mixamoIntegrity": [
         {
-          "sourceRel": "anim/rifle/idle.fbx",
-          "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
-          "bytes": 198881,
+          "sourceRel": "anim/rifle/rifle-aiming-idle.fbx",
+          "sha256": "a60432f27e526a5b546c05515981ad68b24f0581d49672dff877605e0a044dc0",
+          "bytes": 247697,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/idle-aiming.fbx",
-          "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
-          "bytes": 196609,
+          "sourceRel": "anim/rifle/walking.fbx",
+          "sha256": "565e23fd287312c34640806460f873a3380f1ebeef98eab744eee74e86c06b60",
+          "bytes": 169473,
           "status": "present"
         },
         {
-          "sourceRel": "anim/rifle/run-forward.fbx",
-          "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
-          "bytes": 176209,
+          "sourceRel": "anim/rifle/rifle-run.fbx",
+          "sha256": "fa3091293b13134b56c6cd0be779a631ab147d352c2326bbb019e6fa642acf2a",
+          "bytes": 142897,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/firing-rifle.fbx",
+          "sha256": "3aa9664f50488a3c156270b5901016c2033e152cb4ac00aa3ec8dd6597a9e90c",
+          "bytes": 145857,
+          "status": "present"
+        },
+        {
+          "sourceRel": "anim/rifle/reloading.fbx",
+          "sha256": "59f93a07960a3a052b01803f6ea0c9f702f1e9edc6ebff74282ebf0f1ea506da",
+          "bytes": 256545,
           "status": "present"
         }
       ]
     },
     "pistol": {
       "label": "Pistol",
-      "animPack": "rifle",
-      "fallbackPack": "polearm",
-      "status": "degraded",
+      "animPack": "pistol",
+      "fallbackPack": "rifle",
+      "status": "ready",
       "liveRoles": {
         "idle": {
-          "bakeRel": "unarmed/fight_idle",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1cc8e8a6eb8e30ffda04e550eb2a40fda4ee0a69f09090886da9c085fd4452b8"
+          "bakeRel": "pistol/idle",
+          "status": "ready",
+          "sha256": "6473c99694e6498f761d74cf64a97ba9bfbd566cecf53307ed6cf45d9a45c258"
         },
         "walk": {
-          "bakeRel": "magic/Standing Walk Forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "bakeRel": "pistol/walk-forward",
+          "status": "ready",
+          "sha256": "c02bdee382b3040f9a8e62a90d39121bf21b0403e926fd2ab4a51be637762ef8"
         },
         "run": {
-          "bakeRel": "uploads_2026_06/locomotion/torch run forward",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "1be9f1cf125cc82b12fa70e7c1204eb1d311a3e60db39f950f1858742653248e"
+          "bakeRel": "pistol/run-forward",
+          "status": "ready",
+          "sha256": "26a72bc6f0e1aa975d5ccbb0342507ad49ee9d5a7d46abb1d91976510640f39e"
         },
         "attack": {
-          "bakeRel": "polearm/attack",
-          "status": "fallback",
-          "fromPack": "polearm",
-          "sha256": "46304b78c93d82fc11366abf905817419cea60163dd58b380111529ab20dcb42"
+          "bakeRel": "pistol/gunplay",
+          "status": "ready",
+          "sha256": "1e44c5dc01a7838c333a300135b0659a106672cb5908d7c54cb1c2b206e3fcda"
+        },
+        "skill1": {
+          "bakeRel": "pistol/charged-pistol",
+          "status": "ready",
+          "sha256": "a9cd40a7fbea9bac984f11ab0234537802ee4d626ce1f57e91c3cecef31d8d22"
+        },
+        "skill2": {
+          "bakeRel": "pistol/pistol-whip",
+          "status": "ready",
+          "sha256": "8d78d7ac243f69483ea2155c59fef9e99096a712e2de771867955579d911835e"
+        },
+        "jump": {
+          "bakeRel": "pistol/pistol-jump",
+          "status": "ready",
+          "sha256": "3da38f284fae6f18416e41444718e6be0b8a7fb9afdda8606eccc649ff482fda"
         }
       },
       "missingRoles": [],
@@ -2029,7 +2131,7 @@
         "walk": {
           "bakeRel": "magic/Standing Walk Forward",
           "status": "ready",
-          "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174"
+          "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132"
         },
         "run": {
           "bakeRel": "sword_shield/sword and shield run",
@@ -2091,13 +2193,13 @@
     }
   },
   "summary": {
-    "bakedCount": 243,
-    "mixamoCount": 643,
-    "mixamoDeclared": 33,
-    "mixamoDeclaredPresent": 33,
+    "bakedCount": 278,
+    "mixamoCount": 755,
+    "mixamoDeclared": 35,
+    "mixamoDeclaredPresent": 35,
     "mixamoDeclaredAbsent": 0,
-    "weaponsReady": 24,
-    "weaponsDegraded": 5,
+    "weaponsReady": 28,
+    "weaponsDegraded": 1,
     "weaponsIncomplete": 0
   }
 }

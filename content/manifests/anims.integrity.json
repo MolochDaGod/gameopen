@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-01T06:48:05.137Z",
+  "generatedAt": "2026-08-01T07:06:01.328Z",
   "algorithm": "sha256",
   "bakedRoot": "artifacts/animator/public/anims/baked",
   "mixamoRoot": "artifacts/animator/public/anim",
@@ -874,6 +874,55 @@
       "mtimeMs": 1785566771815.6277
     },
     {
+      "bakeRel": "harvest/dig-and-plant-seeds",
+      "file": "anims/baked/harvest/dig-and-plant-seeds.json",
+      "sha256": "47215ade94696e9b1da0205070853fe928cf9e856103a7e22bcbfaca6780a9bb",
+      "bytes": 328365,
+      "mtimeMs": 1785567906672.853
+    },
+    {
+      "bakeRel": "harvest/pick-fruit",
+      "file": "anims/baked/harvest/pick-fruit.json",
+      "sha256": "02762ac60c4f848a04091da8930e553fca49b9a60575fc06432dea5374a5d3af",
+      "bytes": 479007,
+      "mtimeMs": 1785567906865.2395
+    },
+    {
+      "bakeRel": "harvest/plant-a-plant",
+      "file": "anims/baked/harvest/plant-a-plant.json",
+      "sha256": "6751c9e9e25be3fa1f76859bc371fa75910cceb991699a4b1f83818b3a91d224",
+      "bytes": 177487,
+      "mtimeMs": 1785567906957.0464
+    },
+    {
+      "bakeRel": "harvest/plant-tree",
+      "file": "anims/baked/harvest/plant-tree.json",
+      "sha256": "c2a951117eeb88b71caea2a8f6c221b8276a347001744fd44a618eaace3e1842",
+      "bytes": 550307,
+      "mtimeMs": 1785567906763.7744
+    },
+    {
+      "bakeRel": "harvest/pull-plant",
+      "file": "anims/baked/harvest/pull-plant.json",
+      "sha256": "80ef6124e42aad28c383bfd6138a370802620627d5b316bec779bdef0fff130c",
+      "bytes": 280169,
+      "mtimeMs": 1785567906911.8533
+    },
+    {
+      "bakeRel": "harvest/watering",
+      "file": "anims/baked/harvest/watering.json",
+      "sha256": "871c5927924908c1f5083769b3c7ca7d7d195a44b4e981b1005759eb84099674",
+      "bytes": 334665,
+      "mtimeMs": 1785567906811.9714
+    },
+    {
+      "bakeRel": "locomotion/crouch_walk",
+      "file": "anims/baked/locomotion/crouch_walk.json",
+      "sha256": "e32f0367dd0e40798bdabfdf08356041934eece7e7d09ef52e6ce2cc629af499",
+      "bytes": 43115,
+      "mtimeMs": 1785567907046.7021
+    },
+    {
       "bakeRel": "locomotion/dodge_back",
       "file": "anims/baked/locomotion/dodge_back.json",
       "sha256": "39d7e8338910a2b8a6fed8bbebe41508eb835de0d51d3416af16c072454b7c60",
@@ -909,6 +958,13 @@
       "mtimeMs": 1785553213523.0618
     },
     {
+      "bakeRel": "locomotion/idle",
+      "file": "anims/baked/locomotion/idle.json",
+      "sha256": "05154876e88d091b03330ecd067f25c9d821a1880cbf3ac75dc40f51679e44ef",
+      "bytes": 50658,
+      "mtimeMs": 1785567907064.0283
+    },
+    {
       "bakeRel": "locomotion/jump",
       "file": "anims/baked/locomotion/jump.json",
       "sha256": "ea4d31f8e975b1c69f38f1a2a86e683f46fd91aa08080426bda064923e3e212d",
@@ -921,6 +977,13 @@
       "sha256": "ffdc5e5af779bbdc8e03356c6a7f62fcb1a9d69fb975d2fb9dc6f287e60a09da",
       "bytes": 60867,
       "mtimeMs": 1785553213525.6128
+    },
+    {
+      "bakeRel": "locomotion/plant_seed",
+      "file": "anims/baked/locomotion/plant_seed.json",
+      "sha256": "b3f11b0e4c3c20ebe5e1714a08bb3bf77098b437a4fd6bc01dfbfc8dd5e261d2",
+      "bytes": 328359,
+      "mtimeMs": 1785567907004.016
     },
     {
       "bakeRel": "locomotion/roll_back",
@@ -949,6 +1012,20 @@
       "sha256": "a0cb95bb53b7b44de6158e0fcafa32b78f0604d05989483f028512f480b54165",
       "bytes": 54213,
       "mtimeMs": 1785553213528.6191
+    },
+    {
+      "bakeRel": "locomotion/run_forward",
+      "file": "anims/baked/locomotion/run_forward.json",
+      "sha256": "af33cb410215162497b1d0f46449a8985ffe484945690834ab51af29bd0f8f90",
+      "bytes": 30063,
+      "mtimeMs": 1785567907101.3403
+    },
+    {
+      "bakeRel": "locomotion/walk_forward",
+      "file": "anims/baked/locomotion/walk_forward.json",
+      "sha256": "f6671d27a08fddeacae429f151333fdbfba2cf358e9f4a901b73f4eb05aed866",
+      "bytes": 45524,
+      "mtimeMs": 1785567907083.0671
     },
     {
       "bakeRel": "longbow/standing aim recoil",
@@ -1009,23 +1086,114 @@
     {
       "bakeRel": "magic/standing idle",
       "file": "anims/baked/magic/standing idle.json",
-      "sha256": "1144b0fc3663e99ff24aee15ea79e7ab292e308d82a1a21ca4133bfe4bfde85c",
-      "bytes": 112707,
-      "mtimeMs": 1785566434228.8772
+      "sha256": "1daf4e666ac2223ed495e82ae84fccd1dadf2d791bbbebd83af9a5045f08fc4f",
+      "bytes": 113718,
+      "mtimeMs": 1785567907026.019
     },
     {
       "bakeRel": "magic/Standing Run Forward",
       "file": "anims/baked/magic/Standing Run Forward.json",
-      "sha256": "6040397a1c9390089dd0040283ba590722066b006cbb78b635813e9f4ab1c34d",
-      "bytes": 45131,
-      "mtimeMs": 1785566434577.8086
+      "sha256": "106b9b239d8bfd20c043a5c5f69d3a9d5a84b1f2a3e13e89ae1e7c51aad94322",
+      "bytes": 46877,
+      "mtimeMs": 1785567907018.227
     },
     {
       "bakeRel": "magic/Standing Walk Forward",
       "file": "anims/baked/magic/Standing Walk Forward.json",
-      "sha256": "f9169f11f33fa4948066420f631a38cba50bb3d3d3850dab58aaf18748349174",
-      "bytes": 69117,
-      "mtimeMs": 1785566434423.0835
+      "sha256": "78a9b431a64cd1341b3ddd186ef084b8bdb2c9e45fc3a36ffaed8a4fd9ab2132",
+      "bytes": 70271,
+      "mtimeMs": 1785567907012.2695
+    },
+    {
+      "bakeRel": "pistol/charged-pistol",
+      "file": "anims/baked/pistol/charged-pistol.json",
+      "sha256": "a9cd40a7fbea9bac984f11ab0234537802ee4d626ce1f57e91c3cecef31d8d22",
+      "bytes": 153268,
+      "mtimeMs": 1785567906617.1729
+    },
+    {
+      "bakeRel": "pistol/drawing-gun",
+      "file": "anims/baked/pistol/drawing-gun.json",
+      "sha256": "b33cf84ccdd9af9bff242c2e8746ccb511810f108baaffdbb4af4d642e22c9d0",
+      "bytes": 121682,
+      "mtimeMs": 1785567906600.452
+    },
+    {
+      "bakeRel": "pistol/gunplay",
+      "file": "anims/baked/pistol/gunplay.json",
+      "sha256": "1e44c5dc01a7838c333a300135b0659a106672cb5908d7c54cb1c2b206e3fcda",
+      "bytes": 27606,
+      "mtimeMs": 1785567906531.187
+    },
+    {
+      "bakeRel": "pistol/idle",
+      "file": "anims/baked/pistol/idle.json",
+      "sha256": "6473c99694e6498f761d74cf64a97ba9bfbd566cecf53307ed6cf45d9a45c258",
+      "bytes": 74125,
+      "mtimeMs": 1785567906496.647
+    },
+    {
+      "bakeRel": "pistol/kneeling-idle",
+      "file": "anims/baked/pistol/kneeling-idle.json",
+      "sha256": "02fc047f92a920ab5fb02e75f2ec1505c10b71c8af66cb39245b3ef3b566c284",
+      "bytes": 216269,
+      "mtimeMs": 1785567906630.1953
+    },
+    {
+      "bakeRel": "pistol/pistol-jump",
+      "file": "anims/baked/pistol/pistol-jump.json",
+      "sha256": "3da38f284fae6f18416e41444718e6be0b8a7fb9afdda8606eccc649ff482fda",
+      "bytes": 292182,
+      "mtimeMs": 1785567906579.9644
+    },
+    {
+      "bakeRel": "pistol/pistol-whip",
+      "file": "anims/baked/pistol/pistol-whip.json",
+      "sha256": "8d78d7ac243f69483ea2155c59fef9e99096a712e2de771867955579d911835e",
+      "bytes": 155016,
+      "mtimeMs": 1785567906610.3643
+    },
+    {
+      "bakeRel": "pistol/run-backward",
+      "file": "anims/baked/pistol/run-backward.json",
+      "sha256": "1a0be1a03d8b382bcbfc52d98e98c163be4171c74bb1f41c2ec73e0e6bc0c2b6",
+      "bytes": 34967,
+      "mtimeMs": 1785567906523.6453
+    },
+    {
+      "bakeRel": "pistol/run-forward",
+      "file": "anims/baked/pistol/run-forward.json",
+      "sha256": "26a72bc6f0e1aa975d5ccbb0342507ad49ee9d5a7d46abb1d91976510640f39e",
+      "bytes": 33007,
+      "mtimeMs": 1785567906510.445
+    },
+    {
+      "bakeRel": "pistol/strafe-left",
+      "file": "anims/baked/pistol/strafe-left.json",
+      "sha256": "1573247660b29124843e2f44b9c6746b8ba17635ffffc649ef0841bf43945315",
+      "bytes": 36882,
+      "mtimeMs": 1785567906586.9812
+    },
+    {
+      "bakeRel": "pistol/strafe-right",
+      "file": "anims/baked/pistol/strafe-right.json",
+      "sha256": "ad3718009b1b6def6f7792de5cacebdba29ef4776fcd502cf0fed3663c07a456",
+      "bytes": 38881,
+      "mtimeMs": 1785567906592.9265
+    },
+    {
+      "bakeRel": "pistol/walk-backward",
+      "file": "anims/baked/pistol/walk-backward.json",
+      "sha256": "f371e0935a8c1b62878fb7c1efc1b4c457a7b271fbf7b28aac7dea027c950e52",
+      "bytes": 64436,
+      "mtimeMs": 1785567906518.2495
+    },
+    {
+      "bakeRel": "pistol/walk-forward",
+      "file": "anims/baked/pistol/walk-forward.json",
+      "sha256": "c02bdee382b3040f9a8e62a90d39121bf21b0403e926fd2ab4a51be637762ef8",
+      "bytes": 50919,
+      "mtimeMs": 1785567906502.3901
     },
     {
       "bakeRel": "polearm/attack",
@@ -1271,6 +1439,83 @@
       "sha256": "7361f9c75b2f74b3f125e99d81da66be524e415b7852c9901016b13cb4359cde",
       "bytes": 248234,
       "mtimeMs": 1785553213597.7964
+    },
+    {
+      "bakeRel": "rifle/firing-rifle",
+      "file": "anims/baked/rifle/firing-rifle.json",
+      "sha256": "28309547f4bc2a942fddc13ed5197ccd25a37ade2d46ca742e7774d6189dfa69",
+      "bytes": 19359,
+      "mtimeMs": 1785567906335.7703
+    },
+    {
+      "bakeRel": "rifle/hit-reaction",
+      "file": "anims/baked/rifle/hit-reaction.json",
+      "sha256": "fa2b70c61bbaa14d3e4687b5d56429189de886d400875d1840a78f0f4ff68744",
+      "bytes": 28036,
+      "mtimeMs": 1785567906407.7903
+    },
+    {
+      "bakeRel": "rifle/reloading",
+      "file": "anims/baked/rifle/reloading.json",
+      "sha256": "58565838287d093caff8ecabc0cab54d0ae28ba9dedcf5c76da820063bdc8bcb",
+      "bytes": 198079,
+      "mtimeMs": 1785567906360.7764
+    },
+    {
+      "bakeRel": "rifle/rifle-aiming-idle",
+      "file": "anims/baked/rifle/rifle-aiming-idle.json",
+      "sha256": "3b4cb0f7d82c48c5b98b76d893f81819a204da3c421c4c714728edc5b05fe19c",
+      "bytes": 186635,
+      "mtimeMs": 1785567906268.03
+    },
+    {
+      "bakeRel": "rifle/rifle-jump",
+      "file": "anims/baked/rifle/rifle-jump.json",
+      "sha256": "6b9e5c48701681e6743c42f9a9e2c9c8da3d8f3c52a07e81c939f78f0af5c1a7",
+      "bytes": 38737,
+      "mtimeMs": 1785567906380.905
+    },
+    {
+      "bakeRel": "rifle/rifle-run",
+      "file": "anims/baked/rifle/rifle-run.json",
+      "sha256": "064ebab3b742af8ca63cc92684acdf6814914183b2305456efea626d81ee8b8c",
+      "bytes": 46918,
+      "mtimeMs": 1785567906316.9644
+    },
+    {
+      "bakeRel": "rifle/run-backwards",
+      "file": "anims/baked/rifle/run-backwards.json",
+      "sha256": "22b8e25d32194e6071fdfac9fa40fc89085f2ed25041be0afdae343d407a7f04",
+      "bytes": 34941,
+      "mtimeMs": 1785567906467.2737
+    },
+    {
+      "bakeRel": "rifle/strafe-left",
+      "file": "anims/baked/rifle/strafe-left.json",
+      "sha256": "33f88129a88ae87c8d33fb46b75bfa327305180f9fe56aad794ba83fc429f508",
+      "bytes": 64276,
+      "mtimeMs": 1785567906428.192
+    },
+    {
+      "bakeRel": "rifle/strafe-right",
+      "file": "anims/baked/rifle/strafe-right.json",
+      "sha256": "0cac61cf4dc5bc3baa702e48dcd24e559046c0cd47e17e26805a474f6491c468",
+      "bytes": 88086,
+      "mtimeMs": 1785567906449.0474
+    },
+    {
+      "bakeRel": "rifle/walking",
+      "file": "anims/baked/rifle/walking.json",
+      "sha256": "cc0edd2ad4b788fd4c94a0dbed2ec5f4735333c8bc87821b18f7d6477b9e070e",
+      "bytes": 80077,
+      "mtimeMs": 1785567906295.7505
+    },
+    {
+      "bakeRel": "rifle/walking-backwards",
+      "file": "anims/baked/rifle/walking-backwards.json",
+      "sha256": "a49f8e88836239a21b4465ee7bc52c537e23eb528199cbcc3c77aad7880bf990",
+      "bytes": 86201,
+      "mtimeMs": 1785567906489.9065
     },
     {
       "bakeRel": "swim/swimming",
@@ -1708,6 +1953,78 @@
     }
   ],
   "mixamoSources": [
+    {
+      "sourceRel": "anim/action-adventure/cover-to-stand.fbx",
+      "sha256": "9bc7bee383606414c8512f8efc619d563e337af01bf690fe696e3505e7d3f218",
+      "bytes": 163601,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/crouched-sneaking-left.fbx",
+      "sha256": "9c326515096f6161254928a160dafffa23d7692770ac7bb643e18e56b31ac0a0",
+      "bytes": 158449,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/crouched-sneaking-right.fbx",
+      "sha256": "8635f69deaf9380c50b5f267d09f8a2c2619833056e85a25c5326e1a87fa1da1",
+      "bytes": 154849,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/falling-idle.fbx",
+      "sha256": "7eaccdf72fff1627d8f10015e5de851c4889c9489498840a7c17b61c416df9f7",
+      "bytes": 143953,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/falling-to-roll.fbx",
+      "sha256": "670e2b5920f0799a714d38cc3e3e7b41c3d937c0c2b0f754fd576063b6b93ef1",
+      "bytes": 179809,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/hard-landing.fbx",
+      "sha256": "b58fe63ac7a52e178d5b73fe843bb2119ede2cdc567299837c550623b900f15b",
+      "bytes": 187153,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/jumping-up.fbx",
+      "sha256": "c81680f5fc8a36dc664f661df686160eb170d40dd038e7df1e0fac30e89dec15",
+      "bytes": 142433,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/left-cover-sneak.fbx",
+      "sha256": "79b560448c30b2fd80f55147ca2fdaa158c2899815af0edae6fd851441dfc8e0",
+      "bytes": 154065,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/right-cover-sneak.fbx",
+      "sha256": "7fafc99cc27016966f7e930deacf528c9704a14a92815e54cc702dfe72d39fc7",
+      "bytes": 155569,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/run-to-stop.fbx",
+      "sha256": "f94bb9c9fd68afc376fd4139bab8a9f021eb13b40b19ecde5b5d6435a3dedf40",
+      "bytes": 147505,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/running-suspect-run-to-roll.fbx",
+      "sha256": "5899c1d72482a2fc1bec6efabded567eafa1d8c8e8f2423ab6f170da27143396",
+      "bytes": 143185,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/action-adventure/stand-to-cover.fbx",
+      "sha256": "32c500ba6ff31b1d33f7305626b430094f32f444d8ce02ba3a91a87a0e4c794c",
+      "bytes": 157697,
+      "mtimeMs": 1781480262000
+    },
     {
       "sourceRel": "anim/ambient/look-around.fbx",
       "sha256": "eb12de0aee814c1059d6eb1ed18e8aa5ce43370f83323bb686dc3957191a2097",
@@ -3983,6 +4300,36 @@
       "mtimeMs": 1785553212916.2263
     },
     {
+      "sourceRel": "anim/creator-glb/anim_attack_heavy.glb",
+      "sha256": "8ebd125d0645301d68011df6b802e260c716b6b06d3dbf4960829d6363651bd1",
+      "bytes": 100736,
+      "mtimeMs": 1776495452000
+    },
+    {
+      "sourceRel": "anim/creator-glb/anim_attack.glb",
+      "sha256": "dbf3a72f42d92bfa2ced1ed1e2f3d056c286dbff4891a5a8ae3c0c91dd98baeb",
+      "bytes": 106204,
+      "mtimeMs": 1776495452000
+    },
+    {
+      "sourceRel": "anim/creator-glb/anim_death.glb",
+      "sha256": "081d6b080367fe7390be02309dd47067ba9e5b7f11762cc23bedae0131f414e5",
+      "bytes": 117092,
+      "mtimeMs": 1776495452000
+    },
+    {
+      "sourceRel": "anim/creator-glb/anim_idle.glb",
+      "sha256": "72e4eccf49c7271c59fd3028bb552341a8947b96f5fcf0400ccc6b3df6b95e13",
+      "bytes": 171676,
+      "mtimeMs": 1776495452000
+    },
+    {
+      "sourceRel": "anim/creator-glb/anim_walk.glb",
+      "sha256": "db8acc4eaf9224c52b60ada1027be5935317686fd2dc3c5807cf06f1594f7f35",
+      "bytes": 93852,
+      "mtimeMs": 1776495452000
+    },
+    {
       "sourceRel": "anim/extra/aerial-evade.fbx",
       "sha256": "bba4f3b0ebfee6e8b0df7e9c43916381893d384a6beb068d8a65d0261e9fb593",
       "bytes": 272784,
@@ -4223,16 +4570,76 @@
       "mtimeMs": 1785553213046.9749
     },
     {
+      "sourceRel": "anim/farming/box-idle.fbx",
+      "sha256": "cdebec0bbc1dddd7d53894b839974615243208426a57c00546edf7fdee25d905",
+      "bytes": 260993,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/box-turn.fbx",
+      "sha256": "72190fad65cdf063d6237e5bab10143ed2a5f50364a9c2d593883b03beca26a5",
+      "bytes": 153281,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/box-walk-arc.fbx",
+      "sha256": "29a6f863bc02c91de1204964dae9722ec8858d142593cd349a6aaeed8a4944c2",
+      "bytes": 159249,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/cow-milking.fbx",
+      "sha256": "a72ff8f21f3b7eeb1c014314333944a917853f4042c53d00b3e89da5dce8cf41",
+      "bytes": 233985,
+      "mtimeMs": 1781482660000
+    },
+    {
       "sourceRel": "anim/farming/dig-and-plant-seeds.fbx",
       "sha256": "42171438cc89892dc367017284a26aebab8954dbf66c403523035d707df25763",
       "bytes": 303905,
       "mtimeMs": 1785553213049.9724
     },
     {
+      "sourceRel": "anim/farming/holding-idle.fbx",
+      "sha256": "fa44d25dedb7e50428d275ad260451c389f16b2a2196ca799c2f52f3d9583247",
+      "bytes": 260673,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/holding-turn-left.fbx",
+      "sha256": "df23b26e9d7cc3cd82697bf3acdb08e100ae383f45e97f63243f5bcc5f287aaa",
+      "bytes": 155505,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/holding-turn-right.fbx",
+      "sha256": "2b2624d78cfdc531907a29a6caeb57594f8af04d4b2f4abc86660a6fc0b5c249",
+      "bytes": 156161,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/holding-walk.fbx",
+      "sha256": "5074bb05ba1df1b765019e7fb269147bbdf74205a30cc8d7d108bfe21bf31a4a",
+      "bytes": 166673,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/kneeling-idle.fbx",
+      "sha256": "826e7ba9e7a6a7fbc4b379a7c851222ad30931d948646ba3c5a4c0dd6fb4b966",
+      "bytes": 218353,
+      "mtimeMs": 1781482660000
+    },
+    {
       "sourceRel": "anim/farming/pick-fruit.fbx",
       "sha256": "d82a76e0d040040f1ecc52650c207450bc3ee3af225a5ef84e60a746193fedb5",
       "bytes": 387297,
       "mtimeMs": 1785553213053.9734
+    },
+    {
+      "sourceRel": "anim/farming/plant-a-plant.fbx",
+      "sha256": "1dd2ff3754f9cc9544705d77b0aa4967b79159e836eaece39e5720c58f4a94b3",
+      "bytes": 308801,
+      "mtimeMs": 1781482660000
     },
     {
       "sourceRel": "anim/farming/plant-tree.fbx",
@@ -4251,6 +4658,30 @@
       "sha256": "4fa9d004ce4a464b1fba92b83c90522d1c323f69490026e5d1feb501b27b188d",
       "bytes": 307105,
       "mtimeMs": 1785553213062.6826
+    },
+    {
+      "sourceRel": "anim/farming/wheelbarrow-dump.fbx",
+      "sha256": "8e2540a20f9d1bfc866b2c8c48e50aa760eff24f5a1b4e9436d6ab675fb49de6",
+      "bytes": 287953,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/wheelbarrow-idle.fbx",
+      "sha256": "6580634b411c03504a7d84a4dc357be1856491195b9dfbf9f744aca10e9b6b83",
+      "bytes": 157121,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/wheelbarrow-walk-turn.fbx",
+      "sha256": "b1b0447dc581082f0f38f5333aee4e1fe12a33dd8b7e76d6b4df011e76f356a1",
+      "bytes": 157169,
+      "mtimeMs": 1781482660000
+    },
+    {
+      "sourceRel": "anim/farming/wheelbarrow-walk.fbx",
+      "sha256": "8a47482cbf427793b532cece401c650de03bd53fb3c4988f529bab8db02fb22a",
+      "bytes": 151985,
+      "mtimeMs": 1781482660000
     },
     {
       "sourceRel": "anim/gestures/acknowledging.fbx",
@@ -4757,6 +5188,318 @@
       "mtimeMs": 1785553213130.4207
     },
     {
+      "sourceRel": "anim/loco-8way/crouching-turn-90-left.fbx",
+      "sha256": "2fe86fe4dcf73318b95be79fc87eac9165ad4ba5338bf66610e8f9f0b32316e7",
+      "bytes": 160913,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/crouching-turn-90-right.fbx",
+      "sha256": "b4103a349c8f9d119d434ccf35d093116aceb08c47dd4192ab8b690fbf516f3e",
+      "bytes": 160721,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/idle-aiming.fbx",
+      "sha256": "8d9e1eb9ce850a7b728c5e24ae00f273eba252e2f3713ceb57362c03d28f1978",
+      "bytes": 177217,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/idle-crouching-aiming.fbx",
+      "sha256": "ce550755795574ebcc085528baf35762661e20934d0c5637647cd7bc9743476e",
+      "bytes": 176177,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/idle-crouching.fbx",
+      "sha256": "eb3b784c401eb2d332cc5f2cefc50e250e82c44dc2c78f608e8872c26eaede09",
+      "bytes": 175489,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/idle.fbx",
+      "sha256": "f249fb901d6e9d7e04680a899175dda47a54b21f819dc02429fe85bb887c0463",
+      "bytes": 177537,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/jump-down.fbx",
+      "sha256": "dfd5383b1be8f4deb3b8b0ddc00c34e912d8ef749a461bd1fc9234b2189b4a20",
+      "bytes": 140465,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/jump-loop.fbx",
+      "sha256": "579b5cbb40abf6544b6e28147802109156ce121b1feefb8920b23f80a25d2c69",
+      "bytes": 146945,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/jump-up.fbx",
+      "sha256": "4decf61fa9274006dbe8243dbac26b8de9998ee0fa6301e6f45195e8f023f658",
+      "bytes": 143233,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-backward-left.fbx",
+      "sha256": "5e3db25a52ee2d3ea40fb0fbef56cda22e88d43f080ddaa7ad00fc72ca525b9f",
+      "bytes": 176993,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-backward-right.fbx",
+      "sha256": "50b04466ab939b6154a0e4ed6fca131a8127d07267b2caafcc578a91eed3851f",
+      "bytes": 175601,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-backward.fbx",
+      "sha256": "b30517e18db89b80cdc90d034b08fd570259f9c26a956e31fa771af672ee0e9b",
+      "bytes": 173393,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-forward-left.fbx",
+      "sha256": "b54b922642faddda2a0d879e8f7f7bfc7340f755085810ef73d004b8f42f2179",
+      "bytes": 175601,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-forward-right.fbx",
+      "sha256": "1aa40f085966e667e4e870022d681c0bafe950634bd4bcc3e7739637f2316fea",
+      "bytes": 177137,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-forward.fbx",
+      "sha256": "e3020d29a772b6122554e06c0439a7d44fa415fb2dc966bd908a20f7c44af592",
+      "bytes": 175089,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-left.fbx",
+      "sha256": "367767000018496627f0786b4e7ab207352f1b31188e16a561f6d6d48a5e1c7f",
+      "bytes": 175601,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/run-right.fbx",
+      "sha256": "b76dd85983cb4f460310d8f67edbe4894a3bfbb55a4fa22e38b6fddd3c871b15",
+      "bytes": 176929,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-backward-left.fbx",
+      "sha256": "d4ba357195f1e9095d1d49162c8c55f569b34c49f3db35f7be8b01d5f885d4bb",
+      "bytes": 177857,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-backward-right.fbx",
+      "sha256": "8c23644588365bdd0eab227045c7cfe148b4af139956876f8fa5849ff38b8122",
+      "bytes": 175201,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-backward.fbx",
+      "sha256": "e1c7006cb50638755da79dab67fc20f6404bd83ebcd601e43f33f28c89e9bee3",
+      "bytes": 177857,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-forward-left.fbx",
+      "sha256": "ae5d0c1d40cdd64733524f53412000470aca8786287ec158825ab8187087787a",
+      "bytes": 175633,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-forward-right.fbx",
+      "sha256": "18ad56d74cdcf3a78d0050bf2a4f94f493ed843cb5063ca42b2d467f8cf173f0",
+      "bytes": 177281,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-forward.fbx",
+      "sha256": "483094d2f298666eea47ab4343525b7f1e2e5a30c5aff1235659031d7149c398",
+      "bytes": 177825,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-left.fbx",
+      "sha256": "2c6beedec1c0ee6b04c868541d2d871b2036e2da0b295f343bf57d17fefb65c9",
+      "bytes": 175233,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/sprint-right.fbx",
+      "sha256": "fb436dc97434e9d33e3a548eaaec3ad005f562dbd2042c0c910e707f7d0473ea",
+      "bytes": 175777,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/turn-90-left.fbx",
+      "sha256": "18c6a7ac876574dcf0a7e9dad3aa41af37d348b82606b680864e7b7782c2a50f",
+      "bytes": 147409,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/turn-90-right.fbx",
+      "sha256": "85ac3ea4416d3d20c8aa797ef0b11f6a76c9b7ae16ed6c7e58706387173bdfb3",
+      "bytes": 148241,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-backward-left.fbx",
+      "sha256": "6a244ee5fac9f0e78bc029d7d52b381a1eb0aa8c72056a9114b9d2c654d6f357",
+      "bytes": 151185,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-backward-right.fbx",
+      "sha256": "21eaa9319e21327f25a18a9959ae3554b7a48f6ed3e1dddb2a85d7f2da134b10",
+      "bytes": 152705,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-backward.fbx",
+      "sha256": "7171a944204b170d025efcc0a5ede6ac0b3a6347a6dcc663a1fcbbc83ab44258",
+      "bytes": 151185,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-backward-left.fbx",
+      "sha256": "56317e04ec81db1894d2c9d99b53ca8ffd40fd5ad28ac11aeb3b165f20d6346c",
+      "bytes": 149681,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-backward-right.fbx",
+      "sha256": "adc19b50e8a7167520fc028b3fccdea941fa164dc26ad628e824a89a2ef9238d",
+      "bytes": 151441,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-backward.fbx",
+      "sha256": "6887c3543021e5b181e77918e2a9533036ffc36e494bc0f16046e319335c771d",
+      "bytes": 151329,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-forward-left.fbx",
+      "sha256": "f7b3716e23e46e613be1e8d3143a138128281b420bdac44e1542d37f7981b99d",
+      "bytes": 150721,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-forward-right.fbx",
+      "sha256": "8b98de15a8c8533f5371794a1b40f3aa42affff02fb3ab84c999b67cd8831fe7",
+      "bytes": 151185,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-forward.fbx",
+      "sha256": "6ba8c7a5b4bad54025a606f4ab51de44bf9cb10e23896e538b1773edeb7e2f7e",
+      "bytes": 150641,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-left.fbx",
+      "sha256": "d134d2b57b69e996adfbb89a0944f2c2239874f30539acaee373ecc727fe985f",
+      "bytes": 150577,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-crouching-right.fbx",
+      "sha256": "f41cadad4c5bf8de938336c06f36909f1a66636c71b88af22e28bffa0dd93de3",
+      "bytes": 152849,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-forward-left.fbx",
+      "sha256": "7c4a48a65e6948cdf205d684292a9c577c022f86f1ccccee1ff6fa939e68ace0",
+      "bytes": 152705,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-forward-right.fbx",
+      "sha256": "7a1705e8956a7128d5633100a6be527504b15bd61c066893a376963a78ff027d",
+      "bytes": 151185,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-forward.fbx",
+      "sha256": "e8e8330f35b3e5b02ae1b278390eec12151c1926725ef6732a61cec44c05b011",
+      "bytes": 151649,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-left.fbx",
+      "sha256": "9c5e9b0aa9cbeb2a2bbb2bbd103ecbee1660d4b8f66c59f5cac95bd145d2cc0c",
+      "bytes": 150577,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco-8way/walk-right.fbx",
+      "sha256": "3bbb5c269a405c358b6b690488aad2f42bff7b7a04cb34f53f3f778895a5400c",
+      "bytes": 152769,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/loco/jump.fbx",
+      "sha256": "60df17678656be5c10ed3241be0af03adae9403b7c34f6a5352a30ed87f607f4",
+      "bytes": 206369,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/left-strafe-walking.fbx",
+      "sha256": "c2bc70360fa951f90cc65ae01c1640702d9784de956c144f06932f4aa1c1b0b6",
+      "bytes": 156193,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/left-strafe.fbx",
+      "sha256": "21177f7f8c955d77810e0f9151d0f049110a2cb8cca96c9cfe885377862b8a73",
+      "bytes": 139953,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/left-turn-90.fbx",
+      "sha256": "48c660f6ea5dfeb69a8a6a9c3473de40c1a98ed7c05bd44d5faaf7ee49dedd2c",
+      "bytes": 151761,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/left-turn.fbx",
+      "sha256": "6c58cbef3a4fc840a67a1f8ec0e1ba478e30510aac31e3789bb681a9a37bfa46",
+      "bytes": 148881,
+      "mtimeMs": 1781480262000
+    },
+    {
+      "sourceRel": "anim/loco/right-strafe-walking.fbx",
+      "sha256": "b6b4968daf4207217652f9265f93bd98d56b73e5f28272ac074a0cd3065c68f6",
+      "bytes": 156193,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/right-strafe.fbx",
+      "sha256": "771c3d76e221c06556bfa6c1826e1a5a921f8421ba9ff353c014c92c2dc7f150",
+      "bytes": 139953,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/right-turn-90.fbx",
+      "sha256": "8d69f71058de8c581e009042cac23d17c690b75789070d73720877cb89b95c1a",
+      "bytes": 151761,
+      "mtimeMs": 1780059572000
+    },
+    {
+      "sourceRel": "anim/loco/right-turn.fbx",
+      "sha256": "f47520b4e8ee03fbb93741ec2678cadf41e442813363f5c52f218c7dbdc6245f",
+      "bytes": 148881,
+      "mtimeMs": 1781480262000
+    },
+    {
       "sourceRel": "anim/mace/hell-slammer-a.fbx",
       "sha256": "289ac7846e5b6fb9567a6526cfee5425ebf5a4edd899a7988255afa854b86df5",
       "bytes": 332800,
@@ -4775,10 +5518,22 @@
       "mtimeMs": 1785553213136.4536
     },
     {
+      "sourceRel": "anim/magic-loco/standing-jump-running-landing.fbx",
+      "sha256": "1a2dcd01aa1d56fced4dd435430673089dbb925a4855ab47c7b9f69efc2bd8a2",
+      "bytes": 173649,
+      "mtimeMs": 1780060040000
+    },
+    {
       "sourceRel": "anim/magic-loco/standing-jump-running.fbx",
       "sha256": "05dff10d06ea9a68ad3b1676f4b85712a7d30e103fac6f53c8770c189f797488",
       "bytes": 157665,
       "mtimeMs": 1785553213137.9624
+    },
+    {
+      "sourceRel": "anim/magic-loco/standing-jump.fbx",
+      "sha256": "026d93ec7bd482bea6ebc8cf2cbf0954548a3720ab5fe9511b261c19a5826248",
+      "bytes": 215233,
+      "mtimeMs": 1780060040000
     },
     {
       "sourceRel": "anim/magic-loco/standing-land-to-standing-idle.fbx",
@@ -4809,6 +5564,12 @@
       "sha256": "6c12db1919dcda5de596dfe62ed3987bd69b457e104c67bdd23a72e60b3446e8",
       "bytes": 144385,
       "mtimeMs": 1785553213146.0405
+    },
+    {
+      "sourceRel": "anim/magic-loco/standing-sprint-forward.fbx",
+      "sha256": "390383005768c4ee4ed40f207d6d4167946a74a4235d5e5aeb47a481586373f8",
+      "bytes": 135521,
+      "mtimeMs": 1780060040000
     },
     {
       "sourceRel": "anim/magic-loco/standing-turn-left-90.fbx",
@@ -5069,10 +5830,40 @@
       "mtimeMs": 1785553213216.198
     },
     {
+      "sourceRel": "anim/reactions/death-crouching-headshot-front.fbx",
+      "sha256": "182b9eb6bd16dbe16c6f2cffb31d56be91a9a4af9a50e277347062faf8501391",
+      "bytes": 186753,
+      "mtimeMs": 1781480176000
+    },
+    {
       "sourceRel": "anim/reactions/death-from-back-headshot.fbx",
       "sha256": "577b7982c63bfcce14fdd6b2b6bf6299dcdaac9b94bdd2b59906c8c005372810",
       "bytes": 244384,
       "mtimeMs": 1785553213218.196
+    },
+    {
+      "sourceRel": "anim/reactions/death-from-back.fbx",
+      "sha256": "0f4c739ee5b199d077100dbf955e01daeb4329a80bfd7f21e37201d403569f98",
+      "bytes": 221633,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/reactions/death-from-front-headshot.fbx",
+      "sha256": "2e25374c89401b0492ae19a59cb5adc98261ccfb1665460c061ef5cc5150dddf",
+      "bytes": 215841,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/reactions/death-from-front.fbx",
+      "sha256": "d33ba828ca37fec3d3265caac59037186231903a890b6cf0b7450fb3b6b8f7b2",
+      "bytes": 231969,
+      "mtimeMs": 1781480176000
+    },
+    {
+      "sourceRel": "anim/reactions/death-from-right.fbx",
+      "sha256": "4057e92504e71948064ba4cf1f74b42041fa537d9d16a10bc714a84ff15a7d5f",
+      "bytes": 222145,
+      "mtimeMs": 1781480176000
     },
     {
       "sourceRel": "anim/reactions/dodging-back.fbx",
@@ -5195,6 +5986,18 @@
       "mtimeMs": 1785553213259.351
     },
     {
+      "sourceRel": "anim/rifle/firing-rifle.fbx",
+      "sha256": "3aa9664f50488a3c156270b5901016c2033e152cb4ac00aa3ec8dd6597a9e90c",
+      "bytes": 145857,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/hit-reaction.fbx",
+      "sha256": "7fa547c005336315766192223dcace12f626b4b038f19c8ff84ebb2dbcc23ecd",
+      "bytes": 166593,
+      "mtimeMs": 1780057302000
+    },
+    {
       "sourceRel": "anim/rifle/idle-aiming.fbx",
       "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
       "bytes": 196609,
@@ -5219,10 +6022,46 @@
       "mtimeMs": 1785553213265.015
     },
     {
+      "sourceRel": "anim/rifle/jump-forward.fbx",
+      "sha256": "cc430abbf9cc7a0829e0b88fe2f3f698c6a61c4aa865ea5711bf5f595590b854",
+      "bytes": 150289,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/reloading.fbx",
+      "sha256": "59f93a07960a3a052b01803f6ea0c9f702f1e9edc6ebff74282ebf0f1ea506da",
+      "bytes": 256545,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/rifle-aiming-idle.fbx",
+      "sha256": "a60432f27e526a5b546c05515981ad68b24f0581d49672dff877605e0a044dc0",
+      "bytes": 247697,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/rifle-jump.fbx",
+      "sha256": "ed0639194043cd2f5aaead957902c997853f7538c24528142d7738095ed72527",
+      "bytes": 136993,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/rifle-run.fbx",
+      "sha256": "fa3091293b13134b56c6cd0be779a631ab147d352c2326bbb019e6fa642acf2a",
+      "bytes": 142897,
+      "mtimeMs": 1780057302000
+    },
+    {
       "sourceRel": "anim/rifle/run-backward.fbx",
       "sha256": "099b015f6717f18f4d36cba8e342e16738473d6e8f8fc50f3ccbb97ca8368467",
       "bytes": 174289,
       "mtimeMs": 1785553213267.2522
+    },
+    {
+      "sourceRel": "anim/rifle/run-backwards.fbx",
+      "sha256": "d05c85d83b42f8f576013fe9ce63b7f8b0ecd4b9af3fb9925086e87f26a372f1",
+      "bytes": 134049,
+      "mtimeMs": 1780057302000
     },
     {
       "sourceRel": "anim/rifle/run-forward.fbx",
@@ -5249,6 +6088,48 @@
       "mtimeMs": 1785553213272.9272
     },
     {
+      "sourceRel": "anim/rifle/start-walking-backwards.fbx",
+      "sha256": "c657bc62bc91a0cf48021d6387d4704b3243b4b3f9a8da7ac04c4629e18c2dc7",
+      "bytes": 200465,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/start-walking.fbx",
+      "sha256": "5347b342a211ce2de2638bf77fa33b766943e8a0514f61ede64b845bff4c95fe",
+      "bytes": 175377,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/stop-walking.fbx",
+      "sha256": "94b9fd1b37ed5dd420286ca82b77a3c947990ffef1b03ecc2d966a099460e9a3",
+      "bytes": 228513,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/strafe-left.fbx",
+      "sha256": "10722e25301c90abc90d97350ea90b912632bee98358563679a87ac42c1a6588",
+      "bytes": 156177,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/strafe-right.fbx",
+      "sha256": "b9ad2b6d19b4070b0d98bb17228b143728f52f8754b00db508c219cf7adcd228",
+      "bytes": 173889,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/strafe.fbx",
+      "sha256": "87bba0b317f82bd8584e37eb650262605489447a6a4e4a17e4b6ecf6eee73040",
+      "bytes": 134049,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/toss-grenade.fbx",
+      "sha256": "37f4966a701448f7656e7800d6e966b03762686c215ab6a6b26ab91e6e639692",
+      "bytes": 252129,
+      "mtimeMs": 1780057302000
+    },
+    {
       "sourceRel": "anim/rifle/turn-90-left.fbx",
       "sha256": "c69fc3cc323c6202353005f4669ead7792ffd535edb811d7882a15e1161591ba",
       "bytes": 154705,
@@ -5259,6 +6140,42 @@
       "sha256": "ef00023d4a857dc183fc6e3804cd75c5b995b2333c0f5b23b10de8812f53d920",
       "bytes": 155681,
       "mtimeMs": 1785553213274.9268
+    },
+    {
+      "sourceRel": "anim/rifle/turn-left.fbx",
+      "sha256": "0ac70c406ae19e5687a93bbef59bd68f1676d33bfb427444b8f9ef5703da475c",
+      "bytes": 152545,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/turn-right-45.fbx",
+      "sha256": "549a8d5e31a08611fc1fda46601cacbb73e9b89fcd117d0384fa61f9809b6bbd",
+      "bytes": 154705,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/walk-backwards-stop.fbx",
+      "sha256": "8e22f880f06d398793153b608ecfd8b40530827ae0d52f2331ed85827fa6e744",
+      "bytes": 170945,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/walking-backwards.fbx",
+      "sha256": "72c08a6b0dd85b407febf586d6aca396dcd0af93254019de1c3cf88faf28d4f1",
+      "bytes": 172417,
+      "mtimeMs": 1780057302000
+    },
+    {
+      "sourceRel": "anim/rifle/walking-to-dying.fbx",
+      "sha256": "e85f564bdf7de00a0fd2825d1db5c8c9da7f328aa72985ab2b664d950bd79489",
+      "bytes": 246225,
+      "mtimeMs": 1782189068000
+    },
+    {
+      "sourceRel": "anim/rifle/walking.fbx",
+      "sha256": "565e23fd287312c34640806460f873a3380f1ebeef98eab744eee74e86c06b60",
+      "bytes": 169473,
+      "mtimeMs": 1780057302000
     },
     {
       "sourceRel": "anim/spear/lance-spartan.fbx",
@@ -5784,9 +6701,9 @@
       ]
     },
     {
-      "sourceRel": "anim/rifle/idle-aiming.fbx",
-      "sha256": "751c91517ac4fec3dcfe10244a8071f1198862b4c554a5bb495ddb1bacc71602",
-      "bytes": 196609,
+      "sourceRel": "anim/rifle/firing-rifle.fbx",
+      "sha256": "3aa9664f50488a3c156270b5901016c2033e152cb4ac00aa3ec8dd6597a9e90c",
+      "bytes": 145857,
       "status": "present",
       "usedBy": [
         "rifle",
@@ -5795,9 +6712,9 @@
       ]
     },
     {
-      "sourceRel": "anim/rifle/idle.fbx",
-      "sha256": "69bbf2d12e23c13cdd1c69af50c4f59f9e97f34dec9d00acd2a4fcb22484cfd3",
-      "bytes": 198881,
+      "sourceRel": "anim/rifle/reloading.fbx",
+      "sha256": "59f93a07960a3a052b01803f6ea0c9f702f1e9edc6ebff74282ebf0f1ea506da",
+      "bytes": 256545,
       "status": "present",
       "usedBy": [
         "rifle",
@@ -5806,9 +6723,31 @@
       ]
     },
     {
-      "sourceRel": "anim/rifle/run-forward.fbx",
-      "sha256": "f2c564e4cc26d2589b1e722568f13513636eb02e428e89023945ce7ef7889bac",
-      "bytes": 176209,
+      "sourceRel": "anim/rifle/rifle-aiming-idle.fbx",
+      "sha256": "a60432f27e526a5b546c05515981ad68b24f0581d49672dff877605e0a044dc0",
+      "bytes": 247697,
+      "status": "present",
+      "usedBy": [
+        "rifle",
+        "hunter-rifle",
+        "shotgun"
+      ]
+    },
+    {
+      "sourceRel": "anim/rifle/rifle-run.fbx",
+      "sha256": "fa3091293b13134b56c6cd0be779a631ab147d352c2326bbb019e6fa642acf2a",
+      "bytes": 142897,
+      "status": "present",
+      "usedBy": [
+        "rifle",
+        "hunter-rifle",
+        "shotgun"
+      ]
+    },
+    {
+      "sourceRel": "anim/rifle/walking.fbx",
+      "sha256": "565e23fd287312c34640806460f873a3380f1ebeef98eab744eee74e86c06b60",
+      "bytes": 169473,
       "status": "present",
       "usedBy": [
         "rifle",
@@ -5930,13 +6869,13 @@
     "uploads/locomotion/Quick_Roll_To_Run"
   ],
   "summary": {
-    "bakedCount": 243,
-    "mixamoCount": 643,
-    "mixamoDeclared": 33,
-    "mixamoDeclaredPresent": 33,
+    "bakedCount": 278,
+    "mixamoCount": 755,
+    "mixamoDeclared": 35,
+    "mixamoDeclaredPresent": 35,
     "mixamoDeclaredAbsent": 0,
-    "weaponsReady": 24,
-    "weaponsDegraded": 5,
+    "weaponsReady": 28,
+    "weaponsDegraded": 1,
     "weaponsIncomplete": 0
   }
 }
