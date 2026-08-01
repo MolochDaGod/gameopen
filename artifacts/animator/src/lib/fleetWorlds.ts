@@ -39,8 +39,10 @@ export const FLEET_WORLD_HOSTS = {
   waterIsland: "https://water.grudge-studio.com/island",
   /** Angel island demo */
   angelIsland: "https://angel-island.vercel.app/",
-  /** RTS / command */
+  /** Hero Command RTS (hero-rts artifact) — canonical play host */
   playRts: "https://play.grudge-studio.com/",
+  /** Vercel twin for Hero Command */
+  heroRts: "https://hero-rts.vercel.app/",
   forge: "https://forge.grudge-studio.com/",
   /** Warlords / genesis */
   warlords: "https://grudgewarlords.com/",
@@ -147,11 +149,17 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "rts",
-    title: "Voxel RTS / Command",
+    title: "Hero Command RTS",
     url: FLEET_WORLD_HOSTS.playRts,
-    blurb: "Toon RTS + Hero Command (play.grudge-studio.com).",
+    fallbackUrl: FLEET_WORLD_HOSTS.heroRts,
+    blurb:
+      "Hero Command — R3F + Rapier terrain, grudge6 races (CDN). play.grudge-studio.com · hero-rts.",
     kind: "rts",
-    sources: ["F:\\GitHub\\RTS-Grudge", "F:\\GitHub\\grudge-warlords-rts"],
+    sources: [
+      "https://play.grudge-studio.com/",
+      "C:\\Users\\nugye\\Documents\\grudge-studio\\artifacts\\hero-rts",
+      "MolochDaGod/grudge-studio-games",
+    ],
     featured: true,
   },
   {
@@ -200,9 +208,15 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "mech",
     title: "Mech Forge",
     url: FLEET_WORLD_HOSTS.mech,
-    blurb: "Mech builder / playground.",
+    blurb:
+      "Mech playground — TPS Danger cam, Rapier capsule, soft/hard focus crosshair. mech-builder redirects here.",
     kind: "combat",
-    sources: ["F:\\GitHub\\grudge-mech-forge"],
+    sources: [
+      "https://mech-playground.vercel.app/",
+      "C:\\Users\nugye\\Documents\\grudge-mech-forge",
+      "MolochDaGod/grudge-mech-forge",
+    ],
+    featured: true,
   },
   {
     id: "grudox-games",
