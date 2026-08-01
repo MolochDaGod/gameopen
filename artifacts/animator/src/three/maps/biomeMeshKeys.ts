@@ -1,11 +1,15 @@
 /**
  * Proven biome / outdoor mesh keys for Danger Room + ForestWorld.
  *
- * Inventory is from live HEAD (assets.grudge-studio.com + open SPA), 2026-07-29.
- * Prefer SPA mid-size maps when live; CDN (R2) for large / fleet worlds.
- * loadGltfFirst tries each key × fleet hosts until one loads.
+ * HEAD truth (re-probed 2026-08-01):
+ *   DEAD both hosts: island_life, fabled-zone/fabledzone, tropical_island(_dry),
+ *                    bridge-town-kit, bridge_town
+ *   SPA-only OK: arena, pirate village/palms, shipwreck, forest_mountains
+ *   CDN+SPA OK: sailtest, forest-map, small/breeze, warlords tropical_small /
+ *               pirate_island_pack / low_poly / ice / medieval_camp, voxel biomes
  *
- * Policy: do not invent keys. Only list paths verified or intentionally local-first.
+ * Policy: proven 200 keys FIRST (no 404 stall). Dead keys LAST (future upload only).
+ * Never invent keys. Labels in testWorlds must match what actually loads.
  */
 
 export type BiomeKind =
@@ -103,15 +107,17 @@ export const BIOME_MESH_CHAINS: Record<string, BiomeMeshChain> = {
   tropical: {
     biome: "tropical",
     label: "Tropical / beach harvest",
-    primaryHost: "either",
-    notes: "SPA tropical ~69MB excluded from Vercel; CDN tropical_island_small is production fallback",
+    primaryHost: "cdn",
+    notes:
+      "Live mesh: tropical_island_small (CDN). SPA dry/full 404 on prod — kept last for local/future only.",
     meshKeys: [
-      SPA_MAP_KEYS.tropicalDry,
-      SPA_MAP_KEYS.tropicalFull,
       CDN_WARLORDS_WORLD.tropicalSmall,
       CDN_WARLORDS_WORLD.lowPolyIsland,
       CDN_WORLD_KEYS.smallIsland,
       CDN_WORLD_KEYS.breezeIsland,
+      // Future / local-only (both hosts 404 on prod 2026-08-01)
+      SPA_MAP_KEYS.tropicalDry,
+      SPA_MAP_KEYS.tropicalFull,
     ],
   },
   mountain: {
@@ -214,28 +220,48 @@ export const BIOME_MESH_CHAINS: Record<string, BiomeMeshChain> = {
   },
   town: {
     biome: "town",
-    label: "Faction town (fabled missing → pirate island pack)",
+    label: "Town stand-in (fabled mesh not on CDN)",
     primaryHost: "cdn",
-    notes: "fabled-zone.glb not on R2; pirate pack + camp as usable stand-in",
+    notes:
+      "Live mesh: pirate_island_pack. fabled-zone.glb 404 both hosts — last only.",
     meshKeys: [
-      CDN_WORLD_KEYS.fabledZone,
-      CDN_WORLD_KEYS.fabledZoneAlt,
       CDN_WARLORDS_WORLD.pirateIslandPack,
       CDN_WARLORDS_WORLD.medievalCamp,
       CDN_WORLD_KEYS.sailtest,
+      // Future upload only (404 both hosts 2026-08-01)
+      CDN_WORLD_KEYS.fabledZone,
+      CDN_WORLD_KEYS.fabledZoneAlt,
+    ],
+  },
+  /** Bridge / dock kit — primary kit GLBs 404; coastal stand-ins proven. */
+  docks: {
+    biome: "town",
+    label: "Dock / harbor stand-in",
+    primaryHost: "cdn",
+    notes:
+      "bridge-town-kit + bridge_town 404 both hosts. Live: pirate pack + sailtest + medieval camp.",
+    meshKeys: [
+      CDN_WARLORDS_WORLD.pirateIslandPack,
+      CDN_WORLD_KEYS.sailtest,
+      CDN_WARLORDS_WORLD.medievalCamp,
+      CDN_WORLD_KEYS.smallIsland,
+      // Future kit upload only
+      "models/towns/bridge-town-kit.glb",
+      "models/worlds/bridge_town.glb",
     ],
   },
   survival: {
     biome: "coast",
-    label: "Island life survival (island_life.glb missing → sailtest chain)",
+    label: "Survival coast (island_life mesh not on CDN)",
     primaryHost: "cdn",
-    notes: "island_life.glb 404 on CDN; use sailtest / small / breeze",
+    notes: "Live mesh: sailtest. island_life.glb 404 — last only for future upload.",
     meshKeys: [
-      CDN_WORLD_KEYS.islandLife,
       CDN_WORLD_KEYS.sailtest,
       CDN_WORLD_KEYS.smallIsland,
       CDN_WORLD_KEYS.breezeIsland,
       CDN_WARLORDS_WORLD.lowPolyIsland,
+      // Future upload only (404 both hosts 2026-08-01)
+      CDN_WORLD_KEYS.islandLife,
     ],
   },
 };

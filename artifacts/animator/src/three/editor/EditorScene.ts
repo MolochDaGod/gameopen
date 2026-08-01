@@ -76,6 +76,8 @@ import type {
   SceneDescriptor,
   SkillLabState,
 } from "./types";
+import { skillsForGroup, type PlaySkill } from "./playSkills";
+import type { WeaponGroup } from "../types";
 
 /** Internal Skill Lab authoring values (the editable subset of {@link SkillLabState}). */
 type SkillLabConfig = {
@@ -188,6 +190,9 @@ export class EditorScene {
   private axes: THREE.AxesHelper;
   private raycaster = new THREE.Raycaster();
   private vfx: Vfx;
+  /** Soft far-background art + animated translucent "ethereal falls" sheets. */
+  private etherealBackdrop: THREE.Group | null = null;
+  private etherealFalls: THREE.Mesh[] = [];
 
   // Postprocessing pipeline: RenderPass → OutlinePass (selection) → UnrealBloom
   // (toggle) → OutputPass. The loop renders through the composer, not directly.
@@ -321,6 +326,10 @@ export class EditorScene {
   private controller: Controller | null = null;
   private playInput: InputState | null = null;
   private playAvatar: GrudgeAvatar | null = null;
+  /** Resolved weapon-skill kit for the current Play session (empty when idle). */
+  private playSkills: PlaySkill[] = [];
+  /** Per-skill cooldown end timestamps (performance.now() ms); absent = ready. */
+  private skillReadyAt = new Map<string, number>();
   // The character the Controller is actually driving in Play mode. Usually the
   // selected Playground (grudge) character, but falls back to the dressed rig so
   // Play mode works on whatever is on the stand. Used for VFX origin/facing.
@@ -372,8 +381,9 @@ export class EditorScene {
     this.renderer.toneMappingExposure = 1.05;
     container.appendChild(this.renderer.domElement);
 
-    this.scene.background = new THREE.Color(0x0a0d14);
-    this.scene.fog = new THREE.Fog(0x0a0d14, 40, 90);
+    // Match threejs-rapier Dressing Room stage mood (lighter ethereal plate).
+    this.scene.background = new THREE.Color(0x101827);
+    this.scene.fog = new THREE.Fog(0x121b2d, 34, 96);
 
     this.camera = new THREE.PerspectiveCamera(55, 1, 0.05, 500);
     this.camera.position.set(8, 7, 10);
@@ -424,6 +434,7 @@ export class EditorScene {
     this.composer.addPass(new OutputPass());
 
     this.setupLights();
+    this.setupEtherealBackdrop();
 
     this.renderer.domElement.addEventListener("pointerdown", this.onPointerDownCapture, true);
     this.renderer.domElement.addEventListener("pointerdown", this.onPointerDown);
@@ -438,9 +449,10 @@ export class EditorScene {
   }
 
   private setupLights() {
-    this.scene.add(new THREE.AmbientLight(0x4a608f, 0.6));
-    this.scene.add(new THREE.HemisphereLight(0xa8ccff, 0x10141f, 0.85));
-    const key = new THREE.DirectionalLight(0xeaf2ff, 2.0);
+    // Brighter stage lighting from threejs-rapier Dressing Room.
+    this.scene.add(new THREE.AmbientLight(0x7899d8, 0.78));
+    this.scene.add(new THREE.HemisphereLight(0xc8ddff, 0x182033, 1.08));
+    const key = new THREE.DirectionalLight(0xf4f8ff, 2.35);
     key.position.set(8, 16, 6);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
@@ -452,9 +464,98 @@ export class EditorScene {
     key.shadow.camera.top = d;
     key.shadow.camera.bottom = -d;
     this.scene.add(key);
-    const rim = new THREE.DirectionalLight(0x6fa0ff, 0.6);
+    const rim = new THREE.DirectionalLight(0x8fb8ff, 0.9);
     rim.position.set(-10, 8, -8);
     this.scene.add(rim);
+    const lowFill = new THREE.DirectionalLight(0x74f2ff, 0.38);
+    lowFill.position.set(-6, 3, 10);
+    this.scene.add(lowFill);
+  }
+
+  /**
+   * Far-stage Dressing Room visual: ethereal falls plate from the controll lab.
+   * Low-opacity room-scene image + translucent vertical sheets, no heavy geometry.
+   */
+  private setupEtherealBackdrop() {
+    const group = new THREE.Group();
+    group.name = "Ethereal Falls Backdrop";
+    group.position.set(0, 6.5, -25);
+    this.etherealBackdrop = group;
+
+    const tex = new THREE.TextureLoader().load(asset("rooms/dressing-scene.png"));
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+
+    const bg = new THREE.Mesh(
+      new THREE.PlaneGeometry(38, 22),
+      new THREE.MeshBasicMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    bg.name = "Dressing Room Scenic Backdrop";
+    bg.renderOrder = -20;
+    group.add(bg);
+
+    const colors = [0x7dd3ff, 0xa78bfa, 0x67e8f9, 0xc4b5fd];
+    const xs = [-11.5, -5.5, 5.5, 11.5];
+    for (let i = 0; i < xs.length; ++i) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: colors[i],
+        transparent: true,
+        opacity: 0.16,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      });
+      const fall = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 18, 1, 8), mat);
+      fall.name = `Ethereal Fall ${i + 1}`;
+      fall.position.set(xs[i], 0, 0.05 + i * 0.02);
+      fall.userData.phase = i * 1.7;
+      fall.userData.baseX = xs[i];
+      fall.renderOrder = -10;
+      this.etherealFalls.push(fall);
+      group.add(fall);
+    }
+
+    const floorGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(34, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0x5eead4,
+        transparent: true,
+        opacity: 0.08,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      }),
+    );
+    floorGlow.name = "Ethereal Floor Glow";
+    floorGlow.position.set(0, -9.4, 0.12);
+    floorGlow.renderOrder = -9;
+    group.add(floorGlow);
+
+    this.scene.add(group);
+  }
+
+  private updateEtherealBackdrop(dt: number) {
+    void dt;
+    if (!this.etherealBackdrop) return;
+    const t = performance.now() * 0.001;
+    this.etherealBackdrop.rotation.y = Math.sin(t * 0.08) * 0.035;
+    for (let i = 0; i < this.etherealFalls.length; ++i) {
+      const fall = this.etherealFalls[i];
+      const phase = (fall.userData.phase as number) ?? 0;
+      fall.position.y = Math.sin(t * 0.55 + phase) * 0.35;
+      fall.position.x =
+        ((fall.userData.baseX as number) ?? fall.position.x) + Math.sin(t * 0.22 + phase) * 0.18;
+      const mat = fall.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.12 + Math.max(0, Math.sin(t * 0.85 + phase)) * 0.08;
+      fall.scale.y = 1 + Math.sin(t * 0.35 + phase) * 0.06;
+    }
   }
 
   // ── render loop ────────────────────────────────────────────────────────────
@@ -473,6 +574,7 @@ export class EditorScene {
       this.updateFishEye(dt);
     }
     this.vfx.update(dt);
+    this.updateEtherealBackdrop(dt);
     this.rig?.update(dt);
     this.updateMarkers();
     for (const avatar of this.grudge.values()) avatar.update(dt);
@@ -2014,9 +2116,14 @@ export class EditorScene {
   }
 
   setRigWeapon(weaponId: string): void {
-    if (!this.rig) return;
+    if (!this.rig) {
+      this.notify("Load Explorer (Mixamo) rig first — Weapon set only drives the Mixamo 25-bone library.", "info");
+      return;
+    }
+    const def = getWeapon(weaponId);
+    const animSet = def.animSet ?? weaponId;
     this.rig.setWeaponId(weaponId);
-    this.rigWeapon = getWeapon(weaponId).animSet ?? weaponId;
+    this.rigWeapon = animSet;
     // The weapon swap mutates the rig's bone children, so re-register its subtree
     // to keep the hierarchy in sync with the live Object3D graph.
     if (this.rigRootId) this.unregisterSubtree(this.rigRootId);
@@ -2026,6 +2133,17 @@ export class EditorScene {
       parentId: null,
       baseName: "Character",
     });
+    // Force idle on the new class so the dropdown always produces visible motion.
+    try {
+      this.rig.playRole("idle");
+    } catch {
+      try {
+        this.rig.previewClip("attack");
+      } catch {
+        /* clip library still resolving */
+      }
+    }
+    this.notify(`Weapon set · ${def.label ?? weaponId} (${animSet})`, "info");
     this.emit();
   }
 
@@ -2182,19 +2300,120 @@ export class EditorScene {
   }
 
   /**
-   * Equip a catalog weapon onto the rig via the real equip path: swap the rig's
-   * clip set (so its bundled animation style applies) AND mount the prefab's GLB
-   * model on the hand mounts (so its grip/skill/VFX loadout comes along). Loads a
-   * rig first if none is present.
+   * Equip a catalog weapon onto the active character:
+   *  - Explorer Mixamo rig → clip set swap + hand GLB mount
+   *  - Grudge6 race → mount on Bip001 hand sockets (do NOT load a second Explorer)
+   *
+   * Never silently spawns Explorer when a grudge hero is already on the pedestal
+   * (that was vanishing/hiding the race kit under a half-loaded second character).
    */
   async equipWeapon(weaponId: string, tier = 0): Promise<void> {
-    if (!this.rig) await this.loadRig(weaponId);
-    if (!this.rig) return;
+    const def = getWeapon(weaponId);
+    if (def.id === "none") {
+      this.unequipWeapon();
+      return;
+    }
+
+    // Prefer selected / only grudge hero when no Explorer rig is live.
+    if (!this.rig && this.grudge.size > 0) {
+      await this.equipWeaponOnGrudge(weaponId, tier);
+      return;
+    }
+
+    if (!this.rig) {
+      await this.loadRig(weaponId);
+    }
+    if (!this.rig) {
+      this.notify("Couldn't load Explorer rig for weapon equip.", "warn");
+      return;
+    }
+
     this.rig.setWeaponId(weaponId);
-    this.rigWeapon = getWeapon(weaponId).animSet ?? weaponId;
+    this.rigWeapon = def.animSet ?? weaponId;
     this.equippedWeaponId = weaponId;
     this.equippedTier = tier;
     await this.mountCatalogModel();
+    this.pinPedestalCharacter();
+    this.notify(`Equipped ${def.label}`, "info");
+  }
+
+  /** Mount catalog weapon GLB onto selected GrudgeAvatar hand bones. */
+  private async equipWeaponOnGrudge(weaponId: string, tier: number): Promise<void> {
+    const rootId =
+      (this.selectedId && this.grudge.has(this.selectedId) && this.selectedId) ||
+      [...this.grudge.keys()][0];
+    if (!rootId) return;
+    const avatar = this.grudge.get(rootId);
+    if (!avatar) return;
+
+    const rightHand = avatar.rightHand;
+    const leftHand = avatar.leftHand ?? avatar.rightHand;
+    if (!rightHand || !leftHand) {
+      this.notify("No hand sockets on this character — can't mount weapon.", "warn");
+      return;
+    }
+
+    const def = getWeapon(weaponId);
+    const token = ++this.weaponToken;
+    this.clearMountedWeapon();
+    this.equippedWeaponId = weaponId;
+    this.equippedTier = tier;
+    this.busy = true;
+    this.emit();
+
+    try {
+      const mounted = await mountWeaponModel(def, rightHand, leftHand, tier);
+      if (this.disposed || token !== this.weaponToken) {
+        unmountWeapon(mounted);
+        return;
+      }
+      for (const o of mounted.objects) o.userData.__libWeapon = true;
+      this.mountedWeapon = mounted;
+      try {
+        avatar.setGripWeapon(mounted.objects[0] ?? null, weaponId);
+      } catch {
+        /* optional two-hand assist */
+      }
+      if (this.showMarkers) this.ensureMarkers();
+      this.pinPedestalCharacter();
+      this.notify(`Equipped ${def.label} on ${avatar.def.name}`, "info");
+    } catch (e) {
+      console.warn("[EditorScene] grudge equip failed", e);
+      this.notify(`Couldn't equip ${def.label}`, "warn");
+    } finally {
+      this.busy = false;
+      this.emit();
+    }
+  }
+
+  /** Keep pedestal character at origin after equip / clip swaps (no flying off). */
+  private pinPedestalCharacter(): void {
+    if (this.rig) {
+      this.rig.root.position.x = 0;
+      this.rig.root.position.z = 0;
+      const model = findDeployModel(this.rig.root) ?? this.rig.root;
+      try {
+        reGroundAfterAnimSample(model, 0);
+      } catch {
+        /* */
+      }
+      this.rig.root.position.x = 0;
+      this.rig.root.position.z = 0;
+    }
+    for (const avatar of this.grudge.values()) {
+      avatar.root.position.x = 0;
+      avatar.root.position.z = 0;
+      const model = findDeployModel(avatar.root);
+      if (model) {
+        try {
+          reGroundAfterAnimSample(model, 0);
+        } catch {
+          /* */
+        }
+      }
+      avatar.root.position.x = 0;
+      avatar.root.position.z = 0;
+    }
   }
 
   /** (Re)mount the equipped catalog weapon's GLB, re-reading its (possibly edited) prefab data. */
@@ -2214,16 +2433,23 @@ export class EditorScene {
       this.emit();
       return;
     }
-    const mounted = await mountWeaponModel(def, rightHand, leftHand, this.equippedTier);
-    // Discard if a newer equip/edit superseded this async load.
-    if (this.disposed || token !== this.weaponToken || !this.rig) {
-      unmountWeapon(mounted);
-      return;
+    try {
+      const mounted = await mountWeaponModel(def, rightHand, leftHand, this.equippedTier);
+      // Discard if a newer equip/edit superseded this async load.
+      if (this.disposed || token !== this.weaponToken || !this.rig) {
+        unmountWeapon(mounted);
+        return;
+      }
+      // Tag so a later rig re-register (e.g. the Animations panel) skips these.
+      for (const o of mounted.objects) o.userData.__libWeapon = true;
+      this.mountedWeapon = mounted;
+      if (this.showMarkers) this.ensureMarkers();
+    } catch (e) {
+      console.warn("[EditorScene] catalog weapon mount failed", def.id, e);
+      this.notify(`Weapon model failed for ${def.label} — clips still switched.`, "warn");
     }
-    // Tag so a later rig re-register (e.g. the Animations panel) skips these.
-    for (const o of mounted.objects) o.userData.__libWeapon = true;
-    this.mountedWeapon = mounted;
-    if (this.showMarkers) this.ensureMarkers();
+    // Always re-pin: equip flourish + clip swap can drift the pedestal character.
+    this.pinPedestalCharacter();
     this.emit();
   }
 
@@ -2233,10 +2459,23 @@ export class EditorScene {
    * materials; placement is then tuned with the size/grip gizmo.
    */
   equipCustomWeapon(nodeId: string): void {
-    if (!this.rig) return;
     const node = this.find(nodeId);
-    const rightHand = this.rig.rightHand;
-    if (!node || !rightHand) return;
+    if (!node) return;
+
+    let rightHand: THREE.Object3D | null = this.rig?.rightHand ?? null;
+    let gripAvatar: import("../grudge/GrudgeAvatar").GrudgeAvatar | null = null;
+    if (!rightHand && this.grudge.size > 0) {
+      const rootId =
+        (this.selectedId && this.grudge.has(this.selectedId) && this.selectedId) ||
+        [...this.grudge.keys()][0];
+      gripAvatar = rootId ? this.grudge.get(rootId) ?? null : null;
+      rightHand = gripAvatar?.rightHand ?? null;
+    }
+    if (!rightHand) {
+      this.notify("Load a character first, then equip.", "info");
+      return;
+    }
+
     this.weaponToken++; // cancel any in-flight catalog mount
     this.clearMountedWeapon();
     const clone = cloneSkinned(node.object);
@@ -2247,7 +2486,13 @@ export class EditorScene {
     this.customMount = { nodeId, object: clone };
     this.equippedWeaponId = `custom:${nodeId}`;
     this.equippedTier = 0;
+    try {
+      gripAvatar?.setGripWeapon(clone, `custom:${nodeId}`);
+    } catch {
+      /* */
+    }
     if (this.showMarkers) this.ensureMarkers();
+    this.pinPedestalCharacter();
     this.emit();
   }
 
@@ -2261,6 +2506,14 @@ export class EditorScene {
       this.rig.setWeaponId("none");
       this.rigWeapon = "unarmed";
     }
+    for (const avatar of this.grudge.values()) {
+      try {
+        avatar.setGripWeapon(null, null);
+      } catch {
+        /* */
+      }
+    }
+    this.pinPedestalCharacter();
     this.emit();
   }
 
@@ -2441,7 +2694,25 @@ export class EditorScene {
     // highlight to keep the panel state honest.
     this.rigImportedPlaying = null;
     this.rig?.previewClip(name);
+    // Pedestal SSOT: keep world root centred after any residual root-motion sample.
+    // lockHorizontalRoot owns hip X/Z; this guards world Group drift + feet Y.
+    if (this.rig) {
+      this.rig.root.position.x = 0;
+      this.rig.root.position.z = 0;
+      const model = findDeployModel(this.rig.root) ?? this.rig.root;
+      window.setTimeout(() => {
+        if (this.disposed) return;
+        reGroundAfterAnimSample(model, 0);
+        this.rig!.root.position.x = 0;
+        this.rig!.root.position.z = 0;
+      }, 50);
+    }
     this.emit();
+  }
+
+  /** Clip names on the loaded animation-library rig (empty until loadRig). */
+  getRigClipNames(): string[] {
+    return this.rig ? this.rig.clipNames() : [];
   }
 
   unloadRig(): void {
@@ -2638,6 +2909,8 @@ export class EditorScene {
     this.playAvatar = grudge;
     this.driven = driven;
     this.playing = true;
+    this.playSkills = skillsForGroup(this.resolvePlayGroup());
+    this.skillReadyAt.clear();
     window.addEventListener("keydown", this.onPlayKeyDown);
     window.addEventListener("mousedown", this.onPlayMouseDown);
     input.requestLock();
@@ -2664,12 +2937,37 @@ export class EditorScene {
     this.playAvatar = null;
     this.driven = null;
     this.playing = false;
+    this.playSkills = [];
+    this.skillReadyAt.clear();
     // Return the character to a clean idle pose.
     driven?.playRole("idle", 0.15);
     this.orbit.enabled = true;
     // The skill target reverts to the selected grudge character (or none) — resync.
     this.applySkillLab();
     this.emit();
+  }
+
+  /** Weapon group used to pick the Play-mode skill kit for the HUD bar. */
+  private resolvePlayGroup(): WeaponGroup {
+    if (this.playAvatar) {
+      try {
+        const pack = this.playAvatar.getAnimPack?.() as string | null | undefined;
+        if (pack === "magic") return "magic";
+        if (pack === "longbow") return "ranged";
+        if (pack === "sword_shield") return "melee-1h";
+      } catch {
+        /* fall through */
+      }
+    }
+    const id = this.equippedWeaponId;
+    if (id && !id.startsWith("custom:")) {
+      try {
+        return getWeapon(id).group ?? "unarmed";
+      } catch {
+        return "unarmed";
+      }
+    }
+    return "unarmed";
   }
 
   // ── Playground Skill Lab ────────────────────────────────────────────────────
@@ -3542,7 +3840,10 @@ export class EditorScene {
   /** Register the clips that arrived with an imported model under its root node. */
   private registerImportedClips(rootId: string, root: THREE.Object3D, clips: THREE.AnimationClip[]): void {
     if (clips.length === 0) return;
-    this.importedAnims.set(rootId, { mixer: new THREE.AnimationMixer(root), clips });
+    // Always strip residual position tracks at register time so hierarchy play
+    // and double-clicks never reintroduce root-motion drift.
+    const safe = clips.map((c) => stripPositionTracks(c));
+    this.importedAnims.set(rootId, { mixer: new THREE.AnimationMixer(root), clips: safe });
   }
 
   /**
@@ -3600,7 +3901,7 @@ export class EditorScene {
     if (!this.rig || clips.length === 0) return;
     const mixamo = clips.filter((c) => this.isMixamoClip(c));
     if (mixamo.length === 0) return;
-    const retargeted = mixamo.map((c) => retargetMixamoClip(c));
+    const retargeted = mixamo.map((c) => stripPositionTracks(retargetMixamoClip(c)));
     const srcId = `rigimp:${++this.rigImportSeq}`;
     this.rigImportedAnims.set(srcId, { name: srcName, clips: retargeted });
     this.notify(
@@ -3617,8 +3918,17 @@ export class EditorScene {
     const clip = entry.clips.find((c) => c.name === clipName);
     if (!clip) return;
     this.haltImported();
-    this.rig.playExternalClip(clip, true);
+    // Extra safety: strip + lock path goes through Animator.playClipLooped
+    this.rig.playExternalClip(stripPositionTracks(clip), true);
     this.rigImportedPlaying = `${srcId}::${clipName}`;
+    this.rig.root.position.x = 0;
+    this.rig.root.position.z = 0;
+    window.setTimeout(() => {
+      if (this.disposed || !this.rig) return;
+      reGroundAfterAnimSample(findDeployModel(this.rig.root) ?? this.rig.root, 0);
+      this.rig.root.position.x = 0;
+      this.rig.root.position.z = 0;
+    }, 50);
     this.emit();
   }
 
@@ -3824,6 +4134,19 @@ export class EditorScene {
       })),
       skillLab: this.skillLabSnapshot(),
       notice: this.notice,
+      playHud: this.playing
+        ? {
+            health: 1,
+            skills: this.playSkills.map((s) => ({
+              key: s.key,
+              bind: s.bind,
+              label: s.label,
+              glyph: s.glyph,
+              cooldown: s.cooldown,
+              readyAt: this.skillReadyAt.get(s.key) ?? 0,
+            })),
+          }
+        : null,
     });
   }
 

@@ -831,6 +831,91 @@
   border-top: 1px solid rgba(120, 150, 200, 0.18);
 }
 
+/* ── Edit / Move mode cluster — left side under tool rail (never bottom-right) ─ */
+.ed-mode-cluster {
+  position: absolute;
+  left: 10px;
+  top: calc(var(--shell-header-h, 48px) + env(safe-area-inset-top, 0px) + 108px);
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(16, 22, 36, 0.96), rgba(10, 14, 22, 0.96));
+  border: 1px solid rgba(120, 180, 255, 0.32);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(80, 120, 200, 0.12);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  z-index: 1250;
+  min-width: 118px;
+}
+.ed-mode-cluster-row {
+  display: flex;
+  gap: 6px;
+}
+.ed-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 36px;
+  flex: 1;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(110, 168, 255, 0.22);
+  background: rgba(34, 44, 66, 0.75);
+  color: #cfe0ff;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+}
+.ed-mode-btn span {
+  display: inline; /* always readable — never icon-only */
+}
+.ed-mode-btn:hover:not(:disabled) {
+  background: rgba(54, 74, 116, 0.9);
+  border-color: rgba(150, 195, 255, 0.55);
+  color: #fff;
+}
+.ed-mode-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ed-mode-btn.edit.on {
+  background: linear-gradient(180deg, rgba(96, 142, 248, 0.95), rgba(72, 116, 232, 0.95));
+  border-color: rgba(170, 210, 255, 0.9);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(120, 170, 255, 0.35), 0 4px 16px rgba(60, 110, 240, 0.45);
+}
+.ed-mode-btn.move.on {
+  background: linear-gradient(180deg, rgba(60, 200, 120, 0.95), rgba(36, 160, 96, 0.95));
+  border-color: rgba(140, 255, 190, 0.85);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(80, 220, 140, 0.3), 0 4px 16px rgba(40, 160, 100, 0.4);
+}
+.ed-mode-btn.gizmo.on {
+  background: linear-gradient(180deg, rgba(255, 178, 77, 0.95), rgba(240, 150, 50, 0.95));
+  border-color: rgba(255, 210, 150, 0.9);
+  color: #1a1208;
+}
+.ed-mode-sep {
+  display: none;
+}
+@media (max-width: 720px) {
+  .ed-mode-cluster {
+    left: 8px;
+    top: auto;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* clear AI FAB */
+    right: auto;
+    min-width: 108px;
+  }
+}
+
 /* ── persistent tool rail (always-visible, stateful tools) ─────────────────── */
 .ed-toolrail {
   position: absolute;

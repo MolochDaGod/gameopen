@@ -20,7 +20,15 @@ import {
 } from "./three/types";
 import { loadFireFx, saveFireFx, type FireFxParams } from "./three/fxSettings";
 import { loadControls } from "./three/controlsSettings";
-import { ROOM_PRESETS, ROOM_PRESET_LIST, asRoomPresetId, loadRoomPreset, saveRoomPreset, type RoomPresetId } from "./three/RoomPresets";
+import {
+  ROOM_PRESETS,
+  ROOM_PRESET_LIST,
+  asRoomPresetId,
+  loadRoomPreset,
+  saveRoomPreset,
+  loadBackdrop,
+  type RoomPresetId,
+} from "./three/RoomPresets";
 import {
   loadTestWorldId,
   TEST_WORLD_LIST,
@@ -809,6 +817,7 @@ export default function App() {
   /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
+  const [backdropId, setBackdropId] = useState<string | null>(() => loadBackdrop());
   const [testWorldId, setTestWorldId] = useState<TestWorldId>(() => loadTestWorldId());
   const [hudEditing, setHudEditing] = useState(false);
   const hudEditor = useHudEditor();
@@ -917,10 +926,44 @@ export default function App() {
       setPointerLayer("play-free");
     } else {
       setPointerLayer("play-locked");
-      const canvas = mountRef.current?.querySelector("canvas");
-      canvas?.requestPointerLock?.();
+      const canvas = mountRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+      try {
+        const p = canvas?.requestPointerLock?.();
+        // Promise-based API: if rejected, stay free-mouse with visible cursor
+        if (p && typeof (p as Promise<void>).then === "function") {
+          void (p as Promise<void>).catch(() => {
+            setFreeMouse(true);
+            freeMouseRef.current = true;
+            setFreeMouseSticky(true);
+            setPointerLayer("play-free");
+            studioRef.current?.setFreeMouseMode(true);
+            studioRef.current?.flashMessage?.("Pointer lock blocked — free mouse on (F8)", 2);
+          });
+        }
+      } catch {
+        setFreeMouse(true);
+        freeMouseRef.current = true;
+        setPointerLayer("play-free");
+      }
     }
   }, []);
+
+  // ESC unlock / lock fail → free mouse + restore cursor image
+  useEffect(() => {
+    const onLockEvt = (e: Event) => {
+      const locked = !!(e as CustomEvent<{ locked?: boolean }>).detail?.locked;
+      if (!locked && (mode === "danger" || mode === "play") && !freeMouseRef.current) {
+        // User released lock (ESC) — don't leave aim-lock UI with invisible mouse
+        setFreeMouse(true);
+        freeMouseRef.current = true;
+        setFreeMouseSticky(true);
+        setPointerLayer("play-free");
+        studioRef.current?.setFreeMouseMode(true);
+      }
+    };
+    window.addEventListener("grudge:pointerlock", onLockEvt);
+    return () => window.removeEventListener("grudge:pointerlock", onLockEvt);
+  }, [mode]);
 
   // Helpers.glb cinematic load screen when entering Danger Room or Worldbuilder Play.
   useEffect(() => {
@@ -1742,6 +1785,11 @@ export default function App() {
     [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId, onTestWorld],
   );
 
+  const onBackdrop = useCallback((id: string | null) => {
+    setBackdropId(id);
+    studioRef.current?.setBackdrop(id);
+  }, []);
+
   const onRoomPreset = useCallback((id: RoomPresetId) => {
     setRoomPreset(id);
     saveRoomPreset(id);
@@ -2023,14 +2071,19 @@ export default function App() {
           navigate(action.mode as Mode);
           break;
         }
-        case "danger-panel":
+        case "danger-panel": {
           navigate("danger");
           // Open after mode mounts (dock layout is danger-local).
+          // animdbg is not a separate dock on Open — map to anim panel.
+          const panelId =
+            action.id === "animdbg" ? "anim" : action.id === "admin" || action.id === "editor" || action.id === "anim"
+              ? action.id
+              : "admin";
           queueMicrotask(() => {
-            const id = action.id === "animdbg" ? "anim" : action.id;
-            dangerDock.showPanel(id);
+            dangerDock.showPanel(panelId);
           });
           break;
+        }
         case "danger-equip":
           navigate("danger");
           void Promise.resolve().then(() => setEquipOpen(true));
@@ -2127,6 +2180,28 @@ export default function App() {
         placeholder: "Set stone walls, assign NPC patrol AI, list props…",
       };
     }
+    if (mode === "editor") {
+      // Fallback until EditorMode registers live engine tools via context.
+      // Keeps the FAB visible the moment /dressing mounts (Cloudflare hub path).
+      return {
+        surface: "editor",
+        title: "Dressing Room Admin",
+        tools: [],
+        getSystemPrompt: () =>
+          "You are the Dressing Room page admin on open.grudge-studio.com. Help create animations, ground feet, strip root motion, and operate panels. Live engine tools register when the scene is ready.",
+        placeholder: "Create an attack anim, play walk, ground feet…",
+      };
+    }
+    if (mode === "anim" || mode === "anim-ai") {
+      return {
+        surface: "anim",
+        title: "Anim AI Admin",
+        tools: [],
+        getSystemPrompt: () =>
+          "You are the Animation Editor admin. Guide clip authoring, IK, and chat-to-create motion. Prefer concrete clip verbs and grounding advice.",
+        placeholder: "Confident sword idle, IK aim, optimize clip…",
+      };
+    }
     if (
       mode === "doors" ||
       mode === "lobby" ||
@@ -2209,15 +2284,23 @@ export default function App() {
     } else {
       setPointerLayer("play-locked");
       studioRef.current?.setFreeMouseMode(false);
-      // After closing panels, restore aim lock if user wasn't free-mouse sticky
+      // After closing panels, try re-lock — if it fails, free-mouse keeps cursor visible
       if (
         !dangerStartOpen &&
         (mode === "danger" || mode === "play") &&
         !document.pointerLockElement
       ) {
-        const canvas = mountRef.current?.querySelector("canvas");
-        // Defer one frame so overlay unmount doesn't steal the gesture
-        requestAnimationFrame(() => canvas?.requestPointerLock?.());
+        const canvas = mountRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+        requestAnimationFrame(() => {
+          try {
+            const p = canvas?.requestPointerLock?.();
+            if (p && typeof (p as Promise<void>).then === "function") {
+              void (p as Promise<void>).catch(() => applyFreeMouse(true));
+            }
+          } catch {
+            applyFreeMouse(true);
+          }
+        });
       }
     }
     // Play context from HUD (activity + loco + soft/hard focus)
@@ -2231,6 +2314,8 @@ export default function App() {
     mode,
     uiOverlayOpen,
     freeMouse,
+    dangerStartOpen,
+    applyFreeMouse,
     hud?.activityMode,
     hud?.focusLocked,
     hud?.locoCam,
@@ -2669,6 +2754,8 @@ export default function App() {
             onStopDuel={onStopDuel}
             onStartArenaMatch={onStartArenaMatch}
             roomPreset={roomPreset}
+            backdropId={backdropId}
+            onBackdrop={onBackdrop}
             testWorldId={testWorldId}
             onTestWorld={onTestWorld}
             ale={hud?.ale ?? null}
@@ -2862,7 +2949,24 @@ export default function App() {
       {webglError && (
         <div className="webgl-error">
           <h2>WebGL unavailable</h2>
-          <p>This device or browser couldn't create a 3D context. Try a hardware-accelerated browser.</p>
+          <p>
+            Could not create a 3D context (lost GPU / too many contexts / software block). Close other 3D
+            tabs, then retry — or pick Danger Room map without outdoor GLB.
+          </p>
+          <button
+            type="button"
+            className="danger-start-btn"
+            style={{ marginTop: 14 }}
+            onClick={() => {
+              setWebglError(false);
+              // Remount danger by bouncing mode
+              const m = mode;
+              setMode("doors");
+              window.setTimeout(() => setMode(m === "play" ? "danger" : m), 80);
+            }}
+          >
+            Retry 3D
+          </button>
         </div>
       )}
 
@@ -3099,25 +3203,30 @@ export default function App() {
               onTestWorld={onTestWorld}
               onEnter={() => {
                 setDangerStartOpen(false);
-                // Ensure selected outdoor / loco map is applied
-                void studioRef.current?.setTestWorld(testWorldId);
+                setWebglError(false);
+                const mapId = testWorldId;
+                void (async () => {
+                  const studio = studioRef.current;
+                  if (!studio) {
+                    setWebglError(true);
+                    return;
+                  }
+                  const ok = await studio.setTestWorld(mapId);
+                  if (!ok && mapId !== "danger-room") {
+                    studio.flashMessage?.(
+                      `Map "${mapId}" failed — chamber fallback. Check CDN mesh.`,
+                      2.5,
+                    );
+                  }
+                })();
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
-                  studioRef.current?.flashMessage?.(
-                    "MAP PLAY · FREE MOUSE · F9 lock aim",
-                    2.0,
-                  );
+                  studioRef.current?.flashMessage?.("MAP PLAY · FREE MOUSE · F8 lock aim", 2.0);
                   return;
                 }
                 applyFreeMouse(false);
-                const canvas = mountRef.current?.querySelector("canvas");
-                if (canvas) {
-                  canvas.requestPointerLock?.();
-                } else {
-                  document.body.requestPointerLock?.();
-                }
                 studioRef.current?.flashMessage?.(
-                  "MAP PLAY · F8 free mouse · same combat stack · no admin",
+                  "MAP PLAY · F8 free mouse · same combat stack",
                   2.0,
                 );
               }}
@@ -3398,24 +3507,34 @@ export default function App() {
               onOpenAccount={() => navigate("account")}
               onEnter={() => {
                 setDangerStartOpen(false);
-                // Chamber skin + selected outdoor/loco map
+                setWebglError(false);
+                // Chamber skin + selected outdoor/loco map (await fail → stay in chamber)
                 studioRef.current?.setRoomPreset(roomPreset);
-                void studioRef.current?.setTestWorld(testWorldId);
+                const mapId = testWorldId;
+                void (async () => {
+                  const studio = studioRef.current;
+                  if (!studio) {
+                    setWebglError(true);
+                    return;
+                  }
+                  const ok = await studio.setTestWorld(mapId);
+                  if (!ok && mapId !== "danger-room") {
+                    studio.flashMessage?.(
+                      `Map "${mapId}" failed to load — Danger Room chamber. Pick another map.`,
+                      2.5,
+                    );
+                  }
+                })();
+                // Prefer free mouse if sticky; else try lock with safe fallback
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
                   studioRef.current?.flashMessage?.(
-                    "FREE MOUSE · F9 lock aim · RMB focus",
+                    "FREE MOUSE · F8 / F9 lock aim · RMB focus",
                     1.8,
                   );
                   return;
                 }
                 applyFreeMouse(false);
-                const canvas = mountRef.current?.querySelector("canvas");
-                if (canvas) {
-                  canvas.requestPointerLock?.();
-                } else {
-                  document.body.requestPointerLock?.();
-                }
                 studioRef.current?.flashMessage?.(
                   "DANGER · F8 free mouse · maps in Admin · Hold Q mode",
                   1.8,

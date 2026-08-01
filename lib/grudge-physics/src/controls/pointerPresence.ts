@@ -131,12 +131,31 @@ const BODY_PTR = [
   "ptr-climb",
 ] as const;
 
-/** Apply presence classes on document.body (call from CursorManager). */
+/**
+ * Apply presence classes on document.body (call from CursorManager).
+ *
+ * CRITICAL: never use `cursor: none` (play-locked) unless the browser actually
+ * holds pointer lock. ESC unlock / failed lock / sticky free-mouse otherwise
+ * leaves a black void with no mouse image on open.*.
+ */
 export function applyPointerBodyClass(p: PointerPresence = state): void {
   const b = document.body;
+  const root = document.documentElement;
+  const lockHeld =
+    typeof document !== "undefined" && !!document.pointerLockElement;
+
+  // Effective presence: demote play-locked → play-free when lock is not held
+  const effective: PointerPresence =
+    p.layer === "play-locked" && !lockHeld
+      ? { ...p, layer: "play-free" }
+      : p;
+
   for (const c of BODY_PTR) b.classList.remove(c);
-  b.classList.add(pointerBodyClass(p));
-  b.dataset.pointerLayer = p.layer;
-  b.dataset.pointerCtx = p.playCtx;
-  b.dataset.freeMouse = p.freeMouseSticky ? "1" : "0";
+  b.classList.add(pointerBodyClass(effective));
+  b.dataset.pointerLayer = effective.layer;
+  b.dataset.pointerCtx = effective.playCtx;
+  b.dataset.freeMouse = p.freeMouseSticky || !lockHeld ? "1" : "0";
+
+  if (lockHeld) root.classList.add("pointer-locked");
+  else root.classList.remove("pointer-locked");
 }

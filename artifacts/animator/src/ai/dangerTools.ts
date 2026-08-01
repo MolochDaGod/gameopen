@@ -414,7 +414,7 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
     {
       name: "set_test_world",
       description:
-        "Switch Danger live test map: danger-room (combat chamber), sailtest, forest-map, island-life, fabled-zone, bridge-town-docks, tropical-harvest (dry island harvest Q&A), pirate-village (orc loco + water band).",
+        "Switch Danger live test map. Truth: danger-room; sailtest/forest-map (CDN); tropical-harvest (tropical_island_small CDN, not dry SPA); pirate/shipwreck/arena (SPA); island-life/fabled/bridge are STAND-INS (sailtest/pirate pack) until meshes upload.",
       parameters: {
         type: "object",
         properties: {

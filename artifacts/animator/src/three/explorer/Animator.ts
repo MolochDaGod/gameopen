@@ -92,17 +92,27 @@ export class Animator {
   private comboIndex = 0;
   private comboUntil = 0;
   private skillUntil = 0;
-  /** Bind-pose local Y of the Hips bone; clips re-baseline their hip height to
-   *  this so packs authored at a different export height don't float/sink. */
+  /**
+   * Bind-pose local hips position. Clips re-baseline hip X/Z to this (not the
+   * clip's first frame — off-origin "Retargeted Clip" packs otherwise plant the
+   * body tens of units away). Y keeps relative bob only.
+   */
+  private readonly bindHipX: number;
   private readonly bindHipY: number;
+  private readonly bindHipZ: number;
 
   constructor(character: VoxelCharacter, clips: Map<string, THREE.AnimationClip>) {
     this.character = character;
     this.root = character.root;
     this.clips = clips;
     this.mixer = new THREE.AnimationMixer(character.skeletonRoot);
-    const hips = character.skeletonRoot.getObjectByName("mixamorigHips");
+    const hips =
+      character.skeletonRoot.getObjectByName("mixamorigHips") ||
+      character.skeletonRoot.getObjectByName("Hips") ||
+      character.skeletonRoot.getObjectByName("mixamorig:Hips");
+    this.bindHipX = hips ? hips.position.x : 0;
     this.bindHipY = hips ? hips.position.y : 0;
+    this.bindHipZ = hips ? hips.position.z : 0;
     this.locoBlend = new LocomotionBlend((id) => this.action(id));
   }
 
@@ -162,8 +172,16 @@ export class Animator {
     this.currentId = null; // force loco re-eval against the new set
     this.clearOverlay(); // a half-played swing for the old weapon must not linger
     if (sameClass) return; // class unchanged: keep pose, just (un)swapped the mesh
-    const intro = this.resolve("equip") ?? this.resolve("draw");
-    if (intro) this.playOnce(intro);
+    // Dressing Room: prefer idle on class swap — equip/draw flourishes often carry
+    // residual root motion that walks the pedestal character out of frame.
+    const idle = this.resolve("idle");
+    if (idle) {
+      this.setActive(idle, { loop: true, fade: 0.12 });
+      this.once = null;
+    } else {
+      const intro = this.resolve("equip") ?? this.resolve("draw");
+      if (intro) this.playOnce(intro);
+    }
   }
 
   /** Hide/show the off-hand prop (e.g. while its thrown knife is in flight). No-op if none. */
@@ -854,7 +872,8 @@ export class Animator {
     const clip = this.clips.get(id);
     if (!clip) return null;
     const c = filterBindableTracks(this.character.skeletonRoot, clip.clone());
-    lockHorizontalRoot(c, this.bindHipY);
+    // Bind-pose X/Z lock — never pin to clip frame 0 (that is the "feet meters away" bug).
+    lockHorizontalRoot(c, { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ });
     const action = this.mixer.clipAction(c);
     this.actionCache.set(id, action);
     return action;
@@ -884,28 +903,55 @@ export class Animator {
 }
 
 /**
- * Remove horizontal drift from a clip's root (Hips) track while keeping the
- * vertical bob. Mixamo "in place" clips have little horizontal hip motion, but
- * locking X/Z to the first frame guarantees no foot-sliding-independent drift
- * since the game engine owns the character's world translation.
- *
- * The vertical channel is re-baselined so the clip's first frame sits at the
- * rig's bind-pose hip height (`bindHipY`) and only the relative bob is kept.
- * Packs already authored at the rig height are unchanged (y0 ≈ bindHipY → no-op);
- * a pack exported higher (e.g. the dedicated pistol set) would otherwise float
- * the whole body a fixed amount off the ground.
+ * True for a clip's root (Hips) translation track under ANY bone-naming
+ * convention that reaches the rig: native Mixamo (`mixamorigHips`), colon form
+ * (`mixamorig:Hips`), bare `Hips`, and Bip001 pelvis/hips. Exact-string match
+ * alone silently lets un-normalised packs walk off the pedestal.
  */
-function lockHorizontalRoot(clip: THREE.AnimationClip, bindHipY: number): void {
+export function isHipsPositionTrack(name: string): boolean {
+  if (!name.endsWith(".position") && !/\.position\[/.test(name)) return false;
+  const bone = name
+    .replace(/\.position(\[.*)?$/, "")
+    .replace(/^mixamorig:?/i, "")
+    .replace(/^Armature\|/i, "");
+  if (/^Hips\d*$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Hips$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Pelvis$/i.test(bone)) return true;
+  // Whole-character root drifts some GLB packs export as "root" / "Root"
+  if (/^(root|Root|ROOT)$/.test(bone)) return true;
+  return false;
+}
+
+/**
+ * Remove horizontal motion from a clip's root (Hips) track while keeping the
+ * vertical bob, so the game engine (or the Dressing Room pedestal) owns the
+ * character's world translation.
+ *
+ * Every frame's hip X/Z is set to the rig's BIND-POSE hip position — NOT the
+ * clip's first frame. Several "Retargeted Clip" packs author the body tens of
+ * units off-origin, so pinning to frame 0 planted the rig that far from centre
+ * (the "feet meters away" / flying-around-the-editor bug). Re-baselining to the
+ * bind position keeps every clip centred and is a no-op for native in-place clips.
+ *
+ * Accepts either a full bind `{x,y,z}` or a legacy numeric bind hip Y (X/Z = 0).
+ */
+export function lockHorizontalRoot(
+  clip: THREE.AnimationClip,
+  bind: { x: number; y: number; z: number } | number,
+): void {
+  const b =
+    typeof bind === "number"
+      ? { x: 0, y: bind, z: 0 }
+      : bind;
   for (const track of clip.tracks) {
-    if (track.name !== "mixamorigHips.position") continue;
+    if (!isHipsPositionTrack(track.name)) continue;
     const v = track.values;
-    const x0 = v[0];
+    if (!v || v.length < 3) continue;
     const y0 = v[1];
-    const z0 = v[2];
     for (let i = 0; i < v.length; i += 3) {
-      v[i] = x0;
-      v[i + 1] = v[i + 1] - y0 + bindHipY;
-      v[i + 2] = z0;
+      v[i] = b.x;
+      v[i + 1] = v[i + 1] - y0 + b.y;
+      v[i + 2] = b.z;
     }
   }
 }

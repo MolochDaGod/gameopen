@@ -265,16 +265,25 @@ export class ForestWorld {
     }
 
     if (def.id === "tropical-harvest") {
-      return this.loadTropicalHarvestLocal(def);
+      const ok = await this.loadTropicalHarvestLocal(def);
+      if (ok) return true;
+      // SPA dry 404 on prod — fall through to CDN tropical_island_small chain
+      this.cbs.flash?.("Tropical dry SPA miss — CDN tropical_small…", 1.0);
     }
     if (def.id === "pirate-village") {
-      return this.loadPirateVillageLocal(def);
+      const ok = await this.loadPirateVillageLocal(def);
+      if (ok) return true;
+      this.cbs.flash?.("Pirate village SPA miss — CDN pirate pack…", 1.0);
     }
     if (def.id === "shipwreck-island") {
-      return this.loadShipwreckLocal(def);
+      const ok = await this.loadShipwreckLocal(def);
+      if (ok) return true;
+      this.cbs.flash?.("Shipwreck SPA miss — CDN coast fallback…", 1.0);
     }
     if (def.id === "arena") {
-      return this.loadArenaLocal(def);
+      const ok = await this.loadArenaLocal(def);
+      if (ok) return true;
+      this.cbs.flash?.("Arena SPA miss — geonosis stand-in…", 1.0);
     }
     if (def.id === "forest-mountains") {
       const ok = await this.loadForestMountainsLocal(def);

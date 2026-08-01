@@ -34,9 +34,26 @@ function assertValidAction(tool: (typeof TOOLBOX_TOOLS)[number]) {
     expect(/^https?:\/\//i.test(a.url)).toBe(true);
   }
   if (a.kind === "mode") {
-    expect(typeof a.mode).toBe("string");
+    // Modes that Open App.tsx actually mounts (must stay in sync).
+    const LIVE_MODES = new Set([
+      "doors",
+      "danger",
+      "voxel",
+      "play",
+      "editor",
+      "lobby",
+      "ledmask",
+      "avatar",
+      "anim",
+      "anim-ai",
+      "ui",
+    ]);
+    expect(LIVE_MODES.has(a.mode)).toBe(true);
   }
 }
+
+/** Every sheet icon file must exist under public/icons/{name}.png (or skill_nobg). */
+const REQUIRED_ICON_FILES = [...UI_ICONS];
 
 describe("TOOLBOX_TOOLS", () => {
   it("covers all 25 sheet icons exactly once, in sheet order", () => {
@@ -46,6 +63,40 @@ describe("TOOLBOX_TOOLS", () => {
 
   it("every tool has a label, hint, and a valid action target", () => {
     for (const tool of TOOLBOX_TOOLS) assertValidAction(tool);
+  });
+
+  it("every tool icon is a declared UI_ICONS name (sheet order)", () => {
+    for (const tool of TOOLBOX_TOOLS) {
+      expect(UI_ICONS).toContain(tool.icon);
+    }
+  });
+
+  it("no two tools claim the same icon", () => {
+    const icons = TOOLBOX_TOOLS.map((t) => t.icon);
+    expect(new Set(icons).size).toBe(icons.length);
+  });
+
+  it("required icon name list is complete", () => {
+    expect(REQUIRED_ICON_FILES).toHaveLength(25);
+  });
+});
+
+describe("stack tools", () => {
+  it("every stack tab tool has a real external or mode action", () => {
+    for (const tool of [
+      ...THREEJS_STACK_TOOLS,
+      ...RAPIER_STACK_TOOLS,
+      ...R3F_STACK_TOOLS,
+      ...CREATE_STACK_TOOLS,
+    ]) {
+      assertValidAction(tool);
+    }
+  });
+
+  it("toolsForTab returns non-empty lists for each production tab", () => {
+    for (const tab of ["tools", "three", "rapier", "r3f", "create"] as const) {
+      expect(toolsForTab(tab).length).toBeGreaterThan(0);
+    }
   });
 });
 

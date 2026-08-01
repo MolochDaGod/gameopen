@@ -21,6 +21,8 @@ import {
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 import { SPRINT_LOCO_MULT, type AnimPack, asAnimPack } from "./anims";
+import { stripPositionTracks } from "../clipTracks";
+import { reGroundAfterAnimSample, findDeployModel } from "../characterDeploy";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -527,6 +529,8 @@ export class GrudgeAvatar implements Avatar {
     let clip = this.authoredClips.get(key);
     if (!clip) {
       let c = baseAction.getClip();
+      // Skill Lab slices must never reintroduce root-motion (flying pedestal).
+      c = stripPositionTracks(c);
       if (lo > 0.001 || hi < 0.999) {
         const fps = 30;
         const total = Math.max(1, Math.round(c.duration * fps));
@@ -535,6 +539,7 @@ export class GrudgeAvatar implements Avatar {
         c = THREE.AnimationUtils.subclip(c, `${name}__${s}_${e}`, s, e, fps);
       }
       if (this.mirror) c = this.mirrorClip(c);
+      c = stripPositionTracks(c);
       clip = c;
       this.authoredClips.set(key, c);
       // Bound the cache: slider-driven trims would otherwise accumulate a unique
@@ -563,6 +568,7 @@ export class GrudgeAvatar implements Avatar {
     this.oneShot = action;
     const dur = clip.duration / Math.max(0.1, this.overdrive);
     this.oneShotEnd = dur;
+    this.scheduleReGround(Math.min(0.2, dur * 0.12));
     return dur;
   }
 
@@ -722,6 +728,8 @@ export class GrudgeAvatar implements Avatar {
         this.oneShotEnd = d;
         // Mark local oneShot active so Studio busy checks work even if director owns mixer
         this.oneShot = this.actions.get(key) ?? null;
+        // Re-plant feet after the first sample (hip-float / IK ground SSOT)
+        this.scheduleReGround(Math.min(0.2, d * 0.12));
         return d;
       }
     }
@@ -741,7 +749,20 @@ export class GrudgeAvatar implements Avatar {
     this.oneShot = action;
     const dur = action.getClip().duration / Math.max(0.1, this.overdrive);
     this.oneShotEnd = dur;
+    this.scheduleReGround(Math.min(0.2, dur * 0.12));
     return dur;
+  }
+
+  /** After a one-shot lands, re-sit soles on y=0 and zero world XZ drift. */
+  private scheduleReGround(delayS: number): void {
+    const model = this.model ?? findDeployModel(this.root);
+    if (!model) return;
+    window.setTimeout(() => {
+      if (this.disposed) return;
+      reGroundAfterAnimSample(model, 0);
+      this.root.position.x = 0;
+      this.root.position.z = 0;
+    }, Math.max(16, delayS * 1000));
   }
 
   playRoleOnce(role: AnimRole, fade = 0.12): number {

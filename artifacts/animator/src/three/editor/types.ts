@@ -265,6 +265,32 @@ export interface EditorSnapshot {
    * message), then auto-dismiss it. Null when there is nothing to surface.
    */
   notice: EditorNotice | null;
+  /** Game-style combat HUD (vitals + weapon-skill bar) while Play mode runs. */
+  playHud: PlayHudState | null;
+}
+
+/** One Play-mode weapon-skill slot as surfaced to the HUD. */
+export interface PlayHudSkill {
+  /** Slot key ("primary" | "skill1".."skill5"). */
+  key: string;
+  /** Input hint shown on the slot ("LMB" | "1".."5"). */
+  bind: string;
+  /** Skill name. */
+  label: string;
+  /** Glyph/emoji icon. */
+  glyph: string;
+  /** Cooldown length in seconds (0 = instant). */
+  cooldown: number;
+  /** `performance.now()` ms timestamp the slot becomes usable again (0 = ready). */
+  readyAt: number;
+}
+
+/** Game-style combat HUD state for Play mode (null when not playing). */
+export interface PlayHudState {
+  /** Health as a 0..1 fraction (cosmetic full until a damage model exists). */
+  health: number;
+  /** The driven character's weapon-skill bar. */
+  skills: PlayHudSkill[];
 }
 
 /**

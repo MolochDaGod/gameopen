@@ -1,11 +1,9 @@
 /**
  * Conversation lifecycle + streaming orchestration for the assistant.
  *
- * - One conversation per browser per surface, id cached in localStorage so the
- *   thread survives reloads. On mount we re-load that conversation's messages;
- *   if it was deleted server-side we transparently start a new one.
- * - Sending streams assistant text, then executes any tool calls against the
- *   live engine, attaching result chips to the turn.
+ * Production Open: prefer Cloudflare grudge-ai-hub (`/api/ai` → ai.grudge-studio.com)
+ * when `/api/openai/conversations` is unavailable (common on the SPA host).
+ * Tools always execute client-side against the live engine (page admin).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOptionalAuth } from "../auth/clerkOptional";
@@ -14,7 +12,7 @@ import {
   getOpenaiConversation,
   deleteOpenaiConversation,
 } from "@workspace/api-client-react";
-import { streamAssistant } from "./aiClient";
+import { streamAssistant, streamAssistantFleetOnly } from "./aiClient";
 import type { AiMessage, AiTool, ToolCall, ToolResult } from "./types";
 
 function storageKey(surface: string): string {
@@ -41,26 +39,24 @@ export interface UseAssistant {
 export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantArgs): UseAssistant {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
-  const [ready, setReady] = useState(false);
+  // Ready immediately — fleet CF path needs no conversation bootstrap.
+  const [ready, setReady] = useState(true);
   const convoIdRef = useRef<number | null>(null);
-  // Synchronous single-flight lock: `streaming` state lags a render behind, so a
-  // ref guards against overlapping sends fired within the same tick.
+  /** When true, skip openai convo CRUD and always hit Cloudflare hub. */
+  const fleetOnlyRef = useRef(false);
   const inFlightRef = useRef(false);
-  // Aborts the active stream on unmount / surface change.
   const abortRef = useRef<AbortController | null>(null);
 
-  // Bearer token for SSE: Clerk when enabled, else Grudge fleet JWT (optional).
   const { getToken } = useOptionalAuth();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
 
-  // Keep the latest tools/prompt accessor without re-binding send().
   const toolsRef = useRef(tools);
   toolsRef.current = tools;
   const promptRef = useRef(getSystemPrompt);
   promptRef.current = getSystemPrompt;
 
-  // Load (or lazily create on first send) the per-surface conversation.
+  // Optional: hydrate prior openai conversation if it exists (non-blocking).
   useEffect(() => {
     let cancelled = false;
     const stored = Number(localStorage.getItem(storageKey(surface)) ?? "");
@@ -79,8 +75,10 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
             .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
         );
       } catch {
-        // Conversation was deleted server-side; drop the stale id.
-        if (!cancelled) localStorage.removeItem(storageKey(surface));
+        if (!cancelled) {
+          localStorage.removeItem(storageKey(surface));
+          fleetOnlyRef.current = true;
+        }
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -90,7 +88,6 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
     };
   }, [surface]);
 
-  // Abort any in-flight stream when the component unmounts or the surface flips.
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -99,12 +96,18 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
     };
   }, [surface]);
 
-  const ensureConversation = useCallback(async (): Promise<number> => {
+  const ensureConversation = useCallback(async (): Promise<number | null> => {
+    if (fleetOnlyRef.current) return null;
     if (convoIdRef.current != null) return convoIdRef.current;
-    const convo = await createOpenaiConversation({ surface, title: `${surface} assistant` });
-    convoIdRef.current = convo.id;
-    localStorage.setItem(storageKey(surface), String(convo.id));
-    return convo.id;
+    try {
+      const convo = await createOpenaiConversation({ surface, title: `${surface} assistant` });
+      convoIdRef.current = convo.id;
+      localStorage.setItem(storageKey(surface), String(convo.id));
+      return convo.id;
+    } catch {
+      fleetOnlyRef.current = true;
+      return null;
+    }
   }, [surface]);
 
   const runToolCalls = useCallback(async (calls: ToolCall[]): Promise<ToolResult[]> => {
@@ -126,8 +129,6 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
         args = call.arguments as Record<string, unknown>;
       }
       try {
-        // Tools may be async (e.g. AI pattern generation): await each so the
-        // result chip reflects the real outcome and turns run sequentially.
         const label = await tool.execute(args);
         results.push({ name: call.name, label, ok: true });
       } catch (err) {
@@ -144,11 +145,9 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
   const send = useCallback(
     (text: string) => {
       const content = text.trim();
-      // Synchronous lock beats the lagging `streaming` state for double-submits.
       if (!content || inFlightRef.current) return;
       inFlightRef.current = true;
       setStreaming(true);
-      // Optimistically render the user turn + an empty assistant turn to fill.
       setMessages((prev) => [
         ...prev,
         { role: "user", content },
@@ -178,17 +177,49 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const runOnce = async (retried: boolean): Promise<void> => {
-        let conversationId: number;
+      const payload = {
+        content,
+        system: promptRef.current(),
+        tools: toolsRef.current,
+      };
+
+      const runOnce = async (): Promise<void> => {
+        // Fleet-only when openai convo CRUD is dead (Open SPA production).
+        if (fleetOnlyRef.current) {
+          const outcome = await streamAssistantFleetOnly(
+            payload,
+            {
+              onText: appendText,
+              onToolCalls: async (calls) => attachTools(await runToolCalls(calls)),
+              onError: (message) => appendText(message ? `\n${message}` : ""),
+              onDone: () => {},
+            },
+            controller.signal,
+          );
+          if (outcome !== "ok" && !controller.signal.aborted) {
+            appendText(
+              "\nAI hub request failed. Confirm ai.grudge-studio.com/health and sign-in.",
+            );
+          }
+          return;
+        }
+
+        let conversationId: number | null = null;
         try {
           conversationId = await ensureConversation();
         } catch {
-          appendText("I couldn't start a conversation. Please try again.");
+          conversationId = null;
+        }
+
+        if (conversationId == null) {
+          fleetOnlyRef.current = true;
+          await runOnce();
           return;
         }
+
         const outcome = await streamAssistant(
           conversationId,
-          { content, system: promptRef.current(), tools: toolsRef.current },
+          payload,
           {
             onText: appendText,
             onToolCalls: async (calls) => attachTools(await runToolCalls(calls)),
@@ -198,22 +229,35 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
           controller.signal,
           () => getTokenRef.current(),
         );
+
         if (controller.signal.aborted) return;
-        if (outcome === "not_found" && !retried) {
-          // Conversation vanished server-side — drop the stale id and start fresh.
+
+        if (outcome === "not_found") {
           convoIdRef.current = null;
           localStorage.removeItem(storageKey(surface));
-          await runOnce(true);
+          fleetOnlyRef.current = true;
+          await runOnce();
           return;
         }
-        if (outcome !== "ok") {
-          appendText("The assistant request failed. Please try again.");
+        if (outcome === "failed") {
+          // Transparent failover to Cloudflare hub (no user re-prompt).
+          fleetOnlyRef.current = true;
+          await streamAssistantFleetOnly(
+            payload,
+            {
+              onText: appendText,
+              onToolCalls: async (calls) => attachTools(await runToolCalls(calls)),
+              onError: (message) => appendText(message ? `\n${message}` : ""),
+              onDone: () => {},
+            },
+            controller.signal,
+          );
         }
       };
 
       (async () => {
         try {
-          await runOnce(false);
+          await runOnce();
         } finally {
           if (abortRef.current === controller) abortRef.current = null;
           inFlightRef.current = false;

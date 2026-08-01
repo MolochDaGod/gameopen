@@ -123,7 +123,11 @@ export function AiAssistant({ surface, title, tools, getSystemPrompt, placeholde
               {messages.length === 0 && (
                 <div className="ai-empty">
                   <Bot size={22} />
-                  <p>Ask a question, or tell me what to change in the scene.</p>
+                  <p>
+                    Page admin for this surface. Chat to create animations, ground feet, or drive the live
+                    engine tools. Uses Cloudflare AI hub when OpenAI convo API is offline.
+                  </p>
+                  <p className="ai-empty-hint">Sign in with Grudge ID if the hub asks for auth.</p>
                 </div>
               )}
               {messages.map((m, i) => (
@@ -199,8 +203,10 @@ export function AiAssistant({ surface, title, tools, getSystemPrompt, placeholde
         onClick={() => setOpen((v) => !v)}
         whileTap={{ scale: 0.92 }}
         title={title}
+        aria-label={open ? "Close AI assistant" : "Open AI assistant"}
       >
-        {open ? <X size={20} /> : <Bot size={20} />}
+        {open ? <X size={18} /> : <Bot size={18} />}
+        <span className="ai-fab-label">{open ? "Close" : "AI"}</span>
       </motion.button>
     </div>
   );

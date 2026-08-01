@@ -1,6 +1,15 @@
 import * as THREE from "three";
 import { DangerRoom } from "./DangerRoom";
-import { asRoomPresetId, loadRoomPreset, ROOM_PRESETS, type RoomPresetId } from "./RoomPresets";
+import {
+  asRoomPresetId,
+  BACKDROPS,
+  loadBackdrop,
+  loadRoomPreset,
+  ROOM_PRESETS,
+  saveBackdrop,
+  type RoomPresetId,
+} from "./RoomPresets";
+import { assetUrl } from "./assetHost";
 import { DUNGEON_MAPS, loadDungeonMap } from "./DungeonMaps";
 import { addStudioLights, STUDIO_FOG, STUDIO_TONE_MAPPING_EXPOSURE } from "./studioLighting";
 import { DjBooth } from "./DjBooth";
@@ -579,6 +588,10 @@ export class Studio {
   private baseFogNear = Studio.FOG_BASE_NEAR;
   private baseFogFar = Studio.FOG_BASE_FAR;
   private baseBgColor = new THREE.Color(Studio.FOG_BASE_COLOR);
+  /** Active full-scene battle-art backdrop id (null = plain preset colour bg). */
+  private backdropId: string | null = null;
+  private backdropTex: THREE.Texture | null = null;
+  private backdropToken = 0;
   /** Set while the player stands at the door portal (drives the HUD prompt). */
   private doorPrompt = false;
   /** Standing near planted claim flag — HUD shows E interact. */
@@ -1195,6 +1208,9 @@ export class Studio {
     // dark base set just above). The matching ambient bed is applied once the
     // sound system exists, below.
     this.applyRoomAtmosphere(true);
+    // Restore any session-persisted battle-art backdrop over the preset bg
+    // (same quality plate system as threejs-rapier controll lab).
+    this.setBackdrop(loadBackdrop());
     // Resident Racalvin disc_jockey in the enlarged cove above the door (async).
     this.djBooth = new DjBooth(this.room.djBoothAnchor);
     this.scene.add(this.djBooth.group);
@@ -2787,6 +2803,50 @@ export class Studio {
   /** The currently-built Danger Room environment preset id. */
   getRoomPreset(): RoomPresetId {
     return this.room.presetId;
+  }
+
+  /** Current full-scene backdrop id (null = plain preset background). */
+  getBackdropId(): string | null {
+    return this.backdropId;
+  }
+
+  /**
+   * Swap the full-scene battle-art backdrop (`scene.background` becomes a painted
+   * texture). `null` restores the room preset's plain colour background.
+   * Fog writes only touch a Color background, so texture backdrops stay intact.
+   */
+  setBackdrop(id: string | null) {
+    this.backdropId = id;
+    saveBackdrop(id);
+    const token = ++this.backdropToken;
+    if (!id) {
+      if (this.backdropTex) {
+        this.backdropTex.dispose();
+        this.backdropTex = null;
+      }
+      this.scene.background = this.baseBgColor.clone();
+      return;
+    }
+    const bd = BACKDROPS.find((b) => b.id === id);
+    if (!bd) return;
+    const url = assetUrl(bd.file);
+    new THREE.TextureLoader().load(
+      url,
+      (tex) => {
+        if (token !== this.backdropToken) {
+          tex.dispose();
+          return;
+        }
+        tex.colorSpace = THREE.SRGBColorSpace;
+        if (this.backdropTex) this.backdropTex.dispose();
+        this.backdropTex = tex;
+        this.scene.background = tex;
+      },
+      undefined,
+      () => {
+        /* backdrop art failed to load — keep the current background. */
+      },
+    );
   }
 
   /**
@@ -11910,7 +11970,33 @@ export class Studio {
       progress("load_glb", 0.35);
       const ok = await this.forestWorld.load(def);
       if (!ok && def.kind !== "combat") {
+        // Fail closed to combat chamber — never leave room hidden + black void.
+        // forestWorld.load already clear()'d outdoor; prior outdoor may have hidden room.
+        if (this.room?.group) this.room.group.visible = true;
+        this.controller?.setRoomBound(this.room?.half ?? 16);
+        this.controller?.clearWaterBand();
+        this.controller?.setGroundHeightAt(null);
+        // Drop outdoor mesh collision; keep Danger Room KCC ground when available
+        if (this.playerKcc) {
+          this.controller?.setCollision(this.playerKcc, undefined, {
+            keepRoomBounds: true,
+          });
+        } else {
+          this.controller?.setCollision(null);
+        }
+        this.baseFogColor.set(Studio.FOG_BASE_COLOR);
+        this.baseFogNear = Studio.FOG_BASE_NEAR;
+        this.baseFogFar = Studio.FOG_BASE_FAR;
+        this.baseBgColor.set(Studio.FOG_BASE_COLOR);
+        this.writeBaselineFog();
+        this.testWorldId = "danger-room";
+        saveTestWorldId("danger-room");
         progress("failed", 1);
+        this.setCombatFlash(
+          `MAP FAIL · ${def.name} — mesh missing. Staying in Danger Room.`,
+          2.4,
+        );
+        this.onMapLoadProgress?.({ stage: "failed", progress: 1, mapId: id });
         return false;
       }
     }

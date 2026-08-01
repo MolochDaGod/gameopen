@@ -80,16 +80,31 @@ export function CursorManager({ children }: Props) {
     const sync = () => applyPointerBodyClass(getPointerPresence());
     sync();
     const unsub = subscribePointerPresence(sync);
-    // Re-apply after pointer-lock change (browser may reset cursor)
+    // Re-apply after pointer-lock change (browser may reset cursor).
+    // ESC unlock must restore custom mouse immediately — never leave cursor:none.
     const onLock = () => {
       requestAnimationFrame(sync);
+      // Notify app: if lock lost while "play-locked", free-mouse is safer UX
+      try {
+        window.dispatchEvent(
+          new CustomEvent("grudge:pointerlock", {
+            detail: { locked: !!document.pointerLockElement },
+          }),
+        );
+      } catch {
+        /* */
+      }
     };
     document.addEventListener("pointerlockchange", onLock);
+    document.addEventListener("pointerlockerror", onLock);
     window.addEventListener("focus", onLock);
+    window.addEventListener("blur", onLock);
     return () => {
       unsub();
       document.removeEventListener("pointerlockchange", onLock);
+      document.removeEventListener("pointerlockerror", onLock);
       window.removeEventListener("focus", onLock);
+      window.removeEventListener("blur", onLock);
     };
   }, []);
 

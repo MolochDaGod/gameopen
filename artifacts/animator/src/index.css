@@ -417,11 +417,14 @@ html, body, #root {
   inset: 0;
 }
 .canvas-mount canvas { display: block; cursor: inherit; }
-/* Immersive (Danger Room / Play) + pointer-lock: hide OS cursor — HUD reticle owns aim. */
-.canvas-mount.immersive canvas { cursor: none; }
+/* Immersive + *actual* pointer-lock only: hide OS cursor (reticle owns aim). */
+html.pointer-locked .canvas-mount.immersive canvas {
+  cursor: none;
+}
 /* Unlocked: free-mouse sticky, menus, editors — always show game mouse on canvas. */
 .canvas-mount.immersive.free-mouse canvas,
 .canvas-mount:not(.immersive) canvas,
+html:not(.pointer-locked) .canvas-mount canvas,
 body.ptr-ui .canvas-mount canvas,
 body.ptr-free .canvas-mount canvas,
 body.ptr-interact .canvas-mount canvas,
@@ -433,9 +436,18 @@ body.ptr-tool .canvas-mount canvas {
 /* ── Pointer presence cursors (body.ptr-* from CursorManager) ───────────────
    File assets under /ui/cursors/ — visible whenever mouse is unlocked.
    Hotspot: arrow tip (2,2) or centre (14,14). */
-body.ptr-combat,
-body.ptr-combat * {
+
+/* ONLY hide when browser pointer-lock is actually held */
+html.pointer-locked body.ptr-combat,
+html.pointer-locked body.ptr-combat * {
   cursor: none !important;
+}
+
+/* Safety default for shell (before first presence tick) */
+body {
+  cursor: url("/ui/cursors/cursor-normal.png") 2 2,
+    url("/ui/cursors/cursor-default.svg") 2 2,
+    default;
 }
 
 /* UI shell / menus / editors — craftpix-style arrow (PNG) + SVG fallback */

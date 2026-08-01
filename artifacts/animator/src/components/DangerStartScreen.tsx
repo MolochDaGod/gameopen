@@ -4,6 +4,7 @@
  * Room look: three/RoomPresets.ts
  * Playable maps: three/testWorlds.ts (climb / swim / harvest / combat labs)
  */
+import { useEffect, useState } from "react";
 import "./dangerStartScreen.css";
 import type { RoomPresetId } from "../three/RoomPresets";
 import type { TestWorldId, TestWorldKind } from "../three/testWorlds";
@@ -76,7 +77,15 @@ export function DangerStartScreen({
   onEnter,
   onOpenAccount,
 }: DangerStartScreenProps) {
-  const canEnter = ready && warmReady !== false;
+  // Never hard-block ENTER forever: warmup may hang on dead API — allow enter
+  // once character/canvas is ready OR after a short grace period.
+  const [graceEnter, setGraceEnter] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setGraceEnter(true), 4500);
+    return () => window.clearTimeout(t);
+  }, []);
+  // Warmup is best-effort only — never block ENTER if warm hangs.
+  const canEnter = ready || graceEnter || warmReady === true;
   const selectedMap = mapOptions?.find((m) => m.id === testWorldId);
 
   return (

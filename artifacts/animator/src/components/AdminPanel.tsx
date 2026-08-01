@@ -12,7 +12,7 @@ import type {
   WeaponId,
 } from "../three/types";
 import { WEAPON_ICON } from "../three/icons";
-import { ROOM_PRESETS, type RoomPresetId } from "../three/RoomPresets";
+import { BACKDROPS, ROOM_PRESETS, type RoomPresetId } from "../three/RoomPresets";
 import {
   DUNGEON_MAP_LIST,
   loadDungeonMap,
@@ -101,6 +101,9 @@ interface Props {
   onStartArenaMatch: (mode: "1v1" | "2v2" | "ffa4") => void;
   /** The training environment the duel/session will take place in. */
   roomPreset: RoomPresetId;
+  /** Full-scene battle-art backdrop id (null = plain preset colour). */
+  backdropId?: string | null;
+  onBackdrop?: (id: string | null) => void;
   /** Outdoor / combat test map (Danger Room · Sailtest · Forest Map). */
   testWorldId?: TestWorldId;
   onTestWorld?: (id: TestWorldId) => void;
@@ -145,6 +148,8 @@ export function AdminPanel({
   onStopDuel,
   onStartArenaMatch,
   roomPreset,
+  backdropId = null,
+  onBackdrop,
   testWorldId = "danger-room",
   onTestWorld,
   ale,
@@ -400,6 +405,28 @@ export function AdminPanel({
           ))}
         </div>
         <EnvPreview preset={ROOM_PRESETS[roomPreset]} />
+        {onBackdrop && (
+          <>
+            <div className="ale-row-label">Backdrop</div>
+            <div className="grid2">
+              <button
+                className={`opt ${backdropId === null ? "active" : ""}`}
+                onClick={() => onBackdrop(null)}
+              >
+                None
+              </button>
+              {BACKDROPS.map((b) => (
+                <button
+                  key={b.id}
+                  className={`opt ${backdropId === b.id ? "active" : ""}`}
+                  onClick={() => onBackdrop(b.id)}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         {duel ? (
           <>
             <div className="duel-readout">
