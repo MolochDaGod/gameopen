@@ -680,6 +680,30 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
+    id: "grudge-multiverse",
+    title: "Grudge Multiverse",
+    short: "Bermuda · grudge6 · multiplayer",
+    blurb:
+      "RTS Toon race→class, Bermuda Free Fire island (CDN map), harvest, bosses, Main Panel equipment & skills. Dedicated Railway rooms (wss …/api/mv) — not Carrier. Play #room1.",
+    category: "warlords",
+    tags: ["Multiverse", "grudge6", "Multiplayer", "Island", "Bermuda"],
+    tone: "#c8a84b",
+    posterKey: "lobby",
+    icon: "explore",
+    engines: ["three", "rapier"],
+    launch: "external",
+    /** Primary play URL — room hash selects Multiverse Railway room */
+    url: "https://grudge-multiverse.vercel.app/#room1",
+    deploy: { client: "vercel", server: "railway" },
+    sources: [
+      "F:\\GitHub\\grudge-multiverse",
+      "https://grudge-multiverse.vercel.app",
+      "https://grudge-multiverse-room-production.up.railway.app",
+    ],
+    featured: true,
+    status: "live",
+  },
+  {
     id: "angel-island",
     title: "Angel Island",
     short: "Voxel island demo",
