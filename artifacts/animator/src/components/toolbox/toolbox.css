@@ -29,6 +29,7 @@
     inset 0 0 0 1px rgba(0, 0, 0, 0.6),
     inset 0 0 40px rgba(212, 175, 96, 0.06);
   overflow: hidden;
+  min-height: 0;
 }
 
 .toolbox.toolbox-wide {
@@ -79,10 +80,12 @@
 
 .toolbox-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 14px 16px 10px;
   border-bottom: 1px solid rgba(212, 175, 96, 0.22);
+  flex: 0 0 auto;
 }
 
 .toolbox-title {
@@ -107,11 +110,12 @@
 
 /* Tab bar (Tools | Music) sitting in the header, top of the overlay. */
 .toolbox-tabs {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  align-self: center;
+  min-width: 0;
 }
 
 .toolbox-tab {
@@ -183,7 +187,13 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  /* Critical: parent .toolbox is flex column — this pane must scroll */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .toolbox-tool {
@@ -210,10 +220,12 @@
 .toolbox-tool img {
   width: 100%;
   max-width: 84px;
-  aspect-ratio: 224 / 200;
+  aspect-ratio: 1 / 1;
   height: auto;
+  object-fit: contain;
   border-radius: 8px;
   display: block;
+  background: rgba(0, 0, 0, 0.25);
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
 }
 
@@ -236,7 +248,7 @@
   }
 }
 
-/* The shell's Toolbox pill — sits INSIDE the unified 48px header. */
+/* The shell's Toolbox pill — Steam bar (library) or unified 48px header. */
 .shell-toolbox {
   display: flex;
   flex: none;
@@ -264,14 +276,17 @@
   transform: scale(0.97);
 }
 
-/* King-emblem art on the shell pill (replaces the old hammer glyph). */
+/* King emblem — keep visible, don't crop to empty circle */
 .shell-toolbox-art {
   width: 22px;
   height: 22px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center 20%;
   border: 1px solid rgba(212, 175, 96, 0.5);
   flex: none;
+  background: #1a1408;
+  display: block;
 }
 
 @media (max-width: 560px) {

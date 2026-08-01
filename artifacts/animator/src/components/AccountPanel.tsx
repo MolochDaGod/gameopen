@@ -637,13 +637,14 @@ export function AccountPanel({
 /* ── styles (inline — matches dark Open shell) ─────────────────────────── */
 
 const shell: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  overflow: "auto",
+  position: "relative",
+  minHeight: "100%",
+  overflow: "visible",
   background: "linear-gradient(165deg, #0a0e16 0%, #121a28 50%, #0d121c 100%)",
   color: "#e8eef8",
-  padding: "16px 18px 40px",
+  padding: "16px 18px 48px",
   fontFamily: "ui-sans-serif, system-ui, sans-serif",
+  boxSizing: "border-box",
 };
 
 const head: CSSProperties = {

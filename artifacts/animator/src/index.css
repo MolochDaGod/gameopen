@@ -403,7 +403,31 @@ html, body, #root {
   background: #05070c;
   color: #dbe7ff;
   font-family: 'Inter', system-ui, sans-serif;
+  /* Immersive 3D default — shell-scroll overrides for library/account hubs */
   overflow: hidden;
+}
+
+/* Hub / account pages: allow real scrolling (AppShell toggles .shell-scroll) */
+html.shell-scroll,
+html.shell-scroll body,
+html.shell-scroll #root {
+  overflow: auto;
+  overflow-x: hidden;
+  height: auto;
+  min-height: 100%;
+}
+html.shell-scroll body {
+  /* Space for fixed shell-steam-bar on non-library modes that still use it */
+  padding-top: 0;
+}
+/* Account and other modes under the steam bar need top offset */
+html.shell-scroll[data-shell-mode="account"] body,
+html.shell-scroll[data-shell-mode="zones"] body,
+html.shell-scroll[data-shell-mode="realms"] body,
+html.shell-scroll[data-shell-mode="lobby"] body,
+html.shell-scroll[data-shell-mode="rooms"] body {
+  padding-top: calc(var(--shell-header-h, 48px) + env(safe-area-inset-top, 0px));
+  box-sizing: border-box;
 }
 
 .studio {

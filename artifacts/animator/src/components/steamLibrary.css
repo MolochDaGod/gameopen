@@ -57,6 +57,10 @@
 .steam-logo {
   border-radius: 6px;
   flex-shrink: 0;
+  object-fit: cover;
+  object-position: center 18%;
+  background: #1a1408;
+  border: 1px solid rgba(212, 175, 96, 0.35);
 }
 
 .steam-brand {
@@ -159,6 +163,8 @@
   display: grid;
   grid-template-columns: 240px 1fr;
   min-height: 0;
+  /* Ensure body panes can scroll on short viewports */
+  overflow: hidden;
 }
 .steam-body--friends {
   grid-template-columns: 240px 1fr 248px;
@@ -175,6 +181,9 @@
   background: var(--st-panel-2);
   border-right: 1px solid #000;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .steam-side-search {
@@ -293,11 +302,29 @@
 
 .steam-main {
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 16px 20px 28px;
   background:
     radial-gradient(900px 320px at 30% 0%, rgba(102, 192, 244, 0.08), transparent 60%),
     linear-gradient(180deg, #1b2838 0%, #0e141b 45%);
+}
+
+/* Phone: single column — body must still scroll */
+@media (max-width: 900px) {
+  .steam-body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .steam-side {
+    max-height: 42vh;
+    border-right: none;
+    border-bottom: 1px solid #000;
+  }
 }
 
 /* Featured hero */

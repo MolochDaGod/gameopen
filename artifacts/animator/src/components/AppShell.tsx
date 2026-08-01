@@ -16,8 +16,11 @@
  * Modes that own a live engine (the Dressing Room) register their assistant via
  * {@link useRegisterAssistant}; the shell prefers that child-registered config
  * over the `assistant` base config the host passes for the active mode.
+ *
+ * Library hub (doors): toolbox lives IN DoorSelect's steam top bar — never a
+ * fixed top-left float covering brand / logo / nav.
  */
-import { useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Grid3x3, Home, X, Download } from "lucide-react";
 import { AiAssistant } from "../ai/AiAssistant";
@@ -30,6 +33,42 @@ import type { ToolDef } from "./toolbox/tools";
 import { FleetBar } from "./FleetBar";
 import "./appShell.css";
 import "./toolbox/toolbox.css";
+
+/** Library (and any child) can open the shell Toolbox without a covering float. */
+export type ShellChromeApi = {
+  openToolbox: () => void;
+  closeToolbox: () => void;
+  toggleToolbox: () => void;
+  toolboxOpen: boolean;
+};
+
+const ShellChromeContext = createContext<ShellChromeApi | null>(null);
+
+export function useShellChrome(): ShellChromeApi | null {
+  return useContext(ShellChromeContext);
+}
+
+/** King emblem for Toolbox pill — same art as controll lab (public/emblem.png). */
+export function ToolboxEmblem({ size = 22 }: { size?: number }) {
+  return (
+    <img
+      className="shell-toolbox-art"
+      src={assetUrl("emblem.png")}
+      alt=""
+      width={size}
+      height={size}
+      draggable={false}
+      decoding="async"
+      onError={(e) => {
+        // Fallback: gold action icon if emblem 404s on a host
+        const el = e.currentTarget;
+        if (el.dataset.fallback) return;
+        el.dataset.fallback = "1";
+        el.src = assetUrl("icons/asset-manager.png");
+      }}
+    />
+  );
+}
 
 /** Tiny themed game icon from public/icons/. Falls back to a tinted square. */
 function GameIcon({ name, tone, size = 20 }: { name: string; tone: string; size?: number }) {
@@ -171,6 +210,22 @@ export function AppShell({
     return order.filter((g) => map.has(g)).map((g) => ({ group: g, items: map.get(g)! }));
   }, []);
 
+  const chromeApi = useMemo<ShellChromeApi>(
+    () => ({
+      openToolbox: () => {
+        setNavOpen(false);
+        setToolboxOpen(true);
+      },
+      closeToolbox: () => setToolboxOpen(false),
+      toggleToolbox: () => {
+        setNavOpen(false);
+        setToolboxOpen((v) => !v);
+      },
+      toolboxOpen,
+    }),
+    [toolboxOpen],
+  );
+
   const toolboxBtn = (
     <button
       type="button"
@@ -184,147 +239,166 @@ export function AppShell({
       data-tip="Toolbox — tools, music & settings"
       title="Toolbox — tools, music & settings"
     >
-      <img className="shell-toolbox-art" src="/emblem.png" alt="" draggable={false} />
+      <ToolboxEmblem />
       <span className="shell-toolbox-label">Toolbox</span>
     </button>
   );
 
+  // Scrollable document pages (account etc.) need body scroll + header offset.
+  // Library (doors) uses fixed .steam-lib with internal pane scroll — not body scroll.
+  // Immersive 3D modes keep overflow hidden so the canvas owns the viewport.
+  useEffect(() => {
+    const scrollModes = new Set(["account", "zones", "realms", "lobby", "rooms"]);
+    const scroll = scrollModes.has(mode);
+    document.documentElement.classList.toggle("shell-scroll", scroll);
+    document.body.classList.toggle("shell-scroll", scroll);
+    document.documentElement.classList.toggle("shell-immersive", !scroll);
+    document.body.classList.toggle("shell-immersive", !scroll);
+    document.documentElement.dataset.shellMode = mode;
+    return () => {
+      document.documentElement.classList.remove("shell-scroll", "shell-immersive");
+      document.body.classList.remove("shell-scroll", "shell-immersive");
+      delete document.documentElement.dataset.shellMode;
+    };
+  }, [mode]);
+
   return (
     <AssistantSurfaceContext.Provider value={surfaceApi}>
-      {children}
+      <ShellChromeContext.Provider value={chromeApi}>
+        {children}
 
-      {/* Toolbox always reachable — library hub + every surface (parity with controll). */}
-      {hideLauncher ? (
-        <div className="shell-toolbox-float" role="banner">
-          {toolboxBtn}
-        </div>
-      ) : (
-        <>
-          <div className="shell-steam-bar" role="banner">
-            <div className="shell-steam-brand">
-              <span className="shell-steam-brand-name">Grudge Open</span>
-              <button
-                type="button"
-                className="shell-launcher"
-                onClick={() => {
-                  setToolboxOpen(false);
-                  setNavOpen((v) => !v);
-                }}
-                aria-haspopup="menu"
-                aria-expanded={navOpen}
-                title="Switch system / app"
-              >
-                <span className="shell-launcher-icon" style={{ color: current.tone }}>
-                  {navOpen ? <X size={18} /> : current.mode === "doors" ? <Grid3x3 size={18} /> : current.icon}
-                </span>
-                <span className="shell-launcher-label">{current.label}</span>
-                <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
-              </button>
-            </div>
-
-            {showFleetStrip && (
-              <div className="shell-steam-center">
-                <FleetBar variant="inline" />
-              </div>
-            )}
-
-            <div className="shell-steam-actions">
-              {toolboxBtn}
-              <InstallAppButton variant="pill" />
-              <button
-                type="button"
-                className="shell-library-btn"
-                onClick={() => go("doors")}
-                title="Back to library"
-              >
-                <Home size={14} />
-                <span>Library</span>
-              </button>
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {navOpen && (
-              <>
-                <motion.div
-                  className="shell-nav-scrim"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setNavOpen(false)}
-                />
-                <motion.div
-                  className={`shell-nav ${phone ? "sheet" : "popover"}`}
-                  role="menu"
-                  initial={phone ? { y: "100%" } : { opacity: 0, y: -8, scale: 0.97 }}
-                  animate={phone ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
-                  exit={phone ? { y: "100%" } : { opacity: 0, y: -8, scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        {/*
+          Library hub owns its Steam top bar — DO NOT float toolbox over brand/logo.
+          DoorSelect renders the Toolbox pill via useShellChrome().
+        */}
+        {!hideLauncher && (
+          <>
+            <div className="shell-steam-bar" role="banner">
+              <div className="shell-steam-brand">
+                <span className="shell-steam-brand-name">Grudge Open</span>
+                <button
+                  type="button"
+                  className="shell-launcher"
+                  onClick={() => {
+                    setToolboxOpen(false);
+                    setNavOpen((v) => !v);
+                  }}
+                  aria-haspopup="menu"
+                  aria-expanded={navOpen}
+                  title="Switch system / app"
                 >
-                  {phone && <div className="shell-nav-grip" />}
-                  <div className="shell-nav-head">
-                    <span>Library</span>
-                    <span className="shell-nav-head-meta">
-                      <Download size={12} /> Installable app
-                    </span>
-                  </div>
-                  <div className="shell-nav-list">
-                    {groups.map(({ group, items }) => (
-                      <div key={group} className="shell-nav-group">
-                        <div className="shell-nav-group-label">{group}</div>
-                        {items.map((item) => {
-                          const active = item.mode === mode || (mode === "play" && item.mode === "voxel");
-                          return (
-                            <button
-                              key={item.mode}
-                              className={`shell-nav-item ${active ? "active" : ""}`}
-                              role="menuitem"
-                              onClick={() => go(item.mode)}
-                            >
-                              <span className="shell-nav-item-icon" style={{ color: item.tone }}>
-                                {item.icon}
-                              </span>
-                              <span className="shell-nav-item-text">
-                                <span className="shell-nav-item-label">{item.label}</span>
-                                <span className="shell-nav-item-hint">{item.hint}</span>
-                              </span>
-                              {active && <span className="shell-nav-item-dot" style={{ background: item.tone }} />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-        </>
-      )}
+                  <span className="shell-launcher-icon" style={{ color: current.tone }}>
+                    {navOpen ? <X size={18} /> : current.mode === "doors" ? <Grid3x3 size={18} /> : current.icon}
+                  </span>
+                  <span className="shell-launcher-label">{current.label}</span>
+                  <ChevronDown size={15} className={`shell-launcher-chev ${navOpen ? "open" : ""}`} />
+                </button>
+              </div>
 
-      <AnimatePresence>
-        {toolboxOpen && onToolLaunch && (
-          <ToolboxOverlay
-            music={music}
-            onClose={() => setToolboxOpen(false)}
-            onLaunch={(tool) => {
-              setToolboxOpen(false);
-              onToolLaunch(tool);
-            }}
+              {showFleetStrip && (
+                <div className="shell-steam-center">
+                  <FleetBar variant="inline" />
+                </div>
+              )}
+
+              <div className="shell-steam-actions">
+                {toolboxBtn}
+                <InstallAppButton variant="pill" />
+                <button
+                  type="button"
+                  className="shell-library-btn"
+                  onClick={() => go("doors")}
+                  title="Back to library"
+                >
+                  <Home size={14} />
+                  <span>Library</span>
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {navOpen && (
+                <>
+                  <motion.div
+                    className="shell-nav-scrim"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setNavOpen(false)}
+                  />
+                  <motion.div
+                    className={`shell-nav ${phone ? "sheet" : "popover"}`}
+                    role="menu"
+                    initial={phone ? { y: "100%" } : { opacity: 0, y: -8, scale: 0.97 }}
+                    animate={phone ? { y: 0 } : { opacity: 1, y: 0, scale: 1 }}
+                    exit={phone ? { y: "100%" } : { opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  >
+                    {phone && <div className="shell-nav-grip" />}
+                    <div className="shell-nav-head">
+                      <span>Library</span>
+                      <span className="shell-nav-head-meta">
+                        <Download size={12} /> Installable app
+                      </span>
+                    </div>
+                    <div className="shell-nav-list">
+                      {groups.map(({ group, items }) => (
+                        <div key={group} className="shell-nav-group">
+                          <div className="shell-nav-group-label">{group}</div>
+                          {items.map((item) => {
+                            const active = item.mode === mode || (mode === "play" && item.mode === "voxel");
+                            return (
+                              <button
+                                key={item.mode}
+                                className={`shell-nav-item ${active ? "active" : ""}`}
+                                role="menuitem"
+                                onClick={() => go(item.mode)}
+                              >
+                                <span className="shell-nav-item-icon" style={{ color: item.tone }}>
+                                  {item.icon}
+                                </span>
+                                <span className="shell-nav-item-text">
+                                  <span className="shell-nav-item-label">{item.label}</span>
+                                  <span className="shell-nav-item-hint">{item.hint}</span>
+                                </span>
+                                {active && <span className="shell-nav-item-dot" style={{ background: item.tone }} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </>
+        )}
+
+        <AnimatePresence>
+          {toolboxOpen && onToolLaunch && (
+            <ToolboxOverlay
+              music={music}
+              onClose={() => setToolboxOpen(false)}
+              onLaunch={(tool) => {
+                setToolboxOpen(false);
+                onToolLaunch(tool);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {config && !hideAssistant && (
+          <AiAssistant
+            key={config.surface}
+            surface={config.surface}
+            title={config.title}
+            tools={config.tools}
+            getSystemPrompt={config.getSystemPrompt}
+            placeholder={config.placeholder}
           />
         )}
-      </AnimatePresence>
-
-      {config && !hideAssistant && (
-        <AiAssistant
-          key={config.surface}
-          surface={config.surface}
-          title={config.title}
-          tools={config.tools}
-          getSystemPrompt={config.getSystemPrompt}
-          placeholder={config.placeholder}
-        />
-      )}
+      </ShellChromeContext.Provider>
     </AssistantSurfaceContext.Provider>
   );
 }

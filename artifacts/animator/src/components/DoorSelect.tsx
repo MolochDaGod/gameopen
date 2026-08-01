@@ -34,8 +34,10 @@ import {
 import { InstallAppButton } from "./InstallAppButton";
 import { FriendsPanel } from "./FriendsPanel";
 import { StoreView } from "./StoreView";
+import { ToolboxEmblem, useShellChrome } from "./AppShell";
 import "./steamLibrary.css";
 import "./mmoShell.css";
+import "./toolbox/toolbox.css";
 
 /** Resolve a room poster from public/rooms/<name>-scene.png (CDN-aware). */
 const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
@@ -61,6 +63,7 @@ type HubTab = "library" | "store" | "community";
  */
 export function DoorSelect({ onEnter }: Props) {
   const doors = hubDoorSurfaces();
+  const shellChrome = useShellChrome();
   const [tab, setTab] = useState<HubTab>("library");
   const [filter, setFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
@@ -136,7 +139,21 @@ export function DoorSelect({ onEnter }: Props) {
       {/* ── Top bar (MMO UI 4 / HUD.psd family chrome) ── */}
       <header className="steam-top">
         <div className="steam-top-left">
-          <img className="steam-logo" src={assetUrl("logo.svg")} alt="" width={28} height={28} draggable={false} />
+          <img
+            className="steam-logo"
+            src={assetUrl("emblem.png")}
+            alt=""
+            width={28}
+            height={28}
+            draggable={false}
+            decoding="async"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.dataset.fallback) return;
+              el.dataset.fallback = "1";
+              el.src = assetUrl("logo.svg");
+            }}
+          />
           <span className="steam-brand">
             GRUDGE<span className="steam-brand-accent">OPEN</span>
           </span>
@@ -165,6 +182,20 @@ export function DoorSelect({ onEnter }: Props) {
           </nav>
         </div>
         <div className="steam-top-right">
+          {/* Toolbox lives in the Steam bar — never a fixed float over the logo */}
+          {shellChrome && (
+            <button
+              type="button"
+              className={`shell-toolbox ${shellChrome.toolboxOpen ? "on" : ""}`}
+              onClick={() => shellChrome.toggleToolbox()}
+              aria-haspopup="dialog"
+              aria-expanded={shellChrome.toolboxOpen}
+              title="Toolbox — tools, music & settings"
+            >
+              <ToolboxEmblem />
+              <span className="shell-toolbox-label">Toolbox</span>
+            </button>
+          )}
           <button
             type="button"
             className={`steam-friends-toggle ${friendsOpen ? "active" : ""}`}

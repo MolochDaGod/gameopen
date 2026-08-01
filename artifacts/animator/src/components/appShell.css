@@ -58,16 +58,9 @@
   display: none;
 }
 
-/* Library hub: toolbox alone, top-left (launcher chrome is owned by GameLibrary). */
+/* DEPRECATED: top-left float covered library logo/brand — toolbox is in steam-top-right now. */
 .shell-toolbox-float {
-  position: fixed;
-  top: max(10px, env(safe-area-inset-top));
-  left: max(10px, env(safe-area-inset-left));
-  z-index: 720;
-  pointer-events: none;
-}
-.shell-toolbox-float > * {
-  pointer-events: auto;
+  display: none !important;
 }
 
 /* ── Fleet account strip (inline inside shell header) ───────────────────── */
