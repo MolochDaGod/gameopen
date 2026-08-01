@@ -199,6 +199,18 @@
         "jump": "greatsword_samurai/gs_samurai_jump"
       },
       "liveWhenIncomplete": {
+        "note": "Same-origin open may lag R2; CDN + dual_wield keep skills live",
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "greatsword_samurai/gs_samurai_teleport_strike",
+        "skill4": "greatsword_samurai/gs_samurai_jump_sword",
+        "jump": "greatsword_samurai/gs_samurai_jump"
+      },
+      "liveWhenIncomplete": {
         "note": "samurai bake missing → 2h_melee GLB then polearm",
         "idle": "2h_melee/great-sword-idle",
         "walk": "2h_melee/great-sword-walk",

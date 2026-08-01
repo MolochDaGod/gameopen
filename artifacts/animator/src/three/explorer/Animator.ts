@@ -491,6 +491,21 @@ export class Animator {
   }
 
   /**
+   * Register a fleet/baked clip under a catalog id (e.g. animations/sword/…).
+   * Used when Mixamo FBX is absent so Explorer resolves the same packs as grudge6.
+   */
+  registerCatalogClip(id: string, clip: THREE.AnimationClip): void {
+    if (!id || !clip) return;
+    this.clips.set(id, clip);
+    this.actionCache.delete(id);
+  }
+
+  /** Whether a catalog clip id is loaded (for fleet hydrate skip logic). */
+  hasCatalogClip(id: string): boolean {
+    return this.clips.has(id);
+  }
+
+  /**
    * Play an externally-supplied clip as a LOOPED held pose — the airborne
    * equivalent of {@link jump} for a cabinet-specific fall loop (e.g. a skydive
    * pose). Registered under the same synthetic `__ext__` id as {@link playClip}

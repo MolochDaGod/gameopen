@@ -422,38 +422,57 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     // True forward run cycle — NOT locomotion/running (run-to-roll).
     run: "uploads_2026_06/locomotion/torch run forward",
     attack: "unarmed/punching",
+    extras: [
+      "dual_wield/hit",
+      "dual_wield/hurt",
+      "dual_wield/death",
+      "dual_wield/jump",
+      "dual_wield/dodgeF",
+      "dual_wield/dodgeB",
+    ],
   },
   magic: {
     idle: "magic/standing idle",
     walk: "magic/Standing Walk Forward",
     run: "magic/Standing Run Forward",
     attack: "magic/standing 1h cast spell 01",
+    extras: [
+      "dual_wield/attack",
+      "dual_wield/combo",
+      "polearm/skill1",
+      "polearm/skill2",
+      "dual_wield/hit",
+      "dual_wield/death",
+    ],
   },
   sword_shield: {
-    // Open deploy currently ships sword_shield/run only — idle/attack fall back
-    // to magic / dual_wield Bip001 bakes so knights never T-pose in Danger Room.
-    // When full sword_shield JSON pack is on CDN, prefer those paths again.
-    idle: "magic/standing idle",
+    // Primary SSOT: arena/Open sword_shield Bip001 bakes (mirrored to R2).
+    // Walk missing on fleet → magic Standing Walk Forward (proven cycle).
+    idle: "sword_shield/sword and shield idle",
     walk: "magic/Standing Walk Forward",
     run: "sword_shield/sword and shield run",
-    attack: "dual_wield/attack",
+    attack: "sword_shield/sword and shield attack",
     extras: [
+      "sword_shield/sword and shield block",
       "dual_wield/attack2",
       "dual_wield/attack3",
       "dual_wield/combo",
       "dual_wield/block",
+      "dual_wield/dash",
+      "dual_wield/hit",
+      "dual_wield/hurt",
+      "dual_wield/death",
+      "dual_wield/jump",
       "polearm/slash",
       "polearm/thrust",
       "polearm/overhead",
       "polearm/combo",
       "polearm/skill1",
       "polearm/skill2",
-      "block/parry",
-      "block/left-block",
-      "block/right-block",
-      // Prefer sword_shield attack clips when present on CDN
-      "sword_shield/sword and shield attack",
-      "sword_shield/sword and shield idle",
+      // Soft fallbacks if sword_shield primary 404s
+      "magic/standing idle",
+      "dual_wield/attack",
+      "dual_wield/idle",
     ],
   },
   /**
@@ -579,15 +598,27 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "2h_melee/great-sword-blocking",
     ],
   },
-  /** Crossbow — longbow aim set until dedicated bake. */
+  /**
+   * Crossbow — dedicated pack missing on fleet; longbow aim set is SSOT fallback.
+   * Never point primary at crossbow/* that 404 everywhere (T-pose).
+   */
   crossbow: {
-    idle: "crossbow/idle",
-    walk: "crossbow/walk",
-    run: "crossbow/run",
-    attack: "crossbow/shoot",
-    extras: ["crossbow/aim", "crossbow/reload", "crossbow/skill1", "crossbow/skill2"],
+    idle: "longbow/standing idle 01",
+    walk: "longbow/standing walk forward",
+    run: "longbow/standing run forward",
+    attack: "longbow/standing aim recoil",
+    extras: [
+      "longbow/standing dodge forward",
+      "longbow/draw",
+      "longbow/overdraw",
+      "longbow/recoil",
+      "crossbow/idle",
+      "crossbow/shoot",
+      "crossbow/aim",
+      "crossbow/reload",
+    ],
   },
-  /** Rifle — prod/anims/rifle JSON (Bip001 retargeted). */
+  /** Rifle — R2 anims/baked/rifle when present; longbow soft fallbacks last. */
   rifle: {
     idle: "rifle/rifle-aiming-idle",
     walk: "rifle/walking",
@@ -597,6 +628,11 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "rifle/reloading",
       "rifle/rifle-jump",
       "rifle/hit-reaction",
+      // Soft fallbacks if rifle pack incomplete
+      "longbow/standing idle 01",
+      "longbow/standing walk forward",
+      "longbow/standing run forward",
+      "longbow/standing aim recoil",
       "rifle/downrange-aiming-idle",
       "rifle/strafe-left",
       "rifle/strafe-right",

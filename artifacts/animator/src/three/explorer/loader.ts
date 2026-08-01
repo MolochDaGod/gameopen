@@ -558,6 +558,33 @@ export async function createAnimatedCharacter(
   const character = new VoxelCharacter(source, look, opts.height ?? 2);
   const animator = new Animator(character, clips);
   animator.setWeapon(weapon);
+
+  // Production: no Mixamo FBX — hydrate same Bip001 baked packs as grudge6 onto
+  // the Mixamo box-rig (rematchClipToSkeleton). Explorer + RTS_TOON share SSOT.
+  if (!mixamoOk) {
+    try {
+      const { hydrateExplorerFleetBakes, hydrateWeaponClassPack } = await import(
+        "./fleetBakeHydrate"
+      );
+      await hydrateExplorerFleetBakes({
+        skeletonRoot: character.skeletonRoot,
+        inject: (id, clip) => animator.registerCatalogClip(id, clip),
+        has: (id) => animator.hasCatalogClip(id),
+        weapons: classes,
+        log: true,
+      });
+      // Ensure equipped class pack is present even if not in classes list
+      await hydrateWeaponClassPack(
+        character.skeletonRoot,
+        weapon,
+        (id, clip) => animator.registerCatalogClip(id, clip),
+        (id) => animator.hasCatalogClip(id),
+      );
+    } catch (e) {
+      console.warn("[loader] Explorer fleet bake hydrate failed", e);
+    }
+  }
+
   // Kick idle immediately so dressing room is never stuck on bind pose while
   // waiting for the first controller setLocomotion tick.
   animator.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
