@@ -116,9 +116,9 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
   },
   "island-life": {
     id: "island-life",
-    name: "Survival Coast (sailtest)",
+    name: "Island Life",
     blurb:
-      "Live mesh: sailtest.glb (CDN). island_life.glb is NOT on R2/SPA — do not expect the Minecraft island mesh until uploaded.",
+      "Survival coast — island_life.glb on R2 when under size gate; else sailtest/small/breeze fallback chain.",
     kind: "survival_island",
     uuid: "d4e5f6a7-b8c9-4d03-be24-islandlife0004",
     seed: "island-life-survival-01",
@@ -131,9 +131,9 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
   },
   "fabled-zone": {
     id: "fabled-zone",
-    name: "Town Stand-in (pirate pack)",
+    name: "Fabled Main Town",
     blurb:
-      "Live mesh: pirate_island_pack + medieval camp. fabled-zone.glb is NOT on R2/SPA — not the great-tree capital until uploaded.",
+      "Faction capital — fabled-zone.glb on R2 (CDN). Pirate pack only if primary fails.",
     kind: "faction_town",
     uuid: "e5f6a7b8-c9d0-4e14-af35-fabledzone0005",
     seed: "fabled-main-town-01",
@@ -146,9 +146,9 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
   },
   "bridge-town-docks": {
     id: "bridge-town-docks",
-    name: "Harbor Stand-in (pirate + sail)",
+    name: "Bridge Town Dock Kit",
     blurb:
-      "Live mesh: pirate_island_pack + sailtest. bridge-town-kit.glb / bridge_town.glb are NOT on R2/SPA — dock kit pending upload.",
+      "Modular Bridge Town kit on R2 (bridge_town.glb / bridge-town-kit.glb) — dock seeds, piers, NPC slots.",
     kind: "dock_kit",
     uuid: "f6a7b8c9-d0e1-4f25-b046-bridgetown0006",
     seed: "bridge-town-docks-01",

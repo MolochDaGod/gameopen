@@ -220,48 +220,45 @@ export const BIOME_MESH_CHAINS: Record<string, BiomeMeshChain> = {
   },
   town: {
     biome: "town",
-    label: "Town stand-in (fabled mesh not on CDN)",
+    label: "Fabled main town",
     primaryHost: "cdn",
     notes:
-      "Live mesh: pirate_island_pack. fabled-zone.glb 404 both hosts — last only.",
+      "R2 2026-08-01: fabled-zone.glb + fabledzone.glb uploaded (HEAD 200). Pirate pack remains last-resort fallback.",
     meshKeys: [
-      CDN_WARLORDS_WORLD.pirateIslandPack,
-      CDN_WARLORDS_WORLD.medievalCamp,
-      CDN_WORLD_KEYS.sailtest,
-      // Future upload only (404 both hosts 2026-08-01)
       CDN_WORLD_KEYS.fabledZone,
       CDN_WORLD_KEYS.fabledZoneAlt,
+      CDN_WARLORDS_WORLD.pirateIslandPack,
+      CDN_WARLORDS_WORLD.medievalCamp,
+      CDN_WORLD_KEYS.sailtest,
     ],
   },
-  /** Bridge / dock kit — primary kit GLBs 404; coastal stand-ins proven. */
+  /** Bridge / dock kit — production mesh on R2. */
   docks: {
     biome: "town",
-    label: "Dock / harbor stand-in",
+    label: "Bridge Town docks",
     primaryHost: "cdn",
     notes:
-      "bridge-town-kit + bridge_town 404 both hosts. Live: pirate pack + sailtest + medieval camp.",
+      "R2 2026-08-01: bridge-town-kit + bridge_town HEAD 200. Sail/pirate pack fallbacks only.",
     meshKeys: [
+      "models/towns/bridge-town-kit.glb",
+      "models/worlds/bridge_town.glb",
       CDN_WARLORDS_WORLD.pirateIslandPack,
       CDN_WORLD_KEYS.sailtest,
       CDN_WARLORDS_WORLD.medievalCamp,
-      CDN_WORLD_KEYS.smallIsland,
-      // Future kit upload only
-      "models/towns/bridge-town-kit.glb",
-      "models/worlds/bridge_town.glb",
     ],
   },
   survival: {
     biome: "coast",
-    label: "Survival coast (island_life mesh not on CDN)",
+    label: "Island life survival",
     primaryHost: "cdn",
-    notes: "Live mesh: sailtest. island_life.glb 404 — last only for future upload.",
+    notes:
+      "Prefer island_life.glb when on R2 (multipart if >300MiB wrangler). Sailtest chain is fallback.",
     meshKeys: [
+      CDN_WORLD_KEYS.islandLife,
       CDN_WORLD_KEYS.sailtest,
       CDN_WORLD_KEYS.smallIsland,
       CDN_WORLD_KEYS.breezeIsland,
       CDN_WARLORDS_WORLD.lowPolyIsland,
-      // Future upload only (404 both hosts 2026-08-01)
-      CDN_WORLD_KEYS.islandLife,
     ],
   },
 };
