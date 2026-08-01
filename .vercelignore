@@ -100,3 +100,10 @@ reports/
 .wrangler/
 node_modules/
 **/.git/**
+
+# Mimic dungeon volcano scene (user-authored vol.glb)
+!artifacts/animator/public/models/vol.glb
+!artifacts/animator/dist/public/models/vol.glb
+!artifacts/animator/public/models/destructibles/**
+!artifacts/animator/public/models/destructibles/**/*.glb
+

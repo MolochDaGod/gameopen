@@ -1,25 +1,20 @@
 /**
- * Test Dungeon (Mimic) — a self-contained encounter scene.
+ * Test Dungeon (Mimic) — self-contained encounter on **vol.glb** (volcano scene).
  *
- * Loads `vol.glb` (best-practice mesh/material/shadow pass), separates the
- * rigged mimic-creature from the static environment, and runs the full mimic
- * fight against a simple third-person player:
+ * Player is a real **GrudgeAvatar** (skinned Bip001 + baked anim pack + arsenal
+ * sword) — NOT the static 30characters T-pose roster.
  *
- *   disguised (barrel idle) → [E] reveal → chase (waddle) → attack → recover
+ *   disguised (barrel) → [E] reveal → chase → attack → recover
  *
- * Two attacks (shared attack pose at two speeds, per {@link ./mimicMoves}):
- *   • melee — 1.5× speed, lunges +30 MM (maneuver motion) forward, 0.25 s tell + blink.
- *   • acid  — 0.75× speed, 1 s prep, lobs an arcing acid glob at the player's
- *     position captured at launch (does NOT home), bursting in a 3 m AoE.
- *
- * A decoy barrel by the home's door shares the identical "E: Open Barrel"
- * prompt but is harmless. Reuses the animator's `Vfx` (acid) — no new engine.
- * This is an isolated test surface; it does not thread through the full Studio
- * combat pipeline (a follow-up can promote it into the Danger Room flow).
+ * Controls: WASD move · mouse aim-yaw (drag / hold RMB) · LMB / 1–4 skills · E interact · Shift sprint
  */
 import * as THREE from "three";
-import { getBakedCharacter } from "../grudge/bakedRoster";
 import { Vfx } from "../Vfx";
+import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
+import { getWeapon } from "../assets";
+import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
+import type { WeaponId } from "../types";
+import { buildT0SkillHud } from "../brawler/combatLoadout";
 import {
   MIMIC_ATTACKS,
   mimicAttackDuration,
@@ -32,23 +27,24 @@ import {
   type MimicPose,
 } from "./mimicMoves";
 
-/**
- * Grudge "Maneuver Motion" → metres. The controller expresses attack lunges in
- * MM units; +30 MM reads as a brisk ~1.8 m forward lunge here. Tunable once the
- * canonical MM↔metre scale is confirmed.
- */
+/** Grudge "Maneuver Motion" → metres. +30 MM ≈ 1.8 m lunge. */
 const MM_TO_M = 0.06;
 
 const PLAYER_MAX_HP = 100;
 const MIMIC_MAX_HP = 120;
-/** Baked grudge6 roster index for the player avatar (a grudge6 rts_toon character, never a primitive shape). */
-const PLAYER_CHAR_INDEX = 0;
 const PLAYER_SPEED = 5.5;
+const PLAYER_SPRINT = 8.2;
 const MIMIC_SPEED = 2.6;
 const MELEE_REACH = 2.4;
-const PLAYER_MELEE_REACH = 2.6;
+const PLAYER_MELEE_REACH = 2.8;
 const INTERACT_RANGE = 3.0;
 const ACID_AOE = MIMIC_ATTACKS.acid.aoeRadius; // 3 m
+const VOL_MESH_KEYS = [
+  "models/vol.glb",
+  "models/worlds/vol.glb",
+  "models/maps/vol/vol.glb",
+] as const;
+const PLAYER_WEAPON: WeaponId = "sword";
 
 export type MimicPhase =
   | "loading"
@@ -61,6 +57,15 @@ export type MimicPhase =
   | "victory"
   | "defeat";
 
+export interface MimicSkillHud {
+  slot: number;
+  key: string;
+  label: string;
+  cd: number;
+  cdMax: number;
+  iconUrl?: string;
+}
+
 export interface MimicDungeonState {
   phase: MimicPhase;
   prompt: string | null;
@@ -70,6 +75,10 @@ export interface MimicDungeonState {
   mimicHp: number;
   mimicMaxHp: number;
   telegraph: MimicAttackName | null;
+  /** T0 skill strip (1–4) — same kit language as Danger Room. */
+  skills: MimicSkillHud[];
+  /** Short status for load failures / ready. */
+  loadNote: string;
 }
 
 type StateCb = (s: MimicDungeonState) => void;
@@ -89,12 +98,32 @@ export class MimicDungeon {
   private ray = new THREE.Raycaster();
   private readonly DOWN = new THREE.Vector3(0, -1, 0);
 
-  // Player
+  // Player — GrudgeAvatar (skinned + mixer + director), not static baked mesh
   private player = new THREE.Group();
-  private playerModel: THREE.Object3D | null = null;
+  private avatar: GrudgeAvatar | null = null;
+  private mountedWeapon: MountedWeapon | null = null;
   private playerYaw = 0;
+  private camYaw = 0;
   private playerHp = PLAYER_MAX_HP;
   private playerAtkCd = 0;
+  private skills = buildT0SkillHud(PLAYER_WEAPON, 1).map((h) => ({
+    slot: h.slot,
+    key: h.key,
+    label: h.label,
+    clip: h.clip || "attack",
+    reach: h.reach,
+    damage: h.damage,
+    cdMax: h.cdMax,
+    cd: 0,
+    lunge: h.lunge,
+    iconUrl: h.iconUrl,
+    kind: h.kind,
+  }));
+  private loadNote = "Loading volcano scene + hero…";
+  private moving = false;
+  private sprinting = false;
+  private pointerDragging = false;
+  private lastPointerX = 0;
 
   // Mimic
   private mimicRoot = new THREE.Group(); // world nav transform (position + yaw)
@@ -144,17 +173,24 @@ export class MimicDungeon {
     this.scene.add(this.mimicRoot);
     this.mimicRoot.add(this.mimicPose);
     this.scene.add(this.decoy);
+    this.scene.add(this.player);
     this.buildLights();
-    void this.buildPlayer();
+    // Seed camera so first frames are not black / zero-aspect before load
+    this.camera.position.set(0, 8, 12);
+    this.camera.lookAt(0, 1, 0);
 
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     canvas.addEventListener("mousedown", this.onMouseDown);
+    canvas.addEventListener("contextmenu", this.onContextMenu);
+    window.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("mousemove", this.onMouseMove);
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
 
     this.emit();
-    void this.load();
+    // Parallel: vol scene + skinned hero (don't block volcano on character)
+    void Promise.all([this.load(), this.buildPlayer()]);
   }
 
   private buildLights() {
@@ -172,30 +208,62 @@ export class MimicDungeon {
   }
 
   /**
-   * Player avatar: a baked grudge6 (rts_toon) character — never a primitive
-   * shape. The model's geometry + materials are SHARED with the roster cache
-   * (owned for the app lifetime), so `dispose()` skips this subtree rather than
-   * freeing them. Async: the transform group is added immediately and the mesh
-   * attaches when the (cached) baked GLB resolves.
+   * Player: GrudgeAvatar (arena race GLB + Bip001 baked anims) + arsenal sword.
+   * Static 30characters mesh is forbidden here — that path is permanent T-pose.
    */
   private async buildPlayer() {
-    this.scene.add(this.player);
     try {
-      const model = await getBakedCharacter(PLAYER_CHAR_INDEX);
-      if (this.disposed) return;
-      this.playerModel = model;
-      this.player.add(model);
+      const av = new GrudgeAvatar("western-kingdoms", "warrior", {
+        animPack: "sword_shield",
+      });
+      await av.load();
+      if (this.disposed) {
+        av.dispose();
+        return;
+      }
+      this.avatar = av;
+      this.player.add(av.root);
+      av.root.position.set(0, 0, 0);
+      // Idle so first paint is not dead T-pose
+      av.playRole?.("idle", 0);
+      av.setLocomotion?.(0, false);
+
+      // Mount sword on hand sockets (Danger Room arsenal path)
+      try {
+        const def = getWeapon(PLAYER_WEAPON);
+        const rh = av.rightHand;
+        const lh = av.leftHand;
+        if (rh && lh) {
+          this.mountedWeapon = await mountWeaponModel(def, rh, lh, 0);
+        } else {
+          console.warn("[MimicDungeon] no hand bones on avatar — sword not mounted");
+        }
+      } catch (werr) {
+        console.warn("[MimicDungeon] weapon mount failed — combat still works", werr);
+      }
+
+      this.loadNote = "Hero ready · sword + skills 1–4";
+      this.emit();
+      console.info(
+        "[MimicDungeon] GrudgeAvatar ready",
+        av.def?.name,
+        "clips:",
+        av.clipNames?.()?.slice(0, 12) ?? [],
+      );
     } catch (err) {
-      console.error("[MimicDungeon] grudge6 player load failed", err);
+      console.error("[MimicDungeon] GrudgeAvatar load failed", err);
+      this.loadNote = "Hero load failed — check grudge6 race GLB + anim packs";
+      this.emit();
     }
   }
 
   /** Load GLB from the first working fleet candidate (same-origin → Open → R2). */
-  private async loadGltf(path: string) {
+  private async loadGltf(path: string | string[]) {
     const { loadGltfFirst } = await import("../assets");
     const { sharedGltfLoader } = await import("../loaders/gltf");
-    const gltf = await loadGltfFirst(path, sharedGltfLoader());
-    console.info("[MimicDungeon] loaded", path, "from", gltf.url);
+    const keys = Array.isArray(path) ? path : [path];
+    const gltf = await loadGltfFirst(keys, sharedGltfLoader());
+    console.info("[MimicDungeon] loaded", keys[0], "from", gltf.url);
     return gltf;
   }
 
@@ -232,12 +300,15 @@ export class MimicDungeon {
   private async load() {
     let gltf;
     try {
-      gltf = await this.loadGltf("models/vol.glb");
+      gltf = await this.loadGltf([...VOL_MESH_KEYS]);
+      this.loadNote = "Volcano scene loaded";
     } catch (err) {
       console.error("[MimicDungeon] vol.glb load failed all candidates", err);
+      this.loadNote = "vol.glb missing — procedural floor (upload models/vol.glb)";
       this.buildFallbackGround();
       this.spawnMimicFallback();
       this.finishSetup();
+      this.emit();
       return;
     }
     if (this.disposed) return;
@@ -359,9 +430,11 @@ export class MimicDungeon {
     this.mimicRoot.position.set(0, this.groundY(0, 0), 0);
     this.player.position.set(0, this.groundY(0, 7), 7);
     this.playerYaw = Math.PI; // face the mimic (−Z)
+    this.camYaw = this.playerYaw;
+    this.player.rotation.y = this.playerYaw;
     void this.buildDecoyBarrel(new THREE.Vector3(9, 0, -3));
     this.setPhase("disguised");
-    this.raf = requestAnimationFrame(this.animate);
+    if (!this.raf) this.raf = requestAnimationFrame(this.animate);
   }
 
   /** Real destructible barrel GLB when available; procedural fallback otherwise. */
@@ -423,31 +496,89 @@ export class MimicDungeon {
     const k = e.key.toLowerCase();
     this.keys.add(k);
     if (k === "e") this.interactQueued = true;
+    if (k === "1") this.castSkill(0);
+    if (k === "2") this.castSkill(1);
+    if (k === "3") this.castSkill(2);
+    if (k === "4") this.castSkill(3);
+    if (k === " ") e.preventDefault();
   };
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.key.toLowerCase());
   };
+  private onContextMenu = (e: Event) => {
+    e.preventDefault();
+  };
   private onMouseDown = (e: MouseEvent) => {
-    if (e.button === 0) this.playerMelee();
+    if (e.button === 0) this.castSkill(0); // LMB = skill 1 / basic attack
+    if (e.button === 2 || e.button === 1) {
+      this.pointerDragging = true;
+      this.lastPointerX = e.clientX;
+      e.preventDefault();
+    }
+  };
+  private onMouseUp = () => {
+    this.pointerDragging = false;
+  };
+  private onMouseMove = (e: MouseEvent) => {
+    if (!this.pointerDragging) return;
+    const dx = e.clientX - this.lastPointerX;
+    this.lastPointerX = e.clientX;
+    this.camYaw -= dx * 0.005;
   };
   /** React HUD may also forward an interact press (button). */
   interact() {
     this.interactQueued = true;
   }
 
-  private playerMelee() {
-    if (this.playerAtkCd > 0 || this.phase === "victory" || this.phase === "defeat") return;
-    this.playerAtkCd = 0.45;
+  /** Slot 0–3 → T0 weapon skill (clip + damage + optional MM lunge). */
+  private castSkill(slot: number) {
+    if (this.phase === "victory" || this.phase === "defeat" || this.phase === "loading") return;
+    const sk = this.skills[slot];
+    if (!sk || sk.cd > 0) return;
+    sk.cd = sk.cdMax;
+    this.playerAtkCd = Math.min(0.35, sk.cdMax * 0.25);
+
+    // Face mimic when in combat
+    if (this.phase !== "disguised") {
+      const d = this.mimicRoot.position.clone().sub(this.player.position);
+      d.y = 0;
+      if (d.lengthSq() > 1e-4) this.playerYaw = Math.atan2(d.x, d.z);
+    }
+
+    // Play attack / skill clip on skinned rig
+    const clip = sk.clip || "attack";
+    const av = this.avatar;
+    if (av) {
+      if (typeof av.playClipOnce === "function") {
+        const d = av.playClipOnce(clip, 0.08);
+        if (d <= 0) av.playClipOnce?.("attack", 0.08);
+      } else {
+        av.playRole?.("attack", 0.08);
+      }
+    }
+
+    // MM lunge along facing
+    if (sk.lunge && sk.lunge > 0) {
+      const fwd = new THREE.Vector3(Math.sin(this.playerYaw), 0, Math.cos(this.playerYaw));
+      this.player.position.addScaledVector(fwd, Math.min(1.4, sk.lunge * MM_TO_M * 8));
+      this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
+    }
+
     const mp = this.mimicRoot.position;
     const d = mp.clone().sub(this.player.position);
     d.y = 0;
     const dist = d.length();
-    const hitPt = this.player.position.clone().addScaledVector(d.normalize(), Math.min(dist, 1.2));
+    const hitPt = this.player.position
+      .clone()
+      .addScaledVector(d.lengthSq() > 1e-6 ? d.normalize() : new THREE.Vector3(0, 0, 1), Math.min(dist, 1.4));
     hitPt.y += 1.0;
-    this.vfx.impact(hitPt, 0x9fe8ff, 1.0);
-    if (this.phase !== "disguised" && this.phase !== "loading" && dist <= PLAYER_MELEE_REACH) {
-      this.damageMimic(20);
+    this.vfx.impact(hitPt, 0x9fe8ff, 1.1 + slot * 0.15);
+
+    const reach = (sk.reach || PLAYER_MELEE_REACH) + 0.2;
+    if (this.phase !== "disguised" && this.phase !== "loading" && dist <= reach) {
+      this.damageMimic(sk.damage || 18 + slot * 4);
     }
+    this.emit();
   }
 
   // ── damage ─────────────────────────────────────────────────────────────────
@@ -489,7 +620,7 @@ export class MimicDungeon {
         ? "The mimic is slain. Test complete."
         : this.phase === "defeat"
           ? "You were devoured. Refresh to retry."
-          : "WASD move · LMB attack · E interact — beware the barrels.";
+          : "WASD · Shift sprint · RMB drag camera · LMB/1–4 skills · E barrels";
     const state: MimicDungeonState = {
       phase: this.phase,
       prompt,
@@ -499,8 +630,17 @@ export class MimicDungeon {
       mimicHp: Math.round(this.mimicHp),
       mimicMaxHp: MIMIC_MAX_HP,
       telegraph: this.phase === "windup" ? this.attack : null,
+      skills: this.skills.map((s) => ({
+        slot: s.slot,
+        key: s.key,
+        label: s.label,
+        cd: Math.max(0, s.cd),
+        cdMax: s.cdMax,
+        iconUrl: s.iconUrl,
+      })),
+      loadNote: this.loadNote,
     };
-    const sig = `${state.phase}|${state.prompt}|${state.playerHp}|${state.mimicHp}|${state.telegraph}`;
+    const sig = `${state.phase}|${state.prompt}|${state.playerHp}|${state.mimicHp}|${state.telegraph}|${this.loadNote}|${this.skills.map((s) => s.cd.toFixed(1)).join(",")}`;
     if (sig === this.lastSig) return;
     this.lastSig = sig;
     this.onState(state);
@@ -523,20 +663,51 @@ export class MimicDungeon {
   };
 
   private updatePlayer(dt: number) {
-    if (this.phase === "victory" || this.phase === "defeat") return;
-    // Camera-relative WASD (camera sits behind +Z, so W drives −Z into screen).
-    const move = new THREE.Vector3(
+    // Tick skill CDs always
+    for (const sk of this.skills) {
+      if (sk.cd > 0) sk.cd = Math.max(0, sk.cd - dt);
+    }
+
+    if (this.phase === "victory" || this.phase === "defeat") {
+      this.avatar?.setLocomotion?.(0, false);
+      this.avatar?.update?.(dt);
+      return;
+    }
+
+    // Camera-yaw relative WASD (third-person, not world axes)
+    const input = new THREE.Vector3(
       (this.keys.has("d") ? 1 : 0) - (this.keys.has("a") ? 1 : 0),
       0,
       (this.keys.has("s") ? 1 : 0) - (this.keys.has("w") ? 1 : 0),
     );
-    if (move.lengthSq() > 0) {
-      move.normalize();
-      this.player.position.addScaledVector(move, PLAYER_SPEED * dt);
-      this.playerYaw = Math.atan2(move.x, move.z);
+    this.sprinting = this.keys.has("shift");
+    this.moving = input.lengthSq() > 0;
+
+    if (this.moving) {
+      input.normalize();
+      // Rotate input into camera yaw plane
+      const sin = Math.sin(this.camYaw);
+      const cos = Math.cos(this.camYaw);
+      const world = new THREE.Vector3(
+        input.x * cos + input.z * sin,
+        0,
+        -input.x * sin + input.z * cos,
+      );
+      const speed = this.sprinting ? PLAYER_SPRINT : PLAYER_SPEED;
+      this.player.position.addScaledVector(world, speed * dt);
+      this.playerYaw = Math.atan2(world.x, world.z);
     }
+
     this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
     this.player.rotation.y = this.playerYaw;
+
+    // Skinned locomotion + mixer
+    const av = this.avatar;
+    if (av) {
+      const speed01 = this.moving ? (this.sprinting ? 1 : 0.55) : 0;
+      av.setLocomotion?.(speed01, this.sprinting);
+      av.update?.(dt);
+    }
   }
 
   private updateInteraction() {
@@ -712,11 +883,29 @@ export class MimicDungeon {
   }
 
   private updateCamera() {
+    // Third-person boom behind player yaw / orbit camYaw
+    const boom = 8.5;
+    const height = 3.2;
+    const lookY = 1.25;
+    const yaw = this.camYaw;
+    // Soft-follow cam yaw toward player facing when moving (optional glue)
+    if (this.moving && !this.pointerDragging) {
+      let diff = this.playerYaw - this.camYaw;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      this.camYaw += diff * 0.04;
+    }
+    const y = this.camYaw;
     const target = this.player.position.clone();
-    target.y += 1.1;
-    const desired = new THREE.Vector3(target.x, target.y + 6.5, target.z + 9);
-    this.camera.position.lerp(desired, 0.12);
+    target.y += lookY;
+    const desired = new THREE.Vector3(
+      target.x - Math.sin(y) * boom,
+      target.y + height,
+      target.z - Math.cos(y) * boom,
+    );
+    this.camera.position.lerp(desired, 0.14);
     this.camera.lookAt(target);
+    void yaw;
   }
 
   private resize() {
@@ -733,14 +922,22 @@ export class MimicDungeon {
     this.ro?.disconnect();
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
+    window.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("mousemove", this.onMouseMove);
     this.canvas.removeEventListener("mousedown", this.onMouseDown);
+    this.canvas.removeEventListener("contextmenu", this.onContextMenu);
+    if (this.mountedWeapon) {
+      unmountWeapon(this.mountedWeapon);
+      this.mountedWeapon = null;
+    }
+    this.avatar?.dispose?.();
+    this.avatar = null;
     this.vfx.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
-      // The baked grudge6 player shares geometry + materials with the roster
-      // cache (owned app-wide) — never dispose that subtree here.
-      if (this.playerModel && this.isDescendant(m, this.playerModel)) return;
+      // Skip player rig (mixer owns shared clip/geo from fleet cache)
+      if (this.player && this.isDescendant(m, this.player)) return;
       m.geometry?.dispose();
       const mat = m.material;
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());

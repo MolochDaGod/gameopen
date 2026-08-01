@@ -7,12 +7,14 @@ import {
 const INITIAL: MimicDungeonState = {
   phase: "loading",
   prompt: null,
-  hint: "Loading test dungeon…",
+  hint: "Loading volcano + skinned hero…",
   playerHp: 100,
   playerMaxHp: 100,
   mimicHp: 120,
   mimicMaxHp: 120,
   telegraph: null,
+  skills: [],
+  loadNote: "Booting…",
 };
 
 const pct = (v: number, m: number) => `${Math.max(0, Math.min(100, (v / Math.max(1, m)) * 100))}%`;
@@ -75,7 +77,47 @@ export function MimicDungeon({ onExit }: { onExit: () => void }) {
         </button>
       )}
 
-      <div style={hint}>{s.hint}</div>
+      {/* T0 skill strip — same language as Danger Room */}
+      {s.skills.length > 0 && (
+        <div style={skillBar} aria-label="Weapon skills">
+          {s.skills.map((sk) => {
+            const onCd = sk.cd > 0.05;
+            const pctCd = onCd ? Math.min(1, sk.cd / Math.max(0.01, sk.cdMax)) : 0;
+            return (
+              <button
+                key={sk.slot}
+                type="button"
+                style={{
+                  ...skillSlot,
+                  opacity: onCd ? 0.55 : 1,
+                  borderColor: onCd ? "rgba(120,140,160,0.35)" : "rgba(255,200,80,0.55)",
+                }}
+                title={`${sk.label} (${sk.key})`}
+                onClick={() => {
+                  // Forward as keypress path via castSkill indices 0–3
+                  const ev = new KeyboardEvent("keydown", { key: sk.key });
+                  window.dispatchEvent(ev);
+                }}
+              >
+                {sk.iconUrl ? (
+                  <img src={sk.iconUrl} alt="" style={skillIcon} draggable={false} />
+                ) : (
+                  <span style={{ fontSize: 14, fontWeight: 800 }}>{sk.key}</span>
+                )}
+                <span style={skillKey}>{sk.key}</span>
+                {onCd && (
+                  <span style={{ ...skillCd, height: `${pctCd * 100}%` }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={hint}>
+        {s.hint}
+        {s.loadNote ? ` · ${s.loadNote}` : ""}
+      </div>
     </div>
   );
 }
@@ -176,5 +218,55 @@ const hint: CSSProperties = {
   fontSize: 13,
   color: "#9fb8da",
   textAlign: "center",
+  pointerEvents: "none",
+  maxWidth: "90vw",
+};
+const skillBar: CSSProperties = {
+  position: "absolute",
+  bottom: 52,
+  left: "50%",
+  transform: "translateX(-50%)",
+  zIndex: 6,
+  display: "flex",
+  gap: 8,
+  padding: "8px 10px",
+  borderRadius: 12,
+  background: "rgba(7,11,20,0.72)",
+  border: "1px solid rgba(212,175,96,0.28)",
+};
+const skillSlot: CSSProperties = {
+  position: "relative",
+  width: 52,
+  height: 52,
+  borderRadius: 10,
+  border: "1px solid rgba(212,175,96,0.45)",
+  background: "rgba(20,16,10,0.9)",
+  overflow: "hidden",
+  cursor: "pointer",
+  padding: 0,
+  display: "grid",
+  placeItems: "center",
+};
+const skillIcon: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  display: "block",
+};
+const skillKey: CSSProperties = {
+  position: "absolute",
+  top: 2,
+  left: 4,
+  fontSize: 10,
+  fontWeight: 800,
+  color: "#ffe9ad",
+  textShadow: "0 1px 2px #000",
+};
+const skillCd: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: "rgba(0,0,0,0.55)",
   pointerEvents: "none",
 };
