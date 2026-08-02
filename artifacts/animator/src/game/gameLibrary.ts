@@ -626,9 +626,9 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudge Warlords",
     short: "Main Warlords client",
     blurb:
-      "Play Warlords here: pirate lobby opening/tutorial, home island, sectors, maps, crafting, hero fleet. Open does not list islands/sectors/lobby map as separate games — enter them in-client. SSO + Railway era=warlords.",
+      "Play Warlords here: pirate lobby, home island, sectors, crafting, hero fleet. Same Grudge ID + era=warlords heroes as Mine-Loader Realms (mineloader). SI 1.8 m · SSO + Railway characters.",
     category: "warlords",
-    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting", "Tutorial"],
+    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting", "Fleet Heroes", "era:warlords"],
     tone: "#e86a1a",
     posterKey: "zones",
     icon: "rally",

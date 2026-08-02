@@ -259,6 +259,36 @@ export function mineLoaderDrcUrl(
 }
 
 /**
+ * Warlords flagship handoff (strengthens Open → grudgewarlords.com with same hero).
+ * Pair with mineLoader* helpers so voxel + warlords eras share one characterId.
+ */
+export function warlordsPlayUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  baseId?: string | null;
+  raceId?: string | null;
+  host?: "flagship" | "client";
+  from?: string;
+} = {}): string {
+  const origin =
+    opts.host === "client"
+      ? "https://client.grudge-studio.com"
+      : "https://grudgewarlords.com";
+  const u = new URL(origin + "/");
+  if (opts.token) {
+    u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
+    u.searchParams.set(HANDOFF_QUERY.launch, opts.token);
+  }
+  if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
+  if (opts.baseId) u.searchParams.set(HANDOFF_QUERY.baseId, opts.baseId);
+  if (opts.raceId) u.searchParams.set(HANDOFF_QUERY.raceId, opts.raceId);
+  u.searchParams.set("era", "warlords");
+  u.searchParams.set(HANDOFF_QUERY.open, "1");
+  u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  return u.toString();
+}
+
+/**
  * Open collection path for Realms (preferred entry from Library / Zones).
  * Resolves to open.grudge-studio.com/realms when on the Open host.
  */
