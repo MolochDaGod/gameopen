@@ -42,14 +42,21 @@ describe("Warlords-era fleet DRC + grudge6", () => {
     expect(WARLORDS_ERA_ASSET_SSOT.forbidden.join(" ")).toMatch(/Mixamo|sword and shield run|Explorer/i);
   });
 
-  it("Open Danger and Multiverse are DRC-green grudge6", () => {
+  it("core Warlords combat hosts are DRC-green grudge6 + bip001", () => {
     const green = warlordsFleetByStatus("drc-green");
     expect(green.map((h) => h.id)).toEqual(
-      expect.arrayContaining(["open-danger", "multiverse", "grudge-arena"]),
+      expect.arrayContaining([
+        "open-danger",
+        "multiverse",
+        "grudge-arena",
+        "warlord-genesis",
+        "hero-command",
+        "warlords-client",
+      ]),
     );
     for (const h of green) {
       expect(h.mesh).toMatch(/grudge6/);
-      expect(h.anim).toMatch(/bip001/);
+      expect(h.anim).toMatch(/bip001|via-client/);
     }
   });
 
@@ -60,9 +67,10 @@ describe("Warlords-era fleet DRC + grudge6", () => {
     expect(p?.notes).toMatch(/not GRUDOX|not Explorer/i);
   });
 
-  it("flags Warlord Genesis as Mixamo legacy gap", () => {
+  it("Warlord Genesis uses grudge6 + bip001 Open packs", () => {
     const g = WARLORDS_ERA_FLEET.find((h) => h.id === "warlord-genesis");
-    expect(g?.status).toBe("mixamo-legacy");
-    expect(g?.anim).toBe("mixamo");
+    expect(g?.status).toBe("drc-green");
+    expect(g?.anim).toBe("bip001-open");
+    expect(g?.mesh).toMatch(/grudge6/);
   });
 });

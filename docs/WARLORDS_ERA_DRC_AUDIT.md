@@ -72,12 +72,12 @@ Full system: [`GRUDGE6_DRC_COMPLETE_SYSTEM.md`](GRUDGE6_DRC_COMPLETE_SYSTEM.md)
 
 ---
 
-## Gaps (priority)
+## Gaps (status 2026-08-02)
 
-1. **Warlord Genesis** — Mixamo combat still primary; migrate to grudge6 + Bip001 baked (same as Open Danger).
-2. **Warlords client island3d** — `modelLoader` Mixamo remap remains for some characters; production heroes should use grudge6 + Bip001 packs.
-3. **Hero Command** — race kits good; full DRC weapon-skill layer incomplete vs Open.
-4. **Multiverse** — already ships `game/drcAnimSsot.js` + banned-loco filters (`b3961af`); packs use samurai 1H + Open baked hosts. No extra push needed for loco purge.
+1. **Warlord Genesis** — **FIXED:** `Grudge6HeroRig` path already primary; `LOCO_BAKED_BY_PACK` + attacks aligned to Open DRC samurai 1H; multi-host Open baked fetch; race kits prefer GLB.
+2. **Warlords client island3d** — **FIXED:** production heroes load Open Bip001 via `bip001DrcAnims` + `loadBakedAnimationClip` multi-host; Mixamo GLB only as fallback.
+3. **Hero Command** — **FIXED:** `drcWeaponSkills` + Digit1–6 commander skill bar / damage layer (Open baked rels); race kits still CDN grudge6.
+4. **Multiverse** — already ships `game/drcAnimSsot.js` + banned-loco filters; packs use samurai 1H + Open baked hosts.
 
 ---
 
