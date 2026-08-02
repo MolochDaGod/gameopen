@@ -221,8 +221,17 @@ export class MimicDungeon {
    */
   private async buildPlayer() {
     try {
+      // DRC: same pack SSOT as Danger / weapon-live-packs (samurai 1H under sword_shield)
+      let pack: "sword_shield" | "samurai" | "twohand" = "sword_shield";
+      try {
+        const { liveAnimPackForWeapon } = await import("../anim/weaponLivePacks");
+        const live = liveAnimPackForWeapon("sword");
+        if (live === "sword_shield" || live === "samurai" || live === "twohand") pack = live;
+      } catch {
+        /* keep sword_shield */
+      }
       const av = new GrudgeAvatar("western-kingdoms", "warrior", {
-        animPack: "sword_shield",
+        animPack: pack,
       });
       await av.load();
       if (this.disposed) {

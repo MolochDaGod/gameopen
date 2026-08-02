@@ -559,30 +559,29 @@ export async function createAnimatedCharacter(
   const animator = new Animator(character, clips);
   animator.setWeapon(weapon);
 
-  // Production: no Mixamo FBX — hydrate same Bip001 baked packs as grudge6 onto
-  // the Mixamo box-rig (rematchClipToSkeleton). Explorer + RTS_TOON share SSOT.
-  if (!mixamoOk) {
-    try {
-      const { hydrateExplorerFleetBakes, hydrateWeaponClassPack } = await import(
-        "./fleetBakeHydrate"
-      );
-      await hydrateExplorerFleetBakes({
-        skeletonRoot: character.skeletonRoot,
-        inject: (id, clip) => animator.registerCatalogClip(id, clip),
-        has: (id) => animator.hasCatalogClip(id),
-        weapons: classes,
-        log: true,
-      });
-      // Ensure equipped class pack is present even if not in classes list
-      await hydrateWeaponClassPack(
-        character.skeletonRoot,
-        weapon,
-        (id, clip) => animator.registerCatalogClip(id, clip),
-        (id) => animator.hasCatalogClip(id),
-      );
-    } catch (e) {
-      console.warn("[loader] Explorer fleet bake hydrate failed", e);
-    }
+  // DRC SSOT: always hydrate Bip001 baked packs onto Mixamo bones (rematch).
+  // - Mixamo FBX present: fleet bakes fill gaps + CANONICAL loco / samurai 1H
+  // - Mixamo missing (Vercel): fleet bakes are the only combat clips
+  // Never skip this — Explorer and grudge6 share weapon-live / CANONICAL gait.
+  try {
+    const { hydrateExplorerFleetBakes, hydrateWeaponClassPack } = await import(
+      "./fleetBakeHydrate"
+    );
+    await hydrateExplorerFleetBakes({
+      skeletonRoot: character.skeletonRoot,
+      inject: (id, clip) => animator.registerCatalogClip(id, clip),
+      has: (id) => animator.hasCatalogClip(id),
+      weapons: classes,
+      log: !mixamoOk,
+    });
+    await hydrateWeaponClassPack(
+      character.skeletonRoot,
+      weapon,
+      (id, clip) => animator.registerCatalogClip(id, clip),
+      (id) => animator.hasCatalogClip(id),
+    );
+  } catch (e) {
+    console.warn("[loader] Explorer fleet bake hydrate failed", e);
   }
 
   // Kick idle immediately so dressing room is never stuck on bind pose while

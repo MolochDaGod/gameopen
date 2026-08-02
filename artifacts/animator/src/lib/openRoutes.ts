@@ -234,7 +234,7 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["editor", "dressing-room", "animator", "customize"],
     cabinets: ["dressing-room", "dressing", "animator"],
     title: "Dressing Room / Animator",
-    blurb: "Full character animator — gear, clips, VFX (threejs-rapier suite).",
+    blurb: "Full character animator — Explorer Mixamo + grudge6 preview (Open DRC stack).",
     group: "create",
     poster: "dressing",
     tags: ["Customize", "Preview"],

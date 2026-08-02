@@ -545,11 +545,21 @@ export class BrawlerScene {
     this.emitState();
   }
 
-  /** Studio-parity spawn: grudge: → GrudgeAvatar, else Character catalog. */
+  /** Studio-parity spawn: grudge: → GrudgeAvatar + DRC weapon anim pack. */
   private async spawnAvatar(id: string): Promise<Avatar | null> {
     const grudge = parseGrudgeAvatarId(id);
     if (grudge) {
-      const av = new GrudgeAvatar(grudge.raceId, grudge.presetId);
+      // Prefer live weapon pack SSOT (same as Danger Room / weapon-live-packs)
+      let animPack: string | undefined;
+      try {
+        const { liveAnimPackForWeapon } = await import("../anim/weaponLivePacks");
+        animPack = liveAnimPackForWeapon(this.weaponId) || undefined;
+      } catch {
+        /* optional */
+      }
+      const av = new GrudgeAvatar(grudge.raceId, grudge.presetId, {
+        animPack: animPack as import("../grudge/anims").AnimPack | undefined,
+      });
       await av.load();
       return av;
     }

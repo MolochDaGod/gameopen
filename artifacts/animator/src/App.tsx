@@ -590,7 +590,12 @@ export default function App() {
       return next;
     });
   }, []);
-  const [characterId, setCharacterId] = useState("explorer");
+  // DRC combat default = grudge6 WK warrior (never Mixamo explorer for /danger boot)
+  const [characterId, setCharacterId] = useState(
+    () =>
+      // lazy import avoids circular weight at module eval — literal matches DRC_DEFAULT_AVATAR_ID
+      "grudge:western-kingdoms:warrior",
+  );
   const activeCharacterId =
     gameSession.snapshot.selectedCharacterId || characterId || "local";
 
