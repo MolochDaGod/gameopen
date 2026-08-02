@@ -107,23 +107,32 @@
   border-color: rgba(90, 180, 255, 0.55);
 }
 
-/* Doors shell: cinema under Steam UI */
+/* Doors shell: cinema under Steam UI.
+   CRITICAL: never force position:relative on .steam-lib — that overrides
+   fixed inset:0 + internal pane scroll and traps content under overflow:hidden
+   (users literally cannot scroll the library). */
 .doors-cinematic {
-  position: relative;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
 .doors-cinematic .prod-cinema--backdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
+/* Only lift non-fixed UI (legacy door cards). Steam library keeps its own fixed layout. */
 .doors-cinematic .door-select,
-.doors-cinematic .steam-library,
-.doors-cinematic > *:not(.prod-cinema) {
+.doors-cinematic .steam-library:not(.steam-lib) {
   position: relative;
+  z-index: 2;
+}
+.doors-cinematic .steam-lib {
   z-index: 2;
 }

@@ -26,8 +26,14 @@
   background: var(--st-bg);
   color: var(--st-text);
   font-family: "Motiva Sans", Inter, "Segoe UI", system-ui, sans-serif;
+  /* Chrome can disable text selection; main pane stays selectable for UX */
   user-select: none;
   overflow: hidden;
+  /* Own the viewport even when nested under .doors-cinematic */
+  width: 100%;
+  height: 100%;
+  max-height: 100dvh;
+  box-sizing: border-box;
 }
 
 /* ── Top chrome ─────────────────────────────────────────────────────────── */
@@ -303,27 +309,46 @@
 .steam-main {
   min-width: 0;
   min-height: 0;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  user-select: text;
   padding: 16px 20px 28px;
   background:
     radial-gradient(900px 320px at 30% 0%, rgba(102, 192, 244, 0.08), transparent 60%),
     linear-gradient(180deg, #1b2838 0%, #0e141b 45%);
+  /* Visible scrollbar so hub scroll is discoverable */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 192, 244, 0.45) rgba(0, 0, 0, 0.25);
+}
+.steam-main::-webkit-scrollbar {
+  width: 10px;
+}
+.steam-main::-webkit-scrollbar-thumb {
+  background: rgba(102, 192, 244, 0.4);
+  border-radius: 6px;
 }
 
-/* Phone: single column — body must still scroll */
+/* Phone: single column — one scroll owner (main), not nested body+main traps */
 @media (max-width: 900px) {
   .steam-body {
     grid-template-columns: 1fr;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
   }
   .steam-side {
-    max-height: 42vh;
+    max-height: none;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid #000;
+  }
+  .steam-main {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

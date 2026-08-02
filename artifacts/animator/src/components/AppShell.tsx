@@ -244,17 +244,54 @@ export function AppShell({
     </button>
   );
 
-  // Scrollable document pages (account etc.) need body scroll + header offset.
-  // Library (doors) uses fixed .steam-lib with internal pane scroll — not body scroll.
-  // Immersive 3D modes keep overflow hidden so the canvas owns the viewport.
+  // Document-scroll modes (account hubs) vs immersive canvas (danger) vs
+  // library internal pane scroll (.steam-main). Wrong shell-scroll = "can't scroll".
   useEffect(() => {
-    const scrollModes = new Set(["account", "zones", "realms", "lobby", "rooms"]);
-    const scroll = scrollModes.has(mode);
-    document.documentElement.classList.toggle("shell-scroll", scroll);
-    document.body.classList.toggle("shell-scroll", scroll);
-    document.documentElement.classList.toggle("shell-immersive", !scroll);
-    document.body.classList.toggle("shell-immersive", !scroll);
+    const documentScrollModes = new Set([
+      "account",
+      "zones",
+      "realms",
+      "lobby",
+      "rooms",
+      "characters",
+      "landing",
+    ]);
+    // Canvas / full-screen game surfaces — body overflow hidden is correct
+    const immersiveModes = new Set([
+      "danger",
+      "play",
+      "voxel",
+      "brawl",
+      "survival",
+      "mimic",
+      "genesis",
+      "voxgrudge-native",
+      "editor",
+      "ledmask",
+      "avatar",
+      "anim",
+      "anim-ai",
+      "ui",
+      "minegrudge",
+    ]);
+    // Library (doors) uses fixed .steam-lib + .steam-main overflow-y:auto
+    const documentScroll = documentScrollModes.has(mode);
+    const immersive = immersiveModes.has(mode) || mode === "doors";
+    document.documentElement.classList.toggle("shell-scroll", documentScroll);
+    document.body.classList.toggle("shell-scroll", documentScroll);
+    document.documentElement.classList.toggle("shell-immersive", immersive && !documentScroll);
+    document.body.classList.toggle("shell-immersive", immersive && !documentScroll);
     document.documentElement.dataset.shellMode = mode;
+    // Ensure library can receive wheel even if a leftover pointer-lock class stuck
+    if (mode === "doors" || documentScroll) {
+      document.documentElement.classList.remove("pointer-locked");
+      document.body.classList.remove("ptr-ui", "ptr-free", "ptr-interact");
+      try {
+        document.exitPointerLock?.();
+      } catch {
+        /* ignore */
+      }
+    }
     return () => {
       document.documentElement.classList.remove("shell-scroll", "shell-immersive");
       document.body.classList.remove("shell-scroll", "shell-immersive");

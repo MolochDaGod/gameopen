@@ -415,6 +415,16 @@ html.shell-scroll #root {
   overflow-x: hidden;
   height: auto;
   min-height: 100%;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+/* Immersive game surfaces: lock document scroll (canvas owns wheel) */
+html.shell-immersive,
+html.shell-immersive body,
+html.shell-immersive #root {
+  overflow: hidden;
+  height: 100%;
+  overscroll-behavior: none;
 }
 html.shell-scroll body {
   /* Space for fixed shell-steam-bar on non-library modes that still use it */
@@ -1609,7 +1619,11 @@ body.ptr-ui .opt:hover {
 .door p { margin: 0; font-size: 13px; color: #8fa8cc; line-height: 1.5; }
 
 /* ---- Opening cinematic (dying torch) behind the door select ---- */
-.doors-cinematic { position: fixed; inset: 0; }
+.doors-cinematic {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
 .intro-cinematic { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .intro-cinematic canvas { width: 100%; height: 100%; display: block; }
 /* Let the torch scene show through: swap the opaque door backdrop for a warm,
