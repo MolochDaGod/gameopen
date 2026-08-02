@@ -3,8 +3,11 @@
  *
  * Authoritative sailing math + island placement lives in warlord-genesis:
  *   `lib/world-content/src/sectors.ts` (SECTOR_GRID = 3 → 9 cells).
- * Open / gameopen uses this for launch labels, deploy docs, and fleet wiring
- * without importing the full world-content package.
+ *
+ * HARD RULE: Sectors are **in-Warlords-game only**. Open library must never
+ * list them as standalone titles — play via Grudge Warlords client
+ * (`client.grudge-studio.com` / grudgewarlords.com). This file is labels/meta
+ * for docs + fleet wiring, not Open launch tiles.
  */
 
 export const WARLORDS_SECTOR_GRID = 3;

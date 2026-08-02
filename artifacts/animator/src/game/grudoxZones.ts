@@ -101,11 +101,12 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "lobby-island",
-    title: "GRUDOX Island",
+    title: "Warlords Island (in-game)",
     blurb:
-      "Persistent open island — harvest, craft, build, vendors, day/night, PvP as your real Warlords character. Account bag saves to Railway.",
+      "Home / lobby island is inside Grudge Warlords — not a standalone Open zone. Launches Warlords client.",
     tone: "#5fd48a",
-    externalPath: `${PLAY_SHELL_HOST}/?door=lobbyWorld`,
+    // Never PLAY_SHELL lobbyWorld as a fake Open game — Warlords owns the world
+    externalPath: "https://client.grudge-studio.com/home",
   },
   {
     id: "brawler",
@@ -175,10 +176,11 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island",
-    blurb: "water.grudge-studio.com/island — harvest, grudge6, nature packs (in-app canvas).",
+    title: "Warlords Home Island (in-game)",
+    blurb:
+      "Water home island is a Warlords world destination — open the Warlords client, not a separate Open game.",
     tone: "#4fc3c8",
-    externalPath: "https://water.grudge-studio.com/island",
+    externalPath: "https://client.grudge-studio.com/home",
   },
 ] as const;
 

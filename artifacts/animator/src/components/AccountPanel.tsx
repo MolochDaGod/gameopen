@@ -80,7 +80,7 @@ const CRAFTING_LINKS: Record<EraId, { label: string; href: string }[]> = {
   warlords: [
     { label: "Warlords crafting (Puter)", href: "https://puter.com/app/warlords" },
     { label: "grudge-crafting.puter.site", href: "https://grudge-crafting.puter.site" },
-    { label: "Client home island", href: "https://client.grudge-studio.com" },
+    { label: "Warlords (home island in-game)", href: "https://client.grudge-studio.com/home" },
   ],
   voxel: [
     { label: "Mine-Loader Realms", href: "https://mine-loader.vercel.app" },

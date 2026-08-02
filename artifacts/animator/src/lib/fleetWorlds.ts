@@ -122,14 +122,14 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island (Water)",
-    url: FLEET_WORLD_HOSTS.waterIsland,
-    fallbackUrl: FLEET_WORLD_HOSTS.water,
+    title: "Warlords Home Island (in-game only)",
+    url: FLEET_WORLD_HOSTS.warlords,
+    fallbackUrl: "https://client.grudge-studio.com/home",
     blurb:
-      "water.grudge-studio.com — production Warlords island (grudge6, harvest, nature). Canonical water SPA only.",
+      "Not a standalone fleet game. Home/water island is entered from Grudge Warlords after hero select. water.grudge-studio.com hosts world assets for the client.",
     kind: "island",
-    sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
-    featured: true,
+    sources: ["Warlords client", "https://water.grudge-studio.com"],
+    featured: false,
   },
   {
     id: "grudges-survival",
@@ -175,9 +175,10 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "warlords",
     title: "Grudge Warlords",
     url: FLEET_WORLD_HOSTS.warlords,
-    blurb: "Flagship Warlords client — characters, islands, lobbies.",
+    blurb:
+      "Flagship client — home island, sectors, maps, crafting, heroes all in-game. Open library does not list islands/sectors as separate titles.",
     kind: "full-world",
-    sources: ["D:\\GitHub\\GrudgeWarlords"],
+    sources: ["D:\\GitHub\\GrudgeWarlords", "https://client.grudge-studio.com/home"],
     featured: true,
   },
   {

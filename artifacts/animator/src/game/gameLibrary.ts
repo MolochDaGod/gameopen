@@ -5,7 +5,8 @@
  *
  * ## Era categories (SSOT for import / deploy — do not invent parallel games)
  *  - **voxel**    — VoxGrudge production, Mine-Loader Realms, DCQ, Z-Brawl, Worldbuilder
- *  - **warlords** — Fantasy / grudge6 / Warlords client, Genesis, islands, combat labs
+ *  - **warlords** — Fantasy flagship **client** (+ Open tools: Danger, Dressing).
+ *    Home islands, sectors, scatter maps live **inside Warlords**, not as Open tiles.
  *  - **nexus**    — Sci-fi / mech / metaverse / space-adjacent fleet
  *  - **armada**   — Naval / Grim Armada / sail maps
  *  - **account**  — Platform hub only (SSO, rooms shell) — not a game era
@@ -17,6 +18,9 @@
  *    single production open world at voxgrudge.vercel.app — not N launchers.
  * 3. No duplicates, no “worse” or legacy stacks beside the production entry.
  * 4. New era content ships under its era category only (import path = era).
+ * 5. **Warlords world content is not a standalone Open game.** Home island, water
+ *    island, sector seas, and in-game maps launch via **Grudge Warlords client**
+ *    (`warlordsInGameOnly`). Open may keep Danger training maps separately.
  */
 
 import { assetUrl } from "../lib/fleet";
@@ -63,7 +67,7 @@ export const ERA_CATEGORIES: readonly {
   {
     id: "warlords",
     label: "Warlords",
-    blurb: "Fantasy flagship · Genesis · islands · combat sandbox",
+    blurb: "Flagship client (home/sectors/islands inside) · Open Danger/Dressing",
     tone: "#e86a1a",
   },
   {
@@ -145,8 +149,17 @@ export type GameEntry = {
   sources: string[];
   /** Featured on library home row */
   featured?: boolean;
+  /**
+   * Warlords **in-game** world (home island, sector map, scatter island, etc.).
+   * Must not appear as a standalone Open library tile — use {@link warlordsClientUrl}.
+   */
+  warlordsInGameOnly?: boolean;
   status: "live" | "beta" | "local" | "migrating";
 };
+
+/** Canonical Warlords product entry (home islands / sectors live inside this client). */
+export const WARLORDS_CLIENT_URL = "https://client.grudge-studio.com/home";
+export const WARLORDS_PUBLIC_URL = "https://grudgewarlords.com/";
 
 /** Mine-Loader production Realms — fleet SSOT for voxel worlds (GitHub promote path). */
 export const MINE_LOADER = {
@@ -547,20 +560,22 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "grudox-island",
-    title: "GRUDOX Island",
-    short: "Persistent play shell island",
-    blurb: "Harvest, craft, build, PvP as your Warlords character. Account bag on Railway.",
+    title: "Warlords Island (in-game)",
+    short: "Inside Warlords only",
+    blurb:
+      "NOT a standalone Open game. Home / lobby island is entered from Grudge Warlords after character select.",
     category: "warlords",
-    tags: ["Island", "PvP"],
+    tags: ["Island", "In-game", "Warlords"],
     tone: "#5fd48a",
     posterKey: "lobby",
     icon: "loot",
     engines: ["r3f", "rapier"],
     launch: "external",
-    url: `${PLAY_SHELL_HOST}/?door=lobbyWorld`,
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", server: "railway" },
-    sources: ["play shell threejs-rapier"],
-    featured: true,
+    sources: ["Warlords client — not Open library"],
+    featured: false,
+    warlordsInGameOnly: true,
     status: "live",
   },
   {
@@ -568,15 +583,15 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudge Warlords",
     short: "Main Warlords client",
     blurb:
-      "Canonical Warlords hub — home, islands, crafting, hero fleet. SSO via id.grudge-studio.com; characters on Railway era=warlords.",
+      "Play Warlords here: home island, sectors, maps, crafting, hero fleet. Open does not list islands/sectors as separate games — enter them in-client. SSO + Railway era=warlords.",
     category: "warlords",
-    tags: ["Flagship", "Client", "Crafting"],
+    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting"],
     tone: "#e86a1a",
     posterKey: "zones",
     icon: "rally",
     engines: ["three", "colyseus"],
     launch: "external",
-    url: "https://client.grudge-studio.com/home",
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", server: "railway" },
     sources: ["F:\\GitHub\\warlords-crafting-suite", "F:\\GitHub\\GrudgeBuilder"],
     featured: true,
@@ -662,21 +677,22 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island (Water)",
-    short: "Production island",
+    title: "Warlords Home Island (in-game)",
+    short: "Inside Warlords only",
     blurb:
-      "water.grudge-studio.com/island — fleet Warlords water SPA (grudge6, harvest, nature). Not tactical-infinity.vercel.app.",
+      "Home / water island is a Warlords world destination — open Grudge Warlords, not a separate Open title. (water.grudge-studio.com serves the client world stack.)",
     category: "warlords",
-    tags: ["Island", "Warlords", "Water"],
+    tags: ["Island", "Home", "In-game", "Warlords"],
     tone: "#4fc3c8",
     posterKey: "lobby",
     icon: "loot",
     engines: ["three", "r3f"],
     launch: "external",
-    url: FLEET_WORLD_HOSTS.waterIsland,
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", edge: "cloudflare-worker" },
-    sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
-    featured: true,
+    sources: ["Warlords client home · water SPA is world mesh host not Open game"],
+    featured: false,
+    warlordsInGameOnly: true,
     status: "live",
   },
   {
@@ -991,9 +1007,15 @@ export function iconUrl(name: string): string {
   return assetUrl(`icons/${name}.png`);
 }
 
+/** Library UI never lists Warlords in-game worlds as standalone titles. */
+export function isLibraryVisible(g: GameEntry): boolean {
+  return !g.warlordsInGameOnly;
+}
+
 export function libraryByCategory(cat: GameCategory | "all"): GameEntry[] {
-  if (cat === "all") return [...GAME_LIBRARY];
-  return GAME_LIBRARY.filter((g) => g.category === cat);
+  const base =
+    cat === "all" ? [...GAME_LIBRARY] : GAME_LIBRARY.filter((g) => g.category === cat);
+  return base.filter(isLibraryVisible);
 }
 
 /** Eras are the library categories (voxel / warlords / nexus / armada). */
@@ -1008,12 +1030,18 @@ export function productionVoxelGames(): GameEntry[] {
       g.category === "voxel" &&
       g.status === "live" &&
       g.id !== "voxgrudge-lab" &&
-      !g.id.endsWith("-slot"),
+      !g.id.endsWith("-slot") &&
+      isLibraryVisible(g),
   );
 }
 
 export function featuredGames(): GameEntry[] {
-  return GAME_LIBRARY.filter((g) => g.featured);
+  return GAME_LIBRARY.filter((g) => g.featured && isLibraryVisible(g));
+}
+
+/** Warlords sector / home-island catalog (docs + agents) — not Open launch tiles. */
+export function warlordsInGameWorlds(): GameEntry[] {
+  return GAME_LIBRARY.filter((g) => g.warlordsInGameOnly);
 }
 
 export function mineLoaderGames(): GameEntry[] {
@@ -1038,6 +1066,25 @@ export function gameLaunchUrl(
   } = {},
 ): string | null {
   if (game.launch === "native" || game.launch === "editor") return null;
+
+  // Warlords home/sector/map content → always the Warlords client, never a fake standalone
+  if (game.warlordsInGameOnly || game.id === "water-island" || game.id === "grudox-island") {
+    try {
+      const u = new URL(WARLORDS_CLIENT_URL);
+      u.searchParams.set("open", "1");
+      u.searchParams.set("from", "gameopen");
+      u.searchParams.set("warlordsWorld", game.id);
+      if (params.token) {
+        u.searchParams.set("sso_token", params.token);
+        u.searchParams.set("grudge_token", params.token);
+      }
+      if (params.characterId) u.searchParams.set("characterId", params.characterId);
+      if (params.characterName) u.searchParams.set("characterName", params.characterName);
+      return u.toString();
+    } catch {
+      return WARLORDS_CLIENT_URL;
+    }
+  }
 
   // Specialized builders (hash routes / dual hosts)
   if (game.id === "mine-loader-realms" || game.launch === "mine-loader") {
