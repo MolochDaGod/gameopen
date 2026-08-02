@@ -181,9 +181,13 @@ export const MINE_LOADER = {
   localPath: "D:\\GitHub\\minegrudge\\Mine-Loader",
   mirrorPath: "F:\\GitHub\\voxgrudge\\Mine-Loader",
   github: MINE_LOADER_FLEET.github,
-  /** Live host (mine-loader.vercel.app — custom DNS may be pending) */
+  /**
+   * Canonical play host — multiplayer, self-hosted maps, harvest + DRC combat,
+   * account explorer avatar characters.
+   */
   clientUrl: MINE_LOADER_FLEET.client,
   edgeUrl: MINE_LOADER_FLEET.edge,
+  vercelUrl: MINE_LOADER_FLEET.vercel,
   /** Live Railway API (world authority + Codex catalog) */
   apiHost: "https://mine-loader-api-production.up.railway.app",
   docs: "docs/FLEET_DEPLOY.md",
@@ -194,10 +198,10 @@ export const MINE_LOADER = {
     "SSOT: github.com/MolochDaGod/mine-loader — promote editor/world/API there",
     "Never deploy production from Replit — GitHub → Vercel + Railway + CF",
     "Exactly one API replica (in-memory world authority → Postgres flush)",
-    "Open /voxel exports interchange → Realms scene; combat labs stay on Open /danger",
-    "Accounts: same Grudge ID + characterId on Open and Realms handoff",
-    "Primary SPA: https://mine-loader.vercel.app/ · edge: https://mine.grudge-studio.com",
-    "Wide fleet map: Mine-Loader docs/FLEET_WIDE_INTEGRATION.md (Builder + pipeline + VoxGrudge + GRUDOX)",
+    "Play host: https://mineloader.grudge-studio.com (alias mine.grudge-studio.com)",
+    "Modes: mode=harvest (Minecraft-like) · mode=drc (combat + explorer avatar)",
+    "Map deploys: self-hosted scenes via #/play?mapId=… + Railway worlds API",
+    "Accounts: Grudge ID + characterId + baseId=explorer on handoff",
     "Blocks/worlds API: mine-loader-api Railway; characters/bag stay on grudge-api-production",
   ],
 } as const;
@@ -274,11 +278,11 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   {
     id: "mine-loader-realms",
     title: "Mine-Loader Realms",
-    short: "Authoritative voxel worlds",
+    short: "Play · harvest · DRC · maps",
     blurb:
-      "Networked Minecraft-like Realms — build, combat, parties. World server = Mine-Loader (Railway Postgres, 1 replica). Launcher deploys & opens this stack.",
+      "mineloader.grudge-studio.com — multiplayer Realms, self-hosted map deploys, harvest (Minecraft-like) + DRC combat with your account explorer avatar. World API = Mine-Loader Railway (1 replica); characters = grudge-api.",
     category: "voxel",
-    tags: ["Worlds", "Multiplayer", "Deploy"],
+    tags: ["Worlds", "Multiplayer", "Harvest", "DRC", "Explorer", "Deploy"],
     tone: "#7ee0a0",
     posterKey: "library-mine",
     icon: "world-editor",

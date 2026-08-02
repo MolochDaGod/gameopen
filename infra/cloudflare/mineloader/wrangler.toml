@@ -1,18 +1,21 @@
-# Edge: mineloader.grudge-studio.com → Mine-Loader SPA on Vercel
+# Edge: mineloader.grudge-studio.com → Mine-Loader SPA (Vercel)
 #
-# Production host for GRUDOX Realms / Mine-Loader. Never Replit.
+# Canonical **play / multiplayer / map-deploy** host for voxel Realms.
+# Harvest mode + DRC combat use the same SPA with query/hash modes.
 #
 # Deploy (Cloudflare account with grudge-studio.com zone):
 #   cd infra/cloudflare/mineloader && npx wrangler deploy
 #
-# Origin: set Vercel project production domain (default mineloader.vercel.app).
-# After first Vercel deploy of the Mine-Loader SPA, attach custom domain
-# mineloader.grudge-studio.com either via this Worker OR Vercel custom domain.
-# Worker is preferred when you need CF edge + single scheme with open./grudox.
+# Origin override (optional):
+#   npx wrangler secret put ORIGIN_HOST
+#   # enter: mine-loader.vercel.app
+#
+# Related alias: mine.grudge-studio.com (Mine-Loader repo infra/cloudflare/mine)
 
 name = "mineloader-edge-proxy"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
+account_id = "ee475864561b02d4588180b8b9acf694"
 
 [[routes]]
 pattern = "mineloader.grudge-studio.com"

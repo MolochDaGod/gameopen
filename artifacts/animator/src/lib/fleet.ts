@@ -42,8 +42,12 @@ export const FLEET = {
   ai: "https://ai.grudge-studio.com",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
-  /** Mine-Loader SPA edge */
-  mineLoader: "https://mine.grudge-studio.com",
+  /** Canonical play host — multiplayer, maps, harvest, DRC + explorer avatar */
+  mineLoader: "https://mineloader.grudge-studio.com",
+  /** Short alias edge */
+  mineLoaderEdge: "https://mine.grudge-studio.com",
+  /** Vercel origin fallback */
+  mineLoaderVercel: "https://mine-loader.vercel.app",
   arena: "https://grudge-arena.grudge-studio.com",
   /** Production tool surfaces (builders / editors) — full map in productionTools.ts */
   grokBuilder: "https://grok-builder.vercel.app",

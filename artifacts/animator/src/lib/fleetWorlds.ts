@@ -1,20 +1,24 @@
 /**
- * Fleet voxel / world / DCQ hosts — verified live (probed 2026-07).
- *
- * Prefer these URLs for library launch + handoff. Do not use DNS names that
- * fail to resolve (e.g. mineloader.grudge-studio.com was NXDOMAIN).
+ * Fleet voxel / world / DCQ hosts — live smoke 2026-08.
  *
  * Ownership:
  *  - Full open world (VoxGrudge) → voxgrudge.vercel.app / GRUDOX /voxgrudge
- *  - Authoritative multiplayer Realms → mine-loader.vercel.app (Mine-Loader)
+ *  - Authoritative multiplayer Realms / harvest / DRC → **mineloader.grudge-studio.com**
  *  - DCQ dungeon RPG → dcq.grudge-studio.com
  *  - Ruins Brawler → gameopen /brawl only (not Genesis)
  *  - Warlord Genesis → warlord-genesis.vercel.app
  */
 
 export const FLEET_WORLD_HOSTS = {
-  /** Authoritative voxel Realms SPA (Mine-Loader monorepo deploy) */
-  mineLoader: "https://mine-loader.vercel.app/",
+  /**
+   * Canonical play host — multiplayer, map deploys, harvest mode, DRC combat,
+   * account explorer avatar characters. CF Worker → mine-loader.vercel.app.
+   */
+  mineLoader: "https://mineloader.grudge-studio.com/",
+  /** Short alias edge */
+  mineLoaderEdge: "https://mine.grudge-studio.com/",
+  /** Vercel origin fallback */
+  mineLoaderVercel: "https://mine-loader.vercel.app/",
   /** Mine-Loader Railway API (world authority + Codex /api/blocks) */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   /** Mine-Loader GitHub SSOT */
@@ -95,7 +99,9 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "mine-loader",
     title: "Mine-Loader Realms",
     url: FLEET_WORLD_HOSTS.mineLoader,
-    blurb: "Authoritative multiplayer voxel Realms (blocks, lobby, parties).",
+    fallbackUrl: FLEET_WORLD_HOSTS.mineLoaderEdge,
+    blurb:
+      "Play host mineloader.grudge-studio.com — multiplayer Realms, self-hosted maps, harvest (Minecraft-like) + DRC combat with account explorer avatar.",
     kind: "realms",
     sources: ["D:\\GitHub\\minegrudge\\Mine-Loader", "F:\\GitHub\\voxgrudge\\Mine-Loader"],
     featured: true,

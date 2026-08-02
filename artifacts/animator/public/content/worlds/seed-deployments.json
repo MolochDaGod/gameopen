@@ -17,7 +17,7 @@
     "blocks": "https://mine-loader-api-production.up.railway.app/api/blocks",
     "worlds": "https://mine-loader-api-production.up.railway.app/api/worlds",
     "healthz": "https://mine-loader-api-production.up.railway.app/api/healthz",
-    "spa": "https://mine.grudge-studio.com",
+    "spa": "https://mineloader.grudge-studio.com",
     "openProxy": "https://open.grudge-studio.com/api/worlds"
   },
   "journey": [
@@ -863,3 +863,4 @@
   "mapChunkCatalog": "content/worlds/voxel-map-chunk-deployments.json",
   "last30Catalog": "content/worlds/voxel-last30-catalog.json"
 }
+
