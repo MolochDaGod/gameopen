@@ -259,8 +259,9 @@ export function mineLoaderDrcUrl(
 }
 
 /**
- * Warlords flagship handoff (strengthens Open → grudgewarlords.com with same hero).
- * Pair with mineLoader* helpers so voxel + warlords eras share one characterId.
+ * Open Warlords play (era=warlords heroes only).
+ * characterId must be a Warlords-era hero — not a Mine-Loader/voxel character.
+ * Voxel Realms is a separate era roster (mineLoader* helpers).
  */
 export function warlordsPlayUrl(opts: {
   token?: string | null;
