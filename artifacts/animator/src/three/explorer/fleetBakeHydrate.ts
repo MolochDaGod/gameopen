@@ -106,7 +106,9 @@ export async function hydrateExplorerFleetBakes(opts: {
     else failed.push(bakeRel);
   };
 
-  // Universal loco (every class falls back here)
+  // Universal loco (every class falls back here).
+  // PURGED: torch run + thin arena sword_shield run (root-wrong / tip gait).
+  // SSOT: CANONICAL standing walk + locomotion/run_forward + samurai 1H.
   await tryOne("magic/Standing Walk Forward", [
     UNIVERSAL_LOCO.walkF,
     UNIVERSAL_LOCO.walkB,
@@ -117,22 +119,27 @@ export async function hydrateExplorerFleetBakes(opts: {
     "animations/sword/sword-and-shield-strafe",
     "animations/sword/sword-and-shield-strafe-2",
   ]);
-  await tryOne("uploads_2026_06/locomotion/torch run forward", [
+  await tryOne("locomotion/run_forward", [
     UNIVERSAL_LOCO.runF,
     UNIVERSAL_LOCO.runB,
     UNIVERSAL_LOCO.runL,
     UNIVERSAL_LOCO.runR,
     "animations/sword/run-with-sword",
   ]);
-  await tryOne("sword_shield/sword and shield idle", [
+  // Soft alt if run_forward missing on host
+  await tryOne("greatsword_samurai/gs_samurai_run_sword", [
+    UNIVERSAL_LOCO.runF,
+    "animations/sword/run-with-sword",
+  ]);
+  await tryOne("greatsword_samurai/gs_samurai_idle_sword", [
     UNIVERSAL_LOCO.idle,
     "animations/sword/sword-and-shield-idle",
     "animations/bow/unarmed-idle-01",
   ]);
-  await tryOne("sword_shield/sword and shield run", [
+  await tryOne("magic/Standing Run Forward", [
     "animations/sword/sword-and-shield-run",
   ]);
-  await tryOne("sword_shield/sword and shield attack", [
+  await tryOne("greatsword_samurai/gs_samurai_combo_a", [
     "animations/sword/sword-and-shield-attack",
     "animations/sword/one-hand-sword-combo",
   ]);

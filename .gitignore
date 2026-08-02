@@ -50,3 +50,4 @@ artifacts/animator/public/models/battle/**/*.glb
 artifacts/animator/public/models/cinema/stylized-pirate-ship.glb
 artifacts/animator/public/models/creatures/ocean/mutant-stingray.glb
 
+.env*

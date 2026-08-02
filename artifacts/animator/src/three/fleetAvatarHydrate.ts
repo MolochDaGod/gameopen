@@ -7,7 +7,13 @@
  */
 import * as THREE from "three";
 import { filterBindableTracks } from "./clipTracks";
-import { loadBakedClip, MOBILITY_CLIPS, DUAL_WIELD_CLIPS } from "./grudge/anims";
+import {
+  loadBakedClip,
+  MOBILITY_CLIPS,
+  DUAL_WIELD_CLIPS,
+  CANONICAL_LOCO,
+  isBannedLocomotionClip,
+} from "./grudge/anims";
 import { rematchClipToSkeleton } from "./grudge/skeleton";
 import type { AnimRole } from "./types";
 
@@ -33,46 +39,50 @@ export const FLEET_REQUIRED_ROLES: AnimRole[] = [
   "tread",
 ];
 
-/** Baked paths for core combat/loco (universal Danger Room base pack). */
+/**
+ * Baked paths for core combat/loco (universal Danger Room base pack).
+ * NEVER use banned sword_shield run or tip locomotion/walking — samurai + CANONICAL_LOCO.
+ */
 export const FLEET_CORE_BAKE: ReadonlyArray<{ role: AnimRole; bakeRel: string }> = [
-  { role: "idle", bakeRel: "sword_shield/sword and shield idle" },
-  { role: "walk", bakeRel: "magic/Standing Walk Forward" },
-  { role: "run", bakeRel: "sword_shield/sword and shield run" },
-  { role: "attack", bakeRel: "sword_shield/sword and shield attack" },
+  { role: "idle", bakeRel: "greatsword_samurai/gs_samurai_idle_sword" },
+  { role: "walk", bakeRel: CANONICAL_LOCO.walk },
+  { role: "run", bakeRel: CANONICAL_LOCO.run },
+  { role: "attack", bakeRel: "greatsword_samurai/gs_samurai_combo_a" },
   { role: "jump", bakeRel: "locomotion/jump" },
   { role: "hurt", bakeRel: "polearm/hurt" },
-  // Secondary walk/run fallbacks tried if primary 404
-  // (handled in load with fallbacks list)
 ];
 
 const CORE_FALLBACKS: Record<string, string[]> = {
   idle: [
+    "greatsword_samurai/gs_samurai_idle_sword",
+    "dual_wield/idle",
     "sword_shield/sword and shield idle",
-    "polearm/idle",
     "magic/standing idle",
     "unarmed/fight_idle",
   ],
   walk: [
-    "magic/Standing Walk Forward",
+    CANONICAL_LOCO.walk,
+    "greatsword_samurai/gs_samurai_walk_sword",
     "longbow/standing walk forward",
-    "polearm/walk",
+    "dual_wield/walk",
   ],
   run: [
-    "sword_shield/sword and shield run",
+    CANONICAL_LOCO.run,
+    CANONICAL_LOCO.runAlt,
     "magic/Standing Run Forward",
     "longbow/standing run forward",
-    "uploads_2026_06/locomotion/torch run forward",
-    "polearm/run",
+    "dual_wield/run",
   ],
   attack: [
-    "sword_shield/sword and shield attack",
+    "greatsword_samurai/gs_samurai_combo_a",
+    "dual_wield/attack",
     "polearm/attack",
     "unarmed/punching",
   ],
   jump: ["locomotion/jump"],
-  hurt: ["polearm/hurt", "polearm/hitback"],
-  block: ["sword_shield/sword and shield idle"], // soft stand-in
-  death: ["polearm/death", "polearm/hurt"],
+  hurt: ["polearm/hurt", "polearm/hitback", "dual_wield/hurt"],
+  block: ["dual_wield/block", "sword_shield/sword and shield block"],
+  death: ["polearm/death", "dual_wield/death", "polearm/hurt"],
 };
 
 export type HydrateRegister = (role: string, clip: THREE.AnimationClip) => void;
@@ -118,7 +128,13 @@ export async function hydrateFleetAvatarRoles(opts: {
     allowOverwrite = false,
   ): Promise<boolean> => {
     if (!opts.force && !allowOverwrite && opts.hasRole(role)) return true;
+    const isLoco = role === "walk" || role === "run" || role === "sprint";
     for (const path of paths) {
+      // Hard skip banned loco (sword_shield run, tip walk, run-to-roll)
+      if (isLoco && isBannedLocomotionClip(path)) {
+        failed.push(`${role}:${path}:banned`);
+        continue;
+      }
       try {
         const raw = await loadBakedClip(path);
         const clip = rematchClipToSkeleton(opts.model, raw);

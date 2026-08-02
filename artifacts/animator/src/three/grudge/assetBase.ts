@@ -70,7 +70,8 @@ export function assetLoadError(url: string, cause?: unknown): Error {
 export async function probeAssetHost(
   signal?: AbortSignal,
 ): Promise<{ ok: boolean; url: string; status?: number; error?: string }> {
-  const url = `${DEFAULT_ASSET_BASE}/anims/baked/locomotion/walking.json`;
+  // Probe a known-good cycle (locomotion/walking is BANNED tip gait — do not use as health check)
+  const url = `${DEFAULT_ASSET_BASE}/anims/baked/locomotion/run_forward.json`;
   try {
     const res = await fetch(url, { method: "HEAD", cache: "no-store", signal });
     return { ok: res.ok, url, status: res.status };

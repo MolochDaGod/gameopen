@@ -637,10 +637,10 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "dual_wield/dash",
       "ghost_rider/quakesmash",
       "locomotion/roll_forward",
-      // Soft fallbacks if samurai clip 404s
-      "2h_melee/great-sword-slash",
-      "2h_melee/great-sword-overhead",
-      "2h_melee/great-sword-blocking",
+      // Soft fallbacks if samurai clip 404s (dual_wield production bakes — not incomplete 2h_melee)
+      "dual_wield/slash",
+      "dual_wield/overhead",
+      "dual_wield/block",
     ],
   },
   /**

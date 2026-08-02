@@ -19,6 +19,7 @@ import {
   isNonLoopingLocoClip,
   isUnsuitableLocoCycle,
   resolveAnimPackClips,
+  CANONICAL_LOCO,
   type AnimPack,
 } from "./anims";
 // re-export for Studio weapon→pack swaps
@@ -469,11 +470,12 @@ export async function loadGrudge6CombatRig(
   const clips = new Map<string, THREE.AnimationClip>();
   const roles = new Map<string, string>();
 
+  /** Last-resort gait — never torch run or banned sword_shield run. */
   const SAFE_LOCO_FALLBACK: Record<string, string> = {
     idle: "magic/standing idle",
-    walk: "magic/Standing Walk Forward",
-    run: "uploads_2026_06/locomotion/torch run forward",
-    sprint: "uploads_2026_06/locomotion/torch run forward",
+    walk: CANONICAL_LOCO.walk,
+    run: CANONICAL_LOCO.run,
+    sprint: CANONICAL_LOCO.run,
     attack: "dual_wield/attack",
   };
 
@@ -513,7 +515,7 @@ export async function loadGrudge6CombatRig(
         roles.set(role, role);
         return clip;
       } catch (e2) {
-        // Last resort: known-good standing walk / torch run (never roll / tip-walk)
+        // Last resort: CANONICAL standing walk / run_forward (never roll / tip-walk / torch)
         const fb = SAFE_LOCO_FALLBACK[role];
         if (fb && fb !== rel) {
           try {
@@ -523,6 +525,22 @@ export async function loadGrudge6CombatRig(
             roles.set(role, role);
             return clip;
           } catch (e3) {
+            // Second soft: samurai run if primary run_forward 404
+            if (role === "run" || role === "sprint") {
+              try {
+                const clip = await tryLoad(CANONICAL_LOCO.runAlt);
+                console.warn(
+                  `[grudge6Runtime] ${role} fell back to ${CANONICAL_LOCO.runAlt} (was ${rel})`,
+                  e3,
+                );
+                clips.set(role, clip);
+                roles.set(role, role);
+                return clip;
+              } catch (e4) {
+                console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2, e3, e4);
+                return null;
+              }
+            }
             console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2, e3);
             return null;
           }
@@ -628,7 +646,7 @@ export async function loadGrudge6CombatRig(
     const runClip = clips.get("run")!;
     if (isUnsuitableLocoCycle(runClip, runClip.name || "run")) {
       console.error(
-        "[grudge6Runtime] RUN CLIP UNSUITABLE (roll/full-take) — stripping; torch run fallback",
+        "[grudge6Runtime] RUN CLIP UNSUITABLE (roll/full-take) — stripping; CANONICAL run_forward fallback",
       );
       clips.delete("run");
       roles.delete("run");
