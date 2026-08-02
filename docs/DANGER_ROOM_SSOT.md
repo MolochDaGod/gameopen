@@ -2,7 +2,8 @@
 
 **Live:** https://open.grudge-studio.com/danger  
 **Engine:** `artifacts/animator/src/three/Studio.ts`  
-**Updated:** 2026-07-29 (loader consolidation + mesh gaps)
+**Animation law:** [`ANIMATION_FLEET_SSOT.md`](./ANIMATION_FLEET_SSOT.md) · `three/anim/fleetAnimSsot.ts`  
+**Updated:** 2026-08-02 (fleet anim lanes + grudge6 mesh SSOT)
 
 ---
 

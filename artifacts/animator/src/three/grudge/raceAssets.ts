@@ -2,12 +2,13 @@
 // Production SSOT binaries on R2 CDN (assets.grudge-studio.com).
 // Textures: race atlases (webp). flipY=false + MeshStandard in loadBodyTexture.
 //
-// Delivery contract (see docs/CHARACTER_MESH_DELIVERY.md):
-//   mesh  → models/grudge6/races/*_Characters.fbx (FBX SSOT) + GLB fallback
+// Delivery contract (docs/CHARACTER_MESH_DELIVERY.md + docs/ANIMATION_FLEET_SSOT.md):
+//   mesh  → assets…/models/grudge6/races/*_Characters.glb (prod) + FBX atlas fallback
 //   atlas → textures/grudge6/{race}/*.webp  (also /assets/{race}/textures/)
-//   anims → /anims/baked/* (Open rewrite → arena) then R2
+//   anims → bip001-baked lane only: /anims/baked/* then assets…/prod/anims (never Mixamo)
 //   equip → child mesh visibility via gear presets / mesh_ids (fuzzy keys)
 // 2D UI portraits are separate: public/races/*.png + character.avatarUrl
+// HARD: do not use grudge-arena /cdn/assets/characters as primary mesh SSOT.
 
 export type RaceId =
   | "barbarians"

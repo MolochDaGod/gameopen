@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
 import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
+import {
+  assertClipMatchesLane,
+  bip001BakedUrlCandidates,
+} from "../anim/fleetAnimSsot";
 
 // Animation packs match the gear-preset `animPack` field. Each pack maps to a
 // set of pre-baked Bip001 clips (idle / walk / run / attack). The clips were
@@ -937,15 +941,12 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
   const fileUnderscore = file.replace(/\s+/g, "_");
   const prodPack = prodAnimPackId(pack);
 
-  const urls: string[] = [];
+  // Fleet SSOT order (docs/ANIMATION_FLEET_SSOT.md): same-origin baked → R2 prod → hosts
+  const urls: string[] = [...bip001BakedUrlCandidates(clean)];
   const bakedJson = `anims/baked/${clean}.json`;
 
-  // Same-origin first (Open vercel rewrites → arena/public)
   if (typeof window !== "undefined" && window.location?.origin) {
-    urls.push(`${window.location.origin}/${bakedJson}`);
-    urls.push(`/${bakedJson}`);
-  } else {
-    urls.push(`/${bakedJson}`);
+    urls.unshift(`${window.location.origin}/${bakedJson}`);
   }
   if (baseOverride) {
     urls.push(`${baseOverride.replace(/\/+$/, "")}/${bakedJson}`);
@@ -959,12 +960,11 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
       urls.push(`${prodBase}/${prodPack}/${stem}.json`);
       urls.push(`${prodBase}/${prodPack}/${stem}.glb`);
     }
-    // Same-origin proxy for prod if configured
     urls.push(`/prod/anims/${prodPack}/${fileSlug}.json`);
     urls.push(`/prod/anims/${prodPack}/${fileSlug}.glb`);
   }
 
-  // Arena CDN (historical) then fleet hosts
+  // Fleet hosts (historical arena last via resolveGrudgeAssetCandidates)
   urls.push(`${FLEET_ASSET_HOSTS.arena}/${bakedJson}`);
   urls.push(...resolveGrudgeAssetCandidates(bakedJson));
   return [...new Set(urls)];
@@ -1040,6 +1040,13 @@ export async function loadBakedClip(rel: string, baseOverride?: string): Promise
         lastErr = new Error(
           `non-looping loco (roll/transition) ${rel} dur=${clip.duration.toFixed(2)} pelvisErr=${pelvisLoopError(clip).toFixed(3)}`,
         );
+        continue;
+      }
+      // Refuse Mixamo tracks on bip001-baked lane (wrong bake / wrong path)
+      try {
+        assertClipMatchesLane("bip001-baked", clip, rel);
+      } catch (laneErr) {
+        lastErr = laneErr;
         continue;
       }
       return clip;

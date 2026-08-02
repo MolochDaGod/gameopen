@@ -44,8 +44,17 @@ import {
 } from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
+import {
+  grudge6RaceMeshCandidates,
+  isForbiddenPrimaryUrl,
+  tagMixerRoot,
+  type Grudge6RaceKey,
+} from "../anim/fleetAnimSsot";
 
-/** Arena race folder names under /cdn/assets/characters/{race}/ */
+/**
+ * Historical arena path fragments only — NOT mesh SSOT.
+ * @deprecated Prefer R2 models/grudge6/races via fleetAnimSsot.
+ */
 export const ARENA_RACE_DIR: Record<RaceId, string> = {
   "western-kingdoms": "human",
   barbarians: "barbarian",
@@ -55,7 +64,7 @@ export const ARENA_RACE_DIR: Record<RaceId, string> = {
   undead: "undead",
 };
 
-/** Arena GLB filenames (prod-proven on grudge-arena.grudge-studio.com). */
+/** Filenames match R2 models/grudge6/races/*_Characters.glb */
 export const ARENA_RACE_GLB: Record<RaceId, string> = {
   "western-kingdoms": "WK_Characters.glb",
   barbarians: "BRB_Characters.glb",
@@ -65,13 +74,13 @@ export const ARENA_RACE_GLB: Record<RaceId, string> = {
   undead: "UD_Characters.glb",
 };
 
-/** Prefer same-origin proxy (vercel rewrites → arena); fall back to absolute arena. */
+/** @deprecated Arena origin is fallback-only; fleet SSOT is assets.grudge-studio.com */
 export const ARENA_ORIGIN = FLEET_ASSET_HOSTS.arena;
 
+/** Same-origin historical path — last-resort only. */
 export function arenaCharacterGlbUrl(raceId: RaceId): string {
   const dir = ARENA_RACE_DIR[raceId];
   const file = ARENA_RACE_GLB[raceId];
-  // Same-origin first so open.grudge-studio.com can proxy via vercel.json
   return `/cdn/assets/characters/${dir}/${file}`;
 }
 
@@ -106,27 +115,37 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
   p = (async (): Promise<RaceTemplate> => {
     let lastErr: unknown;
     const file = ARENA_RACE_GLB[raceId];
-    const dir = ARENA_RACE_DIR[raceId];
 
-    // 1) R2 production GLB first (always CORS + 200 for WK/BRB/…_Characters.glb).
-    //    Arena absolute second — CORS from open.grudge-studio.com is flaky.
+    // Fleet SSOT: R2 grudge6 races → same-origin resolve → FBX atlas.
+    // Arena /cdn/assets/characters is LAST RESORT only (docs/ANIMATION_FLEET_SSOT.md).
     {
-      const r2Glb = `https://assets.grudge-studio.com/models/grudge6/races/${file}`;
       const rel = `models/grudge6/races/${file}`;
-      const sameOriginArena = `/cdn/assets/characters/${dir}/${file}`;
-      const urls = [
-        r2Glb,
+      const primary = [
+        ...grudge6RaceMeshCandidates(raceId as Grudge6RaceKey, file),
         ...resolveAssetCandidates(rel),
-        sameOriginArena,
+      ];
+      const lastResort = [
+        arenaCharacterGlbUrl(raceId),
         arenaCharacterGlbUrlAbsolute(raceId),
       ];
+      const urls = [...new Set([...primary, ...lastResort])];
       const loader = sharedGltfLoader();
-      for (const url of [...new Set(urls)]) {
-        // Skip known-bad R2 mirror of arena path
+      for (const url of urls) {
         if (url.includes("assets.grudge-studio.com/cdn/assets/")) continue;
         try {
           const gltf = await loader.loadAsync(url);
-          console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
+          if (isForbiddenPrimaryUrl(url)) {
+            console.warn(
+              `[grudge6Runtime] loaded ${raceId} from non-SSOT host (fallback): ${url}`,
+            );
+          } else {
+            console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
+          }
+          tagMixerRoot(gltf.scene, {
+            lane: "bip001-baked",
+            surface: "danger",
+            raceId,
+          });
           return { object: gltf.scene, pipeline: "glb-baked", url };
         } catch (e) {
           lastErr = e;
@@ -134,12 +153,17 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
       }
     }
 
-    // 3) FBX modular kit — only path that should rebind Toon RTS atlas.
+    // FBX modular kit — only path that should rebind Toon RTS atlas.
     try {
       const { loadCharacterModel } = await import("./loadCharacter");
       const race = RACE_ASSETS[raceId];
       const loaded = await loadCharacterModel(race.modelUrl);
       console.info(`[grudge6Runtime] race kit FBX ready ${raceId} ${race.modelUrl}`);
+      tagMixerRoot(loaded.group, {
+        lane: "bip001-baked",
+        surface: "danger",
+        raceId,
+      });
       return {
         object: loaded.group,
         pipeline: "fbx-atlas",

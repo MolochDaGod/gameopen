@@ -1,5 +1,15 @@
 # Animation content SSOT
 
+**Fleet law (rigs · loaders · deploys):** [`docs/ANIMATION_FLEET_SSOT.md`](../../docs/ANIMATION_FLEET_SSOT.md)  
+**Runtime router:** `artifacts/animator/src/three/anim/fleetAnimSsot.ts`
+
+| Lane | Skeleton | Production clips |
+|------|----------|------------------|
+| **bip001-baked** | grudge6 Bip001 | `/anims/baked/{pack}/…` + `prod/anims` |
+| **mixamo-explorer** | 25-bone Mixamo | `/anim/animations/…` only |
+
+Do **not** cross-bind. Do **not** add per-game skill/anim tables outside this tree + `grudge/anims.ts`.
+
 | File | Purpose |
 |------|---------|
 | `database.json` | All clips: packs, roles, bake paths, surfaces, weapons |

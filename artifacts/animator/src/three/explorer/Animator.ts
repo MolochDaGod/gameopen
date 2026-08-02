@@ -30,6 +30,9 @@ const OVERLAY_RATE_MAX = 1.35;
 /**
  * Drives one {@link VoxelCharacter} with a single-active-clip state machine.
  *
+ * **Fleet lane: mixamo-explorer only** (docs/ANIMATION_FLEET_SSOT.md).
+ * Do not bind Bip001 `/anims/baked/*` packs here — that is grudge6Runtime.
+ *
  * Design: exactly one clip is dominant at a time and the mixer crossfades
  * between them. Locomotion, blocking/aim holds, and one-shot actions (attacks,
  * rolls, dashes, hits, death) all resolve to a clip and flow through the same
@@ -43,6 +46,9 @@ const OVERLAY_RATE_MAX = 1.35;
 export class Animator {
   readonly character: VoxelCharacter;
   readonly root: THREE.Group;
+
+  /** Always mixamo-explorer for this class. */
+  readonly fleetAnimLane = "mixamo-explorer" as const;
 
   private readonly mixer: THREE.AnimationMixer;
   private readonly clips: Map<string, THREE.AnimationClip>;
