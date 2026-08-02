@@ -77,7 +77,7 @@ Full system: [`GRUDGE6_DRC_COMPLETE_SYSTEM.md`](GRUDGE6_DRC_COMPLETE_SYSTEM.md)
 1. **Warlord Genesis** — Mixamo combat still primary; migrate to grudge6 + Bip001 baked (same as Open Danger).
 2. **Warlords client island3d** — `modelLoader` Mixamo remap remains for some characters; production heroes should use grudge6 + Bip001 packs.
 3. **Hero Command** — race kits good; full DRC weapon-skill layer incomplete vs Open.
-4. **Multiverse** — was on banned sword_shield run; **fixed** to samurai primary + Open-first hosts (redeploy Multiverse to ship).
+4. **Multiverse** — already ships `game/drcAnimSsot.js` + banned-loco filters (`b3961af`); packs use samurai 1H + Open baked hosts. No extra push needed for loco purge.
 
 ---
 
