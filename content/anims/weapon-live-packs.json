@@ -87,19 +87,25 @@
     "sword": {
       "label": "1H Sword",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "dual_wield/sword_dash_attack",
+        "skill4": "ghost_rider/quakesmash",
+        "dodge": "locomotion/dodge_back",
+        "roll": "locomotion/roll_forward"
       },
       "liveWhenIncomplete": {
-        "note": "sword_shield idle/attack not baked yet → polearm + shared loco",
-        "idle": "polearm/idle",
+        "note": "Samurai sword stance SSOT; dual_wield/locomotion soft fallbacks",
+        "idle": "dual_wield/idle",
         "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "polearm/attack"
+        "run": "locomotion/run_forward",
+        "attack": "dual_wield/attack"
       },
       "mixamoSources": [
         "anim/sword/sword-and-shield-idle.fbx",
@@ -108,36 +114,27 @@
         "anim/sword/one-hand-sword-combo.fbx",
         "anim/sword/slash-advance.fbx"
       ],
-      "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"]
+      "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"],
+      "notes": [
+        "2026-08: purged thin sword_shield run/attack as primary — samurai + dual_wield + GR finishers"
+      ]
     },
     "shield": {
       "label": "Shield (offhand / 1H stance)",
       "animPack": "sword_shield",
-      "fallbackPack": "magic",
-      "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
-      },
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword"
     },
     "axe": {
       "label": "1H Axe",
       "animPack": "sword_shield",
-      "fallbackPack": "magic",
-      "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
-      },
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword"
     },
     "dagger": {
       "label": "Daggers",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword",
       "mixamoSources": ["anim/knife/knife-idle.fbx", "anim/knife/stabbing.fbx"],
       "skillSlots": ["dagger_stab", "dagger_flurry", "dagger_backstab", "dagger_smoke"]
@@ -145,7 +142,7 @@
     "mace": {
       "label": "1H Mace",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword",
       "mixamoSources": ["anim/mace/hell-slammer-a.fbx"],
       "skillSlots": ["mace_crush", "mace_slam", "mace_whirl", "mace_ground"]
@@ -153,18 +150,18 @@
     "hammer": {
       "label": "1H Hammer",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
-      "inheritsFrom": "mace",
+      "fallbackPack": "samurai",
+      "inheritsFrom": "sword",
       "skillSlots": ["hammer_pound", "hammer_quake", "hammer_spin", "hammer_meteor"]
     },
     "spear": {
-      "label": "Spear / Lance",
+      "label": "Spear / Lance (Ikkaku Madarame bake)",
       "animPack": "polearm",
       "fallbackPack": null,
       "liveRoles": {
         "idle": "polearm/idle",
-        "walk": "polearm/walk",
-        "run": "polearm/run",
+        "walk": "magic/Standing Walk Forward",
+        "run": "locomotion/run_forward",
         "attack": "polearm/attack",
         "skill1": "polearm/skill1",
         "skill2": "polearm/skill2",
@@ -172,7 +169,8 @@
         "skill4": "polearm/skill4",
         "special": "polearm/special",
         "thrust": "polearm/thrust",
-        "overhead": "polearm/overhead"
+        "overhead": "polearm/overhead",
+        "roll": "locomotion/roll_forward"
       },
       "mixamoSources": ["anim/spear/spear1.fbx", "anim/spear/lance-spartan.fbx"],
       "skillSlots": ["spear_thrust", "spear_lunge", "spear_impale", "spear_rush"]

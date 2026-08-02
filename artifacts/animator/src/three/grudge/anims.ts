@@ -338,7 +338,20 @@ export const BANNED_LOCOMOTION_CLIPS = [
   "boxanimations/locomotion/Quick Roll To Run (1)",
   /** Tips / lean on Arena Bip001 kits — never map walk here */
   "locomotion/walking",
+  /**
+   * PURGED as primary gait (2026-08) — thin arena sword_shield run often
+   * root-wrong / wrong-way on grudge6. Prefer samurai run_sword + locomotion/run_forward.
+   */
+  "sword_shield/sword and shield run",
 ] as const;
+
+/** Proven Bip001 gait cycles (shared across packs). */
+export const CANONICAL_LOCO = {
+  walk: "magic/Standing Walk Forward",
+  run: "locomotion/run_forward",
+  /** Soft fallback if run_forward missing */
+  runAlt: "greatsword_samurai/gs_samurai_run_sword",
+} as const;
 
 export function isBannedLocomotionClip(rel: string): boolean {
   const n = String(rel || "")
@@ -421,23 +434,26 @@ export function isUnsuitableLocoCycle(clip: THREE.AnimationClip, rel = ""): bool
 export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
   unarmed: {
     idle: "unarmed/fight_idle",
-    // Pack-neutral cycle walk (locomotion/walking tips Arena GLB kits → “falling”).
-    walk: "magic/Standing Walk Forward",
-    // True forward run cycle — NOT locomotion/running (run-to-roll).
-    run: "uploads_2026_06/locomotion/torch run forward",
-    attack: "unarmed/punching",
+    walk: CANONICAL_LOCO.walk,
+    run: CANONICAL_LOCO.run,
+    attack: "dual_wield/attack",
     extras: [
+      "dual_wield/attack2",
+      "dual_wield/combo",
+      "dual_wield/kick",
       "dual_wield/hit",
       "dual_wield/hurt",
       "dual_wield/death",
       "dual_wield/jump",
       "dual_wield/dodgeF",
       "dual_wield/dodgeB",
+      "locomotion/roll_forward",
+      "ghost_rider/quakesmash",
     ],
   },
   magic: {
     idle: "magic/standing idle",
-    walk: "magic/Standing Walk Forward",
+    walk: CANONICAL_LOCO.walk,
     run: "magic/Standing Run Forward",
     attack: "magic/standing 1h cast spell 01",
     extras: [
@@ -447,61 +463,82 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "polearm/skill2",
       "dual_wield/hit",
       "dual_wield/death",
+      "locomotion/roll_forward",
     ],
   },
+  /**
+   * 1H sword / shield / axe / dagger — PURGED thin arena sword_shield primary.
+   * Uses retargeted **samurai sword stance** loco+attack + dual_wield skills/dash
+   * + Ghost Rider rolls/finishers. Old sword_shield run/attack are BANNED.
+   */
   sword_shield: {
-    // Primary SSOT: arena/Open sword_shield Bip001 bakes (mirrored to R2).
-    // Walk missing on fleet → magic Standing Walk Forward (proven cycle).
-    idle: "sword_shield/sword and shield idle",
-    walk: "magic/Standing Walk Forward",
-    run: "sword_shield/sword and shield run",
-    attack: "sword_shield/sword and shield attack",
+    idle: "greatsword_samurai/gs_samurai_idle_sword",
+    walk: "greatsword_samurai/gs_samurai_walk_sword",
+    run: "greatsword_samurai/gs_samurai_run_sword",
+    attack: "greatsword_samurai/gs_samurai_combo_a",
     extras: [
-      "sword_shield/sword and shield block",
+      // 1H skill / combo layer (samurai + dual_wield)
+      "greatsword_samurai/gs_samurai_combo_b",
+      "greatsword_samurai/gs_samurai_dash_opener",
+      "greatsword_samurai/gs_samurai_teleport_strike",
+      "greatsword_samurai/gs_samurai_jump_sword",
+      "dual_wield/attack",
       "dual_wield/attack2",
       "dual_wield/attack3",
       "dual_wield/combo",
-      "dual_wield/block",
+      "dual_wield/slash",
+      "dual_wield/thrust",
+      "dual_wield/overhead",
       "dual_wield/dash",
+      "dual_wield/sword_dash_attack",
+      "dual_wield/block",
       "dual_wield/hit",
       "dual_wield/hurt",
       "dual_wield/death",
       "dual_wield/jump",
-      "polearm/slash",
-      "polearm/thrust",
-      "polearm/overhead",
-      "polearm/combo",
-      "polearm/skill1",
-      "polearm/skill2",
-      // Soft fallbacks if sword_shield primary 404s
-      "magic/standing idle",
-      "dual_wield/attack",
+      // Ghost Rider chain / finisher (slash VFX + dash attacks)
+      "ghost_rider/quakesmash",
+      "ghost_rider/chain_spin",
+      "ghost_rider/chain_stab",
+      "ghost_rider/forward_chain_slam",
+      // Shared rolls (correct facing — not old sword_shield run)
+      "locomotion/dodge_fwd",
+      "locomotion/dodge_back",
+      "locomotion/dodge_l",
+      "locomotion/dodge_r",
+      "locomotion/roll_forward",
+      "locomotion/run_forward",
+      CANONICAL_LOCO.walk,
+      // Soft: dual_wield idle if samurai 404
       "dual_wield/idle",
+      "dual_wield/walk",
+      "dual_wield/run",
+      "sword_shield/sword and shield idle",
+      "sword_shield/sword and shield block",
     ],
   },
   /**
-   * Samurai — production greatsword_samurai Bip001 JSON (retargeted).
-   * Paths resolve via prod/anims/greatsword_samurai/* first.
+   * Samurai — retargeted Bip001 (greatsword_samurai). Also drives 1H via sword_shield.
    */
   samurai: {
-    idle: "greatsword_samurai/gs_samurai_idle",
-    walk: "greatsword_samurai/gs_samurai_walk",
-    run: "greatsword_samurai/gs_samurai_run",
+    idle: "greatsword_samurai/gs_samurai_idle_sword",
+    walk: "greatsword_samurai/gs_samurai_walk_sword",
+    run: "greatsword_samurai/gs_samurai_run_sword",
     attack: "greatsword_samurai/gs_samurai_combo_a",
     extras: [
       "greatsword_samurai/gs_samurai_combo_b",
       "greatsword_samurai/gs_samurai_dash_opener",
       "greatsword_samurai/gs_samurai_teleport_strike",
       "greatsword_samurai/gs_samurai_jump",
+      "greatsword_samurai/gs_samurai_jump_sword",
       "greatsword_samurai/gs_samurai_sword_on",
       "greatsword_samurai/gs_samurai_sword_off",
-      "greatsword_samurai/gs_samurai_idle_sword",
-      "greatsword_samurai/gs_samurai_walk_sword",
-      "greatsword_samurai/gs_samurai_run_sword",
-      // skill aliases filled by aliasCombatRoles from attack when missing
-      "polearm/skill1",
-      "polearm/skill2",
-      "polearm/special",
+      "greatsword_samurai/gs_samurai_idle",
+      "greatsword_samurai/gs_samurai_walk",
+      "greatsword_samurai/gs_samurai_run",
+      "dual_wield/dash",
+      "ghost_rider/quakesmash",
+      "locomotion/roll_forward",
     ],
   },
   longbow: {
@@ -519,15 +556,16 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "longbow/aim-idle",
       "longbow/run-forward",
       "longbow/walk-forward",
+      "locomotion/roll_forward",
     ],
   },
   /**
-   * Spear / 2H polearm — Madarame Bip001 bake (same-origin + prod mirror).
+   * Spear / polearm — Ikkaku Madarame Bip001 bake (ikkaku_madarame.glb).
    */
   polearm: {
     idle: "polearm/idle",
-    walk: "magic/Standing Walk Forward",
-    run: "uploads_2026_06/locomotion/torch run forward",
+    walk: CANONICAL_LOCO.walk,
+    run: CANONICAL_LOCO.run,
     attack: "polearm/attack",
     extras: [
       "polearm/attack2",
@@ -546,16 +584,17 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "polearm/power",
       "polearm/hurt",
       "polearm/death",
+      "locomotion/roll_forward",
+      "ghost_rider/quakesmash",
     ],
   },
   /**
-   * 2H mace / war-hammer — not swords. SC_SC_Jab / ChargeStrike / 180x2Sweep /
-   * SummonCrows from 2hweaponhammerretarget.glb (rotation-only, weapon chain off).
+   * 2H hammer — Scarecrow SC_SC bake (2hweaponhammerretarget.glb).
    */
   hammer: {
     idle: "twohand_hammer/idle",
     walk: "twohand_hammer/walk",
-    run: "uploads_2026_06/locomotion/torch run forward",
+    run: CANONICAL_LOCO.run,
     attack: "twohand_hammer/attack",
     extras: [
       "twohand_hammer/attack1",
@@ -574,12 +613,11 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "twohand_hammer/step-right",
       "twohand_hammer/jump",
       "twohand_hammer/land",
+      "locomotion/roll_forward",
     ],
   },
   /**
-   * 2H sword / greatsword — **samurai** production bake (Bip001 JSON).
-   * Primary attack + skills 1–4 use gs_samurai_* clips with Getsuga/slash VFX.
-   * 2h_melee GLB paths remain as soft fallbacks via loadBakedClip candidates if needed.
+   * 2H sword / greatsword — samurai production bake.
    */
   twohand: {
     idle: "greatsword_samurai/gs_samurai_idle_sword",
@@ -596,6 +634,9 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "greatsword_samurai/gs_samurai_jump",
       "greatsword_samurai/gs_samurai_sword_on",
       "greatsword_samurai/gs_samurai_sword_off",
+      "dual_wield/dash",
+      "ghost_rider/quakesmash",
+      "locomotion/roll_forward",
       // Soft fallbacks if samurai clip 404s
       "2h_melee/great-sword-slash",
       "2h_melee/great-sword-overhead",
