@@ -308,3 +308,171 @@ export const DRC_DANGER_MAP_IDS = [
   "pirate",
   "climbing",
 ] as const;
+
+// ── Warlords-era fleet (external hosts) ─────────────────────────────────────
+
+/**
+ * Production binary SSOT for all Warlords-era 3D games.
+ * Mesh: R2 grudge6 race GLB · Anims: Open /anims/baked Bip001 · HUD: ui.grudge-studio.com
+ */
+export const WARLORDS_ERA_ASSET_SSOT = {
+  meshCdn: "https://assets.grudge-studio.com",
+  raceKit: (prefix: string) =>
+    `https://assets.grudge-studio.com/models/grudge6/races/${prefix}_Characters.glb`,
+  atlasRoot: "https://assets.grudge-studio.com/textures/grudge6",
+  animsBaked: "https://open.grudge-studio.com/anims/baked",
+  animsBakedAlias: "https://gameopen.vercel.app/anims/baked",
+  uiHydra: "https://ui.grudge-studio.com",
+  pirateLobbyMesh:
+    "https://assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb",
+  /** Never primary for Warlords hero mesh */
+  forbidden: [
+    "arena CDN as primary race kit",
+    "Meshy / capsule heroes",
+    "live Mixamo FBX on Bip001",
+    "sword_shield/sword and shield run as primary loco",
+    "locomotion/running as primary run (run-to-roll)",
+    "threejs-rapier-react-three-controll as anim host",
+    "GRUDOX / Explorer product for pirate-islands lobby",
+  ],
+} as const;
+
+export type WarlordsFleetHostStatus =
+  | "drc-green"
+  | "drc-partial"
+  | "mixamo-legacy"
+  | "in-game-only"
+  | "tools";
+
+/**
+ * Warlords-era library / product hosts — loaders + deploy ownership.
+ * Green = grudge6 mesh + Bip001 baked + DRC-ish input; Partial = grudge6 mesh but
+ * incomplete packs; Mixamo = needs DRC migration; in-game-only = Warlords client.
+ */
+export const WARLORDS_ERA_FLEET: readonly {
+  id: string;
+  title: string;
+  host: string;
+  deploy: string;
+  mesh: "grudge6-r2" | "grudge6-via-client" | "mixed" | "n/a";
+  anim: "bip001-open" | "bip001-local" | "mixamo" | "via-client" | "n/a";
+  loader: string;
+  status: WarlordsFleetHostStatus;
+  notes: string;
+}[] = [
+  {
+    id: "open-danger",
+    title: "Open Danger Room (+ maps)",
+    host: "https://open.grudge-studio.com/danger",
+    deploy: "gameopen Vercel",
+    mesh: "grudge6-r2",
+    anim: "bip001-open",
+    loader: "GrudgeAvatar / grudge6Runtime + characterDeploy + anims.ts",
+    status: "drc-green",
+    notes: "DRC L0–L4 SSOT binary",
+  },
+  {
+    id: "warlords-client",
+    title: "Grudge Warlords client",
+    host: "https://client.grudge-studio.com/home",
+    deploy: "GrudgeBuilder Vercel",
+    mesh: "grudge6-via-client",
+    anim: "via-client",
+    loader: "SharedGltfPipeline (DRACO+Meshopt) + RACE_GRUDGE6 + grudge6Equipment",
+    status: "drc-partial",
+    notes:
+      "Mesh CDN correct; island3d modelLoader still Mixamo-remap heavy — prefer Bip001 bakes for heroes",
+  },
+  {
+    id: "pirate-islands",
+    title: "Pirate lobby opening + tutorial",
+    host: "https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands",
+    deploy: "Warlords client only",
+    mesh: "grudge6-via-client",
+    anim: "via-client",
+    loader: "pirate-islands CDN GLB + grudge6 heroes",
+    status: "in-game-only",
+    notes: "Not GRUDOX / not Explorer / not Open tile",
+  },
+  {
+    id: "multiverse",
+    title: "Grudge Multiverse",
+    host: "https://grudge-multiverse.vercel.app/",
+    deploy: "grudge-multiverse Vercel + Railway rooms",
+    mesh: "grudge6-r2",
+    anim: "bip001-open",
+    loader: "grudge6Loader + grudge6SSOT + animPackLoader (Open baked)",
+    status: "drc-green",
+    notes: "Stone grudge6SSOT; packs must match Open samurai 1H purge",
+  },
+  {
+    id: "grudge-arena",
+    title: "Grudge Arena",
+    host: "https://grudge-arena.grudge-studio.com/",
+    deploy: "grudge-arena Vercel",
+    mesh: "grudge6-r2",
+    anim: "bip001-local",
+    loader: "createBakedGrudge6Unit + /api/assets proxy to R2",
+    status: "drc-green",
+    notes: "Baked Bip001 primary; arena /cdn is props — race kits via grudge6AssetUrl",
+  },
+  {
+    id: "hero-command",
+    title: "Hero Command RTS",
+    host: "https://play.grudge-studio.com/",
+    deploy: "hero-rts artifact Vercel",
+    mesh: "grudge6-r2",
+    anim: "bip001-local",
+    loader: "grudge6RaceAssets + AssetRegistry CDN",
+    status: "drc-partial",
+    notes: "Race kits CDN-verified; combat packs less complete than Open DRC",
+  },
+  {
+    id: "warlord-genesis",
+    title: "Warlord Genesis",
+    host: "https://warlord-genesis.vercel.app/lobby",
+    deploy: "warlord-genesis Vercel",
+    mesh: "mixed",
+    anim: "mixamo",
+    loader: "Mixamo Animator (mixamorig*) + some grudge6 faction data",
+    status: "mixamo-legacy",
+    notes: "GAP: still Mixamo combat pipeline — migrate to Bip001 baked + grudge6 kit",
+  },
+  {
+    id: "rts-grudge",
+    title: "Warlords Forge Client",
+    host: "https://rts-grudge.vercel.app/",
+    deploy: "RTS-Grudge Vercel",
+    mesh: "mixed",
+    anim: "mixamo",
+    loader: "Forge/RTS shell — pair with forge + grudge6 where used",
+    status: "drc-partial",
+    notes: "Map tooling + PvP lobby; not full DRC combat SSOT",
+  },
+  {
+    id: "foundry",
+    title: "Character Foundry",
+    host: "https://character.grudge-studio.com/",
+    deploy: "Foundry Vercel",
+    mesh: "grudge6-r2",
+    anim: "n/a",
+    loader: "create/equip → handoff to Warlords client",
+    status: "tools",
+    notes: "No combat DRC required; mesh must be grudge6",
+  },
+  {
+    id: "dressing",
+    title: "Open Dressing Room",
+    host: "https://open.grudge-studio.com/dressing",
+    deploy: "gameopen",
+    mesh: "mixed",
+    anim: "mixamo",
+    loader: "Explorer Mixamo + optional GrudgeAvatar preview",
+    status: "drc-partial",
+    notes: "Authoring surface — Play handoff uses bip001 combat",
+  },
+] as const;
+
+export function warlordsFleetByStatus(status: WarlordsFleetHostStatus) {
+  return WARLORDS_ERA_FLEET.filter((h) => h.status === status);
+}

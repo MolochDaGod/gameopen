@@ -142,6 +142,8 @@ Open may deep-link or catalog-document these worlds, but they are **`warlordsInG
 
 Library eras: [`docs/ERA_LIBRARY.md`](docs/ERA_LIBRARY.md) · deploy gate: `npm run deploy:gate` / `npm run deploy:prod`.
 
+**DRC + grudge6 on Warlords-era games:** loaders, asset hosts, deploy matrix — [`docs/WARLORDS_ERA_DRC_AUDIT.md`](docs/WARLORDS_ERA_DRC_AUDIT.md) · code `drcSurfaceContract.ts` (`WARLORDS_ERA_FLEET`).
+
 ## Asset production pipeline
 
 Scale → purpose classify → convert (grudge-convert) → **Draco last** → AI/game-flow verify.
@@ -197,6 +199,7 @@ Live: [open…/annihilate-demo?hero=elf_worge](https://open.grudge-studio.com/an
 | [DANGER_ROOM_UX_CONSOLIDATION.md](docs/DANGER_ROOM_UX_CONSOLIDATION.md) | One Danger Room, HUD, equip, grudge6 hands |
 | [MINE_LOADER_SSOT.md](docs/MINE_LOADER_SSOT.md) | World editor SSOT, physics, lobby promote |
 | [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
+| [WARLORDS_ERA_DRC_AUDIT.md](docs/WARLORDS_ERA_DRC_AUDIT.md) | Warlords games · grudge6 · DRC loaders/deploy |
 | [OPEN_CONSOLIDATION.md](docs/OPEN_CONSOLIDATION.md) | threejs-rapier → Open |
 | [DANGER_ROOM_T0_COMBAT.md](docs/DANGER_ROOM_T0_COMBAT.md) | T0 skills, MM, parry/block |
 | [ATTACHMENT_EQUIP_CARDS.md](docs/ATTACHMENT_EQUIP_CARDS.md) | Equip container cards |

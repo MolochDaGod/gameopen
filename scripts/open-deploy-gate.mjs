@@ -24,6 +24,11 @@ const CHECKS = [
     rejectHtml: true,
   },
   {
+    name: "Open baked samurai 1H run (DRC sword primary)",
+    url: "https://open.grudge-studio.com/anims/baked/greatsword_samurai/gs_samurai_run_sword.json",
+    rejectHtml: true,
+  },
+  {
     name: "Open SPA",
     url: "https://open.grudge-studio.com/",
     rejectHtml: false,
@@ -32,6 +37,35 @@ const CHECKS = [
     name: "ui.grudge-studio.com",
     url: "https://ui.grudge-studio.com/",
     rejectHtml: false,
+  },
+  // Warlords-era fleet surfaces (must stay up for library deep-links)
+  {
+    name: "Warlords client",
+    url: "https://client.grudge-studio.com/home",
+    rejectHtml: false,
+  },
+  {
+    name: "Pirate lobby mesh (opening+tutorial)",
+    url: "https://assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb",
+    rejectHtml: true,
+  },
+  {
+    name: "Multiverse SPA",
+    url: "https://grudge-multiverse.vercel.app/",
+    rejectHtml: false,
+    optional: true,
+  },
+  {
+    name: "Grudge Arena SPA",
+    url: "https://grudge-arena.grudge-studio.com/",
+    rejectHtml: false,
+    optional: true,
+  },
+  {
+    name: "Hero Command RTS",
+    url: "https://play.grudge-studio.com/",
+    rejectHtml: false,
+    optional: true,
   },
 ];
 

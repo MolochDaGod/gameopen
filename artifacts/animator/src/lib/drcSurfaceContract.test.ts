@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   DRC_DEFAULT_AVATAR_ID,
   DRC_SURFACE_MATRIX,
+  WARLORDS_ERA_ASSET_SSOT,
+  WARLORDS_ERA_FLEET,
   drcSpecForMode,
   isBip001CombatMode,
+  warlordsFleetByStatus,
 } from "./drcSurfaceContract";
 
 describe("drcSurfaceContract", () => {
@@ -28,5 +31,38 @@ describe("drcSurfaceContract", () => {
 
   it("library has no combat controller", () => {
     expect(drcSpecForMode("doors")?.usesStudioController).toBe(false);
+  });
+});
+
+describe("Warlords-era fleet DRC + grudge6", () => {
+  it("asset SSOT points at R2 kits + Open baked anims", () => {
+    expect(WARLORDS_ERA_ASSET_SSOT.meshCdn).toContain("assets.grudge-studio.com");
+    expect(WARLORDS_ERA_ASSET_SSOT.raceKit("WK")).toContain("models/grudge6/races/WK_Characters.glb");
+    expect(WARLORDS_ERA_ASSET_SSOT.animsBaked).toContain("open.grudge-studio.com/anims/baked");
+    expect(WARLORDS_ERA_ASSET_SSOT.forbidden.join(" ")).toMatch(/Mixamo|sword and shield run|Explorer/i);
+  });
+
+  it("Open Danger and Multiverse are DRC-green grudge6", () => {
+    const green = warlordsFleetByStatus("drc-green");
+    expect(green.map((h) => h.id)).toEqual(
+      expect.arrayContaining(["open-danger", "multiverse", "grudge-arena"]),
+    );
+    for (const h of green) {
+      expect(h.mesh).toMatch(/grudge6/);
+      expect(h.anim).toMatch(/bip001/);
+    }
+  });
+
+  it("pirate-islands is in-game-only Warlords (not GRUDOX/Explorer)", () => {
+    const p = WARLORDS_ERA_FLEET.find((h) => h.id === "pirate-islands");
+    expect(p?.status).toBe("in-game-only");
+    expect(p?.host).toContain("map=pirate-islands");
+    expect(p?.notes).toMatch(/not GRUDOX|not Explorer/i);
+  });
+
+  it("flags Warlord Genesis as Mixamo legacy gap", () => {
+    const g = WARLORDS_ERA_FLEET.find((h) => h.id === "warlord-genesis");
+    expect(g?.status).toBe("mixamo-legacy");
+    expect(g?.anim).toBe("mixamo");
   });
 });
