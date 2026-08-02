@@ -521,6 +521,43 @@ const COMBO_ADVANCE_MM = 55;
 const FINISHER_IMPACT_FRAC = 0.55;
 
 /**
+ * Create a WebGL renderer with progressive fallbacks so Danger Room still
+ * boots when high-performance contexts are exhausted or blocked.
+ */
+function createStudioWebGLRenderer(): THREE.WebGLRenderer {
+  const attempts: THREE.WebGLRendererParameters[] = [
+    { antialias: true, powerPreference: "high-performance", alpha: false, stencil: false },
+    { antialias: true, powerPreference: "default", alpha: false, stencil: false },
+    { antialias: false, powerPreference: "default", alpha: false, stencil: false },
+    { antialias: false, powerPreference: "low-power", alpha: false, stencil: false },
+  ];
+  let lastErr: unknown;
+  for (const params of attempts) {
+    try {
+      const r = new THREE.WebGLRenderer(params);
+      const gl = r.getContext();
+      if (!gl) {
+        r.dispose();
+        throw new Error("WebGL context null after create");
+      }
+      if (params.powerPreference !== "high-performance" || !params.antialias) {
+        console.warn("[Studio] WebGL created with fallback params", params);
+      }
+      return r;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  const msg =
+    lastErr instanceof Error
+      ? lastErr.message
+      : String(lastErr || "unknown WebGL error");
+  throw new Error(
+    `WebGL unavailable (${msg}). Close other 3D tabs (library cinema, another Danger Room) and retry.`,
+  );
+}
+
+/**
  * Top-level disposable engine. React mounts it onto a container; it owns the
  * renderer, scene, loop and all subsystems, and pushes HUD snapshots out via a
  * callback. All public mutators are safe to call from React handlers.
@@ -1162,12 +1199,10 @@ export class Studio {
       this.weaponId = bootOpts.weaponId as typeof this.weaponId;
     }
 
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: "high-performance",
-      alpha: false,
-      stencil: false,
-    });
+    // Resilient WebGL create — high-perf first, then default, then no AA.
+    // Competing contexts (library cinema, load screens) often cause the first
+    // attempt to throw; fallbacks recover without a dead "WebGL unavailable" wall.
+    this.renderer = createStudioWebGLRenderer();
     // Cap DPR for stable 60 Hz ticks on high-DPI panels; keep ≥1.5 for readability.
     this.renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 1), 2));
     this.renderer.shadowMap.enabled = true;
@@ -1176,6 +1211,15 @@ export class Studio {
     this.renderer.toneMappingExposure = STUDIO_TONE_MAPPING_EXPOSURE;
     // Correct output colour space for sRGB albedo maps (prevents washed / muddy kits).
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Recover if the GPU context is lost mid-session (driver reset / tab freeze).
+    this.renderer.domElement.addEventListener(
+      "webglcontextlost",
+      (e) => {
+        e.preventDefault();
+        console.error("[Studio] WebGL context lost");
+      },
+      false,
+    );
     container.appendChild(this.renderer.domElement);
     // CSS2D world overlays (damage numbers, interact chips) — sibling of WebGL.
     this.htmlOverlays = new HtmlOverlaySystem(container, this.scene, this.camera);
@@ -15015,6 +15059,12 @@ export class Studio {
       }
     });
     this.postfx?.dispose();
+    try {
+      const ext = this.renderer.getContext()?.getExtension?.("WEBGL_lose_context");
+      ext?.loseContext();
+    } catch {
+      /* ignore */
+    }
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

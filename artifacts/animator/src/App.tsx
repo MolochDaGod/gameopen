@@ -804,6 +804,7 @@ export default function App() {
   const [clips, setClips] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotBinding[]>([]);
   const [webglError, setWebglError] = useState(false);
+  const [webglErrorDetail, setWebglErrorDetail] = useState<string>("");
   /** helpers.glb intro orbit while Danger Room / arena boots. */
   const [helpersLoad, setHelpersLoad] = useState<{
     visible: boolean;
@@ -1031,6 +1032,8 @@ export default function App() {
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
+      setWebglError(false);
+      setWebglErrorDetail("");
       // Playable hero SSOT: URL (ARE / annihilate) → fleet selected → default grudge6.
       // Never boot Explorer Mixamo FBX for production danger (Vercel strips FBX).
       const playable: DangerPlayableCharacter = resolveDangerPlayable({
@@ -1118,6 +1121,7 @@ export default function App() {
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start renderer", err);
+      setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
     return () => {
@@ -1175,6 +1179,7 @@ export default function App() {
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start play session", err);
+      setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
     return () => {
@@ -2951,22 +2956,41 @@ export default function App() {
           <h2>WebGL unavailable</h2>
           <p>
             Could not create a 3D context (lost GPU / too many contexts / software block). Close other 3D
-            tabs, then retry — or pick Danger Room map without outdoor GLB.
+            tabs, hard-refresh this page, then retry.
           </p>
-          <button
-            type="button"
-            className="danger-start-btn"
-            style={{ marginTop: 14 }}
-            onClick={() => {
-              setWebglError(false);
-              // Remount danger by bouncing mode
-              const m = mode;
-              setMode("doors");
-              window.setTimeout(() => setMode(m === "play" ? "danger" : m), 80);
-            }}
-          >
-            Retry 3D
-          </button>
+          {webglErrorDetail ? (
+            <p style={{ marginTop: 10, fontSize: 12, opacity: 0.75, wordBreak: "break-word" }}>
+              {webglErrorDetail}
+            </p>
+          ) : null}
+          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="danger-start-btn"
+              onClick={() => {
+                setWebglError(false);
+                setWebglErrorDetail("");
+                // Remount danger by bouncing mode (gives GPU a frame to free contexts)
+                const m = mode;
+                setMode("doors");
+                window.setTimeout(() => setMode(m === "play" ? "danger" : m), 200);
+              }}
+            >
+              Retry 3D
+            </button>
+            <button
+              type="button"
+              className="danger-start-btn"
+              style={{ opacity: 0.85 }}
+              onClick={() => {
+                setWebglError(false);
+                setWebglErrorDetail("");
+                setMode("doors");
+              }}
+            >
+              Back to Library
+            </button>
+          </div>
         </div>
       )}
 
