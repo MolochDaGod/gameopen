@@ -89,6 +89,9 @@ export class HtmlOverlaySystem {
   private enabled = true;
 
   constructor(container: HTMLElement, scene: THREE.Scene, camera: THREE.Camera) {
+    if (!camera) {
+      throw new Error("HtmlOverlaySystem requires a THREE.Camera (was undefined — init order bug)");
+    }
     this.container = container;
     this.scene = scene;
     this.camera = camera;
@@ -132,13 +135,13 @@ export class HtmlOverlaySystem {
 
   /** Call after WebGL render each frame. */
   render() {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.camera) return;
     this.renderer.render(this.scene, this.camera);
   }
 
   /** Animate floats / blood / distance-cull labels. */
   update(dt: number) {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.camera) return;
     for (const f of this.floats) {
       if (!f.active) continue;
       f.age += dt;

@@ -1,7 +1,8 @@
 .ai-assistant {
   position: fixed;
   /* Sit above Dressing Room docks (1300–1400) + mode cluster (1200) so the FAB
-     is always clickable as page admin. */
+     is always clickable as page admin. Sole owner of bottom-right corner
+     (mouse presence badge lives bottom-left — do not stack under AI). */
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   z-index: 2600;

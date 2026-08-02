@@ -1221,6 +1221,18 @@ export class Studio {
       false,
     );
     container.appendChild(this.renderer.domElement);
+
+    this.scene.background = new THREE.Color(Studio.FOG_BASE_COLOR);
+    this.scene.fog = new THREE.Fog(Studio.FOG_BASE_COLOR, Studio.FOG_BASE_NEAR, Studio.FOG_BASE_FAR);
+
+    // Camera MUST exist before HtmlOverlaySystem / Vfx — they call camera.getWorldPosition.
+    this.camera = new THREE.PerspectiveCamera(this.params.fov, 1, 0.1, 200);
+    // Start ~50% closer to the room centre and aimed at the spawn point so the
+    // opening view (before the async character load wires up the follow-cam)
+    // frames the inside of the arena instead of staring at a far, dark wall.
+    this.camera.position.set(0, 2.2, 3.5);
+    this.camera.lookAt(0, 1, 0);
+
     // CSS2D world overlays (damage numbers, interact chips) — sibling of WebGL.
     this.htmlOverlays = new HtmlOverlaySystem(container, this.scene, this.camera);
     // KTX2 + texture anisotropy: bind ASAP so first character/VFX loads decode well.
@@ -1235,16 +1247,6 @@ export class Studio {
         console.warn("[Studio] KTX2 / texture prep bind failed", err);
       }
     });
-
-    this.scene.background = new THREE.Color(Studio.FOG_BASE_COLOR);
-    this.scene.fog = new THREE.Fog(Studio.FOG_BASE_COLOR, Studio.FOG_BASE_NEAR, Studio.FOG_BASE_FAR);
-
-    this.camera = new THREE.PerspectiveCamera(this.params.fov, 1, 0.1, 200);
-    // Start ~50% closer to the room centre and aimed at the spawn point so the
-    // opening view (before the async character load wires up the follow-cam)
-    // frames the inside of the arena instead of staring at a far, dark wall.
-    this.camera.position.set(0, 2.2, 3.5);
-    this.camera.lookAt(0, 1, 0);
 
     this.room = new DangerRoom({ preset: loadRoomPreset() });
     this.scene.add(this.room.group);
