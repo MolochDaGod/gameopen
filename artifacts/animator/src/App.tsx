@@ -509,9 +509,15 @@ export default function App() {
    * Sticky free-mouse (F8 / \): OS cursor in world, no auto pointer-lock.
    * F9 / ' re-locks aim. Panels force free mouse until closed.
    */
-  const [freeMouse, setFreeMouse] = useState(false);
-  const freeMouseRef = useRef(false);
+  // Default FREE mouse so open.* always shows a cursor image; user can aim-lock (F8)
+  // which uses HUD crosshair (browser hides OS cursor under pointer-lock — reticle stays).
+  const [freeMouse, setFreeMouse] = useState(true);
+  const freeMouseRef = useRef(true);
   freeMouseRef.current = freeMouse;
+  // Sticky free-mouse from first paint so presence SSOT never defaults to locked void
+  useEffect(() => {
+    setFreeMouseSticky(true);
+  }, []);
   const [depositCtx, setDepositCtx] = useState<DepositContext>({
     zone: "none",
     canDeposit: false,
@@ -3066,7 +3072,7 @@ export default function App() {
         <>
           {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen && !freeMouse}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -3357,7 +3363,7 @@ export default function App() {
         <>
           {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen && !freeMouse}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}

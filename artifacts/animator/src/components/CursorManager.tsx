@@ -2,9 +2,12 @@
  * CursorManager — global context-aware cursor system for Open / Danger / fleet.
  *
  * Presence layers (see `pointerPresence.ts`):
- *   play-locked → OS cursor hidden; Crosshair owns aim
- *   play-free   → custom free-aim / soft lock cursor (no pointer lock)
+ *   play-locked → browser may hide OS cursor under pointer-lock; HUD Crosshair always on
+ *   play-free   → custom free-aim / soft lock cursor (no pointer lock) + reticle
  *   ui / shell  → visible game mouse (PNG/SVG) + hover hand on interactables
+ *
+ * HARD RULE (open.*): never leave the user with no mouse and no reticle.
+ * Never set cursor:none in CSS; lock-fail demotes to free-mouse images.
  *
  * Assets: public/ui/cursors/*  (craftpix normal + cyber + SVG fallbacks)
  * Mount once near the app root. Three.js scenes can call setPlayPointerCtx /

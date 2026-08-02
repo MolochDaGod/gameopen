@@ -451,11 +451,21 @@ html.shell-scroll[data-shell-mode="rooms"] body {
   inset: 0;
 }
 .canvas-mount canvas { display: block; cursor: inherit; }
-/* Immersive + *actual* pointer-lock only: hide OS cursor (reticle owns aim). */
-html.pointer-locked .canvas-mount.immersive canvas {
-  cursor: none;
+/*
+ * NEVER use cursor:none on Open.
+ * - Unlocked: craftpix / cyber mouse images (body.ptr-*)
+ * - Browser pointer-lock still hides the OS cursor (UA rule); HUD Crosshair
+ *   must always render in play so aim is never a black void.
+ * - When lock drops / fails, body classes restore the custom mouse immediately.
+ */
+.canvas-mount canvas,
+.canvas-mount.immersive canvas,
+html.pointer-locked .canvas-mount.immersive canvas,
+html.pointer-locked body.ptr-combat,
+html.pointer-locked body.ptr-combat * {
+  cursor: inherit !important;
 }
-/* Unlocked: free-mouse sticky, menus, editors — always show game mouse on canvas. */
+/* Unlocked + free play — always game mouse on canvas */
 .canvas-mount.immersive.free-mouse canvas,
 .canvas-mount:not(.immersive) canvas,
 html:not(.pointer-locked) .canvas-mount canvas,
@@ -463,18 +473,24 @@ body.ptr-ui .canvas-mount canvas,
 body.ptr-free .canvas-mount canvas,
 body.ptr-interact .canvas-mount canvas,
 body.ptr-harvest .canvas-mount canvas,
-body.ptr-tool .canvas-mount canvas {
+body.ptr-tool .canvas-mount canvas,
+body.ptr-combat .canvas-mount canvas,
+body.ptr-aim-soft .canvas-mount canvas,
+body.ptr-aim-hard .canvas-mount canvas {
   cursor: inherit !important;
 }
 
 /* ── Pointer presence cursors (body.ptr-* from CursorManager) ───────────────
-   File assets under /ui/cursors/ — visible whenever mouse is unlocked.
+   File assets under /ui/cursors/ — always preferred over blank / none.
    Hotspot: arrow tip (2,2) or centre (14,14). */
 
-/* ONLY hide when browser pointer-lock is actually held */
-html.pointer-locked body.ptr-combat,
-html.pointer-locked body.ptr-combat * {
-  cursor: none !important;
+/* Combat / play-locked fallback: CSS crosshair (browser may still hide OS
+   cursor under real pointer-lock; HUD reticle is the hard guarantee). */
+body.ptr-combat,
+body.ptr-combat * {
+  cursor: url("/ui/cursors/cursor-menu.svg") 2 2,
+    url("/ui/cursors/cursor-default.svg") 2 2,
+    crosshair !important;
 }
 
 /* Safety default for shell (before first presence tick) */
