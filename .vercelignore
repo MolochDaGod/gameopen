@@ -33,13 +33,82 @@ artifacts/animator/public/models/**/*.fbx
 **/*.rar
 **/*.zip
 
-# EXCEPTION: Explorer Mixamo + Layer-A base pack under public/anim MUST ship.
-# Without these, open.grudge-studio.com/dressing loads a procedural skeleton with
-# zero mixer clips → permanent T-pose (probed: /anim/** 404 on production).
+# EXCEPTION: Explorer Mixamo production packs ONLY (not authoring dumps).
+# Bip001 combat clips are /anims/baked JSON (not FBX). Do NOT ship _anim_pack_stage,
+# ghostrider dumps, loco-8way, creator-glb, action-adventure (authoring → R2 bake).
 !artifacts/animator/public/anim/
-!artifacts/animator/public/anim/**
-!artifacts/animator/public/anim/**/*.glb
-!artifacts/animator/public/anim/**/*.fbx
+!artifacts/animator/public/anim/base/
+!artifacts/animator/public/anim/base/**
+!artifacts/animator/public/anim/animations/
+!artifacts/animator/public/anim/animations/**
+!artifacts/animator/public/anim/bow/
+!artifacts/animator/public/anim/bow/**
+!artifacts/animator/public/anim/sword/
+!artifacts/animator/public/anim/sword/**
+!artifacts/animator/public/anim/climb/
+!artifacts/animator/public/anim/climb/**
+!artifacts/animator/public/anim/swim/
+!artifacts/animator/public/anim/swim/**
+!artifacts/animator/public/anim/striker/
+!artifacts/animator/public/anim/striker/**
+!artifacts/animator/public/anim/reactions/
+!artifacts/animator/public/anim/reactions/**
+!artifacts/animator/public/anim/knife/
+!artifacts/animator/public/anim/knife/**
+!artifacts/animator/public/anim/spear/
+!artifacts/animator/public/anim/spear/**
+!artifacts/animator/public/anim/mace/
+!artifacts/animator/public/anim/mace/**
+!artifacts/animator/public/anim/greataxe/
+!artifacts/animator/public/anim/greataxe/**
+!artifacts/animator/public/anim/greatsword/
+!artifacts/animator/public/anim/greatsword/**
+!artifacts/animator/public/anim/magic/
+!artifacts/animator/public/anim/magic/**
+!artifacts/animator/public/anim/magic-loco/
+!artifacts/animator/public/anim/magic-loco/**
+!artifacts/animator/public/anim/pistol/
+!artifacts/animator/public/anim/pistol/**
+!artifacts/animator/public/anim/rifle/
+!artifacts/animator/public/anim/rifle/**
+!artifacts/animator/public/anim/farming/
+!artifacts/animator/public/anim/farming/**
+!artifacts/animator/public/anim/block/
+!artifacts/animator/public/anim/block/**
+!artifacts/animator/public/anim/combo/
+!artifacts/animator/public/anim/combo/**
+!artifacts/animator/public/anim/gestures/
+!artifacts/animator/public/anim/gestures/**
+!artifacts/animator/public/anim/ambient/
+!artifacts/animator/public/anim/ambient/**
+!artifacts/animator/public/anim/extra/
+!artifacts/animator/public/anim/extra/**
+# Per-folder binary allow only (do NOT use anim/**/*.fbx — that re-admits dumps)
+!artifacts/animator/public/anim/base/**/*.glb
+!artifacts/animator/public/anim/base/**/*.fbx
+!artifacts/animator/public/anim/animations/**/*.fbx
+!artifacts/animator/public/anim/animations/**/*.glb
+!artifacts/animator/public/anim/bow/**/*.fbx
+!artifacts/animator/public/anim/sword/**/*.fbx
+!artifacts/animator/public/anim/climb/**/*.fbx
+!artifacts/animator/public/anim/swim/**/*.fbx
+!artifacts/animator/public/anim/striker/**/*.fbx
+!artifacts/animator/public/anim/reactions/**/*.fbx
+!artifacts/animator/public/anim/knife/**/*.fbx
+!artifacts/animator/public/anim/spear/**/*.fbx
+!artifacts/animator/public/anim/mace/**/*.fbx
+!artifacts/animator/public/anim/greataxe/**/*.fbx
+!artifacts/animator/public/anim/greatsword/**/*.fbx
+!artifacts/animator/public/anim/magic/**/*.fbx
+!artifacts/animator/public/anim/magic-loco/**/*.fbx
+!artifacts/animator/public/anim/pistol/**/*.fbx
+!artifacts/animator/public/anim/rifle/**/*.fbx
+!artifacts/animator/public/anim/farming/**/*.fbx
+!artifacts/animator/public/anim/block/**/*.fbx
+!artifacts/animator/public/anim/combo/**/*.fbx
+!artifacts/animator/public/anim/gestures/**/*.fbx
+!artifacts/animator/public/anim/ambient/**/*.fbx
+!artifacts/animator/public/anim/extra/**/*.fbx
 
 # EXCEPTION: Danger Room practice dummy + boss tester (~0.5 MB total).
 # Served same-origin under /ui/training-targets (not /models/props → R2 rewrite).

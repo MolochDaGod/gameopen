@@ -22,12 +22,12 @@ export const GRUDOX_HOST = "https://grudox.grudge-studio.com";
 
 /**
  * Play shell hosting GRUDOX Island (Lobby World). Override with VITE_PLAY_SHELL_URL.
- * Default: production threejs-rapier GRUDOX play deploy.
+ * SSOT: Open (same fleet SPA) — never pin legacy threejs-rapier demo host.
  */
 export const PLAY_SHELL_HOST =
   (typeof import.meta !== "undefined" &&
     (import.meta.env?.VITE_PLAY_SHELL_URL as string | undefined)?.replace(/\/+$/, "")) ||
-  "https://threejs-rapier-react-three-controll.vercel.app";
+  "https://open.grudge-studio.com";
 
 export interface GrudoxZone {
   /** Cabinet id — `/arcade/play/:id` on GRUDOX. */

@@ -19,8 +19,9 @@ export const FLEET = {
   /** Character / account SSOT Postgres (never auth endpoints; never api.grudge-studio.com). */
   gameData: "https://grudge-api-production-0d46.up.railway.app",
   characterStudio: "https://character.grudge-studio.com",
-  /** Canonical Open launcher + Animator suite (replaces threejs-rapier hub). */
+  /** Canonical Open launcher + Animator suite (SSOT host). */
   gameopen: "https://open.grudge-studio.com",
+  /** Preview alias only — never use as auth return / primary deep-link. */
   gameopenAlias: "https://gameopen.vercel.app",
   warlords: "https://grudgewarlords.com",
   grudox: "https://grudox.grudge-studio.com",
@@ -96,7 +97,7 @@ export const GRUDOX_GAMES: GrudoxGameDef[] = [
   {
     id: "gameopen",
     name: "Grudge Open",
-    blurb: "Fleet launcher + combat sandbox (gameopen.vercel.app)",
+    blurb: "Fleet launcher + combat sandbox (open.grudge-studio.com)",
     url: FLEET.gameopen,
     multiplayer: true,
   },

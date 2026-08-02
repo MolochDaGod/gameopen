@@ -23,7 +23,7 @@ interface Props {
 }
 
 const ACCOUNT_HUB =
-  "https://gameopen.vercel.app/account?open=1&from=charactersgrudox";
+  "https://open.grudge-studio.com/account?open=1&from=charactersgrudox";
 const CHAR_STUDIO = "https://character.grudge-studio.com/?era=warlords";
 
 export function CharactersGrudoxMode({ onExit, onNavigate }: Props) {

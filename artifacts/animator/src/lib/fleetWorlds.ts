@@ -56,7 +56,8 @@ export const FLEET_WORLD_HOSTS = {
   grimArmada: "https://grim-armada-web.vercel.app/",
   /** Open self */
   open: "https://open.grudge-studio.com/",
-  gameopen: "https://gameopen.vercel.app/",
+  /** Alias of open — keep key for older callers; always open.grudge-studio.com */
+  gameopen: "https://open.grudge-studio.com/",
 } as const;
 
 export type FleetWorldId =
