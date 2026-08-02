@@ -638,13 +638,16 @@ body.ptr-ui .opt:hover {
 .crosshair-build { --ch-color: #7fb0ff; }
 .crosshair-swim { --ch-color: #70c8ff; }
 .crosshair-climb { --ch-color: #e8c070; }
-.crosshair-free { --ch-color: #c8d8f0; opacity: 0.85; }
-.crosshair-freemouse { opacity: 0.55; }
-.crosshair-freemouse .ch-line { opacity: 0.45; }
+.crosshair-free { --ch-color: #c8d8f0; opacity: 0.95; }
+/* Unlocked (free mouse): reticle STAYS ON + OS/custom mouse also on.
+   Slightly softer than aim-lock so the cursor image stays readable. */
+.crosshair-freemouse { opacity: 0.88; }
+.crosshair-freemouse .ch-line { opacity: 0.8; }
+.crosshair-freemouse .ch-dot { opacity: 0.95; }
 .aim-center-dot-free {
-  opacity: 0.35;
-  width: 3px;
-  height: 3px;
+  opacity: 0.75;
+  width: 4px;
+  height: 4px;
 }
 
 /* ── Weapon reticle shapes ────────────────────────────────────────────────── */
