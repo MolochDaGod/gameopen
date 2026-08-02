@@ -21,6 +21,10 @@
  * 5. **Warlords world content is not a standalone Open game.** Home island, water
  *    island, sector seas, and in-game maps launch via **Grudge Warlords client**
  *    (`warlordsInGameOnly`). Open may keep Danger training maps separately.
+ * 6. **Chicken Gun / PolygonPirates `pirate-islands` lobby** is the Warlords
+ *    **opening map and tutorial map** (shipwreck_cove → `/tutorial`, lobby
+ *    → `/island-3d?mode=lobby&map=pirate-islands`). It is **not** a GRUDOX
+ *    cabinet, **not** an Explorer product, and **not** an Open library tile.
  */
 
 import { assetUrl } from "../lib/fleet";
@@ -32,6 +36,17 @@ import {
   dcqWorldUrl,
 } from "../lib/productionRuntime";
 import { FLEET_WORLD_HOSTS, fleetWorldLaunchUrl } from "../lib/fleetWorlds";
+
+/**
+ * Production Chicken Gun / PolygonPirates lobby mesh — Warlords only.
+ * Opening + tutorial + era-center lobby. Never GRUDOX / Explorer / Open tile.
+ */
+export const WARLORDS_PIRATE_LOBBY_PATH =
+  "/island-3d?mode=lobby&map=pirate-islands" as const;
+export const WARLORDS_TUTORIAL_PATH = "/tutorial" as const;
+export const WARLORDS_CLIENT_ORIGIN = "https://client.grudge-studio.com";
+export const WARLORDS_PIRATE_LOBBY_URL = `${WARLORDS_CLIENT_ORIGIN}${WARLORDS_PIRATE_LOBBY_PATH}`;
+export const WARLORDS_TUTORIAL_URL = `${WARLORDS_CLIENT_ORIGIN}${WARLORDS_TUTORIAL_PATH}`;
 
 /** How a title launches from the Open launcher. */
 export type LaunchKind =
@@ -328,9 +343,9 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Forest Map",
     short: "Harvest forest",
     blurb:
-      "Dark forest harvest test — Warlords trees/rocks/leaves + flowers, ore, animals. LMB select · RMB harvest. Seed forest-map-harvest-01.",
+      "Danger Room harvest lab (chicken_gun_fruzer dark forest base + Warlords nature scatter). NOT the Warlords Chicken Gun pirate-islands opening/tutorial lobby — that is in-client only (map=pirate-islands).",
     category: "warlords",
-    tags: ["Harvest", "Production", "Map:Forest"],
+    tags: ["Harvest", "DangerLab", "Map:Forest"],
     tone: "#3d7a4a",
     posterKey: "library-mine",
     icon: "harvest",
@@ -579,13 +594,37 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
+    id: "pirate-islands",
+    title: "Warlords Pirate Lobby (in-game)",
+    short: "Opening + tutorial · Warlords only",
+    blurb:
+      "Chicken Gun / PolygonPirates lobby mesh (CDN models/lobby/pirate-islands). Warlords opening map AND tutorial map (shipwreck_cove → /tutorial). NOT GRUDOX, NOT Explorer, NOT an Open standalone game — enter via Grudge Warlords client only.",
+    category: "warlords",
+    tags: ["Lobby", "Opening", "Tutorial", "In-game", "Warlords", "Pirate"],
+    tone: "#4a9ec8",
+    posterKey: "lobby",
+    icon: "explore",
+    engines: ["three", "r3f", "rapier"],
+    launch: "external",
+    url: WARLORDS_PIRATE_LOBBY_URL,
+    deploy: { client: "vercel", server: "railway" },
+    sources: [
+      "https://assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb",
+      "F:\\GitHub\\GrudgeBuilder\\client\\public\\production\\manifest.json",
+      "F:\\GitHub\\GrudgeBuilder\\shared\\fleet\\gameDeployments.ts",
+    ],
+    featured: false,
+    warlordsInGameOnly: true,
+    status: "live",
+  },
+  {
     id: "warlords",
     title: "Grudge Warlords",
     short: "Main Warlords client",
     blurb:
-      "Play Warlords here: home island, sectors, maps, crafting, hero fleet. Open does not list islands/sectors as separate games — enter them in-client. SSO + Railway era=warlords.",
+      "Play Warlords here: pirate lobby opening/tutorial, home island, sectors, maps, crafting, hero fleet. Open does not list islands/sectors/lobby map as separate games — enter them in-client. SSO + Railway era=warlords.",
     category: "warlords",
-    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting"],
+    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting", "Tutorial"],
     tone: "#e86a1a",
     posterKey: "zones",
     icon: "rally",
@@ -1068,12 +1107,25 @@ export function gameLaunchUrl(
   if (game.launch === "native" || game.launch === "editor") return null;
 
   // Warlords home/sector/map content → always the Warlords client, never a fake standalone
-  if (game.warlordsInGameOnly || game.id === "water-island" || game.id === "grudox-island") {
+  if (
+    game.warlordsInGameOnly ||
+    game.id === "water-island" ||
+    game.id === "grudox-island" ||
+    game.id === "pirate-islands"
+  ) {
     try {
-      const u = new URL(WARLORDS_CLIENT_URL);
+      // Chicken Gun pirate lobby = production opening + tutorial mesh (not /home generic)
+      const base =
+        game.id === "pirate-islands" ? WARLORDS_PIRATE_LOBBY_URL : WARLORDS_CLIENT_URL;
+      const u = new URL(base);
       u.searchParams.set("open", "1");
       u.searchParams.set("from", "gameopen");
       u.searchParams.set("warlordsWorld", game.id);
+      if (game.id === "pirate-islands") {
+        // Preserve mode/map from WARLORDS_PIRATE_LOBBY_PATH; reinforce SSOT
+        if (!u.searchParams.get("mode")) u.searchParams.set("mode", "lobby");
+        if (!u.searchParams.get("map")) u.searchParams.set("map", "pirate-islands");
+      }
       if (params.token) {
         u.searchParams.set("sso_token", params.token);
         u.searchParams.set("grudge_token", params.token);
@@ -1082,7 +1134,7 @@ export function gameLaunchUrl(
       if (params.characterName) u.searchParams.set("characterName", params.characterName);
       return u.toString();
     } catch {
-      return WARLORDS_CLIENT_URL;
+      return game.id === "pirate-islands" ? WARLORDS_PIRATE_LOBBY_URL : WARLORDS_CLIENT_URL;
     }
   }
 

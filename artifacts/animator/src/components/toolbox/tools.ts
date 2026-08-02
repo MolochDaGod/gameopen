@@ -484,9 +484,15 @@ export const CREATE_STACK_TOOLS: ToolDef[] = [
   {
     icon: "building-kit",
     label: "Pirate Lobby",
-    hint: "Fleet pirate-islands lobby mesh + open-world pad",
+    hint:
+      "Warlords opening + tutorial map (Chicken Gun pirate-islands) — client only, not GRUDOX/Explorer",
     stack: "create",
-    action: { kind: "external", url: gb({ mode: "pirate-lobby", panel: "agent" }) },
+    // Production SSOT: GrudgeBuilder WARLORDS_LOBBY_PATH — not Grok Builder invent mode
+    action: {
+      kind: "external",
+      url: "https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands",
+      newTab: true,
+    },
   },
   {
     icon: "physics",

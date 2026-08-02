@@ -108,6 +108,19 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     // Never PLAY_SHELL lobbyWorld as a fake Open game — Warlords owns the world
     externalPath: "https://client.grudge-studio.com/home",
   },
+  /**
+   * Chicken Gun / PolygonPirates mesh — Warlords opening + tutorial only.
+   * Never a GRUDOX arcade cabinet; never Explorer. Deep-link into client lobby.
+   */
+  {
+    id: "pirate-islands",
+    title: "Warlords Pirate Lobby (in-game)",
+    blurb:
+      "Chicken Gun pirate map = Warlords opening + tutorial only — not GRUDOX, not Explorer. Launches Warlords client lobby.",
+    tone: "#4a9ec8",
+    externalPath:
+      "https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands",
+  },
   {
     id: "brawler",
     title: "Ruins Brawler",

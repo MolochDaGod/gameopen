@@ -61,11 +61,31 @@ export function warlordsSectorAt(sx: number, sz: number): WarlordsSectorMeta {
   );
 }
 
+/**
+ * Chicken Gun / PolygonPirates lobby — Warlords opening + tutorial mesh only.
+ * Not a GRUDOX product; not an Explorer game; not an Open library tile.
+ * @see client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands
+ * @see client.grudge-studio.com/tutorial
+ */
+export const WARLORDS_PIRATE_LOBBY = {
+  mapId: "pirate-islands",
+  meshCdn: "https://assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb",
+  lobbyPath: "/island-3d?mode=lobby&map=pirate-islands",
+  tutorialPath: "/tutorial",
+  roles: ["opening", "tutorial", "era-center-lobby"] as const,
+  notProducts: ["grudox", "explorer", "open-standalone"] as const,
+} as const;
+
 /** Production pillars wired into the Warlords-era client. */
 export const WARLORDS_PRODUCTION_PILLARS = [
+  {
+    id: "pirate-lobby",
+    label: "Chicken Gun pirate lobby = opening + tutorial",
+    host: "client.grudge-studio.com · map=pirate-islands (not GRUDOX/Explorer)",
+  },
   { id: "sectors", label: "9 sailing sectors", host: "warlord-genesis / grudgewarlords.com" },
   { id: "heroes", label: "4-slot campfire heroes", host: "Railway Postgres · era=warlords" },
-  { id: "units", label: "Explorers = units", host: "factionUnits + explorer rig" },
+  { id: "units", label: "Explorers = units (not the pirate lobby product)", host: "factionUnits + explorer rig" },
   { id: "rts", label: "RTS lanes / buildings", host: "warlord-genesis + RTS-Grudge" },
   { id: "sailing", label: "Water / wind / ships", host: "SailEnvironment · sectors" },
   { id: "combat", label: "Hero + unit combat", host: "Danger Room · genesis · jungle camps" },

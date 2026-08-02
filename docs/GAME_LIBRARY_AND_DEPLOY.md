@@ -85,6 +85,17 @@ Voxel Editor maps in gameopen should eventually **push** to Mine-Loader world AP
 6. If world: `launch: "mine-loader"` + `engines: ["mine-loader"]`.  
 7. Register domain CORS / vercel rewrites per grudge-fleet skill.
 
+### Warlords worlds — never Open standalone tiles
+
+Set `warlordsInGameOnly: true` for content that lives **inside** the Warlords client only:
+
+| Id | Role |
+|----|------|
+| `pirate-islands` | Chicken Gun pirate lobby = **opening map + tutorial map**. Not GRUDOX, not Explorer. |
+| `water-island` / `grudox-island` | Home / lobby island destinations |
+
+Launch: `gameLaunchUrl()` → `client.grudge-studio.com` (pirate lobby uses `/island-3d?mode=lobby&map=pirate-islands`). Tests: `gameLibrary.warlords.test.ts`.
+
 ### Fleet tools / development asset apps
 
 | Tool | Open library id | Live URL |

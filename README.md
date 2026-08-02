@@ -119,6 +119,29 @@ Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).
 **Consolidation:** Open replaces the legacy Animator lab — [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).  
 Ingest: `npm run ingest:rapier`.
 
+## Warlords in-game only (not Open library tiles)
+
+**Flagship client:** [client.grudge-studio.com](https://client.grudge-studio.com/home) · [grudgewarlords.com](https://grudgewarlords.com)
+
+Open may deep-link or catalog-document these worlds, but they are **`warlordsInGameOnly`** — never standalone Open tiles, never GRUDOX cabinets, never Explorer products.
+
+| Id / map | Role | Production path |
+|----------|------|-----------------|
+| **`pirate-islands`** | **Chicken Gun / PolygonPirates lobby** = Warlords **opening map and tutorial map** | `/island-3d?mode=lobby&map=pirate-islands` · tutorial `/tutorial` |
+| `water-island` / home | Home / water island inside Warlords | client home handoff |
+| `grudox-island` | Legacy name for Warlords home lobby island | client home handoff |
+| Sectors (era 9) | Sailing / land zones | in-client ocean + world map |
+
+**Hard rules**
+
+1. Chicken Gun **pirate-islands** is **not** GRUDOX and **not** an Explorer game.
+2. CDN mesh: `assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb`
+3. Open Toolbox **Pirate Lobby** opens the Warlords client path above (not Grok invent mode).
+4. Danger Room maps (`pirate-village`, forest harvest lab, shipwreck SPA) stay Open **training** maps — distinct from the production lobby mesh.
+5. Catalog SSOT: `artifacts/animator/src/game/gameLibrary.ts` · tests: `gameLibrary.warlords.test.ts` · sectors meta: `warlordsSectors.ts`
+
+Library eras: [`docs/ERA_LIBRARY.md`](docs/ERA_LIBRARY.md) · deploy gate: `npm run deploy:gate` / `npm run deploy:prod`.
+
 ## Asset production pipeline
 
 Scale → purpose classify → convert (grudge-convert) → **Draco last** → AI/game-flow verify.

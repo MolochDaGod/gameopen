@@ -67,6 +67,8 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
       return "realms";
     case "lobby-island":
     case "water-island":
+    case "pirate-islands":
+    // Chicken Gun pirate lobby = Warlords client only (opening + tutorial) — never native Explorer
     case "dcq":
     case "racer":
     case "zombie":

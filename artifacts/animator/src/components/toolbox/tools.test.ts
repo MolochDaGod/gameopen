@@ -133,14 +133,22 @@ describe("stack best-practice toolboxes", () => {
     expect(labels).toMatch(/canvas|hook|drei|rapier|perf|suspense|animation|forge|docs/);
   });
 
-  it("Create stack deep-links Grok Builder game modes", () => {
+  it("Create stack deep-links Grok Builder game modes (Pirate Lobby → Warlords client)", () => {
     expect(CREATE_STACK_TOOLS.length).toBeGreaterThanOrEqual(8);
     for (const t of CREATE_STACK_TOOLS) {
       assertValidAction(t);
       expect(t.stack).toBe("create");
       expect(t.action.kind).toBe("external");
       if (t.action.kind === "external") {
-        expect(t.action.url).toMatch(/grok-builder|forge|threejs|rapier|pmnd/i);
+        // Chicken Gun pirate-islands = Warlords opening/tutorial only (not GRUDOX/Explorer/Grok invent)
+        if (t.label === "Pirate Lobby") {
+          expect(t.action.url).toMatch(
+            /client\.grudge-studio\.com\/island-3d\?mode=lobby&map=pirate-islands/,
+          );
+          expect(t.action.url).not.toMatch(/grudox|explorer|grok-builder/i);
+        } else {
+          expect(t.action.url).toMatch(/grok-builder|forge|threejs|rapier|pmnd/i);
+        }
       }
     }
   });

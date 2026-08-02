@@ -416,6 +416,8 @@ export const ARCADE_CABINET_MAP: Record<string, AppMode> = (() => {
   }
   // Historical: bare explorer → danger; explorer?dressing=1 handled in resolve
   m.explorer = "danger";
+  // Chicken Gun pirate-islands is Warlords opening+tutorial — never an Open arcade cabinet
+  // (resolved via GRUDOX zone externalPath → client.grudge-studio.com, not native Explorer)
   return m;
 })();
 
