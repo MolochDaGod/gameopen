@@ -186,6 +186,9 @@ function applyMineHandoff(
   if (opts.room) u.searchParams.set(HANDOFF_QUERY.room, opts.room);
   u.searchParams.set(HANDOFF_QUERY.open, "1");
   u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  // Canonical Realms character era (parity with era=warlords on grudgewarlords.com)
+  u.searchParams.set("era", "voxel");
+  u.searchParams.set("gameEra", "voxel");
   if (typeof window !== "undefined") {
     u.searchParams.set("collection", window.location.origin);
   }
@@ -193,6 +196,7 @@ function applyMineHandoff(
 
 /**
  * Build Realms lobby URL with account handoff (multiplayer rooms / parties).
+ * characterId must be era=voxel when selecting a Realms hero.
  */
 export function mineLoaderLobbyUrl(opts: {
   token?: string | null;
