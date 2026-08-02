@@ -1,20 +1,12 @@
 /**
- * Wallet service — Grudge Open auto-provision wallet.
+ * Wallet service — Grudge Open / GRUDOX account wallet.
  *
- * On every login, `ensureWallet()` is called once after account resolution.
- * It:
- *   1. Tries GET /api/wallet — returns the existing wallet if one is already
- *      provisioned for this grudgeId in Railway Postgres.
- *   2. If none exists (404 / empty), calls POST /api/wallet to create a new
- *      Crossmint custodial Solana wallet, scoped to this grudgeId. Railway
- *      handles the Crossmint API call server-side so no Crossmint credentials
- *      are exposed to the browser.
+ * Production SSOT (Railway Postgres `accounts` row):
+ *   1. GET /api/wallet/status  — hasWallet, walletAddress, walletType, gbuxBalance
+ *   2. GET /api/account        — walletAddress / walletType fallback
+ *   3. POST /api/wallet/create — Crossmint custodial provision (email body)
  *
- * Canonical truth: Railway Postgres `wallets` table, keyed by `grudge_id`.
- * One wallet per account — characters share the account-scoped wallet.
- *
- * The resolved wallet is cached in sessionStorage under "grudge.open.wallet"
- * so subsequent renders don't re-hit the API.
+ * One wallet per account — shared by all characters. Cached in sessionStorage.
  */
 
 import { apiUrl } from "./fleet";
@@ -24,10 +16,16 @@ export interface GrudgeWallet {
   address: string;
   /** Solana | Ethereum | … (always "Solana" for Crossmint custodial) */
   chain: string;
-  /** Railway DB id */
+  /** Railway DB id (optional — status route may omit) */
   id: string;
   /** grudgeId this wallet belongs to */
   grudgeId: string;
+  /** crossmint | external */
+  walletType?: string;
+  /** Crossmint recovery email when custodial */
+  crossmintEmail?: string;
+  /** GBUX from wallet status / account */
+  gbux?: number;
   /** Crossmint locator for server-side operations */
   crossmintLocator?: string;
   createdAt?: string;
@@ -64,71 +62,84 @@ function authHeader(): Record<string, string> {
   return h;
 }
 
-/** Once we know Railway has no wallet route, skip further probes this session. */
-let walletRouteMissing = false;
+function normalizeWallet(data: Record<string, unknown>): GrudgeWallet | null {
+  const w = (data.wallet as Record<string, unknown>) ?? data;
+  const address = String(
+    w.walletAddress || w.address || w.publicKey || w.solanaAddress || "",
+  );
+  if (!address) return null;
+  return {
+    address,
+    chain: String(w.chain || w.network || "Solana"),
+    id: String(w.id || w.crossmintWalletId || ""),
+    grudgeId: String(w.grudgeId || w.grudge_id || ""),
+    walletType: w.walletType ? String(w.walletType) : w.wallet_type ? String(w.wallet_type) : undefined,
+    crossmintEmail: w.crossmintEmail
+      ? String(w.crossmintEmail)
+      : w.crossmint_email
+        ? String(w.crossmint_email)
+        : undefined,
+    gbux:
+      typeof w.gbuxBalance === "number"
+        ? w.gbuxBalance
+        : typeof w.gbux === "number"
+          ? w.gbux
+          : undefined,
+    crossmintLocator: w.crossmintLocator ? String(w.crossmintLocator) : undefined,
+    createdAt: w.createdAt ? String(w.createdAt) : undefined,
+  };
+}
 
-async function fetchWallet(): Promise<GrudgeWallet | null> {
-  if (walletRouteMissing) return null;
+/** Live path: GET /api/wallet/status (Railway accounts.wallet_*). */
+async function fetchWalletStatus(): Promise<GrudgeWallet | null> {
   try {
-    // Single canonical path — do not spam /account/wallet + /wallets (triple 404 noise).
-    const r = await fetch(apiUrl("/api/wallet"), {
+    const r = await fetch(apiUrl("/api/wallet/status"), {
       headers: authHeader(),
       credentials: "include",
       signal: AbortSignal.timeout(8000),
     });
-    if (r.status === 404) {
-      walletRouteMissing = true;
-      return null;
-    }
     if (!r.ok) return null;
-    const data = await r.json() as Record<string, unknown>;
-    // Normalise Railway response shape: may be top-level or nested under `wallet`
-    const w = (data.wallet as Record<string, unknown>) ?? data;
-    const address = String(w.address || w.publicKey || w.solanaAddress || "");
-    if (!address) return null;
-    return {
-      address,
-      chain: String(w.chain || w.network || "Solana"),
-      id: String(w.id || ""),
-      grudgeId: String(w.grudgeId || w.grudge_id || ""),
-      crossmintLocator: w.crossmintLocator ? String(w.crossmintLocator) : undefined,
-      createdAt: w.createdAt ? String(w.createdAt) : undefined,
-    };
+    const data = (await r.json()) as Record<string, unknown>;
+    if (data.hasWallet === false && !data.walletAddress) return null;
+    return normalizeWallet(data);
   } catch {
     return null;
   }
 }
 
-async function createWallet(): Promise<GrudgeWallet | null> {
-  if (walletRouteMissing) return null;
+/** Fallback: wallet fields on GET /api/account. */
+async function fetchWalletFromAccount(): Promise<GrudgeWallet | null> {
   try {
-    const r = await fetch(apiUrl("/api/wallet"), {
+    const r = await fetch(apiUrl("/api/account"), {
+      headers: authHeader(),
+      credentials: "include",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return null;
+    const data = (await r.json()) as Record<string, unknown>;
+    return normalizeWallet(data);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWallet(): Promise<GrudgeWallet | null> {
+  return (await fetchWalletStatus()) || (await fetchWalletFromAccount());
+}
+
+async function createWallet(): Promise<GrudgeWallet | null> {
+  try {
+    // Production route is POST /api/wallet/create { email } — not bare POST /api/wallet.
+    const r = await fetch(apiUrl("/api/wallet/create"), {
       method: "POST",
       headers: authHeader(),
       credentials: "include",
-      body: JSON.stringify({ chain: "Solana", type: "custodial" }),
+      body: JSON.stringify({ email: "player@grudgewarlords.com" }),
       signal: AbortSignal.timeout(15000),
     });
-    if (r.status === 404) {
-      walletRouteMissing = true;
-      // Wallet optional — Railway may not expose /api/wallet yet
-      return null;
-    }
-    if (!r.ok) {
-      return null;
-    }
-    const data = await r.json() as Record<string, unknown>;
-    const w = (data.wallet as Record<string, unknown>) ?? data;
-    const address = String(w.address || w.publicKey || w.solanaAddress || "");
-    if (!address) return null;
-    return {
-      address,
-      chain: String(w.chain || "Solana"),
-      id: String(w.id || ""),
-      grudgeId: String(w.grudgeId || w.grudge_id || ""),
-      crossmintLocator: w.crossmintLocator ? String(w.crossmintLocator) : undefined,
-      createdAt: w.createdAt ? String(w.createdAt) : undefined,
-    };
+    if (!r.ok) return null;
+    const data = (await r.json()) as Record<string, unknown>;
+    return normalizeWallet(data) || fetchWallet();
   } catch (err) {
     console.warn("[wallet] create error", err);
     return null;
@@ -140,12 +151,8 @@ async function createWallet(): Promise<GrudgeWallet | null> {
 /**
  * Ensure the signed-in player has a wallet.
  *
- * Returns the cached wallet immediately if available.
- * Otherwise fetches from Railway; if none exists, provisions a new one via
- * POST /api/wallet (Railway calls Crossmint server-side — no client credentials).
- *
- * Always returns null gracefully when the user is not logged in or the API
- * is unreachable (wallet is optional for gameplay).
+ * Cached → /api/wallet/status → /api/account → optional /api/wallet/create.
+ * Fail soft when offline or guest (wallet optional for gameplay).
  */
 export async function ensureWallet(): Promise<GrudgeWallet | null> {
   // Fast path: already cached this session.
@@ -153,8 +160,6 @@ export async function ensureWallet(): Promise<GrudgeWallet | null> {
   if (cached?.address) return cached;
 
   if (!getStoredToken()) return null; // guest — no wallet
-  // Railway has not published /api/wallet on all deploys — fail soft, never block lobby.
-  if (walletRouteMissing) return null;
 
   // Fetch existing wallet.
   let wallet = await fetchWallet();
@@ -181,5 +186,4 @@ export function getWalletDisplay(): string | null {
 /** Clear the cached wallet (called on logout). */
 export function clearCachedWallet(): void {
   setCachedWallet(null);
-  walletRouteMissing = false;
 }

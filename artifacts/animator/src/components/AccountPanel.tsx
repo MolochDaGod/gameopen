@@ -3,13 +3,15 @@
  * grids, no fake systems.
  *
  * Structure (same for every production era):
- *   Era tabs → Overview · Characters · Inventory · Crafting
+ *   Era tabs → Overview · Characters · Inventory · Wallet · cNFTs · Saves · Crafting
  *
- * Data:
- *   Profile / bag  → GET /api/account · /api/account/resources
- *   Characters     → gameSession roster (Railway /api/characters?era=…)
- *   Equipment icons → resolveCharacterEquipmentVisualSync (master-items / fleet)
- *   Create hero    → Character Foundry deep-link only (not a second Open system)
+ * Shared account data (Railway Postgres via same-origin /api/*):
+ *   Profile / currencies / wallet → GET /api/account · /api/wallet/status
+ *   Bag / inventory               → GET /api/account/resources · inventory
+ *   cNFTs                         → GET /api/nfts
+ *   Home island                   → GET /api/island
+ *   Characters + saveData         → gameSession roster (Railway /api/characters)
+ *   Create hero                   → Character Foundry deep-link only
  */
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
@@ -23,9 +25,17 @@ import { getCachedWallet, ensureWallet, type GrudgeWallet } from "../lib/walletS
 import {
   characterStudioCreateUrl,
   fetchAccountBag,
+  fetchAccountInventory,
+  fetchAccountNfts,
   fetchAccountProfile,
+  fetchHomeIsland,
+  fetchWalletStatus,
   getHandoffFrom,
+  shortAddress,
   type FleetAccountProfile,
+  type FleetIslandSummary,
+  type FleetNft,
+  type FleetWalletStatus,
   type ResourceMap,
 } from "../lib/accountShared";
 import { GAME_LIBRARY, type GameCategory } from "../game/gameLibrary";
@@ -40,7 +50,14 @@ import { embedSessionForZone } from "../lib/inAppLaunch";
 
 /** Playable production eras (same sub-tabs on each). */
 type EraId = "warlords" | "voxel" | "nexus" | "armada";
-type PanelId = "overview" | "characters" | "inventory" | "crafting";
+type PanelId =
+  | "overview"
+  | "characters"
+  | "inventory"
+  | "wallet"
+  | "cnfts"
+  | "saves"
+  | "crafting";
 
 const ERAS: { id: EraId; label: string; tone: string; blurb: string }[] = [
   {
@@ -73,8 +90,14 @@ const PANELS: { id: PanelId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "characters", label: "Characters" },
   { id: "inventory", label: "Inventory" },
+  { id: "wallet", label: "Wallet" },
+  { id: "cnfts", label: "cNFTs" },
+  { id: "saves", label: "Saves" },
   { id: "crafting", label: "Crafting" },
 ];
+
+const WALLET_SITE = "https://wallet.grudge-studio.com";
+const SOLSCAN_ADDR = "https://solscan.io/account/";
 
 const CRAFTING_LINKS: Record<EraId, { label: string; href: string }[]> = {
   warlords: [
@@ -117,6 +140,37 @@ function slotIcon(url: string | undefined, fallback: "equip" | "attack" | "inven
   return iconUrl(fallback);
 }
 
+/** Human-readable summary of character saveData / equipment for the Saves tab. */
+function summarizeSave(c: GrudgeCharacter): { lines: string[]; keys: string[] } {
+  const save = (c.saveData && typeof c.saveData === "object" ? c.saveData : {}) as Record<string, unknown>;
+  const equip = (c.equipment && typeof c.equipment === "object" ? c.equipment : {}) as Record<string, unknown>;
+  const open = (save.open && typeof save.open === "object" ? save.open : {}) as Record<string, unknown>;
+  const keys = Object.keys(save);
+  const lines: string[] = [];
+  if (keys.length === 0 && Object.keys(equip).length === 0) {
+    lines.push("No saveData blob yet — play once to persist progress.");
+  } else {
+    lines.push(`saveData keys: ${keys.length || 0}`);
+  }
+  if (open.lastMode != null) lines.push(`last mode: ${String(open.lastMode)}`);
+  if (open.weaponId != null) lines.push(`open weapon: ${String(open.weaponId)}`);
+  if (open.offHand != null) lines.push(`open off-hand: ${String(open.offHand)}`);
+  if (open.avatarId != null) lines.push(`avatar: ${String(open.avatarId)}`);
+  const meshIds = Array.isArray((save as { mesh_ids?: unknown }).mesh_ids)
+    ? ((save as { mesh_ids: unknown[] }).mesh_ids)
+    : Array.isArray((equip as { mesh_ids?: unknown }).mesh_ids)
+      ? ((equip as { mesh_ids: unknown[] }).mesh_ids)
+      : null;
+  if (meshIds) lines.push(`mesh_ids: ${meshIds.length}`);
+  const equipKeys = Object.keys(equip).filter((k) => equip[k] != null && equip[k] !== "");
+  if (equipKeys.length) lines.push(`equipment slots: ${equipKeys.slice(0, 8).join(", ")}${equipKeys.length > 8 ? "…" : ""}`);
+  if (c.model3d && typeof c.model3d === "object") {
+    const m = c.model3d as Record<string, unknown>;
+    if (m.race || m.kit || m.pack) lines.push(`model3d: ${String(m.race || m.kit || m.pack)}`);
+  }
+  return { lines, keys };
+}
+
 export function AccountPanel({
   onPlayRace,
   onEnterGame,
@@ -132,11 +186,16 @@ export function AccountPanel({
   const [era, setEra] = useState<EraId>("warlords");
   const [panel, setPanel] = useState<PanelId>("overview");
   const [wallet, setWallet] = useState<GrudgeWallet | null>(() => getCachedWallet());
+  const [walletStatus, setWalletStatus] = useState<FleetWalletStatus | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
   const [profile, setProfile] = useState<FleetAccountProfile | null>(null);
   const [bag, setBag] = useState<ResourceMap>({});
+  const [inventoryItems, setInventoryItems] = useState<unknown[]>([]);
+  const [nfts, setNfts] = useState<FleetNft[]>([]);
+  const [island, setIsland] = useState<FleetIslandSummary | null>(null);
   const [sharedBusy, setSharedBusy] = useState(false);
   const [handoffFrom] = useState(() => getHandoffFrom());
+  const [copiedAddr, setCopiedAddr] = useState(false);
 
   useEffect(() => gameSession.subscribe(() => setSnap(gameSession.snapshot)), []);
 
@@ -144,13 +203,28 @@ export function AccountPanel({
     if (!getStoredToken()) {
       setProfile(null);
       setBag({});
+      setInventoryItems([]);
+      setNfts([]);
+      setIsland(null);
+      setWalletStatus(null);
       return;
     }
     setSharedBusy(true);
     try {
-      const [p, r] = await Promise.all([fetchAccountProfile(), fetchAccountBag()]);
+      const [p, r, inv, nftList, isl, ws] = await Promise.all([
+        fetchAccountProfile(),
+        fetchAccountBag(),
+        fetchAccountInventory(),
+        fetchAccountNfts(),
+        fetchHomeIsland(),
+        fetchWalletStatus(),
+      ]);
       setProfile(p);
       setBag(r);
+      setInventoryItems(inv);
+      setNfts(nftList);
+      setIsland(isl);
+      setWalletStatus(ws);
     } finally {
       setSharedBusy(false);
     }
@@ -159,7 +233,9 @@ export function AccountPanel({
   const refreshWallet = useCallback(async () => {
     setWalletBusy(true);
     try {
-      setWallet(await ensureWallet());
+      const [w, ws] = await Promise.all([ensureWallet(), fetchWalletStatus()]);
+      setWallet(w);
+      setWalletStatus(ws);
     } finally {
       setWalletBusy(false);
     }
@@ -177,6 +253,20 @@ export function AccountPanel({
     void refreshShared();
     if (snap.account) void refreshWallet();
   }, [refreshShared, refreshWallet, snap.account]);
+
+  const walletAddress =
+    walletStatus?.walletAddress ||
+    profile?.walletAddress ||
+    wallet?.address ||
+    null;
+  const walletType =
+    walletStatus?.walletType || profile?.walletType || wallet?.walletType || null;
+  const gbuxDisplay =
+    walletStatus?.gbuxBalance ??
+    profile?.gbux ??
+    wallet?.gbux ??
+    profile?.credits ??
+    0;
 
   const eraChars = useMemo(
     () => snap.characters.filter((c) => characterEra(c) === era),
@@ -236,7 +326,7 @@ export function AccountPanel({
             ACCOUNT
           </div>
           <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.75 }}>
-            Grudge ID · Railway characters · bag · per-era roster
+            Grudge ID · wallet · cNFTs · bag · saves · per-era roster (shared Railway account)
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -327,29 +417,89 @@ export function AccountPanel({
             <section style={card}>
               <h3 style={{ ...h3, color: eraTone }}>Account</h3>
               {!snap.account ? (
-                <p style={muted}>Sign in to load Railway profile, bag, and characters.</p>
+                <p style={muted}>
+                  Sign in with Grudge ID to load the shared Railway account (wallet, bag, cNFTs,
+                  characters, saves).
+                </p>
               ) : (
-                <dl style={dl}>
+                <dl style={dlWide}>
                   <dt>Display</dt>
                   <dd>{snap.account.displayName || profile?.displayName || "—"}</dd>
                   <dt>Grudge ID</dt>
                   <dd>
                     <code style={{ fontSize: 12 }}>{snap.account.grudgeId || profile?.grudgeId || "—"}</code>
                   </dd>
-                  <dt>Home island</dt>
-                  <dd>{profile?.homeIslandId || "—"}</dd>
-                  <dt>GBUX / credits</dt>
+                  <dt>Account id</dt>
                   <dd>
-                    {profile?.gbux ?? profile?.credits ?? wallet?.gbux ?? "—"}
-                    {walletBusy ? " …" : ""}
+                    <code style={{ fontSize: 11 }}>{profile?.id || "—"}</code>
                   </dd>
-                  <dt>This era roster</dt>
+                  <dt>Wallet</dt>
+                  <dd>
+                    {walletAddress ? (
+                      <>
+                        <code style={{ fontSize: 11 }} title={walletAddress}>
+                          {shortAddress(walletAddress, 6, 6)}
+                        </code>
+                        {walletType ? (
+                          <span style={{ ...muted, marginLeft: 6 }}>({walletType})</span>
+                        ) : null}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                  <dt>GBUX</dt>
+                  <dd>
+                    {gbuxDisplay}
+                    {walletBusy || sharedBusy ? " …" : ""}
+                  </dd>
+                  <dt>Gold</dt>
+                  <dd>{profile?.gold ?? 0}</dd>
+                  <dt>Premium</dt>
+                  <dd>{profile?.premiumCurrency ?? 0}</dd>
+                  <dt>Char tokens</dt>
+                  <dd>{profile?.characterTokens ?? 0}</dd>
+                  <dt>Account XP</dt>
+                  <dd>{profile?.accountXp ?? 0}</dd>
+                  <dt>Home island</dt>
+                  <dd>
+                    {island?.name || (profile?.homeIsland ? "Yes" : "—")}
+                    {profile?.homeIslandId ? (
+                      <span style={{ ...muted, display: "block", fontSize: 11 }}>
+                        {shortAddress(profile.homeIslandId, 8, 6)}
+                      </span>
+                    ) : null}
+                  </dd>
+                  <dt>This era</dt>
                   <dd>
                     {eraChars.length} character{eraChars.length === 1 ? "" : "s"}
+                    {profile?.eraSlots?.[era] ? (
+                      <span style={muted}>
+                        {" "}
+                        · slots {eraChars.length}/{profile.eraSlots[era].max ?? "?"}
+                      </span>
+                    ) : null}
+                  </dd>
+                  <dt>cNFTs</dt>
+                  <dd>
+                    {nfts.length} on account
+                    {bagEntries.length > 0 ? ` · bag ${bagEntries.length} types` : ""}
                   </dd>
                 </dl>
               )}
               <p style={{ ...muted, marginTop: 12 }}>{ERAS.find((e) => e.id === era)?.blurb}</p>
+              {snap.account && profile?.eraSlots && (
+                <div style={{ marginTop: 12 }}>
+                  <h4 style={{ ...h3, fontSize: 12, marginBottom: 6 }}>Era slots (shared)</h4>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {Object.entries(profile.eraSlots).map(([k, v]) => (
+                      <span key={k} style={chip}>
+                        {k}: {v?.activeCharacterId ? "active" : "—"} / max {v?.max ?? "?"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             <section style={card}>
@@ -554,47 +704,401 @@ export function AccountPanel({
 
         {/* ── Inventory ── */}
         {panel === "inventory" && (
+          <div style={grid2}>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Shared bag · all eras</h3>
+              <p style={muted}>
+                Account resources from Railway <code>/api/account/resources</code> (shared vault). Icons from fleet
+                master-items / materials CDN.
+              </p>
+              {!snap.account ? (
+                <p style={muted}>Sign in to load bag.</p>
+              ) : bagEntries.length === 0 ? (
+                <p style={muted}>{sharedBusy ? "Loading…" : "Bag empty — harvest / craft to fill."}</p>
+              ) : (
+                <div style={invGrid}>
+                  {bagEntries.map(([id, qty]) => (
+                    <div key={id} style={invCell} title={id}>
+                      <img
+                        src={matIconUrl(id)}
+                        alt=""
+                        width={40}
+                        height={40}
+                        style={{ objectFit: "contain", imageRendering: "pixelated" }}
+                        onError={(e) => {
+                          e.currentTarget.src = iconUrl("inventory");
+                        }}
+                      />
+                      <span style={{ fontSize: 11, fontWeight: 700 }}>{qty}</span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          opacity: 0.7,
+                          maxWidth: 72,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {id}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                style={{ ...btnGhost, marginTop: 12 }}
+                onClick={() => void refreshShared()}
+                disabled={sharedBusy}
+              >
+                Refresh bag
+              </button>
+            </section>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Account inventory</h3>
+              <p style={muted}>
+                <code>/api/account/inventory</code> — account-scoped items (not character equip).
+              </p>
+              {!snap.account ? (
+                <p style={muted}>Sign in to load inventory.</p>
+              ) : inventoryItems.length === 0 ? (
+                <p style={muted}>{sharedBusy ? "Loading…" : "No inventory rows yet."}</p>
+              ) : (
+                <ul style={list}>
+                  {inventoryItems.slice(0, 40).map((item, i) => {
+                    const row = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+                    const label =
+                      String(row.itemId || row.id || row.name || row.item_id || `item-${i}`);
+                    const qty = row.quantity ?? row.qty ?? row.count ?? 1;
+                    return (
+                      <li key={`${label}-${i}`} style={{ ...listItem, justifyContent: "flex-start" }}>
+                        <span style={{ fontWeight: 650 }}>{label}</span>
+                        <span style={muted}>×{String(qty)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* ── Wallet ── */}
+        {panel === "wallet" && (
+          <div style={grid2}>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Solana wallet · shared account</h3>
+              <p style={muted}>
+                From Railway <code>/api/wallet/status</code> and <code>/api/account</code> — one wallet for every
+                Grudge Studio game on this Grudge ID.
+              </p>
+              {!snap.account ? (
+                <p style={muted}>Sign in to load wallet.</p>
+              ) : (
+                <dl style={dlWide}>
+                  <dt>Status</dt>
+                  <dd>
+                    {walletAddress ? (
+                      <span style={{ color: "#86efac" }}>Linked</span>
+                    ) : (
+                      <span style={{ color: "#fbbf24" }}>None yet</span>
+                    )}
+                    {walletBusy ? " …" : ""}
+                  </dd>
+                  <dt>Type</dt>
+                  <dd>{walletType || "—"}</dd>
+                  <dt>Address</dt>
+                  <dd>
+                    {walletAddress ? (
+                      <code style={{ fontSize: 11, wordBreak: "break-all" }}>{walletAddress}</code>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                  <dt>GBUX</dt>
+                  <dd>{gbuxDisplay}</dd>
+                  <dt>Crossmint email</dt>
+                  <dd style={{ fontSize: 12 }}>
+                    {profile?.crossmintEmail || walletStatus?.crossmintEmail || wallet?.crossmintEmail || "—"}
+                  </dd>
+                  <dt>Crossmint id</dt>
+                  <dd>
+                    <code style={{ fontSize: 11 }}>{profile?.crossmintWalletId || "—"}</code>
+                  </dd>
+                </dl>
+              )}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+                <button
+                  type="button"
+                  style={btnPrimary}
+                  disabled={!walletAddress}
+                  onClick={async () => {
+                    if (!walletAddress) return;
+                    try {
+                      await navigator.clipboard.writeText(walletAddress);
+                      setCopiedAddr(true);
+                      window.setTimeout(() => setCopiedAddr(false), 1600);
+                    } catch {
+                      /* */
+                    }
+                  }}
+                >
+                  {copiedAddr ? "Copied" : "Copy address"}
+                </button>
+                {walletAddress ? (
+                  <a
+                    href={`${SOLSCAN_ADDR}${walletAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ ...btnGhost, textDecoration: "none" }}
+                  >
+                    Solscan ↗
+                  </a>
+                ) : null}
+                <a
+                  href={WALLET_SITE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...btnGhost, textDecoration: "none" }}
+                >
+                  wallet.grudge-studio.com ↗
+                </a>
+                <button type="button" style={btnGhost} onClick={() => void refreshWallet()} disabled={walletBusy}>
+                  Refresh wallet
+                </button>
+              </div>
+            </section>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Balances · account row</h3>
+              <p style={muted}>Currencies on the shared <code>accounts</code> table (not per-character).</p>
+              {!snap.account ? (
+                <p style={muted}>Sign in required.</p>
+              ) : (
+                <div style={balanceGrid}>
+                  <div style={balanceCell}>
+                    <span style={muted}>GBUX</span>
+                    <strong>{gbuxDisplay}</strong>
+                  </div>
+                  <div style={balanceCell}>
+                    <span style={muted}>Gold</span>
+                    <strong>{profile?.gold ?? 0}</strong>
+                  </div>
+                  <div style={balanceCell}>
+                    <span style={muted}>Premium</span>
+                    <strong>{profile?.premiumCurrency ?? 0}</strong>
+                  </div>
+                  <div style={balanceCell}>
+                    <span style={muted}>Char tokens</span>
+                    <strong>{profile?.characterTokens ?? 0}</strong>
+                  </div>
+                  <div style={balanceCell}>
+                    <span style={muted}>Account XP</span>
+                    <strong>{profile?.accountXp ?? 0}</strong>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {/* ── cNFTs ── */}
+        {panel === "cnfts" && (
           <section style={card}>
-            <h3 style={{ ...h3, color: eraTone }}>Shared bag · all eras</h3>
+            <h3 style={{ ...h3, color: eraTone }}>cNFTs · character & island</h3>
             <p style={muted}>
-              Account resources from Railway <code>/api/account/resources</code> (shared vault). Icons from fleet
-              master-items / materials CDN.
+              Compressed NFTs from Railway <code>/api/nfts</code> (account-scoped). Mint / claim also available
+              from wallet tools when provisioned.
             </p>
             {!snap.account ? (
-              <p style={muted}>Sign in to load bag.</p>
-            ) : bagEntries.length === 0 ? (
-              <p style={muted}>{sharedBusy ? "Loading…" : "Bag empty — harvest / craft to fill."}</p>
-            ) : (
-              <div style={invGrid}>
-                {bagEntries.map(([id, qty]) => (
-                  <div key={id} style={invCell} title={id}>
-                    <img
-                      src={matIconUrl(id)}
-                      alt=""
-                      width={40}
-                      height={40}
-                      style={{ objectFit: "contain", imageRendering: "pixelated" }}
-                      onError={(e) => {
-                        e.currentTarget.src = iconUrl("inventory");
-                      }}
-                    />
-                    <span style={{ fontSize: 11, fontWeight: 700 }}>{qty}</span>
-                    <span style={{ fontSize: 10, opacity: 0.7, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {id}
-                    </span>
-                  </div>
-                ))}
+              <p style={muted}>Sign in to load cNFTs.</p>
+            ) : sharedBusy ? (
+              <p style={muted}>Loading…</p>
+            ) : nfts.length === 0 ? (
+              <div>
+                <p style={muted}>
+                  No cNFTs on this account yet. Mint a character or island NFT from Foundry / wallet flows — they
+                  will list here for every fleet game.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                  <a
+                    href={WALLET_SITE}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ ...btnGhost, textDecoration: "none" }}
+                  >
+                    Open wallet site ↗
+                  </a>
+                  <button type="button" style={btnGhost} onClick={() => void refreshShared()}>
+                    Refresh cNFTs
+                  </button>
+                </div>
               </div>
+            ) : (
+              <ul style={list}>
+                {nfts.map((n, i) => (
+                  <li key={n.id || n.mintAddress || n.characterId || `nft-${i}`} style={listItem}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+                      {n.imageUri ? (
+                        <img
+                          src={n.imageUri}
+                          alt=""
+                          width={44}
+                          height={44}
+                          style={{ borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 8,
+                            background: "rgba(168,85,247,0.15)",
+                            border: "1px solid rgba(168,85,247,0.35)",
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <strong style={{ color: "#eaf4ff" }}>
+                          {n.characterName || n.name || "cNFT"}
+                        </strong>
+                        <div style={muted}>
+                          {n.status || "—"}
+                          {n.isCompressed !== false ? " · compressed" : " · standard"}
+                          {n.characterId ? ` · char ${shortAddress(n.characterId, 6, 4)}` : ""}
+                        </div>
+                        {n.mintAddress ? (
+                          <div style={{ fontSize: 11, opacity: 0.7 }}>
+                            mint {shortAddress(n.mintAddress, 8, 6)}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                      {n.mintAddress ? (
+                        <a
+                          href={`${SOLSCAN_ADDR}${n.mintAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ ...btnGhost, textDecoration: "none", fontSize: 12 }}
+                        >
+                          Solscan
+                        </a>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
-            <button
-              type="button"
-              style={{ ...btnGhost, marginTop: 12 }}
-              onClick={() => void refreshShared()}
-              disabled={sharedBusy}
-            >
-              Refresh bag
-            </button>
           </section>
+        )}
+
+        {/* ── Saves ── */}
+        {panel === "saves" && (
+          <div style={grid2}>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Character saves · {ERAS.find((e) => e.id === era)?.label}</h3>
+              <p style={muted}>
+                Per-character <code>saveData</code> / equipment from Railway roster (not localStorage). Switch era
+                above to filter.
+              </p>
+              {!snap.account ? (
+                <p style={muted}>Sign in to load saves.</p>
+              ) : eraChars.length === 0 ? (
+                <p style={muted}>No characters in this era — create in Foundry or play a game that writes gameEra.</p>
+              ) : (
+                <ul style={list}>
+                  {eraChars.map((c) => {
+                    const summary = summarizeSave(c);
+                    const active = selectedChar?.id === c.id;
+                    return (
+                      <li
+                        key={c.id}
+                        style={{
+                          ...listItem,
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          borderColor: active ? eraTone : "rgba(110,168,255,0.15)",
+                          background: active ? `${eraTone}14` : "rgba(8,12,20,0.65)",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+                            <CharacterAvatar character={c} size={40} />
+                            <div>
+                              <strong style={{ color: "#eaf4ff" }}>{c.name}</strong>
+                              <div style={muted}>
+                                {c.raceId || "—"} · L{c.level ?? 1} · {shortAddress(c.id, 6, 4)}
+                              </div>
+                            </div>
+                          </div>
+                          <button type="button" style={btnGhost} onClick={() => gameSession.selectCharacter(c.id)}>
+                            Select
+                          </button>
+                        </div>
+                        <div style={{ marginTop: 8, fontSize: 12, opacity: 0.85 }}>
+                          {summary.lines.map((line) => (
+                            <div key={line}>{line}</div>
+                          ))}
+                        </div>
+                        {summary.keys.length > 0 && (
+                          <details style={{ marginTop: 8, fontSize: 11, opacity: 0.75 }}>
+                            <summary>saveData keys ({summary.keys.length})</summary>
+                            <code style={{ wordBreak: "break-all" }}>{summary.keys.join(", ")}</code>
+                          </details>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Home island save</h3>
+              <p style={muted}>
+                Account / ownership island from <code>/api/island</code> (shared with Warlords home).
+              </p>
+              {!snap.account ? (
+                <p style={muted}>Sign in required.</p>
+              ) : !island ? (
+                <p style={muted}>
+                  {sharedBusy ? "Loading…" : profile?.homeIslandId ? "Island id on account but detail empty." : "No home island yet."}
+                  {profile?.homeIslandId ? (
+                    <span style={{ display: "block", marginTop: 6 }}>
+                      id <code>{profile.homeIslandId}</code>
+                    </span>
+                  ) : null}
+                </p>
+              ) : (
+                <dl style={dlWide}>
+                  <dt>Name</dt>
+                  <dd>{island.name || "Home Island"}</dd>
+                  <dt>Id</dt>
+                  <dd>
+                    <code style={{ fontSize: 11 }}>{island.id || "—"}</code>
+                  </dd>
+                  <dt>Seed</dt>
+                  <dd>
+                    <code style={{ fontSize: 11 }}>{island.seed || "—"}</code>
+                  </dd>
+                  <dt>Map style</dt>
+                  <dd>{island.mapStyle || "—"}</dd>
+                  <dt>Mint action</dt>
+                  <dd>
+                    <code style={{ fontSize: 11 }}>{profile?.homeIslandMintActionId || "—"}</code>
+                  </dd>
+                </dl>
+              )}
+              <button
+                type="button"
+                style={{ ...btnGhost, marginTop: 12 }}
+                onClick={() => void refreshShared()}
+                disabled={sharedBusy}
+              >
+                Refresh island
+              </button>
+            </section>
+          </div>
         )}
 
         {/* ── Crafting ── */}
@@ -726,6 +1230,40 @@ const dl: CSSProperties = {
   gap: "6px 10px",
   fontSize: 13,
   margin: 0,
+};
+
+const dlWide: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "120px 1fr",
+  gap: "6px 10px",
+  fontSize: 13,
+  margin: 0,
+};
+
+const chip: CSSProperties = {
+  fontSize: 11,
+  padding: "4px 8px",
+  borderRadius: 999,
+  border: "1px solid rgba(110,168,255,0.22)",
+  background: "rgba(8,12,20,0.65)",
+  color: "#c5d4ea",
+};
+
+const balanceGrid: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+  gap: 10,
+  marginTop: 8,
+};
+
+const balanceCell: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(212,175,55,0.2)",
+  background: "rgba(212,175,55,0.06)",
 };
 
 const list: CSSProperties = { listStyle: "none", padding: 0, margin: "12px 0 0", display: "flex", flexDirection: "column", gap: 8 };
