@@ -136,8 +136,10 @@ export function EditorMode({ onExit, initialScene }: Props) {
     engineRef.current = engine;
     // Reopening a saved scene takes precedence; otherwise drop a default rig in
     // so the Dressing Room opens with a character already on the stand.
+    // Default stand: grudge6 Toon RTS only (loadGrudge6CombatRig via GrudgeAvatar).
+    // Never boot Mixamo Explorer — that path left wireframe sludge on the pedestal.
     if (initialScene) engine.importJSON(initialScene);
-    else void engine.loadRig();
+    else void engine.loadGrudgeCharacter("western-kingdoms", "warrior");
     return () => {
       engine.dispose();
       engineRef.current = null;

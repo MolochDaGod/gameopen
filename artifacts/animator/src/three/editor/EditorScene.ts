@@ -2148,20 +2148,24 @@ export class EditorScene {
   }
 
   /**
-   * Load any catalog character into the Dressing Room by id. Procedural rigs
-   * (Explorer / Gunslinger) go through the animation-library rig path so they get
-   * the full clip library + weapon arsenal; GLB fighters (Sensei / Brute /
-   * Striker / Tera-Kasi) are streamed as dressable models with their baked clips
-   * exposed in the Animations panel.
+   * Dressing Room character load — **grudge6 only** (loadGrudge6CombatRig).
+   * Catalog Mixamo Explorer / procedural paths are no longer used for production
+   * heroes (they left wireframe sludge + wrong skeleton). Lab arsenal still has
+   * loadRig behind explicit Anim Library tools.
    *
-   * **Same SSOT as Danger Room** (grudge-character-correctness):
-   * restore materials → deployCharacterModel (1.8 m, XZ pelvis, feet Y, face +Z)
-   * → stripPositionTracks on clips → re-ground after anim sample.
+   * Map legacy catalog ids → race/class presets when possible.
    */
   async loadCatalogCharacter(charId: string): Promise<void> {
     const def = getCharacter(charId);
-    if (def.procedural) {
-      await this.loadRig(def.defaultWeapon ?? "sword", charId);
+    // Production SSOT: never spawn Explorer/Mixamo for Dressing Room heroes
+    if (def.procedural || !def.file) {
+      const race = (def as { grudgeRace?: RaceId }).grudgeRace || "western-kingdoms";
+      const preset = (def as { grudgePreset?: PresetId }).grudgePreset || "warrior";
+      this.notify(
+        `Dressing Room uses grudge6 Toon RTS only (loadGrudge6CombatRig) · ${race}/${preset}`,
+        "info",
+      );
+      await this.loadGrudgeCharacter(race, preset);
       return;
     }
     const token = ++this.rigToken;
@@ -2755,13 +2759,21 @@ export class EditorScene {
     const token = ++this.grudgeToken;
     this.busy = true;
     this.emit();
-    // ONE grudge6 kit on stage — dispose prior avatars so debris/orange sludge piles don't stack
+    // ONE kit on stage — kill prior grudge6 AND Explorer Mixamo (wireframe sludge source)
     this.disposeAllGrudgeAvatars();
+    if (this.rig) {
+      try {
+        this.unloadRig();
+      } catch {
+        /* ignore */
+      }
+    }
     // Combat style from Danger Admin (samurai / knight / …) when no explicit pack
     const stylePack =
       opts?.animPack ||
       animPackForCombatStyle(loadStoredCombatStyle() as CombatStyleId) ||
       undefined;
+    // GrudgeAvatar.load → loadGrudge6CombatRig only (equip → fit → atlas → anims)
     const avatar = new GrudgeAvatar(raceId, presetId, {
       animPack: stylePack || undefined,
     });
@@ -2782,8 +2794,7 @@ export class EditorScene {
       }
       return null;
     }
-    // GrudgeAvatar already deployed model-local (feet Y=0, XZ pelvis). Root at origin.
-    // Path: loadGrudge6CombatRig only (equip → fit → atlas → anims). No second deploy.
+    // Path: loadGrudge6CombatRig only. No second deployCharacterModel / no Explorer.
     avatar.root.position.set(0, 0, 0);
     // Post-idle re-ground (same as Danger after pose sample)
     const model = findDeployModel(avatar.root);

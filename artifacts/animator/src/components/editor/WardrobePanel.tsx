@@ -3,7 +3,6 @@ import { Shirt, Upload, UserPlus, Sparkles, X, UserCheck, Check } from "lucide-r
 import type { EditorScene } from "../../three/editor/EditorScene";
 import type { EditorObjectSnapshot, EditorSnapshot } from "../../three/editor/types";
 import type { VoxelPart } from "../../three/explorer/rig";
-import { CHARACTERS } from "../../three/assets";
 import { RACE_ASSETS, RACE_IDS, PRESET_IDS } from "../../three/grudge";
 import type { RaceId, PresetId } from "../../three/grudge";
 import { SHELLS, type ShellId } from "../../three/LedMaskShells";
@@ -231,17 +230,11 @@ function VoxelCharacterSection({
 }
 
 /**
- * Character loader — catalog GLB fighters OR grudge6 races.
- *
- * Two production skeletons (do not conflate):
- *  - Explorer (catalog procedural): Mixamo 25-bone `mixamorig*` + live packs under
- *    `public/anim/*` (weapon set dropdown in Animations panel).
- *  - Grudge6 races: Bip001 mesh + offline Mixamo→Bip001 bakes under
- *    `anims/baked/*` (combat Style dropdown reloads that pack).
+ * Character loader — **grudge6 Toon RTS only** (loadGrudge6CombatRig).
+ * Race + class gear preset + combat style pack. No Explorer Mixamo path.
  */
 function CharacterLoader({ engine }: { engine: EditorScene }) {
-  const [catId, setCatId] = useState<string>(CHARACTERS[0]?.id ?? "explorer");
-  const [race, setRace] = useState<RaceId>(RACE_IDS[0]);
+  const [race, setRace] = useState<RaceId>("western-kingdoms");
   const [preset, setPreset] = useState<PresetId>("warrior");
   const [style, setStyle] = useState<string>(() => {
     try {
@@ -274,22 +267,12 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
     }
   };
 
-  const loadCatalog = async (id: string) => {
-    setCatId(id);
-    setBusy(true);
-    try {
-      await engine.loadCatalogCharacter(id);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const loadRace = async (r: RaceId, p: PresetId) => {
     setRace(r);
     setPreset(p);
     setBusy(true);
     try {
-      // Style pack is read from localStorage inside loadGrudgeCharacter
+      // GrudgeAvatar → loadGrudge6CombatRig only
       await engine.loadGrudgeCharacter(r, p);
     } finally {
       setBusy(false);
@@ -298,36 +281,13 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
 
   return (
     <div className="ed-field">
-      <label className="ed-label">Load character</label>
-      <div className="ed-row">
-        <select
-          className="ed-select"
-          value={catId}
-          disabled={busy}
-          title="Catalog — Explorer is Mixamo 25-bone; other ids may be GLB fighters"
-          onChange={(e) => void loadCatalog(e.target.value)}
-        >
-          {CHARACTERS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <button
-          className="ed-btn ed-tw"
-          disabled={busy}
-          title="Reload catalog character"
-          onClick={() => void loadCatalog(catId)}
-        >
-          <UserPlus size={14} />
-        </button>
-      </div>
+      <label className="ed-label">Load character (grudge6 Toon RTS)</label>
       <div className="ed-row" style={{ marginTop: 6 }}>
         <select
           className="ed-select"
           value={race}
           disabled={busy}
-          title="Grudge6 race (Bip001 + baked packs)"
+          title="Grudge6 race — Bip001 + Toon RTS atlas (loadGrudge6CombatRig)"
           onChange={(e) => void loadRace(e.target.value as RaceId, preset)}
         >
           {RACE_IDS.map((r) => (
@@ -340,7 +300,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
           className="ed-select"
           value={preset}
           disabled={busy}
-          title="Gear preset"
+          title="Class gear preset (mesh_ids)"
           onChange={(e) => void loadRace(race, e.target.value as PresetId)}
         >
           {PRESET_IDS.map((p) => (
@@ -352,7 +312,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         <button
           className="ed-btn ed-tw"
           disabled={busy}
-          title="Reload grudge6 race (Danger stack)"
+          title="Reload via loadGrudge6CombatRig (Danger SSOT)"
           onClick={() => void loadRace(race, preset)}
         >
           <UserPlus size={14} />
@@ -363,7 +323,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
           className="ed-select"
           value={style}
           disabled={busy}
-          title="Combat style reloads the Mixamo→Bip001 baked pack on the selected grudge hero"
+          title="Combat style reloads Mixamo→Bip001 baked pack"
           onChange={(e) => void applyStyle(e.target.value)}
         >
           <option value="auto">Style · Weapon default</option>
@@ -394,14 +354,12 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
             engine.setShowSkeleton(e.target.checked);
           }}
         />
-        <span>Show skeleton (Bip001 / mixamorig)</span>
+        <span>Show skeleton (Bip001)</span>
       </label>
       <div className="ed-empty" style={{ padding: "6px 0 0", fontSize: 11, opacity: 0.75 }}>
-        <strong>Explorer</strong> = Mixamo 25-bone + <code>anim/*</code> packs.
-        <br />
-        <strong>Grudge6</strong> = Bip001 mesh + retargeted bakes in{" "}
-        <code>anims/baked/&#123;pack&#125;</code> (sword_shield, magic, longbow…).
-        Style dropdown swaps that pack live.
+        <strong>Only path:</strong> <code>loadGrudge6CombatRig</code> — equip → SI fit →
+        atlas → Bip001 baked packs under <code>anims/baked/&#123;pack&#125;</code>.
+        No Explorer / Mixamo catalog on this pedestal.
       </div>
     </div>
   );
