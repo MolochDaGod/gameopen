@@ -10,13 +10,15 @@ import { T0_WEAPON_KITS } from "./t0WeaponSkills";
 import type { SkillKind } from "../types";
 
 function kindToProjectile(kind: SkillKind): FleetWeaponSkill["projectile"] | undefined {
+  // Slash waves are melee residual projectiles (weapon edge), not free casts.
+  // Range/color/size refined per skill role in t0SkillToFleet.
   if (kind === "slash" || kind === "thrust") {
     return {
       kind: "slash_wave",
-      speed: 15,
-      range: 8,
+      speed: 14,
+      range: 4,
       slashVariant: "slashblue",
-      contactRadius: 0.95,
+      contactRadius: 0.9,
       followWeapon: true,
       followDuration: 0.1,
     };
@@ -81,10 +83,24 @@ export function t0SkillToFleet(
   const projectile = kindToProjectile(skill.kind);
   if (projectile?.kind === "slash_wave") {
     projectile.slashVariant = variant;
-    if (isSamurai2h) {
-      projectile.speed = role === "power" ? 20 : role === "ranged" ? 18 : 15;
-      projectile.range = role === "power" ? 12 : 9;
+    // Role-based travel: light residual ~1–2 m, power wave ~8–10 m
+    if (role === "power") {
+      projectile.speed = isSamurai2h ? 18 : 16;
+      projectile.range = isSamurai2h ? 10 : 9;
+      projectile.contactRadius = 1.25;
+    } else if (role === "special") {
+      projectile.speed = 15;
+      projectile.range = 6;
       projectile.contactRadius = 1.05;
+    } else if (role === "ranged") {
+      projectile.speed = 17;
+      projectile.range = 7;
+      projectile.contactRadius = 0.95;
+    } else {
+      // basic / light — short melee extension
+      projectile.speed = 12;
+      projectile.range = 1.5;
+      projectile.contactRadius = 0.65;
     }
   }
 
@@ -106,8 +122,9 @@ export function t0SkillToFleet(
     castDuration: 0.2,
     activeDuration: isSamurai2h ? 0.32 : 0.25,
     collider: kindToCollider(skill.kind),
-    castEffectId: isSamurai2h ? "getsuga_slash" : skill.kind,
-    impactEffectId: skill.kind === "slash" || isSamurai2h ? "getsuga_slash" : skill.kind,
+    // Cast/impact VFX ids = skill kind; slash_wave projectile carries residual
+    castEffectId: skill.kind,
+    impactEffectId: skill.kind,
     projectile,
     aoeRadius: skill.kind === "nova" || skill.kind === "slam" ? 2.4 : undefined,
     iconUrl: skill.iconUrl,

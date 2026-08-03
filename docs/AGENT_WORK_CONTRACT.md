@@ -10,6 +10,9 @@ systems instead of finishing the path already on **grudox.grudge-studio.com**.
 
 1. **Finish existing SSOT first** — search GRUDOX arcade, arena, Warlords, D1
    before inventing a substitute mode.
+1b. **Packages / 3D stack** — before `npm install` or a new anim/terrain/physics
+   folder, read **`docs/OPEN_PACKAGE_SSOT.md`**. One mixer (Three), one physics
+   (Rapier compat), one play Controller/camera. No parallel systems.
 2. **Do not rebrand one game as another** — Voxel Velocity ≠ Danger Room.
 2b. **Production world only** — terrain / water / AI / island deploy work builds
    and QA against **live** open.grudge-studio.com + CDN (skill

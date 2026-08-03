@@ -16,6 +16,7 @@ import {
   type IslandMapLayers,
 } from "./islandMapLayers";
 import { ORC_AGENT } from "./pirateVillageMap";
+import { applyMapScaleForOrc } from "./mapOrcScale";
 
 const BASE = import.meta.env.BASE_URL || "/";
 
@@ -34,23 +35,20 @@ function loadGltf(url: string): Promise<THREE.Group> {
 }
 
 /**
- * Load arena. Default scale 1; if the pit reads huge/tiny, pass explicit scale
- * after measuring door/human props.
+ * Load arena. Auto-fit for 2 m orc door clear unless fixedScale passed.
  */
 export async function loadArenaMap(opts?: {
   scale?: number;
 }): Promise<ArenaMapResult> {
-  const scale = opts?.scale ?? 1.0;
   const url = `${BASE}models/maps/arena/arena.glb`;
   const scene = await loadGltf(url);
 
   const root = new THREE.Group();
   root.name = "ArenaMap";
-  scene.scale.setScalar(scale);
   root.add(scene);
 
-  reGroundToY0(root);
-  centerXZ(root);
+  const report = applyMapScaleForOrc(root, { fixedScale: opts?.scale });
+  const scale = report.scale;
 
   const layers = classifyIslandScene(root, "arena");
   const fp = measureFootprint(root);

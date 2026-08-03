@@ -224,8 +224,9 @@ export function orientProjectile(
     // Empirically: (π/2, 0, 0) puts local Y→−Z of root; (0, π/2, π/2) was old — often flat.
     // New default faceOn: X=spine horizontal, Y=up along long after rotate.
     if (mode === "faceOn") {
-      // Thin local Y → root +Z (travel): rotate +90° about X so Y→−Z, then flip
-      // Use: Rx(π/2) maps Y→−Z; we want Y→+Z so Rx(−π/2)
+      // Thin local Y → root +Z (travel): Rx(−π/2) maps +Y → +Z.
+      // Optional localEuler then twists the crescent so the *belly/mid* leads
+      // (bow-shot style) instead of a side-on board.
       _eul.set(-Math.PI / 2, 0, 0);
     } else {
       // edgeLead: long local Z already → root +Z; no extra

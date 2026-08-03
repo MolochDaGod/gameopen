@@ -7,7 +7,6 @@ import {
   type PresetId,
   type RaceId,
 } from "./index";
-import { loadBakedGrudgeCharacter } from "./bakedRoster";
 import { loadGrudge6CombatRig } from "./grudge6Runtime";
 import {
   resolveSkeletonSockets,
@@ -322,20 +321,18 @@ export class GrudgeAvatar implements Avatar {
       );
       return;
     } catch (err) {
-      console.warn("[GrudgeAvatar] grudge6 skinned+baked path failed — static fallback", err);
+      // NEVER fall back to 30characters.glb static roster — that multi-hero bake
+      // is a known failed attempt and produces the debris / wrong-kit look.
+      console.error(
+        "[GrudgeAvatar] grudge6 combat rig FAILED — no 30characters fallback",
+        this.raceId,
+        this.presetId,
+        err,
+      );
+      throw err instanceof Error
+        ? err
+        : new Error(`[GrudgeAvatar] grudge6 load failed for ${this.raceId}/${this.presetId}`);
     }
-
-    // Fallback: textured static roster (visible but NO skeletal animation).
-    const group = await loadBakedGrudgeCharacter(this.raceId, this.presetId);
-    if (this.disposed) return;
-    this.model = group;
-    this.mixer = null;
-    this.holder.add(group);
-    group.updateMatrixWorld(true);
-    this.rightHand = findHandBone(group, "R");
-    this.leftHand = findHandBone(group, "L");
-    this.findArmBones(group);
-    this.holder.rotation.y = this.modelYaw;
   }
 
   clipNames(): string[] {
@@ -753,15 +750,18 @@ export class GrudgeAvatar implements Avatar {
     return dur;
   }
 
-  /** After a one-shot lands, re-sit soles on y=0 and zero world XZ drift. */
+  /**
+   * After a one-shot lands, re-sit soles on model-local y=0 only.
+   * NEVER touch `this.root.position` world XZ/Y — Controller owns world feet
+   * (zeroing XZ was teleporting heroes to origin / through the floor).
+   */
   private scheduleReGround(delayS: number): void {
     const model = this.model ?? findDeployModel(this.root);
     if (!model) return;
     window.setTimeout(() => {
-      if (this.disposed) return;
-      reGroundAfterAnimSample(model, 0);
-      this.root.position.x = 0;
-      this.root.position.z = 0;
+      if (this.disposed || !this.model) return;
+      // Model-local ground only (under holder). World root stays with Controller.
+      reGroundAfterAnimSample(this.model, 0);
     }, Math.max(16, delayS * 1000));
   }
 
@@ -821,6 +821,69 @@ export class GrudgeAvatar implements Avatar {
   }
 
   /**
+   * Re-fill climb/swim/hurt/death/mantle after map switch (same controller session).
+   * Safe to call repeatedly — only loads missing roles.
+   */
+  async ensureFleetRolesReady(): Promise<void> {
+    if (!this.model || !this.mixer) return;
+    try {
+      const { hydrateFleetAvatarRoles, applyRoleAliases, missingFleetRoles } = await import(
+        "../fleetAvatarHydrate"
+      );
+      await hydrateFleetAvatarRoles({
+        model: this.model,
+        mixer: this.mixer,
+        logId: `map-ready:${this.raceId}`,
+        hasRole: (role) =>
+          this.roleClip.has(role as import("../types").AnimRole) || this.actions.has(role),
+        register: (role, clip) => {
+          if (!this.mixer) return;
+          const action = this.mixer.clipAction(clip);
+          this.actions.set(role, action);
+          this.actions.set(clip.name, action);
+          this.roleClip.set(role as import("../types").AnimRole, role);
+        },
+      });
+      applyRoleAliases(
+        (n) => this.actions.has(n),
+        (role, key) => {
+          if (this.roleClip.has(role as import("../types").AnimRole)) return;
+          if (this.actions.has(key)) this.roleClip.set(role as import("../types").AnimRole, key);
+        },
+        (r) => this.roleClip.has(r as import("../types").AnimRole),
+      );
+      // Rebuild director so new roles are playable
+      if (this.mixer) {
+        try {
+          const clipMap = new Map<string, THREE.AnimationClip>();
+          for (const [role, actionKey] of this.roleClip) {
+            const act = this.actions.get(actionKey) || this.actions.get(role);
+            if (act) clipMap.set(role, act.getClip());
+          }
+          for (const [name, act] of this.actions) {
+            if (!clipMap.has(name)) clipMap.set(name, act.getClip());
+          }
+          this.director = new AnimationDirector(
+            this.mixer,
+            clipsFromRoleMap(clipMap),
+            { fade: this.blendTime },
+          );
+        } catch {
+          /* keep existing director */
+        }
+      }
+      const miss = missingFleetRoles(
+        (r) => this.roleClip.has(r as import("../types").AnimRole) || this.actions.has(r),
+      );
+      if (miss.length) {
+        console.warn(`[GrudgeAvatar] map roles still missing: ${miss.join(",")}`);
+      }
+    } catch (e) {
+      console.warn("[GrudgeAvatar] ensureFleetRolesReady", e);
+    }
+  }
+
+  /**
    * Wire arsenal weapon mesh for two-hand / spear grip assist.
    * Call from Studio after attachWeapon when weapon is 2H or spear.
    */
@@ -833,6 +896,7 @@ export class GrudgeAvatar implements Avatar {
   update(dt: number): void {
     if (!this.mixer) return;
     // beginFrame → mixer → apply (foot plant; matches Character)
+    // Director owns mixer when present — never double-update (explodes bones).
     this.footGrounder.beginFrame();
     if (this.director) {
       this.director.update(dt);
@@ -846,6 +910,8 @@ export class GrudgeAvatar implements Avatar {
       this.twoHandGrip.apply(dt, { strength: this.isOneShotActive ? 0.65 : 0.4 });
     }
     this.updateColliderTransform();
+    // Foot IK plants relative to model; ground is Danger Room y=0. Do not
+    // write root world Y here — Controller owns feet on floor.
     this.footGrounder.apply(dt);
     if (this.oneShot) {
       this.oneShotEnd -= dt;

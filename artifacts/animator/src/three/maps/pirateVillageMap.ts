@@ -4,23 +4,17 @@
  * Assets: public/models/maps/pirate/{village,palm_trees,date_palm}.glb
  * Recipe: content/worlds/pirate-village-production.json
  * Docs: docs/DANGER_MAP_MOBILITY_AND_PIRATE_VILLAGE.md
+ * Scale SSOT: maps/mapOrcScale.ts (ORC_AGENT 2.0 m)
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { ORC_AGENT } from "./mapOrcScale";
 
 export type GameLayer = "ground" | "solid" | "climb" | "swim" | "harvest" | "vehicle" | "prop";
 
-/** SSOT agent for 2 m orc (see content/worlds/pirate-village-production.json). */
-export const ORC_AGENT = {
-  baseHeightM: 2.0,
-  radiusM: 0.52,
-  doorClearM: 2.45,
-  stepHeightM: 0.4,
-  maxSlopeDeg: 45,
-  /** Miniature Sketchfab village → playable orc doors (~1.86 m tall pack × 4). */
-  villageUniformScale: 4.0,
-  datePalmScale: 0.01,
-} as const;
+/** Re-export SSOT — all maps use the same 2 m orc agent. */
+export { ORC_AGENT };
+export { ORC_NAV_AGENT } from "./mapOrcScale";
 
 const LAYER_MATCH: Record<GameLayer, string[]> = {
   ground: ["Landscape", "Stairs", "Sand"],
@@ -316,16 +310,6 @@ export function colliderPlanForObject(o: THREE.Object3D): {
   }
   return null;
 }
-
-/** Agent constants for navmesh bake (three-pathfinding / Recast). */
-export const ORC_NAV_AGENT = {
-  height: ORC_AGENT.baseHeightM + 0.1,
-  radius: ORC_AGENT.radiusM,
-  doorClear: ORC_AGENT.doorClearM,
-  step: ORC_AGENT.stepHeightM,
-  maxSlopeDeg: ORC_AGENT.maxSlopeDeg,
-  zoneId: "danger-pirate",
-} as const;
 
 /**
  * Build a three-pathfinding zone from landscape meshes (merge geometries).

@@ -75,4 +75,23 @@ if (!fs.existsSync(out)) {
   console.error("Missing build output:", out);
   process.exit(1);
 }
+
+// 5. Purge failed / non-SSOT character packs so Danger Room cannot load them
+const purge = [
+  "models/grudge6/30characters.glb",
+  "models/characters/30characters.glb",
+];
+for (const rel of purge) {
+  const p = path.join(anim, "dist/public", rel);
+  if (fs.existsSync(p)) {
+    fs.unlinkSync(p);
+    console.log("[vercel-build] purged failed character asset:", rel);
+  }
+  const pub = path.join(anim, "public", rel);
+  if (fs.existsSync(pub)) {
+    fs.unlinkSync(pub);
+    console.log("[vercel-build] purged public:", rel);
+  }
+}
+
 console.log("\n[vercel-build] OK →", out);

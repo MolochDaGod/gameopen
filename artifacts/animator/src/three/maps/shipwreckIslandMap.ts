@@ -14,6 +14,7 @@ import {
   type IslandMapLayers,
 } from "./islandMapLayers";
 import { ORC_AGENT } from "./pirateVillageMap";
+import { applyMapScaleForOrc } from "./mapOrcScale";
 
 const BASE = import.meta.env.BASE_URL || "/";
 
@@ -30,23 +31,21 @@ function loadGltf(url: string): Promise<THREE.Group> {
 }
 
 /**
- * Load shipwreck island, classify layers, SI re-ground, optional uniform scale.
- * Default scale 1 — Sprytile maps are often already metre-ish; pass scale if tiny.
+ * Load shipwreck island, classify layers, scale for 2 m orc, SI re-ground.
  */
 export async function loadShipwreckIslandMap(opts?: {
   scale?: number;
 }): Promise<ShipwreckMapResult> {
-  const scale = opts?.scale ?? 1.0;
   const url = `${BASE}models/maps/shipwreck/shipwreck_island.glb`;
   const scene = await loadGltf(url);
 
   const root = new THREE.Group();
   root.name = "ShipwreckIslandMap";
-  scene.scale.setScalar(scale);
   root.add(scene);
 
-  reGroundToY0(root);
-  centerXZ(root);
+  const report = applyMapScaleForOrc(root, {
+    fixedScale: opts?.scale,
+  });
 
   const layers = classifyIslandScene(root, "shipwreck");
   const fp = measureFootprint(root);
@@ -63,7 +62,7 @@ export async function loadShipwreckIslandMap(opts?: {
     root,
     ...layers,
     waterBand,
-    scale,
+    scale: report.scale,
     boundHalf: fp.boundHalf,
     footprint: { min: fp.min, max: fp.max },
     agent: ORC_AGENT,

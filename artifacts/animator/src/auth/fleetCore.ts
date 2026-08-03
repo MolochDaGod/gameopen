@@ -3,8 +3,10 @@
  * Aligned with gameopen (`artifacts/animator/src/lib/fleet.ts` + grudgeAuth).
  *
  * SSOT: Railway Postgres characters · Grudge ID JWT · same-origin /api rewrites.
- * See docs/GRUDOX_UNIFIED_SCHEME.md
+ * See docs/GRUDOX_UNIFIED_SCHEME.md · entryCatch anti-loop return URLs
  */
+
+import { safeReturnUrl } from "../lib/entryCatch";
 
 export const FLEET = {
   /** Grudge ID hub — login + /api/auth/* (id-gateway → Railway). */
@@ -289,7 +291,8 @@ function fleetBrandReturn(pathAndQuery?: string): string {
  * Always uses /login (sso-check is 404 on id-gateway).
  */
 export function buildFleetLoginUrl(returnTo?: string, opts?: { app?: string; force?: boolean }): string {
-  const redirect = returnTo || fleetBrandReturn();
+  // Anti-loop: sanitize return (never character.* / id.* as destination)
+  const redirect = safeReturnUrl(returnTo || fleetBrandReturn(), fleetBrandReturn());
   const q = new URLSearchParams({
     redirect_uri: redirect,
     redirect,

@@ -171,6 +171,10 @@ import {
 import { FabledSkyTowns } from "./fabled/FabledSkyTowns";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
 import {
+  FLAT_FOOT_SAMPLER,
+  footSamplerFromHeightAt,
+} from "./anim/terrainFootSample";
+import {
   deploySandboxVfx,
   sandboxEffectForKey,
   sandboxLabelForEffect,
@@ -2040,14 +2044,31 @@ export class Studio {
     } catch {
       /* optional */
     }
-    // Terrain foot IK — Character + GrudgeAvatar (flat y=0 Danger Room floor).
-    if (typeof (next as { setFootIk?: (on: boolean) => void }).setFootIk === "function") {
-      (next as { setFootIk: (on: boolean) => void }).setFootIk(true);
+    // Terrain foot IK — use active map height field when outdoor, else flat DR.
+    {
+      const outdoor =
+        this.testWorldId !== "danger-room" &&
+        this.forestWorld?.isReady?.() &&
+        this.forestWorld?.getGroundHeightAt?.();
+      this.wireCharacterFeetOnTerrain(outdoor || null);
     }
-    // Reliable scene deploy: human-scale + feet grounded (Y-up / XZ ground SSOT).
+    // Scale gate only if deploy did not already lock SI height (avoid double-fit stretch).
     try {
-      const { ensureHumanScale } = await import("./characterDeploy");
-      ensureHumanScale(this.character.root);
+      const {
+        ensureHumanScale,
+        findDeployModel,
+        reGroundAfterAnimSample,
+      } = await import("./characterDeploy");
+      const model = findDeployModel(this.character.root);
+      const already =
+        model?.userData?.grudgeHeightFit === true ||
+        model?.userData?.characterDeployed === true;
+      if (!already) {
+        ensureHumanScale(this.character.root);
+      } else if (model) {
+        // Soft re-ground only — never re-scale a finished grudge6 kit
+        reGroundAfterAnimSample(model, 0);
+      }
     } catch (e) {
       console.warn("[Studio] ensureHumanScale failed", e);
     }
@@ -3534,25 +3555,39 @@ export class Studio {
         );
       }
 
-      // ── Projectile deploy (Getsuga ice-bow slash wave / bolt along swing) ──
+      // ── Melee slash-wave / bolt (NOT a hotkey) — weapon-edge angle at hit frame ──
       if (fx.projectile && fx.projectile.kind !== "none") {
-        // Barrel / tip spawn — sticky aim so waves leave near the edge, not the chest
+        // Muzzle = weapon tip; direction = grip→tip (blade angle), not body forward
         const barrel = barrelSpawn(sample, 0.1);
         const muzzle = tip
-          ? barrel.origin
-          : this.muzzleOrigin?.(dir) ?? slashPos.clone();
-        const projDir = barrel.dir.lengthSq() > 1e-6 ? barrel.dir : dir;
+          ? tip.clone()
+          : barrel.origin.lengthSq() > 1e-6
+            ? barrel.origin
+            : this.muzzleOrigin?.(dir) ?? slashPos.clone();
+        // Prefer live weapon edge direction so projectile matches anim blade angle
+        let projDir = dir.clone();
+        if (tip && grip) {
+          const along = tip.clone().sub(grip);
+          if (along.lengthSq() > 1e-5) {
+            along.normalize();
+            // Blend blade angle with aim (blade dominates so slash leaves the steel)
+            projDir.copy(along).lerp(dir, 0.22).normalize();
+          }
+        } else if (barrel.dir.lengthSq() > 1e-6) {
+          projDir.copy(barrel.dir).lerp(dir, 0.3).normalize();
+        }
         if (fx.projectile.kind === "slash_wave") {
           const contactR = fx.projectile.contactRadius ?? 0.95;
+          const meshScale = fx.projectile.meshScale ?? 1;
           const projDmg = strike.damage * dmgMul * 0.35;
-          // Light residual along the wave; end-hit carries the full residual pack.
+          // Path damage + physical push collider along residual wave
           const applyPathHit = (p: THREE.Vector3, radius: number, scale = 0.22) => {
             const dmg = projDmg * scale;
             this.targets.playerHit(
               p,
               radius,
               {
-                force: 1,
+                force: Math.max(1, fx.knockback * scale * 0.35),
                 damage: dmg,
                 poiseDamage: Math.round(4 * scale * 4),
               },
@@ -3561,44 +3596,49 @@ export class Studio {
             );
             this.campEnemies?.damageInRadius(p, radius, dmg);
             this.raiderBoats?.damageInRadius(p, radius, dmg);
+            // Practice bags / pinata push along the wave
+            this.hitBags(p, radius, fx.knockback * scale * 0.4, dmg * 0.5);
           };
-          // Weapon edge for trail: grip→tip follows mounted collider
+          // Stick to weapon edge for a few frames so angle matches anim
           const followWeapon = () => {
             if (this.mounted?.tip) {
-              const tip = new THREE.Vector3();
-              this.mounted.tip.getWorldPosition(tip);
+              const tipW = new THREE.Vector3();
+              this.mounted.tip.getWorldPosition(tipW);
               const base = new THREE.Vector3();
               if (this.mounted.tip.parent) {
                 this.mounted.tip.parent.getWorldPosition(base);
               } else {
-                base.copy(tip).addScaledVector(dir, -0.6);
+                base.copy(tipW).addScaledVector(projDir, -0.6);
               }
-              return { base, tip };
+              return { base, tip: tipW };
             }
             const pose = this.colliderPose();
             if (pose) {
-              const tip = pose.pos.clone();
-              const base = tip.clone().addScaledVector(dir, -0.55);
-              return { base, tip };
+              const tipW = pose.pos.clone();
+              const base = tipW.clone().addScaledVector(projDir, -0.55);
+              return { base, tip: tipW };
             }
             return null;
           };
-          // Aim point: hard/soft lock, else along swing so crescent faces that way
+          // Aim: lock if any, else continue along **blade** dir (not only body fwd)
           const lockPt = this.targets?.selectedHostilePoint?.();
           const aimPt = lockPt
             ? lockPt.clone().setY(lockPt.y + 0.2)
-            : muzzle.clone().addScaledVector(dir, fx.projectile.range);
+            : muzzle.clone().addScaledVector(projDir, fx.projectile.range);
           this.vfx.getsugaSlash(muzzle, projDir, {
             speed: fx.projectile.speed,
             range: fx.projectile.range,
             color: fx.projectile.color,
-            // Production mesh: slashred | slashblue | slashpurple | slashyellow
             variant: fx.projectile.variant,
             aim: aimPt,
             contactRadius: contactR,
+            meshScale,
             followDuration: fx.projectile.followDuration ?? 0.1,
             followWeapon,
-            tickEvery: 0.14,
+            // Short residual waves: less arc so they read as melee extension
+            arcHeightFrac: fx.projectile.range <= 2 ? 0.04 : 0.12,
+            arcLateral: fx.projectile.range <= 2 ? 0.05 : 0.28,
+            tickEvery: 0.12,
             onPathTick: (p, radius) => applyPathHit(p, radius, 0.22),
             onHit: (p) => {
               this.vfx.impact(p, fx.projectile!.color, contactR);
@@ -11993,60 +12033,244 @@ export class Studio {
     null;
 
   /**
-   * Switch test map: Danger Room (combat) · outdoor harvest/build/loco maps.
-   * Persists selection; applies fog + default activity mode.
-   * Emits onMapLoadProgress for loading curtains (best practice).
+   * Same player session across every map:
+   * - keep Controller instance, viewMode, weaponId / T0 skills
+   * - plant feet on terrain (Controller Y + foot IK)
+   * - camera occluders from map meshes when outdoor
+   */
+  private wirePlayerSessionOnMap(kind: "danger-room" | "outdoor"): void {
+    // Never rebuild Controller / weapon / camera here — only rebind surfaces.
+    if (!this.controller) return;
+
+    // Camera framing stays what the player already has
+    this.controller.setViewMode(this.viewMode);
+    this.applyActivityCamera(this.activityMode);
+
+    if (kind === "danger-room") {
+      this.controller.setGroundHeightAt(null);
+      this.controller.setCameraOccluders([]);
+      this.wireCharacterFeetOnTerrain(null);
+      return;
+    }
+
+    const gh = this.forestWorld?.getGroundHeightAt?.() ?? null;
+    this.controller.setGroundHeightAt(gh);
+    const grounds = this.forestWorld?.getGroundMeshes?.() ?? [];
+    // Soft occluders so TPS camera doesn't clip through terrain/props
+    this.controller.setCameraOccluders(grounds.length ? grounds : []);
+    this.wireCharacterFeetOnTerrain(gh);
+
+    // Snap body Y onto terrain without changing XZ / facing / weapon
+    if (gh && this.character) {
+      const p = this.character.root.position.clone();
+      let y = gh(p.x, p.z);
+      if (y == null || !Number.isFinite(y)) y = gh(0, 0);
+      if (y != null && Number.isFinite(y)) {
+        p.y = y;
+        this.controller.blinkTo(p);
+      }
+    }
+  }
+
+  /**
+   * Foot IK plants soles on terrain after mixer (Character + GrudgeAvatar).
+   * Pass null for flat Danger Room y=0.
+   */
+  private wireCharacterFeetOnTerrain(
+    heightAt: ((x: number, z: number) => number | null) | null,
+  ): void {
+    const ch = this.character as {
+      setFootIk?: (on: boolean) => void;
+      setGroundSampler?: (fn: ((x: number, z: number) => { y: number; normal: THREE.Vector3 | null }) | null) => void;
+    } | null;
+    if (!ch) return;
+    ch.setFootIk?.(true);
+    if (heightAt) {
+      ch.setGroundSampler?.(footSamplerFromHeightAt(heightAt, { withNormals: true }));
+    } else {
+      ch.setGroundSampler?.(FLAT_FOOT_SAMPLER);
+    }
+  }
+
+  /**
+   * Ensure climb / swim / hurt / death / mantle etc. are registered before play.
+   * Does not swap weapon packs or controller — fills missing fleet roles only.
+   */
+  private async ensureTraversalAnimsReady(): Promise<void> {
+    const ch = this.character as {
+      hasRole?: (r: string) => boolean;
+      ensureFleetRolesReady?: () => Promise<void>;
+    } | null;
+    if (!ch) return;
+    try {
+      if (typeof ch.ensureFleetRolesReady === "function") {
+        await ch.ensureFleetRolesReady();
+      }
+      const { missingFleetRoles } = await import("./fleetAvatarHydrate");
+      const miss = missingFleetRoles((r) => !!ch.hasRole?.(r));
+      if (miss.length) {
+        console.warn(`[Studio] map session missing roles: ${miss.join(",")}`);
+      } else {
+        console.info("[Studio] map session fleet roles OK (loco/climb/swim/hurt/death)");
+      }
+    } catch (e) {
+      console.warn("[Studio] ensureTraversalAnimsReady", e);
+    }
+  }
+
+  /**
+   * Full Danger Room combat instance — walls, DJ, heavy bags, KCC floor.
+   * Exclusive with outdoor map instances (never half-hide into a void).
+   * Same Controller / weapon skills / camera as outdoor (only surfaces change).
+   */
+  private activateDangerRoomInstance(reason = "restore"): void {
+    this.forestWorld?.clear();
+    if (this.room?.group) this.room.group.visible = true;
+    if (this.djBooth?.group) this.djBooth.group.visible = true;
+    if (this.practiceTargets?.group) this.practiceTargets.group.visible = true;
+    this.controller?.setRoomBound(this.room?.half ?? 16);
+    this.controller?.clearWaterBand();
+    if (this.playerKcc) {
+      this.applyDangerRoomCollision(this.character?.root.position.clone());
+    } else {
+      this.controller?.setCollision(null);
+    }
+    this.wirePlayerSessionOnMap("danger-room");
+    this.baseFogColor.set(Studio.FOG_BASE_COLOR);
+    this.baseFogNear = Studio.FOG_BASE_NEAR;
+    this.baseFogFar = Studio.FOG_BASE_FAR;
+    this.baseBgColor.set(Studio.FOG_BASE_COLOR);
+    this.writeBaselineFog();
+    this.applyRoomAtmosphere(true);
+    this.applyRoomAmbience();
+    this.pinataHarvest?.clear();
+    this.harvestPhysicsBake?.clear();
+    this.forestHarvestBake?.clear();
+    if (this.buildGrid) {
+      this.buildGrid.setGroundMeshes([]);
+      this.buildGrid.setVisible(false);
+    }
+    void this.ensureTraversalAnimsReady();
+    console.info(`[Studio] Danger Room instance ACTIVE (${reason})`);
+  }
+
+  /**
+   * Outdoor map as exclusive instance — only after ForestWorld is ready
+   * (terrain + height sampler / water). Hides chamber props so they don't
+   * float in the skybox without colliders.
+   * Same Controller / weapon skills / camera; feet + IK on terrain.
+   */
+  private activateOutdoorMapInstance(def: (typeof TEST_WORLDS)[TestWorldId]): void {
+    // Chamber shell + DR props off — this map owns the stage completely
+    if (this.room?.group) this.room.group.visible = false;
+    if (this.practiceTargets?.group) this.practiceTargets.group.visible = false;
+    if (this.djBooth?.group) this.djBooth.group.visible = false;
+
+    const half = this.forestWorld?.getBoundHalf?.() ?? (def.id === "fabled-zone" ? 500 : 80);
+    this.controller?.setRoomBound(Math.max(24, half));
+    const wb = this.forestWorld?.getWaterBand?.() ?? null;
+    if (wb) this.controller?.setWaterBand(wb.top, wb.bottom);
+    else if (this.forestWorld?.sail) {
+      const wy = this.forestWorld.sail.waterSurfaceY;
+      this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
+    } else {
+      this.controller?.clearWaterBand();
+    }
+    // Outdoor maps: height sampler owns feet; keep KCC with room bounds for walls
+    // but ground Y from terrain (Controller.sampleGroundY).
+    if (this.playerKcc && this.controller) {
+      this.controller.setCollision(this.playerKcc, undefined, {
+        keepRoomBounds: true,
+      });
+    }
+    this.wirePlayerSessionOnMap("outdoor");
+    void this.ensureTraversalAnimsReady();
+    console.info(
+      `[Studio] Outdoor map instance ACTIVE ${def.id} groundMeshes=${this.forestWorld?.getGroundMeshes?.()?.length ?? 0} footIk=terrain controller=same weapon=${this.weaponId} view=${this.viewMode}`,
+    );
+  }
+
+  /**
+   * Switch test map as a **full exclusive instance** (not a hot-load into void).
+   * - danger-room → complete combat chamber (walls, DJ, bags, KCC)
+   * - outdoor → only after ForestWorld.isReady() (terrain + height)
+   * - fail → stay on / restore Danger Room (never hide chamber without a map)
    */
   async setTestWorld(id: TestWorldId): Promise<boolean> {
     const def = TEST_WORLDS[id];
     if (!def) return false;
+
+    const progress = (stage: string, progress: number, detail?: string) => {
+      this.onMapLoadProgress?.({ stage, progress, mapId: id, detail } as {
+        stage: string;
+        progress: number;
+        mapId: string;
+      });
+    };
+
+    // 1) REST descriptor (same-origin catalog) — best practice: know assets before GLB
+    progress("rest_descriptor", 0.1);
+    try {
+      const { fetchMapDescriptor } = await import("../lib/mapInstanceApi");
+      const desc = await fetchMapDescriptor(id);
+      if (desc) {
+        progress("rest_descriptor", 0.18, desc.name);
+        console.info(
+          `[Studio] map REST · ${desc.id} assets=${desc.assets?.length ?? 0} exclusive=${desc.instance?.exclusive !== false}`,
+        );
+      }
+    } catch (e) {
+      console.warn("[Studio] map REST optional fail", e);
+    }
+
+    progress("dispose_prev", 0.2);
+
+    // Pure combat chamber — exclusive full instance (walls, DJ, bags, KCC)
+    if (def.kind === "combat" || id === "danger-room") {
+      progress("danger_room", 0.55);
+      this.testWorldId = "danger-room";
+      saveTestWorldId("danger-room");
+      this.activateDangerRoomInstance("select-danger-room");
+      progress("ready", 1);
+      this.setCombatFlash("MAP · DANGER ROOM (full instance)", 1.2);
+      return true;
+    }
+
+    progress("load_assets", 0.28);
+    // Keep chamber VISIBLE until outdoor is ready (Three.js instance swap, not void)
+    if (this.room?.group) this.room.group.visible = true;
+
+    if (!this.forestWorld) {
+      this.setCombatFlash("MAP FAIL · outdoor loader missing", 2);
+      this.activateDangerRoomInstance("no-forest-world");
+      progress("failed", 1);
+      return false;
+    }
+
+    progress("load_assets", 0.4);
+    const ok = await this.forestWorld.load(def);
+    progress("build_colliders", 0.65);
+    const ready = ok && this.forestWorld.isReady();
+    if (!ready) {
+      // Fail closed — full Danger Room instance, never empty stage
+      this.testWorldId = "danger-room";
+      saveTestWorldId("danger-room");
+      this.activateDangerRoomInstance(`map-fail:${id}`);
+      progress("failed", 1);
+      this.setCombatFlash(
+        `MAP FAIL · ${def.name} incomplete (no terrain/colliders). Danger Room restored.`,
+        2.6,
+      );
+      this.onMapLoadProgress?.({ stage: "failed", progress: 1, mapId: id });
+      return false;
+    }
+
+    // Outdoor instance ready — exclusive activate (dispose-visible swap)
     this.testWorldId = id;
     saveTestWorldId(id);
-
-    const progress = (stage: string, progress: number) => {
-      this.onMapLoadProgress?.({ stage, progress, mapId: id });
-    };
-    progress("start", 0.08);
-    progress("dispose_prev", 0.15);
-
-    // Do NOT load small_island under camp on sailtest — SAILTEST.glb is the dual-island mesh.
-    // Camp placeables still use seedSandboxClaim for build rights.
-
-    if (this.forestWorld) {
-      progress("load_glb", 0.35);
-      const ok = await this.forestWorld.load(def);
-      if (!ok && def.kind !== "combat") {
-        // Fail closed to combat chamber — never leave room hidden + black void.
-        // forestWorld.load already clear()'d outdoor; prior outdoor may have hidden room.
-        if (this.room?.group) this.room.group.visible = true;
-        this.controller?.setRoomBound(this.room?.half ?? 16);
-        this.controller?.clearWaterBand();
-        this.controller?.setGroundHeightAt(null);
-        // Drop outdoor mesh collision; keep Danger Room KCC ground when available
-        if (this.playerKcc) {
-          this.controller?.setCollision(this.playerKcc, undefined, {
-            keepRoomBounds: true,
-          });
-        } else {
-          this.controller?.setCollision(null);
-        }
-        this.baseFogColor.set(Studio.FOG_BASE_COLOR);
-        this.baseFogNear = Studio.FOG_BASE_NEAR;
-        this.baseFogFar = Studio.FOG_BASE_FAR;
-        this.baseBgColor.set(Studio.FOG_BASE_COLOR);
-        this.writeBaselineFog();
-        this.testWorldId = "danger-room";
-        saveTestWorldId("danger-room");
-        progress("failed", 1);
-        this.setCombatFlash(
-          `MAP FAIL · ${def.name} — mesh missing. Staying in Danger Room.`,
-          2.4,
-        );
-        this.onMapLoadProgress?.({ stage: "failed", progress: 1, mapId: id });
-        return false;
-      }
-    }
-    progress("classify_bake", 0.72);
+    progress("wire_layers", 0.78);
+    this.activateOutdoorMapInstance(def);
+    progress("activate", 0.85);
 
     // Pinata: clear + re-register harvest meshes for break/absorb + Rapier bake
     this.pinataHarvest?.clear();
@@ -12102,48 +12326,8 @@ export class Studio {
       this.buildGrid.setVisible(false);
     }
 
-    // Outdoor / loco-QA maps: hide combat chamber shell so GLB terrain is the stage.
-    // Combat danger-room keeps walls/floor/DJ. Bounds + water + ground height follow map.
-    const outdoor =
-      def.kind !== "combat" &&
-      (def.meshKeys?.length ||
-        id === "tropical-harvest" ||
-        id === "pirate-village" ||
-        id === "sailtest" ||
-        id === "forest-map" ||
-        id === "island-life" ||
-        id === "fabled-zone" ||
-        id === "bridge-town-docks");
-    if (this.room?.group) {
-      this.room.group.visible = !outdoor;
-    }
-    if (def.kind === "combat") {
-      this.controller?.setRoomBound(this.room?.half ?? 16);
-      this.controller?.clearWaterBand();
-      this.controller?.setGroundHeightAt(null);
-    } else {
-      const half = this.forestWorld?.getBoundHalf?.() ?? (id === "fabled-zone" ? 500 : 80);
-      this.controller?.setRoomBound(Math.max(24, half));
-      const wb = this.forestWorld?.getWaterBand?.() ?? null;
-      if (wb) this.controller?.setWaterBand(wb.top, wb.bottom);
-      else if (this.forestWorld?.sail) {
-        const wy = this.forestWorld.sail.waterSurfaceY;
-        this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
-      } else {
-        this.controller?.clearWaterBand();
-      }
-      const gh = this.forestWorld?.getGroundHeightAt?.() ?? null;
-      this.controller?.setGroundHeightAt(gh);
-      // Seat player feet on terrain if sampler present
-      if (gh && this.character) {
-        const p = this.character.root.position.clone();
-        const y = gh(p.x, p.z);
-        if (y != null && Number.isFinite(y)) {
-          p.y = y;
-          this.controller?.blinkTo(p);
-        }
-      }
-    }
+    // Bounds / water / ground already applied in activateOutdoorMapInstance.
+    // Do NOT re-hide the chamber here or leave a void if systems failed mid-setup.
 
     // Voxel / outdoor camp enemies
     this.campEnemies?.clear();
@@ -12206,10 +12390,12 @@ export class Studio {
       this.applyRoomAtmosphere?.(true);
     }
 
-    if (def.defaultMode) this.setActivityMode(def.defaultMode);
+    // Keep same activity/camera/weapon — do NOT force map defaultMode (would
+    // swap combat TPS ↔ harvest shoulder). Player chooses mode; map only swaps terrain.
+    // if (def.defaultMode) this.setActivityMode(def.defaultMode);
     progress("ready", 1);
     this.setCombatFlash(
-      `MAP · ${def.name} · ${def.uuid.slice(0, 8)}… · seed ${def.seed}`,
+      `MAP · ${def.name} · feet on terrain · same cam/skills`,
       1.5,
     );
     return true;
@@ -12604,15 +12790,17 @@ export class Studio {
       this.radialHoldT = 0;
       return;
     }
-    // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C + Alt+Space Getsuga) ──
-    // Bare keys stay combat (C parry, G evade, T stomp, V kick, B camera, F skill).
-    // Alt alone (no VFX letter) = combat slide.
+    // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C only) ──
+    // Slash-wave / Getsuga is NOT a hotkey — it spawns from melee attack stages
+    // (meleeStrikeFx projectile on doComboHit). Space = jump only.
     {
       const altHeld = this.input.down("AltLeft") || this.input.down("AltRight");
-      const effectId = sandboxEffectForKey(code, altHeld);
-      if (effectId) {
-        this.deploySandboxHotkeyVfx(effectId);
-        return;
+      if (code !== "Space") {
+        const effectId = sandboxEffectForKey(code, altHeld);
+        if (effectId) {
+          this.deploySandboxHotkeyVfx(effectId);
+          return;
+        }
       }
       if (
         (code === "AltLeft" || code === "AltRight") &&
@@ -12623,8 +12811,7 @@ export class Studio {
       }
     }
     if (code === "Space") {
-      // Smash recovery: Space during tumble/ragdoll = cut backflip, not jump.
-      // Otherwise: wall jump (near wall / wall-run) → double jump → ground jump.
+      // Smash recovery / jump only — never slash projectile.
       if (this.tumbleActive || this.recoverLock > 0.2) this.smashRecover();
       else this.tryJumpWithStamina();
     }

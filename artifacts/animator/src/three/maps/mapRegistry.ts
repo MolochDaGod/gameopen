@@ -2,6 +2,17 @@
  * Open map registry — all Danger / loco / harvest / build maps with bake status,
  * stack services, and public paths. Best-practice access for UI + AI tools.
  *
+ * ## Instance rule (HARD)
+ * Each map is an **exclusive full instance**. Never hot-load a GLB into the
+ * Danger Room shell and hide walls without terrain height + ground meshes.
+ * Studio.setTestWorld:
+ *   - danger-room → activateDangerRoomInstance (walls, DJ, bags, KCC)
+ *   - outdoor → ForestWorld.load until isReady() → activateOutdoorMapInstance
+ *   - fail → restore Danger Room (never black void)
+ *
+ * Scale SSOT: maps/mapOrcScale.ts — all outdoor maps fit for **2.0 m orc**
+ * (door clear ≥ 2.45 m, storey ≈ 3.8 m). Not 1.8 m human default.
+ *
  * Stack: Three r185 · Rapier (@workspace/grudge-physics) · pinata harvest ·
  * GamePlayLayers · BuildGrid · Controller water/climb · ObjectStore icons ·
  * Railway bag · info.grudge-studio.com definitions.

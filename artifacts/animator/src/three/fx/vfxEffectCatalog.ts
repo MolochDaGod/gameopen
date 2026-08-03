@@ -81,8 +81,9 @@ export const VFX_CATALOG: readonly VfxCatalogEntry[] = [
     name: "Getsuga Slash",
     category: "slash",
     color: 0x7dd3fc,
-    description: "Crescent slash wave that travels toward the enemy.",
-    tags: ["slash", "projectile", "crescent", "getsuga"],
+    description:
+      "Melee residual only — weapon-edge slash projectile (1–10 m, color/size per attack). Not a hotkey.",
+    tags: ["slash", "projectile", "crescent", "getsuga", "melee-residual"],
   },
   {
     id: "fireball",
@@ -187,8 +188,8 @@ export const VFX_SANDBOX_SHORTCUTS: readonly VfxSandboxShortcut[] = [
   { key: "G", code: "KeyG", label: "Aura Ring", effectId: "fire_aura", alt: true },
   { key: "T", code: "KeyT", label: "Earth Surge", effectId: "earth_surge", alt: true },
   { key: "C", code: "KeyC", label: "Fireball", effectId: "fireball", alt: true },
-  // Getsuga is Space on the puter panel — combat uses Alt+Space so jump is free.
-  { key: " ", code: "Space", label: "Getsuga Slash", effectId: "getsuga_slash", alt: true },
+  // NO Space / Alt+Space Getsuga here.
+  // Slash-wave projectiles are melee combat only (meleeStrikeFx per weapon stage).
 ] as const;
 
 /** Secondary panel keys (learn / optional binds). */

@@ -6,6 +6,8 @@
 :root {
   --shell-header-h: 48px;
   --shell-header-gap: 4px;
+  /* Total height of steam bar (header + safe area) — use for stage top offsets */
+  --shell-header-offset: calc(var(--shell-header-h) + env(safe-area-inset-top, 0px));
 }
 
 .shell-steam-bar {
@@ -25,6 +27,30 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(14px);
   pointer-events: auto;
+}
+
+/*
+ * Full-bleed canvas / lab stages under the steam bar.
+ * Use on immersive modes (e.g. /world VoxGrudge) so the WebGL canvas and
+ * surface chrome never sit under .shell-steam-bar (z-index 720).
+ * Library (doors) owns its own Steam chrome — do not wrap those in this class.
+ */
+.shell-stage {
+  position: fixed;
+  top: var(--shell-header-offset);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+/* Absolute children of .studio that must clear the steam bar */
+html.shell-immersive .studio > .shell-stage-abs,
+html.shell-immersive .iagc-root {
+  top: var(--shell-header-offset) !important;
+  height: auto !important;
+  bottom: 0 !important;
 }
 
 .shell-steam-brand {

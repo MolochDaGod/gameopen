@@ -184,39 +184,84 @@ export function hideEquippableMeshes(group: THREE.Object3D): void {
 }
 
 /**
+ * Nuclear hide: every Mesh/SkinnedMesh on a modular race kit.
+ * Use before exclusive loadout show — prevents leftover props/variants.
+ */
+export function hideAllKitMeshes(group: THREE.Object3D): void {
+  group.traverse((node) => {
+    if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
+    // Keep pure bone helpers if any were mis-typed as Mesh
+    if ((node as THREE.Bone).isBone) return;
+    node.visible = false;
+  });
+}
+
+function meshRole(key: string): string | null {
+  if (/weapon|sword|axe|bow|staff|spear|dagger|hammer|mace|pick|shield|quiver|xtra/.test(key)) {
+    if (/shield/.test(key)) return "shield";
+    if (/quiver|xtra|bag|wood/.test(key)) return "utility";
+    return "weapon";
+  }
+  if (/body/.test(key)) return "body";
+  if (/head|hat|tricorn/.test(key)) return "head";
+  if (/arms/.test(key)) return "arms";
+  if (/legs/.test(key)) return "legs";
+  if (/shoulder/.test(key)) return "shoulders";
+  return null;
+}
+
+/**
  * Show only the preset's armour + weapon meshes (child visibility).
- * Uses fuzzy meshKey matching — never exact string equality alone.
+ * Prefer exact meshKey match; never leave full wardrobe on.
  *
- * HARD RULE (grudge6 modular): hide all equippable first, then show loadout.
- * Never leave default "everything visible" — that is the spiked-blob / stretch
- * look on modular race kits.
+ * HARD RULE (grudge6 modular): hide ALL kit meshes first, then show loadout only.
+ * Exclusive slots: at most one body / arms / legs / head / weapon / shield.
+ * Spiked-blob / flying planks = this was skipped or matching was too fuzzy.
  */
 export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]): void {
   if (!visibleMeshes.length) return;
-  const wantKeys = visibleMeshes.map(meshKey);
-  let matched = 0;
+  const wantKeys = visibleMeshes.map(meshKey).filter(Boolean);
+
+  // 1) Hide entire kit wardrobe (not only "equippable" regex — that missed junk)
+  hideAllKitMeshes(group);
+
+  // 2) Score matches: exact > endsWith > includes
+  type Cand = { node: THREE.Object3D; key: string; score: number; role: string | null };
+  const cands: Cand[] = [];
   group.traverse((node) => {
     if (!(node instanceof THREE.Mesh) && !(node instanceof THREE.SkinnedMesh)) return;
     const n = node.name;
-    if (!n || !isEquippableMeshName(n)) return;
+    if (!n) return;
     const key = meshKey(n);
-    let show = false;
+    if (!key) return;
+    let score = 0;
     for (const w of wantKeys) {
-      if (key === w || key.endsWith(w) || w.endsWith(key)) {
-        show = true;
-        break;
-      }
+      if (key === w) score = Math.max(score, 100);
+      else if (key.endsWith(w) || w.endsWith(key)) score = Math.max(score, 70);
+      else if (key.includes(w) || w.includes(key)) score = Math.max(score, 40);
     }
-    node.visible = show;
-    if (show) matched++;
+    if (score > 0) cands.push({ node, key, score, role: meshRole(key) });
   });
-  // Fail-safe: if nothing matched (name drift), show at least one body so the
-  // hero is never an invisible/spiked full-wardrobe blob.
+  cands.sort((a, b) => b.score - a.score);
+
+  // 3) Exclusive by role — first best match wins (kills multi-body / multi-weapon blob)
+  const taken = new Set<string>();
+  let matched = 0;
+  for (const c of cands) {
+    const role = c.role || c.key;
+    // Utility can co-exist; exclusive armor/weapon slots
+    if (role !== "utility" && taken.has(role)) continue;
+    if (role !== "utility") taken.add(role);
+    c.node.visible = true;
+    matched++;
+  }
+
+  // 4) Fail-safe base armor only
   if (matched === 0) {
     console.warn(
       "[applyGearPreset] 0 mesh matches for",
       visibleMeshes.slice(0, 6),
-      "— showing first body/head/arms/legs",
+      "— exclusive base body/head/arms/legs",
     );
     const roles = ["body", "head", "arms", "legs"];
     const shown = new Set<string>();
@@ -225,14 +270,42 @@ export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]):
       const key = meshKey(node.name);
       for (const r of roles) {
         if (shown.has(r)) continue;
-        if (key.includes(r) && !key.includes("weapon") && !key.includes("shield")) {
+        if (key.includes(r) && !/weapon|shield/.test(key)) {
           node.visible = true;
           shown.add(r);
+          matched++;
           break;
         }
       }
     });
   }
+
+  // 5) Sanity: too many visible skinned = still a wardrobe bomb
+  let visSkinned = 0;
+  group.traverse((node) => {
+    if (node instanceof THREE.SkinnedMesh && node.visible) visSkinned++;
+  });
+  if (visSkinned > 14) {
+    console.error(
+      `[applyGearPreset] wardrobe bomb: ${visSkinned} visible skinned — re-hiding non-body`,
+    );
+    group.traverse((node) => {
+      if (!(node instanceof THREE.SkinnedMesh) || !node.visible) return;
+      const key = meshKey(node.name);
+      const r = meshRole(key);
+      if (r === "weapon" || r === "shield" || r === "utility" || r === "shoulders") {
+        // keep one weapon max already handled; drop extras
+        if (r !== "weapon" && r !== "shield") return;
+      }
+      if (!r || (r !== "body" && r !== "head" && r !== "arms" && r !== "legs" && r !== "weapon" && r !== "shield")) {
+        node.visible = false;
+      }
+    });
+  }
+
+  console.info(
+    `[applyGearPreset] matched=${matched} visSkinned=${visSkinned} want=${wantKeys.length}`,
+  );
 }
 
 /**

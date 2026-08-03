@@ -47,6 +47,12 @@ export {
   type LiveRoleStatus,
 } from "./weaponLivePacks";
 
+export {
+  FLAT_FOOT_SAMPLER,
+  footSamplerFromHeightAt,
+  normalFromHeightField,
+} from "./terrainFootSample";
+
 /** Frame-based Animation Creator + AI clip contract (zip animator tools). */
 export { AnimEditor, type AnimEditorState, type BoneInfo, type FrameInfo } from "./AnimEditor";
 export {
