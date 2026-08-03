@@ -7,6 +7,7 @@
  */
 
 import { FLEET, readFleetToken } from "./fleetCore";
+import { normalizeToGrudgeAvatarId } from "../lib/raceModel";
 
 export const GRUDOX_HOST = FLEET.grudox;
 export const OPEN_HOST = FLEET.gameopen;
@@ -318,18 +319,11 @@ export function rememberHeroFromContext(ctx: HubLaunchContext) {
   }
 }
 
-/** Map charactersgrudox baseId → play-shell grudge kit id when possible. */
+/** Map charactersgrudox baseId → Studio id (`grudge:race:preset` SSOT). */
 export function mapBaseToAnimatorId(baseId: string): string {
-  const b = baseId.toLowerCase();
-  if (b.startsWith("grudge-")) return b;
-  if (b === "race-human" || b === "human") return "grudge-western-kingdoms-warrior";
-  if (b === "race-orc" || b === "orc") return "grudge-orcs-warrior";
-  if (b === "race-dwarf" || b === "dwarf") return "grudge-dwarves-warrior";
-  if (b === "race-high-elf" || b.includes("elf")) return "grudge-high-elves-ranger";
-  if (b === "race-barbarian" || b.includes("barb")) return "grudge-barbarians-warrior";
-  if (b === "race-undead" || b.includes("undead")) return "grudge-undead-warrior";
-  if (b === "grudge") return "grudge-western-kingdoms-mage";
-  return "explorer";
+  const b = (baseId || "").toLowerCase();
+  if (b === "explorer" || b === "led-monk") return "explorer";
+  return normalizeToGrudgeAvatarId(baseId || "western-kingdoms", "warrior");
 }
 
 export function launchHubDestination(

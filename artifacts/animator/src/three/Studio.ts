@@ -19,7 +19,7 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { buildAnimationClip, listStoredClips } from "./anim/clipStore";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
-import { parseGrudgeAvatarId } from "../lib/raceModel";
+import { normalizeToGrudgeAvatarId, parseGrudgeAvatarId } from "../lib/raceModel";
 import {
   animPackForCombatStyle,
   getCombatStyle,
@@ -1966,8 +1966,15 @@ export class Studio {
 
   private async spawnCharacter(id: string) {
     const token = ++this.loadToken;
-    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race kit
-    // (the active fleet character's race); anything else is a catalog rig.
+    // PRACTICE: every race/lobby/account string → grudge:race:preset before spawn.
+    // Legacy race-human / grudge-western-kingdoms-warrior / bare "orc" used Character
+    // + wrong GLB and looked "totally fucked" on Danger. Only explorer stays Mixamo.
+    const normalized = normalizeToGrudgeAvatarId(id);
+    if (normalized !== id) {
+      console.info(`[Studio] normalize character id ${id} → ${normalized}`);
+      id = normalized;
+      this.characterId = id;
+    }
     const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
     const stylePack = animPackForCombatStyle(this.combatStyleId);
@@ -1976,9 +1983,18 @@ export class Studio {
           meshIds: this.pendingMeshIds || undefined,
           animPack: stylePack || undefined,
         })
-      : def.procedural
-        ? new ExplorerCharacter(def)
-        : new Character(def);
+      : def.procedural || id === "explorer"
+        ? new ExplorerCharacter(def.procedural ? def : getCharacter("explorer"))
+        : // Refuse Character path for anything that should have been grudge6
+          (() => {
+            console.error(
+              `[Studio] non-grudge6 id after normalize (${id}) — forcing WK warrior SSOT`,
+            );
+            return new GrudgeAvatar("western-kingdoms", "warrior", {
+              meshIds: this.pendingMeshIds || undefined,
+              animPack: stylePack || undefined,
+            });
+          })();
     try {
       await next.load();
     } catch (err) {

@@ -121,7 +121,7 @@ import {
   buildGenesisHeroOptions,
   type GenesisHeroOption,
 } from "./lib/grudoxRoster";
-import { resolveRaceModel } from "./lib/raceModel";
+import { normalizeToGrudgeAvatarId, resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
@@ -2557,16 +2557,14 @@ export default function App() {
         onAvatarEdit={() => navigate("avatar")}
         onPlayDanger={(hero) => {
           gameSession.selectCharacter(hero.id);
-          const animId =
-            hero.baseId === "explorer" || !hero.baseId
+          // PRACTICE: always grudge:race:preset — never race-human / explorer fallback for races
+          const seed = hero.baseId || hero.raceKey || "western-kingdoms";
+          const avatarId =
+            seed === "explorer"
               ? "explorer"
-              : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                ? hero.baseId
-                : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-          setCharacterId(animId === "human" ? "race-human" : animId);
-          studioRef.current?.setCharacter(
-            animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-          );
+              : normalizeToGrudgeAvatarId(seed, "warrior");
+          setCharacterId(avatarId);
+          studioRef.current?.setCharacter(avatarId);
           navigate("danger");
         }}
       />
@@ -2629,16 +2627,13 @@ export default function App() {
           }}
           onPlayDanger={(hero) => {
             gameSession.selectCharacter(hero.id);
-            const animId =
-              hero.baseId === "explorer" || !hero.baseId
+            const seed = hero.baseId || hero.raceKey || "western-kingdoms";
+            const avatarId =
+              seed === "explorer"
                 ? "explorer"
-                : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                  ? hero.baseId
-                  : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-            setCharacterId(animId === "human" ? "race-human" : animId);
-            studioRef.current?.setCharacter(
-              animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-            );
+                : normalizeToGrudgeAvatarId(seed, "warrior");
+            setCharacterId(avatarId);
+            studioRef.current?.setCharacter(avatarId);
             navigate("danger");
           }}
         />,

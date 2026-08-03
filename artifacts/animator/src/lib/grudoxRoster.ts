@@ -10,6 +10,7 @@
  */
 
 import type { GrudgeCharacter } from "./grudgeAuth";
+import { normalizeToGrudgeAvatarId } from "./raceModel";
 
 export const GRUDOX_MAX_SLOTS = 4;
 
@@ -61,20 +62,11 @@ export function raceKeyToLabel(raceKey: string): string {
   return labels[raceKey] || "Hero";
 }
 
-/** Map baseId → Animator character catalog id (for Danger Room / Studio). */
+/** Map baseId → Studio grudge6 id (`grudge:race:preset`) for Danger / Open play. */
 export function baseIdToAnimatorId(baseId: string | null | undefined): string {
   const b = (baseId || "").toLowerCase();
-  if (!b) return "explorer";
-  if (b.startsWith("grudge-")) return b;
-  if (b.startsWith("race-")) return b;
-  if (b === "human") return "race-human";
-  if (b === "orc") return "race-orc";
-  if (b === "dwarf") return "race-dwarf";
-  if (b.includes("elf")) return "race-high-elf";
-  if (b.includes("barb")) return "race-barbarian";
-  if (b.includes("undead")) return "race-undead";
-  if (b === "explorer" || b === "grudge") return "explorer";
-  return b;
+  if (b === "explorer" || b === "led-monk") return "explorer";
+  return normalizeToGrudgeAvatarId(baseId || "western-kingdoms", "warrior");
 }
 
 function readRosterFromKey(key: string): GrudoxSavedCharacter[] {
