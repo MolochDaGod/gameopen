@@ -123,6 +123,14 @@ export class Character {
   }
 
   /**
+   * Public re-entry: ensure climb/swim/hurt/death/loco roles after map open.
+   * Safe to call repeatedly (fills gaps only).
+   */
+  async ensureFleetRolesReady(): Promise<void> {
+    await this.hydrateFleetBakedRoles();
+  }
+
+  /**
    * Fleet SSOT hydrate — full loco + combat + climb/swim for any skinned GLB.
    * @see fleetAvatarHydrate.ts
    */

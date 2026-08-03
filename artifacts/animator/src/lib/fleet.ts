@@ -4,7 +4,10 @@
  *
  * Auth contract: docs/GRUDGE_AUTH_CONNECT.md (GrudgeBuilder)
  * Login must dual-write redirect_uri + redirect + return so id-gateway never drops return.
+ * Return URLs sanitized via entryCatch.safeReturnUrl (anti-loop).
  */
+
+import { safeReturnUrl } from "./entryCatch";
 
 export const FLEET = {
   /**
@@ -168,7 +171,8 @@ export function openReturnUrl(pathAndQuery?: string): string {
  * Always lands on /login; dual-writes every return alias; production return is brand Open.
  */
 export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean; app?: string }): string {
-  const redirect = returnTo || openReturnUrl();
+  // Catch: never return to foundry/id/assets (loops) — see entryCatch.safeReturnUrl
+  const redirect = safeReturnUrl(returnTo || openReturnUrl(), openReturnUrl());
   const origin = OPEN_BRAND;
   const q = new URLSearchParams({
     redirect_uri: redirect,

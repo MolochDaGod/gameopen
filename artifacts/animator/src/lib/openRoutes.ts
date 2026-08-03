@@ -14,7 +14,10 @@
  *  - Every surface owns one Mode string (engine switch).
  *  - URL is source of truth on load + back/forward; mode changes pushState.
  *  - Never invent parallel character stores — fleet GameSession + Railway only.
+ *  - Wrong product / loops: `entryCatch.ts` (apply before mode resolve).
  */
+
+import { applyEntryCatch } from "./entryCatch";
 
 export type AppMode =
   | "landing"
@@ -453,26 +456,23 @@ function modeFromSlug(seg: string): AppMode | null {
 
 /**
  * Resolve app mode from location.
- * Priority: ?door= → path slug → /arcade/play/<id> → ?mode= → hub.
+ * Priority:
+ *   entryCatch (wrong host / loop / create / warlords) →
+ *   ?door= → path slug → /arcade/play/<id> → ?mode= → hub.
+ *
+ * Catch SSOT: `lib/entryCatch.ts` + docs/ENTRY_CATCH_SSOT.md
  */
 export function resolveModeFromLocation(
   pathname = typeof window !== "undefined" ? window.location.pathname : "/",
   search = typeof window !== "undefined" ? window.location.search : "",
 ): AppMode {
   try {
-    const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
+    // 0. Catch system — hard redirects + forced modes (anti-loop / wrong product)
+    const caught = applyEntryCatch({ pathname, search });
+    if (caught.redirected) return "doors"; // shell while navigating away
+    if (caught.mode) return caught.mode;
 
-    // 0. Fleet handoff from Character Studio / charactersgrudox → Account hub
-    //    e.g. /account?open=1&from=charactersgrudox&characterId=…
-    const from = (q.get("from") || q.get("source") || "").toLowerCase();
-    if (
-      from === "charactersgrudox" ||
-      from === "character-studio" ||
-      from === "gcs" ||
-      from === "character"
-    ) {
-      return "account";
-    }
+    const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
 
     // 1. Explicit ?door=<mode|alias> (legacy threejs-rapier deep-links)
     const door = q.get("door");
@@ -490,34 +490,9 @@ export function resolveModeFromLocation(
       // fall through to arcade / mode query
     } else if (segs[0] === "arcade" && segs[1] === "play" && segs[2]) {
       const cabinetId = segs[2]!;
+      // GRUDOX-only cabinets already hard-redirected by entryCatch
       if (cabinetId === "explorer") {
         return q.get("dressing") === "1" ? "editor" : "danger";
-      }
-      // GRUDOX Voxel Arcade cabinets (Voxel Velocity = racer, etc.) do not run
-      // inside gameopen. Edge proxy should send /arcade/* to grudox; if we still
-      // hit this SPA, hard-redirect to the real arcade host.
-      const GRUDOX_ARCADE = new Set([
-        "racer",
-        "race",
-        "velocity",
-        "voxel-velocity",
-        "zombie",
-        "undead",
-        "sword-master",
-        "swordmaster",
-        "z-brawl",
-        "zbrawl",
-        "sailing",
-        "carrier",
-      ]);
-      if (GRUDOX_ARCADE.has(cabinetId) && typeof window !== "undefined") {
-        const dest = new URL(
-          `https://grudox.grudge-studio.com/arcade/play/${encodeURIComponent(cabinetId)}`,
-        );
-        dest.search = search.startsWith("?") ? search : search ? `?${search}` : "";
-        if (!dest.searchParams.has("open")) dest.searchParams.set("open", "1");
-        window.location.replace(dest.toString());
-        return "doors"; // brief shell while navigating away
       }
       const mapped = ARCADE_CABINET_MAP[cabinetId];
       if (mapped) return mapped;

@@ -158,6 +158,8 @@ const server = http.createServer(async (req, res) => {
       health: "/api/healthz",
       effects: "/api/effects",
       content: "/api/content",
+      maps: "/api/maps",
+      mapById: "/api/maps/:id",
       characters: "/api/characters",
       modes: "/api/modes",
       fleet: "/api/fleet/config",
@@ -165,6 +167,46 @@ const server = http.createServer(async (req, res) => {
       hasDatabase: Boolean(process.env.DATABASE_URL),
       hasJwt: Boolean(process.env.JWT_SECRET),
     });
+  }
+
+  // ── Map instance catalog (Danger Room exclusive worlds) ─────────────────
+  if (path === "/api/maps" || path === "/api/maps/") {
+    const mapsFile = join(
+      root,
+      "artifacts/animator/public/content/maps/danger-maps.json",
+    );
+    if (existsSync(mapsFile)) {
+      const body = JSON.parse(readFileSync(mapsFile, "utf8"));
+      body.source = "danger-maps.json";
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=30");
+      return json(res, 200, body);
+    }
+    return json(res, 200, { version: 0, maps: [], source: "empty" });
+  }
+  if (path.startsWith("/api/maps/")) {
+    const id = decodeURIComponent(path.slice("/api/maps/".length).replace(/\/$/, ""));
+    const mapsFile = join(
+      root,
+      "artifacts/animator/public/content/maps/danger-maps.json",
+    );
+    if (!existsSync(mapsFile)) {
+      return json(res, 404, { error: "maps catalog missing", id });
+    }
+    const body = JSON.parse(readFileSync(mapsFile, "utf8"));
+    const hit = (body.maps || []).find(
+      (m) => m.id === id || m.testWorldId === id,
+    );
+    if (!hit) return json(res, 404, { error: "map not found", id });
+    const combat = hit.kind === "combat" || hit.id === "danger-room";
+    hit.instance = hit.instance || {
+      exclusive: true,
+      requiresTerrain: !combat,
+      requiresHeight: !combat,
+      hideDangerRoomShell: !combat,
+    };
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    return json(res, 200, hit);
   }
 
   // ── Weapon / skill / item content catalog (SSOT: content/) ───────────────

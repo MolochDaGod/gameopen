@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "generatedAt": "2026-08-02T08:38:14.607Z",
+  "generatedAt": "2026-08-03T03:21:00.309Z",
   "game": "gameopen",
   "count": 1885,
   "byKind": {
     "data": 309,
     "animation": 747,
-    "model": 250,
+    "model": 249,
     "texture": 501,
-    "other": 61,
+    "other": 62,
     "icon": 8,
     "text": 3,
     "bin": 2,
@@ -27,7 +27,7 @@
     "map": 12,
     "character": 8
   },
-  "totalBytes": 1217137185,
+  "totalBytes": 1209425190,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -13250,13 +13250,13 @@
       "category": "models/grudge"
     },
     {
-      "id": "GO-9b6583593337",
-      "path": "/models/grudge6/30characters.glb",
-      "rel": "models/grudge6/30characters.glb",
-      "kind": "model",
+      "id": "GO-48fe2aa3d094",
+      "path": "/models/grudge6/README-CHARACTERS.md",
+      "rel": "models/grudge6/README-CHARACTERS.md",
+      "kind": "other",
       "purpose": "character",
-      "ext": "glb",
-      "bytes": 7712396,
+      "ext": "md",
+      "bytes": 401,
       "category": "models/grudge6"
     },
     {

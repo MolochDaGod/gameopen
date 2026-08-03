@@ -3033,17 +3033,28 @@ export class Vfx {
    * Orient a slash projectile so the **crescent face** reads toward the target
    * (not the flat board-side). SSOT: `fx/projectileAim.ts`.
    */
+  /**
+   * Slash / Getsuga aim: fly **tip-first toward aim** (bow-shot rule).
+   * Crescent plane stays upright; leading belly of the arc hits the target first
+   * — not a sideways "board" and not spine-first weird yaw.
+   */
   private orientSlashProjectile(
     root: THREE.Object3D,
     pos: THREE.Vector3,
     travel: THREE.Vector3,
     meshAxes?: { thin: THREE.Vector3; mid: THREE.Vector3; long: THREE.Vector3 } | null,
   ) {
+    // Prefer measured axes when available (ice-bow / slash GLBs).
+    // faceOn + thin→travel = crescent face reads toward target path.
+    // Extra Z-spin: ice-bow authoring often has long axis 90° off "blade lead".
     orientProjectile(root, pos, travel, {
       faceMode: "faceOn",
       localThin: meshAxes?.thin,
       localMid: meshAxes?.mid,
       localLong: meshAxes?.long,
+      // Keep plane vertical and put the crescent belly / mid-spine leading into
+      // travel (user: "middle of bow first thing to hit", like aiming a bow).
+      localEuler: new THREE.Euler(0, 0, Math.PI / 2),
     });
   }
 
@@ -3090,6 +3101,10 @@ export class Vfx {
    * applies energy shader, **arcs toward the aim target**, and keeps the crescent
    * **face-on** (not flat board-side) via `projectileAim.orientProjectile`.
    */
+  /**
+   * Melee slash-wave projectile (weapon residual). Call only from attack hit
+   * frames with `dir` ≈ weapon grip→tip and `range`/`meshScale` from meleeStrikeFx.
+   */
   getsugaSlash(
     from: THREE.Vector3,
     dir: THREE.Vector3,
@@ -3102,10 +3117,12 @@ export class Vfx {
       contactRadius?: number;
       growFrom?: number;
       growTo?: number;
+      /** Multiplier on projectile mesh size (stage variety). */
+      meshScale?: number;
       followWeapon?: () => { base: THREE.Vector3; tip: THREE.Vector3 } | null;
       followDuration?: number;
       tickEvery?: number;
-      /** Arc height as fraction of distance (default 0.16). */
+      /** Arc height as fraction of distance (default 0.16). Short melee residual ~0.04. */
       arcHeightFrac?: number;
       /** Lateral curve (m); gives intelligent non-straight path. */
       arcLateral?: number;
@@ -3129,8 +3146,9 @@ export class Vfx {
     const speed = opts.speed ?? 15;
     const range = opts.range ?? 8.5;
     const contactRadius = opts.contactRadius ?? 0.95;
-    const growFrom = opts.growFrom ?? 0.45;
-    const growTo = opts.growTo ?? 2.05;
+    const meshScale = opts.meshScale ?? 1;
+    const growFrom = (opts.growFrom ?? 0.45) * meshScale;
+    const growTo = (opts.growTo ?? 2.05) * meshScale;
     const followDur = opts.followDuration ?? 0.1;
     const tickEvery = opts.tickEvery ?? 0.08;
 

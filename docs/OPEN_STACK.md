@@ -43,12 +43,17 @@ Browser
 
 ## 2. Dependencies (runtime & monorepo)
 
+> **HARD SSOT for npm / workspaces / what not to invent:**  
+> **[`docs/OPEN_PACKAGE_SSOT.md`](./OPEN_PACKAGE_SSOT.md)**  
+> (mixer = Three; physics = rapier3d-compat; feet/terrain = in-repo; no second stacks.)
+
 ### App workspace (animator)
 | Area | Stack |
 |------|--------|
-| UI | React 18, Vite, Tailwind-ish utility CSS, Framer Motion (shell) |
-| 3D | Three.js r184, Rapier (physics), custom Studio engine |
+| UI | React 19, Vite, Tailwind-ish utility CSS, Framer Motion (shell) |
+| 3D | Three.js **r185**, Rapier **compat** (physics), custom Studio engine |
 | Combat | `@workspace/epicfight` (local package) |
+| Physics | `@workspace/grudge-physics` + `@dimforge/rapier3d-compat` |
 | Net | DangerClient / brawl-net / carrier-net |
 | Auth | `grudgeAuth.ts` + fleet SSO (no Clerk required) |
 | AI dock | `AiAssistant` + tool schemas (dangerTools, companionPrompt) |

@@ -445,14 +445,26 @@ export async function loadGrudge6CombatRig(
   // ── EQUIP BEFORE FIT (sturdy MMO proportions) ────────────────────────────
   // Modular race GLBs ship every armor/weapon variant visible. Fitting while
   // the full wardrobe is on inflates the skinned AABB → wrong scale / "stretch".
-  // SSOT: hide equippable → show mesh_ids only → then SI height fit.
+  // SSOT: hide ALL kit meshes → exclusive mesh_ids only → then SI height fit.
   hideEquippableMeshes(model);
   applyGearVisibility(model, meshIds);
+  // Count visible skinned — wardrobe bomb = wrong loadout, force class preset once
+  let vis = 0;
+  model.traverse((o) => {
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.visible) vis++;
+  });
+  if (vis === 0 || vis > 14) {
+    console.error(
+      `[grudge6Runtime] equip failed visSkinned=${vis} — forcing class preset ${presetId}`,
+    );
+    applyGearVisibility(model, preset.visibleMeshes);
+  }
   model.userData.equipMeshIds = meshIds.slice();
   model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
   model.userData.physicsLayer = "character";
 
   normalizeSkinned(model, template.pipeline);
+  model.userData.characterDeployed = true;
 
   // Materials / colors:
   //  - FBX modular kits: always rebind Toon RTS atlas (flipY=false MeshStandard).

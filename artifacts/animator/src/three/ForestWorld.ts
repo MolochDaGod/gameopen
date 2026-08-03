@@ -28,6 +28,7 @@ import { loadForestMountainsMap } from "./maps/forestMountainsMap";
 import { createTerrainHeightSampler } from "./brawler/survivalEnvironment";
 import { upgradeMapPresentation } from "./materials/toonStyle";
 import { getMapRegistryEntry } from "./maps/mapRegistry";
+import { applyMapScaleForOrc, ORC_AGENT } from "./maps/mapOrcScale";
 
 export type HarvestNodeKind = "wood" | "ore" | "flower" | "forage" | "skin" | "mine";
 
@@ -230,6 +231,23 @@ export class ForestWorld {
     return this.groundMeshes;
   }
 
+  /**
+   * True when outdoor content is playable (not an empty clear()).
+   * Combat danger-room uses ForestWorld only as outdoor container — not ready.
+   */
+  isReady(): boolean {
+    if (!this.activeId || this.activeId === "danger-room") return false;
+    if (this.terrain) return true;
+    if (this.groundMeshes.length > 0) return true;
+    if (this.heightAt) return true;
+    if (this.sailEnv) return true;
+    return false;
+  }
+
+  getActiveId(): TestWorldId | null {
+    return this.activeId;
+  }
+
   clear() {
     if (this.terrain) {
       this.group.remove(this.terrain);
@@ -301,20 +319,17 @@ export class ForestWorld {
       if (getMapRegistryEntry(def.id)?.toonStyle) {
         upgradeMapPresentation(scene, { toon: true });
       }
-      // Fit loosely — keep author scale for forest; island already handled in camp
-      scene.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(scene);
-      // Center XZ, seat on y=0
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      scene.position.x -= center.x;
-      scene.position.z -= center.z;
-      scene.position.y -= box.min.y;
+      // SI fit for 2 m orc (door clear 2.45 m) — before height samplers
       scene.name = `terrain:${def.id}`;
       scene.userData.testWorldId = def.id;
       scene.userData.uuid = def.uuid;
       scene.userData.seed = def.seed;
       scene.userData.sourceUrl = url;
+      const scaleReport = applyMapScaleForOrc(scene, {
+        preferVillageDefault: def.id === "pirate-village",
+      });
+      scene.userData.orcMapScale = scaleReport.scale;
+      scene.userData.orcMapScaleReason = scaleReport.reason;
 
       let stripped = 0;
       if (def.natureReplace) {
@@ -351,7 +366,7 @@ export class ForestWorld {
         this.waterBand = { top: wy + 0.05, bottom: wy - 2.2 };
       }
 
-      // Height sampler from large terrain meshes
+      // Height sampler + ground mesh list from large terrain (REQUIRED for playable map)
       {
         const terrainMeshes: THREE.Mesh[] = [];
         scene.traverse((o) => {
@@ -362,9 +377,30 @@ export class ForestWorld {
           b.getSize(s);
           if (s.x > 8 && s.z > 8) terrainMeshes.push(m);
         });
-        this.heightAt = terrainMeshes.length
-          ? createTerrainHeightSampler(terrainMeshes.slice(0, 48))
+        // Prefer big floors; if none, any large-ish mesh so feet don't free-fall
+        if (terrainMeshes.length === 0) {
+          scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!m.isMesh || !m.visible) return;
+            const b = new THREE.Box3().setFromObject(m);
+            const s = new THREE.Vector3();
+            b.getSize(s);
+            if (Math.max(s.x, s.z) > 4) terrainMeshes.push(m);
+          });
+        }
+        this.groundMeshes = terrainMeshes.slice(0, 64);
+        this.heightAt = this.groundMeshes.length
+          ? createTerrainHeightSampler(this.groundMeshes.slice(0, 48))
           : null;
+      }
+
+      if (!this.heightAt && !this.sailEnv) {
+        console.error(
+          `[ForestWorld] ${def.id} has no ground height sampler — rejecting map (would be void fall)`,
+        );
+        this.clear();
+        this.cbs.flash?.(`${def.name} rejected · no terrain colliders`, 1.6);
+        return false;
       }
 
       if (def.natureReplace || def.harvestScatter) {
@@ -381,12 +417,13 @@ export class ForestWorld {
       }
 
       this.cbs.flash?.(
-        `${def.name.toUpperCase()} · ${stripped ? `stripped ${stripped} · ` : ""}${this.harvestNodes.length} harvest · ${def.sailing ? "water+wind+sky" : "outdoor"}`,
-        1.5,
+        `${def.name.toUpperCase()} · READY · orc×${scaleReport.scale.toFixed(2)} (${scaleReport.reason}) · ${stripped ? `stripped ${stripped} · ` : ""}${this.harvestNodes.length} harvest · ground=${this.groundMeshes.length}${def.sailing ? " · water+wind+sky" : ""}`,
+        1.6,
       );
-      return true;
+      return this.isReady();
     } catch (err) {
       console.warn("[ForestWorld] load failed", def.id, err);
+      this.clear();
       this.cbs.flash?.(`${def.name} load failed`, 1.2);
       return false;
     }
@@ -735,7 +772,7 @@ export class ForestWorld {
    */
   private async loadShipwreckLocal(def: TestWorldDef): Promise<boolean> {
     try {
-      const map = await loadShipwreckIslandMap({ scale: 1 });
+      const map = await loadShipwreckIslandMap();
       upgradeMapPresentation(map.root, { toon: true });
       map.root.userData.testWorldId = def.id;
       map.root.userData.uuid = def.uuid;
@@ -785,7 +822,7 @@ export class ForestWorld {
    */
   private async loadArenaLocal(def: TestWorldDef): Promise<boolean> {
     try {
-      const map = await loadArenaMap({ scale: 1 });
+      const map = await loadArenaMap();
       upgradeMapPresentation(map.root, { toon: true });
       map.root.userData.testWorldId = def.id;
       map.root.userData.uuid = def.uuid;
