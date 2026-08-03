@@ -17,7 +17,6 @@ import { Character } from "../Character";
 import { Controller } from "../Controller";
 import { InputState } from "../input";
 import { PhysicsSystem } from "../PhysicsSystem";
-import { getBakedCharacter } from "../grudge/bakedRoster";
 import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
 import {
@@ -526,19 +525,25 @@ export class BrawlerScene {
       }
     }
 
-    // Fallback: static baked mesh (pose only)
+    // HARD: no 30characters / static roster. Last try = default grudge6 WK warrior.
     try {
-      const model = await getBakedCharacter(this.rosterIndex);
-      if (this.disposed) return;
-      this.fallbackModel = model;
-      model.position.set(0, 0, 8);
-      this.scene.add(model);
+      const av = new GrudgeAvatar("western-kingdoms", "warrior");
+      await av.load();
+      if (this.disposed) {
+        av.dispose();
+        return;
+      }
+      this.avatar = av;
+      this.characterId = "grudge:western-kingdoms:warrior";
+      this.ensureAvatarHumanScale(av);
+      av.root.position.set(0, 0, 8);
+      this.scene.add(av.root);
+      this.bindController(av);
       this.installSkillsForWeapon(this.weaponId);
-      this.loadError =
-        "Static mesh only — grudge6 / lab rig failed; skills still use T0 kit";
-      console.warn("[BrawlerScene]", this.loadError);
+      await this.applyWeaponAsync(this.weaponId);
+      console.info("[BrawlerScene] last-resort grudge6 WK warrior ready");
     } catch (err) {
-      this.loadError = "Player model failed to load";
+      this.loadError = "Player grudge6 SSOT failed (no fake mesh fallback)";
       console.error("[BrawlerScene] player load failed", err);
       this.installSkillsForWeapon(this.weaponId);
     }
@@ -980,14 +985,17 @@ export class BrawlerScene {
       if (p.id === this.selfId) continue;
       if (!this.remoteMeshes.has(p.id)) {
         try {
-          const model = await getBakedCharacter((this.rosterIndex + 1) % 30);
-          if (this.disposed) return;
-          const grp = new THREE.Group();
-          grp.add(model);
-          this.scene.add(grp);
-          this.remoteMeshes.set(p.id, grp);
+          // SSOT only — never 30characters static roster for remotes
+          const av = new GrudgeAvatar("western-kingdoms", "warrior");
+          await av.load();
+          if (this.disposed) {
+            av.dispose();
+            return;
+          }
+          this.scene.add(av.root);
+          this.remoteMeshes.set(p.id, av.root);
         } catch {
-          /* optional */
+          /* optional remote visual */
         }
       }
       const mesh = this.remoteMeshes.get(p.id);

@@ -28,7 +28,8 @@
  */
 
 import * as THREE from "three";
-import { getBakedCharacter } from "./bakedRoster";
+import { BAKED_ORDER } from "./bakedRoster";
+import { loadGrudge6CombatRig } from "./grudge6Runtime";
 import { Vfx } from "../Vfx";
 import {
   type WeaponFamily,
@@ -155,12 +156,17 @@ export class Grudge6CombatCharacter {
 
   async load(): Promise<void> {
     try {
-      const group = await getBakedCharacter(this.rosterIndex);
-      this.mesh = group;
-      this.pivot.add(group);
+      // ONE path: modular kit + equip + atlas + Bip001 clips (never 30characters)
+      const pair = BAKED_ORDER[this.rosterIndex] ?? BAKED_ORDER[0]!;
+      const [raceId, presetId] = pair;
+      const rig = await loadGrudge6CombatRig(raceId, presetId);
+      this.mesh = rig.root;
+      this.pivot.add(rig.root);
+      // Keep mixer alive on mesh userData so hosts can drive gait if needed
+      (rig.root as THREE.Object3D).userData.grudge6Mixer = rig.mixer;
+      (rig.root as THREE.Object3D).userData.grudge6Clips = rig.clips;
 
-      // Collect materials for flash.
-      group.traverse((o) => {
+      rig.root.traverse((o) => {
         const m = o as THREE.Mesh;
         if (!m.isMesh) return;
         m.castShadow = true;
@@ -173,10 +179,18 @@ export class Grudge6CombatCharacter {
         }
       });
 
+      // Play idle so we never leave a T-pose body
+      const idle = rig.clips.get("idle");
+      if (idle) {
+        const act = rig.mixer.clipAction(idle);
+        act.setLoop(THREE.LoopRepeat, Infinity);
+        act.play();
+      }
       this.state = "idle";
     } catch (err) {
-      console.error("[Grudge6CombatCharacter] load failed", err);
-      this.state = "idle"; // continue without mesh (no-op)
+      console.error("[Grudge6CombatCharacter] loadGrudge6CombatRig failed", err);
+      this.state = "idle";
+      throw err;
     }
   }
 

@@ -206,8 +206,9 @@ export function pathAliases(path: string): string[] {
   }
 
   // grudge6 baked roster — Open same-origin only (not on R2 root yet)
-  if (clean === "models/grudge6/30characters.glb") {
-    out.push("models/grudge6/30characters.glb", "models/characters/30characters.glb");
+  // 30characters.glb PURGED — never alias as grudge6 hero path
+  if (/30characters/i.test(clean)) {
+    return out; // empty aliases — refuse to resolve
   }
 
   // Modular race kit (FBX + textures) — R2 /assets/{race}/... + grudge6 races + texture alt paths

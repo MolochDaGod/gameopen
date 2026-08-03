@@ -1988,28 +1988,32 @@ export class Studio {
         grudge ? `grudge6 ${grudge.raceId}/${grudge.presetId}` : "catalog",
         err,
       );
-      // Grudge6 race mesh/CDN can fail: try catalog Character (fleet bake hydrate),
-      // then Explorer procedural (always playable).
-      if (!grudge) return;
-      next.dispose();
-      if (this.disposed || token !== this.loadToken) return;
-      const catalogFallback = getCharacter("gunslinger"); // racalvin — skinned + bake hydrate
-      try {
-        next = new Character(catalogFallback);
-        await next.load();
-        id = catalogFallback.id;
-        console.warn("[Studio] grudge6 failed — using catalog Character + fleet bakes", catalogFallback.id);
-      } catch (err2) {
-        console.error("[Studio] catalog Character fallback failed", err2);
-        const exDef = getCharacter("explorer");
-        next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
-        try {
-          await next.load();
-          id = exDef.id;
-        } catch (err3) {
-          console.error("[Studio] Explorer fallback failed", err3);
+      // HARD: never fall back grudge6 → Mixamo explorer / gunslinger / 30characters.
+      // Wrong mesh+scale+no Bip001 anims is worse than a failed load.
+      if (grudge) {
+        next.dispose();
+        // One retry: class preset mesh_ids only (drop broken account mesh set)
+        if (this.pendingMeshIds?.length) {
+          try {
+            const retry = new GrudgeAvatar(grudge.raceId, grudge.presetId, {
+              animPack: stylePack || undefined,
+            });
+            await retry.load();
+            next = retry;
+            console.warn(
+              "[Studio] grudge6 retry OK without account mesh_ids",
+              grudge.raceId,
+              grudge.presetId,
+            );
+          } catch (err2) {
+            console.error("[Studio] grudge6 SSOT retry failed — no fake hero", err2);
+            return;
+          }
+        } else {
           return;
         }
+      } else {
+        return;
       }
     }
     // Discard stale loads — only the most recent selection may commit.

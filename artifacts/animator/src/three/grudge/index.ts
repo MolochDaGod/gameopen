@@ -1,8 +1,10 @@
-// Vendored Grudge character-kit — framework-agnostic (three only) helpers and
-// data for spawning the equipment-driven Toon_RTS character inside the Animator.
-// The Animator forbids `@workspace` imports, so this is a local copy of the
-// grudge-game character-kit; keep the DATA (RACE_ASSETS, RACE_GEAR_PRESETS) in
-// lockstep with the source if it ever changes.
+/**
+ * Grudge6 kit — ONE production path only:
+ *   loadGrudge6CombatRig(race, preset, opts)  ← mesh + equip + atlas + SI + anims
+ *   GrudgeAvatar → same
+ *
+ * PURGED: 30characters.glb, bakedRoster static heroes, Mixamo fallback for races.
+ */
 
 export {
   setAssetBase,

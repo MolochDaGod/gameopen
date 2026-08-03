@@ -119,7 +119,7 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
     const file = ARENA_RACE_GLB[raceId];
 
     // Fleet SSOT: R2 grudge6 races → same-origin resolve → FBX atlas.
-    // Arena /cdn/assets/characters is LAST RESORT only (docs/ANIMATION_FLEET_SSOT.md).
+    // NEVER 30characters.glb. Arena /cdn/assets/characters is LAST RESORT only.
     {
       const rel = `models/grudge6/races/${file}`;
       const primary = [
@@ -130,10 +130,13 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
         arenaCharacterGlbUrl(raceId),
         arenaCharacterGlbUrlAbsolute(raceId),
       ];
-      const urls = [...new Set([...primary, ...lastResort])];
+      const urls = [...new Set([...primary, ...lastResort])].filter(
+        (u) => !/30characters/i.test(u),
+      );
       const loader = sharedGltfLoader();
       for (const url of urls) {
         if (url.includes("assets.grudge-studio.com/cdn/assets/")) continue;
+        if (/30characters/i.test(url)) continue;
         try {
           const gltf = await loader.loadAsync(url);
           if (isForbiddenPrimaryUrl(url)) {
@@ -722,22 +725,33 @@ export async function loadGrudge6CombatRig(
     }
   }
 
+  // HARD GATE — never ship wrong mesh / scale / T-pose. Fail the load entirely.
   const check = validateCharacterDeploy(model);
   const look = diagnoseCharacterLook(model);
   model.userData.diagnoseCharacterLook = look;
-  if (!check.ok || !look.ok) {
-    console.warn(
-      `[grudge6Runtime] deploy validation race=${raceId}`,
-      check.issues,
-      look.errors,
-      look.warnings,
-      `h=${check.heightM.toFixed(3)} skeletons=${look.skeletonCount}`,
+  const hardErrors: string[] = [];
+  if (!clips.has("idle")) hardErrors.push("missing idle clip");
+  if (!clips.has("walk") && !clips.has("run")) hardErrors.push("missing walk/run loco");
+  if (!clips.has("attack")) hardErrors.push("missing attack clip");
+  if (!(check.heightM >= 1.45 && check.heightM <= 2.25)) {
+    hardErrors.push(`height ${check.heightM.toFixed(3)}m outside SI human band`);
+  }
+  if (look.errors?.length) hardErrors.push(...look.errors);
+  if (check.issues?.length && !check.ok) hardErrors.push(...check.issues);
+  if (hardErrors.length) {
+    console.error(
+      `[grudge6Runtime] HARD FAIL race=${raceId} preset=${presetId} pack=${animPack}`,
+      hardErrors,
     );
-  } else {
-    model.userData.deployValidated = true;
-    if (look.warnings.length) {
-      console.info(`[grudge6Runtime] deploy ok with warnings race=${raceId}`, look.warnings);
-    }
+    mixer.stopAllAction();
+    throw new Error(
+      `[grudge6Runtime] refuse broken kit ${raceId}/${presetId}: ${hardErrors.join("; ")}`,
+    );
+  }
+  model.userData.deployValidated = true;
+  model.userData.grudge6Ssot = "loadGrudge6CombatRig";
+  if (look.warnings?.length) {
+    console.info(`[grudge6Runtime] deploy ok with warnings race=${raceId}`, look.warnings);
   }
 
   // Role aliases for T0 weapon skills / Studio multiPart names
