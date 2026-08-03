@@ -16,9 +16,9 @@
     "@workspace/assets": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.15.30",
+    "@types/node": "catalog:",
     "@types/three": "^0.184.1",
     "three": "^0.184.0",
-    "vite": "^6.3.5"
+    "vite": "catalog:"
   }
 }

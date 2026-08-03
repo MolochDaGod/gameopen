@@ -6,8 +6,6 @@ function clampMove(v: number, max: number): number {
 
 /** Window (ms) within which two fresh presses of the same key count as a double-tap. */
 const DOUBLE_TAP_MS = 280;
-/** Window (ms) for a third press (A-A-A / D-D-D) after the prior tap. */
-const TRIPLE_TAP_MS = 360;
 
 /** Lightweight keyboard + mouse state tracker for the studio. */
 export class InputState {
@@ -17,13 +15,11 @@ export class InputState {
   wheel = 0;
   locked = false;
 
-  // Double/triple-tap edge detection (A-A dodge, A-A-A ice slide). `tapAt` holds
-  // the time of the last *fresh* press per key; successive presses inside the
-  // window queue double/triple taps for consumers to drain.
+  // Double-tap edge detection (A-A / D-D dodge rolls). `tapAt` holds the time of
+  // the last *fresh* press per key; a second fresh press inside DOUBLE_TAP_MS
+  // queues the code in `doubleTaps` for a consumer to drain via consumeDoubleTap.
   private tapAt: Record<string, number> = {};
-  private tapCount: Record<string, number> = {};
   private doubleTaps = new Set<string>();
-  private tripleTaps = new Set<string>();
   // Single fresh-press edges (one entry per keydown that wasn't OS key-repeat),
   // drained via consumePress — used for stance-gated single-tap actions.
   private pressed = new Set<string>();
@@ -56,22 +52,10 @@ export class InputState {
       this.pressed.add(e.code);
       const now = performance.now();
       const last = this.tapAt[e.code] ?? 0;
-      const prevCount = this.tapCount[e.code] ?? 0;
-      // Triple window is slightly looser so A-A-A is reachable after a double.
-      const windowMs = prevCount >= 1 ? TRIPLE_TAP_MS : DOUBLE_TAP_MS;
-      if (now - last <= windowMs && prevCount > 0) {
-        const n = prevCount + 1;
-        this.tapCount[e.code] = n;
-        this.tapAt[e.code] = now;
-        if (n === 2) this.doubleTaps.add(e.code);
-        if (n >= 3) {
-          this.tripleTaps.add(e.code);
-          // Reset chain so a 4th press starts a new sequence.
-          this.tapCount[e.code] = 0;
-          this.tapAt[e.code] = 0;
-        }
+      if (now - last <= DOUBLE_TAP_MS) {
+        this.doubleTaps.add(e.code);
+        this.tapAt[e.code] = 0;
       } else {
-        this.tapCount[e.code] = 1;
         this.tapAt[e.code] = now;
       }
     }
@@ -82,20 +66,7 @@ export class InputState {
   private onKeyUp = (e: KeyboardEvent) => {
     this.keys.delete(e.code);
   };
-  /**
-   * Last free-mouse client coords (canvas-relative aim). Updated when not
-   * pointer-locked so soft-lock select / free-aim follow the OS cursor.
-   */
-  clientX = 0;
-  clientY = 0;
-  /** True after at least one free-mouse mousemove over the canvas. */
-  hasClientPos = false;
-
   private onMouseMove = (e: MouseEvent) => {
-    // Always track free-cursor position for soft-lock / free-mouse aim.
-    this.clientX = e.clientX;
-    this.clientY = e.clientY;
-    this.hasClientPos = true;
     if (!this.locked) return;
     // Drop the first event after acquiring lock: its delta is unreliable and is
     // the usual source of the "camera snaps across the room" jolt.
@@ -120,15 +91,10 @@ export class InputState {
       this.mouseDX = 0;
       this.mouseDY = 0;
     } else {
-      // Unlock must NOT clear WASD / edge presses — free-mouse sticky and ESC
-      // exit should keep locomotion. Only drop look deltas + tap queues.
-      this.mouseDX = 0;
-      this.mouseDY = 0;
+      this.keys.clear();
       this.doubleTaps.clear();
-      this.tripleTaps.clear();
       this.pressed.clear();
       this.tapAt = {};
-      this.tapCount = {};
     }
   };
 
@@ -176,20 +142,6 @@ export class InputState {
   /** Drain a queued double-tap for `code` (true once per detected double-tap). */
   consumeDoubleTap(code: string): boolean {
     if (this.doubleTaps.has(code)) {
-      this.doubleTaps.delete(code);
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Drain a queued triple-tap for `code` (true once per A-A-A / D-D-D).
-   * Used by ice-staff extended dash-slide.
-   */
-  consumeTripleTap(code: string): boolean {
-    if (this.tripleTaps.has(code)) {
-      this.tripleTaps.delete(code);
-      // A triple supersedes any pending double for the same key.
       this.doubleTaps.delete(code);
       return true;
     }

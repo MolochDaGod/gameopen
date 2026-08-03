@@ -1,0 +1,384 @@
+/* ============================================================
+   MMORPG BOTTOM BAR — PSD-reference MMORPG layout.
+   Dark charcoal/stone background, two gold trim rails top/bottom,
+   numbered skill slots on left + right clusters, HP/MP bars in
+   the centre. Matches the PSD's dark brown/gold fantasy chrome.
+   ============================================================ */
+
+.ms-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translate(var(--hud-dx, 0px), var(--hud-dy, 0px)) scale(var(--hud-scale, 1));
+  transform-origin: bottom center;
+
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  z-index: 6;
+  pointer-events: none;
+
+  width: min(96vw, 1100px);
+  height: 96px;
+
+  background:
+    linear-gradient(180deg,
+      rgba(30, 22, 12, 0.97) 0%,
+      rgba(20, 14, 8, 0.99) 55%,
+      rgba(14, 10, 6, 0.99) 100%);
+
+  border-left:  2px solid #6e4c1c;
+  border-right: 2px solid #6e4c1c;
+  box-shadow:
+    0 -2px 0 0 #f2dd9b,
+    0  2px 0 0 #f2dd9b,
+    0 -3px 0 0 #6e4c1c,
+    0  3px 0 0 #6e4c1c,
+    0 -18px 36px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 236, 160, 0.06),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Gold rails — top and bottom decorative lines */
+.ms-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    #6e4c1c 0%,
+    #b78d3d 8%,
+    #f2dd9b 20%,
+    #e8c87c 50%,
+    #f2dd9b 80%,
+    #b78d3d 92%,
+    #6e4c1c 100%);
+  pointer-events: none;
+}
+.ms-rail-top    { top: 0; }
+.ms-rail-bottom { bottom: 0; }
+
+/* ---- CLUSTERS (left + right) ---- */
+.ms-cluster {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  flex: 0 0 auto;
+}
+.ms-cluster-left {
+  border-right: 1px solid rgba(232, 185, 74, 0.25);
+}
+.ms-cluster-right {
+  border-left: 1px solid rgba(232, 185, 74, 0.25);
+}
+
+/* ---- SKILL SLOT ---- */
+.ms-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 58px;
+}
+
+.ms-icon-wrap {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: radial-gradient(circle at 50% 30%,
+    rgba(46, 34, 18, 0.95),
+    rgba(16, 12, 8, 0.98));
+
+  border: 1px solid #6e4c1c;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.7),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.ms-slot.ms-ready .ms-icon-wrap {
+  border-color: #b78d3d;
+  box-shadow:
+    0 0 10px rgba(232, 185, 74, 0.35),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+.ms-slot.ms-accent .ms-icon-wrap {
+  border-color: rgba(255, 160, 80, 0.7);
+  box-shadow:
+    0 0 12px rgba(255, 130, 40, 0.4),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+.ms-slot.ms-on-cd .ms-icon-wrap svg {
+  filter: grayscale(0.6) brightness(0.55);
+}
+
+.ms-slot.ms-dim .ms-icon-wrap {
+  opacity: 0.35;
+}
+
+.ms-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+.ms-cd {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffe9b0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.ms-key {
+  font-size: 10px;
+  font-weight: 800;
+  color: #14100a;
+  background: linear-gradient(180deg, #f2dd9b, #b78d3d);
+  border-radius: 4px;
+  padding: 0 6px;
+  min-width: 22px;
+  text-align: center;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.ms-slot.ms-accent .ms-key {
+  background: linear-gradient(180deg, #ffb070, #c05010);
+  color: #1a0800;
+}
+
+.ms-label {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: #a58c55;
+  max-width: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+/* ---- CENTER ---- */
+.ms-center {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 14px;
+}
+
+.ms-char-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f0e0b0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---- RESOURCE BARS ---- */
+.ms-res {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ms-res-label {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #c8a870;
+  width: 22px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.ms-res-track {
+  position: relative;
+  flex: 1 1 0;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(8, 6, 4, 0.85);
+  border: 1px solid rgba(110, 76, 28, 0.6);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.ms-res-fill {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  transition: width 120ms linear;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.ms-res-hp .ms-res-fill {
+  background: linear-gradient(90deg, #c0392b, #e8654b 70%, #f08060);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 200, 170, 0.28),
+    0 0 6px rgba(200, 60, 40, 0.4);
+}
+
+.ms-res-mp .ms-res-fill {
+  background: linear-gradient(90deg, #1a4a8c, #2e7dcc 70%, #57a8f0);
+  box-shadow:
+    inset 0 1px 0 rgba(150, 200, 255, 0.28),
+    0 0 6px rgba(30, 100, 200, 0.4);
+}
+
+.ms-res-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #f5efdd;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+
+/* ---- POISE STRIP ---- */
+.ms-poise-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ms-poise-label {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #7a6a4a;
+  width: 22px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.ms-poise-track {
+  flex: 1 1 0;
+  height: 6px;
+  border-radius: 2px;
+  background: rgba(8, 6, 4, 0.7);
+  border: 1px solid rgba(110, 76, 28, 0.4);
+  overflow: hidden;
+}
+
+.ms-poise-fill {
+  height: 100%;
+  transition: width 200ms linear, background 300ms;
+  border-radius: 1px;
+}
+
+/* ---- HUD-EDITOR THEMING ---- */
+.studio.hud-themed .ms-bar {
+  background: var(--hud-panel-bg);
+  border-color: var(--hud-panel-border);
+  box-shadow:
+    0 0 calc(22px * var(--hud-glow-strength, 1)) var(--hud-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 -18px 36px rgba(0, 0, 0, 0.6);
+}
+
+.studio.hud-themed .ms-rail {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--hud-accent) 8%,
+    color-mix(in srgb, var(--hud-accent) 70%, #ffffff) 50%,
+    var(--hud-accent) 92%,
+    transparent 100%);
+}
+
+.studio.hud-themed .ms-cluster-left {
+  border-right-color: color-mix(in srgb, var(--hud-panel-border) 60%, transparent);
+}
+
+.studio.hud-themed .ms-cluster-right {
+  border-left-color: color-mix(in srgb, var(--hud-panel-border) 60%, transparent);
+}
+
+.studio.hud-themed .ms-icon-wrap {
+  background: var(--hud-panel-bg);
+  border-color: var(--hud-panel-border);
+}
+
+.studio.hud-themed .ms-slot.ms-ready .ms-icon-wrap {
+  border-color: var(--hud-accent);
+  box-shadow: 0 0 calc(10px * var(--hud-glow-strength, 1)) var(--hud-glow);
+}
+
+.studio.hud-themed .ms-key {
+  background: var(--hud-accent);
+  color: #05121c;
+  box-shadow: 0 0 calc(8px * var(--hud-glow-strength, 1)) var(--hud-glow);
+}
+
+.studio.hud-themed .ms-slot.ms-accent .ms-key {
+  background: var(--hud-accent-2);
+}
+
+.studio.hud-themed .ms-label {
+  color: var(--hud-muted);
+}
+
+.studio.hud-themed .ms-char-name {
+  color: var(--hud-text);
+  font-family: var(--hud-font);
+}
+
+.studio.hud-themed .ms-res-label,
+.studio.hud-themed .ms-poise-label {
+  color: var(--hud-muted);
+}
+
+.studio.hud-themed .ms-res-track,
+.studio.hud-themed .ms-poise-track {
+  border-color: var(--hud-panel-border);
+}
+
+.studio.hud-themed .ms-res-hp .ms-res-fill {
+  background: var(--hud-hp);
+}
+
+.studio.hud-themed .ms-res-mp .ms-res-fill {
+  background: var(--hud-sp);
+}
+
+/* touch: hide bottom bar */
+.studio.touch .ms-bar { display: none; }

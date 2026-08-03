@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "generatedAt": "2026-08-03T03:21:00.309Z",
+  "generatedAt": "2026-08-03T18:28:34.100Z",
   "game": "gameopen",
-  "count": 1885,
+  "count": 1929,
   "byKind": {
-    "data": 309,
+    "data": 353,
     "animation": 747,
     "model": 249,
     "texture": 501,
@@ -15,7 +15,7 @@
     "code": 4
   },
   "byPurpose": {
-    "data": 309,
+    "data": 353,
     "unknown": 358,
     "prop": 37,
     "animation": 320,
@@ -27,7 +27,7 @@
     "map": 12,
     "character": 8
   },
-  "totalBytes": 1209425190,
+  "totalBytes": 1213146456,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -8880,6 +8880,46 @@
       "category": "anims/baked/greatsword_samurai"
     },
     {
+      "id": "GO-70bd45df0a34",
+      "path": "/anims/baked/harvest/box-idle.json",
+      "rel": "anims/baked/harvest/box-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 108343,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-3102b3708f9c",
+      "path": "/anims/baked/harvest/box-turn.json",
+      "rel": "anims/baked/harvest/box-turn.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 40768,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a5a11640729a",
+      "path": "/anims/baked/harvest/box-walk-arc.json",
+      "rel": "anims/baked/harvest/box-walk-arc.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 52795,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-fbab881296dc",
+      "path": "/anims/baked/harvest/cow-milking.json",
+      "rel": "anims/baked/harvest/cow-milking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114032,
+      "category": "anims/baked/harvest"
+    },
+    {
       "id": "GO-22bf3b2dc196",
       "path": "/anims/baked/harvest/dig-and-plant-seeds.json",
       "rel": "anims/baked/harvest/dig-and-plant-seeds.json",
@@ -8887,6 +8927,66 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 328365,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-4700827a6c68",
+      "path": "/anims/baked/harvest/holding-idle.json",
+      "rel": "anims/baked/harvest/holding-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 118479,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-322705d9ff1a",
+      "path": "/anims/baked/harvest/holding-turn-left.json",
+      "rel": "anims/baked/harvest/holding-turn-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 45450,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-434d71438e87",
+      "path": "/anims/baked/harvest/holding-turn-right.json",
+      "rel": "anims/baked/harvest/holding-turn-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 41023,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-8016e6471c22",
+      "path": "/anims/baked/harvest/holding-walk.json",
+      "rel": "anims/baked/harvest/holding-walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 64765,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-bd3c330112bf",
+      "path": "/anims/baked/harvest/kneeling-idle.json",
+      "rel": "anims/baked/harvest/kneeling-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 83992,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a6f5851a5e96",
+      "path": "/anims/baked/harvest/manifest.json",
+      "rel": "anims/baked/harvest/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 754,
       "category": "anims/baked/harvest"
     },
     {
@@ -8937,6 +9037,46 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 334665,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a03d5742563f",
+      "path": "/anims/baked/harvest/wheelbarrow-dump.json",
+      "rel": "anims/baked/harvest/wheelbarrow-dump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 181243,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-115d32307437",
+      "path": "/anims/baked/harvest/wheelbarrow-idle.json",
+      "rel": "anims/baked/harvest/wheelbarrow-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31825,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-7e8311db066f",
+      "path": "/anims/baked/harvest/wheelbarrow-walk-turn.json",
+      "rel": "anims/baked/harvest/wheelbarrow-walk-turn.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 57149,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-b224fece287d",
+      "path": "/anims/baked/harvest/wheelbarrow-walk.json",
+      "rel": "anims/baked/harvest/wheelbarrow-walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 49112,
       "category": "anims/baked/harvest"
     },
     {
@@ -9207,6 +9347,36 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 70271,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-5c3f554f426b",
+      "path": "/anims/baked/magic/standing-jump-running-landing.json",
+      "rel": "anims/baked/magic/standing-jump-running-landing.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 91296,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-92ca414286d7",
+      "path": "/anims/baked/magic/standing-jump.json",
+      "rel": "anims/baked/magic/standing-jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 142517,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-e0b4c10939ae",
+      "path": "/anims/baked/magic/standing-sprint-forward.json",
+      "rel": "anims/baked/magic/standing-sprint-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 36959,
       "category": "anims/baked/magic"
     },
     {
@@ -9700,6 +9870,66 @@
       "category": "anims/baked/polearm"
     },
     {
+      "id": "GO-d2dc7d3f1928",
+      "path": "/anims/baked/reactions/death-crouching-headshot-front.json",
+      "rel": "anims/baked/reactions/death-crouching-headshot-front.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 86917,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-0b68e8c8ba44",
+      "path": "/anims/baked/reactions/death-from-back.json",
+      "rel": "anims/baked/reactions/death-from-back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 117067,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-361ae726340c",
+      "path": "/anims/baked/reactions/death-from-front-headshot.json",
+      "rel": "anims/baked/reactions/death-from-front-headshot.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 109412,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-61ef0b09e22e",
+      "path": "/anims/baked/reactions/death-from-front.json",
+      "rel": "anims/baked/reactions/death-from-front.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 117831,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-30004bbdb0c4",
+      "path": "/anims/baked/reactions/death-from-right.json",
+      "rel": "anims/baked/reactions/death-from-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99521,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-e99e63f1a0df",
+      "path": "/anims/baked/rifle/death-from-front-headshot.json",
+      "rel": "anims/baked/rifle/death-from-front-headshot.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 171683,
+      "category": "anims/baked/rifle"
+    },
+    {
       "id": "GO-fde7f1f9a15c",
       "path": "/anims/baked/rifle/firing-rifle.json",
       "rel": "anims/baked/rifle/firing-rifle.json",
@@ -9720,13 +9950,63 @@
       "category": "anims/baked/rifle"
     },
     {
+      "id": "GO-6244d975aee8",
+      "path": "/anims/baked/rifle/idle-aiming.json",
+      "rel": "anims/baked/rifle/idle-aiming.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 107994,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-d808b902ab60",
+      "path": "/anims/baked/rifle/idle-crouching.json",
+      "rel": "anims/baked/rifle/idle-crouching.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114071,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-ce7e01b6769e",
+      "path": "/anims/baked/rifle/idle.json",
+      "rel": "anims/baked/rifle/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114421,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-9072e3df603d",
+      "path": "/anims/baked/rifle/jump-backward.json",
+      "rel": "anims/baked/rifle/jump-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 42343,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-a6e2ec920869",
+      "path": "/anims/baked/rifle/jump-forward.json",
+      "rel": "anims/baked/rifle/jump-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 56926,
+      "category": "anims/baked/rifle"
+    },
+    {
       "id": "GO-6176936f4bab",
       "path": "/anims/baked/rifle/manifest.json",
       "rel": "anims/baked/rifle/manifest.json",
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 4912,
+      "bytes": 710,
       "category": "anims/baked/rifle"
     },
     {
@@ -9770,6 +10050,16 @@
       "category": "anims/baked/rifle"
     },
     {
+      "id": "GO-b6cea8cdbd7f",
+      "path": "/anims/baked/rifle/run-backward.json",
+      "rel": "anims/baked/rifle/run-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31881,
+      "category": "anims/baked/rifle"
+    },
+    {
       "id": "GO-8c2a04b22d43",
       "path": "/anims/baked/rifle/run-backwards.json",
       "rel": "anims/baked/rifle/run-backwards.json",
@@ -9777,6 +10067,76 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 34941,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-fc4a207c585f",
+      "path": "/anims/baked/rifle/run-forward.json",
+      "rel": "anims/baked/rifle/run-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34034,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-d179cb476da4",
+      "path": "/anims/baked/rifle/run-left.json",
+      "rel": "anims/baked/rifle/run-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 32832,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-892895a8bc83",
+      "path": "/anims/baked/rifle/run-right.json",
+      "rel": "anims/baked/rifle/run-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 33098,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-c24101c45b29",
+      "path": "/anims/baked/rifle/start-run.json",
+      "rel": "anims/baked/rifle/start-run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 78771,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-ebe4a244be57",
+      "path": "/anims/baked/rifle/start-walking-backwards.json",
+      "rel": "anims/baked/rifle/start-walking-backwards.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 123433,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-0a84068f51c5",
+      "path": "/anims/baked/rifle/start-walking.json",
+      "rel": "anims/baked/rifle/start-walking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 90301,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-4a8fc2e21607",
+      "path": "/anims/baked/rifle/stop-walking.json",
+      "rel": "anims/baked/rifle/stop-walking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 160759,
       "category": "anims/baked/rifle"
     },
     {
@@ -9800,6 +10160,76 @@
       "category": "anims/baked/rifle"
     },
     {
+      "id": "GO-c7fbf12c076d",
+      "path": "/anims/baked/rifle/strafe.json",
+      "rel": "anims/baked/rifle/strafe.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34952,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-2a115e6c34e8",
+      "path": "/anims/baked/rifle/toss-grenade.json",
+      "rel": "anims/baked/rifle/toss-grenade.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 191862,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e4e1d80120cd",
+      "path": "/anims/baked/rifle/turn-90-left.json",
+      "rel": "anims/baked/rifle/turn-90-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62349,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-3788ed78f493",
+      "path": "/anims/baked/rifle/turn-90-right.json",
+      "rel": "anims/baked/rifle/turn-90-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 65153,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-dc370ec40550",
+      "path": "/anims/baked/rifle/turn-left.json",
+      "rel": "anims/baked/rifle/turn-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 56330,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e252401687bf",
+      "path": "/anims/baked/rifle/turn-right-45.json",
+      "rel": "anims/baked/rifle/turn-right-45.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62466,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-09c8215e6266",
+      "path": "/anims/baked/rifle/walk-backwards-stop.json",
+      "rel": "anims/baked/rifle/walk-backwards-stop.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 84363,
+      "category": "anims/baked/rifle"
+    },
+    {
       "id": "GO-7a11c3889341",
       "path": "/anims/baked/rifle/walking-backwards.json",
       "rel": "anims/baked/rifle/walking-backwards.json",
@@ -9807,6 +10237,16 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 86201,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-65100c123aaa",
+      "path": "/anims/baked/rifle/walking-to-dying.json",
+      "rel": "anims/baked/rifle/walking-to-dying.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 184180,
       "category": "anims/baked/rifle"
     },
     {
@@ -11326,7 +11766,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 24157,
+      "bytes": 24165,
       "category": "content/worlds"
     },
     {
@@ -13256,7 +13696,7 @@
       "kind": "other",
       "purpose": "character",
       "ext": "md",
-      "bytes": 401,
+      "bytes": 409,
       "category": "models/grudge6"
     },
     {

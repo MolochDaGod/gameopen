@@ -1,17 +1,15 @@
 /**
  * Device-local persistence for the controller / camera / mouse "feel" settings
- * (the `EditorParams` block surfaced in the Editor panel).
+ * (the `EditorParams` block surfaced in the Editor panel). Stored in
+ * localStorage, schema-versioned, and clamped on load so a stale or corrupt
+ * blob can never feed NaN into the camera/physics. This mirrors the
+ * `fxSettings` / `soundSettings` modules so every settings group in the studio
+ * persists the same way — previously these reset to defaults on every reload,
+ * the lone group that didn't stick.
  *
- * **Fleet SSOT storage keys** live in `@workspace/grudge-physics`
- * (`grudge:controls`). All Open native modes (Danger, Play, Brawler, …) share
- * the same blob so updating sensitivity on one surface updates the rest.
+ * This is the animator artifact, so NOTHING here may import `@workspace/*`.
  */
 
-import {
-  CONTROLS_SCHEMA,
-  readControlsRaw,
-  writeControlsRaw,
-} from "@workspace/grudge-physics";
 import { DEFAULT_EDITOR, type EditorParams } from "./types";
 
 /**
@@ -37,6 +35,9 @@ export const CONTROL_RANGES: Record<string, readonly [number, number]> = {
   attackSteer: [0, 1.5],
 };
 
+const KEY = "dangerroom:controls";
+const SCHEMA = 1;
+
 const clampNum = (v: unknown, [min, max]: readonly [number, number], d: number): number =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : d;
 
@@ -51,10 +52,10 @@ const bool = (v: unknown, d: boolean): boolean => (typeof v === "boolean" ? v : 
 export function loadControls(): EditorParams {
   const d = DEFAULT_EDITOR;
   try {
-    const raw = readControlsRaw();
+    const raw = localStorage.getItem(KEY);
     if (!raw) return { ...d };
     const o = JSON.parse(raw) as Partial<EditorParams> & { schema?: number };
-    if (o.schema !== CONTROLS_SCHEMA) return { ...d };
+    if (o.schema !== SCHEMA) return { ...d };
     return {
       moveSpeed: clampNum(o.moveSpeed, CONTROL_RANGES.moveSpeed, d.moveSpeed),
       sprintMultiplier: clampNum(o.sprintMultiplier, CONTROL_RANGES.sprintMultiplier, d.sprintMultiplier),
@@ -82,10 +83,19 @@ export function loadControls(): EditorParams {
 
 export function saveControls(p: EditorParams): void {
   try {
-    writeControlsRaw(JSON.stringify({ ...p, modelYaw: undefined, schema: CONTROLS_SCHEMA }));
+    localStorage.setItem(KEY, JSON.stringify({ ...p, modelYaw: undefined, schema: SCHEMA }));
   } catch {
     /* storage unavailable — keep in-memory only */
   }
+  // Notify live listeners (Voxel Editor orbit, Dressing Room OrbitControls) so a
+  // Mouse Sens / Invert Y change applies immediately, without re-entering the
+  // mode. The persisted blob above stays the source of truth for fresh mounts.
+  notifyMouseFeel({ sensitivity: p.mouseSensitivity, invertY: p.invertY });
+}
+
+export interface MouseFeel {
+  sensitivity: number;
+  invertY: boolean;
 }
 
 /**
@@ -93,7 +103,34 @@ export function saveControls(p: EditorParams): void {
  * only need the shared mouse feel so the global Mouse Sens / Invert Y settings
  * apply uniformly everywhere, not just in the Danger Room controller.
  */
-export function loadMouseFeel(): { sensitivity: number; invertY: boolean } {
+export function loadMouseFeel(): MouseFeel {
   const c = loadControls();
   return { sensitivity: c.mouseSensitivity, invertY: c.invertY };
+}
+
+const mouseFeelListeners = new Set<(feel: MouseFeel) => void>();
+
+/**
+ * Subscribe to live mouse-feel (Mouse Sens / Invert Y) changes. Fires whenever
+ * {@link saveControls} runs — e.g. when a slider/toggle in the Editor panel is
+ * adjusted — so already-open surfaces can update their camera in place instead
+ * of only re-reading the persisted value at mount. Returns an unsubscribe fn;
+ * callers MUST call it on teardown to avoid a leaked reference to a disposed
+ * scene.
+ */
+export function subscribeMouseFeel(cb: (feel: MouseFeel) => void): () => void {
+  mouseFeelListeners.add(cb);
+  return () => {
+    mouseFeelListeners.delete(cb);
+  };
+}
+
+function notifyMouseFeel(feel: MouseFeel): void {
+  for (const cb of mouseFeelListeners) {
+    try {
+      cb(feel);
+    } catch {
+      /* a listener error must not break persistence or other listeners */
+    }
+  }
 }
