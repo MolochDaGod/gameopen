@@ -66,18 +66,40 @@ const MIXAMO_TO_BIP001 = {
 
 /** Live pack paths used by ANIM_PACK_CLIPS + weapon-live-packs */
 const TARGETS = [
-  // Rifle (fixes degraded rifle/pistol weapons on integrity)
+  // Rifle (gunner pack — Mixamo sources under public/anim/rifle)
   { bakeRel: "rifle/rifle-aiming-idle", src: "anim/rifle/rifle-aiming-idle.fbx" },
+  { bakeRel: "rifle/idle", src: "anim/rifle/idle.fbx" },
+  { bakeRel: "rifle/idle-aiming", src: "anim/rifle/idle-aiming.fbx" },
+  { bakeRel: "rifle/idle-crouching", src: "anim/rifle/idle-crouching.fbx" },
   { bakeRel: "rifle/walking", src: "anim/rifle/walking.fbx" },
   { bakeRel: "rifle/rifle-run", src: "anim/rifle/rifle-run.fbx" },
+  { bakeRel: "rifle/run-forward", src: "anim/rifle/run-forward.fbx" },
   { bakeRel: "rifle/firing-rifle", src: "anim/rifle/firing-rifle.fbx" },
   { bakeRel: "rifle/reloading", src: "anim/rifle/reloading.fbx" },
   { bakeRel: "rifle/rifle-jump", src: "anim/rifle/rifle-jump.fbx" },
+  { bakeRel: "rifle/jump-forward", src: "anim/rifle/jump-forward.fbx" },
+  { bakeRel: "rifle/jump-backward", src: "anim/rifle/jump-backward.fbx" },
   { bakeRel: "rifle/hit-reaction", src: "anim/rifle/hit-reaction.fbx" },
+  { bakeRel: "rifle/strafe", src: "anim/rifle/strafe.fbx" },
   { bakeRel: "rifle/strafe-left", src: "anim/rifle/strafe-left.fbx" },
   { bakeRel: "rifle/strafe-right", src: "anim/rifle/strafe-right.fbx" },
   { bakeRel: "rifle/run-backwards", src: "anim/rifle/run-backwards.fbx" },
+  { bakeRel: "rifle/run-backward", src: "anim/rifle/run-backward.fbx" },
   { bakeRel: "rifle/walking-backwards", src: "anim/rifle/walking-backwards.fbx" },
+  { bakeRel: "rifle/walk-backwards-stop", src: "anim/rifle/walk-backwards-stop.fbx" },
+  { bakeRel: "rifle/start-walking", src: "anim/rifle/start-walking.fbx" },
+  { bakeRel: "rifle/start-walking-backwards", src: "anim/rifle/start-walking-backwards.fbx" },
+  { bakeRel: "rifle/stop-walking", src: "anim/rifle/stop-walking.fbx" },
+  { bakeRel: "rifle/start-run", src: "anim/rifle/start-run.fbx" },
+  { bakeRel: "rifle/run-left", src: "anim/rifle/run-left.fbx" },
+  { bakeRel: "rifle/run-right", src: "anim/rifle/run-right.fbx" },
+  { bakeRel: "rifle/turn-left", src: "anim/rifle/turn-left.fbx" },
+  { bakeRel: "rifle/turn-right-45", src: "anim/rifle/turn-right-45.fbx" },
+  { bakeRel: "rifle/turn-90-left", src: "anim/rifle/turn-90-left.fbx" },
+  { bakeRel: "rifle/turn-90-right", src: "anim/rifle/turn-90-right.fbx" },
+  { bakeRel: "rifle/toss-grenade", src: "anim/rifle/toss-grenade.fbx" },
+  { bakeRel: "rifle/death-from-front-headshot", src: "anim/rifle/death-from-front-headshot.fbx" },
+  { bakeRel: "rifle/walking-to-dying", src: "anim/rifle/walking-to-dying.fbx" },
 
   // Pistol
   { bakeRel: "pistol/idle", src: "anim/pistol/idle.fbx" },
@@ -94,7 +116,7 @@ const TARGETS = [
   { bakeRel: "pistol/charged-pistol", src: "anim/pistol/charged-pistol.fbx" },
   { bakeRel: "pistol/kneeling-idle", src: "anim/pistol/kneeling-idle.fbx" },
 
-  // Farming / harvest (Controller harvest roles)
+  // Farming / harvest (Controller harvest + farm tool roles)
   { bakeRel: "harvest/dig-and-plant-seeds", src: "anim/farming/dig-and-plant-seeds.fbx" },
   { bakeRel: "harvest/plant-tree", src: "anim/farming/plant-tree.fbx" },
   { bakeRel: "harvest/watering", src: "anim/farming/watering.fbx" },
@@ -102,11 +124,35 @@ const TARGETS = [
   { bakeRel: "harvest/pull-plant", src: "anim/farming/pull-plant.fbx" },
   { bakeRel: "harvest/plant-a-plant", src: "anim/farming/plant-a-plant.fbx" },
   { bakeRel: "locomotion/plant_seed", src: "anim/farming/dig-and-plant-seeds.fbx" },
+  // Carry / box / wheelbarrow / milk (farm activity set)
+  { bakeRel: "harvest/holding-idle", src: "anim/farming/holding-idle.fbx" },
+  { bakeRel: "harvest/holding-walk", src: "anim/farming/holding-walk.fbx" },
+  { bakeRel: "harvest/holding-turn-left", src: "anim/farming/holding-turn-left.fbx" },
+  { bakeRel: "harvest/holding-turn-right", src: "anim/farming/holding-turn-right.fbx" },
+  { bakeRel: "harvest/kneeling-idle", src: "anim/farming/kneeling-idle.fbx" },
+  { bakeRel: "harvest/box-idle", src: "anim/farming/box-idle.fbx" },
+  { bakeRel: "harvest/box-turn", src: "anim/farming/box-turn.fbx" },
+  { bakeRel: "harvest/box-walk-arc", src: "anim/farming/box-walk-arc.fbx" },
+  { bakeRel: "harvest/wheelbarrow-idle", src: "anim/farming/wheelbarrow-idle.fbx" },
+  { bakeRel: "harvest/wheelbarrow-walk", src: "anim/farming/wheelbarrow-walk.fbx" },
+  { bakeRel: "harvest/wheelbarrow-walk-turn", src: "anim/farming/wheelbarrow-walk-turn.fbx" },
+  { bakeRel: "harvest/wheelbarrow-dump", src: "anim/farming/wheelbarrow-dump.fbx" },
+  { bakeRel: "harvest/cow-milking", src: "anim/farming/cow-milking.fbx" },
+
+  // Reactions (shared hit/death for gun + farm combat)
+  { bakeRel: "reactions/death-from-front", src: "anim/reactions/death-from-front.fbx" },
+  { bakeRel: "reactions/death-from-back", src: "anim/reactions/death-from-back.fbx" },
+  { bakeRel: "reactions/death-from-right", src: "anim/reactions/death-from-right.fbx" },
+  { bakeRel: "reactions/death-from-front-headshot", src: "anim/reactions/death-from-front-headshot.fbx" },
+  { bakeRel: "reactions/death-crouching-headshot-front", src: "anim/reactions/death-crouching-headshot-front.fbx" },
 
   // Magic loco (strengthen magic pack walk/run from user magic_loco zip)
   { bakeRel: "magic/Standing Walk Forward", src: "anim/magic-loco/standing-walk-forward.fbx" },
   { bakeRel: "magic/Standing Run Forward", src: "anim/magic-loco/standing-run-forward.fbx" },
   { bakeRel: "magic/standing idle", src: "anim/magic-loco/standing-idle.fbx" },
+  { bakeRel: "magic/standing-jump", src: "anim/magic-loco/standing-jump.fbx" },
+  { bakeRel: "magic/standing-sprint-forward", src: "anim/magic-loco/standing-sprint-forward.fbx" },
+  { bakeRel: "magic/standing-jump-running-landing", src: "anim/magic-loco/standing-jump-running-landing.fbx" },
 
   // 8-way crouch walk (mobility crouchWalk)
   { bakeRel: "locomotion/crouch_walk", src: "anim/loco-8way/walk-crouching-forward.fbx" },

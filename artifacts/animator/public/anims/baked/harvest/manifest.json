@@ -1,0 +1,24 @@
+﻿{
+    "pack":  "harvest",
+    "clips":  [
+                  "box-idle",
+                  "box-turn",
+                  "box-walk-arc",
+                  "cow-milking",
+                  "dig-and-plant-seeds",
+                  "holding-idle",
+                  "holding-turn-left",
+                  "holding-turn-right",
+                  "holding-walk",
+                  "kneeling-idle",
+                  "pick-fruit",
+                  "plant-a-plant",
+                  "plant-tree",
+                  "pull-plant",
+                  "watering",
+                  "wheelbarrow-dump",
+                  "wheelbarrow-idle",
+                  "wheelbarrow-walk-turn",
+                  "wheelbarrow-walk"
+              ]
+}

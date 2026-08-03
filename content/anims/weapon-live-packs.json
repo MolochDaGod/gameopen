@@ -338,14 +338,19 @@
         "idle": "rifle/rifle-aiming-idle",
         "walk": "rifle/walking",
         "run": "rifle/rifle-run",
+        "sprint": "rifle/run-forward",
         "attack": "rifle/firing-rifle",
         "skill1": "rifle/firing-rifle",
         "skill2": "rifle/reloading",
+        "skill3": "rifle/toss-grenade",
         "jump": "rifle/rifle-jump",
-        "hurt": "rifle/hit-reaction"
+        "hurt": "rifle/hit-reaction",
+        "death": "rifle/walking-to-dying",
+        "strafeL": "rifle/strafe-left",
+        "strafeR": "rifle/strafe-right"
       },
       "liveWhenIncomplete": {
-        "note": "rifle Bip001 bake from gun/shooter packs — longbow soft fallback",
+        "note": "rifle Bip001 bake from public/anim/rifle FBX via bake-gun-farm-loco.mjs",
         "idle": "rifle/rifle-aiming-idle",
         "walk": "rifle/walking",
         "run": "rifle/rifle-run",
@@ -356,7 +361,10 @@
         "anim/rifle/walking.fbx",
         "anim/rifle/rifle-run.fbx",
         "anim/rifle/firing-rifle.fbx",
-        "anim/rifle/reloading.fbx"
+        "anim/rifle/reloading.fbx",
+        "anim/rifle/toss-grenade.fbx",
+        "anim/rifle/strafe-left.fbx",
+        "anim/rifle/strafe-right.fbx"
       ],
       "skillSlots": ["rifle_shot", "rifle_burst", "rifle_reload_bash", "rifle_snipe"]
     },

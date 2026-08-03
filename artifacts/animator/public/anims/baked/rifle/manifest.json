@@ -1,238 +1,35 @@
-{
-  "version": 1,
-  "updated": "2026-08-01",
-  "skeleton": "Bip001",
-  "stripPositionTracks": true,
-  "source": "ingest-anim-packs + bake-gun-farm-loco",
-  "clips": [
-    {
-      "bakeRel": "rifle/rifle-aiming-idle",
-      "ok": true,
-      "duration": 3.0999999046325684,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/walking",
-      "ok": true,
-      "duration": 1.3666666746139526,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/rifle-run",
-      "ok": true,
-      "duration": 0.7333333492279053,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/firing-rifle",
-      "ok": true,
-      "duration": 0.2666666805744171,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/reloading",
-      "ok": true,
-      "duration": 3.299999952316284,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/rifle-jump",
-      "ok": true,
-      "duration": 0.6000000238418579,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/hit-reaction",
-      "ok": true,
-      "duration": 0.4333333373069763,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/strafe-left",
-      "ok": true,
-      "duration": 1.0333333015441895,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/strafe-right",
-      "ok": true,
-      "duration": 1.4333332777023315,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/run-backwards",
-      "ok": true,
-      "duration": 0.5333333611488342,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "rifle/walking-backwards",
-      "ok": true,
-      "duration": 1.399999976158142,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/idle",
-      "ok": true,
-      "duration": 1.3333333730697632,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/walk-forward",
-      "ok": true,
-      "duration": 0.800000011920929,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/run-forward",
-      "ok": true,
-      "duration": 0.5,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/walk-backward",
-      "ok": true,
-      "duration": 1.0333333015441895,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/run-backward",
-      "ok": true,
-      "duration": 0.5333333611488342,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/gunplay",
-      "ok": true,
-      "duration": 0.5666666626930237,
-      "tracks": 16
-    },
-    {
-      "bakeRel": "pistol/pistol-jump",
-      "ok": true,
-      "duration": 4.933333396911621,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/strafe-left",
-      "ok": true,
-      "duration": 0.5666666626930237,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/strafe-right",
-      "ok": true,
-      "duration": 0.6000000238418579,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/drawing-gun",
-      "ok": true,
-      "duration": 2,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/pistol-whip",
-      "ok": true,
-      "duration": 2.566666603088379,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/charged-pistol",
-      "ok": true,
-      "duration": 2.5333333015441895,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "pistol/kneeling-idle",
-      "ok": true,
-      "duration": 3.799999952316284,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/dig-and-plant-seeds",
-      "ok": true,
-      "duration": 5.5,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/plant-tree",
-      "ok": true,
-      "duration": 9.266666412353516,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/watering",
-      "ok": true,
-      "duration": 5.599999904632568,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/pick-fruit",
-      "ok": true,
-      "duration": 8,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/pull-plant",
-      "ok": true,
-      "duration": 4.666666507720947,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "harvest/plant-a-plant",
-      "ok": true,
-      "duration": 7.566666603088379,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "locomotion/plant_seed",
-      "ok": true,
-      "duration": 5.5,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "magic/Standing Walk Forward",
-      "ok": true,
-      "duration": 1.1333333253860474,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "magic/Standing Run Forward",
-      "ok": true,
-      "duration": 0.7333333492279053,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "magic/standing idle",
-      "ok": true,
-      "duration": 1.8666666746139526,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "locomotion/crouch_walk",
-      "ok": true,
-      "duration": 1,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "locomotion/idle",
-      "ok": true,
-      "duration": 2.0333333015441895,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "locomotion/walk_forward",
-      "ok": true,
-      "duration": 1,
-      "tracks": 20
-    },
-    {
-      "bakeRel": "locomotion/run_forward",
-      "ok": true,
-      "duration": 0.5,
-      "tracks": 20
-    }
-  ],
-  "failed": []
-}
+﻿[
+    "death-from-front-headshot",
+    "firing-rifle",
+    "hit-reaction",
+    "idle-aiming",
+    "idle-crouching",
+    "idle",
+    "jump-backward",
+    "jump-forward",
+    "reloading",
+    "rifle-aiming-idle",
+    "rifle-jump",
+    "rifle-run",
+    "run-backward",
+    "run-backwards",
+    "run-forward",
+    "run-left",
+    "run-right",
+    "start-run",
+    "start-walking-backwards",
+    "start-walking",
+    "stop-walking",
+    "strafe-left",
+    "strafe-right",
+    "strafe",
+    "toss-grenade",
+    "turn-90-left",
+    "turn-90-right",
+    "turn-left",
+    "turn-right-45",
+    "walk-backwards-stop",
+    "walking-backwards",
+    "walking-to-dying",
+    "walking"
+]
