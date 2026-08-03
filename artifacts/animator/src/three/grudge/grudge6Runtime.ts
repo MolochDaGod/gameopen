@@ -42,6 +42,7 @@ import {
   validateCharacterDeploy,
   diagnoseCharacterLook,
   sampleClipAndReground,
+  liftForClipFootClearance,
 } from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
@@ -318,34 +319,34 @@ export async function ensureGrudge6Materials(
   });
 
   const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
-  // GLB modular kits often ship with sparse maps on hidden wardrobe meshes;
-  // rebind Toon RTS atlas whenever coverage is poor so heroes aren't yellow/grey.
-  const needsAtlas =
-    allowAtlasRebind &&
-    (pipeline === "fbx-atlas" || mapRatio < 0.55 || mappedMeshes === 0);
-
-  if (needsAtlas) {
+  // HARD: modular Toon RTS / grudge6 always uses the race atlas (sRGB, flipY=false).
+  // Sparse/broken GLB maps still count as "mapped" and used to skip rebind → orange sludge.
+  // One path: rebind whenever allowAtlasRebind (default true from loadGrudge6CombatRig).
+  if (allowAtlasRebind) {
     const mat = await rebindRaceAtlas(model, raceId);
     if (mat) {
       console.info(
         `[grudge6Runtime] atlas bound race=${raceId} pipeline=${pipeline} mapRatio=${mapRatio.toFixed(2)}`,
       );
-    }
-  } else {
-    // Ensure existing albedo maps are sRGB + white tint (second pass after restore)
-    model.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const m of mats) {
-        if (m instanceof THREE.MeshStandardMaterial && m.map) {
-          m.color.setHex(0xffffff);
-          m.metalness = Math.min(m.metalness, 0.08);
-          m.roughness = Math.max(m.roughness, 0.55);
-          m.needsUpdate = true;
+    } else {
+      // Atlas failed — still neutralize so we don't ship yellow plastic
+      model.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of mats) {
+          if (m instanceof THREE.MeshStandardMaterial && m.map) {
+            m.color.setHex(0xffffff);
+            m.metalness = Math.min(m.metalness, 0.08);
+            m.roughness = Math.max(m.roughness, 0.55);
+            m.needsUpdate = true;
+          }
         }
-      }
-    });
+      });
+      console.warn(
+        `[grudge6Runtime] atlas rebind FAILED race=${raceId} mapRatio=${mapRatio.toFixed(2)} — materials neutralized only`,
+      );
+    }
   }
 }
 
@@ -693,6 +694,11 @@ export async function loadGrudge6CombatRig(
   // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
   // Position/scale tracks stripped in rematchClipToSkeleton; sample still needed
   // so rotation-only idle sits soles on y=0 (uniform mixer path).
+  //
+  // HARD RULE: permanent model Y = idle plant + walk/run foot clearance only.
+  // Never re-ground on attack — raised slash feet permanently lower the kit so
+  // idle/walk soles tunnel through the floor (classic Danger "walk into ground").
+  // Slight idle float after walk lift is OK — FootGrounder plants soles.
   if (clips.has("idle")) {
     try {
       const dy = sampleClipAndReground(model, clips.get("idle")!);
@@ -701,8 +707,15 @@ export async function loadGrudge6CombatRig(
           `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId} pack=${animPack}`,
         );
       }
-      if (clips.has("attack")) {
-        sampleClipAndReground(model, clips.get("attack")!);
+      for (const role of ["walk", "run"] as const) {
+        const c = clips.get(role);
+        if (!c) continue;
+        const lift = liftForClipFootClearance(model, c, { groundY: 0, samples: 8 });
+        if (lift > 1e-3) {
+          console.info(
+            `[grudge6Runtime] post-${role} foot lift dy=${lift.toFixed(4)} race=${raceId}`,
+          );
+        }
       }
     } catch (e) {
       console.warn("[grudge6Runtime] post-idle re-ground failed", e);

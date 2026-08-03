@@ -290,13 +290,29 @@ export class FootGrounder {
     return !!(this.left && this.right);
   }
 
+  /**
+   * Prefer true pelvis/hips only. Never first-match `hip` (hits `Bip001 L Hip`
+   * / thigh before Pelvis and drops the wrong bone through the floor).
+   * Same scoring as fitCharacterHeight.findPelvisBone.
+   */
   private findPelvis(root: THREE.Object3D): THREE.Object3D | null {
-    let hit: THREE.Object3D | null = null;
+    let best: THREE.Object3D | null = null;
+    let bestScore = -1;
     root.traverse((n) => {
-      if (hit || !(n as THREE.Bone).isBone) return;
-      if (/pelvis|hips|hip\b/i.test(n.name)) hit = n;
+      if (!(n as THREE.Bone).isBone || !n.name) return;
+      const key = n.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      let score = 0;
+      if (key === "bip001pelvis" || key === "pelvis") score = 100;
+      else if (key.endsWith("pelvis")) score = 90;
+      else if (key === "mixamorighips" || key === "hips") score = 80;
+      else if (key.endsWith("hips")) score = 70;
+      // Do NOT score bare "hip" / "L Hip" — those are leg roots, not pelvis.
+      if (score > bestScore) {
+        bestScore = score;
+        best = n;
+      }
     });
-    return hit;
+    return best;
   }
 
   /**

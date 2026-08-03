@@ -424,12 +424,10 @@ export function resolveAssetCandidates(path: string): string[] {
       urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
     }
 
-    // Arena for skinned characters / baked anims
+    // Arena: skinned race GLB fallback ONLY — never baked anims (CORS broken from Open).
     if (
-      a.startsWith("cdn/") ||
-      a.startsWith("anims/") ||
-      a.includes("grudge6") ||
-      a.startsWith("assets/")
+      (a.startsWith("cdn/") || a.includes("grudge6") || a.startsWith("assets/")) &&
+      !a.startsWith("anims/")
     ) {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }

@@ -130,6 +130,7 @@ export {
   reGroundAfterAnimSample,
   diagnoseCharacterLook,
   sampleClipAndReground,
+  liftForClipFootClearance,
   findDeployModel,
   validateCharacterDeploy,
   findPelvisBone,

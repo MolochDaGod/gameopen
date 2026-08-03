@@ -12143,15 +12143,30 @@ export class Studio {
     this.writeBaselineFog();
     this.applyRoomAtmosphere(true);
     this.applyRoomAmbience();
-    this.pinataHarvest?.clear();
-    this.harvestPhysicsBake?.clear();
-    this.forestHarvestBake?.clear();
+    this.safeClearHarvestSystems();
     if (this.buildGrid) {
       this.buildGrid.setGroundMeshes([]);
       this.buildGrid.setVisible(false);
     }
     void this.ensureTraversalAnimsReady();
     console.info(`[Studio] Danger Room instance ACTIVE (${reason})`);
+  }
+
+  /**
+   * Map swap must never throw — optional chaining does not protect against a
+   * missing `.clear` method (only nullish host). Fail soft so Danger Room restores.
+   */
+  private safeClearHarvestSystems(): void {
+    const callClear = (label: string, sys: { clear?: () => void } | null | undefined) => {
+      try {
+        if (sys && typeof sys.clear === "function") sys.clear();
+      } catch (e) {
+        console.warn(`[Studio] ${label}.clear failed`, e);
+      }
+    };
+    callClear("pinataHarvest", this.pinataHarvest);
+    callClear("harvestPhysicsBake", this.harvestPhysicsBake);
+    callClear("forestHarvestBake", this.forestHarvestBake);
   }
 
   /**
@@ -12273,9 +12288,7 @@ export class Studio {
     progress("activate", 0.85);
 
     // Pinata: clear + re-register harvest meshes for break/absorb + Rapier bake
-    this.pinataHarvest?.clear();
-    this.harvestPhysicsBake?.clear();
-    this.forestHarvestBake?.clear();
+    this.safeClearHarvestSystems();
     if (this.pinataHarvest && def.kind !== "combat") {
       this.pinataHarvest.setGroundSampler(
         this.forestWorld?.getGroundHeightAt?.() ?? null,

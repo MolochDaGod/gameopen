@@ -1876,6 +1876,51 @@ export class Controller {
       }
     }
 
+    // Floor failsafe (Danger flat y=0 + outdoor height field): never let feet
+    // tunnel under the SSOT height when not in a special airborne mode.
+    // KCC alone can report ungrounded while walking if the capsule loses the
+    // plane; outdoor maps also keep the DR ground plane at y=0 under hills.
+    if (
+      !this.flipActive &&
+      !this.rollActive &&
+      !this.spinActive &&
+      !this.hoverActive &&
+      !this.skillFlightActive &&
+      !this.wallRunActive &&
+      !this.climbActive
+    ) {
+      const gy = this.sampleGroundY(pos.x, pos.z);
+      if (gy != null && Number.isFinite(gy)) {
+        // Stick to terrain when already grounded (outdoor hills)
+        if (this.grounded && this.vertical <= 0 && this.groundHeightAt) {
+          pos.y = gy;
+          this.vertical = 0;
+        } else if (pos.y < gy - 0.02 && this.vertical <= 0) {
+          if (!this.grounded) {
+            this.justLanded = true;
+            this.landingSpeed = Math.abs(this.vertical);
+            if (this.slamActive) {
+              this.justSlamLanded = true;
+              this.slamActive = false;
+            }
+            this.landedWithDouble = this.didDoubleJump;
+            this.justRollLanding = this.didDoubleJump || this.hoverWasActive;
+            this.hoverWasActive = false;
+          }
+          pos.y = gy;
+          this.vertical = 0;
+          this.grounded = true;
+          this.jumpsLeft = 2;
+          this.didDoubleJump = false;
+          this.airDoubleUsed = false;
+          this.airWallJumpUsed = false;
+          this.endWallRun(false);
+          this.skyfallArmed = false;
+          this.character.root.rotation.x = 0;
+        }
+      }
+    }
+
     // Lock-on overrides facing: keep the body squared to the enemy so A/D reads
     // as a strafe instead of turning to face the movement direction.
     if (lockYaw !== null && !this.spinActive) this.wantFacing = lockYaw;

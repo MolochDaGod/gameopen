@@ -3,9 +3,15 @@
  */
 export class ForestHarvestBake {
   private physics: unknown = null;
+  private lastCount = 0;
 
   setPhysics(physics: unknown) {
     this.physics = physics;
+  }
+
+  /** Map switch / Danger restore — no colliders held in this stub. */
+  clear(): void {
+    this.lastCount = 0;
   }
 
   /**
@@ -19,6 +25,7 @@ export class ForestHarvestBake {
     const nodes = forestMap?.harvestNodes ?? [];
     const max = opts?.maxHarvest ?? 160;
     void this.physics;
-    return Math.min(nodes.length, max);
+    this.lastCount = Math.min(nodes.length, max);
+    return this.lastCount;
   }
 }

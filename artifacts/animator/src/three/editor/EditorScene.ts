@@ -2755,6 +2755,8 @@ export class EditorScene {
     const token = ++this.grudgeToken;
     this.busy = true;
     this.emit();
+    // ONE grudge6 kit on stage — dispose prior avatars so debris/orange sludge piles don't stack
+    this.disposeAllGrudgeAvatars();
     // Combat style from Danger Admin (samurai / knight / …) when no explicit pack
     const stylePack =
       opts?.animPack ||
@@ -2781,6 +2783,7 @@ export class EditorScene {
       return null;
     }
     // GrudgeAvatar already deployed model-local (feet Y=0, XZ pelvis). Root at origin.
+    // Path: loadGrudge6CombatRig only (equip → fit → atlas → anims). No second deploy.
     avatar.root.position.set(0, 0, 0);
     // Post-idle re-ground (same as Danger after pose sample)
     const model = findDeployModel(avatar.root);
@@ -2874,6 +2877,13 @@ export class EditorScene {
     this.grudge.delete(rootId);
     if (this.selectedId === rootId) this.selectedId = null;
     this.emit();
+  }
+
+  /** Clear every grudge6 kit from the Dressing Room stage (one-kit SSOT). */
+  private disposeAllGrudgeAvatars(): void {
+    for (const id of [...this.grudge.keys()]) {
+      this.unloadGrudge(id);
+    }
   }
 
   /**
@@ -3422,6 +3432,16 @@ export class EditorScene {
   ): Promise<void> {
     const o = this.find(id);
     if (!o) return;
+    // grudge6 modular kits: flat color-only paint strips the race atlas → orange sludge.
+    // Allow metal/roughness + optional texture; refuse bare recolor on GrudgeAvatar roots.
+    const isGrudge = this.grudge.has(id) || [...this.grudge.values()].some((a) => a.root === o.object || o.object.parent === a.root);
+    if (isGrudge && opts.color !== undefined && !opts.textureDataUrl) {
+      this.notify(
+        "Grudge6 uses the race atlas — load a texture or leave color white. Flat paint disabled.",
+        "warn",
+      );
+      return;
+    }
     let tex: THREE.Texture | null = null;
     if (opts.textureDataUrl) {
       try {

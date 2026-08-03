@@ -8,6 +8,7 @@ import {
   groundFeetLocal,
   ensureHumanScale,
   validateCharacterDeploy,
+  liftForClipFootClearance,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
 import { stripPositionTracks } from "./clipTracks";
@@ -132,6 +133,39 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     const box = bodyBox(model);
     expect(Math.abs(box.min.y)).toBeLessThan(0.12);
     expect(findDeployModel(avatar)).toBe(model);
+  });
+});
+
+describe("liftForClipFootClearance", () => {
+  it("raises model when soles sit under groundY", () => {
+    const { root } = makeBip001Hero();
+    groundFeetLocal(root, 0);
+    root.position.y -= 0.22;
+    const clip = new THREE.AnimationClip("walk", 0.5, [
+      new THREE.QuaternionKeyframeTrack(
+        "Bip001 Pelvis.quaternion",
+        [0, 0.5],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+      ),
+    ]);
+    const dy = liftForClipFootClearance(root, clip, { groundY: 0, samples: 4 });
+    expect(dy).toBeGreaterThan(0.1);
+    const box = bodyBox(root);
+    expect(box.min.y).toBeGreaterThan(-0.05);
+  });
+
+  it("no-ops when already planted", () => {
+    const { root } = makeBip001Hero();
+    groundFeetLocal(root, 0);
+    const clip = new THREE.AnimationClip("walk", 0.5, [
+      new THREE.QuaternionKeyframeTrack(
+        "Bip001 Pelvis.quaternion",
+        [0, 0.5],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+      ),
+    ]);
+    const dy = liftForClipFootClearance(root, clip, { groundY: 0, samples: 3 });
+    expect(dy).toBe(0);
   });
 });
 

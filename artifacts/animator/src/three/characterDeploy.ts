@@ -458,6 +458,9 @@ export function diagnoseCharacterLook(model: THREE.Object3D): {
 /**
  * Sample a clip on a temporary mixer, re-ground feet, dispose mixer.
  * Use after loading packs so bind-pose ≠ idle pose doesn't leave floating feet.
+ *
+ * **Final permanent Y must be from idle (or walk), never attack** — attack poses
+ * often raise feet; re-grounding them permanently sinks idle/walk soles under floor.
  */
 export function sampleClipAndReground(
   model: THREE.Object3D,
@@ -476,4 +479,49 @@ export function sampleClipAndReground(
     mixer.stopAllAction();
     mixer.uncacheRoot(model);
   }
+}
+
+/**
+ * Sample a locomotion cycle at several times; if skinned soles dip below
+ * groundY, lift the model so the deepest frame sits on the ground.
+ * Call **after** idle re-ground so walk/run do not tunnel through the floor.
+ * Returns Δy applied (always ≥ 0).
+ */
+export function liftForClipFootClearance(
+  model: THREE.Object3D,
+  clip: THREE.AnimationClip,
+  opts?: { groundY?: number; samples?: number },
+): number {
+  const groundY = opts?.groundY ?? 0;
+  const samples = Math.max(3, opts?.samples ?? 8);
+  if (!clip || clip.duration <= 0) return 0;
+
+  const mixer = new THREE.AnimationMixer(model);
+  let deepest = Infinity;
+  try {
+    const act = mixer.clipAction(clip);
+    act.play();
+    act.setLoop(THREE.LoopOnce, 1);
+    for (let i = 0; i < samples; i++) {
+      const t = (i / (samples - 1)) * Math.max(1e-4, clip.duration * 0.98);
+      act.time = t;
+      mixer.update(0);
+      prepareSkinnedMeasure(model);
+      const minY = bodyBox(model).min.y;
+      if (Number.isFinite(minY) && minY < deepest) deepest = minY;
+    }
+  } finally {
+    mixer.stopAllAction();
+    mixer.uncacheRoot(model);
+  }
+
+  if (!Number.isFinite(deepest)) return 0;
+  const sink = groundY - deepest;
+  // Only lift when soles clearly go under (ignore float noise)
+  if (sink <= 0.015) return 0;
+  // Cap so a bad clip cannot launch the hero
+  const dy = Math.min(sink, 0.35);
+  model.position.y += dy;
+  model.updateWorldMatrix(true, true);
+  return dy;
 }

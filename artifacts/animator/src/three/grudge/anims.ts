@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { assetLoadError, resolveGrudgeAssetCandidates } from "./assetBase";
+import { assetLoadError } from "./assetBase";
 import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 import {
   assertClipMatchesLane,
@@ -1022,10 +1022,17 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
     urls.push(`/prod/anims/${prodPack}/${fileSlug}.glb`);
   }
 
-  // Fleet hosts (historical arena last via resolveGrudgeAssetCandidates)
-  urls.push(`${FLEET_ASSET_HOSTS.arena}/${bakedJson}`);
-  urls.push(...resolveGrudgeAssetCandidates(bakedJson));
-  return [...new Set(urls)];
+  // Same-origin + assets CDN only for baked clips.
+  // NEVER fetch grudge-arena / gameopen.vercel.app from open.grudge-studio.com —
+  // those hosts have no CORS for Open and spam the console with net::ERR_FAILED.
+  // Missing mobility clips (dive/getup/climb placeholders) 404 once on SSOT hosts
+  // and loaders soft-fail; do not cascade across broken cross-origin hosts.
+  const filtered = [...new Set(urls)].filter(
+    (u) =>
+      !/grudge-arena\.grudge-studio\.com/i.test(u) &&
+      !/gameopen\.vercel\.app/i.test(u),
+  );
+  return filtered;
 }
 
 // Rotation-only conformation — bone lengths come from the MODEL skeleton, motion

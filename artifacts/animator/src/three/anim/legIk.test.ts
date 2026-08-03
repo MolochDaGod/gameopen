@@ -51,6 +51,29 @@ describe("findLegChain (Bip001 naming)", () => {
   });
 });
 
+describe("FootGrounder pelvis resolution", () => {
+  it("binds Bip001_Pelvis not a L Hip-named bone", () => {
+    const { root, pelvis } = makeBiped();
+    // Fake "hip" bone that would fool /hip\b/ first-match
+    const fakeHip = new THREE.Bone();
+    fakeHip.name = "Bip001_L_Hip";
+    fakeHip.position.set(0.1, 0, 0);
+    root.add(fakeHip);
+
+    const g = new FootGrounder();
+    g.bind(root);
+    g.setEnabled(true);
+    g.setGroundSampler(() => ({ y: -0.2, normal: null }));
+    // One frame of drop must move the true pelvis, not only the fake hip
+    const before = pelvis.position.y;
+    g.beginFrame();
+    g.apply(1 / 60);
+    expect(pelvis.position.y).toBeLessThan(before);
+    // Fake hip must stay put (not used as pelvis)
+    expect(fakeHip.position.y).toBeCloseTo(0, 5);
+  });
+});
+
 describe("FootGrounder pelvis-drop idempotency", () => {
   // Ground below the resting feet forces a downward pelvis drop every frame.
   const belowGround = () => ({ y: -0.2, normal: null });

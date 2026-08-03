@@ -76,9 +76,30 @@ export class PinataHarvestSystem {
     this.groundSampler = fn;
   }
 
+  /**
+   * Drop all registered harvest nodes (map switch / restore Danger Room).
+   * Does not dispose meshes owned by ForestWorld — only unregisters pinata state.
+   * Studio calls this from activateDangerRoomInstance / setTestWorld.
+   */
+  clear(): void {
+    for (const n of this.nodes.values()) {
+      if (n.mesh?.userData) delete n.mesh.userData.harvestId;
+      // Leave mesh visibility to map instance (chamber restore / outdoor clear)
+    }
+    this.nodes.clear();
+    this.respawnTimers.clear();
+  }
+
   registerMesh(
     mesh: THREE.Object3D,
-    meta: { id: string; kind?: string; tool?: string; hp?: number },
+    meta: {
+      id: string;
+      kind?: string;
+      tool?: string;
+      hp?: number;
+      /** Optional material id for bag yield (ignored if unknown). */
+      materialId?: string;
+    },
   ) {
     const maxHp = meta.hp ?? 40;
     const node: PinataNode = {
@@ -91,6 +112,7 @@ export class PinataHarvestSystem {
       broken: false,
     };
     mesh.userData.harvestId = meta.id;
+    if (meta.materialId) mesh.userData.harvestMaterialId = meta.materialId;
     mesh.visible = true;
     this.nodes.set(meta.id, node);
   }
