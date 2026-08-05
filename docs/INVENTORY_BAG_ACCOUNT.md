@@ -19,9 +19,21 @@ Harvest **does not** go straight to home island. It fills the **character bag** 
 - **Boat** → boat hold
 - Explicit **Send camp → home island** moves camp vault to account bag (own camp only)
 
-### Stealing / lockpick
+### Lockpick zones (product law)
 
-Foreign camp chests and hidden loot use ScriptRunner `open-ui` → `LockpickPanel` (native HTML, Kenney Lockpick style reference only — no SWF). Success marks lock busted and grants location loot into the character bag.
+| Zone | Lockpick? |
+|------|-----------|
+| **Home island** (any home bag / warehouse) | **SAFE — never** |
+| Own camp / own boat | No pick — open free |
+| **Dungeons** | Yes |
+| **Treasures / hidden chests** found in game | Yes |
+| **Contested** area chests | Yes |
+| **Enemy** territory chests | Yes |
+| **Conquered island** enemy-area chests | Yes |
+| **Foreign** player camps | Yes (steal) |
+
+ScriptRunner `open-ui` → `LockpickPanel` (native HTML; Kenney Lockpick style reference only — no SWF).  
+Gate: `isLockpickAllowed()` + `isHomeIslandStorage()` — home always rejected.
 
 ## HUD
 

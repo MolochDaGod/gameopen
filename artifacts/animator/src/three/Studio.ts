@@ -1856,7 +1856,9 @@ export class Studio {
   }
 
   /**
-   * Start lockpick UI for foreign camp / hidden chest / treasure.
+   * Start lockpick UI — only for lockpickable zones.
+   * **Home islands are SAFE (never lockpick).**
+   * Dungeons, treasures, contested, enemy, conquered, foreign camps → pick.
    * App mounts LockpickPanel; result opens location storage loot.
    */
   beginLockpickChallenge(payload: {
@@ -1865,16 +1867,50 @@ export class Studio {
     difficulty?: number;
     label?: string;
     ownerAccountId?: string | null;
+    zone?: string | null;
+    viewerAccountId?: string | null;
   }): void {
-    const detail = {
-      ui: "lockpick",
-      targetId: payload.targetId,
-      kind: payload.kind || "container",
-      difficulty: payload.difficulty ?? 30,
-      label: payload.label || "Locked container",
-      ownerAccountId: payload.ownerAccountId ?? null,
-    };
-    window.dispatchEvent(new CustomEvent("grudge-open-ui", { detail }));
+    // Lazy import avoids circular weight at Studio boot
+    void import("../game/inventory/locationInventory").then(
+      ({ isLockpickAllowed, isHomeIslandStorage }) => {
+        if (
+          isHomeIslandStorage(payload.targetId, payload.kind) ||
+          payload.zone === "home_island"
+        ) {
+          this.setCombatFlash("Home island is safe — no lockpicking", 2.2);
+          return;
+        }
+        const gate = isLockpickAllowed({
+          locationId: payload.targetId,
+          kind: payload.kind || "container",
+          ownerAccountId: payload.ownerAccountId,
+          viewerAccountId: payload.viewerAccountId,
+          zone: payload.zone,
+          lockDifficulty: payload.difficulty,
+        });
+        if (!gate.allowed) {
+          this.setCombatFlash(
+            gate.reason === "own_storage"
+              ? "Your storage — open freely (no lockpick)"
+              : gate.reason === "home_island_safe"
+                ? "Home island is safe — no lockpicking"
+                : "Cannot lockpick here",
+            2.2,
+          );
+          return;
+        }
+        const detail = {
+          ui: "lockpick",
+          targetId: payload.targetId,
+          kind: payload.kind || "container",
+          difficulty: payload.difficulty ?? gate.defaultDc,
+          label: payload.label || "Locked container",
+          ownerAccountId: payload.ownerAccountId ?? null,
+          zone: payload.zone ?? null,
+        };
+        window.dispatchEvent(new CustomEvent("grudge-open-ui", { detail }));
+      },
+    );
   }
 
   /** Load content/runtime script pack when present (same shape for all scenes). */
@@ -1895,9 +1931,13 @@ export class Studio {
           this.beginLockpickChallenge({
             targetId: String(a.payload?.targetId ?? a.payload?.locationId ?? "unknown"),
             kind: String(a.payload?.kind ?? "container"),
-            difficulty: Number(a.payload?.difficulty ?? 30),
+            difficulty:
+              a.payload?.difficulty != null
+                ? Number(a.payload.difficulty)
+                : undefined,
             label: String(a.payload?.label ?? "Locked"),
             ownerAccountId: (a.payload?.ownerAccountId as string) ?? null,
+            zone: (a.payload?.zone as string) ?? null,
           });
           return;
         }

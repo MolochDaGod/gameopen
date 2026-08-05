@@ -4,7 +4,11 @@ import {
   depositToLocation,
   ensureCampStorage,
   ensureHiddenLootStorage,
+  ensureZoneLootStorage,
   homeIslandLocationId,
+  homeIslandAsLocation,
+  isHomeIslandStorage,
+  isLockpickAllowed,
   loadLocationStorage,
   markLockBusted,
   newLocationStorage,
@@ -92,6 +96,34 @@ describe("location inventory (Albion)", () => {
     expect(canAccessLocationWithoutLockpick(st, "thief")).toBe(false);
     const busted = markLockBusted(st);
     expect(canAccessLocationWithoutLockpick(busted, "thief")).toBe(true);
+  });
+
+  it("home island is always safe — no lockpick", () => {
+    const home = homeIslandAsLocation("acct_safe");
+    expect(isHomeIslandStorage(home.locationId, home.kind)).toBe(true);
+    expect(home.lockDifficulty).toBe(0);
+    const gate = isLockpickAllowed({
+      locationId: home.locationId,
+      kind: "home_island",
+      zone: "home_island",
+      viewerAccountId: "thief",
+    });
+    expect(gate.allowed).toBe(false);
+    expect(gate.reason).toBe("home_island_safe");
+  });
+
+  it("dungeon / contested / enemy / conquered are lockpickable", () => {
+    for (const zone of ["dungeon", "contested", "enemy", "conquered"] as const) {
+      const st = ensureZoneLootStorage({ pinId: `p_${zone}`, zone });
+      expect(st.lockDifficulty).toBeGreaterThan(0);
+      const gate = isLockpickAllowed({
+        locationId: st.locationId,
+        kind: st.kind,
+        zone,
+        lockDifficulty: st.lockDifficulty,
+      });
+      expect(gate.allowed).toBe(true);
+    }
   });
 
   it("hidden treasure has lock difficulty", () => {

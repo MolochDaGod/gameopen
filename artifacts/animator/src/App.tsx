@@ -709,8 +709,21 @@ export default function App() {
     const onOpenUi = (ev: Event) => {
       const d = (ev as CustomEvent).detail || {};
       if (d.ui === "lockpick" || d.ui === "lock_pick") {
+        const targetId = String(d.targetId || d.locationId || "unknown");
+        // Home islands are SAFE — never open lockpick UI
+        if (
+          targetId.startsWith("home:") ||
+          d.kind === "home_island" ||
+          d.zone === "home_island"
+        ) {
+          studioRef.current?.flashMessage?.(
+            "Home island is safe — no lockpicking",
+            2.2,
+          );
+          return;
+        }
         setLockpickChallenge({
-          targetId: String(d.targetId || d.locationId || "unknown"),
+          targetId,
           kind: (d.kind as LockpickChallenge["kind"]) || "container",
           difficulty: Number(d.difficulty ?? 30),
           label: String(d.label || "Locked container"),

@@ -1,18 +1,37 @@
 {
   "id": "hidden-loot-lockpick",
-  "name": "Hidden chests, treasure, foreign camp steal",
-  "version": 1,
+  "name": "Lockpick zones — NOT home island (safe)",
+  "version": 2,
+  "notes": "Home islands never get lockpick scripts. Dungeons, treasures, contested, enemy, conquered, foreign camp only.",
   "scripts": [
+    {
+      "id": "script_dungeon_chest",
+      "name": "Dungeon chest lockpick",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "dungeon"],
+      "trigger": { "kind": "interact", "targetId": "prop_dungeon_chest" },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "dungeon:prop_dungeon_chest",
+            "kind": "dungeon_chest",
+            "zone": "dungeon",
+            "difficulty": 35,
+            "label": "Dungeon chest"
+          }
+        }
+      ]
+    },
     {
       "id": "script_hidden_chest_demo",
       "name": "Hidden chest lockpick",
       "mode": "repeat",
       "enabled": true,
       "tags": ["loot", "lockpick", "hidden_chest"],
-      "trigger": {
-        "kind": "interact",
-        "targetId": "prop_hidden_chest"
-      },
+      "trigger": { "kind": "interact", "targetId": "prop_hidden_chest" },
       "actions": [
         {
           "kind": "open-ui",
@@ -20,6 +39,7 @@
             "ui": "lockpick",
             "targetId": "hchest:prop_hidden_chest",
             "kind": "hidden_chest",
+            "zone": "open_world",
             "difficulty": 28,
             "label": "Hidden chest"
           }
@@ -32,10 +52,7 @@
       "mode": "repeat",
       "enabled": true,
       "tags": ["loot", "lockpick", "hidden_treasure"],
-      "trigger": {
-        "kind": "interact",
-        "targetId": "prop_hidden_treasure"
-      },
+      "trigger": { "kind": "interact", "targetId": "prop_hidden_treasure" },
       "actions": [
         {
           "kind": "open-ui",
@@ -43,8 +60,72 @@
             "ui": "lockpick",
             "targetId": "treasure:prop_hidden_treasure",
             "kind": "hidden_treasure",
+            "zone": "open_world",
             "difficulty": 48,
             "label": "Hidden treasure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "script_contested_chest",
+      "name": "Contested area chest",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "contested"],
+      "trigger": { "kind": "interact", "targetId": "prop_contested_chest" },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "contested:prop_contested_chest",
+            "kind": "contested_chest",
+            "zone": "contested",
+            "difficulty": 40,
+            "label": "Contested chest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "script_enemy_area_chest",
+      "name": "Enemy territory chest",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "enemy"],
+      "trigger": { "kind": "interact", "targetId": "prop_enemy_chest" },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "enemy:prop_enemy_chest",
+            "kind": "enemy_chest",
+            "zone": "enemy",
+            "difficulty": 55,
+            "label": "Enemy chest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "script_conquered_island_chest",
+      "name": "Conquered island enemy chest",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "conquered"],
+      "trigger": { "kind": "interact", "targetId": "prop_conquered_chest" },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "conquered:prop_conquered_chest",
+            "kind": "conquered_chest",
+            "zone": "conquered",
+            "difficulty": 42,
+            "label": "Conquered island chest"
           }
         }
       ]
@@ -55,10 +136,7 @@
       "mode": "repeat",
       "enabled": true,
       "tags": ["pvp", "camp", "lockpick"],
-      "trigger": {
-        "kind": "interact",
-        "targetId": "camp_storage_foreign"
-      },
+      "trigger": { "kind": "interact", "targetId": "camp_storage_foreign" },
       "actions": [
         {
           "kind": "open-ui",
@@ -66,6 +144,7 @@
             "ui": "lockpick",
             "targetId": "camp:foreign_claim",
             "kind": "camp",
+            "zone": "camp_foreign",
             "difficulty": 55,
             "label": "Enemy camp chest",
             "ownerAccountId": "foreign_owner"

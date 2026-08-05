@@ -1,6 +1,10 @@
 /**
  * Lockpick skill-check (native web — not Skyrim SWF).
- * Used for foreign camp steal, hidden chests, hidden treasure.
+ *
+ * Product law:
+ *   · Home islands = SAFE (never call this for home:*)
+ *   · Lockpickable: dungeons, treasures, contested chests, enemy area chests,
+ *     conquered-island enemy loot, foreign camps
  *
  * Design language: Kenney Lockpick Pro style (CC-BY settings reference only).
  * Runtime: pure math + optional UI panel; host fires via ScriptRunner open-ui.
@@ -10,6 +14,10 @@ export type LockpickTargetKind =
   | "camp"
   | "hidden_chest"
   | "hidden_treasure"
+  | "dungeon_chest"
+  | "contested_chest"
+  | "enemy_chest"
+  | "conquered_chest"
   | "door"
   | "container";
 
