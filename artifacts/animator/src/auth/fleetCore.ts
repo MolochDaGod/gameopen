@@ -139,12 +139,15 @@ export const GRUDOX_GAMES: GrudoxGameDef[] = [
   },
 ];
 
-/** Prefer same-origin /api so Vercel rewrites skip CORS. */
+/**
+ * Prefer same-origin `/api/*` so Vercel rewrites skip CORS (browser).
+ * SSR / Node: absolute Railway URL — **must keep** the `/api` prefix
+ * (grudge-api 404s on `/health` and `/uuid/*` without it).
+ */
 export function apiUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
   if (typeof window === "undefined") {
-    if (p.startsWith("/api")) return `${FLEET.gameData}${p.replace(/^\/api/, "")}`;
-    return `${FLEET.gameData}${p.startsWith("/") ? p : `/${p}`}`;
+    return gameDataUrl(p);
   }
   if (p.startsWith("/api")) return p;
   return `/api${p}`;
