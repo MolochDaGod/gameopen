@@ -11,6 +11,18 @@ export interface ScenePhysicsOptions {
   gravityY?: number;
   /** Add a flat ground plane at y=0 (Danger Room / brawler / island fallback). */
   ground?: boolean | { y?: number; half?: number };
+  /**
+   * Rapier heightfield terrain (three.js physics_rapier_terrain pattern).
+   * When set, preferred over a flat ground plane for outdoor islands.
+   */
+  heightfield?: {
+    width: number;
+    depth: number;
+    heights: Float32Array;
+    scale: { x: number; y: number; z: number };
+    origin?: { x: number; y: number; z: number };
+    friction?: number;
+  };
   /** Create a player KCC at spawn (feet). */
   player?: boolean | { x: number; y: number; z: number };
   /** Install three-mesh-bvh accelerated raycast if available. */
@@ -47,7 +59,23 @@ export async function createScenePhysics(
   const physics = new PhysicsWorld();
   await physics.init(opts.gravityY ?? GRAVITY_Y);
 
-  if (opts.ground) {
+  if (opts.heightfield) {
+    const hf = opts.heightfield;
+    const col = physics.addHeightfieldGrid(
+      {
+        width: hf.width,
+        depth: hf.depth,
+        heights: hf.heights,
+        scale: hf.scale,
+        origin: hf.origin,
+      },
+      { friction: hf.friction },
+    );
+    if (!col && opts.ground !== false) {
+      // Fail closed to flat ground so KCC never free-falls
+      physics.addGroundPlane(0, Math.max(hf.scale.x, hf.scale.z) * 0.5);
+    }
+  } else if (opts.ground) {
     const g = typeof opts.ground === "object" ? opts.ground : {};
     physics.addGroundPlane(g.y ?? 0, g.half ?? 60);
   }

@@ -11,6 +11,8 @@
 import {
   MAX_PLAYERS,
   MAX_MOVE_SPEED,
+  PERSISTENT_ROOMS,
+  PERSISTENT_ROOM_MAX_PLAYERS,
   PLAYER_TIMEOUT_MS,
   PVP_ATTACK_WINDOW_MS,
   PVP_AVOID_COOLDOWN_MS,
@@ -83,6 +85,9 @@ export class DangerRoom {
   mode: RoomMode;
   content: ContentRef;
   hostId: string | null = null;
+  /** Official always-on lobby — never deleted when empty. */
+  readonly persistent: boolean;
+  readonly maxPlayers: number;
 
   private players = new Map<string, RoomPlayer>();
   private npcs: NpcState[] = [];
@@ -93,12 +98,16 @@ export class DangerRoom {
     mode: RoomMode;
     visibility: RoomVisibility;
     content: ContentRef;
+    persistent?: boolean;
+    maxPlayers?: number;
   }) {
     this.code = opts.code;
     this.name = opts.name;
     this.mode = opts.mode;
     this.visibility = opts.visibility;
     this.content = opts.content;
+    this.persistent = !!opts.persistent;
+    this.maxPlayers = opts.maxPlayers ?? MAX_PLAYERS;
   }
 
   get playerCount(): number {
@@ -110,7 +119,7 @@ export class DangerRoom {
   }
 
   isFull(): boolean {
-    return this.players.size >= MAX_PLAYERS;
+    return this.players.size >= this.maxPlayers;
   }
 
   info(): PublicRoomInfo {
@@ -121,8 +130,9 @@ export class DangerRoom {
       mode: this.mode,
       content: this.content,
       players: this.players.size,
-      maxPlayers: MAX_PLAYERS,
+      maxPlayers: this.maxPlayers,
       hostName: host?.name ?? "—",
+      persistent: this.persistent,
     };
   }
 
@@ -384,6 +394,24 @@ export class DangerRoomManager {
     this.timer = setInterval(() => this.tick(), 1000 / TICK_HZ);
     // Don't keep the process alive solely for this relay timer.
     if (typeof this.timer.unref === "function") this.timer.unref();
+    this.seedPersistent();
+  }
+
+  /** Seed always-on DANGER / ARENA lobbies (SSOT: PERSISTENT_ROOMS). */
+  private seedPersistent(): void {
+    for (const spec of PERSISTENT_ROOMS) {
+      if (this.rooms.has(spec.code)) continue;
+      const room = new DangerRoom({
+        code: spec.code,
+        name: spec.name,
+        mode: spec.mode,
+        visibility: "public",
+        content: { kind: "arena", name: spec.name, preset: spec.preset },
+        persistent: true,
+        maxPlayers: spec.maxPlayers ?? PERSISTENT_ROOM_MAX_PLAYERS,
+      });
+      this.rooms.set(spec.code, room);
+    }
   }
 
   private newCode(): string {
@@ -406,7 +434,7 @@ export class DangerRoomManager {
     content: ContentRef;
   }): DangerRoom {
     const code = this.newCode();
-    const room = new DangerRoom({ code, ...opts });
+    const room = new DangerRoom({ code, ...opts, persistent: false });
     this.rooms.set(code, room);
     return room;
   }
@@ -417,12 +445,13 @@ export class DangerRoomManager {
 
   deleteRoomIfEmpty(code: string): void {
     const room = this.rooms.get(code);
-    if (room && room.isEmpty()) this.rooms.delete(code);
+    if (room && room.isEmpty() && !room.persistent) this.rooms.delete(code);
   }
 
   publicRooms(): PublicRoomInfo[] {
+    // Always list persistent lobbies (even empty) + occupied public ad-hoc rooms.
     return [...this.rooms.values()]
-      .filter((r) => r.visibility === "public" && !r.isEmpty())
+      .filter((r) => r.visibility === "public" && (r.persistent || !r.isEmpty()))
       .map((r) => r.info());
   }
 
@@ -430,7 +459,8 @@ export class DangerRoomManager {
     const now = Date.now();
     for (const [code, room] of this.rooms) {
       room.tick(now);
-      if (room.isEmpty()) this.rooms.delete(code);
+      if (room.isEmpty() && !room.persistent) this.rooms.delete(code);
     }
+    this.seedPersistent();
   }
 }

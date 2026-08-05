@@ -50,6 +50,7 @@ export {
 export {
   FLAT_FOOT_SAMPLER,
   footSamplerFromHeightAt,
+  footSamplerFromHeightfieldGrid,
   normalFromHeightField,
 } from "./terrainFootSample";
 

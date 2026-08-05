@@ -2,7 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { AppShell } from "./auth/ClerkSetup";
 import { gameSession } from "./game/GameSession";
-import { bindInstallPrompt, registerServiceWorker } from "./lib/pwa";
+import {
+  bindInstallPrompt,
+  purgeHistoricalShellIfNeeded,
+  registerServiceWorker,
+} from "./lib/pwa";
 import { bootstrapMineLoaderFleetCache } from "./lib/mineLoaderFleetCache";
 import "./index.css";
 
@@ -30,7 +34,8 @@ void import("./three/content/masterWeaponSkills")
 
 // PWA: capture install prompt + register offline shell worker (prod).
 bindInstallPrompt();
-void registerServiceWorker();
+// Drop historical SW shells (v2/v3) that could pin wrong asset paths / kits
+void purgeHistoricalShellIfNeeded(4).then(() => registerServiceWorker());
 
 // Expose for Studio host / debug HUD (no React re-render requirement).
 if (typeof window !== "undefined") {

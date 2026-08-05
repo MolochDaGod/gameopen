@@ -20,5 +20,8 @@ export const WARLORDS_STACK = {
   },
 } as const;
 
-/** Semantic version of this runtime contract (bump when location/script shape breaks). */
-export const GRUDGE_RUNTIME_CONTRACT = "1.0.0";
+/**
+ * Semantic version of this runtime contract (bump when location/script shape breaks).
+ * 1.1.0 — FleetGameLoop + InputActionMap (GF patterns, no Closure).
+ */
+export const GRUDGE_RUNTIME_CONTRACT = "1.1.0";

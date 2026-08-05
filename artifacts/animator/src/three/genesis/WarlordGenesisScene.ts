@@ -137,6 +137,12 @@ const JUNGLE_CAMP_SPAWNS: Array<{
   { modelKey: "forest_zombie", hp: 50, speed: 2.2, atkDamage: 11, atkReach: 1.5, x: 11.2, z: 7 },
   { modelKey: "forest_bear", hp: 120, speed: 2.4, atkDamage: 18, atkReach: 1.9, x: 0, z: -12 },
   { modelKey: "jungle_ogre", hp: 220, speed: 1.9, atkDamage: 28, atkReach: 2.2, x: 12, z: -10 },
+  // Session pack mobs
+  { modelKey: "hollow_knight_vengefly", hp: 35, speed: 3.4, atkDamage: 9, atkReach: 1.2, x: -8, z: -6 },
+  { modelKey: "violet_4_hn_creature", hp: 110, speed: 2.6, atkDamage: 16, atkReach: 1.7, x: 8, z: -6 },
+  { modelKey: "lowpoly_rhino", hp: 140, speed: 3.0, atkDamage: 24, atkReach: 1.8, x: -6, z: 12 },
+  { modelKey: "mage_demon", hp: 130, speed: 2.4, atkDamage: 20, atkReach: 8.0, x: 6, z: 12 },
+  { modelKey: "blocker_broker", hp: 160, speed: 2.2, atkDamage: 22, atkReach: 2.0, x: 0, z: 14 },
 ];
 
 const ENEMY_MODEL_PATHS: Record<string, string> = {
@@ -152,6 +158,12 @@ const ENEMY_MODEL_PATHS: Record<string, string> = {
   forest_zombie: "models/enemies/voxel-zombies/voxel-zombie-1.glb",
   jungle_orc: "models/orc.glb",
   jungle_ogre: "models/ogre.glb",
+  // Session pack → R2 models/enemies/session
+  blocker_broker: "models/enemies/session/blocker_broker.glb",
+  hollow_knight_vengefly: "models/enemies/session/hollow_knight_vengefly.glb",
+  mage_demon: "models/enemies/session/mage_demon.glb",
+  lowpoly_rhino: "models/enemies/session/lowpoly_rhino.glb",
+  violet_4_hn_creature: "models/enemies/session/violet_4_hn_creature.glb",
 };
 
 const ENEMY_HEIGHT: Record<string, number> = {
@@ -165,6 +177,11 @@ const ENEMY_HEIGHT: Record<string, number> = {
   forest_zombie: 1.7,
   jungle_orc: 1.95,
   jungle_ogre: 2.4,
+  blocker_broker: 2.0,
+  hollow_knight_vengefly: 0.95,
+  mage_demon: 2.0,
+  lowpoly_rhino: 1.65,
+  violet_4_hn_creature: 1.8,
 };
 
 /** XP awarded on kill (jungle/camp creeps). */

@@ -72,3 +72,15 @@ export {
   type SurfaceLocomotionState,
   type ResolveSurfaceInput,
 } from "./surfaceLocomotion";
+/** three.js physics_rapier_terrain pattern — heightfield + heightAt for feet IK */
+export {
+  generateRadialHeight,
+  sampleHeightfieldY,
+  normalFromHeightfield,
+  heightAtFromHeightfield,
+  rapierHeightfieldDims,
+  validateHeightfieldGrid,
+  clampHeights,
+  type HeightfieldScale,
+  type HeightfieldGrid,
+} from "./heightfieldTerrain";

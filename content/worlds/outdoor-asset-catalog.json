@@ -208,6 +208,46 @@
       "contentType": "model/gltf-binary"
     },
     {
+      "id": "enemy_blocker_broker",
+      "r2Key": "models/enemies/session/blocker_broker.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Blocker Broker elite (SI ~2.0 m)"
+    },
+    {
+      "id": "enemy_hollow_knight_vengefly",
+      "r2Key": "models/enemies/session/hollow_knight_vengefly.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Vengefly swarm flyer (SI ~0.95 m)"
+    },
+    {
+      "id": "enemy_mage_demon",
+      "r2Key": "models/enemies/session/mage_demon.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Mage Demon ranged (SI ~2.0 m)"
+    },
+    {
+      "id": "enemy_lowpoly_rhino",
+      "r2Key": "models/enemies/session/lowpoly_rhino.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Rhino beast charge (SI ~1.65 m)"
+    },
+    {
+      "id": "enemy_violet_4_hn_creature",
+      "r2Key": "models/enemies/session/violet_4_hn_creature.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Violet HN creature melee (SI ~1.8 m)"
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",

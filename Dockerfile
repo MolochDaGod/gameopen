@@ -5,7 +5,9 @@ ENV NODE_ENV=production
 ENV PORT=8080
 
 COPY server/standalone.mjs /app/standalone.mjs
+COPY server/danger-relay.mjs /app/danger-relay.mjs
 COPY server/package.json /app/package.json
+# content/ only — do NOT COPY artifacts/animator/public (excluded by .railwayignore)
 COPY content /app/content
 
 EXPOSE 8080

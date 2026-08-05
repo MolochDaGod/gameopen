@@ -3,14 +3,18 @@
  * v3: every respondWith path MUST resolve to a real Response.
  *     v2 returned `undefined` when cache misses → browser:
  *       "Failed to convert value to 'Response'" / FetchEvent network error.
+ * v4 (2026-08): drop historical shell caches; NEVER cache 3D binaries
+ *     (glb/fbx/bin/hdr/ktx2/draco) or /models|/textures|/anims|/audio.
+ *     Stale mesh shells caused SI stretch / wrong kits after fleet CDN fixes.
  *
  * Strategy:
  *  - Navigations: network-only (no stale index.html pinning old Vite hashes)
- *  - /assets/*: network-first; cache hit only as offline fallback
+ *  - /assets/*: network-first; cache hit only as offline fallback (JS/CSS only)
  *  - Icons: stale-while-revalidate with guaranteed Response fallback
- *  - Never intercept API/auth
+ *  - Never intercept API/auth; never cache production meshes (CDN SSOT)
  */
-const CACHE = "grudge-open-shell-v3";
+const CACHE = "grudge-open-shell-v4";
+const CACHE_VERSION = 4;
 const PRECACHE = [
   "/manifest.webmanifest",
   "/favicon.svg",
@@ -19,6 +23,23 @@ const PRECACHE = [
   "/pwa-512.png",
   "/apple-touch-icon.png",
 ];
+
+/** Paths that must always hit network / CDN — never Cache API (stretch / mismatch). */
+function isHeavyAssetPath(path) {
+  if (
+    path.startsWith("/models/") ||
+    path.startsWith("/textures/") ||
+    path.startsWith("/anims/") ||
+    path.startsWith("/audio/") ||
+    path.startsWith("/cdn/") ||
+    path.startsWith("/gameopen/models/")
+  ) {
+    return true;
+  }
+  return /\.(glb|gltf|fbx|bin|hdr|exr|ktx2|basis|wasm|mp3|ogg|wav|webm|mp4)(\?|$)/i.test(
+    path,
+  );
+}
 
 /** Always a valid Response — never undefined/null. */
 function offlineResponse(status = 503, body = "Offline") {
@@ -66,7 +87,11 @@ self.addEventListener("activate", (event) => {
       .then(() =>
         self.clients.matchAll({ type: "window" }).then((clients) => {
           for (const c of clients) {
-            c.postMessage({ type: "SW_ACTIVATED", cache: CACHE, version: 3 });
+            c.postMessage({
+              type: "SW_ACTIVATED",
+              cache: CACHE,
+              version: CACHE_VERSION,
+            });
           }
         }),
       ),
@@ -95,6 +120,17 @@ self.addEventListener("fetch", (event) => {
     path.startsWith("/sso")
   ) {
     return; // default browser fetch — never break auth
+  }
+
+  // 3D / audio / baked anims — network only (R2 rewrite or CDN). Caching these
+  // freezes wrong-scale kits and wastes RAM in Chromium's disk/memory cache.
+  if (isHeavyAssetPath(path)) {
+    event.respondWith(
+      fetch(req, { cache: "no-store" })
+        .then((res) => asResponse(res))
+        .catch(() => offlineResponse(503, "asset offline")),
+    );
+    return;
   }
 
   // HTML navigations — network only so new deploys stick (no cached index)

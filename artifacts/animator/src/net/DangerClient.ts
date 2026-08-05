@@ -1,11 +1,17 @@
 /**
  * Browser-side client for the Danger Room multiplayer relay (`/api/danger`).
  *
- * Thin typed wrapper over a WebSocket: handles connect/reconnect, exposes
- * lobby actions (list/create/join/leave) and in-room reporting
+ * Thin typed wrapper over a WebSocket: handles connect/reconnect (exponential
+ * backoff), lobby actions (list/create/join/leave) and in-room reporting
  * (state/combat/npcs), and emits decoded server messages to subscribers. A
  * single instance is created in the Lobby and handed to the Studio so the
  * session survives the lobby → room transition.
+ *
+ * Production URL resolution (see `relayUrl`):
+ *  1. `VITE_GAME_SERVER_URL` when set at build time
+ *  2. Direct Railway `wss://gameopen-production.up.railway.app` on Open hosts
+ *     (Vercel cannot upgrade WebSockets; same-origin `/api/danger` hangs)
+ *  3. Same-origin fallback for local dev / dedicated hosts that do upgrade
  */
 import {
   WS_PATH,
@@ -20,6 +26,9 @@ import {
   type RoomMode,
   type RoomVisibility,
 } from "@workspace/danger-net";
+
+/** Live Danger Room / gameopen API host (WS + HTTP). */
+export const DEFAULT_GAME_SERVER_WS = "wss://gameopen-production.up.railway.app";
 
 export interface WelcomeData {
   self: string;
@@ -44,24 +53,39 @@ export interface DangerClientEvents {
   combat: (ev: CombatEvent) => void;
   preset: (preset: string) => void;
   error: (code: string, message: string) => void;
+  /** Fired once when reconnect budget is exhausted (lobby can show offline). */
+  offline: () => void;
 }
 
 type Listener<K extends keyof DangerClientEvents> = DangerClientEvents[K];
+
+function isOpenProductionHost(hostname: string): boolean {
+  return (
+    hostname === "open.grudge-studio.com" ||
+    hostname === "gameopen.vercel.app" ||
+    hostname.endsWith(".vercel.app")
+  );
+}
 
 /**
  * Resolve the WebSocket URL for the Danger Room relay.
  *
  * When `VITE_GAME_SERVER_URL` is configured (e.g. a dedicated VPS-hosted game
  * server), it is used as the origin and the relay path is appended — accepting
- * either an `http(s)://` or `ws(s)://` base. When unset, falls back to the
- * same-origin relay (the Replit deployment), preserving existing behavior.
+ * either an `http(s)://` or `ws(s)://` base. On Open production hosts (Vercel
+ * SPA + CF proxy), WebSocket upgrades do not reach Railway via HTTP rewrites,
+ * so we default to the Railway gameopen WS origin. Local dev still uses
+ * same-origin (or Vite proxy).
  */
-function relayUrl(): string {
+export function relayUrl(): string {
   const configured = import.meta.env.VITE_GAME_SERVER_URL?.trim();
   if (configured) {
     const base = configured.replace(/\/+$/, "");
     const wsBase = base.replace(/^http(s?):\/\//i, (_m, s: string) => `ws${s}://`);
     return `${wsBase}${WS_PATH}`;
+  }
+  if (typeof window !== "undefined" && isOpenProductionHost(window.location.hostname)) {
+    return `${DEFAULT_GAME_SERVER_WS}${WS_PATH}`;
   }
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}${WS_PATH}`;
@@ -82,17 +106,26 @@ export class DangerClient {
     combat: new Set(),
     preset: new Set(),
     error: new Set(),
+    offline: new Set(),
   };
 
   private wantOpen = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private outbox: string[] = [];
+  /** Consecutive failed reconnect attempts (reset on successful open). */
+  private reconnectAttempts = 0;
+  private static readonly MAX_RECONNECT = 12;
+  private static readonly RECONNECT_BASE_MS = 1200;
 
   // Last known room identity (also used to auto-rejoin after a reconnect).
   selfId = "";
   roomCode: string | null = null;
   hostId: string | null = null;
   mode: RoomMode = "coop";
+  /** Display name used for create/join — resent on auto-rejoin. */
+  private playerName = "Player";
+  /** True after reconnect budget exhausted until connect() is called again. */
+  offline = false;
 
   on<K extends keyof DangerClientEvents>(event: K, cb: Listener<K>): () => void {
     this.listeners[event].add(cb);
@@ -116,13 +149,32 @@ export class DangerClient {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
+  /** Current resolved relay URL (for lobby diagnostics). */
+  get url(): string {
+    return relayUrl();
+  }
+
   connect(): void {
     this.wantOpen = true;
+    this.offline = false;
     if (
       this.ws &&
       (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
     ) {
       return;
+    }
+    // Drop a half-dead socket before opening a new one.
+    if (this.ws) {
+      try {
+        this.ws.onopen = null;
+        this.ws.onclose = null;
+        this.ws.onerror = null;
+        this.ws.onmessage = null;
+        this.ws.close();
+      } catch {
+        /* ignore */
+      }
+      this.ws = null;
     }
     let ws: WebSocket;
     try {
@@ -134,6 +186,18 @@ export class DangerClient {
     this.ws = ws;
 
     ws.onopen = () => {
+      this.reconnectAttempts = 0;
+      this.offline = false;
+      // Auto-rejoin last room after a drop (Studio keeps the session).
+      if (this.roomCode) {
+        ws.send(
+          encode({
+            t: "join",
+            code: this.roomCode,
+            player: this.playerName,
+          }),
+        );
+      }
       // Flush anything queued while connecting.
       for (const frame of this.outbox.splice(0)) ws.send(frame);
       this.emit("open");
@@ -154,10 +218,24 @@ export class DangerClient {
 
   private scheduleReconnect(): void {
     if (this.reconnectTimer || !this.wantOpen) return;
+    if (this.reconnectAttempts >= DangerClient.MAX_RECONNECT) {
+      console.warn(
+        `[DangerClient] gave up after ${DangerClient.MAX_RECONNECT} attempts — offline (${relayUrl()})`,
+      );
+      this.wantOpen = false;
+      this.offline = true;
+      this.emit("offline");
+      return;
+    }
+    this.reconnectAttempts++;
+    const delay = Math.min(
+      30_000,
+      DangerClient.RECONNECT_BASE_MS * Math.pow(2, this.reconnectAttempts - 1),
+    );
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
-    }, 1500);
+    }, delay);
   }
 
   private handle(raw: string): void {
@@ -232,11 +310,13 @@ export class DangerClient {
     visibility: RoomVisibility;
     content: ContentRef;
   }): void {
-    this.send(encode({ t: "create", ...opts }));
+    this.playerName = (opts.player || "Player").slice(0, 32);
+    this.send(encode({ t: "create", ...opts, player: this.playerName }));
   }
 
   join(code: string, player: string): void {
-    this.send(encode({ t: "join", code: code.toUpperCase(), player }));
+    this.playerName = (player || "Player").slice(0, 32);
+    this.send(encode({ t: "join", code: code.toUpperCase(), player: this.playerName }));
   }
 
   leave(): void {
@@ -262,6 +342,13 @@ export class DangerClient {
   /** Host-only: broadcast a mid-session environment preset change to the room. */
   sendPreset(preset: string): void {
     this.send(encode({ t: "preset", preset }));
+  }
+
+  /** Manual retry after offline (lobby "Reconnect" button). */
+  retry(): void {
+    this.reconnectAttempts = 0;
+    this.offline = false;
+    this.connect();
   }
 
   /** Tear down for good (no reconnect). */
