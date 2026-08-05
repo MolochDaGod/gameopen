@@ -94,7 +94,18 @@ export interface MineLoaderLaunchOpts {
   surface?: MineLoaderSurface;
   characterId?: string | null;
   characterName?: string | null;
+  /**
+   * Body form for Realms. Always explorer / avatar race — never grudge6 race-*.
+   * Default `explorer` (box_hero mesh + avatarbaseraces look).
+   */
   baseId?: string | null;
+  /**
+   * Paper race for Avatar Explorer assist (human|orc|elf|dwarf|undead|barbarian).
+   * Mine-Loader uses this with public/assets/models/avatarbaseraces.
+   */
+  raceId?: string | null;
+  /** Avatar Edit avatar id e.g. avatar-human */
+  avatarId?: string | null;
   token?: string | null;
   joinCode?: string | null;
   /** Minecraft-like world seed (numeric or label). */
@@ -146,6 +157,8 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   if (opts.characterId) url.searchParams.set("characterId", opts.characterId);
   if (opts.characterName) url.searchParams.set("characterName", opts.characterName);
   if (opts.baseId) url.searchParams.set("baseId", opts.baseId);
+  if (opts.raceId) url.searchParams.set("raceId", opts.raceId);
+  if (opts.avatarId) url.searchParams.set("avatarId", opts.avatarId);
   if (opts.joinCode) url.searchParams.set("join", opts.joinCode);
   if (opts.seed != null && opts.seed !== "") {
     url.searchParams.set("seed", String(opts.seed));
