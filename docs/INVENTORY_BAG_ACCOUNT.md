@@ -1,5 +1,7 @@
 # Character bag · Account inventory · Trees
 
+**Fleet SSOT (one source of truth):** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md)
+
 Production inventory model for Open harvest/build HUD.
 
 ## Layers (Albion location model)

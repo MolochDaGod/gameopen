@@ -29,6 +29,8 @@ This doc is the fleet contract for **world authoring → map deploy → multipla
 | Fleet identity / characters | GrudgeBuilder Postgres | Both via `/api/characters` (Vercel satellite rewrites) |
 | Definition JSON (weapons master) | ObjectStore D1 | Both via `/api/objectstore` |
 | Realms world authority | Mine-Loader Railway Postgres | 1 replica; `players` = Grudge user membership cache only |
+| **Location bag / camp / lockpick (MMO)** | **gameopen** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) | Open MMO; Mine-Loader harvest/chests separate leaf |
+| **Voxel auto-harvest + world chests** | **mine-loader** `docs/HARVEST_SYSTEM.md` | `setPlayerAutoHarvest` · `registerChest` · skill `mine-loader-harvest-chests` |
 
 **Rule:** Promote world/editor/deploy features **into mine-loader first**, then consume from Open. Do not fork a second world server in gameopen.  
 **Rule:** Do not invent a second character DB on Realms — heroes stay Builder Postgres; Open `saveData.open` and Realms `saveData.realms` are namespaced. Auth: [mine-loader `docs/AUTH_GRUDGE.md`](https://github.com/MolochDaGod/mine-loader/blob/main/docs/AUTH_GRUDGE.md).

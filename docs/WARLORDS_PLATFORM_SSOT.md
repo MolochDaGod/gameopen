@@ -183,6 +183,19 @@ Scripts are **JSON documents** + host-registered handlers:
 
 `ScriptRunner` dispatches only registered `ScriptActionKind`s — **never** `eval`.
 
+### Location inventory · camp · lockpick (fleet bag SSOT)
+
+**One source of truth:** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md)
+
+| Rule | Detail |
+|------|--------|
+| Home island | **Safe** — never lockpick |
+| Camp deposit | Stays at camp for RTS until Send → home island bag |
+| Lockpickable | Dungeons, treasures, contested/enemy/conquered chests, foreign camps |
+| `open-ui` | `{ ui: "lockpick", zone, targetId, difficulty }` — refuse `home:*` |
+
+Code: `artifacts/animator/src/game/inventory/*` · skill `open-camp-location-inventory`.
+
 ---
 
 ## 6. Scene host pattern

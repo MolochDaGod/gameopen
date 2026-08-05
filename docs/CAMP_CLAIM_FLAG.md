@@ -17,7 +17,7 @@ Planting the **claim flag** (Pirate Claim Flag / territory marker) grants **buil
 | **Buildings** | Claim-gated stations + RTS halls; lists quick-craft as **excluded** |
 | **Upgrades** | Structure levels + `nodeUpgrades.json` tracks |
 
-Inventory SSOT: `docs/INVENTORY_BAG_ACCOUNT.md` · `game/inventory/locationInventory.ts`.
+**Fleet SSOT:** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) · bag detail [INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md) · `game/inventory/locationInventory.ts`.
 
 ## Build rights vs quick-craft
 
