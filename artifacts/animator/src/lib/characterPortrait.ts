@@ -226,6 +226,18 @@ function racePortraitPaths(paper: PaperRaceKey): string[] {
   return ["races/human.png"];
 }
 
+/**
+ * Mine-Loader Avatar Explorer race portraits (avatarbaseraces pack).
+ * Hosted on mine SPA public — not Open git. Prefer absolute edge URLs.
+ */
+const MINE_AVATAR_RACE_PORTRAIT_BASE =
+  "https://mine.grudge-studio.com/assets/models/avatarbaseraces";
+
+function voxelRacePortraitFile(paper: PaperRaceKey): string {
+  // Six races in Mine-Loader public/assets/models/avatarbaseraces/*-portrait.png
+  return `${paper}-portrait.png`;
+}
+
 function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
   const open = openBlob(ch);
   const out: string[] = [];
@@ -237,7 +249,17 @@ function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
     "headSnapshot",
   ]);
   if (snap) out.push(snap);
-  // Only paths that exist under public/ — avoid console 404 spam
+
+  // Avatar Explorer race PNGs (SSOT: Mine-Loader avatarbaseraces)
+  const paper = fleetRaceToPaper(
+    ch?.raceId ||
+      (typeof open.race === "string" ? open.race : null) ||
+      (typeof ch?.config?.baseId === "string" ? String(ch.config.baseId) : null),
+  );
+  out.push(`${MINE_AVATAR_RACE_PORTRAIT_BASE}/${voxelRacePortraitFile(paper)}`);
+  out.push(`${MINE_AVATAR_RACE_PORTRAIT_BASE}/human-portrait.png`);
+
+  // Only local paths that exist under Open public/ — avoid console 404 spam
   for (const p of [
     "races/portraits/voxel-head.png",
     "races/voxel-head.png",

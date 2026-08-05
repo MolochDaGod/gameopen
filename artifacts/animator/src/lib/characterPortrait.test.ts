@@ -76,8 +76,8 @@ describe("characterPortrait", () => {
       saveData: { open: { kind: "voxel" } },
     });
     expect(p.isVoxel).toBe(true);
-    // No voxel-head.png shipped yet → fall through to race PNG
-    expect(p.url).toMatch(/races\/human\.png/);
+    // Avatar Explorer portraits: Mine-Loader avatarbaseraces pack (not missing voxel-head)
+    expect(p.url).toMatch(/avatarbaseraces\/human-portrait\.png/);
     expect(p.candidates.some((u) => u.includes("voxel-head"))).toBe(false);
   });
 });
