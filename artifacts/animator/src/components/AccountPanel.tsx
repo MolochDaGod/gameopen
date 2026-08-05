@@ -106,7 +106,8 @@ const CRAFTING_LINKS: Record<EraId, { label: string; href: string }[]> = {
     { label: "Warlords (home island in-game)", href: "https://client.grudge-studio.com/home" },
   ],
   voxel: [
-    { label: "Mine-Loader Realms", href: "https://mine-loader.vercel.app" },
+    { label: "Mine-Loader Realms", href: "https://mine.grudge-studio.com" },
+    { label: "mineloader play host", href: "https://mineloader.grudge-studio.com" },
     { label: "VoxGrudge world", href: "https://voxgrudge.vercel.app" },
   ],
   nexus: [
@@ -118,10 +119,14 @@ const CRAFTING_LINKS: Record<EraId, { label: string; href: string }[]> = {
 
 function characterEra(c: GrudgeCharacter): EraId {
   const raw =
+    c.gameEra ||
     (c as { gameEra?: string }).gameEra ||
     (c.config?.gameEra as string | undefined) ||
     (c.saveData?.gameEra as string | undefined) ||
     (c.config?.era as string | undefined) ||
+    (c.config?.baseId === "explorer" || c.config?.renderPipeline === "voxel"
+      ? "voxel"
+      : undefined) ||
     "warlords";
   const e = String(raw).toLowerCase();
   if (e === "voxel" || e === "nexus" || e === "armada" || e === "warlords") return e;
@@ -294,15 +299,35 @@ export function AccountPanel({
   const eraTone = ERAS.find((e) => e.id === era)?.tone ?? "#4fc3ff";
   const eraGames = useMemo(() => gamesForEra(era).slice(0, 8), [era]);
 
-  const openFoundry = () => {
+  const openFoundry = (forEra: EraId = era) => {
     const url = characterStudioCreateUrl({
+      era: forEra,
+      mode: "create",
       token: getStoredToken(),
       returnTo:
         typeof window !== "undefined"
-          ? `${window.location.origin}/account?open=1`
-          : "https://open.grudge-studio.com/account?open=1",
+          ? `${window.location.origin}/account?open=1&era=${forEra}`
+          : `https://open.grudge-studio.com/account?open=1&era=${forEra}`,
     });
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  /** Mine-Loader Realms handoff — voxel era only, Explorer body (never warlords characterId). */
+  const playVoxelRealms = (ch: GrudgeCharacter | null) => {
+    if (ch) gameSession.selectCharacter(ch.id);
+    const token = getStoredToken();
+    // Dynamic import keeps AccountPanel free of circular mine config weight at boot
+    void import("../auth/mineLoaderConfig").then(({ openMineLoaderLive }) => {
+      openMineLoaderLive({
+        surface: "lobby",
+        token,
+        characterId: ch?.id ?? null,
+        characterName: ch?.name ?? null,
+        baseId: "explorer",
+        raceId: ch?.raceId ?? null,
+        worldMode: "drc",
+      });
+    });
   };
 
   const openExternalZone = (zoneId: string) => {
@@ -546,13 +571,13 @@ export function AccountPanel({
                   );
                 })}
               </div>
-              {era === "warlords" && (
+              {(era === "warlords" || era === "voxel") && (
                 <p style={{ ...muted, marginTop: 14 }}>
                   New heroes: use{" "}
-                  <button type="button" style={linkBtn} onClick={openFoundry}>
-                    Character Foundry
+                  <button type="button" style={linkBtn} onClick={() => openFoundry(era)}>
+                    Character Foundry ({era})
                   </button>{" "}
-                  (character.grudge-studio.com) — not a second create system here.
+                  — 4 slots per era on Railway. Same account bag/wallet; separate playable roster.
                 </p>
               )}
             </section>
@@ -565,25 +590,84 @@ export function AccountPanel({
             <section style={card}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                 <h3 style={{ ...h3, color: eraTone, margin: 0 }}>
-                  {ERAS.find((e) => e.id === era)?.label} characters
+                  {ERAS.find((e) => e.id === era)?.label} · 4 slots
                 </h3>
-                {era === "warlords" && (
-                  <button type="button" style={btnGhost} onClick={openFoundry}>
+                {(era === "warlords" || era === "voxel") && (
+                  <button type="button" style={btnGhost} onClick={() => openFoundry(era)}>
                     Foundry ↗
                   </button>
                 )}
               </div>
               <p style={muted}>
-                Only heroes already on your account (Railway). Equipment from saveData / mesh_ids —
-                no race-kit invent.
+                Railway Postgres · era=<code>{era}</code> · shared Grudge ID + bag · not cross-play
+                bodies (Warlords grudge6 ≠ Voxel Explorer).
               </p>
               {era === "warlords" && <CharacterPicker />}
+              {/* 4-slot strip (empty = free) */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 8,
+                  marginTop: 12,
+                }}
+              >
+                {[0, 1, 2, 3].map((i) => {
+                  const bySlot = eraChars.find(
+                    (c) =>
+                      c.slotIndex === i ||
+                      (c.config?.slotIndex as number | undefined) === i,
+                  );
+                  const fill =
+                    bySlot ||
+                    eraChars.filter(
+                      (c) =>
+                        c.slotIndex == null &&
+                        (c.config?.slotIndex as number | undefined) == null,
+                    )[i] ||
+                    null;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        if (fill) gameSession.selectCharacter(fill.id);
+                        else openFoundry(era);
+                      }}
+                      style={{
+                        ...listItem,
+                        flexDirection: "column",
+                        alignItems: "stretch",
+                        minHeight: 96,
+                        borderColor:
+                          fill && selectedChar?.id === fill.id
+                            ? eraTone
+                            : "rgba(110,168,255,0.15)",
+                        background:
+                          fill && selectedChar?.id === fill.id
+                            ? `${eraTone}14`
+                            : "rgba(8,12,20,0.65)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontSize: 10, opacity: 0.55, fontFamily: "monospace" }}>
+                        Slot {i + 1}
+                      </div>
+                      {fill ? (
+                        <>
+                          <CharacterAvatar character={fill} size={36} />
+                          <strong style={{ color: "#eaf4ff", fontSize: 12 }}>{fill.name}</strong>
+                        </>
+                      ) : (
+                        <span style={{ ...muted, fontSize: 12 }}>+ Create</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
               {eraChars.length === 0 ? (
                 <p style={{ ...muted, marginTop: 16 }}>
-                  No characters for this era yet.
-                  {era === "warlords"
-                    ? " Create in Foundry, then Refresh."
-                    : " Era roster fills as that game writes characters with gameEra."}
+                  No characters for this era yet. Create in Foundry (era={era}), then Refresh.
                 </p>
               ) : (
                 <ul style={list}>
@@ -605,9 +689,11 @@ export function AccountPanel({
                             <strong style={{ color: "#eaf4ff" }}>{c.name}</strong>
                             <div style={muted}>
                               {c.raceId || "—"} · {c.classId || vis.presetId} · L{c.level ?? 1}
+                              {c.slotIndex != null ? ` · slot ${c.slotIndex + 1}` : ""}
                             </div>
                             <div style={{ fontSize: 11, opacity: 0.6 }}>
                               {vis.meshIds.length} meshes · {vis.source}
+                              {c.gameEra ? ` · ${c.gameEra}` : ""}
                             </div>
                           </div>
                         </div>
@@ -634,6 +720,15 @@ export function AccountPanel({
                               }}
                             >
                               Play
+                            </button>
+                          )}
+                          {era === "voxel" && (
+                            <button
+                              type="button"
+                              style={btnPrimary}
+                              onClick={() => playVoxelRealms(c)}
+                            >
+                              Realms
                             </button>
                           )}
                         </div>

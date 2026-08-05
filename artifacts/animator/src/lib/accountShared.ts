@@ -304,7 +304,10 @@ export type CreateCharacterInput = {
   classId?: string;
   /** Catalog id e.g. race-human for Open mesh resolver */
   catalogId?: string;
-  gameEra?: "warlords" | "nexus" | "armada";
+  /** Fleet era — 4 slots per era on Railway. Default warlords. */
+  gameEra?: "warlords" | "voxel" | "nexus" | "armada";
+  /** Optional Foundry slot 0–3 */
+  slotIndex?: number;
   /**
    * Starting equipment bag (mesh_ids + slots + open loadout).
    * Built via {@link buildStartingEquipment} for GrudaChain / main-panel parity.
@@ -315,9 +318,9 @@ export type CreateCharacterInput = {
 };
 
 /**
- * POST Railway /api/characters — create Warlords-era fleet character.
+ * POST Railway /api/characters — create fleet character for an era.
+ * Account is shared (bag/wallet); playable roster is per gameEra (4 slots).
  * Body fields dual-written for schema variants (raceId vs race, gameEra vs era).
- * Starting gear (mesh_ids) is written into equipment + saveData.open for Danger Room.
  */
 export async function createFleetCharacter(
   input: CreateCharacterInput,
@@ -327,10 +330,12 @@ export async function createFleetCharacter(
   const classId = input.classId || "warrior";
   const era = input.gameEra || "warlords";
   const equipment = input.equipment || {};
+  const isVoxel = era === "voxel";
   const saveData = {
     ...(input.saveData || {}),
     equipment,
     open: (equipment as { open?: unknown }).open || input.saveData?.open,
+    ...(isVoxel ? { realms: { pipeline: "box_hero" } } : {}),
   };
   const config = {
     catalogId: input.catalogId,
@@ -339,7 +344,22 @@ export async function createFleetCharacter(
     ...(input.config || {}),
     equipment,
     open: (equipment as { open?: unknown }).open,
+    // Voxel Realms: Explorer body — never grudge6 kit on Mine-Loader maps
+    ...(isVoxel
+      ? {
+          baseId: "explorer",
+          avatarKey: "box_hero",
+          renderPipeline: "voxel",
+          pipeline: "box_hero",
+        }
+      : {}),
+    gameEra: era,
   };
+
+  const slot =
+    typeof input.slotIndex === "number" && Number.isFinite(input.slotIndex)
+      ? Math.max(0, Math.min(3, Math.trunc(input.slotIndex)))
+      : undefined;
 
   const bodies: Record<string, unknown>[] = [
     {
@@ -352,6 +372,7 @@ export async function createFleetCharacter(
       equipment,
       saveData,
       config,
+      ...(slot != null ? { slotIndex: slot, slot } : {}),
     },
     {
       name,
@@ -362,6 +383,7 @@ export async function createFleetCharacter(
       equipment,
       save_data: saveData,
       config,
+      ...(slot != null ? { slot_index: slot, slot } : {}),
     },
   ];
 
@@ -410,13 +432,19 @@ function normalizeRaceId(raw: string): string {
   return s || "human";
 }
 
-/** Deep-link to Character Studio for full GCS create (era=warlords). */
+/**
+ * Deep-link to Character Studio Foundry for era create (4 slots per era).
+ * Default warlords; use era=voxel for Mine-Loader Avatar Explorers.
+ */
 export function characterStudioCreateUrl(opts?: {
   token?: string | null;
   returnTo?: string;
+  era?: "warlords" | "voxel" | "nexus" | "armada";
+  mode?: "create" | "select";
 }): string {
-  const u = new URL("https://character.grudge-studio.com/");
-  u.searchParams.set("era", "warlords");
+  const u = new URL("https://character.grudge-studio.com/foundry");
+  u.searchParams.set("era", opts?.era || "warlords");
+  u.searchParams.set("mode", opts?.mode || "create");
   u.searchParams.set("from", "gameopen");
   u.searchParams.set("open", "1");
   if (opts?.returnTo) u.searchParams.set("redirect_uri", opts.returnTo);
