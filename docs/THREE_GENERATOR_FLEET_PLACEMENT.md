@@ -19,11 +19,20 @@
 ```
 1. Generate / drop raw GLB in uploads/
 2. npm run fleet:convert -- raw.glb [--height 0.8]
-3. POST /api/register-generated-asset  → CDN URL (or pending)
-4. POST /api/scenes  → gfscene-lite JSON
-5. Open forgeDeepLink  → Forge import
-6. Never ship raw/unbaked as production hero/prop
+3. npm run fleet:publish-r2          → R2 grudge-assets + CDN HEAD 200
+4. npm run fleet:sync-casting        → CastingAbilities public fallback
+5. POST /api/scenes  → gfscene-lite JSON + forgeDeepLink
+6. Consumers: GET fleet catalog (CDN or lab /api/catalog)
 ```
+
+### Live catalog (systems consume this)
+
+```
+https://assets.grudge-studio.com/catalogs/three-generator/fleet-catalog.json
+```
+
+Lab: `GET http://localhost:3000/api/catalog`  
+Client helper: `shared/fleetAssetClient.ts` · CastingAbilities `src/assets/generatedCatalog.js`
 
 ## API (lab)
 
