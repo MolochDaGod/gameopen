@@ -1,10 +1,39 @@
 # Deploy status & failed-build recovery (2026-08-04)
 
+## SSOT connection audit (2026-08-05)
+
+Verified against `FLEET_ENV_SECRETS_MATRIX.md` · `PRODUCTION_CONNECTIONS.md` · `fleetCore.FLEET` · five-layer asset law.
+
+| Layer | SSOT host | Live probe | Via Open rewrite |
+|-------|-----------|------------|------------------|
+| **Player / bag / ledger** | Railway `grudge-api-production-0d46` | `/api/health` healthy · DB up | `/api/health` · `/api/uuid/test` · `/api/ledger/search` · `/api/characters` → 401 unauth JSON |
+| **Auth** | `id.grudge-studio.com` | `/login` 200 | `vercel.json` → id |
+| **Definitions** | `info…/api/v1` (+ objectstore OK) | master-weaponSkills 200 both | `/api/objectstore/*` → info |
+| **Asset INDEX (D1)** | `api.grudge-studio.com/assets` | 200 JSON rows | `/api/asset-registry` |
+| **Binaries (R2)** | `assets.grudge-studio.com` | grudge6 + outdoor + VFX 200 | same-origin rewrites |
+| **Open Danger WS** | `gameopen-production` Railway | `/api/health` service=gameopen-api | CF Worker upgrade `/api/danger` only |
+| **AI** | `ai.grudge-studio.com` | 200 | client `VITE_AI_URL` only (no keys) |
+
+**Durable scripts (this host):** `deploy:gate` PASS · `smoke:prod` **41/41** · `verify:assets:cdn` **33/33** + D1 index.
+
+**SPA:** live `index-6cCQMn6K.js` on open + gameopen.vercel.app (Vercel Production ~14m after PR #9). Bundle contains `/api/ledger`, `/api/uuid`, fleet hosts, heightfield, asset-registry.
+
+**Best-practice checks:**
+
+| Rule | Status |
+|------|--------|
+| Browser `apiUrl` same-origin `/api/*` | OK (`fleetCore`) |
+| SSR/Node must not strip `/api` on Railway | Fixed 2026-08-05 (`apiUrl` → `gameDataUrl`) |
+| No player bag in D1 | OK (registry = mesh index only) |
+| No GLB in git for session mobs | OK (local only; seed script) |
+| Vercel public env pack (auth/AI/CDN/API) | Present (names only) |
+| CF open Worker: HTTP → Vercel rewrites; WS danger → Railway | OK |
+
 ## Live health (probed)
 
 | Service | Host | Status |
 |---------|------|--------|
-| Open SPA | https://open.grudge-studio.com | **200** (Vercel Ready) |
+| Open SPA | https://open.grudge-studio.com | **200** (Vercel Ready · `index-6cCQMn6K.js`) |
 | Open API | https://gameopen-production.up.railway.app/api/healthz | **fix + redeploy 2026-08-04** (`root` crash + Danger WS) |
 | Mine-Loader SPA | https://mine.grudge-studio.com · mineloader.grudge-studio.com | **200** (Vercel Ready) |
 | Mine-Loader API | https://mine-loader-api-production.up.railway.app/api/healthz | **ok** (redeployed) |
