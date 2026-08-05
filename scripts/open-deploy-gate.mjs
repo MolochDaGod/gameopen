@@ -85,12 +85,24 @@ const CHECKS = [
     rejectHtml: true,
     optional: true,
   },
-  // —— Definitions (ObjectStore / info) ——
+  // —— Definitions SSOT (info.grudge-studio.com) ——
   {
     name: "info master-weaponSkills",
     url: "https://info.grudge-studio.com/api/v1/master-weaponSkills.json",
+    expectJson: true,
     rejectHtml: true,
-    optional: true,
+  },
+  {
+    name: "info weapons.json",
+    url: "https://info.grudge-studio.com/api/v1/weapons.json",
+    expectJson: true,
+    rejectHtml: true,
+  },
+  {
+    name: "Open objectstore rewrite → info skills",
+    url: "https://open.grudge-studio.com/api/objectstore/v1/master-weaponSkills.json",
+    expectJson: true,
+    rejectHtml: true,
   },
   {
     name: "ui.grudge-studio.com",

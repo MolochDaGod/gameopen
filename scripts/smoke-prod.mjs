@@ -142,6 +142,32 @@ await probe("api-ledger-search", `${BASE}/api/ledger/search`, {
   sample: true,
   critical: true,
 });
+// Definitions SSOT — info.grudge-studio.com (same-origin objectstore rewrite)
+await probe("info-master-weaponSkills", "https://info.grudge-studio.com/api/v1/master-weaponSkills.json", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("info-weapons", "https://info.grudge-studio.com/api/v1/weapons.json", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("info-races", "https://info.grudge-studio.com/api/v1/races.json", {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("open-objectstore-proxy-skills", `${BASE}/api/objectstore/v1/master-weaponSkills.json`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("open-objectstore-proxy-weapons", `${BASE}/api/objectstore/v1/weapons.json`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
 await probe("api-characters-voxel", `${BASE}/api/characters?era=voxel`, {
   expect: "jsonish",
   sample: true,
