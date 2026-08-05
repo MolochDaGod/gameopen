@@ -739,48 +739,52 @@ export class BrawlerScene {
         console.warn(`[BrawlerScene] grudge6 hostile ${prefab.id} failed`, err);
       }
     }
-    // Soft fallback: voxel zombies only if all grudge6 kits failed
+    // Soft fallback: session mobs + voxel zombies if grudge6 kits failed
     if (!this.enemyTemplates.some(Boolean)) {
-      console.warn("[BrawlerScene] no grudge6 hostiles — trying voxel fallback");
-      for (let i = 0; i < 3; i++) {
-        const n = i + 1;
-        const paths = [
-          `models/enemies/voxel-zombies/voxel-zombie-${n}.glb`,
-          `voxel-zombie-${n}.glb`,
-        ];
-        for (const path of paths) {
-          try {
-            const gltf = await this.loadGltf(path);
-            if (this.disposed) return;
-            const root = gltf.scene;
-            // Converted voxel pipeline: SI creature scale + anim brain (not ad-hoc Box3)
-            const { finalizeConvertedVoxelAsset } = await import(
-              "../voxel/convertedAssetPipeline"
-            );
-            const fin = finalizeConvertedVoxelAsset(root, {
-              name: path,
-              tags: ["enemy", "creature", "voxel"],
-              forceRole: "creature",
-              targetHeightM: PLAYER_HEIGHT_M * 0.9,
-              clips: gltf.animations ?? [],
-              ground: true,
-              attachMixer: false,
-            });
-            root.userData.selectable = "hostile";
-            root.userData.voxelAnimBrain = fin.animBrain;
-            root.userData.convertedRole = fin.role;
-            root.traverse((o) => {
-              const m = o as THREE.Mesh;
-              if (m.isMesh) m.userData.selectable = "hostile";
-            });
-            this.enemyTemplates[i] = root as THREE.Group;
-            console.info(
-              `[BrawlerScene] voxel creature ${path} scale=${fin.scale.toFixed(3)} brain=${Object.keys(fin.animBrain).join(",")}`,
-            );
-            break;
-          } catch {
-            /* try next */
-          }
+      console.warn("[BrawlerScene] no grudge6 hostiles — trying session + voxel fallback");
+      const sessionPack: { path: string; heightM: number }[] = [
+        { path: "models/enemies/session/blocker_broker.glb", heightM: 2.0 },
+        { path: "models/enemies/session/mage_demon.glb", heightM: 2.0 },
+        { path: "models/enemies/session/violet_4_hn_creature.glb", heightM: 1.8 },
+        { path: "models/enemies/session/lowpoly_rhino.glb", heightM: 1.65 },
+        { path: "models/enemies/session/hollow_knight_vengefly.glb", heightM: 0.95 },
+        { path: "models/enemies/voxel-zombies/voxel-zombie-1.glb", heightM: PLAYER_HEIGHT_M * 0.9 },
+        { path: "models/enemies/voxel-zombies/voxel-zombie-2.glb", heightM: PLAYER_HEIGHT_M * 0.9 },
+        { path: "models/enemies/voxel-zombies/voxel-zombie-3.glb", heightM: PLAYER_HEIGHT_M * 0.9 },
+      ];
+      let slot = 0;
+      for (const entry of sessionPack) {
+        if (slot >= 8) break;
+        try {
+          const gltf = await this.loadGltf(entry.path);
+          if (this.disposed) return;
+          const root = gltf.scene;
+          const { finalizeConvertedVoxelAsset } = await import(
+            "../voxel/convertedAssetPipeline"
+          );
+          const fin = finalizeConvertedVoxelAsset(root, {
+            name: entry.path,
+            tags: ["enemy", "creature", "voxel", "session"],
+            forceRole: "creature",
+            targetHeightM: entry.heightM,
+            clips: gltf.animations ?? [],
+            ground: true,
+            attachMixer: false,
+          });
+          root.userData.selectable = "hostile";
+          root.userData.voxelAnimBrain = fin.animBrain;
+          root.userData.convertedRole = fin.role;
+          root.userData.sessionEnemyPath = entry.path;
+          root.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (m.isMesh) m.userData.selectable = "hostile";
+          });
+          this.enemyTemplates[slot++] = root as THREE.Group;
+          console.info(
+            `[BrawlerScene] session/voxel creature ${entry.path} scale=${fin.scale.toFixed(3)} h=${entry.heightM}`,
+          );
+        } catch {
+          /* try next pack entry */
         }
       }
     }
@@ -1474,11 +1478,25 @@ export class BrawlerScene {
     }
   }
 
-  // ── RAF ────────────────────────────────────────────────────────────────────
+  /** GF-style residual for fixed 1/60 sim (FleetGameLoop pattern). */
+  private simAccum = 0;
+  private static readonly FIXED_DT = 1 / 60;
+
+  // ── RAF (fixed-step sim — @workspace/grudge-runtime FleetGameLoop pattern) ─
   private animate = () => {
     if (this.disposed) return;
     this.raf = requestAnimationFrame(this.animate);
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    if (typeof document !== "undefined" && document.hidden) {
+      this.simAccum = 0;
+      return;
+    }
+    const wallDt = Math.min(this.clock.getDelta(), 0.25);
+    this.simAccum += wallDt;
+    const FIXED = BrawlerScene.FIXED_DT;
+    if (this.simAccum < FIXED) return;
+    if (this.simAccum > FIXED * 4) this.simAccum = FIXED * 4;
+    this.simAccum -= FIXED;
+    const dt = FIXED;
 
     // Physics layer (fixed substeps inside PhysicsSystem)
     this.physics?.step(dt);

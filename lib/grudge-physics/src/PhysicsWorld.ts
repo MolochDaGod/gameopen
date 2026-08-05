@@ -55,6 +55,84 @@ export class PhysicsWorld {
   }
 
   /**
+   * Static heightfield collider — same contract as three.js
+   * `RapierPhysics.addHeightfield` in physics_rapier_terrain:
+   *   addHeightfield(mesh, width-1, depth-1, heightData, { x: extentsX, y: 1, z: extentsZ })
+   *
+   * Prefer for large islands over full trimesh (production-world TERRAIN_RULES).
+   * Pair with {@link sampleHeightfieldY} / {@link heightAtFromHeightfield} for
+   * Controller feet + FootGrounder (same grid as physics).
+   *
+   * @param nrows — depth cells = vertexDepth − 1
+   * @param ncols — width cells = vertexWidth − 1
+   * @param heights — (nrows+1)*(ncols+1) row-major heights
+   * @param scale — world size { x: fullWidthM, y: heightScale, z: fullDepthM }
+   */
+  addStaticHeightfield(
+    nrows: number,
+    ncols: number,
+    heights: Float32Array | number[],
+    scale: { x: number; y: number; z: number },
+    opts?: {
+      translation?: { x: number; y: number; z: number };
+      /** Unit quaternion { x, y, z, w }; default identity */
+      rotation?: { x: number; y: number; z: number; w: number };
+      friction?: number;
+    },
+  ): RAPIER.Collider | null {
+    const world = this.world;
+    if (!world) return null;
+    if (nrows < 1 || ncols < 1) return null;
+    const expected = (nrows + 1) * (ncols + 1);
+    if (heights.length < expected) {
+      console.warn(
+        `[PhysicsWorld] heightfield heights length ${heights.length} < expected ${expected}`,
+      );
+      return null;
+    }
+    const heightsArr =
+      heights instanceof Float32Array ? heights : Float32Array.from(heights);
+    try {
+      const bodyDesc = RAPIER.RigidBodyDesc.fixed();
+      const t = opts?.translation;
+      if (t) bodyDesc.setTranslation(t.x, t.y, t.z);
+      const r = opts?.rotation;
+      if (r) bodyDesc.setRotation({ x: r.x, y: r.y, z: r.z, w: r.w });
+      const body = world.createRigidBody(bodyDesc);
+      // Rapier API: heightfield(nrows, ncols, heights, scale)
+      let desc = RAPIER.ColliderDesc.heightfield(nrows, ncols, heightsArr, scale);
+      if (!desc) return null;
+      desc = desc.setFriction(opts?.friction ?? 0.9);
+      return world.createCollider(desc, body);
+    } catch (e) {
+      console.warn("[PhysicsWorld] addStaticHeightfield failed", e);
+      return null;
+    }
+  }
+
+  /**
+   * Convenience: heightfield from our {@link HeightfieldGrid} (vertex dims).
+   * Converts width/depth vertices → Rapier nrows/ncols cells.
+   */
+  addHeightfieldGrid(
+    grid: {
+      width: number;
+      depth: number;
+      heights: Float32Array;
+      scale: { x: number; y: number; z: number };
+      origin?: { x: number; y: number; z: number };
+    },
+    opts?: { friction?: number },
+  ): RAPIER.Collider | null {
+    const nrows = Math.max(1, grid.depth - 1);
+    const ncols = Math.max(1, grid.width - 1);
+    return this.addStaticHeightfield(nrows, ncols, grid.heights, grid.scale, {
+      translation: grid.origin ?? { x: 0, y: 0, z: 0 },
+      friction: opts?.friction,
+    });
+  }
+
+  /**
    * Flat ground cuboid whose TOP face sits at `y`.
    * Danger Room / brawler / island fallback floors.
    */

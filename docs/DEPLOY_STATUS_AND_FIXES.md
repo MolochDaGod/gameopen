@@ -1,15 +1,26 @@
-# Deploy status & failed-build recovery (2026-08-03)
+# Deploy status & failed-build recovery (2026-08-04)
 
 ## Live health (probed)
 
 | Service | Host | Status |
 |---------|------|--------|
 | Open SPA | https://open.grudge-studio.com | **200** (Vercel Ready) |
-| Open API | https://gameopen-production.up.railway.app/api/healthz | **ok** (redeployed) |
+| Open API | https://gameopen-production.up.railway.app/api/healthz | **fix + redeploy 2026-08-04** (`root` crash + Danger WS) |
 | Mine-Loader SPA | https://mine.grudge-studio.com · mineloader.grudge-studio.com | **200** (Vercel Ready) |
 | Mine-Loader API | https://mine-loader-api-production.up.railway.app/api/healthz | **ok** (redeployed) |
 | GRUDOX room | https://voxgrudge-grudox-room-production.up.railway.app/api/health | **ok** |
 | Grudge API | https://grudge-api-production-0d46.up.railway.app/api/health | **ok** |
+
+### 2026-08-04 pass (Open multiplayer + favicon)
+
+| Issue | Fix |
+|-------|-----|
+| Railway `gameopen` **Crashed** (`ReferenceError: root is not defined` on `/api/maps`) | Define `root` in `server/standalone.mjs`; safe maps path |
+| No Danger Room WS on Railway zero-dep server | `server/danger-relay.mjs` — full danger-net protocol + persistent DANGER/ARENA |
+| Carrier upgrade **destroyed** non-carrier sockets | Carrier only claims `/api/carrier` |
+| Client same-origin `/api/danger` hangs (Vercel no WS) | `DangerClient` → Railway WS on Open hosts; CF proxy upgrade path |
+| Lobby empty when offline | Exponential backoff, offline event, Reconnect button, seed persistent rooms |
+| `favicon.ico` 404 | Orc-head favicon set (`favicon.ico` / png / apple / pwa) |
 
 ## Failures found → fixed
 

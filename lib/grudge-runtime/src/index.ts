@@ -3,6 +3,7 @@
  *
  * Pair with `@workspace/grudge-physics` for full scene stack:
  *   ids · location · scripting · assets · scene host · dep pins
+ *   gameLoop · inputActions (GF-pattern runtime, no Closure)
  */
 
 export * from "./ids";
@@ -12,3 +13,5 @@ export * from "./scripting";
 export * from "./assets";
 export * from "./stack";
 export * from "./sceneHost";
+export * from "./gameLoop";
+export * from "./inputActions";

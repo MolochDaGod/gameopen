@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   footSamplerFromHeightAt,
+  footSamplerFromHeightfieldGrid,
   normalFromHeightField,
   FLAT_FOOT_SAMPLER,
 } from "./terrainFootSample";
+import { generateRadialHeight } from "@workspace/grudge-physics";
 
 describe("terrainFootSample", () => {
   it("flat sampler is y=0 no normal", () => {
@@ -34,5 +36,25 @@ describe("terrainFootSample", () => {
     expect(n).toBeTruthy();
     expect(n!.x).toBeLessThan(0);
     expect(n!.y).toBeGreaterThan(0);
+  });
+
+  it("footSamplerFromHeightfieldGrid matches three.js rapier terrain grid", () => {
+    const width = 16;
+    const depth = 16;
+    const grid = {
+      width,
+      depth,
+      heights: generateRadialHeight(width, depth, 0, 4),
+      scale: { x: 100, y: 1, z: 100 },
+      origin: { x: 0, y: 0, z: 0 },
+    };
+    const samp = footSamplerFromHeightfieldGrid(grid);
+    const s = samp(0, 0);
+    expect(Number.isFinite(s.y)).toBe(true);
+    expect(s.normal).toBeTruthy();
+    expect(s.normal!.y).toBeGreaterThan(0.3);
+    // Outside extents → void
+    const voidS = samp(200, 0);
+    expect(Number.isFinite(voidS.y)).toBe(false);
   });
 });

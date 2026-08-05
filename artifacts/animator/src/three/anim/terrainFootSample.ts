@@ -1,9 +1,18 @@
 /**
  * Terrain ground sampler for FootGrounder + Controller feet.
  * Builds world Y + slope normals from a height field (ForestWorld heightAt).
+ *
+ * Outdoor physics prefer Rapier heightfield colliders (three.js example
+ * physics_rapier_terrain) via `@workspace/grudge-physics` heightfieldTerrain.
+ * Visual foot plant uses the same heightAt contract either way.
  */
 import * as THREE from "three";
 import type { GroundSample, GroundSampler } from "./legIk";
+import {
+  heightAtFromHeightfield,
+  normalFromHeightfield,
+  type HeightfieldGrid,
+} from "@workspace/grudge-physics";
 
 const UP = new THREE.Vector3(0, 1, 0);
 
@@ -61,5 +70,29 @@ export function footSamplerFromHeightAt(
     }
     const normal = withNormals ? normalFromHeightField(heightAt, x, z, eps) : UP.clone();
     return { y, normal };
+  };
+}
+
+/**
+ * Foot IK sampler from a Rapier-style heightfield grid
+ * (same data as PhysicsWorld.addHeightfieldGrid / three.js physics_rapier_terrain).
+ */
+export function footSamplerFromHeightfieldGrid(
+  grid: HeightfieldGrid,
+  opts?: { withNormals?: boolean },
+): GroundSampler {
+  const heightAt = heightAtFromHeightfield(grid);
+  const withNormals = opts?.withNormals !== false;
+  return (x: number, z: number): GroundSample => {
+    const y = heightAt(x, z);
+    if (y == null || !Number.isFinite(y)) {
+      return { y: Number.NaN, normal: null };
+    }
+    if (!withNormals) return { y, normal: UP.clone() };
+    const n = normalFromHeightfield(grid, x, z);
+    return {
+      y,
+      normal: n ? new THREE.Vector3(n.x, n.y, n.z) : UP.clone(),
+    };
   };
 }

@@ -52,6 +52,17 @@ export const FLEET_CORE_BAKE: ReadonlyArray<{ role: AnimRole; bakeRel: string }>
   { role: "hurt", bakeRel: "polearm/hurt" },
 ];
 
+/** Samurai 2H skill / combo roles (greatsword_samurai bake — Getsuga chain). */
+export const SAMURAI_BAKE_ROLES: ReadonlyArray<{ role: string; bakeRel: string }> = [
+  { role: "skill1", bakeRel: "greatsword_samurai/gs_samurai_combo_b" },
+  { role: "skill2", bakeRel: "greatsword_samurai/gs_samurai_dash_opener" },
+  { role: "skill3", bakeRel: "greatsword_samurai/gs_samurai_teleport_strike" },
+  { role: "skill4", bakeRel: "greatsword_samurai/gs_samurai_combo_a" },
+  { role: "attack2", bakeRel: "greatsword_samurai/gs_samurai_combo_b" },
+  { role: "draw", bakeRel: "greatsword_samurai/gs_samurai_sword_on" },
+  { role: "sheath", bakeRel: "greatsword_samurai/gs_samurai_sword_off" },
+];
+
 const CORE_FALLBACKS: Record<string, string[]> = {
   idle: [
     "greatsword_samurai/gs_samurai_idle_sword",
@@ -217,6 +228,13 @@ export async function hydrateFleetAvatarRoles(opts: {
       await tryBake(role, [bakeRel], allowOverwrite);
     }),
   );
+
+  // 3c) Samurai 2H skill/combo chain (greatsword_samurai) — fill gaps only so
+  // weapon packs keep primary attack; skills get Getsuga-ready roles when empty.
+  for (const { role, bakeRel } of SAMURAI_BAKE_ROLES) {
+    if (!opts.force && opts.hasRole(role)) continue;
+    await tryBake(role, [bakeRel], false);
+  }
 
   // 4) Alias chain so controller never hits empty hasRole
   const aliasPairs: [string, string][] = [

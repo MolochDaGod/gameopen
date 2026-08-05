@@ -211,6 +211,7 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
   const [roomFilter, setRoomFilter] = useState<RoomPresetId | "all">("all");
   const [netErr, setNetErr] = useState<string | null>(null);
   const [connected, setConnected] = useState(net.connected);
+  const [offline, setOffline] = useState(net.offline);
   const enteredRef = useRef(false);
 
   /**
@@ -249,16 +250,27 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
     net.connect();
     if (net.connected) {
       setConnected(true);
+      setOffline(false);
       net.list();
     }
     const offOpen = net.on("open", () => {
       setConnected(true);
+      setOffline(false);
+      setNetErr(null);
       net.list();
     });
     const offClose = net.on("close", () => setConnected(false));
+    const offOffline = net.on("offline", () => {
+      setConnected(false);
+      setOffline(true);
+      setNetErr(
+        "Multiplayer relay offline — rooms will reconnect when the game server is back.",
+      );
+    });
     const offRooms = net.on("rooms", (r) => setRooms(r));
     const offErr = net.on("error", (_code, message) => setNetErr(message));
     const offWelcome = net.on("welcome", (msg) => {
+      // Allow re-entry after reconnect auto-join (room already active in Studio).
       if (enteredRef.current) return;
       enteredRef.current = true;
       void enterWithContent(msg.content);
@@ -269,6 +281,7 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
     return () => {
       offOpen();
       offClose();
+      offOffline();
       offRooms();
       offErr();
       offWelcome();
@@ -400,12 +413,30 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
       <section className="rooms">
         <div className="rooms-head">
           <h2 className="rooms-title">Multiplayer Rooms</h2>
-          <span className={`rooms-conn ${connected ? "on" : ""}`}>
-            {connected ? "● connected" : "○ connecting…"}
+          <span className={`rooms-conn ${connected ? "on" : offline ? "off" : ""}`}>
+            {connected ? "● connected" : offline ? "○ offline" : "○ connecting…"}
           </span>
+          {offline && (
+            <button
+              type="button"
+              className="ve-btn"
+              onClick={() => {
+                setNetErr(null);
+                setOffline(false);
+                net.retry();
+              }}
+            >
+              Reconnect
+            </button>
+          )}
         </div>
 
         {netErr && <p className="rooms-err">{netErr}</p>}
+        {!connected && !offline && (
+          <p className="rooms-hint" style={{ opacity: 0.75, fontSize: "0.85rem" }}>
+            Linking Danger relay… official rooms DANGER (co-op) and ARENA (PvP) appear when live.
+          </p>
+        )}
 
         <div className="rooms-controls">
           <div className="rooms-create">

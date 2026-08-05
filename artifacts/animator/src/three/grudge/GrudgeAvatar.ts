@@ -18,6 +18,7 @@ import {
   clipsFromRoleMap,
 } from "../ummorpg/animationDirector";
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
+import { FLAT_FOOT_SAMPLER } from "../anim/terrainFootSample";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 import { SPRINT_LOCO_MULT, type AnimPack, asAnimPack } from "./anims";
 import { stripPositionTracks } from "../clipTracks";
@@ -300,9 +301,11 @@ export class GrudgeAvatar implements Avatar {
 
       this.root.userData.physicsLayer = "character";
       this.model.userData.physicsLayer = "character";
+      // Terrain plant: bind Bip001 legs; Studio swaps sampler to heightfield on outdoor maps.
+      this.configureFootIkForGrudge6();
       this.footGrounder.bind(this.model);
       this.footGrounder.setEnabled(true);
-      this.footGrounder.setGroundSampler(() => ({ y: 0, normal: null }));
+      this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
       this.twoHandGrip.bind(this.model, null);
 
       // AnimationDirector (uMMORPG Animator layers: loco + skill override)
@@ -817,7 +820,32 @@ export class GrudgeAvatar implements Avatar {
   }
 
   setGroundSampler(fn: GroundSampler | null): void {
-    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
+    this.footGrounder.setGroundSampler(fn ?? FLAT_FOOT_SAMPLER);
+  }
+
+  /**
+   * grudge6 foot plant limits — enough for hills/steps, never the old 0.55 m
+   * crouch-slam that made specialty packs look loose. Hosts rebind via
+   * {@link setGroundSampler} with `footSamplerFromHeightAt`.
+   */
+  private configureFootIkForGrudge6(): void {
+    this.footGrounder.maxLift = 0.28;
+    this.footGrounder.maxDrop = 0.22;
+    this.footGrounder.smooth = 16;
+    this.footGrounder.alignFeet = true;
+    this.footGrounder.maxTilt = 0.4;
+  }
+
+  /** Re-locate legs after equip / skeleton unify (Studio map open). */
+  rebindFootIk(): void {
+    if (!this.model) return;
+    this.configureFootIkForGrudge6();
+    this.footGrounder.bind(this.model);
+    this.footGrounder.setEnabled(true);
+  }
+
+  get footIkBound(): boolean {
+    return this.footGrounder.isBound;
   }
 
   /**
@@ -910,8 +938,8 @@ export class GrudgeAvatar implements Avatar {
       this.twoHandGrip.apply(dt, { strength: this.isOneShotActive ? 0.65 : 0.4 });
     }
     this.updateColliderTransform();
-    // Foot IK plants relative to model; ground is Danger Room y=0. Do not
-    // write root world Y here — Controller owns feet on floor.
+    // Foot IK plants soles on sampler (flat DR or outdoor heightfield).
+    // Controller owns root world Y — do not write root.position.y here.
     this.footGrounder.apply(dt);
     if (this.oneShot) {
       this.oneShotEnd -= dt;

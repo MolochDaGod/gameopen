@@ -8,6 +8,7 @@ import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
 import { FootGrounder, type GroundSampler } from "./anim/legIk";
+import { FLAT_FOOT_SAMPLER } from "./anim/terrainFootSample";
 import { PHYSICS_DT } from "../lib/productionRuntime";
 
 /** Crossfade (seconds) used to ease the additive combat overlay in and out. */
@@ -116,9 +117,14 @@ export class Character {
 
     this.model.updateMatrixWorld(true);
     this.findHands();
+    this.footGrounder.maxLift = 0.28;
+    this.footGrounder.maxDrop = 0.22;
+    this.footGrounder.smooth = 16;
+    this.footGrounder.alignFeet = true;
     this.footGrounder.bind(this.model);
-    // Flat Danger Room floor at y=0; hosts may swap terrain sampler later.
+    // Flat Danger Room floor at y=0; Studio.wireCharacterFeetOnTerrain swaps outdoor heightfield.
     this.footGrounder.setEnabled(true);
+    this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
     this.playRole("idle", 0);
   }
 
@@ -192,7 +198,18 @@ export class Character {
 
   /** Custom ground height sampler (default flat y=0). */
   setGroundSampler(fn: GroundSampler | null): void {
-    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
+    this.footGrounder.setGroundSampler(fn ?? FLAT_FOOT_SAMPLER);
+  }
+
+  /** Re-locate legs after mesh/equip changes; Studio calls on map open. */
+  rebindFootIk(): void {
+    if (!this.model) return;
+    this.footGrounder.bind(this.model);
+    this.footGrounder.setEnabled(true);
+  }
+
+  get footIkBound(): boolean {
+    return this.footGrounder.isBound;
   }
 
   /**
