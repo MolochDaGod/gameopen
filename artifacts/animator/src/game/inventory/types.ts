@@ -211,11 +211,22 @@ export interface AccountInventoryState {
 
 export type DepositZoneKind = "claim" | "camp" | "boat" | "storage" | "none";
 
+/** Albion destination for bag deposit (see locationInventory + depositZones). */
+export interface DepositDestinationInfo {
+  kind: string;
+  locationId?: string;
+  label: string;
+}
+
 export interface DepositContext {
   zone: DepositZoneKind;
   /** True when quick-deposit button should illuminate. */
   canDeposit: boolean;
   label: string;
+  /** Where goods land (camp storage vs home island bag). */
+  destination?: DepositDestinationInfo;
+  /** Show “Send camp → home island” affordance when at own camp. */
+  canSendToHome?: boolean;
 }
 
 /** RMB context actions on a bag item. */

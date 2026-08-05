@@ -1802,6 +1802,10 @@ export class Studio {
     insideClaim: boolean;
     nearCamp: boolean;
     onBoat: boolean;
+    nearStorage: boolean;
+    onHomeIsland: boolean;
+    claimKey: string;
+    boatId?: string;
   } {
     const pos = this.character?.root.position;
     const insideClaim = !!(
@@ -1810,22 +1814,72 @@ export class Studio {
       this.campBuild.hasClaim &&
       this.campBuild.isInsideClaim(pos)
     );
-    const nearCamp = !!(this.campBuild?.hasClaim || (this.campBuild?.structures.length ?? 0) > 0);
+    const nearCamp = !!(
+      this.campBuild?.hasClaim ||
+      (this.campBuild?.structures.length ?? 0) > 0
+    );
     const roomKind = (this as { room?: { kind?: string } }).room?.kind ?? "";
     const onBoat =
       roomKind === "sail" ||
       roomKind === "sailing" ||
       /sail|boat/i.test(String(roomKind));
-    return { insideClaim, nearCamp, onBoat };
+    // Home island surfaces (water / island play modes)
+    const onHomeIsland =
+      /home.?island|island_home|water_home|haven/i.test(String(roomKind)) ||
+      /home.?island|island_home/i.test(String(this.locationBag?.getLocation?.()?.kind ?? ""));
+    // Near storage chest prop or warehouse placeable
+    let nearStorage = false;
+    if (pos && this.campBuild?.structures?.length) {
+      for (const s of this.campBuild.structures) {
+        const k = String((s as { placeableId?: string; id?: string }).placeableId ?? (s as { id?: string }).id ?? "");
+        if (/storage|chest|warehouse|bank/i.test(k)) {
+          const sp = (s as { position?: { x: number; z: number } }).position;
+          if (sp && Math.hypot(sp.x - pos.x, sp.z - pos.z) < 4) {
+            nearStorage = true;
+            break;
+          }
+        }
+      }
+    }
+    const claimKey =
+      (this.campBuild as { claimId?: string } | null)?.claimId ||
+      (this.campBuild?.hasClaim ? "local_claim" : "default");
+    return {
+      insideClaim,
+      nearCamp,
+      onBoat,
+      nearStorage,
+      onHomeIsland,
+      claimKey,
+      boatId: onBoat ? String(roomKind || "boat") : undefined,
+    };
+  }
+
+  /**
+   * Start lockpick UI for foreign camp / hidden chest / treasure.
+   * App mounts LockpickPanel; result opens location storage loot.
+   */
+  beginLockpickChallenge(payload: {
+    targetId: string;
+    kind?: string;
+    difficulty?: number;
+    label?: string;
+    ownerAccountId?: string | null;
+  }): void {
+    const detail = {
+      ui: "lockpick",
+      targetId: payload.targetId,
+      kind: payload.kind || "container",
+      difficulty: payload.difficulty ?? 30,
+      label: payload.label || "Locked container",
+      ownerAccountId: payload.ownerAccountId ?? null,
+    };
+    window.dispatchEvent(new CustomEvent("grudge-open-ui", { detail }));
   }
 
   /** Load content/runtime script pack when present (same shape for all scenes). */
   private async loadRuntimeScripts() {
     try {
-      const res = await fetch("/content/runtime/example-danger-scripts.json");
-      if (!res.ok) return;
-      const pack = (await res.json()) as { scripts?: unknown[] };
-      const docs = (pack.scripts ?? []).filter(isScriptDoc) as ScriptDoc[];
       this.scripts.clear();
       this.scripts.register("message", (a) => {
         const text = String(a.payload?.text ?? "");
@@ -1835,7 +1889,53 @@ export class Studio {
         // Door already owns enterDungeon; portal scripts can share this handler later.
         this.tryEnterDungeonFromScript();
       });
-      this.scripts.load(docs);
+      this.scripts.register("open-ui", (a) => {
+        const ui = String(a.payload?.ui ?? a.payload?.name ?? "");
+        if (ui === "lockpick" || ui === "lock_pick") {
+          this.beginLockpickChallenge({
+            targetId: String(a.payload?.targetId ?? a.payload?.locationId ?? "unknown"),
+            kind: String(a.payload?.kind ?? "container"),
+            difficulty: Number(a.payload?.difficulty ?? 30),
+            label: String(a.payload?.label ?? "Locked"),
+            ownerAccountId: (a.payload?.ownerAccountId as string) ?? null,
+          });
+          return;
+        }
+        window.dispatchEvent(
+          new CustomEvent("grudge-open-ui", {
+            detail: { ui, ...(a.payload || {}) },
+          }),
+        );
+      });
+      this.scripts.register("grant-item", (a) => {
+        const tid = String(a.payload?.templateId ?? a.payload?.itemId ?? "");
+        const qty = Math.max(1, Number(a.payload?.qty ?? 1));
+        if (!tid) return;
+        window.dispatchEvent(
+          new CustomEvent("grudge-grant-item", {
+            detail: { templateId: tid, qty },
+          }),
+        );
+      });
+
+      const packs = [
+        "/content/runtime/example-danger-scripts.json",
+        "/content/runtime/hidden-loot-lockpick-scripts.json",
+      ];
+      const allDocs: ScriptDoc[] = [];
+      for (const url of packs) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const pack = (await res.json()) as { scripts?: unknown[] };
+          for (const s of pack.scripts ?? []) {
+            if (isScriptDoc(s)) allDocs.push(s);
+          }
+        } catch {
+          /* optional pack */
+        }
+      }
+      this.scripts.load(allDocs);
     } catch {
       // Optional content pack — missing file is fine in slim deploys.
     }
@@ -12095,20 +12195,31 @@ export class Studio {
   /**
    * Foot IK plants soles on terrain after mixer (Character + GrudgeAvatar).
    * Pass null for flat Danger Room y=0.
+   * Same player session: only rebinds sampler + leg chains — not Controller/weapon.
    */
   private wireCharacterFeetOnTerrain(
     heightAt: ((x: number, z: number) => number | null) | null,
   ): void {
     const ch = this.character as {
       setFootIk?: (on: boolean) => void;
-      setGroundSampler?: (fn: ((x: number, z: number) => { y: number; normal: THREE.Vector3 | null }) | null) => void;
+      setGroundSampler?: (
+        fn: ((x: number, z: number) => { y: number; normal: THREE.Vector3 | null }) | null,
+      ) => void;
+      rebindFootIk?: () => void;
+      footIkBound?: boolean;
     } | null;
     if (!ch) return;
+    // Re-find Bip001 legs after kit hydrate / equip (shallow bones may change).
+    ch.rebindFootIk?.();
     ch.setFootIk?.(true);
     if (heightAt) {
       ch.setGroundSampler?.(footSamplerFromHeightAt(heightAt, { withNormals: true }));
+      console.info(
+        `[Studio] foot IK ← terrain heightfield (bound=${ch.footIkBound !== false})`,
+      );
     } else {
       ch.setGroundSampler?.(FLAT_FOOT_SAMPLER);
+      console.info(`[Studio] foot IK ← flat Danger Room y=0 (bound=${ch.footIkBound !== false})`);
     }
   }
 

@@ -34,7 +34,17 @@ import {
   depositInstances,
   hydrateAccountInventory,
   pushAccountResources,
+  loadAccountInventory,
+  saveAccountInventory,
 } from "./accountInventory";
+export { loadAccountInventory, saveAccountInventory };
+import {
+  depositToLocation,
+  ensureCampStorage,
+  loadLocationStorage,
+  newLocationStorage,
+  saveLocationStorage,
+} from "./locationInventory";
 import { readFleetToken } from "../../auth/fleetCore";
 import {
   ledgerEquipChange,
@@ -46,9 +56,6 @@ const bagKey = (characterId: string) =>
 /** Legacy key — migrated on first load. */
 const bagKeyV1 = (characterId: string) =>
   `grudge:char-bag:v1:${characterId || "local"}`;
-const accountKey = (accountId: string) =>
-  `grudge:account-inv:v1:${accountId || "local"}`;
-
 export function loadCharacterBag(characterId: string): CharacterBagState {
   try {
     let raw = localStorage.getItem(bagKey(characterId));
@@ -111,29 +118,7 @@ export function saveCharacterBag(bag: CharacterBagState): void {
   }
 }
 
-export function loadAccountInventory(accountId = "local"): AccountInventoryState {
-  try {
-    const raw = localStorage.getItem(accountKey(accountId));
-    if (!raw) return newAccountInventory(accountId);
-    const parsed = JSON.parse(raw) as AccountInventoryState;
-    return {
-      accountId: accountId || parsed.accountId || "local",
-      resources: parsed.resources || {},
-      items: Array.isArray(parsed.items) ? parsed.items : [],
-      updatedAt: parsed.updatedAt || Date.now(),
-    };
-  } catch {
-    return newAccountInventory(accountId);
-  }
-}
-
-export function saveAccountInventory(inv: AccountInventoryState): void {
-  try {
-    localStorage.setItem(accountKey(inv.accountId), JSON.stringify(inv));
-  } catch {
-    /* ignore */
-  }
-}
+// loadAccountInventory / saveAccountInventory — re-exported from accountInventory
 
 /**
  * Harvest / pickup → character bag.
@@ -351,17 +336,25 @@ export async function unequipToBagWithLedger(opts: {
 }
 
 /**
- * Quick deposit: bag materials → account inventory (+ Railway when signed in).
+ * Quick deposit — Albion routing:
+ *   · destination.kind camp/boat → location storage (stays there)
+ *   · home_island / default → account vault (shared home island bag)
  */
 export async function quickDepositAll(
   characterId: string,
   accountId = "local",
+  destination?: {
+    kind?: string;
+    locationId?: string;
+    label?: string;
+  },
 ): Promise<{
   ok: boolean;
   bag: CharacterBagState;
   account: AccountInventoryState;
   deposited: ItemInstance[];
   message: string;
+  locationId?: string;
 }> {
   const bag = loadCharacterBag(characterId);
   const deposited = listDepositable(bag);
@@ -375,10 +368,44 @@ export async function quickDepositAll(
     };
   }
 
+  const kind = destination?.kind || "home_island";
+  const n = deposited.reduce((s, i) => s + i.qty, 0);
+
+  // Camp / boat hold — location-bound (not free account vault)
+  if (
+    (kind === "camp" || kind === "boat") &&
+    destination?.locationId
+  ) {
+    let loc =
+      kind === "camp"
+        ? ensureCampStorage(
+            destination.locationId.replace(/^camp:/, ""),
+            accountId,
+          )
+        : loadLocationStorage(
+            destination.locationId,
+            newLocationStorage(destination.locationId, "boat", {
+              ownerAccountId: accountId,
+            }),
+          );
+    loc = depositToLocation(loc, deposited);
+    saveLocationStorage(loc);
+    const nextBag = clearDepositable(bag);
+    saveCharacterBag(nextBag);
+    return {
+      ok: true,
+      bag: nextBag,
+      account: loadAccountInventory(accountId),
+      deposited,
+      locationId: loc.locationId,
+      message: `Deposited ${n} items → ${destination.label || loc.label} (stays here until moved home)`,
+    };
+  }
+
+  // Home island bag = account inventory (+ Railway when signed in)
   let account = loadAccountInventory(accountId);
   account = depositInstances(account, deposited);
 
-  // Railway shared resources
   const delta: Record<string, number> = {};
   for (const it of deposited) {
     if (!it.templateId.startsWith("wpn_") && !it.templateId.startsWith("arm_")) {
@@ -393,13 +420,13 @@ export async function quickDepositAll(
   saveCharacterBag(nextBag);
   saveAccountInventory(account);
 
-  const n = deposited.reduce((s, i) => s + i.qty, 0);
   return {
     ok: true,
     bag: nextBag,
     account,
     deposited,
-    message: `Deposited ${n} items to account inventory`,
+    locationId: `home:${accountId}`,
+    message: `Deposited ${n} items → home island bag (shared account)`,
   };
 }
 

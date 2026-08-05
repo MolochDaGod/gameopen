@@ -1,8 +1,13 @@
 /**
- * Quick-deposit illumination: claim radius, camp, boat, storage.
+ * Quick-deposit illumination + Albion destination routing.
+ *
+ * At claim/camp → **camp storage** (RTS inventory stays at camp).
+ * At home island warehouse → **home island bag** (account vault).
+ * Boat → boat hold. Hidden chest/treasure open via lockpick + loot, not deposit.
  */
 
 import type { DepositContext, DepositZoneKind } from "./types";
+import type { StorageLocationKind } from "./locationInventory";
 
 export interface DepositProbeInput {
   /** Player feet position. */
@@ -15,24 +20,91 @@ export interface DepositProbeInput {
   nearCamp?: boolean;
   /** On boat / sailtest deck. */
   onBoat?: boolean;
-  /** Near chest / bank prop. */
+  /** Near chest / bank prop / home warehouse. */
   nearStorage?: boolean;
+  /** Standing on home island (or home warehouse pad). */
+  onHomeIsland?: boolean;
+  /** Claim key for camp storage id. */
+  claimKey?: string;
+  /** Boat id when onBoat. */
+  boatId?: string;
+  /** Account id for home island bag. */
+  accountId?: string;
+}
+
+export type DepositDestination = {
+  kind: StorageLocationKind | "none";
+  /** Location storage id when not home (home uses account inv). */
+  locationId?: string;
+  label: string;
+};
+
+/** Where bag deposit goes (Albion: location-bound). */
+export function resolveDepositDestination(
+  p: DepositProbeInput,
+): DepositDestination {
+  // Home island warehouse / pad beats field camp when both true
+  if (p.onHomeIsland) {
+    return {
+      kind: "home_island",
+      locationId: `home:${p.accountId || "local"}`,
+      label: "Home island bag (shared account)",
+    };
+  }
+  if (p.insideClaim || p.nearCamp) {
+    const claim = p.claimKey || "default";
+    return {
+      kind: "camp",
+      locationId: `camp:${claim}`,
+      label: "Camp storage (RTS · stays at camp)",
+    };
+  }
+  if (p.onBoat) {
+    const boat = p.boatId || "default";
+    return {
+      kind: "boat",
+      locationId: `boat:${boat}`,
+      label: "Boat hold",
+    };
+  }
+  if (p.nearStorage) {
+    return {
+      kind: "home_island",
+      locationId: `home:${p.accountId || "local"}`,
+      label: "Home island bag (shared account)",
+    };
+  }
+  return { kind: "none", label: "No deposit zone" };
 }
 
 export function resolveDepositContext(p: DepositProbeInput): DepositContext {
-  if (p.insideClaim) {
-    return { zone: "claim", canDeposit: true, label: "Deposit to account · Claim" };
+  const dest = resolveDepositDestination(p);
+  if (dest.kind === "none") {
+    return {
+      zone: "none",
+      canDeposit: false,
+      label: "Deposit (need camp · boat · home island)",
+      destination: dest,
+    };
   }
-  if (p.onBoat) {
-    return { zone: "boat", canDeposit: true, label: "Deposit to account · Boat hold" };
-  }
-  if (p.nearCamp) {
-    return { zone: "camp", canDeposit: true, label: "Deposit to account · Camp" };
-  }
-  if (p.nearStorage) {
-    return { zone: "storage", canDeposit: true, label: "Deposit to account · Storage" };
-  }
-  return { zone: "none", canDeposit: false, label: "Deposit (need claim / camp / boat)" };
+  const zone: DepositZoneKind =
+    dest.kind === "camp"
+      ? p.insideClaim
+        ? "claim"
+        : "camp"
+      : dest.kind === "boat"
+        ? "boat"
+        : dest.kind === "home_island"
+          ? "storage"
+          : "none";
+  return {
+    zone,
+    canDeposit: true,
+    label: `Deposit → ${dest.label}`,
+    destination: dest,
+    /** Owner can also send camp → home from camp hub. */
+    canSendToHome: dest.kind === "camp",
+  };
 }
 
 export function depositZoneTone(zone: DepositZoneKind): string {

@@ -74,6 +74,7 @@ import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
 import { ClassSkillBar } from "./components/ClassSkillBar";
+import { LockpickPanel } from "./components/minigames/LockpickPanel";
 import {
   loadCharacterBag,
   saveCharacterBag,
@@ -87,6 +88,9 @@ import {
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
+  markLockBusted,
+  loadLocationStorage,
+  type LockpickChallenge,
 } from "./game/inventory";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
@@ -521,9 +525,11 @@ export default function App() {
   const [depositCtx, setDepositCtx] = useState<DepositContext>({
     zone: "none",
     canDeposit: false,
-    label: "Deposit (need claim / camp / boat)",
+    label: "Deposit (need camp · boat · home island)",
   });
   const [bagOccupied, setBagOccupied] = useState(0);
+  const [lockpickChallenge, setLockpickChallenge] =
+    useState<LockpickChallenge | null>(null);
   // Never carry the loadout overlay across surfaces (doors/editor/play/danger).
   useEffect(() => {
     setEquipOpen(false);
@@ -666,13 +672,21 @@ export default function App() {
     [activeCharacterId, refreshBagMeta],
   );
 
+  const accountIdForBag =
+    (gameSession.selectedCharacter() as { accountId?: string } | null)
+      ?.accountId ||
+    (gameSession.snapshot as { accountId?: string }).accountId ||
+    "local";
+
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {
       insideClaim: false,
       nearCamp: false,
       onBoat: false,
+      nearStorage: false,
+      onHomeIsland: false,
+      claimKey: "default",
     };
-    // DepositProbeInput requires feet x/y/z; zone flags drive illumination.
     setDepositCtx(
       resolveDepositContext({
         x: 0,
@@ -681,9 +695,52 @@ export default function App() {
         insideClaim: !!probe.insideClaim,
         nearCamp: !!probe.nearCamp,
         onBoat: !!probe.onBoat,
+        nearStorage: !!probe.nearStorage,
+        onHomeIsland: !!probe.onHomeIsland,
+        claimKey: probe.claimKey || "default",
+        boatId: probe.boatId,
+        accountId: accountIdForBag,
       }),
     );
-  }, []);
+  }, [accountIdForBag]);
+
+  // ScriptRunner open-ui lockpick + grant-item bus
+  useEffect(() => {
+    const onOpenUi = (ev: Event) => {
+      const d = (ev as CustomEvent).detail || {};
+      if (d.ui === "lockpick" || d.ui === "lock_pick") {
+        setLockpickChallenge({
+          targetId: String(d.targetId || d.locationId || "unknown"),
+          kind: (d.kind as LockpickChallenge["kind"]) || "container",
+          difficulty: Number(d.difficulty ?? 30),
+          label: String(d.label || "Locked container"),
+          ownerAccountId: d.ownerAccountId ?? null,
+        });
+        document.exitPointerLock?.();
+        studioRef.current?.setFreeMouseMode?.(true);
+      }
+    };
+    const onGrant = (ev: Event) => {
+      const d = (ev as CustomEvent).detail || {};
+      const tid = String(d.templateId || "");
+      const qty = Math.max(1, Number(d.qty ?? 1));
+      if (!tid) return;
+      const res = harvestIntoBag(activeCharacterId, tid, qty);
+      refreshBagMeta();
+      studioRef.current?.flashMessage?.(
+        res.full
+          ? `Bag full · ${tid}`
+          : `+${qty - res.leftover} ${tid}`,
+        1.6,
+      );
+    };
+    window.addEventListener("grudge-open-ui", onOpenUi);
+    window.addEventListener("grudge-grant-item", onGrant);
+    return () => {
+      window.removeEventListener("grudge-open-ui", onOpenUi);
+      window.removeEventListener("grudge-grant-item", onGrant);
+    };
+  }, [activeCharacterId, refreshBagMeta]);
 
   useEffect(() => {
     try {
@@ -3119,6 +3176,7 @@ export default function App() {
           <CharacterBagPanel
             open={bagOpen}
             characterId={activeCharacterId}
+            accountId={accountIdForBag}
             deposit={depositCtx}
             onClose={() => setBagOpen(false)}
             onBagChange={() => refreshBagMeta()}
@@ -3129,6 +3187,33 @@ export default function App() {
             onDeployPlaceable={(placeableId) => {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
+            }}
+          />
+          <LockpickPanel
+            open={!!lockpickChallenge}
+            challenge={lockpickChallenge}
+            onClose={() => setLockpickChallenge(null)}
+            onResult={(result) => {
+              setLockpickChallenge(null);
+              studioRef.current?.flashMessage?.(result.message, 2);
+              if (!result.ok) return;
+              try {
+                const st = loadLocationStorage(result.targetId);
+                for (const [tid, qty] of Object.entries(st.resources)) {
+                  if (qty > 0) harvestIntoBag(activeCharacterId, tid, qty);
+                }
+                for (const it of st.items) {
+                  harvestIntoBag(activeCharacterId, it.templateId, it.qty);
+                }
+                markLockBusted({
+                  ...st,
+                  resources: {},
+                  items: [],
+                });
+                refreshBagMeta();
+              } catch {
+                /* offline ok */
+              }
             }}
           />
           <ClassSkillBar
@@ -3410,6 +3495,7 @@ export default function App() {
           <CharacterBagPanel
             open={bagOpen}
             characterId={activeCharacterId}
+            accountId={accountIdForBag}
             deposit={depositCtx}
             onClose={() => setBagOpen(false)}
             onBagChange={() => refreshBagMeta()}

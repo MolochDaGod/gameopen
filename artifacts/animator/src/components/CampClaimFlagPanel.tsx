@@ -37,6 +37,13 @@ import {
   type CampClaimState,
 } from "../lib/campClaimPersist";
 import {
+  ensureCampStorage,
+  loadLocationStorage,
+  transferLocationToHomeIsland,
+  type LocationStorageState,
+} from "../game/inventory/locationInventory";
+import { getItemTemplate } from "../game/inventory/catalog";
+import {
   CLAIM_PLACEABLES,
   listClaimGatedPlaceables,
   getPlaceable,
@@ -341,6 +348,12 @@ export function CampClaimFlagPanel({
               }
             />
           )}
+          {page === "storage" && (
+            <CampStoragePage
+              claimKey="local_claim"
+              onNotice={setNotice}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -349,6 +362,7 @@ export function CampClaimFlagPanel({
 
 const DEFAULT_PAGES: Array<{ id: CampPageId; label: string; summary: string }> = [
   { id: "skills", label: "Camp Skills", summary: "" },
+  { id: "storage", label: "Storage", summary: "Camp inventory · RTS · send home" },
   { id: "farming", label: "Farming", summary: "" },
   { id: "taming", label: "Taming", summary: "" },
   { id: "defensives", label: "Defensives", summary: "" },
@@ -356,6 +370,87 @@ const DEFAULT_PAGES: Array<{ id: CampPageId; label: string; summary: string }> =
   { id: "buildings", label: "Buildings", summary: "" },
   { id: "upgrades", label: "Upgrades", summary: "" },
 ];
+
+/**
+ * Camp location inventory (Albion): goods deposited here stay at camp for RTS.
+ * Send to home island bag to share fleet-wide.
+ */
+function CampStoragePage({
+  claimKey,
+  onNotice,
+}: {
+  claimKey: string;
+  onNotice: (msg: string) => void;
+}) {
+  const [storage, setStorage] = useState<LocationStorageState>(() =>
+    ensureCampStorage(claimKey, "local"),
+  );
+  const [busy, setBusy] = useState(false);
+
+  const refresh = () => setStorage(loadLocationStorage(`camp:${claimKey}`));
+
+  useEffect(() => {
+    refresh();
+  }, [claimKey]);
+
+  const rows = Object.entries(storage.resources);
+  const uniques = storage.items;
+
+  return (
+    <>
+      <p className="ccf-notice dim">
+        Albion model: harvest deposit at this claim goes to <b>camp storage</b>. RTS units and
+        buildings spend from here. Home island bag is the shared account vault — use{" "}
+        <b>Send → home island</b> to move goods out of the camp.
+      </p>
+      <div className="ccf-list">
+        {rows.length === 0 && uniques.length === 0 && (
+          <p className="ccf-notice">Empty — deposit from bag while inside claim radius.</p>
+        )}
+        {rows.map(([tid, qty]) => {
+          const tpl = getItemTemplate(tid);
+          return (
+            <div key={tid} className="ccf-row">
+              <span>
+                {tpl?.name || tid} ×{qty}
+              </span>
+            </div>
+          );
+        })}
+        {uniques.map((it) => {
+          const tpl = getItemTemplate(it.templateId);
+          return (
+            <div key={it.instanceId} className="ccf-row">
+              <span>
+                {tpl?.name || it.templateId}
+                {it.grudgeUuid ? " · unique" : ""}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        className="ccf-btn gold"
+        disabled={busy || (rows.length === 0 && uniques.length === 0)}
+        onClick={() => {
+          setBusy(true);
+          void transferLocationToHomeIsland({
+            storage,
+            accountId: "local",
+            includeUniques: true,
+          }).then((res) => {
+            onNotice(res.message);
+            refresh();
+            setBusy(false);
+          });
+        }}
+      >
+        {busy ? "Sending…" : "Send camp storage → home island bag"}
+      </button>
+    </>
+  );
+}
 
 function SkillsPage({
   doc,

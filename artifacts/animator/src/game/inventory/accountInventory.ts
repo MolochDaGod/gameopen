@@ -8,6 +8,34 @@ import { newAccountInventory } from "./types";
 import { batchAddAccountResources, fetchAccountResources } from "../../auth/accountBag";
 import { readFleetToken } from "../../auth/fleetCore";
 
+const accountKey = (accountId: string) =>
+  `grudge:account-inv:v1:${accountId || "local"}`;
+
+/** Local cache of account vault (Railway is SSOT when signed in). */
+export function loadAccountInventory(accountId = "local"): AccountInventoryState {
+  try {
+    const raw = localStorage.getItem(accountKey(accountId));
+    if (!raw) return newAccountInventory(accountId);
+    const parsed = JSON.parse(raw) as AccountInventoryState;
+    return {
+      accountId: accountId || parsed.accountId || "local",
+      resources: parsed.resources || {},
+      items: Array.isArray(parsed.items) ? parsed.items : [],
+      updatedAt: parsed.updatedAt || Date.now(),
+    };
+  } catch {
+    return newAccountInventory(accountId);
+  }
+}
+
+export function saveAccountInventory(inv: AccountInventoryState): void {
+  try {
+    localStorage.setItem(accountKey(inv.accountId), JSON.stringify(inv));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function addResources(
   inv: AccountInventoryState,
   resources: Record<string, number>,

@@ -19,6 +19,8 @@ import {
   swapSlots,
   useConsumableHotkey,
   depositZoneTone,
+  transferLocationToHomeIsland,
+  loadLocationStorage,
 } from "../../game/inventory";
 import "./characterBag.css";
 
@@ -26,6 +28,8 @@ export interface CharacterBagPanelProps {
   open: boolean;
   characterId: string;
   deposit: DepositContext;
+  /** Account for home island bag / camp ownership. */
+  accountId?: string;
   onClose: () => void;
   onBagChange?: (bag: CharacterBagState) => void;
   onFlash?: (msg: string) => void;
@@ -39,6 +43,7 @@ export function CharacterBagPanel({
   open,
   characterId,
   deposit,
+  accountId = "local",
   onClose,
   onBagChange,
   onFlash,
@@ -78,8 +83,31 @@ export function CharacterBagPanel({
     if (!deposit.canDeposit || busy) return;
     setBusy(true);
     try {
-      const res = await quickDepositAll(characterId);
+      const res = await quickDepositAll(
+        characterId,
+        accountId,
+        deposit.destination,
+      );
       commit(res.bag);
+      onFlash?.(res.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Albion: empty camp storage into home island bag (own camp only). */
+  const onSendCampToHome = async () => {
+    if (!deposit.canSendToHome || !deposit.destination?.locationId || busy) {
+      return;
+    }
+    setBusy(true);
+    try {
+      const st = loadLocationStorage(deposit.destination.locationId);
+      const res = await transferLocationToHomeIsland({
+        storage: st,
+        accountId,
+        includeUniques: true,
+      });
       onFlash?.(res.message);
     } finally {
       setBusy(false);
@@ -328,12 +356,32 @@ export function CharacterBagPanel({
             onClick={() => void onDeposit()}
             title={deposit.label}
           >
-            {busy ? "Depositing…" : "Quick deposit → account"}
+            {busy
+              ? "Depositing…"
+              : deposit.destination?.kind === "camp"
+                ? "Quick deposit → camp storage"
+                : deposit.destination?.kind === "boat"
+                  ? "Quick deposit → boat hold"
+                  : deposit.destination?.kind === "home_island"
+                    ? "Quick deposit → home island bag"
+                    : "Quick deposit"}
           </button>
+          {deposit.canSendToHome && deposit.destination?.locationId && (
+            <button
+              type="button"
+              className="cbag-deposit is-lit"
+              style={{ boxShadow: "0 0 12px #8ecbff", marginTop: 6 }}
+              disabled={busy}
+              onClick={() => void onSendCampToHome()}
+              title="Move entire camp storage to shared home island bag (Albion bank style)"
+            >
+              Send camp storage → home island
+            </button>
+          )}
           <p className="cbag-hint">
-            Account inventory is shared across characters, islands, instances. Bag holds gear
-            swaps, drops, harvest (×100), mission items. RMB = options · drag to J/H/V for
-            consumables, claim flag, mounts.
+            Albion model: deposit at camp stays at camp for RTS. Home island bag is the shared
+            account vault. Move goods home explicitly (button above) or carry in bag. RMB =
+            options · drag to J/H/V.
           </p>
         </footer>
       </div>
@@ -350,7 +398,12 @@ export function CharacterBagPanel({
                 {a === "deploy" && "Deploy (place)"}
                 {a === "use" && "Use"}
                 {a === "equip" && "Equip"}
-                {a === "deposit" && "Deposit to account"}
+                {a === "deposit" &&
+                  (deposit.destination?.kind === "camp"
+                    ? "Deposit to camp"
+                    : deposit.destination?.kind === "home_island"
+                      ? "Deposit to home island"
+                      : "Deposit")}
                 {a === "drop" && "Drop"}
                 {a === "inspect" && "Inspect"}
                 {a === "split" && "Split"}

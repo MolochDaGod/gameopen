@@ -20,7 +20,9 @@ export type CampPageId =
   | "defensives"
   | "units"
   | "buildings"
-  | "upgrades";
+  | "upgrades"
+  /** Albion location inventory for this claim — RTS spends from here */
+  | "storage";
 
 export type CampPageDef = {
   id: CampPageId;

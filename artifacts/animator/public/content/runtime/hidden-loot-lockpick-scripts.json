@@ -1,0 +1,77 @@
+{
+  "id": "hidden-loot-lockpick",
+  "name": "Hidden chests, treasure, foreign camp steal",
+  "version": 1,
+  "scripts": [
+    {
+      "id": "script_hidden_chest_demo",
+      "name": "Hidden chest lockpick",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "hidden_chest"],
+      "trigger": {
+        "kind": "interact",
+        "targetId": "prop_hidden_chest"
+      },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "hchest:prop_hidden_chest",
+            "kind": "hidden_chest",
+            "difficulty": 28,
+            "label": "Hidden chest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "script_hidden_treasure_demo",
+      "name": "Hidden treasure lockpick",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["loot", "lockpick", "hidden_treasure"],
+      "trigger": {
+        "kind": "interact",
+        "targetId": "prop_hidden_treasure"
+      },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "treasure:prop_hidden_treasure",
+            "kind": "hidden_treasure",
+            "difficulty": 48,
+            "label": "Hidden treasure"
+          }
+        }
+      ]
+    },
+    {
+      "id": "script_foreign_camp_steal",
+      "name": "Steal from foreign camp storage",
+      "mode": "repeat",
+      "enabled": true,
+      "tags": ["pvp", "camp", "lockpick"],
+      "trigger": {
+        "kind": "interact",
+        "targetId": "camp_storage_foreign"
+      },
+      "actions": [
+        {
+          "kind": "open-ui",
+          "payload": {
+            "ui": "lockpick",
+            "targetId": "camp:foreign_claim",
+            "kind": "camp",
+            "difficulty": 55,
+            "label": "Enemy camp chest",
+            "ownerAccountId": "foreign_owner"
+          }
+        }
+      ]
+    }
+  ]
+}
