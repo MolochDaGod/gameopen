@@ -55,6 +55,22 @@
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/inventory/:path*"
     },
     {
+      "source": "/api/ledger",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/ledger"
+    },
+    {
+      "source": "/api/ledger/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/ledger/:path*"
+    },
+    {
+      "source": "/api/uuid",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/uuid"
+    },
+    {
+      "source": "/api/uuid/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/uuid/:path*"
+    },
+    {
       "source": "/api/professions",
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/professions"
     },

@@ -196,3 +196,35 @@ export function isStackableMaterial(templateId: string): boolean {
 export function maxStackFor(templateId: string): number {
   return getItemTemplate(templateId).maxStack;
 }
+
+/**
+ * Unique instances require Railway grudge_uuid + ledger when signed in.
+ * Stackable mats/consumables use definition id + qty only.
+ */
+export function isLedgerUniqueItem(templateId: string): boolean {
+  if (!templateId) return false;
+  if (
+    templateId.startsWith("wpn_") ||
+    templateId.startsWith("arm_") ||
+    templateId.startsWith("EQIP-") ||
+    templateId.startsWith("ITEM-")
+  ) {
+    return true;
+  }
+  const t = getItemTemplate(templateId);
+  if (t.maxStack <= 1) {
+    if (
+      t.kind === "weapon" ||
+      t.kind === "equipment" ||
+      t.kind === "mount" ||
+      t.kind === "boat" ||
+      t.kind === "tool" ||
+      t.kind === "relic"
+    ) {
+      return true;
+    }
+  }
+  // Bound mission tools / one-off placeables that must not stack
+  if (templateId.startsWith("tool_") || /_tool_/.test(templateId)) return true;
+  return false;
+}

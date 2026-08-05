@@ -23,6 +23,7 @@ import {
   HARVEST_TABS,
   canCraft,
   craftRecipe,
+  craftRecipeAsync,
   ensureStarterBag,
   fetchCodexBlocks,
   fetchCodexDefinitions,
@@ -299,14 +300,36 @@ export function HarvestProductionUI({
       setCraftingId(r.id);
       const delay = Math.min(Math.max(r.timeSec * 400, 400), 2800);
       window.setTimeout(() => {
-        const res = craftRecipe(r, bag);
-        setCraftingId(null);
-        if (!res.ok) {
-          showNotice(res.reason ?? "Cannot craft");
-          return;
-        }
-        setBag(res.bag);
-        showNotice(`Crafted ${r.output.name} ×${r.output.qty}`);
+        void (async () => {
+          const charId =
+            typeof window !== "undefined"
+              ? localStorage.getItem("grudge.activeCharId") ||
+                localStorage.getItem("grudge.open.selectedCharacterId") ||
+                null
+              : null;
+          // Prefer async craft: unique → ledger; mats → Railway dual-write
+          const res = await craftRecipeAsync(r, bag, {
+            characterId: charId,
+          });
+          setCraftingId(null);
+          if (!res.ok) {
+            // Fallback guest sync path
+            const sync = craftRecipe(r, bag);
+            if (!sync.ok) {
+              showNotice(res.reason ?? sync.reason ?? "Cannot craft");
+              return;
+            }
+            setBag(sync.bag);
+            showNotice(`Crafted ${r.output.name} ×${r.output.qty} (local)`);
+            return;
+          }
+          setBag(res.bag);
+          showNotice(
+            res.uniqueGranted
+              ? `Crafted ${r.output.name} · ledger UUID`
+              : `Crafted ${r.output.name} ×${r.output.qty}`,
+          );
+        })();
       }, delay);
     },
     [bag, craftingId, showNotice],

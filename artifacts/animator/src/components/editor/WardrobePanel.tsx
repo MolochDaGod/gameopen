@@ -93,6 +93,18 @@ function VoxelCharacterSection({
       scheduleCharacterLoadoutSave(charId, ch, { voxelLook: blob as unknown as Record<string, unknown> }, (saveData) => {
         gameSession.patchCharacter(charId, { saveData });
       });
+      void import("../../game/inventory/characterAppearance").then(
+        ({ saveCharacterSlotAppearance }) => {
+          void saveCharacterSlotAppearance({
+            characterId: charId,
+            model3d: {
+              renderPipeline: "voxel",
+              voxelAvatar: blob,
+            },
+            voxelLook: blob as unknown as Record<string, unknown>,
+          });
+        },
+      );
     }
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);

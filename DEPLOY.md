@@ -75,15 +75,53 @@ Deploy Worker: `cd infra/cloudflare/open && npx wrangler deploy`
 | GLB / room posters | **R2** (`gameopen/`) |
 | Mine-Loader worlds | Mine-Loader Railway (separate) |
 
+## Durable deploy process (preferred)
+
+Fail-closed pipeline — tests → fleet gate → (optional CDN verify) → Vercel prod → post smoke:
+
+```bash
+# Full ship
+npm run deploy:durable
+
+# Gate + inventory tests only (no ship)
+npm run deploy:durable:dry
+
+# Include critical R2 CDN inventory
+npm run deploy:durable:assets
+```
+
+| Step | Script | What |
+|------|--------|------|
+| 1 | `test:inventory` | Bag / ledger unit tests |
+| 2 | `deploy:gate` | SPA + R2 + health + uuid + ledger + **D1 asset-registry** |
+| 3 | `verify:assets:cdn` | Optional grudge6 / outdoor R2 HEADs + D1 index |
+| 4 | `vercel deploy --prod` | Ship SPA (`.vercelignore` keeps binaries out of tarball) |
+| 5 | `smoke:prod:open` | SPA + uuid + ledger + asset-registry + characters |
+
+### Asset database usage (do not invert)
+
+| Layer | Owns | Client path |
+|-------|------|-------------|
+| **Postgres** (grudge-api Railway) | Characters, bag, wallet, `grudge_uuid` ledger | `/api/characters`, `/api/ledger/*`, `/api/uuid/*` |
+| **D1** (asset-registry Worker) | Mesh/icon **index** rows only | `/api/asset-registry` → `api.grudge-studio.com/assets` |
+| **R2** (`assets.grudge-studio.com`) | GLB / FBX / tex / audio **binaries** | CDN direct or Vercel rewrites |
+| **localStorage** | Offline draft / bag **cache** | Never production SSOT when signed in |
+
+Never put player state in D1. Never ship multi-GB GLBs in the Vercel tarball (see `.vercelignore` / `.gitignore` `tmp/`, author kits).
+
 ## Smoke checks after deploy
 
 ```bash
+npm run smoke:prod:open
+# or manual:
 curl -sI https://open.grudge-studio.com/ | head -5
-curl -s https://gameopen-production.up.railway.app/api/health
+curl -s https://open.grudge-studio.com/api/health
+curl -s https://open.grudge-studio.com/api/uuid/test
+curl -s https://open.grudge-studio.com/api/ledger/search
 curl -sI https://id.grudge-studio.com/login | head -3
 curl -H "Authorization: Bearer <sso_token>" https://open.grudge-studio.com/api/characters
-curl -sI https://objectstore.grudge-studio.com/api/v1/weaponSkills.json | head -5
-curl -sI https://assets.grudge-studio.com/gameopen/icons/attack.png | head -5
+curl -sI https://info.grudge-studio.com/api/v1/master-weaponSkills.json | head -5
+curl -sI https://assets.grudge-studio.com/models/grudge6/races/WK_Characters.glb | head -5
 ```
 
 Default home after deploy: **Game Library** (`/?door=library`).

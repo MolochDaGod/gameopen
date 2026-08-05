@@ -240,7 +240,8 @@ export type CraftToolResult =
   | { ok: false; reason: string };
 
 /**
- * One-time craft. Caller must verify + deduct materials from bag/account.
+ * One-time craft (sync). Guest/offline: provisional instance.
+ * Prefer craftHarvestToolAsync when signed in so tools get ledger grudge_uuid.
  */
 export function craftHarvestTool(
   state: CraftedToolsState,
@@ -261,6 +262,48 @@ export function craftHarvestTool(
     state: next,
     instance: newItemInstance(toolId, 1, { bound: true }),
   };
+}
+
+/** Signed-in tool craft: mint ledger UUID when possible. */
+export async function craftHarvestToolAsync(
+  state: CraftedToolsState,
+  toolId: string,
+  opts?: { characterId?: string | null; accountId?: string | null },
+): Promise<CraftToolResult & { ledgered?: boolean }> {
+  const def = HARVEST_TOOLS.find((t) => t.id === toolId);
+  if (!def) return { ok: false, reason: "Unknown tool" };
+  if (state.crafted[toolId]) return { ok: false, reason: "Already crafted (one-time)" };
+
+  let instance = newItemInstance(toolId, 1, { bound: true });
+  let ledgered = false;
+  try {
+    const { readFleetToken } = await import("../../auth/fleetCore");
+    if (readFleetToken() && opts?.characterId) {
+      const { mintUniqueItemInstance } = await import("./ledgerClient");
+      const minted = await mintUniqueItemInstance({
+        templateId: toolId,
+        characterId: opts.characterId,
+        accountId: opts.accountId,
+        sourceType: "harvest_tool_craft",
+        sourceRef: toolId,
+      });
+      if (minted) {
+        instance = { ...minted, bound: true };
+        ledgered = true;
+      }
+    }
+  } catch {
+    /* guest path keeps provisional */
+  }
+
+  const next: CraftedToolsState = {
+    ...state,
+    crafted: { ...state.crafted, [toolId]: Date.now() },
+    activeToolId: state.activeToolId || toolId,
+    updatedAt: Date.now(),
+  };
+  saveCraftedTools(next);
+  return { ok: true, state: next, instance, ledgered };
 }
 
 export function setActiveHarvestTool(

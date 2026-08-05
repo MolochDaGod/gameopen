@@ -1407,7 +1407,12 @@ export function openMineLoaderEditor(): string {
   });
 }
 
-/** Bag mat counts (local stub inventory until Railway bag is bound). */
+/**
+ * Harvest production mat bag (qty map).
+ * - Always mirrored in localStorage for UI snappiness
+ * - When signed in: also dual-write stackable mats to Railway account resources
+ * Unique gear outputs use grantUniqueToBag / ledger — not this map as SSOT.
+ */
 const BAG_KEY = "harvest:bag:v1";
 
 export function loadBag(): Record<string, number> {
@@ -1426,10 +1431,30 @@ export function saveBag(bag: Record<string, number>) {
   }
 }
 
+/** Push positive mat deltas to Railway account bag when JWT present. */
+async function pushMatsToRailway(delta: Record<string, number>): Promise<void> {
+  try {
+    const { getStoredToken } = await import("../lib/grudgeAuth");
+    if (!getStoredToken()) return;
+    const items = Object.entries(delta)
+      .filter(([, n]) => n > 0)
+      .map(([resourceId, amount]) => ({ resourceId, amount: Math.floor(amount) }));
+    if (!items.length) return;
+    const { batchAddAccountResources } = await import("../auth/accountBag");
+    await batchAddAccountResources(items);
+  } catch {
+    /* offline / no account bridge */
+  }
+}
+
 export function canCraft(recipe: CraftRecipe, bag: Record<string, number>): boolean {
   return recipe.inputs.every((i) => (bag[i.id] ?? 0) >= i.qty);
 }
 
+/**
+ * Synchronous craft for UI timers (mat qty only).
+ * Prefer craftRecipeAsync when signed in (unique outputs + Railway mats).
+ */
 export function craftRecipe(
   recipe: CraftRecipe,
   bag: Record<string, number>,
@@ -1440,6 +1465,68 @@ export function craftRecipe(
   next[recipe.output.id] = (next[recipe.output.id] ?? 0) + recipe.output.qty;
   saveBag(next);
   return { ok: true, bag: next };
+}
+
+/**
+ * Production craft: deduct mats, dual-write Railway for stackables,
+ * mint unique outputs via ledger when signed in.
+ */
+export async function craftRecipeAsync(
+  recipe: CraftRecipe,
+  bag: Record<string, number>,
+  opts?: { characterId?: string | null; accountId?: string | null },
+): Promise<{
+  ok: boolean;
+  bag: Record<string, number>;
+  reason?: string;
+  uniqueGranted?: boolean;
+}> {
+  if (!canCraft(recipe, bag)) {
+    return { ok: false, bag, reason: "missing materials" };
+  }
+  const next = { ...bag };
+  for (const i of recipe.inputs) {
+    next[i.id] = (next[i.id] ?? 0) - i.qty;
+  }
+
+  const { isLedgerUniqueItem } = await import("./inventory/catalog");
+  const outId = recipe.output.id;
+  let uniqueGranted = false;
+
+  if (isLedgerUniqueItem(outId)) {
+    const { getStoredToken } = await import("../lib/grudgeAuth");
+    if (getStoredToken() && opts?.characterId) {
+      const { grantUniqueToBag } = await import("./inventory/store");
+      for (let n = 0; n < recipe.output.qty; n++) {
+        const g = await grantUniqueToBag({
+          characterId: opts.characterId,
+          templateId: outId,
+          accountId: opts.accountId,
+          sourceType: "open_craft",
+          sourceRef: recipe.id,
+        });
+        if (!g.item) {
+          // roll back mats in memory only if mint fails mid-loop
+          return {
+            ok: false,
+            bag,
+            reason: g.message || "Ledger craft mint failed",
+          };
+        }
+        uniqueGranted = g.ledgered;
+      }
+      // Unique gear lives on character bag (ledger), not mat map
+    } else {
+      // Guest: keep qty map for UI only (provisional)
+      next[outId] = (next[outId] ?? 0) + recipe.output.qty;
+    }
+  } else {
+    next[outId] = (next[outId] ?? 0) + recipe.output.qty;
+    await pushMatsToRailway({ [outId]: recipe.output.qty });
+  }
+
+  saveBag(next);
+  return { ok: true, bag: next, uniqueGranted };
 }
 
 /** Seed starter mats for first-run UX. */
@@ -1605,9 +1692,22 @@ export function applyHarvestYield(
   if (characterId) {
     try {
       // Dynamic to avoid circular import at module load
-      void import("./inventory/store").then(({ harvestIntoBag }) => {
+      void import("./inventory/store").then(async ({ harvestIntoBag, grantUniqueToBag }) => {
+        const { isLedgerUniqueItem } = await import("./inventory/catalog");
         for (const [id, qty] of Object.entries(charAdds)) {
-          harvestIntoBag(characterId, id, qty);
+          if (isLedgerUniqueItem(id)) {
+            // Unique gear: mint via /api/uuid + ledger (not client ent_ ids)
+            for (let i = 0; i < qty; i++) {
+              await grantUniqueToBag({
+                characterId,
+                templateId: id,
+                sourceType: "open_harvest",
+                sourceRef: id,
+              });
+            }
+          } else {
+            harvestIntoBag(characterId, id, qty);
+          }
         }
       });
     } catch {

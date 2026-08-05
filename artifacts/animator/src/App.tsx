@@ -83,7 +83,7 @@ import {
   applyDeathBagDrop,
   DEFAULT_BAG_SLOTS,
   useConsumableHotkey,
-  equipBagToKept,
+  equipFromBagWithLedger,
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
@@ -649,11 +649,14 @@ export default function App() {
           (s) => s.item?.templateId === res.used!.templateId,
         );
         if (bagIdx >= 0) {
-          const equipped = equipBagToKept(res.bag, bagIdx, res.summonSlot);
-          if (equipped.ok) {
-            saveCharacterBag(equipped.bag);
-            refreshBagMeta();
-          }
+          // Phase 1: equip path logs EQUIPPED via /api/ledger when instance is ledgered
+          void equipFromBagWithLedger({
+            characterId: activeCharacterId,
+            bagIndex: bagIdx,
+            slot: res.summonSlot,
+          }).then((equipped) => {
+            if (equipped.ok) refreshBagMeta();
+          });
         }
         studioRef.current?.flashMessage?.(`Summon ${name}`, 1.2);
         return true;
