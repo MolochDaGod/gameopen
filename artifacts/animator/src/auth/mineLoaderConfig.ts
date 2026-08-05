@@ -157,6 +157,9 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   }
   if (opts.worldMode) url.searchParams.set("mode", opts.worldMode);
 
+  // Always pin body form for Realms: explorer / box_hero path (never grudge6 race-*).
+  if (!opts.baseId) url.searchParams.set("baseId", "explorer");
+
   // Point SPA API at Railway authority (or same-origin Open proxy when embedded).
   // Mine-Loader Vercel also rewrites /api/* → Railway; absolute API avoids drift.
   // On Replit the SPA uses fleetProxy + absolute Builder when rewrites are missing.

@@ -28,87 +28,39 @@ artifacts/animator/public/models/**/*.glb
 artifacts/animator/public/models/**/*.fbx
 
 # Ban GLB/FBX by default (keeps multi-GB model trees out of the deploy tarball)
+# Historical deploys that bundled local kits caused SI stretch vs CDN SSOT.
 **/*.glb
 **/*.fbx
+**/*.obj
+**/*.blend
+**/*.tga
+**/*.tif
+**/*.tiff
+**/*.psd
 **/*.rar
 **/*.zip
+**/*.7z
 
-# EXCEPTION: Explorer Mixamo production packs ONLY (not authoring dumps).
-# Bip001 combat clips are /anims/baked JSON (not FBX). Do NOT ship _anim_pack_stage,
-# ghostrider dumps, loco-8way, creator-glb, action-adventure (authoring → R2 bake).
+# Never ship author/source character kits or cinema stage dumps in SPA
+**/grudge6/**
+**/Toon*/**
+**/tpose-for-mixamo/**
+**/public/models/cinema/**
+**/public/models/grudge6/**
+**/node_modules/**
+**/.git/**
+**/backups/**
+**/reports/**
+**/artifacts/animator/public/models/nature/**
+**/artifacts/animator/public/models/characters/**
+
+# EXCEPTION: Explorer Mixamo + Layer-A base pack under public/anim MUST ship.
+# Without these, open.grudge-studio.com/dressing loads a procedural skeleton with
+# zero mixer clips → permanent T-pose (probed: /anim/** 404 on production).
 !artifacts/animator/public/anim/
-!artifacts/animator/public/anim/base/
-!artifacts/animator/public/anim/base/**
-!artifacts/animator/public/anim/animations/
-!artifacts/animator/public/anim/animations/**
-!artifacts/animator/public/anim/bow/
-!artifacts/animator/public/anim/bow/**
-!artifacts/animator/public/anim/sword/
-!artifacts/animator/public/anim/sword/**
-!artifacts/animator/public/anim/climb/
-!artifacts/animator/public/anim/climb/**
-!artifacts/animator/public/anim/swim/
-!artifacts/animator/public/anim/swim/**
-!artifacts/animator/public/anim/striker/
-!artifacts/animator/public/anim/striker/**
-!artifacts/animator/public/anim/reactions/
-!artifacts/animator/public/anim/reactions/**
-!artifacts/animator/public/anim/knife/
-!artifacts/animator/public/anim/knife/**
-!artifacts/animator/public/anim/spear/
-!artifacts/animator/public/anim/spear/**
-!artifacts/animator/public/anim/mace/
-!artifacts/animator/public/anim/mace/**
-!artifacts/animator/public/anim/greataxe/
-!artifacts/animator/public/anim/greataxe/**
-!artifacts/animator/public/anim/greatsword/
-!artifacts/animator/public/anim/greatsword/**
-!artifacts/animator/public/anim/magic/
-!artifacts/animator/public/anim/magic/**
-!artifacts/animator/public/anim/magic-loco/
-!artifacts/animator/public/anim/magic-loco/**
-!artifacts/animator/public/anim/pistol/
-!artifacts/animator/public/anim/pistol/**
-!artifacts/animator/public/anim/rifle/
-!artifacts/animator/public/anim/rifle/**
-!artifacts/animator/public/anim/farming/
-!artifacts/animator/public/anim/farming/**
-!artifacts/animator/public/anim/block/
-!artifacts/animator/public/anim/block/**
-!artifacts/animator/public/anim/combo/
-!artifacts/animator/public/anim/combo/**
-!artifacts/animator/public/anim/gestures/
-!artifacts/animator/public/anim/gestures/**
-!artifacts/animator/public/anim/ambient/
-!artifacts/animator/public/anim/ambient/**
-!artifacts/animator/public/anim/extra/
-!artifacts/animator/public/anim/extra/**
-# Per-folder binary allow only (do NOT use anim/**/*.fbx — that re-admits dumps)
-!artifacts/animator/public/anim/base/**/*.glb
-!artifacts/animator/public/anim/base/**/*.fbx
-!artifacts/animator/public/anim/animations/**/*.fbx
-!artifacts/animator/public/anim/animations/**/*.glb
-!artifacts/animator/public/anim/bow/**/*.fbx
-!artifacts/animator/public/anim/sword/**/*.fbx
-!artifacts/animator/public/anim/climb/**/*.fbx
-!artifacts/animator/public/anim/swim/**/*.fbx
-!artifacts/animator/public/anim/striker/**/*.fbx
-!artifacts/animator/public/anim/reactions/**/*.fbx
-!artifacts/animator/public/anim/knife/**/*.fbx
-!artifacts/animator/public/anim/spear/**/*.fbx
-!artifacts/animator/public/anim/mace/**/*.fbx
-!artifacts/animator/public/anim/greataxe/**/*.fbx
-!artifacts/animator/public/anim/greatsword/**/*.fbx
-!artifacts/animator/public/anim/magic/**/*.fbx
-!artifacts/animator/public/anim/magic-loco/**/*.fbx
-!artifacts/animator/public/anim/pistol/**/*.fbx
-!artifacts/animator/public/anim/rifle/**/*.fbx
-!artifacts/animator/public/anim/farming/**/*.fbx
-!artifacts/animator/public/anim/block/**/*.fbx
-!artifacts/animator/public/anim/combo/**/*.fbx
-!artifacts/animator/public/anim/gestures/**/*.fbx
-!artifacts/animator/public/anim/ambient/**/*.fbx
-!artifacts/animator/public/anim/extra/**/*.fbx
+!artifacts/animator/public/anim/**
+!artifacts/animator/public/anim/**/*.glb
+!artifacts/animator/public/anim/**/*.fbx
 
 # EXCEPTION: Danger Room practice dummy + boss tester (~0.5 MB total).
 # Served same-origin under /ui/training-targets (not /models/props → R2 rewrite).
@@ -164,15 +116,16 @@ artifacts/animator/public/models/**/*.fbx
 !artifacts/animator/dist/public/models/equipment/
 !artifacts/animator/dist/public/models/equipment/wing_animated.glb
 
-# Dev / reports
+# Dev / reports / local bake dumps — never in deploy tarball
 reports/
+tmp/
+**/tmp/
+tmp/**/*
 .wrangler/
 node_modules/
 **/.git/**
-
-# Mimic dungeon volcano scene (user-authored vol.glb)
-!artifacts/animator/public/models/vol.glb
-!artifacts/animator/dist/public/models/vol.glb
-!artifacts/animator/public/models/destructibles/**
-!artifacts/animator/public/models/destructibles/**/*.glb
-
+_anim_pack_stage/
+**/_anim_pack_stage/
+**/*.broken*
+backups/
+**/backups/**

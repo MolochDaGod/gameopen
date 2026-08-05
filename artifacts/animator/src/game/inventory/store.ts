@@ -1,23 +1,45 @@
 /**
  * Persist character bag + account inventory.
- * Bag: per characterId localStorage (until character save API).
- * Account resources: local mirror + Railway push via accountBag.
+ *
+ * Phase 1 law:
+ *  - localStorage = cache only when signed in
+ *  - stackable mats → bag qty + Railway account resources on deposit
+ *  - unique gear → mint via ledgerClient (grudge_uuid); equip logs EQUIPPED
  */
 
-import type { AccountInventoryState, CharacterBagState, ItemInstance } from "./types";
-import { emptyKeptLoadout, newAccountInventory, newCharacterBag } from "./types";
-import { ensureBagSize, ensureKeptLoadout, dropCarryOnDeath } from "./characterBag";
+import type {
+  AccountInventoryState,
+  CharacterBagState,
+  ItemInstance,
+  KeptLoadoutSlotId,
+} from "./types";
+import {
+  emptyKeptLoadout,
+  newAccountInventory,
+  newCharacterBag,
+  newItemInstance,
+} from "./types";
+import { isLedgerUniqueItem } from "./catalog";
+import {
+  ensureBagSize,
+  ensureKeptLoadout,
+  dropCarryOnDeath,
+  addToBag,
+  clearDepositable,
+  listDepositable,
+  equipBagToKept,
+  unequipKeptToBag,
+} from "./characterBag";
 import {
   depositInstances,
   hydrateAccountInventory,
   pushAccountResources,
 } from "./accountInventory";
-import {
-  addToBag,
-  clearDepositable,
-  listDepositable,
-} from "./characterBag";
 import { readFleetToken } from "../../auth/fleetCore";
+import {
+  ledgerEquipChange,
+  mintUniqueItemInstance,
+} from "./ledgerClient";
 
 const bagKey = (characterId: string) =>
   `grudge:char-bag:v2:${characterId || "local"}`;
@@ -113,16 +135,219 @@ export function saveAccountInventory(inv: AccountInventoryState): void {
   }
 }
 
-/** Harvest pickup → character bag (not account until deposit). */
+/**
+ * Harvest / pickup → character bag.
+ * Stackables only via sync path. Unique gear must use grantUniqueToBag.
+ */
 export function harvestIntoBag(
   characterId: string,
   templateId: string,
   qty: number,
 ): { bag: CharacterBagState; leftover: number; full: boolean } {
+  if (isLedgerUniqueItem(templateId) && readFleetToken()) {
+    // Do not client-mint production uniques; caller should await grantUniqueToBag
+    console.warn(
+      `[inventory] harvestIntoBag blocked unique ${templateId} while signed in — use grantUniqueToBag`,
+    );
+    return {
+      bag: loadCharacterBag(characterId),
+      leftover: qty,
+      full: true,
+    };
+  }
   const bag = loadCharacterBag(characterId);
   const res = addToBag(bag, templateId, qty);
   saveCharacterBag(res.bag);
   return { bag: res.bag, leftover: res.leftover, full: !res.ok };
+}
+
+/**
+ * Grant unique gear: Railway mint + ledger, then bag cache.
+ * Guest/offline → provisional instance (not production SSOT).
+ */
+export async function grantUniqueToBag(opts: {
+  characterId: string;
+  templateId: string;
+  accountId?: string | null;
+  sourceType?: string;
+  sourceRef?: string;
+}): Promise<{
+  bag: CharacterBagState;
+  item: ItemInstance | null;
+  ledgered: boolean;
+  message: string;
+}> {
+  const bag = loadCharacterBag(opts.characterId);
+  if (!isLedgerUniqueItem(opts.templateId)) {
+    const res = addToBag(bag, opts.templateId, 1);
+    saveCharacterBag(res.bag);
+    const added = res.bag.slots.find(
+      (s) => s.item?.templateId === opts.templateId,
+    )?.item;
+    return {
+      bag: res.bag,
+      item: added ?? null,
+      ledgered: false,
+      message: "Stackable added to bag",
+    };
+  }
+
+  let item: ItemInstance | null = null;
+  let ledgered = false;
+  if (readFleetToken()) {
+    item = await mintUniqueItemInstance({
+      templateId: opts.templateId,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      sourceType: opts.sourceType || "open_grant",
+      sourceRef: opts.sourceRef,
+    });
+    ledgered = !!item?.grudgeUuid;
+    // Fail closed when signed in — never write provisional as production SSOT
+    if (!item) {
+      return {
+        bag,
+        item: null,
+        ledgered: false,
+        message: `Ledger mint failed for ${opts.templateId}`,
+      };
+    }
+  } else {
+    item = newItemInstance(opts.templateId, 1);
+  }
+
+  // Place instance into bag (unique does not stack)
+  const empty = bag.slots.find((s) => !s.item);
+  if (!empty) {
+    return {
+      bag,
+      item: null,
+      ledgered,
+      message: "Bag full",
+    };
+  }
+  empty.item = item;
+  bag.updatedAt = Date.now();
+  saveCharacterBag(bag);
+  return {
+    bag,
+    item,
+    ledgered,
+    message: ledgered
+      ? `Ledgered ${opts.templateId} · ${item.grudgeUuid}`
+      : `Provisional ${opts.templateId} (guest/offline)`,
+  };
+}
+
+/**
+ * Equip bag → kept loadout; log EQUIPPED when instance has grudgeUuid.
+ */
+export async function equipFromBagWithLedger(opts: {
+  characterId: string;
+  bagIndex: number;
+  slot: KeptLoadoutSlotId;
+  accountId?: string | null;
+}): Promise<{
+  bag: CharacterBagState;
+  ok: boolean;
+  reason?: string;
+  ledgered: boolean;
+}> {
+  let bag = loadCharacterBag(opts.characterId);
+  const carry = bag.slots[opts.bagIndex]?.item;
+  if (!carry) {
+    return { bag, ok: false, reason: "Empty bag slot", ledgered: false };
+  }
+
+  // Signed-in + unique + provisional → remint through ledger before equip
+  if (
+    readFleetToken() &&
+    isLedgerUniqueItem(carry.templateId) &&
+    (carry.provisional || !carry.grudgeUuid)
+  ) {
+    const minted = await mintUniqueItemInstance({
+      templateId: carry.templateId,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      sourceType: "open_equip_remint",
+      sourceRef: opts.slot,
+    });
+    if (!minted) {
+      return {
+        bag,
+        ok: false,
+        reason: "Cannot equip: ledger mint failed (provisional gear)",
+        ledgered: false,
+      };
+    }
+    bag.slots[opts.bagIndex] = { index: opts.bagIndex, item: minted };
+    saveCharacterBag(bag);
+  }
+
+  const prevKept = bag.kept[opts.slot];
+  const res = equipBagToKept(bag, opts.bagIndex, opts.slot);
+  if (!res.ok) {
+    return { bag: res.bag, ok: false, reason: res.reason, ledgered: false };
+  }
+  saveCharacterBag(res.bag);
+
+  let ledgered = false;
+  if (prevKept?.grudgeUuid) {
+    await ledgerEquipChange({
+      item: prevKept,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      keptSlot: opts.slot,
+      equip: false,
+    });
+  }
+  const equipped = res.bag.kept[opts.slot];
+  if (equipped?.grudgeUuid) {
+    ledgered = await ledgerEquipChange({
+      item: equipped,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      keptSlot: opts.slot,
+      equip: true,
+    });
+    // Persist worn mesh refs on character UUID (appearance law)
+    if (opts.characterId && !opts.characterId.startsWith("local")) {
+      void import("./characterAppearance").then(({ saveCharacterSlotAppearance }) =>
+        saveCharacterSlotAppearance({
+          characterId: opts.characterId,
+          bag: res.bag,
+        }),
+      );
+    }
+  }
+  return { bag: res.bag, ok: true, ledgered };
+}
+
+/** Unequip kept → bag + UNEQUIPPED ledger. */
+export async function unequipToBagWithLedger(opts: {
+  characterId: string;
+  slot: KeptLoadoutSlotId;
+  accountId?: string | null;
+  preferBagIndex?: number;
+}): Promise<{ bag: CharacterBagState; ok: boolean; reason?: string; ledgered: boolean }> {
+  const bag = loadCharacterBag(opts.characterId);
+  const was = bag.kept[opts.slot];
+  const res = unequipKeptToBag(bag, opts.slot, opts.preferBagIndex);
+  if (!res.ok) {
+    return { bag: res.bag, ok: false, reason: res.reason, ledgered: false };
+  }
+  saveCharacterBag(res.bag);
+  let ledgered = false;
+  if (was) {
+    ledgered = await ledgerEquipChange({
+      item: was,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      keptSlot: opts.slot,
+      equip: false,
+    });
+  }
+  return { bag: res.bag, ok: true, ledgered };
 }
 
 /**

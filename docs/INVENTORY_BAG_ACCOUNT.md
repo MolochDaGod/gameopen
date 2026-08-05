@@ -40,7 +40,13 @@ Combat mode **I** still opens full Equipment paperdoll.
 | class / mastery | Class path (warrior, …) |
 | profession | harvest skill-trees.json |
 | camp | Claim, farm, build, defense, tame |
-| weapon_tier | Per family × T0–T5 **UUID branch ids** (`wpn_tree_<family>_tN_<uuid>`) |
+| weapon_tier | Per family × T0–T5 **UUID branch ids** (`wpn_tree_<family>_tN_<uuid>`) — progress keys, not bag instances |
+| unique gear instance | Railway **`grudge_uuid`** via `/api/uuid/generate` + `/api/ledger/*` (Open: `mintUniqueItemInstance`) |
+| stackable mats | definition id + qty; bag cache `stack_<templateId>`; deposit → `/api/account/resources` |
+| equip | kept loadout + ledger `EQUIPPED` / `UNEQUIPPED` when `grudgeUuid` present |
+| appearance | `PATCH /api/characters/:uuid` model3d + avatar + equipment mesh refs (`saveCharacterSlotAppearance`) |
+
+**Banned as production bag SSOT:** client-only `ent_*` / provisional uniques while signed in.
 
 Persisted: `localStorage grudge:weapon-tree-branches:v1`
 

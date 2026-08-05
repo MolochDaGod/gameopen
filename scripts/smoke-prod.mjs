@@ -115,19 +115,40 @@ await probe("api-content-weapons", `${BASE}/api/content/weapons`, {
   sample: true,
   critical: false,
 });
+// D1 asset INDEX (not player bag). Must not SPA-masquerade.
 await probe("api-asset-registry", `${BASE}/api/asset-registry?limit=3`, {
   expect: "jsonish",
   sample: true,
-  critical: false,
+  critical: true,
 });
 await probe("api-health", `${BASE}/api/health`, {
   expect: "jsonish",
   sample: true,
-  critical: false,
+  critical: true,
 });
 await probe("api-healthz", `${BASE}/api/healthz`, {
   expect: "jsonish",
   sample: true,
+  critical: false,
+});
+// Phase 1 identity: UUID mint system + ledger (must not SPA-masquerade)
+await probe("api-uuid-test", `${BASE}/api/uuid/test`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("api-ledger-search", `${BASE}/api/ledger/search`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("api-characters-voxel", `${BASE}/api/characters?era=voxel`, {
+  expect: "jsonish",
+  sample: true,
+  critical: false,
+});
+await probe("realms-route", `${BASE}/realms`, {
+  expect: "html",
   critical: false,
 });
 

@@ -23,7 +23,16 @@ artifacts/animator/public/models/worlds/**/*.glb
 
 
 reports/
-
+tmp/
+**/tmp/
+tmp/**/*
+backups/
+**/backups/
+.playwright-mcp/
+**/.playwright-mcp/
+*.local.json
+.env.deploy
+.env.production.local
 
 # Road pack binary — R2 only
 artifacts/animator/public/models/packs/*.glb
