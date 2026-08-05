@@ -672,11 +672,11 @@ export default function App() {
     [activeCharacterId, refreshBagMeta],
   );
 
+  // Vault id = grudgeId when signed in (shared home island bag). Not character uuid.
   const accountIdForBag =
-    (gameSession.selectedCharacter() as { accountId?: string } | null)
-      ?.accountId ||
-    (gameSession.snapshot as { accountId?: string }).accountId ||
-    "local";
+    gameSession.snapshot.account?.grudgeId ||
+    (gameSession.snapshot.account?.source === "guest" ? "guest" : null) ||
+    "guest";
 
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {

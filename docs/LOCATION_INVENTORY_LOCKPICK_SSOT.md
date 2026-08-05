@@ -144,3 +144,14 @@ Live: mineloader.grudge-studio.com
 - Railway-authoritative camp storage rows (today: `localStorage grudge:loc-inv:v1:*` + home via account API)
 - RTS trainUnit auto-deduct from camp storage
 - Live multiplayer foreign-camp ownership IDs for PvP steal
+
+## 10. Fixed assumptions (audit)
+
+| Assumption | Fix |
+|------------|-----|
+| Camp hub used `local_claim` while deposit used `default` | **`claimKeyForCharacter(characterId)`** shared by Studio probe + Storage + deposit |
+| Account vault used `"local"` / fake character.accountId | **`account.grudgeId`** (or `guest`) via `accountIdForVault` |
+| `nearStorage` read `.position` on placeables | Uses **`PlacedStructure.x/z` + `placeableId`** |
+| LockpickPanel could double-fire `onResult` | **`reported` ref** once per session |
+| Mine-Loader `move_item` was "coming soon" | Moves held → deck storage |
+| Combat bar trailing empty class placeholders | Fills from backpack weapons/tools |

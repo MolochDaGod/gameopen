@@ -114,6 +114,25 @@ export function campLocationId(claimKey: string): string {
   return `camp:${claimKey || "default"}`;
 }
 
+/**
+ * Stable claim key for a hero — same key for deposit, camp Storage page, Studio probe.
+ * Avoids "local_claim" vs "default" desync that emptied the wrong vault.
+ */
+export function claimKeyForCharacter(characterId: string | null | undefined): string {
+  const id = (characterId || "guest").replace(/[^a-zA-Z0-9_-]+/g, "_").slice(0, 64);
+  return `claim_${id || "guest"}`;
+}
+
+/** Account vault key: grudgeId when signed in, else guest/local. */
+export function accountIdForVault(
+  grudgeId: string | null | undefined,
+  fallback = "guest",
+): string {
+  const g = (grudgeId || "").trim();
+  if (g) return g;
+  return fallback || "guest";
+}
+
 export function boatLocationId(boatId: string): string {
   return `boat:${boatId || "default"}`;
 }

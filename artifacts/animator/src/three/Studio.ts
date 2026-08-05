@@ -102,6 +102,7 @@ import {
   type ScriptDoc,
   isScriptDoc,
 } from "@workspace/grudge-runtime";
+import { claimKeyForCharacter } from "../game/inventory/locationInventory";
 import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
 import { getAnimDatabase } from "./anim/AnimDatabase";
 import {
@@ -1827,23 +1828,21 @@ export class Studio {
     const onHomeIsland =
       /home.?island|island_home|water_home|haven/i.test(String(roomKind)) ||
       /home.?island|island_home/i.test(String(this.locationBag?.getLocation?.()?.kind ?? ""));
-    // Near storage chest prop or warehouse placeable
+    // Near storage chest / warehouse placeable (PlacedStructure uses x/z + placeableId)
     let nearStorage = false;
     if (pos && this.campBuild?.structures?.length) {
       for (const s of this.campBuild.structures) {
-        const k = String((s as { placeableId?: string; id?: string }).placeableId ?? (s as { id?: string }).id ?? "");
-        if (/storage|chest|warehouse|bank/i.test(k)) {
-          const sp = (s as { position?: { x: number; z: number } }).position;
-          if (sp && Math.hypot(sp.x - pos.x, sp.z - pos.z) < 4) {
+        const k = String(s.placeableId ?? "");
+        if (/storage|chest|warehouse|bank|crate/i.test(k)) {
+          if (Math.hypot(s.x - pos.x, s.z - pos.z) < 4) {
             nearStorage = true;
             break;
           }
         }
       }
     }
-    const claimKey =
-      (this.campBuild as { claimId?: string } | null)?.claimId ||
-      (this.campBuild?.hasClaim ? "local_claim" : "default");
+    // Same key as Camp hub Storage + bag deposit (no local_claim/default fork)
+    const claimKey = claimKeyForCharacter(this.characterId);
     return {
       insideClaim,
       nearCamp,

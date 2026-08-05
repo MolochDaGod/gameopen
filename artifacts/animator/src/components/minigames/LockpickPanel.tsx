@@ -34,12 +34,16 @@ export function LockpickPanel({
   const holding = useRef(false);
   const drag = useRef(false);
   const lastX = useRef(0);
+  /** Prevent double onResult when status flips (success + unmount). */
+  const reported = useRef(false);
 
   useEffect(() => {
     if (!open || !challenge) {
       setSession(null);
+      reported.current = false;
       return;
     }
+    reported.current = false;
     setSession(createLockpickSession(challenge));
     holding.current = false;
   }, [open, challenge]);
@@ -63,9 +67,10 @@ export function LockpickPanel({
 
   useEffect(() => {
     if (!session || session.status === "active") return;
-    const result = lockpickResultFromSession(session);
-    onResult(result);
-  }, [session?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (reported.current) return;
+    reported.current = true;
+    onResult(lockpickResultFromSession(session));
+  }, [session, onResult]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!drag.current) return;

@@ -1,6 +1,8 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
+  accountIdForVault,
   campLocationId,
+  claimKeyForCharacter,
   depositToLocation,
   ensureCampStorage,
   ensureHiddenLootStorage,
@@ -47,6 +49,13 @@ describe("location inventory (Albion)", () => {
     });
     expect(dest.kind).toBe("camp");
     expect(dest.locationId).toBe("camp:test_claim");
+  });
+
+  it("claimKeyForCharacter is stable (no local_claim/default fork)", () => {
+    expect(claimKeyForCharacter("hero-1")).toBe("claim_hero-1");
+    expect(claimKeyForCharacter("hero-1")).toBe(claimKeyForCharacter("hero-1"));
+    expect(accountIdForVault("gid_abc")).toBe("gid_abc");
+    expect(accountIdForVault(null)).toBe("guest");
   });
 
   it("routes home island to shared bag", () => {

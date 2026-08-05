@@ -37,6 +37,7 @@ import {
   type CampClaimState,
 } from "../lib/campClaimPersist";
 import {
+  claimKeyForCharacter,
   ensureCampStorage,
   loadLocationStorage,
   transferLocationToHomeIsland,
@@ -88,6 +89,8 @@ function PlaceGhostBtn({
 export type CampClaimFlagPanelProps = {
   open: boolean;
   characterId: string;
+  /** grudgeId for home island vault (Send → home). */
+  accountId?: string;
   onClose: () => void;
   /** Optional start page (e.g. deep-link to units). */
   initialPage?: CampPageId;
@@ -98,6 +101,7 @@ export type CampClaimFlagPanelProps = {
 export function CampClaimFlagPanel({
   open,
   characterId,
+  accountId = "guest",
   onClose,
   initialPage = "units",
   onBeginPlace,
@@ -350,7 +354,8 @@ export function CampClaimFlagPanel({
           )}
           {page === "storage" && (
             <CampStoragePage
-              claimKey="local_claim"
+              claimKey={claimKeyForCharacter(characterId)}
+              accountId={accountId}
               onNotice={setNotice}
             />
           )}
@@ -377,21 +382,25 @@ const DEFAULT_PAGES: Array<{ id: CampPageId; label: string; summary: string }> =
  */
 function CampStoragePage({
   claimKey,
+  accountId,
   onNotice,
 }: {
   claimKey: string;
+  accountId: string;
   onNotice: (msg: string) => void;
 }) {
   const [storage, setStorage] = useState<LocationStorageState>(() =>
-    ensureCampStorage(claimKey, "local"),
+    ensureCampStorage(claimKey, accountId),
   );
   const [busy, setBusy] = useState(false);
 
-  const refresh = () => setStorage(loadLocationStorage(`camp:${claimKey}`));
+  const refresh = useCallback(() => {
+    setStorage(ensureCampStorage(claimKey, accountId));
+  }, [claimKey, accountId]);
 
   useEffect(() => {
     refresh();
-  }, [claimKey]);
+  }, [refresh]);
 
   const rows = Object.entries(storage.resources);
   const uniques = storage.items;
@@ -399,9 +408,9 @@ function CampStoragePage({
   return (
     <>
       <p className="ccf-notice dim">
-        Albion model: harvest deposit at this claim goes to <b>camp storage</b>. RTS units and
-        buildings spend from here. Home island bag is the shared account vault — use{" "}
-        <b>Send → home island</b> to move goods out of the camp.
+        Albion model: harvest deposit at this claim goes to <b>camp storage</b> (
+        <code>camp:{claimKey}</code>). RTS spends from here. Home island bag is the shared account
+        vault — <b>Send → home island</b> moves goods out.
       </p>
       <div className="ccf-list">
         {rows.length === 0 && uniques.length === 0 && (
@@ -436,8 +445,8 @@ function CampStoragePage({
         onClick={() => {
           setBusy(true);
           void transferLocationToHomeIsland({
-            storage,
-            accountId: "local",
+            storage: loadLocationStorage(`camp:${claimKey}`),
+            accountId: accountId || "guest",
             includeUniques: true,
           }).then((res) => {
             onNotice(res.message);
