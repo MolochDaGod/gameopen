@@ -66,14 +66,14 @@ export const ARENA_RACE_DIR: Record<RaceId, string> = {
   undead: "undead",
 };
 
-/** Filenames match R2 models/grudge6/races/*_Characters.glb */
+/** Filenames match Toon RTS pack raceId.glb (not races/*_Characters, not FBX). */
 export const ARENA_RACE_GLB: Record<RaceId, string> = {
-  "western-kingdoms": "WK_Characters.glb",
-  barbarians: "BRB_Characters.glb",
-  "high-elves": "ELF_Characters.glb",
-  dwarves: "DWF_Characters.glb",
-  orcs: "ORC_Characters.glb",
-  undead: "UD_Characters.glb",
+  "western-kingdoms": "human.glb",
+  barbarians: "barbarian.glb",
+  "high-elves": "elf.glb",
+  dwarves: "dwarf.glb",
+  orcs: "orc.glb",
+  undead: "undead.glb",
 };
 
 /** @deprecated Arena origin is fallback-only; fleet SSOT is assets.grudge-studio.com */
@@ -97,9 +97,8 @@ const TARGET_HEIGHT = PLAYER_HEIGHT_M || 1.8;
 
 /**
  * How the race mesh was imported — drives material pipeline.
- *  - `glb-baked`: Arena / R2 production GLB with correct UVs + materials. Do NOT
- *    rebind the Toon RTS FBX atlas or skins look scrambled.
- *  - `fbx-atlas`: modular race FBX kit; requires Toon RTS atlas rebind.
+ *  - `glb-baked`: Toon RTS ★ production GLB (embedded atlas). Do NOT force rebind.
+ *  - `fbx-atlas`: author FBX only (not used in game deploy).
  */
 export type RaceImportPipeline = "glb-baked" | "fbx-atlas";
 
@@ -118,20 +117,22 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
     let lastErr: unknown;
     const file = ARENA_RACE_GLB[raceId];
 
-    // Fleet SSOT: R2 grudge6 races → same-origin resolve → FBX atlas.
-    // NEVER 30characters.glb. Arena /cdn/assets/characters is LAST RESORT only.
+    // Fleet SSOT: Toon RTS GLB ★ only — never FBX in game deploy.
+    // NEVER 30characters.glb / metaverse / races bake as primary.
     {
-      const rel = `models/grudge6/races/${file}`;
       const primary = [
         ...grudge6RaceMeshCandidates(raceId as Grudge6RaceKey, file),
-        ...resolveAssetCandidates(rel),
-      ];
+        RACE_ASSETS[raceId]?.modelUrl,
+      ].filter(Boolean) as string[];
       const lastResort = [
         arenaCharacterGlbUrl(raceId),
         arenaCharacterGlbUrlAbsolute(raceId),
       ];
       const urls = [...new Set([...primary, ...lastResort])].filter(
-        (u) => !/30characters/i.test(u),
+        (u) =>
+          !/30characters/i.test(u) &&
+          !/\.fbx($|\?)/i.test(u) &&
+          !/metaverse\//i.test(u),
       );
       const loader = sharedGltfLoader();
       for (const url of urls) {
@@ -144,7 +145,7 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
               `[grudge6Runtime] loaded ${raceId} from non-SSOT host (fallback): ${url}`,
             );
           } else {
-            console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
+            console.info(`[grudge6Runtime] Toon RTS GLB ready ${raceId} ${url}`);
           }
           tagMixerRoot(gltf.scene, {
             lane: "bip001-baked",
@@ -158,28 +159,7 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
       }
     }
 
-    // FBX modular kit — only path that should rebind Toon RTS atlas.
-    try {
-      const { loadCharacterModel } = await import("./loadCharacter");
-      const race = RACE_ASSETS[raceId];
-      const loaded = await loadCharacterModel(race.modelUrl);
-      console.info(`[grudge6Runtime] race kit FBX ready ${raceId} ${race.modelUrl}`);
-      tagMixerRoot(loaded.group, {
-        lane: "bip001-baked",
-        surface: "danger",
-        raceId,
-      });
-      return {
-        object: loaded.group,
-        pipeline: "fbx-atlas",
-        url: race.modelUrl,
-      };
-    } catch (e) {
-      lastErr = e;
-      console.warn(`[grudge6Runtime] FBX kit failed ${raceId}`, e);
-    }
-
-    throw lastErr ?? new Error(`Failed to load grudge6 race mesh for ${raceId}`);
+    throw lastErr ?? new Error(`Failed to load Toon RTS grudge6 mesh for ${raceId}`);
   })();
   meshCache.set(raceId, p);
   return p;

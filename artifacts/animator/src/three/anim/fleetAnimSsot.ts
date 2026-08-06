@@ -33,20 +33,30 @@ export const FLEET_ANIM_HOSTS = {
   bakedPrefix: "/anims/baked",
   /** Explorer Mixamo authoring / runtime FBX tree */
   explorerAnimPrefix: "/anim/animations",
-  /** grudge6 race kits (GLB preferred production) */
+  /**
+   * GOLDEN play kits — Toon RTS pack only (never FBX / metaverse / races bake).
+   * Same SSOT as ObjectStore js/grudge6-kit.js + GRUDGE6_Characters lab ★
+   */
+  grudge6Toon: "https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters",
+  /** @deprecated author/compare only — not play */
   grudge6Races: "https://assets.grudge-studio.com/models/grudge6/races",
 } as const;
 
 /**
- * Race kit filenames — only these for fleet grudge6 (Toon RTS prefixes).
+ * Race kit filenames — Toon RTS ★ play GLBs (raceId.glb on CDN pack).
  */
 export const GRUDGE6_RACE_GLB = {
-  "western-kingdoms": "WK_Characters.glb",
-  barbarians: "BRB_Characters.glb",
-  "high-elves": "ELF_Characters.glb",
-  dwarves: "DWF_Characters.glb",
-  orcs: "ORC_Characters.glb",
-  undead: "UD_Characters.glb",
+  "western-kingdoms": "human.glb",
+  human: "human.glb",
+  barbarians: "barbarian.glb",
+  barbarian: "barbarian.glb",
+  "high-elves": "elf.glb",
+  elf: "elf.glb",
+  dwarves: "dwarf.glb",
+  dwarf: "dwarf.glb",
+  orcs: "orc.glb",
+  orc: "orc.glb",
+  undead: "undead.glb",
 } as const;
 
 export type Grudge6RaceKey = keyof typeof GRUDGE6_RACE_GLB;
@@ -133,22 +143,22 @@ export function resolveFleetAnimLane(
 export function grudge6RaceGlbUrl(raceId: Grudge6RaceKey | string): string {
   const file =
     GRUDGE6_RACE_GLB[raceId as Grudge6RaceKey] ??
-    (String(raceId).includes("ELF")
-      ? "ELF_Characters.glb"
-      : String(raceId).includes("BRB")
-        ? "BRB_Characters.glb"
-        : String(raceId).includes("DWF")
-          ? "DWF_Characters.glb"
-          : String(raceId).includes("ORC")
-            ? "ORC_Characters.glb"
-            : String(raceId).includes("UD")
-              ? "UD_Characters.glb"
-              : "WK_Characters.glb");
-  return `${FLEET_ANIM_HOSTS.grudge6Races}/${file}`;
+    (String(raceId).includes("ELF") || /elf/i.test(String(raceId))
+      ? "elf.glb"
+      : /BRB|barb/i.test(String(raceId))
+        ? "barbarian.glb"
+        : /DWF|dwarf/i.test(String(raceId))
+          ? "dwarf.glb"
+          : /ORC|orc/i.test(String(raceId))
+            ? "orc.glb"
+            : /UD|undead/i.test(String(raceId))
+              ? "undead.glb"
+              : "human.glb");
+  return `${FLEET_ANIM_HOSTS.grudge6Toon}/${file}`;
 }
 
 /**
- * Ordered mesh candidates for grudge6 — R2 first, same-origin second.
+ * Ordered mesh candidates for grudge6 — Toon RTS pack only (no FBX).
  * Arena / secondary CDN is NOT included (callers may append as last resort).
  */
 export function grudge6RaceMeshCandidates(
@@ -158,12 +168,16 @@ export function grudge6RaceMeshCandidates(
   const file =
     fileName ??
     GRUDGE6_RACE_GLB[raceId as Grudge6RaceKey] ??
-    "WK_Characters.glb";
-  const rel = `models/grudge6/races/${file}`;
+    "human.glb";
+  // Accept legacy WK_Characters.glb filename → map to toon raceId
+  const toonFile = /_Characters\.glb$/i.test(file)
+    ? GRUDGE6_RACE_GLB[raceId as Grudge6RaceKey] ?? "human.glb"
+    : file;
+  const rel = `asset-packs/toon-rts-characters/glb/characters/${toonFile}`;
   return [
     `${FLEET_ANIM_HOSTS.assets}/${rel}`,
     `/${rel}`,
-    `${FLEET_ANIM_HOSTS.grudge6Races}/${file}`,
+    `${FLEET_ANIM_HOSTS.grudge6Toon}/${toonFile}`,
   ];
 }
 

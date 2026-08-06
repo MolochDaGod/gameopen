@@ -317,8 +317,19 @@ export const DRC_DANGER_MAP_IDS = [
  */
 export const WARLORDS_ERA_ASSET_SSOT = {
   meshCdn: "https://assets.grudge-studio.com",
-  raceKit: (prefix: string) =>
-    `https://assets.grudge-studio.com/models/grudge6/races/${prefix}_Characters.glb`,
+  /** Toon RTS ★ only — never FBX / metaverse / races bake in game deploy */
+  raceKit: (prefix: string) => {
+    const map: Record<string, string> = {
+      WK: "human",
+      BRB: "barbarian",
+      ELF: "elf",
+      DWF: "dwarf",
+      ORC: "orc",
+      UD: "undead",
+    };
+    const id = map[String(prefix).toUpperCase()] || "human";
+    return `https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/${id}.glb`;
+  },
   atlasRoot: "https://assets.grudge-studio.com/textures/grudge6",
   animsBaked: "https://open.grudge-studio.com/anims/baked",
   animsBakedAlias: "https://gameopen.vercel.app/anims/baked",
@@ -330,6 +341,9 @@ export const WARLORDS_ERA_ASSET_SSOT = {
     "arena CDN as primary race kit",
     "Meshy / capsule heroes",
     "live Mixamo FBX on Bip001",
+    "browser FBX race kits as play default",
+    "models/grudge6/metaverse/* as play mesh",
+    "models/grudge6/races/*_Characters.glb as play default (use Toon RTS pack)",
     "sword_shield/sword and shield run as primary loco",
     "locomotion/running as primary run (run-to-roll)",
     "threejs-rapier-react-three-controll as anim host",

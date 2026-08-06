@@ -37,7 +37,9 @@ describe("drcSurfaceContract", () => {
 describe("Warlords-era fleet DRC + grudge6", () => {
   it("asset SSOT points at R2 kits + Open baked anims", () => {
     expect(WARLORDS_ERA_ASSET_SSOT.meshCdn).toContain("assets.grudge-studio.com");
-    expect(WARLORDS_ERA_ASSET_SSOT.raceKit("WK")).toContain("models/grudge6/races/WK_Characters.glb");
+    expect(WARLORDS_ERA_ASSET_SSOT.raceKit("WK")).toContain(
+      "asset-packs/toon-rts-characters/glb/characters/human.glb",
+    );
     expect(WARLORDS_ERA_ASSET_SSOT.animsBaked).toContain("open.grudge-studio.com/anims/baked");
     expect(WARLORDS_ERA_ASSET_SSOT.forbidden.join(" ")).toMatch(/Mixamo|sword and shield run|Explorer/i);
   });

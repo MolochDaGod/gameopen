@@ -17,16 +17,19 @@ describe("fleetAnimSsot", () => {
     expect(resolveFleetAnimLane("explorer")).toBe("mixamo-explorer");
   });
 
-  it("race GLB is R2 grudge6 races not arena", () => {
+  it("race GLB is Toon RTS pack not arena/FBX/races bake", () => {
     const url = grudge6RaceGlbUrl("western-kingdoms");
-    expect(url).toContain("assets.grudge-studio.com/models/grudge6/races/WK_Characters.glb");
+    expect(url).toContain(
+      "assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/human.glb",
+    );
+    expect(url).not.toMatch(/\.fbx/i);
     expect(isForbiddenPrimaryUrl(url)).toBe(false);
     expect(isForbiddenPrimaryUrl("https://x/cdn/assets/characters/human/WK.glb")).toBe(true);
   });
 
-  it("mesh candidates put R2 first", () => {
+  it("mesh candidates put Toon RTS R2 first", () => {
     const c = grudge6RaceMeshCandidates("orcs");
-    expect(c[0]).toContain("ORC_Characters.glb");
+    expect(c[0]).toContain("toon-rts-characters/glb/characters/orc.glb");
     expect(c[0]).toContain("assets.grudge-studio.com");
   });
 
