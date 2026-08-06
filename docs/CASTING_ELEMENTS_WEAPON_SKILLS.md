@@ -67,8 +67,22 @@ CastingAbilities local mirror: `src/combat/elementWeaponSkills.js` + `?arcane=1`
 
 ## Checklist before ship
 
-- [ ] Host resolves `castEffectId` / `impactEffectId` in Vfx catalog  
-- [ ] Magic pack clips 200 on same-origin or CDN  
+- [x] Host resolves `castEffectId` / `impactEffectId` in Vfx catalog (`deploySandboxVfx` + Studio `doFleetStaffSkill` / Grudge6CombatCharacter)
+- [x] Magic pack Bip001 clips: same-origin `public/anims/baked/magic/standing 1h cast spell 01.json` + CDN `staffattack.json`; role `cast` aliased in grudge6Runtime
+- [x] Equip / hotbar: `skillPackForWeaponId` + `t0SignatureSkills` staff trees + Studio loadout rebind
+- [x] Damage/range via fleet SkillPack + sparringBlast — not Casting path volumes
 - [ ] Staff mesh grip from arsenal (not only modular kit)  
 - [ ] `assessWeaponSkillReadiness` green  
-- [ ] No second combat controller — use fleet CC host  
+- [x] No second combat controller — use fleet CC host  
+
+## Live hotbar bind
+
+| Equip `weaponId` | Hotbar tree |
+|------------------|-------------|
+| `staffFire` | Fire Bolt · Flame Wave · Meteor Path · Inferno |
+| `staffIce` | Water Lash · Frost Wave · Moon Beam · Blizzard Shell |
+| `staffNature` | Earth Spike · Quake Surge · Stone Path · Tectonic Burst |
+| `staffStorm` | Wind Bolt · Gale Nova · Chain Storm · Tempest |
+| `staff` / wand / tome | Arcane Bolt · Arcane Gale · Void Burst · Storm Arcane |
+
+API: `skillPackForWeaponId("staffFire")` · Studio equip rebinds via `t0SignatureSkills`.

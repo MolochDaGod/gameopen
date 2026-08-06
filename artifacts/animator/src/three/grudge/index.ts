@@ -78,8 +78,21 @@ export {
   familyFromWeaponId,
   familyFromAnimPack,
   skillPackForFamily,
+  skillPackForWeaponId,
+  skillBakedRole,
+  MAGIC_SKILLS,
   SAMURAI_2H_SKILLS,
 } from "./weaponSkillPacks";
+export {
+  skillPackForStaffWeaponId,
+  castingElementToFleetRows,
+  CASTING_ELEMENT_PHASE_VFX,
+  STAFF_FIRE_SKILLS,
+  STAFF_WATER_SKILLS,
+  STAFF_EARTH_SKILLS,
+  STAFF_WIND_SKILLS,
+  STAFF_ARCANE_SKILLS,
+} from "./castingElementSkills";
 export {
   powerOfTenScale,
   normalizeBoneKey,

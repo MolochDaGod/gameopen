@@ -48,6 +48,11 @@ export interface LoadoutClips {
    * target for a true faster cycle once Mixamo sprint is retargeted.
    */
   sprint?: string;
+  /**
+   * Magic / staff cast role (Bip001). Same clip as attack for magic pack until
+   * dedicated cast variants ship. Fleet staff trees request bakedRole `cast`.
+   */
+  cast?: string;
   /** Optional extra roles loaded for weapon skills (combo / skill1–4). */
   extras?: string[];
 }
@@ -456,6 +461,8 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
     walk: CANONICAL_LOCO.walk,
     run: "magic/Standing Run Forward",
     attack: "magic/standing 1h cast spell 01",
+    /** cast role → same Bip001 cast clip (fleet staff trees). */
+    cast: "magic/standing 1h cast spell 01",
     extras: [
       "dual_wield/attack",
       "dual_wield/combo",
@@ -464,6 +471,8 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "dual_wield/hit",
       "dual_wield/death",
       "locomotion/roll_forward",
+      // staffattack.json on CDN assets.grudge-studio.com/anims/baked/magic/
+      // (same-origin cast clip is public/anims/baked/magic/standing 1h cast spell 01.json)
     ],
   },
   /**

@@ -173,6 +173,16 @@ R3F island games (not Open Studio loop): add `@react-three/fiber` · `drei` · `
 
 Smoke: `npm run smoke:prod:open` · physics: `npm run test:physics` · anim integrity scripts as needed.
 
+### Lab / MCP only (not SPA runtime)
+
+| Package / tool | Role | Production import |
+|----------------|------|-------------------|
+| **`mcp-game-asset-gen`** (root `devDependency`) | MCP image/3D gen APIs | **Never** bundle — use CDN catalog after convert |
+| **three-generator** lab | R3F preview + fleet convert/publish | `generatedFleetCatalog.ts` + R2 mesh URLs |
+| Flux159 sample FlyControls / Prisma | Lab only | Forbidden in play hosts |
+
+Doc: `docs/MCP_GAME_ASSET_GEN_FLEET.md` · `docs/THREE_GENERATOR_FLEET_PLACEMENT.md`
+
 ---
 
 ## 8. Agent rules (stop package sprawl)

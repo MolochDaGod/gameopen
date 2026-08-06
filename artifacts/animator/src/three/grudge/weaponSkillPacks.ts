@@ -509,24 +509,17 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
   }
 }
 
-/** Staff arsenal weaponId → elemental Casting pack (Warlords staffs). */
+/**
+ * Equip / hotbar SSOT: arsenal weaponId → SkillPack tree.
+ * staffFire|staffIce|staffNature|staffStorm|staff → Casting element packs;
+ * other weapons → family packs.
+ */
 export function skillPackForWeaponId(weaponId: string): readonly SkillPack[] {
   const w = String(weaponId || "").toLowerCase();
   if (w.startsWith("staff") || w === "wand" || w === "tome") {
     return skillPackForStaffWeaponId(w);
   }
   return skillPackForFamily(familyFromWeaponId(w));
-}
-
-function familyFromWeaponId(w: string): WeaponFamily {
-  if (w.includes("bow") || w.includes("rifle") || w.includes("gun")) return "longbow";
-  if (w.includes("mace") || w.includes("hammer")) return "mace";
-  if (w.includes("spear") || w.includes("javelin")) return "spear";
-  if (w.includes("chain")) return "chain";
-  if (w.includes("great") || w.includes("axe") || w.includes("scythe")) return "greatsword";
-  if (w.includes("unarmed") || w.includes("fist")) return "unarmed";
-  if (w.includes("sword")) return "sword";
-  return "sword";
 }
 
 /** Map an animPack string (from gearPresets.ts / Explosive map) to a weapon family. */

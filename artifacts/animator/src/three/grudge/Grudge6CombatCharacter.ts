@@ -31,12 +31,15 @@ import * as THREE from "three";
 import { BAKED_ORDER } from "./bakedRoster";
 import { loadGrudge6CombatRig } from "./grudge6Runtime";
 import { Vfx } from "../Vfx";
+import { deploySandboxVfx } from "../fx/vfxSandboxHotkeys";
 import {
   type WeaponFamily,
   type SkillPack,
   skillPackForFamily,
+  skillPackForWeaponId,
   skillBakedRole,
   familyFromAnimPack,
+  familyFromWeaponId,
 } from "./weaponSkillPacks";
 import type { AnimPack } from "./anims";
 
@@ -117,6 +120,13 @@ export class Grudge6CombatCharacter {
   lastChainDamage = 0;
   /** Optional host callback when chain lands (Studio / AI damage apply). */
   onChainHit: ((tip: THREE.Vector3, damage: number, skill: SkillPack) => void) | null = null;
+  /**
+   * Host callback for fleet skill hit (bolt / nova / impact).
+   * Damage + range come from SkillPack — not Casting path volumes.
+   */
+  onSkillHit: ((tip: THREE.Vector3, damage: number, skill: SkillPack, reach: number) => void) | null = null;
+
+  private weaponId: string | null = null;
 
   constructor(
     scene: THREE.Scene,
@@ -128,14 +138,18 @@ export class Grudge6CombatCharacter {
     /**
      * Weapon family (controls which skill pack is loaded).
      * Use `familyFromAnimPack(preset.animPack)` to derive from gear preset.
+     * Prefer options.weaponId for staffFire…staffStorm elemental trees.
      */
     weaponFamily: WeaponFamily | AnimPack = "sword",
     options: {
       maxHp?: number;
+      /** Arsenal weaponId — drives skillPackForWeaponId (staff elemental packs). */
+      weaponId?: string;
     } = {},
   ) {
     this.maxHp = options.maxHp ?? 100;
     this._hp = this.maxHp;
+    this.weaponId = options.weaponId ?? null;
 
     // Normalise animPack string → WeaponFamily.
     const family: WeaponFamily =
@@ -146,10 +160,23 @@ export class Grudge6CombatCharacter {
       : (weaponFamily as string) === "unarmed"    ? "unarmed"
       : (weaponFamily as WeaponFamily);
 
-    this.skills = skillPackForFamily(family);
+    // Equip SSOT: weaponId → elemental staff tree; else family pack.
+    this.skills = this.weaponId
+      ? skillPackForWeaponId(this.weaponId)
+      : skillPackForFamily(family);
     this.vfx = new Vfx(scene);
     this.root.add(this.pivot);
     scene.add(this.root);
+  }
+
+  /**
+   * Rebind hotbar skill tree on equip (Warlords / Danger loadout swap).
+   * staffFire → fire tree, staffIce → water, staffNature → earth, staffStorm → wind, staff → arcane.
+   */
+  setWeaponId(weaponId: string): void {
+    this.weaponId = weaponId;
+    this.skills = skillPackForWeaponId(weaponId);
+    this.cooldowns = [0, 0, 0, 0];
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -299,13 +326,16 @@ export class Grudge6CombatCharacter {
     this.activeSkill = skill;
     this.transitionTo("attack");
 
-    // VFX at weapon reach — samurai 2H uses Getsuga / slash waves + arc.
+    // VFX: castEffectId / impactEffectId via production sandbox catalog first
+    // (Casting migrate + fleet staff trees). Damage/range = skill.damage / skill.reach
+    // via onSkillHit — never Casting path-draw volumes.
     const dir = new THREE.Vector3(
       Math.sin(this.root.rotation.y),
       0,
       Math.cos(this.root.rotation.y),
     ).normalize();
-    const origin = this.root.position.clone().add(new THREE.Vector3(0, 1.15, 0));
+    const rootPos = this.root.position.clone();
+    const origin = rootPos.clone().add(new THREE.Vector3(0, 1.15, 0));
     const impactPos = origin.clone().addScaledVector(dir, skill.reach * 0.75);
     const scale = 0.55 + skill.damage / 90;
     const kind = skill.effectKind ?? "impact";
@@ -313,8 +343,21 @@ export class Grudge6CombatCharacter {
       new THREE.Vector3(0, 0, 1),
       dir,
     );
+    const aimPoint = impactPos.clone();
+    const reportHit = (tip: THREE.Vector3, dmgScale = 1) => {
+      this.onSkillHit?.(tip, skill.damage * dmgScale, skill, skill.reach);
+    };
 
     try {
+      // ── Production cast tell (hand charge) ──────────────────────────────
+      if (skill.castEffectId) {
+        deploySandboxVfx(this.vfx, skill.castEffectId, {
+          origin: rootPos,
+          forward: dir,
+          aim: aimPoint,
+        });
+      }
+
       if (kind === "chain" || skill.projectile === "hellfire_chain") {
         // Ranged-melee: extending hellfire chain weapon mesh + flame aura
         const from = this.root.position.clone().add(new THREE.Vector3(0, 1.1, 0));
@@ -331,7 +374,6 @@ export class Grudge6CombatCharacter {
           dissipateTime: 0.26,
           contactRadius: 0.55 + skill.damage * 0.004,
           onPathTick: (tip, radius) => {
-            // Lightweight trail damage read for AI / hit probes
             this.lastChainTip?.copy(tip);
             this.lastChainRadius = radius;
             this.lastChainDamage = skill.damage * 0.35;
@@ -341,8 +383,81 @@ export class Grudge6CombatCharacter {
             this.lastChainRadius = 0.9;
             this.lastChainDamage = skill.damage * dmgScale;
             this.onChainHit?.(tip, skill.damage * dmgScale, skill);
+            reportHit(tip, dmgScale);
+            if (skill.impactEffectId) {
+              deploySandboxVfx(this.vfx, skill.impactEffectId, {
+                origin: tip.clone().setY(rootPos.y),
+                forward: dir,
+                aim: tip,
+              });
+            }
           },
         });
+      } else if (skill.castEffectId || skill.impactEffectId) {
+        // Casting-element staff path: cast tell already fired; travel + impact.
+        const proj = skill.projectile ?? "none";
+        const from = this.findHandWorld() ?? origin.clone();
+        const fireImpact = (p: THREE.Vector3) => {
+          if (skill.impactEffectId) {
+            deploySandboxVfx(this.vfx, skill.impactEffectId, {
+              origin: p.clone().setY(rootPos.y),
+              forward: dir,
+              aim: p,
+              onHit: (hp) => reportHit(hp, 1),
+            });
+          } else {
+            this.vfx.impact(p, skill.vfxColor, scale);
+          }
+          reportHit(p, 1);
+        };
+        if (proj === "bolt" || proj === "slash_wave" || proj === "arrow") {
+          const vfxAny = this.vfx as {
+            castFireball?: (
+              o: THREE.Vector3,
+              d: THREE.Vector3,
+              c: number,
+              onHit?: (p: THREE.Vector3) => void,
+            ) => void;
+            bolt?: (
+              o: THREE.Vector3,
+              d: THREE.Vector3,
+              c: number,
+              speed: number,
+              range: number,
+              onHit?: (p: THREE.Vector3) => void,
+            ) => void;
+            slashWave?: (
+              o: THREE.Vector3,
+              d: THREE.Vector3,
+              opts: Record<string, unknown>,
+            ) => void;
+          };
+          if (skill.impactEffectId === "inferno" || skill.castEffectId === "fire_hand") {
+            if (typeof vfxAny.castFireball === "function") {
+              vfxAny.castFireball(from, dir, skill.vfxColor, fireImpact);
+            } else if (typeof vfxAny.bolt === "function") {
+              vfxAny.bolt(from, dir, skill.vfxColor, 18, skill.reach, fireImpact);
+            } else {
+              fireImpact(aimPoint);
+            }
+          } else if (proj === "slash_wave" && typeof vfxAny.slashWave === "function") {
+            vfxAny.slashWave(from, dir, {
+              speed: 15,
+              range: skill.reach,
+              color: skill.vfxColor,
+              onHit: fireImpact,
+            });
+          } else if (typeof vfxAny.bolt === "function") {
+            vfxAny.bolt(from, dir, skill.vfxColor, 18, skill.reach, fireImpact);
+          } else {
+            fireImpact(aimPoint);
+          }
+        } else if (kind === "nova" || kind === "slam") {
+          fireImpact(aimPoint);
+          this.vfx.aoeBlast(aimPoint.clone().setY(0.35), skill.vfxColor, 1.5 + skill.reach * 0.08);
+        } else {
+          fireImpact(aimPoint);
+        }
       } else if (kind === "getsuga" || kind === "slashWave") {
         this.vfx.slashWave(origin, dir, {
           speed: 14 + skill.lungeSpeed * 0.4,
@@ -351,26 +466,36 @@ export class Grudge6CombatCharacter {
           variant: skill.slashVariant ?? "slashred",
           contactRadius: 0.95,
           followDuration: 0.08,
-          onHit: (p) => this.vfx.impact(p, skill.vfxColor, scale * 1.1),
+          onHit: (p) => {
+            this.vfx.impact(p, skill.vfxColor, scale * 1.1);
+            reportHit(p, 1);
+          },
         });
         this.vfx.slashArc(impactPos, quat, skill.vfxColor);
       } else if (kind === "nova" || kind === "slam") {
         this.vfx.aoeBlast(impactPos.clone().setY(0.35), skill.vfxColor, 2.0 + skill.reach * 0.25);
         this.vfx.impact(impactPos, skill.vfxColor, scale * 1.3);
+        reportHit(impactPos, 1);
       } else if (kind === "slash") {
         this.vfx.slashArc(impactPos, quat, skill.vfxColor);
         this.vfx.impact(impactPos, skill.vfxColor, scale);
+        reportHit(impactPos, 1);
       } else {
         this.vfx.impact(impactPos, skill.vfxColor, scale);
+        reportHit(impactPos, 1);
       }
     } catch (e) {
       console.warn("[Grudge6CombatCharacter] skill VFX failed", e);
       this.vfx.impact(impactPos, skill.vfxColor, scale);
     }
 
-    // Traveling slash / bolt projectiles (Getsuga family) when skill asks for them.
+    // Legacy traveling projectiles when skill has no cast/impact effect ids.
     const proj = skill.projectile ?? "none";
-    if (proj === "slash_wave" || proj === "bolt" || proj === "arrow") {
+    if (
+      !skill.castEffectId &&
+      !skill.impactEffectId &&
+      (proj === "slash_wave" || proj === "bolt" || proj === "arrow")
+    ) {
       const from = this.root.position.clone().add(new THREE.Vector3(0, 1.05, 0));
       try {
         if (typeof (this.vfx as { getsugaSlash?: Function }).getsugaSlash === "function") {
@@ -379,12 +504,14 @@ export class Grudge6CombatCharacter {
             speed: proj === "arrow" ? 28 : 15,
             range: skill.reach,
             color: skill.vfxColor,
+            onHit: (p: THREE.Vector3) => reportHit(p, 1),
           });
         } else if (typeof (this.vfx as { slashWave?: Function }).slashWave === "function") {
           (this.vfx as { slashWave: Function }).slashWave(from, dir, {
             speed: 15,
             range: skill.reach,
             color: skill.vfxColor,
+            onHit: (p: THREE.Vector3) => reportHit(p, 1),
           });
         }
       } catch {
@@ -512,14 +639,17 @@ export class Grudge6CombatCharacter {
 
 /**
  * Create an animated combat character from a race index + animPack string.
- * Convenience wrapper that avoids calling familyFromAnimPack at the callsite.
+ * Pass weaponId (staffFire…) so equip loads the Casting element skill tree.
  */
 export function createCombatCharacter(
   scene: THREE.Scene,
   rosterIndex: number,
   animPack: AnimPack,
   maxHp = 100,
+  weaponId?: string,
 ): Grudge6CombatCharacter {
-  const family = familyFromAnimPack(animPack);
-  return new Grudge6CombatCharacter(scene, rosterIndex, family, { maxHp });
+  const family = weaponId
+    ? familyFromWeaponId(weaponId)
+    : familyFromAnimPack(animPack);
+  return new Grudge6CombatCharacter(scene, rosterIndex, family, { maxHp, weaponId });
 }

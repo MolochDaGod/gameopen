@@ -32,7 +32,12 @@ https://assets.grudge-studio.com/catalogs/three-generator/fleet-catalog.json
 ```
 
 Lab: `GET http://localhost:3000/api/catalog`  
-Client helper: `shared/fleetAssetClient.ts` · CastingAbilities `src/assets/generatedCatalog.js`
+Client helpers:
+- **Open:** `artifacts/animator/src/three/assets/generatedFleetCatalog.ts`
+- Lab: `Documents/_forks/three-generator/shared/fleetAssetClient.ts`
+- CastingAbilities: `src/assets/generatedCatalog.js`
+
+MCP raw gen (dev): `mcp-game-asset-gen` — see `docs/MCP_GAME_ASSET_GEN_FLEET.md`
 
 ## API (lab)
 

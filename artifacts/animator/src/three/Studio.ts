@@ -19,6 +19,7 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { buildAnimationClip, listStoredClips } from "./anim/clipStore";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
+import { skillPackForWeaponId } from "./grudge/weaponSkillPacks";
 import { normalizeToGrudgeAvatarId, parseGrudgeAvatarId } from "../lib/raceModel";
 import {
   animPackForCombatStyle,
@@ -6178,6 +6179,16 @@ export class Studio {
       return this.doCrossbowSig(signatureIndex!);
     }
 
+    // Casting-element staff trees (skillPackForWeaponId): staffFire…staffStorm
+    // + plain staff when not Soulbinder. Real hotbar labels from fleet pack;
+    // cast/impact via deploySandboxVfx; damage/range via sparringBlast.
+    if (this.isCastingElementStaff() && isSig) {
+      return this.doFleetStaffSkill(signatureIndex!);
+    }
+    if (this.isCastingElementStaff() && !isSig) {
+      return this.doFleetStaffSkill(0);
+    }
+
     // Arcane Staff "Soulbinder": four bespoke soul/void signature skills, each
     // with its own independent cooldown — bypass the shared skillCooldown gate
     // like the kick + kiter kits do.
@@ -9025,6 +9036,122 @@ export class Studio {
   }
 
   // ------------------------------------------------------------------ Staff kit
+
+  /**
+   * staffFire / staffIce / staffNature / staffStorm / staff (non-Soulbinder).
+   * Hotbar trees from skillPackForWeaponId (Casting element migrate).
+   */
+  private isCastingElementStaff(): boolean {
+    const id = this.weaponId;
+    if (id === "staffFire" || id === "staffIce" || id === "staffNature" || id === "staffStorm") {
+      return true;
+    }
+    // Plain arcane staff when character is not the Soulbinder bespoke kit.
+    if (id === "staff" || id === "wand" || id === "tome") {
+      const def = getCharacter(this.characterId);
+      return !def.arcane;
+    }
+    return false;
+  }
+
+  /**
+   * Fleet staff signature: castEffectId → travel bolt → impactEffectId.
+   * Damage + blast radius from SkillPack.reach / damage (fleet CC / sparring).
+   * Does not use Casting freehand path volumes.
+   */
+  private doFleetStaffSkill(slotIndex: number): boolean {
+    if (!this.character || !this.controller) return false;
+    if ((this.sigCooldowns[slotIndex] ?? 0) > 0) return false;
+
+    const pack = skillPackForWeaponId(this.weaponId);
+    const skill =
+      pack.find((s) => s.slot === ((slotIndex + 1) as 1 | 2 | 3 | 4)) ?? pack[slotIndex];
+    if (!skill) return false;
+
+    const origin = this.character.root.position.clone();
+    const fwd = this.facing();
+    const reach = Math.max(4, skill.reach);
+    const damage = skill.damage * (0.85 + this.params.skillForce * 0.02);
+    const color = skill.vfxColor;
+    const blastR = Math.max(1.2, skill.reach * 0.12);
+
+    // Magic Bip001 cast / attack roles (CDN + same-origin baked magic pack).
+    const roleRaw = skill.bakedRole || skill.animRole || "cast";
+    const tryRoles = [roleRaw, "cast", "attack"] as const;
+    let played = false;
+    for (const r of tryRoles) {
+      if (this.character.hasRole?.(r as never)) {
+        this.character.playRoleOnce?.(r as never, 0.1);
+        played = true;
+        break;
+      }
+    }
+    if (!played && this.character.hasClip("attack")) {
+      this.character.playClipOnce("attack", 0.12);
+    }
+
+    const picked = this.pickTargetInFront(origin, fwd, reach + 4, -0.2);
+    const aimPoint =
+      picked?.position.clone() ??
+      origin.clone().addScaledVector(fwd, reach).setY(origin.y + 1.1);
+    const faceDir = aimPoint.clone().sub(origin).setY(0);
+    if (faceDir.lengthSq() < 1e-4) faceDir.copy(fwd);
+    else faceDir.normalize();
+    this.controller.faceToward(faceDir, 0.2);
+
+    // Cast tell at hand (catalog effect ids: fire_hand, arcane_swirl, …).
+    if (skill.castEffectId) {
+      deploySandboxVfx(this.vfx, skill.castEffectId, {
+        origin,
+        forward: fwd,
+        aim: aimPoint,
+      });
+    }
+
+    const applyImpact = (p: THREE.Vector3) => {
+      if (this.disposed) return;
+      if (skill.impactEffectId) {
+        deploySandboxVfx(this.vfx, skill.impactEffectId, {
+          origin: p.clone().setY(origin.y),
+          forward: fwd,
+          aim: p,
+        });
+      } else {
+        this.vfx.aoeBlast(p, color, blastR);
+      }
+      // Fleet CC damage/range — not Casting path volumes.
+      this.sparringBlast(p, blastR, damage, this.params.skillForce * 0.9);
+    };
+
+    this.abilities.cast(kitAbility(`fleetStaff:${skill.animKey}`, "bolt", color, 0), {
+      onImpact: () => {
+        if (!this.character || this.disposed) return;
+        const from = this.staffMuzzle();
+        const dir = aimPoint.clone().sub(from);
+        if (dir.lengthSq() < 1e-4) dir.copy(fwd);
+        dir.normalize();
+        const proj = skill.projectile ?? "bolt";
+        if (proj === "bolt" || proj === "slash_wave" || proj === "arrow") {
+          if (
+            skill.castEffectId === "fire_hand" ||
+            skill.impactEffectId === "inferno" ||
+            this.weaponId === "staffFire"
+          ) {
+            this.vfx.castFireball(from, dir, color, applyImpact);
+          } else {
+            this.vfx.bolt(from, dir, color, 18 + slotIndex * 2, reach, applyImpact);
+          }
+        } else {
+          applyImpact(aimPoint);
+        }
+      },
+    });
+
+    const cd = Math.max(0.4, skill.cooldown || 1.2);
+    this.armSigSlot(slotIndex, cd, 10 + skill.damage * 0.12);
+    this.setCombatFlash(skill.label.toUpperCase(), 0.55);
+    return true;
+  }
 
   /** True while the equipped weapon is a staff (the `magic` weapon group). */
   private isStaffEquipped(): boolean {

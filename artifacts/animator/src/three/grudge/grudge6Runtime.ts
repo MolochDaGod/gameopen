@@ -576,6 +576,14 @@ export async function loadGrudge6CombatRig(
     loadRole("run", pack.run),
     loadRole("attack", pack.attack),
   ]);
+  // Magic / staff fleet trees request bakedRole `cast` (Casting migrate).
+  // Prefer pack.cast Bip001 clip; else alias attack so cast never T-poses.
+  if (pack.cast) {
+    await loadRole("cast", pack.cast);
+  } else if (clips.has("attack") && !clips.has("cast")) {
+    clips.set("cast", clips.get("attack")!);
+    roles.set("cast", "cast");
+  }
 
   // Pack extras (weapon skill one-shots only — never swap mesh weapons)
   if (pack.extras?.length) {
