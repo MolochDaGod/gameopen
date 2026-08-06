@@ -7,7 +7,15 @@
  *
  * These are consumed by Grudge6CombatCharacter to build the character's
  * hotbar-slot skill set at load time.
+ *
+ * Magic / staffs: CastingAbilities element migration → castingElementSkills.ts
  */
+
+import {
+  MAGIC_SKILLS_FROM_CASTING,
+  skillPackForStaffWeaponId,
+  STAFF_ARCANE_SKILLS,
+} from "./castingElementSkills";
 
 /** Weapon families with associated skill sets. */
 export type WeaponFamily =
@@ -402,41 +410,16 @@ export const SPEAR_SKILLS: readonly SkillPack[] = [
   },
 ] as const;
 
-// ── Magic pack ───────────────────────────────────────────────────────────────
-export const MAGIC_SKILLS: readonly SkillPack[] = [
-  {
-    animKey: "magic_bolt",
-    slot: 1,
-    label: "Arcane Bolt",
-    clipPath: "anims/baked/magic/standing 1h cast spell 01.json",
-    reach: 8.0, damage: 22, lungeSpeed: 0, lungeDuration: 0,
-    vfxColor: 0xb98cff, cooldown: 0,
-  },
-  {
-    animKey: "magic_nova",
-    slot: 2,
-    label: "Arcane Nova",
-    clipPath: "anims/baked/magic/staffattack.json",
-    reach: 4.0, damage: 35, lungeSpeed: 0, lungeDuration: 0,
-    vfxColor: 0xd4aaff, cooldown: 3.0,
-  },
-  {
-    animKey: "magic_area",
-    slot: 3,
-    label: "Area Burst",
-    clipPath: "anims/baked/polearm/skill1.json",
-    reach: 5.0, damage: 48, lungeSpeed: 0, lungeDuration: 0,
-    vfxColor: 0x8844ff, cooldown: 6.0,
-  },
-  {
-    animKey: "magic_cast",
-    slot: 4,
-    label: "Grand Casting",
-    clipPath: "anims/baked/polearm/special.json",
-    reach: 10.0, damage: 65, lungeSpeed: 0, lungeDuration: 0,
-    vfxColor: 0x6600ff, cooldown: 12.0,
-  },
-] as const;
+// ── Magic pack (CastingAbilities migrate — purple arcane tree) ─────────────
+// Full elemental staff packs: castingElementSkills.ts
+//   STAFF_FIRE_SKILLS | STAFF_WATER_SKILLS | STAFF_EARTH_SKILLS
+//   STAFF_WIND_SKILLS | STAFF_ARCANE_SKILLS
+
+/** Default magic hotbar = arcane tree (cast/travel/impact from Casting VFX ids). */
+export const MAGIC_SKILLS: readonly SkillPack[] = MAGIC_SKILLS_FROM_CASTING;
+
+/** @deprecated alias — use STAFF_ARCANE_SKILLS */
+export const MAGIC_SKILLS_LEGACY_LABELS = STAFF_ARCANE_SKILLS;
 
 // ── Longbow pack ─────────────────────────────────────────────────────────────
 export const LONGBOW_SKILLS: readonly SkillPack[] = [
@@ -524,6 +507,26 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
     case "unarmed":   return STRIKER_SKILLS;
     default:          return SWORD_SKILLS;
   }
+}
+
+/** Staff arsenal weaponId → elemental Casting pack (Warlords staffs). */
+export function skillPackForWeaponId(weaponId: string): readonly SkillPack[] {
+  const w = String(weaponId || "").toLowerCase();
+  if (w.startsWith("staff") || w === "wand" || w === "tome") {
+    return skillPackForStaffWeaponId(w);
+  }
+  return skillPackForFamily(familyFromWeaponId(w));
+}
+
+function familyFromWeaponId(w: string): WeaponFamily {
+  if (w.includes("bow") || w.includes("rifle") || w.includes("gun")) return "longbow";
+  if (w.includes("mace") || w.includes("hammer")) return "mace";
+  if (w.includes("spear") || w.includes("javelin")) return "spear";
+  if (w.includes("chain")) return "chain";
+  if (w.includes("great") || w.includes("axe") || w.includes("scythe")) return "greatsword";
+  if (w.includes("unarmed") || w.includes("fist")) return "unarmed";
+  if (w.includes("sword")) return "sword";
+  return "sword";
 }
 
 /** Map an animPack string (from gearPresets.ts / Explosive map) to a weapon family. */
