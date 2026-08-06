@@ -97,9 +97,11 @@ const hero = resolveAssetUrl("models/grudge/wk_warrior.glb", { cdnBase: cdn });
 
 ## 3. Grudge UUID / identity (uniform)
 
+**Full table (eras + asset uuid + bag ledger):** [FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md) §5.
+
 | Kind | Prefix | Mint |
 |------|--------|------|
-| Character (DB) | `char_` | Postgres / D1 SSOT |
+| Character (DB) | `char_` / Railway uuid | Postgres SSOT |
 | Hero pack | `HERO-` | Fleet character API |
 | Equipment | `EQIP-` | Item system |
 | Item | `ITEM-` | Item system |
@@ -108,6 +110,7 @@ const hero = resolveAssetUrl("models/grudge/wk_warrior.glb", { cdnBase: cdn });
 | Zone | `zone_` | content / GRUDOX id |
 | Portal | `portal_` | seed portals |
 | Script | `scr_` | `newScriptId()` |
+| Asset file (D1) | sha1 of `r2Key` | asset registry — **not** character id |
 
 ```ts
 import {

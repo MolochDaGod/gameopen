@@ -13,6 +13,7 @@ This doc verifies **what enginesource contains**, **how assets should be used**,
 | Assets CDN: skill `grudge-d1-r2` · `assets.grudge-studio.com` |
 | Convert/bake: skill `grudge-asset-convert` |
 | Bag/camp/lockpick: [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) |
+| **Eras · codexes · definitions · Grudge UUID:** [FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md) |
 
 ---
 

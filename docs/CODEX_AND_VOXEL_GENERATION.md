@@ -1,5 +1,8 @@
 # Codex & Voxel Asset Generation Guide
 
+**Fleet umbrella (eras · all codexes · definitions · UUID):**  
+[FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md)
+
 **Live Codex UI:** https://mine-loader.vercel.app/#/defs  
 **Open entry:** Realms / Mine-Loader → Codex · `open.grudge-studio.com` → library  
 **Repo SSOT:** `Mine-Loader` (`artifacts/voxelcraft` + `lib/asset-catalog` + `lib/db`)
