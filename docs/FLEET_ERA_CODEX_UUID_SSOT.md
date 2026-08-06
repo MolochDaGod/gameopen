@@ -8,7 +8,9 @@ Do not invent a second roster DB, a second definitions host, or a third UUID sch
 | Data layers: [CANONICAL_DATA_LAYER.md](./CANONICAL_DATA_LAYER.md) · code `lib/fleetSsot.ts` |
 | Voxel codex generators: [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md) |
 | Multi-era characters: Mine-Loader [CHARACTER_ERAS.md](https://github.com/MolochDaGod/mine-loader/blob/main/docs/CHARACTER_ERAS.md) · Open `FLEET_CHARACTER_ERAS` in `lib/grudgeAuth.ts` |
-| Runtime ids: `@workspace/grudge-runtime` `ids.ts` · [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) §3 |
+| **Voxel Codex** leaf: [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md) · [VOXEL_CANONICAL.md](./VOXEL_CANONICAL.md) |
+| **Warlords** stack: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · arsenal + info master catalogs |
+| Runtime ids: `@workspace/grudge-runtime` `ids.ts` |
 | Asset UUID / CDN: skill `grudge-d1-r2` · [OUTDOOR_ASSETS_D1_R2.md](./OUTDOOR_ASSETS_D1_R2.md) |
 | Bag / camp / lockpick: [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) · [INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md) |
 | PlayCanvas lab only: [ENGINE_SOURCE_CLOUDFLARE_SSOT.md](./ENGINE_SOURCE_CLOUDFLARE_SSOT.md) |
@@ -80,12 +82,12 @@ Open / Foundry production constant (do not invent a fifth without updating **bot
 export const FLEET_CHARACTER_ERAS = ["warlords", "voxel", "nexus", "armada"] as const;
 ```
 
-| Era id | Pipeline / look | Create / select | Play host (typical) | Slots |
-|--------|-----------------|-----------------|---------------------|-------|
-| **warlords** | grudge6 modular · Foundry | character.grudge-studio.com Foundry | Open Danger / Island / WCS handoff · grudgewarlords / client.* | **4** |
-| **voxel** | voxel / explorer / TVS | Mine-Loader / Foundry `?era=voxel` | mineloader · Realms | **4** |
-| **nexus** | toon / Grudox / mech shelf | Grudox / Foundry `?era=nexus` | grudox / nexus products | **4** |
-| **armada** | naval / mech shelf | Foundry `?era=armada` (may be content-gated) | Armada / sail products | **4** |
+| Era id | Pipeline / look | **Era codex** | Create / select | Play host (typical) | Slots |
+|--------|-----------------|---------------|-----------------|---------------------|-------|
+| **warlords** | grudge6 modular · Foundry | **Warlords Codex** | character.grudge-studio.com Foundry | Open Danger / Island / WCS · grudgewarlords / client.* | **4** |
+| **voxel** | voxel / explorer / TVS | **Voxel Codex** | Mine-Loader / Foundry `?era=voxel` | mineloader · Realms | **4** |
+| **nexus** | toon / Grudox / mech shelf | **Nexus Codex** | Grudox / Foundry `?era=nexus` | grudox / nexus products | **4** |
+| **armada** | naval / mech shelf | *(future Armada Codex when gated)* | Foundry `?era=armada` (may be content-gated) | Armada / sail products | **4** |
 
 **Optional / non-product shelves (do not treat as Open library tabs):**
 
@@ -208,76 +210,121 @@ Independent game checklist:
 
 ## 3. Separate codexes (do not merge tables)
 
-A **codex** is a **browse + generate + place** surface for **one content domain**.  
-Each has its **own host, API, and generators**. Agents must not dump all content into one JSON file or one UI tab.
+**Three production era codexes are real products** — one per major play shelf.  
+They are **not** aliases of each other, and **info.grudge-studio.com is not “the codex.”**  
+Info is the **definitions publish pipe** that Warlords / Nexus codex packages (and other catalogs) ride on.
 
-### 3.1 Codex map (production)
+| Era codex | Era id | Product meaning |
+|-----------|--------|-----------------|
+| **Warlords Codex** | `warlords` | Fantasy flagship design + arsenal gear/skills + grudge6 kits |
+| **Voxel Codex** | `voxel` | Placeable blocks, Realms mechanics, voxel item/icon catalog |
+| **Nexus Codex** | `nexus` | Sci-fi / mech / metaverse / Carrier / Grudox design shelf |
 
-| Codex | Live UI | Authority | What it defines | Player state? |
-|-------|---------|-----------|-----------------|---------------|
-| **Mine-Loader Codex** | mineloader… `/#/defs` | Mine-Loader API + voxelcraft data | Mechanics prose, **blocks**, item icon packs | No |
-| **Fleet definitions (info)** | Open via `fetchCatalogJson` | **info.grudge-studio.com** | weapons, races, recipes, skill trees, gear presets | No |
-| **ObjectStore / Pages catalog** | ObjectStore site | D1 index + JSON dual-publish | Same defs fallback; multi-host | No |
-| **Camp claim catalog** | Open Camp hub | Open `content/camp/*` + ObjectStore | buildings, units, node upgrades, claim flag | Camp rows → Railway / location store |
-| **Outdoor / nature worlds** | Open outdoor | CDN + D1 registry | island meshes, nature packs | No (placement only) |
-| **Amida / farm layout** | Open farm/camp docs | Amida mesh roles + `/api/blocks` bind | terrain ↔ `cat:` blocks | No |
-| **enginesource lab** | PlayCanvas examples | Local fork | **Not** a Grudge codex — codec/lab only | No |
+`armada` may grow a fourth era codex when naval content is gated open — do **not** invent it early by stuffing sail defs into Warlords or Nexus.
 
-### 3.2 Mine-Loader Codex (three tabs)
+A **codex** = browse + generate + bind surface for **that era’s** content domain  
+(own APIs, generators, place/bind rules). Agents must not dump all three into one JSON or one UI tab.
 
-From [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md):
+### 3.1 Era codex map (SSOT)
 
-| Tab | Source | Wired to play? |
-|-----|--------|----------------|
-| **Mechanics** | `api-server/src/data/gameDefs.ts` → `GET /api/definitions` | Rules / map gen prose |
-| **Blocks** | `blockCatalogData.ts` + atlas → `cat:<id>` | **Yes** — place in voxel |
-| **Catalog** (items icons) | ~550 icons / 22 packs | **Browse reference** until opt-in inventory phase |
+| Codex | Live UI / product | Authority | What it owns | Place / bind contract |
+|-------|-------------------|-----------|--------------|----------------------|
+| **Warlords Codex** | Arsenal · Foundry catalogs · Open Danger weapon/skill surfaces · equipment codex packs | **info** master catalogs + grudge6 presets + Open `arsenal/*` + R2 meshes | races, weapons, armor, equipment, master-weaponSkills, professions, skill trees, grudge6 mesh_ids / gear presets | Equip by template + ledger instance; mesh via R2 grudge6 kits — **not** `cat:` blocks |
+| **Voxel Codex** | Mine-Loader `#/defs` · Open Production **Codex** tab (**P**) · Realms codex door | Mine-Loader Railway `blocks` + `gameDefs` + voxelcraft generators | **Blocks** (250+), mechanics prose, item-icon catalog, seed codex links | Place `cat:<slug>`; atlas face = codex look |
+| **Nexus Codex** | Grudox / Carrier / nexus library shelf · nexus content catalogs | Nexus / Grudox definition packs + CDN toon/mech assets (info multi-host where published) | mech / toon / metaverse / Carrier content ids, nexus pipeline models | Era=`nexus` heroes only — **not** Realms block place |
 
-Generators stay Mine-Loader scripts (`build_block_icons.mjs`, `build_item_catalog.mjs`, …).  
-**Atlas face is Codex look** — no separate isometric crop pipeline.
+**Naming trap:** Mine-Loader docs titled “Nexus-era Voxel SSOT” mean **voxel product lineage**, not character `era=nexus`.  
+**Voxel Codex** = blocks/Realms. **Nexus Codex** = sci-fi/mech shelf. Do not merge.
 
-API:
+### 3.2 Warlords Codex (detail)
+
+| Slice | Source | Wired to play? |
+|-------|--------|----------------|
+| Weapons + skills | `weapons.json`, `master-weaponSkills.json` via `fetchCatalogJson` · Open `three/arsenal/*` · `content/masterWeaponSkills` | **Yes** — Danger / combat bar / T0 skills |
+| Races + modular kits | `races.json`, `grudge6-gear-presets.json`, `grudge6-canonical.json` | **Yes** — Foundry / Danger grudge6 |
+| Armor / equipment / items | `equipment.json`, `armor.json`, `master-items.json`, recipes | Arsenal product + bag templates |
+| Classes / professions / trees | `classes.json`, `professions.json`, `master-skillTrees.json`, class relics | Progress / UI trees |
+| Equipment production package | R2 / client `codex/equipment-production.json` (when exported) | Deploy artifact — still Warlords family |
+
+**Law:** Warlords Arsenal reads **Warlords Codex** (info master-items / weapon skills).  
+It does **not** consume Voxel Codex `/api/blocks` as gear SSOT.
+
+Leaf: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · skill `grudge-warlords-assets` · `grudge6-full-stack`.
+
+### 3.3 Voxel Codex (detail)
+
+Live: mineloader / mine-loader `#/defs` · Open Production UI **Codex** tab.  
+Leaf: [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md) · [VOXEL_LAST30_D1_CODEX.md](./VOXEL_LAST30_D1_CODEX.md).
+
+| Tab / surface | Source | Wired to play? |
+|---------------|--------|----------------|
+| **Mechanics** | `gameDefs.ts` → `GET /api/definitions` | Rules / map gen prose |
+| **Blocks** | Postgres `blocks` + atlas → `cat:<id>` | **Yes** — place in Realms / voxel |
+| **Catalog** (item icons) | ~550 icons / 22 packs | Browse reference until inventory opt-in |
+| **Maps codex links** | D1 / catalog `codexBlocks` / `codexDefs` | Maps tab deep-links to blocks/defs |
+
+Generators: Mine-Loader `build_block_icons.mjs`, `build_item_catalog.mjs`, …  
+**Atlas face is Codex look** — no separate isometric crop.
 
 ```http
-GET /api/definitions     # mechanics entries
-GET /api/blocks?limit=N  # full block catalog + meta
+GET /api/ssot            # discovery contract
+GET /api/definitions     # mechanics
+GET /api/blocks?limit=N  # full Voxel Codex catalog
+GET /api/blocks/{slug}
 ```
 
-### 3.3 Fleet definitions host (info) — see §4
+Open: `fetchCodexBlocks()` / `fetchCodexDefinitions()` in `harvestCatalog.ts`.  
+Consumers (VoxGrudge, Open voxel): REST only — **do not fork** the block table.
 
-Codex **UI** for fleet is Open library / Foundry / character tools; **data** is info JSON, not Mine-Loader `gameDefs.ts`.
+### 3.4 Nexus Codex (detail)
 
-### 3.4 Camp claim codex
+| Slice | Source | Wired to play? |
+|-------|--------|----------------|
+| Era roster | `/api/characters?era=nexus` · Foundry `?era=nexus` | **Yes** — 4 nexus slots |
+| Toon / mech / Grudox content | Nexus library shelf · Grudox cabinets · Carrier | Product hosts on `grudox.*` / nexus cards |
+| Definition packs | Nexus / toon catalogs via info multi-host when published | Stats + mesh path pointers |
+| Pipeline | `renderPipeline` forced from era on create | Nexus bodies — not grudge6 default, not `cat:` |
 
-| Surface | Owns |
-|---------|------|
-| Camp claim flag / structures | claim key `camp:claim_<characterId>` |
-| Storage page | camp vault + Send → home island |
-| Unit / building defs | content camp catalogs + RTS train recipes |
+**Law:** Nexus Codex content never becomes Realms map avatars or Warlords Danger grudge6 kits without an explicit product bridge.  
+Character isolation stays per §2.
 
-**Not** the Mine-Loader blocks codex. Camp deposit law: [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md).
+### 3.5 Supporting catalogs (not era codexes)
 
-### 3.5 Codex vs “definitions” vs “gamedata” vs “registry”
+These are real, but they are **not** substitutes for the three era codexes:
+
+| Surface | Role | Belongs with |
+|---------|------|--------------|
+| **info / ObjectStore multi-host** | Publish + fetch pipe for design JSON | Warlords + Nexus (and shared templates) — §4 |
+| **Camp claim catalog** | buildings, units, claim flag, storage keys | Open camp RTS · location inventory |
+| **Outdoor / nature D1+R2** | island meshes, nature packs | Warlords outdoor / production world |
+| **Amida farm bind** | mesh roles → terrain / `cat:` when online | Voxel place hints + farm layout |
+| **enginesource lab** | PlayCanvas examples | **Not** a Grudge codex |
+
+Camp deposit law stays in [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md).
+
+### 3.6 Codex vs definitions vs gamedata vs registry
 
 | Term | Meaning | Write player bag? |
 |------|---------|-------------------|
-| **Codex** | Product UI that **shows** definitions + generation tools | **No** |
-| **Definitions** | Static design JSON (info / ObjectStore) — template ids, stats, recipes | **No** |
-| **Gamedata (R2 bucket)** | JSON blobs on Cloudflare `grudge-gamedata` for some backends | **No** |
-| **Asset registry (D1)** | Index of **binary** R2 keys (`grudge_uuid` from r2Key) | **No** |
+| **Era codex** | Product surface for **one era** (Warlords / Voxel / Nexus) | **No** |
+| **Definitions** | Static design JSON published on info (templates, stats) | **No** |
+| **Gamedata (R2 bucket)** | Some backend JSON blobs | **No** |
+| **Asset registry (D1)** | Index of **binary** R2 keys | **No** |
 | **Player / ledger** | Railway rows + bag + ledger events | **Yes** |
 
 Never write player bag into a codex JSON file.  
 Never use D1 `asset_registry` as character SSOT.
 
-### 3.6 Separation hard rules
+### 3.7 Separation hard rules
 
 | Do | Do not |
 |----|--------|
-| Extend Mine Codex generators for new **blocks** | Put warlords weapons into Mine `gameDefs` as the only SSOT |
-| Fetch fleet skills via `fetchCatalogJson` | Hard-code objectstore-only URLs (many 404) |
-| Bind Amida roles → `/api/blocks` when online | Invent a second block catalog JSON in Open |
-| Keep camp catalog under camp content | Merge camp buildings into races.json |
+| Extend **Voxel Codex** generators for new **blocks** | Put Warlords weapons into Mine `gameDefs` as gear SSOT |
+| Extend **Warlords Codex** via arsenal + info master-* + grudge6 | Load Voxel `/api/blocks` as Arsenal inventory |
+| Extend **Nexus Codex** via Grudox/nexus packs + `era=nexus` | Treat Mine-Loader “Nexus voxel” doc title as character `era=nexus` |
+| Fetch Warlords/Nexus design via `fetchCatalogJson` | Hard-code objectstore-only URLs (many 404) |
+| Bind Amida → Voxel `/api/blocks` when online | Invent a second block catalog in Open |
+| Keep camp under camp content | Merge camp buildings into races.json or blocks |
 
 ---
 
@@ -364,14 +411,14 @@ Probed layout (do not reverse casually):
 
 Weapon **tree branch** ids (`wpn_tree_<family>_tN_<uuid>`) are **progress keys**, not bag item instances ([INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md)).
 
-### 4.5 Era-specific definition use
+### 4.5 Era codex → definition packs
 
-| Era | Definition packs used first |
-|-----|----------------------------|
-| warlords | grudge6 presets/canonical, races, weapon skills, professions, classes |
-| voxel | Mine-Loader blocks + definitions API + item catalog icons |
-| nexus | toon / nexus catalogs + Grudox defs |
-| armada | naval/mech defs when gated live |
+| Era codex | Definition / API surface used first |
+|-----------|-------------------------------------|
+| **Warlords Codex** | grudge6 presets/canonical, races, weapon skills, professions, classes, master-items (info multi-host) |
+| **Voxel Codex** | Mine-Loader `/api/blocks` + `/api/definitions` + item catalog icons — **not** Warlords arsenal JSON |
+| **Nexus Codex** | toon / nexus / Grudox catalogs (info multi-host when published) |
+| armada (future) | naval/mech defs when gated live |
 
 Mesh **files** still resolve through R2; definition JSON only **points** at paths / `mesh_ids`.
 
@@ -513,6 +560,8 @@ Home island = shared account bag (no lockpick). Foreign/contested camps + hidden
 | Mine-Loader worlds DB as hero SSOT | Railway `/api/characters?era=` |
 | Puter UUID as production character id | Grudge ID + Railway |
 | Cross-era saveData clobber | Namespace per app/era |
+| Merge Warlords / Voxel / Nexus into one “fleet codex” | Three era codexes (§3) |
+| Call Voxel Codex the “Nexus Codex” | Voxel = blocks; Nexus = sci-fi/mech shelf |
 
 ---
 
@@ -522,7 +571,10 @@ Home island = shared account bag (no lockpick). Foreign/contested camps + hidden
 1. Login (Grudge ID) → JWT  (account.grudgeId)
 2. Pick era shelf → GET /api/characters?era=<era>
 3. Select characterId (Railway uuid)  [per-era selection map]
-4. Load definitions (info multi-host) for race/class/weapons for that pipeline
+4. Load that era’s codex:
+     warlords → Warlords Codex (info master-* + arsenal + grudge6)
+     voxel    → Voxel Codex    (/api/blocks + /api/definitions)
+     nexus    → Nexus Codex    (Grudox/nexus packs + era pipeline)
 5. Resolve mesh_ids / paths → assets.grudge-studio.com (R2)
    optional: D1 grudge_uuid index for the file
 6. Play:
@@ -531,7 +583,7 @@ Home island = shared account bag (no lockpick). Foreign/contested camps + hidden
    - Character bag 3×3 carry
    - Ledger grudgeUuid for unique gear
    - Runtime ent_/inst_ for scene entities (not bag)
-7. Worlds (voxel era): Mine-Loader seed + blocks from Mine codex
+7. Worlds (voxel era only): Mine-Loader seed + Voxel Codex placeables
 ```
 
 ---
@@ -541,7 +593,7 @@ Home island = shared account bag (no lockpick). Foreign/contested camps + hidden
 | Layer | enginesource | Fleet |
 |-------|--------------|-------|
 | Eras / characters | **None** | Railway eras |
-| Codex / definitions | Example assets only | info + Mine Codex |
+| Codex / definitions | Example assets only | **Warlords + Voxel + Nexus** codexes · info publish pipe |
 | Grudge UUID | **None** | grudge-runtime + Railway + D1 asset uuid |
 | Binaries | Lab GLB/KTX2/Basis | R2 CDN |
 | Deploy helper | Build flavors ESM/UMD | Vercel SPA + CF CDN Worker |
@@ -553,10 +605,11 @@ See [ENGINE_SOURCE_CLOUDFLARE_SSOT.md](./ENGINE_SOURCE_CLOUDFLARE_SSOT.md).
 
 ## 8. Agent checklist
 
-- [ ] Know which **era** the character belongs to before loading mesh/pipeline  
+- [ ] Know which **era** and which **era codex** (Warlords / Voxel / Nexus) before loading content  
 - [ ] Account bag ≠ character equip ≠ D1 asset uuid  
-- [ ] Definitions from **info multi-host** (`fetchCatalogJson`), binaries from **assets**  
-- [ ] Mine Codex blocks vs item-catalog browse vs fleet master-JSON are **separate**  
+- [ ] Warlords design via **Warlords Codex** + info multi-host; binaries from **assets**  
+- [ ] Voxel placeables via **Voxel Codex** `/api/blocks` — never fork the block table  
+- [ ] Nexus content via **Nexus Codex** + `era=nexus` — not Realms blocks, not grudge6 default  
 - [ ] Template id (define) ≠ instance grudgeUuid (unique) ≠ `stack_` (qty)  
 - [ ] Mint runtime entities with `newGrudgeId`; harvest pins with Mine SSOT; uniques with ledger  
 - [ ] Home island never lockpick; camp uses `claim_<characterId>`  
@@ -578,15 +631,16 @@ curl -s -o NUL -w "%{http_code}\n" \
 curl -sH "Authorization: Bearer $JWT" \
   "https://open.grudge-studio.com/api/characters?era=warlords" | head
 
-# Definitions (content + api)
+# Warlords Codex (definitions publish pipe)
 curl -sI https://info.grudge-studio.com/content/grudge6-gear-presets.json
 curl -sI https://info.grudge-studio.com/api/v1/master-weaponSkills.json
 curl -sI https://info.grudge-studio.com/api/v1/materials.json
 
-# Binaries
+# Binaries (shared CDN)
 curl -sI https://assets.grudge-studio.com/models/grudge6/races/WK_Characters.fbx
 
-# Mine codex
+# Voxel Codex
+curl -s "https://mineloader.grudge-studio.com/api/ssot" | head
 curl -s "https://mineloader.grudge-studio.com/api/definitions" | head
 curl -s "https://mineloader.grudge-studio.com/api/blocks?limit=3" | head
 ```
