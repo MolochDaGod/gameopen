@@ -132,14 +132,14 @@ export function clampQuickSlots(raw: unknown): QuickSlots {
 
 /** Short footer legend used by Hud / mode chip (always matches Studio keys). */
 export const COMBAT_KEY_LEGEND =
-  "Hold Q mode · J/H/V bag · RMB focus · LMB atk · X roll · C parry · E guard · F/1–4 · F8 free mouse · P prod";
+  "Q mode · RMB focus · LMB atk · X roll · C parry · E guard · F/1–4 · F8 free mouse · F1 help";
 
 export const COMBAT_KEY_CHIPS: readonly string[] = [
-  "Hold Q: Mode",
-  "J/H/V: Bag use",
+  "Q: Mode",
   "RMB: Focus",
-  "LMB: Atk / Select",
+  "LMB: Atk",
   "X: Roll",
   "C: Parry",
-  "R: Heavy",
+  "E: Guard",
+  "F1: Help",
 ];

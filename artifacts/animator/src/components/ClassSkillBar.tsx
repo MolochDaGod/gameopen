@@ -94,7 +94,16 @@ export function ClassSkillBar({ characterId, onCast, visible = true }: Props) {
   const castSlot = useCallback(
     (slot: ClassSkillSlot) => {
       if (slot.empty || !slot.id) return;
-      if ((cds[slot.id] ?? 0) > 0) return;
+      if ((cds[slot.id] ?? 0) > 0) {
+        setTip({
+          x: window.innerWidth / 2,
+          y: 120,
+          title: "On cooldown",
+          body: `${slot.name || "Skill"} · wait ${((cds[slot.id] ?? 0)).toFixed(1)}s`,
+        });
+        window.setTimeout(() => setTip(null), 900);
+        return;
+      }
       setCds((c) => ({ ...c, [slot.id]: slot.cooldownSec }));
       setFlash(slot.id);
       window.setTimeout(() => setFlash((f) => (f === slot.id ? null : f)), 220);

@@ -65,6 +65,7 @@ import {
   setPointerLayer,
 } from "@workspace/grudge-physics";
 import { Hud } from "./components/Hud";
+import { HotkeyHelpOverlay } from "./components/HotkeyHelpOverlay";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
@@ -898,6 +899,8 @@ export default function App() {
   const [dockOpen, setDockOpen] = useState(false);
   /** In-play test map picker (TEST_WORLDS). */
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  /** F1 / ? full keyboard guide */
+  const [hotkeyHelpOpen, setHotkeyHelpOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
   /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
@@ -1349,25 +1352,44 @@ export default function App() {
   useEffect(() => {
     if (mode !== "danger") return;
     const onKey = (e: KeyboardEvent) => {
-      // Esc closes loadout / systems / claim / bag overlays even while inputs are focused.
-      if (
-        e.code === "Escape" &&
-        (equipOpenRef.current ||
+      // Esc closes help first, then loadout / systems / claim / bag overlays.
+      if (e.code === "Escape") {
+        if (hotkeyHelpOpen) {
+          setHotkeyHelpOpen(false);
+          return;
+        }
+        if (
+          equipOpenRef.current ||
           systemsOpenRef.current ||
           claimFlagOpenRef.current ||
           bagOpenRef.current ||
-          harvestUiOpenRef.current)
-      ) {
-        setEquipOpen(false);
-        setSystemsOpen(false);
-        setClaimFlagOpen(false);
-        setBagOpen(false);
-        setHarvestUiOpen(false);
-        return;
+          harvestUiOpenRef.current
+        ) {
+          setEquipOpen(false);
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          setBagOpen(false);
+          setHarvestUiOpen(false);
+          return;
+        }
       }
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
       if (e.repeat) return;
+      // F1 or ? — full controls guide (free mouse for reading)
+      if (e.code === "F1" || (e.key === "?" && !e.ctrlKey && !e.metaKey)) {
+        e.preventDefault();
+        setHotkeyHelpOpen((v) => {
+          const next = !v;
+          if (next) {
+            document.exitPointerLock?.();
+            studioRef.current?.setFreeMouseMode?.(true);
+            studioRef.current?.flashMessage?.("CONTROLS · F1 / Esc close", 1.4);
+          }
+          return next;
+        });
+        return;
+      }
       if (e.code === "KeyI") {
         e.preventDefault();
         // Main Panel (character sheet) — Equipment default; bag via Inventory tab
@@ -1506,30 +1528,48 @@ export default function App() {
     applyFreeMouse,
     dangerDock,
     tryUseUtilityHotkey,
+    hotkeyHelpOpen,
   ]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
   useEffect(() => {
     if (mode !== "play") return;
     const onKey = (e: KeyboardEvent) => {
-      if (
-        e.code === "Escape" &&
-        (equipOpenRef.current ||
+      if (e.code === "Escape") {
+        if (hotkeyHelpOpen) {
+          setHotkeyHelpOpen(false);
+          return;
+        }
+        if (
+          equipOpenRef.current ||
           systemsOpenRef.current ||
           claimFlagOpenRef.current ||
           bagOpenRef.current ||
-          harvestUiOpenRef.current)
-      ) {
-        setEquipOpen(false);
-        setSystemsOpen(false);
-        setClaimFlagOpen(false);
-        setBagOpen(false);
-        setHarvestUiOpen(false);
-        return;
+          harvestUiOpenRef.current
+        ) {
+          setEquipOpen(false);
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          setBagOpen(false);
+          setHarvestUiOpen(false);
+          return;
+        }
       }
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
       if (e.repeat) return;
+      if (e.code === "F1" || (e.key === "?" && !e.ctrlKey && !e.metaKey)) {
+        e.preventDefault();
+        setHotkeyHelpOpen((v) => {
+          const next = !v;
+          if (next) {
+            document.exitPointerLock?.();
+            studioRef.current?.setFreeMouseMode?.(true);
+          }
+          return next;
+        });
+        return;
+      }
       if (e.code === "KeyI") {
         e.preventDefault();
         if (systemsOpenRef.current && systemsTab === "tabEquipment") {
@@ -1618,7 +1658,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse, tryUseUtilityHotkey]);
+  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse, tryUseUtilityHotkey, hotkeyHelpOpen]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
   // joystick/look-pad own input. Re-applies whenever the breakpoint flips.
@@ -3185,6 +3225,17 @@ export default function App() {
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
             utilitySlots={utilitySlots}
+            onOpenHotkeyHelp={() => {
+              setHotkeyHelpOpen(true);
+              document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode?.(true);
+            }}
+          />
+          <HotkeyHelpOverlay
+            open={hotkeyHelpOpen}
+            onClose={() => setHotkeyHelpOpen(false)}
+            surface={mode === "play" ? "play" : "danger"}
+            activityMode={hud?.activityMode === "build" ? "build" : hud?.activityMode === "harvest" ? "harvest" : "combat"}
           />
           <CharacterBagPanel
             open={bagOpen}
@@ -3372,9 +3423,9 @@ export default function App() {
             !systemsOpen &&
             !claimFlagOpen && (
               <div className="click-hint">
-                <p>Click canvas to re-lock · or F8 free mouse</p>
+                <p>Click canvas to re-lock · F8 free mouse · F1 help</p>
                 <p className="dim">
-                  AA/DD dash · X roll · LMB attack/select · RMB focus · C parry
+                  WASD move · X roll · LMB atk · RMB focus · C parry · E guard · 1–4 skills
                 </p>
               </div>
             )}
@@ -3504,6 +3555,17 @@ export default function App() {
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
             utilitySlots={utilitySlots}
+            onOpenHotkeyHelp={() => {
+              setHotkeyHelpOpen(true);
+              document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode?.(true);
+            }}
+          />
+          <HotkeyHelpOverlay
+            open={hotkeyHelpOpen}
+            onClose={() => setHotkeyHelpOpen(false)}
+            surface={mode === "play" ? "play" : "danger"}
+            activityMode={hud?.activityMode === "build" ? "build" : hud?.activityMode === "harvest" ? "harvest" : "combat"}
           />
           <CharacterBagPanel
             open={bagOpen}
