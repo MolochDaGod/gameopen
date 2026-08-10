@@ -38,6 +38,22 @@ Skills are **nested prefabs** under a weapon family. They never float without a 
 | arcane | `#b06bff` | directional |
 | arrow | `#e8d9a0` | directional |
 
+## Travel / cast anchors → weapon spine
+
+Skill `vfx.travel.startAnchor` maps to prefab spine points (`WEAPON_PREFAB.md` §3):
+
+| `startAnchor` | Spine point |
+|---------------|-------------|
+| `weaponTip` / `tip` | **tip** |
+| `muzzle` / `barrel` | **barrel** |
+| `cast` / `staff` / `wand` | **cast** |
+| `blunt` / `impact` | **blunt** |
+| `blade` / `edge` | **blade** |
+| `hand` / `grip` | **grip** |
+
+Resolve: `spinePointForVfxAnchor()` in `arsenal/weaponPrefabSpine.ts`.  
+Do not invent parallel anchor names.
+
 ## Readiness
 
 Skill is ready when: `data` + `anim` + `vfx` + `icon` are all `ready` or intentional `placeholder`.

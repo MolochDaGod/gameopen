@@ -109,13 +109,44 @@ writeJson(wpnPath, {
     },
     status: "missing",
   },
-  tags: ["scaffolded"],
+  // Spine sockets — fill SI local points per content/docs/WEAPON_PREFAB.md §3
+  // Runtime defaults: arsenal/weaponPrefabSpine.ts defaultSpineForFamily(family)
+  spine: {
+    forward: family === "gun" || family === "bow" || family === "crossbow" ? "z+" : "y+",
+    align: family === "gun" || family === "bow" || family === "crossbow" ? "z" : "y",
+    status: "placeholder",
+    points: {
+      grip: { pos: [0, 0, 0] },
+      tip: { pos: family === "gun" ? [0, 0.06, 0.36] : [0, 1.0, 0] },
+      ...(family === "gun" || family === "bow" || family === "crossbow"
+        ? { barrel: { pos: [0, 0.06, 0.36] } }
+        : {}),
+      ...(family === "staff" || family === "wand" || family === "tome"
+        ? { cast: { pos: [0, 1.2, 0] } }
+        : { blade: { pos: [0, 0.55, 0] } }),
+      physics: { pos: [0, 0.5, 0], radius: 0.05, halfHeight: 0.4 },
+      effect: { pos: family === "gun" ? [0, 0.06, 0.36] : [0, 1.0, 0] },
+    },
+  },
+  physics: {
+    kind: "capsule",
+    attach: "physics",
+    radius: 0.05,
+    halfHeight: 0.4,
+    sensor: true,
+  },
+  effects: {
+    trail: { from: "grip", to: "tip" },
+    impact: { at: "tip" },
+  },
+  tags: ["scaffolded", "warlords"],
   ship: false,
   readiness: {
     data: "ready",
     mesh: "missing",
     combat: "placeholder",
     present: "missing",
+    spine: "placeholder",
   },
 });
 

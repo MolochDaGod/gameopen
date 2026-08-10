@@ -54,6 +54,9 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 | JWT reader | `readProductionAuthToken()` — Open key `grudge.open.token` first |
 | Campfire roster | `/characters` · `/lobby` → `CampfireLobbyScene` (TVS CDN props) |
 | AI hub client | `artifacts/animator/src/ai/aiGateway.ts` → same JWT reader |
+| **Weapon prefab** (Warlords) | `content/docs/WEAPON_PREFAB.md` · `arsenal/weaponPrefabSpine.ts` |
+| Prefab spine points | cast · barrel · blade · blunt · tip · special · physics · effect |
+| Prefab UUID graph | `docs/WEAPON_PREFAB_UUID_SSOT.md` |
 
 ---
 

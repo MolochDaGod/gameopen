@@ -36,6 +36,21 @@ export { staffHoverTheme } from "./staffHover";
 export type { StaffHoverStyle, StaffHoverTheme } from "./staffHover";
 export { ELEMENT_THEME } from "./elements";
 export type { ElementTheme, ElementProjectile } from "./elements";
+export {
+  defaultSpineForFamily,
+  primaryCombatPointId,
+  resolveWeaponSpine,
+  resolveSpinePoint,
+  spinePointForVfxAnchor,
+  spineExportFragment,
+} from "./weaponPrefabSpine";
+export type {
+  SpinePointId,
+  SpinePoint,
+  WeaponSpine,
+  PrefabWeaponFamily,
+  SpineSource,
+} from "./weaponPrefabSpine";
 
 /** The "no weapon" prefab — a pure unarmed loadout (no model, no grip). */
 export const NONE: WeaponDef = {
