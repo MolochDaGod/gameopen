@@ -250,6 +250,12 @@ To **ship a new craft bench end-to-end**:
 3. Held item state / equipment keys.  
 4. Optional: item-catalog fantasy/tactical pack icon for inventory UI.
 
+### D2. Craft-stage **resource** props (ores / ingots)
+
+Onboarded: **Free Low Poly Resources Pack** → `assets/resources/lp/*.glb` · catalog keys `lp_*`.  
+Stages: coal/fuel → ore → ingot (see Mine-Loader `docs/LP_RESOURCES_STAGES.md`).  
+Static meshes only — **no** skeleton; do not retarget onto voxel avatar.
+
 ### E. New armour look
 
 1. Prefer cosmetics GLB (hat/helm) + character equipment slots.  

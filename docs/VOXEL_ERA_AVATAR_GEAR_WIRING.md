@@ -39,6 +39,7 @@ Browser (Open Realms / Mine-Loader / Campfire voxel seats)
 | World / blocks | Mine-Loader + `@workspace/voxel-canonical` | Free-form hex block maps as SSOT |
 | Gear **UI icons** | Codex item-catalog packs | Invent new icon host |
 | Gear **held mesh** (Mine) | pixel tools / rpg_weapons / TVS variants | grudge6 Toon race kits as voxel body |
+| Craft **resource** 3D props | `assets/resources/lp` · catalog `lp_*` (ores/ingots stages) | Using resource GLBs as avatar bones/anims |
 | Danger combat weapon | `saveData.open.weaponId` + arsenal | Separate “voxel combat weapon DB” |
 | Anim (Explorer) | One mixer · explorer/Mixamo path | Second AnimationMixer / Bip001-only packs forced on cube body |
 | Physics | One Rapier world per surface | Second physics engine |
