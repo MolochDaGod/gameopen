@@ -83,6 +83,8 @@ console.log(`\n=== Grudge Open smoke · base=${BASE} ===\n`);
 // SPA shells
 await probe("open-home", `${BASE}/`, { expect: "html" });
 await probe("danger", `${BASE}/danger`, { expect: "html" });
+await probe("characters-campfire", `${BASE}/characters`, { expect: "html" });
+await probe("lobby-campfire", `${BASE}/lobby`, { expect: "html" });
 await probe("annihilate-demo", `${BASE}/annihilate-demo`, { expect: "html" });
 await probe(
   "annihilate-hero",
@@ -142,18 +144,39 @@ await probe("api-ledger-search", `${BASE}/api/ledger/search`, {
   sample: true,
   critical: true,
 });
-// Definitions SSOT — info.grudge-studio.com (same-origin objectstore rewrite)
-await probe("info-master-weaponSkills", "https://info.grudge-studio.com/api/v1/master-weaponSkills.json", {
+// Definitions SSOT — R2 CDN + ObjectStore Worker (info.pages may 404)
+await probe("cdn-weapons", `${CDN}/api/v1/weapons.json`, {
   expect: "jsonish",
   sample: true,
   critical: true,
 });
-await probe("info-weapons", "https://info.grudge-studio.com/api/v1/weapons.json", {
+await probe("cdn-gear-presets", `${CDN}/api/v1/grudge6-gear-presets.json`, {
   expect: "jsonish",
   sample: true,
   critical: true,
 });
-await probe("info-races", "https://info.grudge-studio.com/api/v1/races.json", {
+await probe("objectstore-discovery", "https://objectstore.grudge-studio.com/api/v1", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("objectstore-assets-list", "https://objectstore.grudge-studio.com/v1/assets?limit=5", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("objectstore-weapons", "https://objectstore.grudge-studio.com/api/v1/weapons.json", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("gh-master-weaponSkills", "https://molochdagod.github.io/ObjectStore/api/v1/master-weaponSkills.json", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+// info Pages — optional until host recovers
+await probe("info-weapons-optional", "https://info.grudge-studio.com/api/v1/weapons.json", {
   expect: "jsonish",
   sample: true,
   critical: false,
@@ -164,6 +187,11 @@ await probe("open-objectstore-proxy-skills", `${BASE}/api/objectstore/v1/master-
   critical: true,
 });
 await probe("open-objectstore-proxy-weapons", `${BASE}/api/objectstore/v1/weapons.json`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("open-api-v1-weapons", `${BASE}/api/v1/weapons.json`, {
   expect: "jsonish",
   sample: true,
   critical: true,
@@ -219,6 +247,32 @@ await probe("cdn-dying-torch", `${CDN}/models/props/dying-torch.glb`, {
 await probe("cdn-claim-flag", `${CDN}/models/camp/claim-flag.glb`, {
   expect: "asset",
   critical: false,
+});
+
+// Campfire TVS farm props (R2 CDN law — Vercel SPA never ships these .glb)
+const TVS_CRITICAL = ["campfire.glb", "chair.glb", "fence.glb", "tree.glb"];
+for (const f of TVS_CRITICAL) {
+  await probe(
+    `cdn-campfire-tvs-${f.replace(".glb", "")}`,
+    `${CDN}/models/campfire-lobby/tvs/${f}`,
+    { expect: "asset", critical: true },
+  );
+}
+await probe("cdn-campfire-tvs-barn", `${CDN}/models/campfire-lobby/tvs/barn.glb`, {
+  expect: "asset",
+  critical: false,
+});
+
+// AI hub — health public; same-origin rewrite must not SPA-masquerade
+await probe("api-ai-health", `${BASE}/api/ai/health`, {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
+});
+await probe("ai-hub-health", "https://ai.grudge-studio.com/health", {
+  expect: "jsonish",
+  sample: true,
+  critical: true,
 });
 
 // Same-origin Open game pack (must ship with SPA)

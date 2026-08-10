@@ -198,7 +198,7 @@ export function useAssistant({ surface, tools, getSystemPrompt }: UseAssistantAr
           );
           if (outcome !== "ok" && !controller.signal.aborted) {
             appendText(
-              "\nAI hub request failed. Confirm ai.grudge-studio.com/health and sign-in.",
+              "\nAI hub request failed. Hub health is usually fine — sign in with Grudge ID so a fleet JWT is sent (grudge.open.token). Then retry.",
             );
           }
           return;

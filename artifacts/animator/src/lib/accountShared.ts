@@ -268,6 +268,36 @@ export async function fetchAccountNfts(): Promise<FleetNft[]> {
   }
 }
 
+/**
+ * One-shot shared account bundle (parity with GRUDOX loadSharedAccountBundle).
+ * Same Railway Postgres routes via same-origin /api/*.
+ */
+export async function loadSharedAccountBundle(): Promise<{
+  account: FleetAccountProfile | null;
+  wallet: FleetWalletStatus | null;
+  nfts: FleetNft[];
+  resources: ResourceMap;
+  island: FleetIslandSummary | null;
+  inventory: unknown[];
+}> {
+  const [account, wallet, nfts, resources, island, inventory] = await Promise.all([
+    fetchAccountProfile(),
+    fetchWalletStatus(),
+    fetchAccountNfts(),
+    fetchAccountResources(),
+    fetchHomeIsland(),
+    fetchAccountInventory(),
+  ]);
+  return {
+    account,
+    wallet,
+    nfts,
+    resources: resources || {},
+    island,
+    inventory: inventory || [],
+  };
+}
+
 /** GET /api/island — home island for the JWT account (when present). */
 export async function fetchHomeIsland(): Promise<FleetIslandSummary | null> {
   try {

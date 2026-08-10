@@ -5,11 +5,12 @@
  * - Launch native modes or external / Mine-Loader worlds
  * - Surface deploy stack + treaty entry points
  */
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   ERA_CATEGORIES,
   GAME_LIBRARY,
   MINE_LOADER,
+  SHARED_ACCOUNT_SCHEME,
   featuredGames,
   gameLaunchUrl,
   getGame,
@@ -26,6 +27,12 @@ import {
   nativeModeForGame,
   type InAppEmbedSession,
 } from "../lib/inAppLaunch";
+import {
+  canInstallPwa,
+  isStandalone,
+  onInstallAvailability,
+  promptInstall,
+} from "../lib/pwa";
 import "./gameLibrary.css";
 
 export type LibraryNavigateMode =
@@ -64,6 +71,11 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
   const [filter, setFilter] = useState<FilterId>("featured");
   const [selectedId, setSelectedId] = useState<string>(() => featuredGames()[0]?.id ?? GAME_LIBRARY[0].id);
   const [q, setQ] = useState("");
+  const [canInstall, setCanInstall] = useState(false);
+  const [installMsg, setInstallMsg] = useState<string | null>(null);
+  const standalone = typeof window !== "undefined" && isStandalone();
+
+  useEffect(() => onInstallAvailability(setCanInstall), []);
 
   const list = useMemo(() => {
     let base =
@@ -141,6 +153,27 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
             placeholder="Search games, engines, tags…"
             aria-label="Search library"
           />
+          {canInstall && !standalone && (
+            <button
+              type="button"
+              className="gl-btn primary"
+              title="Install Grudge Open as a desktop/mobile app"
+              onClick={async () => {
+                const r = await promptInstall();
+                if (r === "accepted") setInstallMsg("App install started");
+                else if (r === "unavailable")
+                  setInstallMsg("Use browser menu → Install app (Chrome/Edge)");
+                else setInstallMsg(null);
+              }}
+            >
+              Install app
+            </button>
+          )}
+          {standalone && (
+            <span className="gl-install-badge" title="Running as installed PWA">
+              App mode
+            </span>
+          )}
           <button type="button" className="gl-btn ghost" onClick={() => onOpenAccount?.() || onNavigate("account")}>
             Account
           </button>
@@ -149,6 +182,11 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
           </button>
         </div>
       </header>
+      {installMsg && (
+        <div className="gl-install-toast" role="status">
+          {installMsg}
+        </div>
+      )}
 
       <div className="gl-mine-banner">
         <div>
@@ -254,11 +292,37 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
                 <button type="button" className="gl-btn ghost large" onClick={() => onNavigate("account")}>
                   Treaty / Account
                 </button>
+                {canInstall && !standalone && (
+                  <button
+                    type="button"
+                    className="gl-btn ghost large"
+                    onClick={async () => {
+                      const r = await promptInstall();
+                      if (r === "accepted") setInstallMsg("App install started");
+                      else if (r === "unavailable")
+                        setInstallMsg("Browser menu → Install Grudge Open");
+                    }}
+                  >
+                    Download app
+                  </button>
+                )}
               </div>
+              <p className="gl-account-scheme">
+                Shared fleet account · {SHARED_ACCOUNT_SCHEME.dataLaw.characters} · CDN{" "}
+                {SHARED_ACCOUNT_SCHEME.assetsCdn.replace("https://", "")}
+              </p>
             </div>
           </div>
 
           <section className="gl-panels">
+            {selected.playerInfo && (
+              <div className="gl-panel">
+                <h3>How to play</h3>
+                <p style={{ margin: 0, opacity: 0.9, lineHeight: 1.45, fontSize: 13 }}>
+                  {selected.playerInfo}
+                </p>
+              </div>
+            )}
             <div className="gl-panel">
               <h3>Deploy stack</h3>
               <ul>
@@ -277,6 +341,13 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
                   {selected.url ? ` · ${selected.url}` : selected.nativeMode ? ` · mode=${selected.nativeMode}` : ""}
                 </li>
               </ul>
+              {selected.deployNotes && selected.deployNotes.length > 0 && (
+                <ul style={{ marginTop: 10 }}>
+                  {selected.deployNotes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="gl-panel">
               <h3>Sources (local fleet)</h3>
@@ -289,12 +360,21 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
               </ul>
             </div>
             <div className="gl-panel">
-              <h3>Mine-Loader world rules</h3>
+              <h3>Fleet deploy best practices</h3>
               <ul>
-                {MINE_LOADER.rules.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
+                <li>One production URL per title · unique poster under public/rooms/</li>
+                <li>Live HTTP 200 before status=live · era shelf only</li>
+                <li>SSO: Grudge ID · characters Railway · never invent hosts</li>
+                <li>Mine-Loader worlds: 1 API replica · no Replit production</li>
+                <li>GRUDOX cabinets stay on grudox.* · Warlords in-game not Open tiles</li>
               </ul>
+              {selected.engines.includes("mine-loader") && (
+                <ul style={{ marginTop: 8 }}>
+                  {MINE_LOADER.rules.slice(0, 4).map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 

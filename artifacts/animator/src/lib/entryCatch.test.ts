@@ -64,6 +64,22 @@ describe("entryCatch", () => {
     expect(r.kind).not.toBe("hard_redirect");
   });
 
+  it("purges legacy /game to Mine-Loader islands", () => {
+    const r = catchEntry({ pathname: "/game", search: "" });
+    expect(r.kind).toBe("hard_redirect");
+    if (r.kind === "hard_redirect") {
+      expect(r.url).toContain("mineloader.grudge-studio.com");
+      expect(r.url).toContain("entry=islands");
+      expect(r.url).toContain("from=open-game-purge");
+    }
+  });
+
+  it("startUrlForIntent islands → Mine-Loader", () => {
+    const u = startUrlForIntent("islands", { characterId: "c1" });
+    expect(u).toContain("mineloader.grudge-studio.com");
+    expect(u).toContain("characterId=c1");
+  });
+
   it("skips login landing when session present", () => {
     const r = catchEntry({
       pathname: "/login",

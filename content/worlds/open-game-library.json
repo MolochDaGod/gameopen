@@ -1,0 +1,186 @@
+{
+  "format": "grudge.open-game-library.v1",
+  "version": 2,
+  "updated": "2026-08-09",
+  "launcher": "https://open.grudge-studio.com/?door=library",
+  "pwa": {
+    "manifest": "/manifest.webmanifest",
+    "startUrl": "/?door=library",
+    "serviceWorker": "/sw.js",
+    "shellCacheVer": 5
+  },
+  "sharedAccountScheme": {
+    "authHost": "https://id.grudge-studio.com",
+    "playerApi": "https://grudge-api-production-0d46.up.railway.app",
+    "openApiPrefix": "/api",
+    "assetsCdn": "https://assets.grudge-studio.com",
+    "assetRegistry": "https://open.grudge-studio.com/api/asset-registry",
+    "accountSurfaces": {
+      "open": "https://open.grudge-studio.com/?door=account",
+      "grudox": "https://grudox.grudge-studio.com/account",
+      "grudoxVercel": "https://grudox.vercel.app/account",
+      "poker": "https://poker.grudge-studio.com/account",
+      "warlords": "https://client.grudge-studio.com/home",
+      "foundry": "https://character.grudge-studio.com/",
+      "wallet": "https://wallet.grudge-studio.com/"
+    },
+    "handoffParams": [
+      "sso_token",
+      "grudge_token",
+      "characterId",
+      "characterName",
+      "baseId",
+      "raceId",
+      "open",
+      "from"
+    ],
+    "dataLaw": {
+      "characters": "Railway Postgres",
+      "bag": "Railway Postgres",
+      "wallet": "Railway Postgres",
+      "assetIndex": "Cloudflare D1",
+      "binaries": "Cloudflare R2",
+      "localStorage": "offline cache only"
+    },
+    "doc": "docs/FLEET_ACCOUNT_ACCESSIBILITY.md"
+  },
+  "codeSsot": "artifacts/animator/src/game/gameLibrary.ts",
+  "games": [
+    {
+      "id": "account-hub",
+      "stack": { "client": "vercel", "edge": "cloudflare-worker" },
+      "launch": "native",
+      "url": null,
+      "sso": true
+    },
+    {
+      "id": "mine-loader-realms",
+      "stack": {
+        "client": "vercel",
+        "server": "railway",
+        "edge": "cloudflare-worker",
+        "singleReplica": true
+      },
+      "launch": "native",
+      "url": "https://mineloader.grudge-studio.com/",
+      "sso": true,
+      "engines": ["mine-loader", "three"]
+    },
+    {
+      "id": "danger-room",
+      "stack": { "client": "vercel", "edge": "cloudflare-worker" },
+      "launch": "native",
+      "engines": ["three", "rapier"],
+      "sso": true
+    },
+    {
+      "id": "gst-islands",
+      "stack": { "client": "vercel", "edge": "cloudflare-worker" },
+      "launch": "external",
+      "url": "https://grudge-studio.com/gst/",
+      "engines": ["three", "r3f", "rapier"],
+      "sso": true
+    },
+    {
+      "id": "voxgrudge",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://voxgrudge.vercel.app/",
+      "sso": true
+    },
+    {
+      "id": "warlords",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://client.grudge-studio.com/home",
+      "sso": true
+    },
+    {
+      "id": "warlord-genesis",
+      "stack": {
+        "client": "vercel",
+        "server": "railway",
+        "edge": "cloudflare-worker"
+      },
+      "launch": "native",
+      "url": "https://warstrat.grudge-studio.com/lobby",
+      "sso": true
+    },
+    {
+      "id": "hero-command",
+      "stack": { "client": "vercel" },
+      "launch": "external",
+      "url": "https://play.grudge-studio.com/",
+      "sso": true
+    },
+    {
+      "id": "dungeon-crawler",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://dcq.grudge-studio.com/",
+      "sso": true
+    },
+    {
+      "id": "grudge-multiverse",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://grudge-multiverse.vercel.app/#room1",
+      "sso": true
+    },
+    {
+      "id": "grudge-arena",
+      "stack": { "client": "vercel" },
+      "launch": "external",
+      "url": "https://grudge-arena.grudge-studio.com/",
+      "sso": true
+    },
+    {
+      "id": "grim-armada",
+      "stack": { "client": "vercel" },
+      "launch": "external",
+      "url": "https://grim-armada-web.vercel.app/",
+      "sso": true
+    },
+    {
+      "id": "nexus-carrier",
+      "stack": {
+        "client": "vercel",
+        "server": "railway",
+        "edge": "cloudflare-worker"
+      },
+      "launch": "external",
+      "url": "https://carrier.grudge-studio.com/",
+      "sso": true
+    },
+    {
+      "id": "grudox-games",
+      "stack": { "client": "vercel", "edge": "cloudflare-worker" },
+      "launch": "external",
+      "url": "https://grudox.grudge-studio.com/",
+      "accountUrl": "https://grudox.grudge-studio.com/account",
+      "sso": true,
+      "brand": "GRUDOX",
+      "role": "voxel-hub-editor-deployer-account"
+    },
+    {
+      "id": "mech-forge",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://mech-playground.vercel.app/",
+      "sso": true
+    },
+    {
+      "id": "survival-grudges",
+      "stack": { "client": "vercel", "server": "railway" },
+      "launch": "external",
+      "url": "https://grudges.grudge-studio.com/",
+      "sso": true
+    }
+  ],
+  "seedWorldsCatalog": "content/worlds/seed-deployments.json",
+  "notes": [
+    "Code SSOT remains gameLibrary.ts — this JSON is agent/DB smoke inventory",
+    "Warlords in-game worlds (pirate-islands) are not Open launch tiles",
+    "Postgres = player; D1 = asset index; R2 = binaries"
+  ]
+}

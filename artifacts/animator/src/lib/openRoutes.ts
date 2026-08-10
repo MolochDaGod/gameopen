@@ -335,7 +335,7 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
   {
     mode: "minegrudge",
     slug: "realms-hub",
-    aliases: ["realms-menu", "mine-loader-menu"],
+    aliases: ["realms-menu", "mine-loader-menu", "islands-menu"],
     cabinets: [],
     title: "Realms menu",
     blurb: "Pick Realms surface (lobby / play / build / codex) then enter in-app.",
@@ -352,10 +352,10 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     cabinets: ["lobby", "party"],
     title: "Character Lobby",
     blurb:
-      "Ethereal Falls campfire — up to 4 voxel heroes, select seat, launch PvE/PvP.",
+      "TVS farm campfire — 4 chairs, sit idle, hover to stand; launch PvE/PvP.",
     group: "hub",
     poster: "lobby",
-    tags: ["4-slot", "Characters", "Campfire"],
+    tags: ["4-slot", "Characters", "Campfire", "TVS"],
     accent: "#5fe0ff",
   },
   {
@@ -478,7 +478,15 @@ export function resolveModeFromLocation(
     const door = q.get("door");
     if (door) {
       if (MODE_SET.has(door)) return door as AppMode;
-      if (door === "charactersgrudox" || door === "characters") return "account";
+      // Campfire roster hub (TVS farm chairs) — not AccountPanel HTML
+      if (
+        door === "charactersgrudox" ||
+        door === "characters" ||
+        door === "campfire" ||
+        door === "roster-hub"
+      ) {
+        return "characters";
+      }
       if (door === "grudoxEditor") return "minegrudge";
       const viaAlias = modeFromSlug(door);
       if (viaAlias) return viaAlias;

@@ -6,9 +6,19 @@
  *     → Cloudflare edge (open.grudge-studio.com Worker proxy)
  *     → Vercel SPA (gameopen.vercel.app) + vercel.json rewrites
  *     → Railway Node REST (grudge-api)  |  R2 CDN binaries  |  D1 index
+ *     → AI hub ai.grudge-studio.com (JWT) via same-origin /api/ai
  *     → optional WS via CF Worker or Railway (never Vercel upgrade alone)
  *
+ * Reliability laws (2026-08 hardened):
+ *  1. Auth JWT: one reader (`readProductionAuthToken`) — Open primary key
+ *     grudge.open.token, then fleet keys. AI / REST / warmup all use it.
+ *  2. GLB props: R2 CDN absolute first; never rely on Vercel SPA for .glb
+ *     (vercelignore bans all .glb). Campfire TVS: CAMPFIRE_TVS.
+ *  3. Routes: /characters + /lobby + door=characters → CampfireLobby (not account).
+ *  4. AI: health is public; chat/image need Bearer JWT; fail with clear auth copy.
+ *
  * Use with: cinema timing, BootGate load screens, loadGltfFirst, same-origin /api/*.
+ * Docs: docs/PRODUCTION_SYSTEMS_PATTERN.md · docs/FLEET_AUTH_WIRING.md
  */
 
 /** Canonical production hosts (smoke + resolvers). */
@@ -22,6 +32,107 @@ export const PROD_HOSTS = {
   info: "https://info.grudge-studio.com",
   arena: "https://grudge-arena.grudge-studio.com",
   ai: "https://ai.grudge-studio.com",
+} as const;
+
+/**
+ * Fleet JWT storage keys — write all on login, read any (Open primary first).
+ * Must stay aligned with `lib/fleet.ts` FLEET_TOKEN_KEYS + grudgeAuth TOKEN_KEY.
+ */
+export const PROD_AUTH_TOKEN_KEYS = [
+  "grudge.open.token",
+  "grudge_auth_token",
+  "grudge_session_token",
+  "grudge.token",
+  "sso_token",
+  "grudge_token",
+] as const;
+
+/**
+ * Single production JWT reader for AI hub, REST warmup, and any Bearer call.
+ * Prefer this over ad-hoc localStorage scans so AI never misses grudge.open.token.
+ */
+export function readProductionAuthToken(opts?: {
+  /** Explicit override (tests / embed). */
+  override?: string | null;
+}): string | null {
+  if (opts && "override" in opts) {
+    const o = opts.override;
+    if (o) return o;
+    if (o === null) return null;
+  }
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      for (const k of PROD_AUTH_TOKEN_KEYS) {
+        const v = sessionStorage.getItem(k);
+        if (v) return v;
+      }
+    }
+    if (typeof localStorage !== "undefined") {
+      for (const k of PROD_AUTH_TOKEN_KEYS) {
+        const v = localStorage.getItem(k);
+        if (v) return v;
+      }
+    }
+  } catch {
+    /* private mode */
+  }
+  return null;
+}
+
+/**
+ * Campfire /characters TVS Voxel Farm props — production binary law.
+ * Vercel SPA omits .glb; loaders must CDN-first then same-origin for local dev.
+ */
+export const CAMPFIRE_TVS = {
+  cdnBase: `${PROD_HOSTS.assetsCdn}/models/campfire-lobby/tvs`,
+  localRel: "models/campfire-lobby/tvs",
+  /** Files used by CampfireLobbyScene (smoke probes these on R2). */
+  files: [
+    "campfire.glb",
+    "chair.glb",
+    "fence.glb",
+    "fencepost.glb",
+    "haybale.glb",
+    "watertrough.glb",
+    "soil.glb",
+    "wheat.glb",
+    "pumpkin.glb",
+    "tree.glb",
+    "appletree.glb",
+    "barn.glb",
+  ] as const,
+  /** Critical for first paint of farm camp (smoke critical subset). */
+  smokeCritical: ["campfire.glb", "chair.glb", "fence.glb", "tree.glb"] as const,
+} as const;
+
+/** CDN-first URL candidates for a TVS farm prop filename. */
+export function campfireTvsUrls(file: string): string[] {
+  const name = file.replace(/^\//, "");
+  return [
+    `${CAMPFIRE_TVS.cdnBase}/${name}`,
+    `/${CAMPFIRE_TVS.localRel}/${name}`,
+  ];
+}
+
+/** Product surface routes that own CampfireLobby (not AccountPanel). */
+export const CAMPFIRE_SURFACES = {
+  modes: ["characters", "lobby"] as const,
+  paths: ["/characters", "/lobby"] as const,
+  doorAliases: ["characters", "charactersgrudox", "campfire", "roster-hub"] as const,
+  notes: "4-seat TVS farm camp; door=characters must not open account panel",
+} as const;
+
+/** AI hub wiring — health public, chat/image JWT. */
+export const AI_WIRING = {
+  hub: PROD_HOSTS.ai,
+  sameOriginPrefix: "/api/ai",
+  healthSameOrigin: "/api/ai/health",
+  healthAbsolute: `${PROD_HOSTS.ai}/health`,
+  /** User-facing errors when JWT missing vs rejected. */
+  errNoToken:
+    "AI gateway auth failed — sign in with Grudge ID (no fleet JWT in browser)",
+  errRejected:
+    "AI gateway rejected session — re-sign in with Grudge ID (token expired or wrong issuer)",
 } as const;
 
 /**
@@ -58,6 +169,8 @@ export const REST_SAME_ORIGIN = {
   wallet: "/api/wallet",
   authMe: "/api/auth/me",
   assetRegistry: "/api/asset-registry",
+  /** AI hub health (public; chat still needs JWT) */
+  aiHealth: "/api/ai/health",
   /** Binary proxy (not preferred for large GLB — use CDN absolute or rewrite paths) */
   assetsProxy: "/api/assets/",
 } as const;
@@ -122,9 +235,15 @@ export const SURFACE_LOAD_PLAN: Record<
   characters: {
     pattern: "cinema_flow",
     cinemaId: "char_select_establish",
-    rest: ["charactersWarlords", "account"],
-    criticalMeshes: ["models/racalvin.glb"],
-    notes: "Cinema then campfire; heroes from Railway",
+    rest: ["charactersWarlords", "account", "aiHealth"],
+    // TVS farm props on R2 — not Vercel public/ (glb banned in deploy tarball)
+    criticalMeshes: [
+      "models/campfire-lobby/tvs/campfire.glb",
+      "models/campfire-lobby/tvs/chair.glb",
+      "models/campfire-lobby/tvs/fence.glb",
+      "models/campfire-lobby/tvs/tree.glb",
+    ],
+    notes: "Cinema then TVS farm campfire; heroes Railway; props CDN-only",
   },
   intro_handoff: {
     pattern: "cinema_flow",
@@ -134,12 +253,15 @@ export const SURFACE_LOAD_PLAN: Record<
     notes: "Landing → roster cinema",
   },
   lobby: {
-    // ONE scene: CampfireLobbyScene (Ethereal Falls) — never dungeon/arena establish
+    // ONE scene: CampfireLobbyScene (TVS farm) — never dungeon/arena establish
     pattern: "spa_instant",
     cinemaId: undefined,
-    rest: ["health", "charactersWarlords"],
-    criticalMeshes: ["models/racalvin.glb"],
-    notes: "Ethereal Falls campfire only — no ProductionCinema dungeon shell",
+    rest: ["health", "charactersWarlords", "aiHealth"],
+    criticalMeshes: [
+      "models/campfire-lobby/tvs/campfire.glb",
+      "models/campfire-lobby/tvs/chair.glb",
+    ],
+    notes: "TVS farm campfire only — no ProductionCinema dungeon shell",
   },
   danger: {
     pattern: "boot_gate",
@@ -171,17 +293,22 @@ export const SURFACE_LOAD_PLAN: Record<
  * Deploy order for fastest safe production ship.
  */
 export const DEPLOY_CHECKLIST = [
-  "verify:assets:cdn — R2 magic bytes",
+  "verify:assets:cdn — R2 magic bytes + campfire TVS props HEAD",
   "git push main — Vercel SPA build (or npm run deploy:prod)",
   "wrangler deploy infra/cloudflare/open if edge proxy changed",
   "verify:assets:open — same-origin rewrites on open.grudge-studio.com",
   "REST smoke: GET /api/health + /api/characters (auth)",
+  "AI smoke: GET /api/ai/health 200; chat 401 without JWT is expected",
+  "Surface smoke: /characters + /lobby = campfire; door=characters not account",
   "Cinema/UI smoke: /login → characters, / doors, /lobby",
 ] as const;
 
 /** Never do these in production paths. */
 export const PROD_KILL_LIST = [
-  "Load large GLBs only from git / Vercel bundle (OOM + slow)",
+  "Load large GLBs only from git / Vercel bundle (OOM + slow; vercelignore bans .glb)",
+  "Campfire TVS props from same-origin only without R2 CDN first",
+  "AI client that skips grudge.open.token (only legacy fleet keys)",
+  "door=characters → AccountPanel (must be CampfireLobby)",
   "Call Railway absolute API from browser when same-origin /api exists",
   "Use assets.grudge-studio.com/gameopen/* incomplete prefix for GLBs",
   "Expect Vercel alone to upgrade WebSockets",
@@ -224,14 +351,13 @@ export async function warmupProductionSurface(
     typeof performance !== "undefined" ? performance.now() : Date.now();
 
   const restOk: Record<string, boolean> = {};
-  // Attach fleet JWT when present so characters/account warmup is not a red 401 for guests mid-boot
+  // Single token reader (grudge.open.token + fleet keys) — never AI/REST-only legacy keys
   let authHeader: Record<string, string> = { Accept: "application/json" };
   try {
     const tok =
-      (opts?.authToken !== undefined ? opts.authToken : null) ||
-      (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("grudge.open.token") : null) ||
-      (typeof localStorage !== "undefined" ? localStorage.getItem("grudge.open.token") : null) ||
-      "";
+      opts?.authToken !== undefined
+        ? opts.authToken
+        : readProductionAuthToken();
     if (tok) authHeader = { ...authHeader, Authorization: `Bearer ${tok}` };
   } catch {
     /* private mode */
@@ -243,6 +369,7 @@ export async function warmupProductionSurface(
       return;
     }
     // Auth-gated routes: skip network when no token (avoids console 401 spam on lobby)
+    // aiHealth is public — always probe
     const needsAuth =
       key === "charactersWarlords" ||
       key === "characters" ||
@@ -313,12 +440,15 @@ export async function warmupProductionSurface(
 /** Agent / docs fragment — keep cinema + deploy AI aligned. */
 export const AI_PRODUCTION_SYSTEMS_PROMPT = `
 You ship Grudge Open production systems with this stack only:
-1. Frontend: Vercel SPA (gameopen) — never put large GLBs in the JS bundle.
+1. Frontend: Vercel SPA (gameopen) — never put large GLBs in the JS bundle (vercelignore bans .glb).
 2. Edge: Cloudflare Worker open.grudge-studio.com → Vercel; R2 assets.grudge-studio.com; D1 asset index.
 3. REST: same-origin /api/* rewrites to Railway grudge-api (characters, account, island, wallet) and id auth.
-4. Realtime: Railway or CF DO/Worker — Vercel cannot upgrade WebSockets alone.
-5. Load UX: BootGate (danger) OR ProductionCinema flow (characters/lobby) OR HelpersLoadScreen — parallelize REST + CDN during cinema/load, never serial block.
-6. Timing: rest warmup ≤2.5s budget; BootGate soft 8s / hard 30s per step; cinema skippableAfterSec from catalog.
-7. Assets: loadGltfFirst + fleetAssetResolver CDN-first; never assets…/gameopen incomplete prefix.
-8. QA: open.grudge-studio.com + verify:assets:cdn + /api/health — not localhost-only sign-off.
+4. Auth JWT: readProductionAuthToken() — grudge.open.token first, then fleet keys. Dual-write all keys on login.
+5. AI: /api/ai → ai.grudge-studio.com; health public; chat/image Bearer JWT; use AI_WIRING error copy on 401.
+6. Campfire: /characters + /lobby + door=characters → CampfireLobby TVS farm; props from CAMPFIRE_TVS CDN first.
+7. Realtime: Railway or CF DO/Worker — Vercel cannot upgrade WebSockets alone.
+8. Load UX: BootGate (danger) OR ProductionCinema flow OR HelpersLoadScreen — parallelize REST + CDN, never serial block.
+9. Timing: rest warmup ≤2.5s budget; BootGate soft 8s / hard 30s per step; cinema skippableAfterSec from catalog.
+10. Assets: loadGltfFirst + fleetAssetResolver CDN-first; never assets…/gameopen incomplete prefix.
+11. QA: open.grudge-studio.com smoke:prod:open + /api/health + /api/ai/health + TVS CDN HEADs — not localhost-only.
 `.trim();

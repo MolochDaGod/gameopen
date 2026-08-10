@@ -4,12 +4,14 @@
  * Static pose: only the **back circle / base ring** is visible — attach that
  * to Bip001 Spine / back. Deployed: open/expand wing planes (type 1 or 2).
  *
- * Modes (back-slot item driven):
+ * Modes (back-slot item driven — back slot **is** the effect slot):
  *  - stowed     — closed circle only (parachute pack on back)
  *  - parachute  — open (descent drag)
  *  - glide      — expand (horizontal glide)
  *  - flight     — expand + higher lift (powered / skill)
  *  - sail       — open; couples to open-ocean waterboard / sail deploy
+ *
+ * Wider item list (wind surf, hover, shell, stealth, …): see backSlotItems.ts.
  *
  * Clips in GLB (no skin — rigid keyframe hierarchy):
  *  open/expand/dispand/close × type 1 and type 2

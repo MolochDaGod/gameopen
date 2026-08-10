@@ -41,6 +41,22 @@ export type HarvestNode = {
   remaining: number;
 };
 
+/** Family id for matching hand tool ↔ node.tool (harvest F). */
+export function harvestToolFamily(id?: string): string {
+  const s = String(id || "").toLowerCase();
+  if (!s || s === "any" || s === "gather" || s === "hand") return "any";
+  if (/axe|hatchet|chop|wood|log/.test(s)) return "axe";
+  if (/pick|mine|ore/.test(s)) return "pick";
+  if (/knife|skin/.test(s)) return "knife";
+  if (/sickle|forage|herb|flower|gather/.test(s)) return "forage";
+  if (/hoe|farm/.test(s)) return "hoe";
+  if (/shovel|dig|terrain/.test(s)) return "shovel";
+  if (/bucket|water/.test(s)) return "bucket";
+  if (/fish|rod|pole/.test(s)) return "fish";
+  if (/hammer|build/.test(s)) return "hammer";
+  return s;
+}
+
 export type ForestWorldCallbacks = {
   flash?: (msg: string, t?: number) => void;
 };
@@ -944,6 +960,36 @@ export class ForestWorld {
       }
     }
     return null;
+  }
+
+  /**
+   * Nearest alive harvest node, optionally filtered by tool in hand.
+   * Used by harvest **F** (not LMB select).
+   */
+  nearestHarvest(
+    pos: THREE.Vector3,
+    handTool?: string,
+    maxDist = 12,
+  ): HarvestNode | null {
+    const maxSq = maxDist * maxDist;
+    let best: HarvestNode | null = null;
+    let bestSq = maxSq;
+    const want = handTool ? harvestToolFamily(handTool) : null;
+    for (const n of this.harvestNodes) {
+      if (n.remaining <= 0 || !n.mesh.visible) continue;
+      if (want && want !== "any") {
+        const nodeFam = harvestToolFamily(n.tool);
+        if (nodeFam !== "any" && nodeFam !== want) continue;
+      }
+      const dx = n.position.x - pos.x;
+      const dz = n.position.z - pos.z;
+      const sq = dx * dx + dz * dz;
+      if (sq <= bestSq) {
+        bestSq = sq;
+        best = n;
+      }
+    }
+    return best;
   }
 
   /** Consume one harvest hit; hide mesh when depleted. */

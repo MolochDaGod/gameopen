@@ -55,8 +55,11 @@ Canonical login always returns to **this** origin with tokens the app can store.
 2. After login, id handoff attaches **`sso_token`** (full session JWT) and **`grudge_token`** (short launch) in **query and hash**.
 3. On boot, **prefer `sso_token` / `token`** over `grudge_token`. Never use launch JWT alone as Bearer.
 4. If only launch is present → `POST /api/auth/session/exchange` (or grudge-bridge) with `audience=https://gameopen.vercel.app`.
-5. Store under fleet keys: `grudge_auth_token`, `grudge_session_token`, `grudge.token`, `sso_token`, plus `grudge.open.token`.
-6. **No custom identity headers** (e.g. `x-grudge-id`) — CORS preflight fails on Railway; Bearer carries identity.
+5. Store under fleet keys: **`grudge.open.token` first**, then `grudge_auth_token`, `grudge_session_token`, `grudge.token`, `sso_token`, `grudge_token`. Dual-write all on login.
+6. **Read JWT** via `readProductionAuthToken()` (`lib/productionSystemsPattern.ts`) for AI hub + REST — never a third key scanner.
+7. **No custom identity headers** (e.g. `x-grudge-id`) — CORS preflight fails on Railway; Bearer carries identity.
+
+Pattern SSOT: [`docs/PRODUCTION_SYSTEMS_PATTERN.md`](docs/PRODUCTION_SYSTEMS_PATTERN.md) · [`docs/FLEET_AUTH_WIRING.md`](docs/FLEET_AUTH_WIRING.md).
 
 ```bash
 # Probe id dual-write (expect 302 with both redirect_uri and redirect)
@@ -107,9 +110,10 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/world` | VoxGrudge open world |
 | `/dressing` | Dressing Room / Animator (threejs-rapier suite) |
 | `/avatar` | Cube modular Avatar Editor |
-| `/characters` | Characters GRUDOX campfire hub |
+| `/characters` | **TVS farm campfire** roster hub (CDN props) |
 | `/realms` | Mine-Loader / GRUDOX Realms |
-| `/lobby` | Multiplayer lobby |
+| `/lobby` | Same campfire roster (not dungeon cinema) |
+| `/api/ai/*` | AI hub rewrite (`ai.grudge-studio.com`; JWT for chat) |
 | `/zones` | GRUDOX zone launcher |
 | `/ledmask` | LED Mask + voxel avatar design |
 | `/account` | Account hub (races, wallet, treaty) |

@@ -6,7 +6,7 @@
  *  - Authoritative multiplayer Realms / harvest / DRC → **mineloader.grudge-studio.com**
  *  - DCQ dungeon RPG → dcq.grudge-studio.com
  *  - Ruins Brawler → gameopen /brawl only (not Genesis)
- *  - Warlord Genesis → warlord-genesis.vercel.app
+ *  - Warlord Genesis / Warstrat → warstrat.grudge-studio.com (canonical)
  */
 
 export const FLEET_WORLD_HOSTS = {
@@ -50,7 +50,12 @@ export const FLEET_WORLD_HOSTS = {
   forge: "https://forge.grudge-studio.com/",
   /** Warlords / genesis */
   warlords: "https://grudgewarlords.com/",
-  warlordGenesis: "https://warlord-genesis.vercel.app/lobby",
+  /** Canonical Warstrat production SPA (Warlord Genesis warcamp) */
+  warstrat: "https://warstrat.grudge-studio.com/",
+  warstratLobby: "https://warstrat.grudge-studio.com/lobby",
+  /** Vercel twin for Warstrat / Genesis */
+  warlordGenesis: "https://warstrat.grudge-studio.com/lobby",
+  warlordGenesisVercel: "https://warlord-genesis.vercel.app/lobby",
   /** Social / meta */
   metaverse: "https://metaverse.grudge-studio.com/",
   carrier: "https://carrier.grudge-studio.com/",
@@ -62,6 +67,12 @@ export const FLEET_WORLD_HOSTS = {
   open: "https://open.grudge-studio.com/",
   /** Alias of open — keep key for older callers; always open.grudge-studio.com */
   gameopen: "https://open.grudge-studio.com/",
+  /** GST Islands RTS (portal /gst/) */
+  gstIslands: "https://grudge-studio.com/gst/",
+  /** Arena PvP */
+  grudgeArena: "https://grudge-arena.grudge-studio.com/",
+  /** Multiverse */
+  multiverse: "https://grudge-multiverse.vercel.app/",
 } as const;
 
 export type FleetWorldId =
@@ -78,7 +89,10 @@ export type FleetWorldId =
   | "metaverse"
   | "carrier"
   | "mech"
-  | "grudox-games";
+  | "grudox-games"
+  | "gst-islands"
+  | "grudge-arena"
+  | "multiverse";
 
 export type FleetWorldDef = {
   id: FleetWorldId;
@@ -189,11 +203,17 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "warlord-genesis",
-    title: "Warlord Genesis",
-    url: FLEET_WORLD_HOSTS.warlordGenesis,
-    blurb: "3-lane MOBA/RTS warcamp (not Ruins Brawler).",
+    title: "Warstrat · Warlord Genesis",
+    url: FLEET_WORLD_HOSTS.warstratLobby,
+    fallbackUrl: FLEET_WORLD_HOSTS.warlordGenesisVercel,
+    blurb:
+      "Warstrat (warstrat.grudge-studio.com) — 3-lane MOBA/RTS warcamp, shared Grudge ID + Railway account DB. Not Ruins Brawler.",
     kind: "rts",
-    sources: ["F:\\GitHub\\warlord-genesis"],
+    sources: [
+      "https://warstrat.grudge-studio.com/",
+      "F:\\GitHub\\warlord-genesis",
+      "C:\\Users\\nugye\\Documents\\warlord-genesis",
+    ],
     featured: true,
   },
   {
@@ -233,6 +253,35 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     blurb: "Arcade + cabinet index (racer, zombie, z-brawl, waters).",
     kind: "hub",
     sources: ["D:\\GitHub\\grudox"],
+    featured: true,
+  },
+  {
+    id: "gst-islands",
+    title: "Grudge Islands RTS",
+    url: FLEET_WORLD_HOSTS.gstIslands,
+    blurb:
+      "GST /gst/ — airship cinema, island sim, combat showcase. Vercel grudge-studio-tool.",
+    kind: "rts",
+    sources: [
+      "C:\\Users\\nugye\\Documents\\Game-Studio-Tool\\Game-Studio-Tool\\artifacts\\grudge-islands",
+    ],
+    featured: true,
+  },
+  {
+    id: "grudge-arena",
+    title: "Grudge Arena",
+    url: FLEET_WORLD_HOSTS.grudgeArena,
+    blurb: "Instanced PvP · grudge6 · dual skill HUD.",
+    kind: "combat",
+    sources: ["F:\\GitHub\\grudge-arena"],
+  },
+  {
+    id: "multiverse",
+    title: "Grudge Multiverse",
+    url: FLEET_WORLD_HOSTS.multiverse,
+    blurb: "Bermuda island multiplayer · dedicated Railway rooms (not Carrier).",
+    kind: "full-world",
+    sources: ["F:\\GitHub\\grudge-multiverse"],
     featured: true,
   },
 ] as const;

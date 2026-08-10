@@ -447,7 +447,7 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
     {
       name: "equip_back_wing",
       description:
-        "Equip back-slot wing pack modes: back_wing_pack (stowed circle), back_parachute, back_glider, back_flight_rig, back_sail_deploy (ocean sail/waterboard). Pass null/empty to hide.",
+        "Equip back-slot items (back slot = effect slot): back_wing_pack, back_parachute, back_glider, back_flight_rig, back_sail_deploy. Planned: wind_surf, hover, protective_shell, invisibility — see backSlotItems.ts. Pass null/empty to hide.",
       parameters: {
         type: "object",
         properties: {

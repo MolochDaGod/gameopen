@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   AI_PRODUCTION_SYSTEMS_PROMPT,
+  AI_WIRING,
+  CAMPFIRE_SURFACES,
+  CAMPFIRE_TVS,
+  campfireTvsUrls,
   DEPLOY_CHECKLIST,
   DEPLOY_LAYERS,
+  PROD_AUTH_TOKEN_KEYS,
   PROD_HOSTS,
   PROD_KILL_LIST,
   PROD_TIMING_MS,
+  readProductionAuthToken,
   REST_SAME_ORIGIN,
   SURFACE_LOAD_PLAN,
   warmupProductionSurface,
@@ -23,6 +29,7 @@ describe("productionSystemsPattern", () => {
     for (const path of Object.values(REST_SAME_ORIGIN)) {
       expect(path.startsWith("/api/")).toBe(true);
     }
+    expect(REST_SAME_ORIGIN.aiHealth).toBe("/api/ai/health");
   });
 
   it("maps critical surfaces to load patterns + cinema ids", () => {
@@ -33,6 +40,35 @@ describe("productionSystemsPattern", () => {
     expect(SURFACE_LOAD_PLAN.lobby?.cinemaId).toBeUndefined();
     expect(SURFACE_LOAD_PLAN.danger?.pattern).toBe("boot_gate");
     expect(SURFACE_LOAD_PLAN.home_island?.criticalMeshes?.length).toBeGreaterThan(0);
+  });
+
+  it("characters/lobby critical meshes are TVS farm CDN props not dungeon", () => {
+    const charMeshes = SURFACE_LOAD_PLAN.characters?.criticalMeshes ?? [];
+    expect(charMeshes.some((m) => m.includes("campfire-lobby/tvs"))).toBe(true);
+    expect(charMeshes.some((m) => /dungeon|ethereal/i.test(m))).toBe(false);
+    expect(CAMPFIRE_SURFACES.modes).toContain("characters");
+    expect(CAMPFIRE_SURFACES.doorAliases).toContain("characters");
+  });
+
+  it("auth token keys put Open primary first and match fleet.ts", async () => {
+    expect(PROD_AUTH_TOKEN_KEYS[0]).toBe("grudge.open.token");
+    expect(readProductionAuthToken({ override: "jwt.test" })).toBe("jwt.test");
+    expect(readProductionAuthToken({ override: null })).toBe(null);
+    const { FLEET_TOKEN_KEYS } = await import("./fleet");
+    expect([...FLEET_TOKEN_KEYS]).toEqual([...PROD_AUTH_TOKEN_KEYS]);
+  });
+
+  it("campfire TVS urls are CDN-first", () => {
+    const urls = campfireTvsUrls("campfire.glb");
+    expect(urls[0]).toContain(PROD_HOSTS.assetsCdn);
+    expect(urls[0]).toContain("campfire-lobby/tvs/campfire.glb");
+    expect(CAMPFIRE_TVS.smokeCritical.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("AI wiring has health path and auth error copy", () => {
+    expect(AI_WIRING.healthSameOrigin).toBe("/api/ai/health");
+    expect(AI_WIRING.errNoToken).toMatch(/sign in/i);
+    expect(AI_WIRING.errRejected).toMatch(/re-sign/i);
   });
 
   it("keeps timing budgets under boot stall", () => {
@@ -80,7 +116,9 @@ describe("productionSystemsPattern", () => {
   it("exports deploy checklist and kill list for agents", () => {
     expect(DEPLOY_CHECKLIST.length).toBeGreaterThan(3);
     expect(PROD_KILL_LIST.some((k) => /WebSocket/i.test(k))).toBe(true);
+    expect(PROD_KILL_LIST.some((k) => /grudge\.open\.token/i.test(k))).toBe(true);
     expect(AI_PRODUCTION_SYSTEMS_PROMPT).toContain("same-origin");
     expect(AI_PRODUCTION_SYSTEMS_PROMPT).toContain("Cloudflare");
+    expect(AI_PRODUCTION_SYSTEMS_PROMPT).toContain("readProductionAuthToken");
   });
 });

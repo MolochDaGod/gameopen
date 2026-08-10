@@ -14,10 +14,32 @@
     "tome_divine_wave_sacred_shield_smite_grace_fury_wrath_page"
   ],
   "mesh": {
-    "path": "models/weapons/shield.glb",
+    "path": "models/weapons/tome.glb",
     "format": "glb",
     "status": "ready",
-    "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
+    "aliases": [
+      "models/weapons/grimoire.glb",
+      "models/props/grimoire.glb",
+      "prod/gltf/weapons/tome.glb"
+    ],
+    "authorSource": "D:/Games/Models/animator-dist (2)/models/props/grimoire.glb",
+    "notes": "Warlords grimoire/tome mesh — L_hand_container off-hand; cast via magic animPack + beam/orb VFX from hand"
+  },
+  "attach": {
+    "slot": "offHand",
+    "socket": "L_hand_container",
+    "fallbacks": ["Bip001 L Hand", "Bip001_L_Hand"],
+    "gripOffset": { "x": 0.04, "y": 0.02, "z": 0.06 },
+    "gripEuler": { "x": -0.35, "y": 0.15, "z": 0.4 },
+    "targetLenM": 0.28,
+    "antiClip": true
+  },
+  "cast": {
+    "animPack": "magic",
+    "roles": ["cast", "attack", "channel"],
+    "projectileOrigin": "tome",
+    "beamProfile": "tome",
+    "vfx": ["bolt", "heal", "aura", "channel"]
   },
   "tags": [
     "master-weaponSkills",

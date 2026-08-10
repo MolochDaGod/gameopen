@@ -336,7 +336,8 @@ const FALLBACK_SYSTEMS: SystemsDoc = {
   ],
   controls: [
     { key: "Hold Q", action: "Mode radial · ↑ combat · ↓ harvest (tap toggles)" },
-    { key: "Hold R", action: "Harvest tool radial (equip tool)" },
+    { key: "F", action: "Harvest nearest node of tool in hand" },
+    { key: "Hold R", action: "Tool radial · professions · farm · shovel · back (effects)" },
     { key: "J/H/V", action: "Bag utility · consumable / deploy / mount" },
     { key: "Hold Tab", action: "Radial tool wheel" },
     { key: "P", action: "Toggle production UI" },

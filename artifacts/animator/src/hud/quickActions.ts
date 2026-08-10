@@ -5,11 +5,13 @@
 // Keybind SSOT (Danger Room / Open combat):
 //   Hold Q = mode radial (↑ combat · ↓ harvest) · tap Q toggles combat↔harvest
 //   Shift+Q = swap main ↔ side arm (combat only)
-//   Hold R (harvest) = tool radial · combat R = heavy
+//   Hold R (harvest) = tool radial (professions · farm · shovel · back slot/effects)
+//   combat R = heavy
+//   Harvest F = nearest node of tool in hand · combat F / 1–4 = skills
 //   J / H / V = bag utility (consumable / deployable / mount)
 //   RMB = toggle hard FOCUS (face+lock) / soft lock
 //   LMB = attack/combo in FOCUS · select target in soft lock
-//   C = parry · X = roll · E = forcefield guard · F / 1–4 skills
+//   C = parry · X = roll · E = forcefield guard
 
 import type { IconName } from "../three/icons";
 

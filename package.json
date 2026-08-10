@@ -23,6 +23,8 @@
     "smoke:prod": "node scripts/smoke-prod.mjs",
     "smoke:prod:open": "node scripts/smoke-prod.mjs --base https://open.grudge-studio.com",
     "smoke:prod:portal": "node scripts/smoke-prod.mjs --base https://grudge-studio.com",
+    "smoke:library": "node scripts/library-stack-smoke.mjs",
+    "smoke:library:open": "node scripts/library-stack-smoke.mjs --base=https://open.grudge-studio.com",
     "readiness:anims": "node scripts/readiness-anim-packs.mjs",
     "anims:sync": "node scripts/sync-anim-database.mjs",
     "anims:verify": "node scripts/verify-anim-integrity.mjs",

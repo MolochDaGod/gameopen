@@ -123,12 +123,23 @@ function cleanHandoffParamsFromUrl(): void {
   }
 }
 
+/**
+ * Open session JWT — same key order as productionSystemsPattern.readProductionAuthToken.
+ * Prefer importing that for new AI/REST callers; keep this for auth bootstrap callers.
+ */
 export function getStoredToken(): string | null {
   try {
-    const open = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
-    if (open) return open;
+    // session first (tab-scoped SSO handoff), then local (persist)
+    const openSess = sessionStorage.getItem(TOKEN_KEY);
+    if (openSess) return openSess;
     for (const k of FLEET_TOKEN_KEYS) {
-      const t = localStorage.getItem(k) || sessionStorage.getItem(k);
+      const t = sessionStorage.getItem(k);
+      if (t) return t;
+    }
+    const openLocal = localStorage.getItem(TOKEN_KEY);
+    if (openLocal) return openLocal;
+    for (const k of FLEET_TOKEN_KEYS) {
+      const t = localStorage.getItem(k);
       if (t) return t;
     }
   } catch {

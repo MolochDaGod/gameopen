@@ -17,7 +17,10 @@ import {
   probeAiHub,
   type AiHubHealth,
 } from "../lib/engineStack";
-import { FLEET_TOKEN_KEYS } from "../lib/fleet";
+import {
+  AI_WIRING,
+  readProductionAuthToken,
+} from "../lib/productionSystemsPattern";
 
 export type { AiHubHealth };
 export { probeAiHub, aiHealthUrl, aiChatUrl, aiRoleChatUrl, aiImageUrl };
@@ -33,17 +36,13 @@ export type FleetAiRole =
   | "faction"
   | string;
 
+/**
+ * JWT for AI hub — single production reader (grudge.open.token + fleet keys).
+ * SSOT: productionSystemsPattern.readProductionAuthToken
+ * Bug class fixed: scanning only legacy keys missed Open session → false 401.
+ */
 function readFleetToken(): string | null {
-  if (typeof localStorage === "undefined") return null;
-  for (const k of FLEET_TOKEN_KEYS) {
-    try {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    } catch {
-      /* private mode */
-    }
-  }
-  return null;
+  return readProductionAuthToken();
 }
 
 function authHeaders(extra?: HeadersInit): Headers {
@@ -101,10 +100,11 @@ export async function fleetRoleChat(
         credentials: "omit",
       });
       if (res.status === 401 || res.status === 403) {
+        const hasToken = !!readFleetToken();
         return {
           ok: false,
           status: res.status,
-          error: "AI gateway auth failed — sign in with Grudge ID",
+          error: hasToken ? AI_WIRING.errRejected : AI_WIRING.errNoToken,
         };
       }
       if (!res.ok) {

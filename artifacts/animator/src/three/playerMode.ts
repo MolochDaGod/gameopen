@@ -9,7 +9,10 @@
  *
  * Input SSOT (production):
  *   · **Hold Q** → mode radial (↑ combat · ↓ harvest); tap Q cycles combat↔harvest
- *   · **Hold R** (harvest) → tool radial (all harvest tools); combat R = heavy
+ *   · **F** (harvest) → harvest **nearest node** matching tool in hand
+ *   · **Hold R** (harvest) → tool radial: all professions · farm · terrain shovel ·
+ *     **back slot** (one slot — items *are* the effects: glider, parachute, shell, …)
+ *   · Combat R = heavy · combat F = weapon skill
  *   · **Hold Tab** → mode-options radial (combat actions / build placeables)
  *   · **J / H / V** → bag utility slots (consumables · deployables · mounts)
  *   · **X** always dodge (combat i-frames)
@@ -62,7 +65,7 @@ export const MODE_BLURB: Record<PlayerActivityMode, string> = {
   combat:
     "Hold Q mode · J/H/V bag · soft LMB · RMB focus · X roll · C parry · E guard · F/1–4",
   harvest:
-    "Hold Q mode · Hold R tools · LMB node · tool skills 2–5 · J/H/V use · bag craft",
+    "Hold Q mode · F nearest (tool in hand) · Hold R tool radial · LMB select · 1–4 tool skills · J/H/V",
   build: "Hold Q mode · Tab placeables · LMB place · J/H/V deploy · bag · P production",
 };
 
@@ -88,15 +91,29 @@ export const RADIAL_BY_MODE: Record<PlayerActivityMode, RadialOption[]> = {
     { id: "potion", label: "Potion", glyph: "⚗", hint: "J", color: "#7ee7a8" },
     { id: "skill", label: "Skill", glyph: "✦", hint: "F", color: "#b98cff" },
   ],
+  /**
+   * Hold-R harvest tool radial — equip only.
+   * Profession tools + farming + terrain shovel + **one back slot**
+   * (back items carry effects: glider / parachute / shell / stealth / …).
+   * F harvests nearest node for the equipped profession tool.
+   */
   harvest: [
-    { id: "gather", label: "Gather", glyph: "🌿", hint: "LMB", color: "#7ee7a8" },
-    { id: "skin", label: "Skin", glyph: "🥩", hint: "E", color: "#e8a070" },
-    { id: "mine", label: "Mine", glyph: "⛏", hint: "LMB", color: "#a0b0c8" },
-    { id: "chop", label: "Chop", glyph: "🪓", hint: "LMB", color: "#c98a3d" },
-    { id: "dig", label: "Dig", glyph: "🪣", hint: "LMB", color: "#c4a070" },
-    { id: "forage", label: "Forage", glyph: "🫐", hint: "LMB", color: "#90d070" },
-    { id: "fish", label: "Fish", glyph: "🎣", color: "#70c0e0" },
-    { id: "farm", label: "Farm", glyph: "🌾", color: "#d0d060" },
+    { id: "hatchet", label: "Hatchet", glyph: "🪓", hint: "wood", color: "#c98a3d" },
+    { id: "pick", label: "Pick", glyph: "⛏", hint: "ore", color: "#a0b0c8" },
+    { id: "knife", label: "Knife", glyph: "🥩", hint: "skin", color: "#e8a070" },
+    { id: "sickle", label: "Sickle", glyph: "🌿", hint: "forage", color: "#90d070" },
+    { id: "bucket", label: "Bucket", glyph: "🪣", hint: "water", color: "#5ec8ff" },
+    { id: "hoe", label: "Hoe", glyph: "🌾", hint: "farm", color: "#d0d060" },
+    { id: "shovel", label: "Shovel", glyph: "⛏", hint: "terrain", color: "#c4a070" },
+    { id: "fishingPole", label: "Rod", glyph: "🎣", hint: "fish", color: "#70c0e0" },
+    { id: "buildHammer", label: "Hammer", glyph: "🔨", hint: "build", color: "#ffb74d" },
+    {
+      id: "back_slot",
+      label: "Back",
+      glyph: "🪽",
+      hint: "effect",
+      color: "#b0c8ff",
+    },
   ],
   build: [
     { id: "place", label: "Flag", glyph: "⚑", hint: "LMB", color: "#e8c547" },
@@ -182,12 +199,14 @@ export function toolSkillsFor(toolId: string): RadialOption[] {
   const id = String(toolId || "gather").toLowerCase();
   if (HARVEST_TOOL_SKILLS[id]) return HARVEST_TOOL_SKILLS[id]!;
   // Alias common Studio / forest tool ids
-  if (id === "axe" || id === "wood" || id === "hatchet") return HARVEST_TOOL_SKILLS.chop!;
-  if (id === "pick" || id === "pickaxe" || id === "ore") return HARVEST_TOOL_SKILLS.mine!;
-  if (id === "knife" || id === "skinning") return HARVEST_TOOL_SKILLS.skin!;
-  if (id === "sickle" || id === "herb") return HARVEST_TOOL_SKILLS.forage!;
-  if (id === "rod" || id === "fishing") return HARVEST_TOOL_SKILLS.fish!;
-  if (id === "hoe") return HARVEST_TOOL_SKILLS.farm!;
+  if (id === "axe" || id === "wood" || id === "hatchet" || id === "chop") return HARVEST_TOOL_SKILLS.chop!;
+  if (id === "pick" || id === "pickaxe" || id === "ore" || id === "mine") return HARVEST_TOOL_SKILLS.mine!;
+  if (id === "knife" || id === "skinning" || id === "skin") return HARVEST_TOOL_SKILLS.skin!;
+  if (id === "sickle" || id === "herb" || id === "forage") return HARVEST_TOOL_SKILLS.forage!;
+  if (id === "rod" || id === "fishing" || id === "fishingpole" || id === "fish") return HARVEST_TOOL_SKILLS.fish!;
+  if (id === "hoe" || id === "farm") return HARVEST_TOOL_SKILLS.farm!;
+  if (id === "shovel" || id === "dig" || id === "bucket") return HARVEST_TOOL_SKILLS.dig!;
+  if (id === "back_slot" || id === "buildhammer") return HARVEST_TOOL_SKILLS.gather!;
   return HARVEST_TOOL_SKILLS.gather!;
 }
 

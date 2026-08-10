@@ -27,7 +27,8 @@ Deploy Worker: `cd infra/cloudflare/open && npx wrangler deploy`
 | `VITE_GAME_SERVER_URL` | `wss://gameopen-production.up.railway.app` | Danger Room WS |
 | `VITE_ZONE_SERVER_URL` | `wss://voxgrudge-grudox-room-production.up.railway.app` | GRUDOX zone WS |
 | `VITE_GRUDGE_API_BASE` | `https://grudge-api-production-0d46.up.railway.app` | Builder API |
-| `VITE_OBJECTSTORE_URL` | `https://info.grudge-studio.com/api/v1` | Definitions catalogs (info SSOT; objectstore host often 404) |
+| `VITE_OBJECTSTORE_URL` | `https://objectstore.grudge-studio.com/api/v1` | Definitions dual-publish (info still primary in fleetSsot) |
+
 | `VITE_PLAY_SHELL_URL` | play-shell host | GRUDOX Island deep-links (optional) |
 
 ### Auth flow
@@ -41,7 +42,8 @@ Deploy Worker: `cd infra/cloudflare/open && npx wrangler deploy`
 ### Vercel rewrites (see root `vercel.json`)
 - `/api/auth/*`, `/login` → Grudge ID  
 - `/api/characters*`, `/api/account/*`, `/api/wallet*` → Builder Railway  
-- `/api/objectstore/*` → ObjectStore (D1 catalogs)  
+- `/api/objectstore/*` → info catalogs (dual-publish path)  
+- `/api/os/*` → live ObjectStore Worker (`/v1/assets`, discovery, `/api/v1/*.json`)  
 - `/api/assets/*` → R2  
 - `/api/brawl|space|carrier` → GRUDOX zone Railway  
 - `/api/*` → gameopen Railway  

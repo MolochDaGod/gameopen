@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-raw\\mage_demon.glb",
+  "output": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\mage_demon.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 64,
+    "materials": 1,
+    "textures": 2,
+    "animations": 5,
+    "nodes": 151,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.31436917185783386,
+      -0.6780727505683899,
+      -1.220240592956543
+    ],
+    "max": [
+      1.05076265335083,
+      1.3219273090362549,
+      1.220240592956543
+    ],
+    "size": [
+      1.365131825208664,
+      2.0000000596046448,
+      2.440481185913086
+    ],
+    "bodyOnly": false
+  },
+  "collider": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\mage_demon.collider.json",
+  "producedAt": "2026-08-04T07:12:29.735Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

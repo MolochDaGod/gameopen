@@ -21,16 +21,19 @@ export const FLEET = {
   assets: "https://assets.grudge-studio.com",
   gameopenPrefix: "gameopen",
   /**
-   * Definitions / catalogs SSOT (probed 2026-07).
-   * Prefer this over objectstore host — public objectstore /api/v1 catalogs 404.
+   * Definitions / catalogs primary — R2 CDN mirror (stable when info.pages is down).
+   * Dual-publish: ObjectStore Worker + assets.grudge-studio.com/api/v1.
    */
-  definitions: "https://info.grudge-studio.com/api/v1",
+  definitions: "https://assets.grudge-studio.com/api/v1",
   /**
-   * @deprecated Alias of {@link definitions} for older callers named objectStore.
-   * Do not point at objectstore.grudge-studio.com for catalogs until that host is fixed.
+   * Live ObjectStore Worker — catalogs under /api/v1/*.json + asset CRUD under /v1/*.
    */
-  objectStore: "https://info.grudge-studio.com/api/v1",
-  /** Legacy definitions hostname (often 404 for catalogs — fallback only). */
+  objectStore: "https://objectstore.grudge-studio.com/api/v1",
+  /** ObjectStore Worker root (discovery + /v1/assets|/v1/models). */
+  objectStoreApi: "https://objectstore.grudge-studio.com",
+  /** Info Pages host (may 404; fleetSsot still probes as fallback). */
+  objectStoreInfo: "https://info.grudge-studio.com/api/v1",
+  /** @deprecated Use {@link objectStore} */
   objectStoreLegacy: "https://objectstore.grudge-studio.com/api/v1",
   /**
    * Player state — Railway Postgres (characters, account bag, island).
@@ -89,8 +92,14 @@ export function authApiUrl(path: string): string {
   return `${FLEET.auth.replace(/\/$/, "")}${p}`;
 }
 
-/** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap). */
+/**
+ * Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap + Open).
+ * Must stay equal to PROD_AUTH_TOKEN_KEYS in productionSystemsPattern.ts.
+ * AI / REST: use readProductionAuthToken() — do not invent a third key scanner.
+ */
 export const FLEET_TOKEN_KEYS = [
+  /** Open SPA primary (grudgeAuth.ts) — AI hub must read this first */
+  "grudge.open.token",
   "grudge_auth_token",
   "grudge_session_token",
   "grudge.token",
@@ -187,17 +196,18 @@ export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean;
 }
 
 /**
- * Resolve a path under the **definitions** catalog host (info.grudge-studio.com).
+ * Resolve a path under the **definitions** catalog host (info primary).
  * Use for weapon/item/recipe/skill JSON — never for character state.
  * Example: contentUrl("master-items.json") → https://info…/api/v1/master-items.json
  *
  * For multi-host resilience use `contentCandidates` / `fetchCatalogJson` from
- * `./fleetSsot` (preferred).
+ * `./fleetSsot` (preferred). Live ObjectStore Worker dual-publishes the same JSON.
  */
 export function contentUrl(path: string): string {
   const base =
     (import.meta.env.VITE_OBJECTSTORE_URL as string) ||
     FLEET.definitions ||
+    FLEET.objectStoreInfo ||
     FLEET.objectStore;
   return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }

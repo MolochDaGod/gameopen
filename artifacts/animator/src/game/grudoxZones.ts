@@ -147,12 +147,12 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "genesis",
-    title: "Warlord Genesis",
-    blurb: "3-lane MOBA/RTS — native Open surface or warlord-genesis canvas.",
+    title: "Warstrat · Warlord Genesis",
+    blurb: "3-lane MOBA/RTS — warstrat.grudge-studio.com (canonical) or Open genesis picker.",
     tone: "#ffd24d",
     native: true,
     nativeMode: "genesis",
-    productionUrl: "https://warlord-genesis.vercel.app/",
+    productionUrl: "https://warstrat.grudge-studio.com/lobby",
   },
   {
     id: "racer",

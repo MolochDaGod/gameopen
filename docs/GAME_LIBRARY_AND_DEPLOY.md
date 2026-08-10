@@ -44,7 +44,8 @@ open.grudge-studio.com          (gameopen / animator)
 
 Catalog code: `artifacts/animator/src/game/gameLibrary.ts`  
 UI: `artifacts/animator/src/components/GameLibrary.tsx`  
-Posters: `public/rooms/library-*-scene.png` (+ legacy `*-scene.png` refreshed)
+Posters: `public/rooms/{posterKey}-scene.jpg` (screenshot-style covers; `posterUrl()` → `.jpg`)  
+Regenerated 2026-08: danger · mine · brawl · rts · genesis · voxworld · gst-islands · voxgrudge-battle · forest-map · worldbuilder (+ PNG→JPG fallbacks for lobby/dressing/mimic/voxel)
 
 ---
 
@@ -77,13 +78,15 @@ Voxel Editor maps in gameopen should eventually **push** to Mine-Loader world AP
 
 ## Adding a game to the library
 
-1. Add a `GameEntry` in `gameLibrary.ts` (posterKey, engines, launch, sources, deploy).  
-2. Drop `public/rooms/<posterKey>-scene.png` (16:9 marketing art).  
-3. Prefer `icon` from `public/icons/`.  
-4. If native: wire `nativeMode` + App mode.  
-5. If external: URL + fleet query params via `gameLaunchUrl()`.  
-6. If world: `launch: "mine-loader"` + `engines: ["mine-loader"]`.  
-7. Register domain CORS / vercel rewrites per grudge-fleet skill.
+1. Add a `GameEntry` in `gameLibrary.ts` (unique `posterKey`, engines, launch, sources, deploy).  
+2. Drop **unique** `public/rooms/<id>-scene.jpg` (or `.png`) 16:9 marketing art — **no shared mine poster for five maps**.  
+3. Fill `playerInfo` + `deployNotes` (shown on library detail).  
+4. Prefer `icon` from `public/icons/`.  
+5. If native: wire `nativeMode` + App mode.  
+6. If external: URL + fleet query params via `gameLaunchUrl()`.  
+7. If world: `launch: "mine-loader"` + `engines: ["mine-loader"]`.  
+8. Register domain CORS / vercel rewrites per grudge-fleet skill.  
+9. Audit: `docs/OPEN_LIBRARY_AUDIT.md` · era rules: `docs/ERA_LIBRARY.md`.
 
 ### Warlords worlds — never Open standalone tiles
 

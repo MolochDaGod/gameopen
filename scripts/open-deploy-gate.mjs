@@ -17,6 +17,27 @@ const CHECKS = [
     url: "https://open.grudge-studio.com/",
     rejectHtml: false,
   },
+  {
+    name: "Open library door",
+    url: "https://open.grudge-studio.com/?door=library",
+    rejectHtml: false,
+  },
+  {
+    name: "PWA manifest",
+    url: "https://open.grudge-studio.com/manifest.webmanifest",
+    rejectHtml: false,
+  },
+  {
+    name: "PWA service worker",
+    url: "https://open.grudge-studio.com/sw.js",
+    rejectHtml: true,
+  },
+  {
+    name: "GST Islands RTS",
+    url: "https://grudge-studio.com/gst/",
+    rejectHtml: false,
+    optional: true,
+  },
   // —— R2 combat / grudge6 ——
   {
     name: "R2 grudge6 WK kit",
@@ -85,24 +106,50 @@ const CHECKS = [
     rejectHtml: true,
     optional: true,
   },
-  // —— Definitions SSOT (info.grudge-studio.com) ——
+  // —— Definitions SSOT (R2 CDN + ObjectStore; info.pages may 404) ——
   {
-    name: "info master-weaponSkills",
-    url: "https://info.grudge-studio.com/api/v1/master-weaponSkills.json",
+    name: "CDN weapons.json",
+    url: "https://assets.grudge-studio.com/api/v1/weapons.json",
     expectJson: true,
     rejectHtml: true,
   },
   {
-    name: "info weapons.json",
-    url: "https://info.grudge-studio.com/api/v1/weapons.json",
+    name: "CDN grudge6-gear-presets",
+    url: "https://assets.grudge-studio.com/api/v1/grudge6-gear-presets.json",
     expectJson: true,
     rejectHtml: true,
   },
   {
-    name: "Open objectstore rewrite → info skills",
-    url: "https://open.grudge-studio.com/api/objectstore/v1/master-weaponSkills.json",
+    name: "GH Pages master-weaponSkills",
+    url: "https://molochdagod.github.io/ObjectStore/api/v1/master-weaponSkills.json",
     expectJson: true,
     rejectHtml: true,
+  },
+  {
+    name: "ObjectStore Worker discovery",
+    url: "https://objectstore.grudge-studio.com/api/v1",
+    expectJson: true,
+    rejectHtml: true,
+  },
+  {
+    name: "ObjectStore Worker assets list",
+    url: "https://objectstore.grudge-studio.com/v1/assets?limit=5",
+    expectJson: true,
+    rejectHtml: true,
+  },
+  {
+    name: "ObjectStore catalog via multi-upstream",
+    url: "https://objectstore.grudge-studio.com/api/v1/weapons.json",
+    expectJson: true,
+    rejectHtml: true,
+  },
+  {
+    name: "Open /api/v1 rewrite → CDN weapons",
+    url: "https://open.grudge-studio.com/api/v1/weapons.json",
+    expectJson: true,
+    rejectHtml: true,
+    // Optional until this deploy lands new vercel rewrites
+    optional: true,
   },
   {
     name: "ui.grudge-studio.com",

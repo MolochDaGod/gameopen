@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-raw\\hollow_knight_vengefly.glb",
+  "output": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\hollow_knight_vengefly.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 69,
+    "materials": 1,
+    "textures": 1,
+    "animations": 1,
+    "nodes": 150,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.2834024131298065,
+      -0.2887127995491028,
+      -0.5416619181632996
+    ],
+    "max": [
+      0.34008288383483887,
+      0.6612871885299683,
+      0.566804826259613
+    ],
+    "size": [
+      0.6234852969646454,
+      0.949999988079071,
+      1.1084667444229126
+    ],
+    "bodyOnly": false
+  },
+  "collider": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\hollow_knight_vengefly.collider.json",
+  "producedAt": "2026-08-04T07:12:28.999Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

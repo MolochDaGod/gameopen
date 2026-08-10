@@ -84,6 +84,11 @@ export const WARLORDS_PRODUCTION_PILLARS = [
     host: "client.grudge-studio.com · map=pirate-islands (not GRUDOX/Explorer)",
   },
   { id: "sectors", label: "9 sailing sectors", host: "warlord-genesis / grudgewarlords.com" },
+  {
+    id: "aethermoor-map",
+    label: "Aethermoor world map + event-island conveyor",
+    host: "warlord-genesis lib/world-content (aethermoor + eventConveyor) · Railway player SSOT",
+  },
   { id: "heroes", label: "4-slot campfire heroes", host: "Railway Postgres · era=warlords" },
   { id: "units", label: "Explorers = units (not the pirate lobby product)", host: "factionUnits + explorer rig" },
   { id: "rts", label: "RTS lanes / buildings", host: "warlord-genesis + RTS-Grudge" },

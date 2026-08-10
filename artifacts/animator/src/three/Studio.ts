@@ -155,6 +155,10 @@ import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
 import { WingBackRig } from "./equipment/WingBackRig";
+import {
+  backSlotItem,
+  nextCodedBackSlotId,
+} from "./equipment/backSlotItems";
 import { loadCampClaimState, ensureDemoRoster } from "../lib/campClaimPersist";
 import {
   loadTestWorldId,
@@ -955,6 +959,8 @@ export class Studio {
   private buildGrid: BuildGridOverlay | null = null;
   /** Back-slot wing pack (parachute / glide / flight / ocean sail). */
   private wingRig: WingBackRig | null = null;
+  /** Last equipped back-slot item id (same slot as “effects”). */
+  private _lastBackSlotItemId: string | null = "back_wing_pack";
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
   /** Hellmaw / volcanic / boss-event world boss (Shadow Flame Mantis + Ash Ghasts). */
@@ -1706,15 +1712,21 @@ export class Studio {
     this.wingRig.equipBackItem("back_wing_pack");
   }
 
-  /** Equip / change back-slot wing mode (parachute, glider, flight, sail deploy). */
+  /** Equip / change back-slot item (effects live on the item — not a second slot). */
   equipBackWing(itemId: string | null) {
+    if (itemId) this._lastBackSlotItemId = itemId;
     if (!this.wingRig?.isReady) {
       void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
       return;
     }
     this.wingRig.equipBackItem(itemId);
+    const def = itemId ? backSlotItem(itemId) : null;
     this.setCombatFlash(
-      itemId ? `BACK · ${itemId.replace(/_/g, " ").toUpperCase()}` : "BACK · cleared",
+      itemId
+        ? `BACK · ${(def?.label || itemId).replace(/_/g, " ").toUpperCase()}${
+            def?.effect ? ` · ${def.effect}` : ""
+          }`
+        : "BACK · cleared",
       0.8,
     );
   }
@@ -12780,6 +12792,21 @@ export class Studio {
       return;
     }
 
+    // Back slot = effect slot (one equip). Items *are* the effects.
+    // Hold-R → Back cycles coded items; full list in backSlotItems.ts.
+    if (id === "back_slot" || id === "effect_slot") {
+      this.activityTool = "back_slot";
+      const nextId = nextCodedBackSlotId(this._lastBackSlotItemId);
+      this._lastBackSlotItemId = nextId;
+      this.equipBackWing(nextId);
+      const def = backSlotItem(nextId);
+      this.setCombatFlash(
+        `BACK · ${(def?.label || nextId).toUpperCase()} · ${def?.effect || "equip"}`,
+        0.7,
+      );
+      return;
+    }
+
     // Harvest tool equip (hold R) or options tool pick
     this.activityTool = id;
     this.setCombatFlash(id.replace(/_/g, " ").toUpperCase(), 0.4);
@@ -12792,6 +12819,47 @@ export class Studio {
       else if (id === "potion") this.healPotion();
       else if (id === "skill") this.useSkill();
       else if (id === "block") this.forceFieldGuard();
+    }
+  }
+
+  /**
+   * Harvest **F**: nearest alive node matching tool in hand → approach + swing.
+   * Not combat weapon skill. Tool equip is Hold-R radial only.
+   */
+  private harvestNearestWithHandTool() {
+    if (this.activityMode !== "harvest" || !this.character) return;
+    const hand = this.activityTool || "gather";
+    if (hand === "back_slot" || hand === "effect_slot") {
+      this.setCombatFlash("BACK SLOT · equip via Hold R · not a harvest tool", 0.5);
+      return;
+    }
+    const origin = this.character.root.position;
+    const node = this.forestWorld?.nearestHarvest?.(origin, hand, 14) ?? null;
+    if (!node) {
+      this.setCombatFlash(`NO NODE · ${String(hand).toUpperCase()}`, 0.5);
+      return;
+    }
+    this.harvestSelectPos = node.position.clone();
+    this.harvestSelectName = `${node.kind}:${node.tool}`;
+    this.harvestSelectNodeId = node.id;
+    this.harvestMoveActive = false;
+    this.vfx.auraRing(
+      new THREE.Vector3(node.position.x, 0.08, node.position.z),
+      0x7ee7a8,
+      1.15,
+      0.45,
+    );
+    const dx = node.position.x - origin.x;
+    const dz = node.position.z - origin.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist <= 2.8) {
+      this.setCombatFlash(
+        `HARVEST · ${node.kind.toUpperCase()} · ${hand}`,
+        0.45,
+      );
+      this.runActivityTool(hand);
+    } else {
+      this.beginHarvestMove();
     }
   }
 
@@ -13126,6 +13194,10 @@ export class Studio {
       else this.tryJumpWithStamina();
     }
     else if (code === "KeyR") {
+      // Harvest: KeyR arms tool radial on keydown above — do not heavy-attack.
+      if (this.activityMode === "harvest") {
+        return;
+      }
       // Racalvin: R = Keeper Tornados (spin → fire tornado projectiles)
       if (this.characterId === "gunslinger" && this.livingSwords) {
         this.doLivingSwordTornadoSkill();
@@ -13134,6 +13206,11 @@ export class Studio {
       }
     }
     else if (code === "KeyF") {
+      // Harvest: F = nearest node of tool in hand (not combat f-skill).
+      if (this.activityMode === "harvest") {
+        this.harvestNearestWithHandTool();
+        return;
+      }
       // Guns: F starts hold-charge / reload on release (see updateGunInput).
       // Crossbow: F = charged magical bolt.
       // Non-guns: F = f-skill.
@@ -13326,14 +13403,8 @@ export class Studio {
         this.rHoldArmed = false;
         return;
       }
-      // Quick tap R in harvest: re-swing current tool; combat heavy is on keydown.
-      if (
-        this.rHoldArmed &&
-        this.radialHoldT < 0.18 &&
-        this.activityMode === "harvest"
-      ) {
-        this.runActivityTool(this.activityTool);
-      }
+      // Harvest: Hold R = tool radial only. Swing is F (nearest of tool in hand).
+      // Quick tap R does not harvest (avoids double-binding with F).
       this.rHoldArmed = false;
       if (!this.radialOpen) this.radialHoldT = 0;
       return;

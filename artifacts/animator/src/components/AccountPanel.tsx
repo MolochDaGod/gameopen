@@ -31,6 +31,7 @@ import {
   fetchHomeIsland,
   fetchWalletStatus,
   getHandoffFrom,
+  loadSharedAccountBundle,
   shortAddress,
   type FleetAccountProfile,
   type FleetIslandSummary,
@@ -38,7 +39,12 @@ import {
   type FleetWalletStatus,
   type ResourceMap,
 } from "../lib/accountShared";
-import { GAME_LIBRARY, type GameCategory } from "../game/gameLibrary";
+import {
+  FLEET_SURFACES,
+  fleetAccountHandoffUrl,
+  GRUDOX_ACCOUNT_URL,
+} from "../lib/fleetAccountAccess";
+import { GAME_LIBRARY, SHARED_ACCOUNT_SCHEME, type GameCategory } from "../game/gameLibrary";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CharacterPicker } from "./CharacterPicker";
 import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
@@ -216,20 +222,14 @@ export function AccountPanel({
     }
     setSharedBusy(true);
     try {
-      const [p, r, inv, nftList, isl, ws] = await Promise.all([
-        fetchAccountProfile(),
-        fetchAccountBag(),
-        fetchAccountInventory(),
-        fetchAccountNfts(),
-        fetchHomeIsland(),
-        fetchWalletStatus(),
-      ]);
-      setProfile(p);
-      setBag(r);
-      setInventoryItems(inv);
-      setNfts(nftList);
-      setIsland(isl);
-      setWalletStatus(ws);
+      // Same bundle shape as GRUDOX /account (Railway Postgres SSOT)
+      const bundle = await loadSharedAccountBundle();
+      setProfile(bundle.account);
+      setBag(bundle.resources);
+      setInventoryItems(bundle.inventory);
+      setNfts(bundle.nfts);
+      setIsland(bundle.island);
+      setWalletStatus(bundle.wallet);
     } finally {
       setSharedBusy(false);
     }
@@ -393,6 +393,41 @@ export function AccountPanel({
           ) : null}
         </div>
       )}
+
+      {/* Fleet accessibility — same account data on Open · GRUDOX · Warlords · Poker · GST */}
+      <section style={fleetStrip} aria-label="Fleet account surfaces">
+        <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 8 }}>
+          Shared account · {SHARED_ACCOUNT_SCHEME.dataLaw.characters} · open everywhere with Grudge ID
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {FLEET_SURFACES.filter((s) => s.id !== "open").map((s) => (
+            <a
+              key={s.id}
+              href={fleetAccountHandoffUrl(s.id, {
+                token: getStoredToken(),
+                characterId: snap.selectedCharacterId,
+                from: "open-account",
+              })}
+              target="_blank"
+              rel="noreferrer"
+              style={fleetChip}
+              title={s.blurb}
+            >
+              {s.label}
+              {s.id === "grudox" ? " · voxel hub" : ""}
+            </a>
+          ))}
+          <a
+            href={GRUDOX_ACCOUNT_URL}
+            target="_blank"
+            rel="noreferrer"
+            style={{ ...fleetChip, borderColor: "rgba(212,175,55,0.45)", color: "#e8d48a" }}
+            title="GRUDOX voxel editor · deployer · account (same Railway data)"
+          >
+            GRUDOX /account
+          </a>
+        </div>
+      </section>
 
       {/* Era strip — same structure for every era */}
       <nav style={eraBar} aria-label="Production eras">
@@ -1255,6 +1290,25 @@ const head: CSSProperties = {
   marginBottom: 12,
 };
 
+const fleetStrip: CSSProperties = {
+  margin: "0 0 12px",
+  padding: "10px 12px",
+  borderRadius: 10,
+  border: "1px solid rgba(79,195,255,0.18)",
+  background: "rgba(10,16,28,0.85)",
+};
+const fleetChip: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "6px 10px",
+  borderRadius: 8,
+  border: "1px solid rgba(79,195,255,0.28)",
+  background: "rgba(7,11,20,0.7)",
+  color: "#cfe8ff",
+  fontSize: 11,
+  fontWeight: 600,
+  textDecoration: "none",
+};
 const banner: CSSProperties = {
   padding: "8px 12px",
   marginBottom: 12,

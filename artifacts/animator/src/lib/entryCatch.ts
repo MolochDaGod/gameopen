@@ -17,10 +17,15 @@ export const ENTRY_HOSTS = {
   foundry: "https://character.grudge-studio.com",
   warlords: "https://client.grudge-studio.com",
   warlordsPlay: "https://grudgewarlords.com",
+  /** Warstrat / Warlord Genesis warcamp (canonical production SPA) */
+  warstrat: "https://warstrat.grudge-studio.com",
+  warlordGenesis: "https://warlord-genesis.vercel.app",
   id: "https://id.grudge-studio.com",
   ui: "https://ui.grudge-studio.com",
   forge: "https://forge.grudge-studio.com",
   assets: "https://assets.grudge-studio.com",
+  /** Voxel Realms (Mine-Loader) production */
+  mineLoader: "https://mineloader.grudge-studio.com",
 } as const;
 
 /**
@@ -42,8 +47,16 @@ export const PRODUCT_STARTS = {
   foundryHub: `${ENTRY_HOSTS.foundry}/`,
   /** Warlords home island (needs characterId on handoff) */
   warlordsHome: `${ENTRY_HOSTS.warlords}/home-island`,
+  /** Warlords tutorial (shipwreck / opening mesh — not Open /game) */
+  warlordsTutorial: `${ENTRY_HOSTS.warlords}/tutorial`,
+  /** Warstrat warcamp lobby (shared Railway account characters) */
+  warstratLobby: `${ENTRY_HOSTS.warstrat}/lobby`,
   /** GRUDOX arcade root */
   grudoxArcade: `${ENTRY_HOSTS.grudox}/arcade`,
+  /** Voxel Realms islands — harvest/craft/build/sail (Mine-Loader) */
+  mineLoader: `${ENTRY_HOSTS.mineLoader}/`,
+  /** Open in-app Realms surface */
+  openRealms: `${ENTRY_HOSTS.open}/realms`,
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -84,6 +97,9 @@ export const ALLOWED_RETURN_HOST_SUFFIXES = [
   "forge.grudge-studio.com",
   "ui.grudge-studio.com",
   "mine.grudge-studio.com",
+  "mineloader.grudge-studio.com",
+  "mine-loader.vercel.app",
+  "warstrat.grudge-studio.com",
   "warlord-genesis.vercel.app",
   "localhost",
   "127.0.0.1",
@@ -257,6 +273,20 @@ export function catchEntry(input: CatchInput): CatchAction {
       mode: "account",
       reason: `handoff from=${from || "character"} → account hub`,
       replace: true,
+    };
+  }
+
+  // ── 3b. Purge legacy /game — never Combat Sandbox SPA as "the game" ───
+  // Historical: open.grudge-studio.com/game served a sandbox title. Production
+  // island play is Mine-Loader; Warlords tutorial is client /tutorial.
+  if (parts[0] === "game" || parts[0] === "games") {
+    const dest = new URL(PRODUCT_STARTS.mineLoader);
+    dest.searchParams.set("from", "open-game-purge");
+    dest.searchParams.set("entry", "islands");
+    return {
+      kind: "hard_redirect",
+      url: dest.toString(),
+      reason: "/game purged → Voxel Realms (Mine-Loader) islands entry",
     };
   }
 
@@ -436,8 +466,14 @@ export function startUrlForIntent(
     | "foundryCreate"
     | "foundryHub"
     | "warlordsHome"
+    | "warlordsTutorial"
     | "grudoxArcade"
-    | "arcadeCabinet",
+    | "arcadeCabinet"
+    | "mineLoader"
+    | "realms"
+    | "islands"
+    | "warstrat"
+    | "warlordGenesis",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -463,12 +499,30 @@ export function startUrlForIntent(
       u.searchParams.set("from", "gcs");
       return u.toString();
     }
+    case "warlordsTutorial":
+      return PRODUCT_STARTS.warlordsTutorial;
     case "grudoxArcade":
       return PRODUCT_STARTS.grudoxArcade;
     case "arcadeCabinet": {
       const id = opts?.cabinetId || "racer";
       return `${ENTRY_HOSTS.grudox}/arcade/play/${encodeURIComponent(id)}?open=1`;
     }
+    case "mineLoader":
+    case "islands": {
+      const u = new URL(PRODUCT_STARTS.mineLoader);
+      u.searchParams.set("entry", "islands");
+      if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);
+      return u.toString();
+    }
+    case "warstrat":
+    case "warlordGenesis": {
+      const u = new URL(PRODUCT_STARTS.warstratLobby);
+      u.searchParams.set("from", "open");
+      if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);
+      return u.toString();
+    }
+    case "realms":
+      return PRODUCT_STARTS.openRealms;
     default:
       return PRODUCT_STARTS.openHub;
   }

@@ -135,9 +135,16 @@ export function pathAliases(path: string): string[] {
   if (/scythe/i.test(clean) && !out.some((p) => /war-spear|spear/.test(p))) {
     out.push("models/weapons/war-spear.glb", "models/weapons/spear.glb");
   }
-  // Tome / book offhand stand-in until dedicated mesh
-  if (/models\/weapons\/tome/i.test(clean)) {
-    out.push("models/weapons/shield.glb", "models/weapons/staff.glb");
+  // Tome / grimoire — dedicated mesh (no shield/staff stand-in)
+  if (/models\/weapons\/tome|models\/weapons\/grimoire|models\/props\/grimoire/i.test(clean)) {
+    out.length = 0;
+    out.push(
+      "models/weapons/tome.glb",
+      "models/weapons/grimoire.glb",
+      "models/props/grimoire.glb",
+      "prod/gltf/weapons/tome.glb",
+      "prod/gltf/weapons/grimoire.glb",
+    );
   }
 
   // Racalvin living twin swords (Brothers Keeper)

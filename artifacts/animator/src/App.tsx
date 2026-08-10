@@ -2646,7 +2646,7 @@ export default function App() {
   }
 
   if (mode === "characters") {
-    // ONE scene only: Ethereal Falls CampfireLobbyScene (no ProductionCinema dungeon).
+    // ONE scene: TVS farm campfire + chairs (no dungeon / Ethereal Falls).
     // Optional storm-ship intro is allowed once, then campfire — never stacked.
     let introOnce: string | null = null;
     try {
@@ -2716,7 +2716,7 @@ export default function App() {
   }
 
   if (mode === "lobby") {
-    // Product SSOT: ONE WebGL scene = Ethereal Falls CampfireLobbyScene.
+    // Product SSOT: ONE WebGL scene = floating-island CampfireLobbyScene.
     // Never wrap in CinemaFlowGate(lobby_establish) — that loaded dungeon.glb
     // as a second full render over the campfire (double-scene conflict).
     return shell(

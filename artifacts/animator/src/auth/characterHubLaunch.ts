@@ -233,15 +233,14 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "warlord-genesis",
-    label: "Warlord Genesis",
-    blurb: "3-lane MOBA / RTS with fleet character",
+    label: "Warstrat · Warlord Genesis",
+    blurb: "3-lane MOBA / RTS warcamp — warstrat.grudge-studio.com",
     group: "fleet",
-    // Prefer same-origin Genesis picker (4 GRUDOX slots) then handoff to product
+    // Open genesis picker first; product play host is Warstrat
     localMode: "genesis",
     external: (ctx) => {
       try {
-        // Same-origin Open /genesis — shows 4-slot charactersgrudox picker first
-        const u = new URL(`${PLAY_SHELL}/genesis`);
+        const u = new URL("https://warstrat.grudge-studio.com/lobby");
         u.searchParams.set("open", "1");
         u.searchParams.set("from", "charactersgrudox");
         if (ctx.characterId) u.searchParams.set("characterId", ctx.characterId);
@@ -254,7 +253,7 @@ export const HUB_DESTINATIONS: HubDestination[] = [
         }
         return u.toString();
       } catch {
-        return `${PLAY_SHELL}/genesis?open=1&from=charactersgrudox`;
+        return "https://warstrat.grudge-studio.com/lobby?open=1&from=charactersgrudox";
       }
     },
   },

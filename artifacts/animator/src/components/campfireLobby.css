@@ -59,6 +59,47 @@
   -webkit-user-drag: none;
 }
 
+.cfl-kicker {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0e6d0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.04em;
+}
+
+/* Hover character tooltip (screen-space) */
+.cfl-tooltip {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  min-width: 160px;
+  max-width: 240px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(95, 224, 255, 0.45);
+  background: rgba(6, 14, 22, 0.92);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  transform: translateY(-100%);
+}
+.cfl-tooltip-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8f4ff;
+  letter-spacing: 0.02em;
+}
+.cfl-tooltip-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: #8ab4c8;
+}
+.cfl-tooltip-hint {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #5fe0ff;
+  opacity: 0.85;
+}
 .cfl-sub {
   margin: 6px 0 0;
   font-size: 12px;

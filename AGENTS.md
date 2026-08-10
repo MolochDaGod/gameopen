@@ -50,6 +50,10 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 | Outdoor maps | `artifacts/animator/src/three/ForestWorld.ts` + `maps/*` |
 | Package pin | `artifacts/animator/package.json` + `docs/OPEN_PACKAGE_SSOT.md` |
 | **Entry catch / anti-loop** | `artifacts/animator/src/lib/entryCatch.ts` + `docs/ENTRY_CATCH_SSOT.md` |
+| **Production pattern** (auth/AI/CDN/campfire) | `artifacts/animator/src/lib/productionSystemsPattern.ts` + `docs/PRODUCTION_SYSTEMS_PATTERN.md` |
+| JWT reader | `readProductionAuthToken()` — Open key `grudge.open.token` first |
+| Campfire roster | `/characters` · `/lobby` → `CampfireLobbyScene` (TVS CDN props) |
+| AI hub client | `artifacts/animator/src/ai/aiGateway.ts` → same JWT reader |
 
 ---
 
@@ -59,13 +63,19 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 2. **Map open** = same Controller, weapon skills, camera; rebind terrain / water / foot IK only.  
 3. **Feet on terrain** = Controller ground height **and** avatar foot sampler from the **same** height field.  
 4. **Anims** = fleet hydrate roles (climb/swim/hurt/death/loco); fill gaps via `ensureFleetRolesReady`, do not invent a new anim service.  
-5. **Characters** = grudge6 SSOT; **never** `30characters.glb` fallback.  
+5. **Characters** = grudge6 SSOT. **`30characters.glb` ALLOWED** as outline/look (disk `_anim_packs/30characters.glb`) + weapon packs under `_anim_packs/*`. Still ban Meshy/capsule stubs.  
 6. **Scale** = SI metres; human fit ~1.8 m; map scale for ~2 m orc when outdoor.  
 7. **Physics** = Rapier compat + grudge-physics; one authority.  
 8. **Mixer** = `THREE.AnimationMixer` only.  
 9. **Entry catch** = wrong host / create / arcade / returnTo always go through `entryCatch` — no parallel redirect invent.  
 
-Docs: `docs/ENTRY_CATCH_SSOT.md` · `docs/MELEE_SLASH_FX.md` · `docs/ANIMATION_FLEET_SSOT.md` · `docs/CONTROLS_CAMERA_WEAPON_SSOT.md` · `docs/DANGER_ROOM_SSOT.md`
+Docs: `docs/ENTRY_CATCH_SSOT.md` · `docs/PRODUCTION_SYSTEMS_PATTERN.md` · `docs/FLEET_AUTH_WIRING.md` · `docs/MELEE_SLASH_FX.md` · `docs/ANIMATION_FLEET_SSOT.md` · `docs/CONTROLS_CAMERA_WEAPON_SSOT.md` · `docs/DANGER_ROOM_SSOT.md`
+
+**Production reliability (do not regress):**
+- One JWT reader for AI + REST (`readProductionAuthToken` / dual-write fleet keys).
+- Lobby GLBs from R2 CDN first (`CAMPFIRE_TVS`) — never rely on Vercel SPA for `.glb`.
+- `door=characters` → campfire hub, not AccountPanel.
+- Smoke: `npm run smoke:prod:open` includes `/characters`, `/api/ai/health`, TVS CDN HEADs.
 
 ---
 
