@@ -1,7 +1,16 @@
-# Weapon Prefab Contract (Warlords era · Grudge Open)
+# Weapon Prefab Contract (shared combat packages · Grudge Open)
 
-A **weapon prefab** is game-ready only when **data + mesh + combat + present + spine + physics/effect wiring** are green (or intentional `placeholder`).  
-Agents and humans fill packages against this checklist — they do **not** invent parallel combat systems.
+A **weapon prefab** is a **held combat mesh package** (stats, skills, mesh, spine sockets, VFX defaults).  
+It is **not** the voxel avatar customizer, **not** Railway character rows, and **not** the Voxel Codex item catalog.
+
+| Layer | Owns character body / era look | Owns held weapon combat mesh |
+|-------|--------------------------------|------------------------------|
+| **voxel era** | `saveData.open.voxelLook` · [VOXEL_ERA_AVATAR_GEAR_WIRING.md](../../docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md) | Codex / pixel tools on Mine; optional `weaponId` → arsenal on Danger only |
+| **warlords era** | grudge6 `mesh_ids` + gear presets | This prefab + arsenal + ObjectStore skills |
+| **Danger / sandbox** | Selected fleet character | This prefab + `MountedWeapon.tip` / spine |
+
+A package is game-ready when **data + mesh + combat + present + spine + physics/effect** are green (or intentional `placeholder`).  
+Do **not** invent parallel combat systems or a second avatar store under “prefab.”
 
 | Surface | Role |
 |---------|------|
@@ -12,6 +21,7 @@ Agents and humans fill packages against this checklist — they do **not** inven
 | **Melee residual** | `three/combat/meleeStrikeFx.ts` + `docs/MELEE_SLASH_FX.md` |
 | **Catalog / icons** | ObjectStore `master-weaponSkills.json` · CDN `assets.grudge-studio.com` |
 | **UUID graph** | `docs/WEAPON_PREFAB_UUID_SSOT.md` |
+| **Voxel era wiring** | `docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md` |
 
 Gold package: **`wpn_sword_iron_01`**.
 

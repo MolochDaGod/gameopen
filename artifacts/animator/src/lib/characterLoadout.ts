@@ -4,6 +4,13 @@
  * Characters live on GrudgeBuilder Postgres (`/api/characters`). Open stores a
  * namespaced blob under `saveData.open` (or `config.open`) so Warlords and other
  * clients keep their own keys.
+ *
+ * Era wiring (do not invent parallel stores):
+ *  - Body look (voxel/explorer): `voxelLook` → three/explorer/voxelAvatarSave.ts
+ *  - Danger held weapon: `weaponId` / `offHand` → arsenal + optional content/weapons spine
+ *  - Warlords modular armor: `meshIds` / `gearPresetId` (grudge6) — not Realms body
+ *  - Voxel Realms bag/world: `saveData.realms` (Mine) — not this blob alone
+ * SSOT: docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md · docs/FLEET_ERA_CODEX_UUID_SSOT.md
  */
 import type { WeaponId } from "../three/types";
 import { WEAPONS } from "../three/arsenal";
@@ -13,15 +20,21 @@ import { getStoredToken, apiFetch } from "./grudgeAuth";
 const OPEN_SAVE_NS = "open";
 
 export type OpenCharacterLoadout = {
-  /** Primary weapon for Danger Room / brawler / playtest */
+  /**
+   * Primary weapon for Danger Room / brawler / playtest (arsenal id).
+   * Not the Voxel Codex bag item id — Mine held gear uses Codex / pixel tools.
+   */
   weaponId: WeaponId;
   /** Off-hand piece (shield, etc.) or null */
   offHand: WeaponId | null;
   /** Avatar catalog id if not using grudge: race path (e.g. race-human) */
   avatarId?: string;
-  /** grudge6 child mesh_ids from main panel / account equipment */
+  /**
+   * grudge6 child mesh_ids from main panel / account equipment (warlords pipeline).
+   * Do not treat as Realms/voxel body — use voxelLook for era=voxel cosmetics.
+   */
   meshIds?: string[];
-  /** ObjectStore gear preset id when known */
+  /** ObjectStore gear preset id when known (warlords) */
   gearPresetId?: string;
   /** Slot → CDN icon URL (main panel / HUD) */
   slotIcons?: Record<string, string>;
@@ -29,7 +42,7 @@ export type OpenCharacterLoadout = {
   lastMode?: string;
   /**
    * Saved procedural voxel / Explorer look (Dressing Room → Play).
-   * Also mirrored in localStorage (`avatarEdit:voxelLook:v1`).
+   * Fleet SSOT for era=voxel cosmetics. Mirrored in localStorage (`avatarEdit:voxelLook:v1`).
    */
   voxelLook?: Record<string, unknown>;
   /** Opaque per-mode bags (danger progress, etc.) */

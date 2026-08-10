@@ -4,6 +4,10 @@
  * SSOT docs: content/docs/WEAPON_PREFAB.md §3
  * Defaults fill when content JSON omits spine.points[id].
  * Runtime mount still uses MountedWeapon.tip; resolve helpers unify authors + combat.
+ *
+ * NOT an avatar customization system. Voxel body/look stays in voxelAvatarSave +
+ * saveData.open.voxelLook (docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md). Spine is only
+ * local sockets on a held weapon mesh for combat FX / projectiles / colliders.
  */
 
 export type SpinePointId =

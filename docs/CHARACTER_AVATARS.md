@@ -15,6 +15,7 @@ Related: production-wiring skill · [OPEN_PRODUCT.md](./OPEN_PRODUCT.md) · [CHA
 | Custom 2D portrait | `characters.avatar_url` | Prefer over type PNG |
 | 3D modular look | `characters.model_3d` | Danger Room / grudge6 meshes |
 | Open-only prefs | `saveData.open` / config | avatarId, voxelLook (Avatar Edit head), loadout |
+| **Voxel era full map** | [VOXEL_ERA_AVATAR_GEAR_WIRING.md](./VOXEL_ERA_AVATAR_GEAR_WIRING.md) | DB + gear + anim anti-duplicate |
 | Account profile pic | `accounts.avatar_url` | FleetBar / social only — **not** hero portrait |
 | Race definition art | `races.portrait_path` + ObjectStore | Catalog / create UI |
 | Type PNGs (per model) | Open `public/races/*.png` (+ optional `races/portraits/{race}_{class}.png`) | Fallback when no DB avatar |

@@ -9,7 +9,9 @@ Do not invent a second roster DB, a second definitions host, or a third UUID sch
 | Voxel codex generators: [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md) |
 | Multi-era characters: Mine-Loader [CHARACTER_ERAS.md](https://github.com/MolochDaGod/mine-loader/blob/main/docs/CHARACTER_ERAS.md) · Open `FLEET_CHARACTER_ERAS` in `lib/grudgeAuth.ts` |
 | **Voxel Codex** leaf: [CODEX_AND_VOXEL_GENERATION.md](./CODEX_AND_VOXEL_GENERATION.md) · [VOXEL_CANONICAL.md](./VOXEL_CANONICAL.md) |
+| **Voxel avatar · gear · DB wiring (anti-duplicate):** [VOXEL_ERA_AVATAR_GEAR_WIRING.md](./VOXEL_ERA_AVATAR_GEAR_WIRING.md) |
 | **Warlords** stack: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · arsenal + info master catalogs |
+| Shared weapon **mesh sockets** (not avatar customizer): [content/docs/WEAPON_PREFAB.md](../content/docs/WEAPON_PREFAB.md) |
 | Runtime ids: `@workspace/grudge-runtime` `ids.ts` |
 | Asset UUID / CDN: skill `grudge-d1-r2` · [OUTDOOR_ASSETS_D1_R2.md](./OUTDOOR_ASSETS_D1_R2.md) |
 | Bag / camp / lockpick: [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) · [INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md) |

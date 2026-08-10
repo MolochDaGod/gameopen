@@ -1,9 +1,11 @@
-# Weapon prefab UUID graph (Warlords / Open)
+# Weapon prefab UUID graph (shared combat packages / Open)
 
 **Status:** SSOT 2026-08  
-**Pairs with:** `content/docs/WEAPON_PREFAB.md` · `docs/FLEET_ERA_CODEX_UUID_SSOT.md`
+**Pairs with:** `content/docs/WEAPON_PREFAB.md` · `docs/FLEET_ERA_CODEX_UUID_SSOT.md` · `docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md`
 
 Templates live in **content / ObjectStore**. **Instances** (player bag rows) live on **Railway**.
+
+This graph is for **weapon packages** (`wpn_*` / skills / icons). It is **not** the voxel avatar look graph (`voxelLook`) and **not** a second character UUID scheme.
 
 ---
 
