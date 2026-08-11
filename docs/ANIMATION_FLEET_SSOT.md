@@ -2,6 +2,7 @@
 
 **Status:** HARD LAW for Open Danger, GRUDOX, controller Vercel, Foundry, Warlords.  
 **Live Danger binary (target):** `open.grudge-studio.com/danger`  
+**GRUDOX Animator:** https://grudox.grudge-studio.com/animator/ · library/math/agent: [GRUDOX_ANIMATOR_LIBRARY_MATH_SSOT.md](./GRUDOX_ANIMATOR_LIBRARY_MATH_SSOT.md)  
 **Code:** `artifacts/animator/src/three/anim/fleetAnimSsot.ts`  
 **Content:** `content/anims/*` + `/anims/baked/{pack}/*.json`
 
@@ -50,7 +51,20 @@
 1. **One mixer per skinned body** for player poses.  
 2. Attack = **one-shot overlay**, never permanently replaces idle.  
 3. Pack swap: **load clips first → rebuild director** (never dispose mid-attack without queue).  
-4. After idle/attack sample: **reGround** (`characterDeploy.sampleClipAndReground`).
+4. After idle/attack sample: **reGround** (`characterDeploy.sampleClipAndReground`).  
+5. **Weapon equip / class swap:** fade to **idle** only — equip/draw flourishes with root keys tip/spin the body.  
+6. **Stabilize every clip before `clipAction`:** `stabilizeClipForMixer` in `clipTracks.ts` (filter → strip limb/scale pos → hip X/Z lock → sanitize NaN).
+
+### 3.1 Weapon spin / dive-into-ground (fixed pattern)
+
+| Symptom | Cause | Fix |
+|---------|--------|-----|
+| Spin on weapon select | Limb **position** tracks from foreign Mixamo pack on procedural skeleton | `stripLimbPositionTracks` / `stripPositionTracks({ keepRootPosition: true })` |
+| Point feet into ground / tip | **Scale** tracks or NaN hip Y | `stripScaleTracks` + `sanitizeClipTracks` |
+| Walk off pedestal | Hip XZ = clip frame 0 (off-origin retarget) | `lockHorizontalRoot(clip, bindHip)` — never pin to frame 0 |
+| Second mixer “fix” | Parallel `AnimationMixer` on same body | **Forbidden** — one mixer; use action weights + crossFade |
+
+Explorer bind path: `Animator.action()` → `stabilizeClipForMixer` → single `this.mixer.clipAction`.
 
 ---
 

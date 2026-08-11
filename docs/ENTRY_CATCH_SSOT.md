@@ -44,7 +44,9 @@ Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 | `/arcade/play/racer` (etc. GRUDOX-only) on Open | **Hard redirect** → grudox arcade |
 | `/arcade/play/explorer` | Open **danger** (or dressing if `?dressing=1`) |
 | `?mode=create` / `/foundry` on Open | **Hard redirect** → character foundry + safe `returnTo` |
-| `from=gcs\|charactersgrudox\|foundry` | Mode **account** (not combat) |
+| `/characters`, `/lobby`, `?door=characters\|campfire` | Mode **characters** (CampfireLobby) — **wins over** `from=` |
+| `from=foundry\|gcs\|character-studio` without campfire path | Mode **account** (not combat) |
+| `from=charactersgrudox` on hub `/` | Mode **characters** (campfire roster) |
 | `/home-island`, `/tutorial`, `/island-3d` on Open | **Hard redirect** → Warlords client |
 | `/world` on Open | **Stay** — VoxGrudge lab (not Warlords world) |
 | `/login` while session exists | Mode **doors** (hub) |

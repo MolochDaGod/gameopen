@@ -37,13 +37,40 @@ describe("entryCatch", () => {
     }
   });
 
-  it("hands charactersgrudox to account hub", () => {
+  it("door=characters wins over from=charactersgrudox (campfire, not account)", () => {
+    const r = catchEntry({
+      pathname: "/",
+      search: "?door=characters&from=charactersgrudox&characterId=abc",
+    });
+    expect(r.kind).toBe("mode");
+    if (r.kind === "mode") expect(r.mode).toBe("characters");
+  });
+
+  it("/characters path is campfire hub", () => {
+    const r = catchEntry({
+      pathname: "/characters",
+      search: "?from=foundry",
+    });
+    expect(r.kind).toBe("mode");
+    if (r.kind === "mode") expect(r.mode).toBe("characters");
+  });
+
+  it("foundry handoff without campfire path → account hub", () => {
     const r = catchEntry({
       pathname: "/danger",
-      search: "?from=charactersgrudox&characterId=abc",
+      search: "?from=foundry&characterId=abc",
     });
     expect(r.kind).toBe("mode");
     if (r.kind === "mode") expect(r.mode).toBe("account");
+  });
+
+  it("from=charactersgrudox on hub → campfire", () => {
+    const r = catchEntry({
+      pathname: "/",
+      search: "?from=charactersgrudox&characterId=abc",
+    });
+    expect(r.kind).toBe("mode");
+    if (r.kind === "mode") expect(r.mode).toBe("characters");
   });
 
   it("sends home-island to Warlords client", () => {

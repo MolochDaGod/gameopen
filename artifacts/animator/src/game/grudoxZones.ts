@@ -65,13 +65,13 @@ export interface GrudoxZone {
 export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "characters",
-    title: "Characters",
+    title: "Characters · Campfire",
     blurb:
-      "Account hub: charactersgrudox race kit, create/equip heroes, credits, wallet, treaty — native Open surface.",
+      "4-seat TVS campfire roster (charactersgrudox) · launch PvE/PvP · Account for bag/wallet.",
     tone: "#4fc3ff",
     native: true,
-    // Fallback embed if host navigates via deep-link only
-    externalPath: "https://open.grudge-studio.com/?door=account",
+    // Campfire hub — never AccountPanel (door=characters SSOT)
+    externalPath: "https://open.grudge-studio.com/characters",
   },
   {
     id: "minegrudge",

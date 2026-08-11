@@ -12,7 +12,7 @@ import {
 import { LocomotionBlend } from "./LocomotionBlend";
 import type { VoxelCharacter } from "./rig";
 import { mountWeapons, unmountWeapons, type MountedWeapons } from "./weapons";
-import { filterBindableTracks } from "../clipTracks";
+import { filterBindableTracks, stabilizeClipForMixer } from "../clipTracks";
 import { isUpperBodyTrack } from "../upperBody";
 
 /** Horizontal speed below which the character is considered standing still. */
@@ -178,14 +178,16 @@ export class Animator {
     this.currentId = null; // force loco re-eval against the new set
     this.clearOverlay(); // a half-played swing for the old weapon must not linger
     if (sameClass) return; // class unchanged: keep pose, just (un)swapped the mesh
-    // Dressing Room: prefer idle on class swap — equip/draw flourishes often carry
-    // residual root motion that walks the pedestal character out of frame.
+    // Class swap: fade to idle only. Equip/draw flourishes often carry residual
+    // root / hip keys that spin or tip the body into the ground on pedestal/play.
+    // Actions stay on ONE mixer; cached actions from old class remain valid.
     const idle = this.resolve("idle");
     if (idle) {
-      this.setActive(idle, { loop: true, fade: 0.12 });
+      this.setActive(idle, { loop: true, fade: 0.18 });
       this.once = null;
     } else {
-      const intro = this.resolve("equip") ?? this.resolve("draw");
+      // Last resort — still avoid long equip takes; prefer short draw if any
+      const intro = this.resolve("draw") ?? this.resolve("equip");
       if (intro) this.playOnce(intro);
     }
   }
@@ -886,15 +888,22 @@ export class Animator {
     return a;
   }
 
-  /** Get/create a cached action for a clip id (clone + lock horizontal root). */
+  /**
+   * Get/create a cached action for a clip id.
+   * Stable bind: filter → strip limb/scale pos → hip X/Z lock → sanitize NaN.
+   * One mixer only — never create a second AnimationMixer for weapon packs.
+   */
   private action(id: string): THREE.AnimationAction | null {
     const cached = this.actionCache.get(id);
     if (cached) return cached;
     const clip = this.clips.get(id);
     if (!clip) return null;
-    const c = filterBindableTracks(this.character.skeletonRoot, clip.clone());
-    // Bind-pose X/Z lock — never pin to clip frame 0 (that is the "feet meters away" bug).
-    lockHorizontalRoot(c, { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ });
+    const c = stabilizeClipForMixer(clip, {
+      root: this.character.skeletonRoot,
+      bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
+      keepRootPosition: true,
+      lockHorizontalRoot,
+    });
     const action = this.mixer.clipAction(c);
     this.actionCache.set(id, action);
     return action;
@@ -902,7 +911,7 @@ export class Animator {
 
   /**
    * Get/create a cached UPPER-BODY ADDITIVE action for a clip id. The clip is
-   * cloned, stripped to its upper-body tracks (legs stay on the locomotion
+   * stabilized, stripped to upper-body tracks (legs stay on the locomotion
    * blend), made additive relative to its own first frame, and registered with
    * the additive blend mode. Cached under a separate key so it never collides
    * with the full-body action of the same id.
@@ -913,13 +922,36 @@ export class Animator {
     if (cached) return cached;
     const clip = this.clips.get(id);
     if (!clip) return null;
-    const c = filterBindableTracks(this.character.skeletonRoot, clip.clone());
+    const c = stabilizeClipForMixer(clip, {
+      root: this.character.skeletonRoot,
+      bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
+      keepRootPosition: false, // upper body only — no hip travel on overlay
+      lockHorizontalRoot,
+    });
     c.tracks = c.tracks.filter((t) => isUpperBodyTrack(t.name));
     if (c.tracks.length === 0) return null;
     THREE.AnimationUtils.makeClipAdditive(c);
     const action = this.mixer.clipAction(c, undefined, THREE.AdditiveAnimationBlendMode);
     this.actionCache.set(key, action);
     return action;
+  }
+
+  /**
+   * Clear action cache when clips are hot-replaced (weapon pack rebind).
+   * Keeps the same AnimationMixer instance — best practice for stack.
+   */
+  invalidateActionCache(): void {
+    for (const a of this.actionCache.values()) {
+      try {
+        a.stop();
+        this.mixer.uncacheAction(a.getClip());
+      } catch {
+        /* ignore */
+      }
+    }
+    this.actionCache.clear();
+    this.current = null;
+    this.currentId = null;
   }
 }
 

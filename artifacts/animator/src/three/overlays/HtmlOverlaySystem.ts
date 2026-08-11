@@ -100,6 +100,15 @@ export class HtmlOverlaySystem {
     this.root = document.createElement("div");
     this.root.className = "gxo-root";
     this.root.setAttribute("aria-hidden", "true");
+    // 2D Gore UI pack — frames/gauges for damage popup chrome + blood layer
+    try {
+      // Lazy import path avoids circular deps in tests
+      void import("../../lib/goreUiCatalog").then(({ applyGoreUiTheme }) => {
+        applyGoreUiTheme(this.root, "gore");
+      });
+    } catch {
+      /* optional theme */
+    }
 
     this.renderer = new CSS2DRenderer({ element: this.root });
     this.renderer.domElement.style.position = "absolute";

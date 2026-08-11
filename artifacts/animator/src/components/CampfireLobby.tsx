@@ -142,6 +142,38 @@ const PVE_DESTS: MenuDest[] = [
     needsHero: false,
   },
   {
+    id: "world-map",
+    label: "Aethermoor World Map",
+    blurb: "Warlords sectors · sail · island POIs (client)",
+    kind: "external",
+    url: "https://client.grudge-studio.com/island-3d?mode=lobby",
+    needsHero: true,
+  },
+  {
+    id: "home-island",
+    label: "Home Island",
+    blurb: "Warlords home · Railway island claim · bag",
+    kind: "external",
+    url: "https://client.grudge-studio.com/home-island",
+    needsHero: true,
+  },
+  {
+    id: "harvest",
+    label: "Harvestables",
+    blurb: "Danger harvest activity · tools · nature scatter",
+    kind: "external",
+    url: "https://open.grudge-studio.com/danger?activity=harvest",
+    needsHero: true,
+  },
+  {
+    id: "deployables",
+    label: "Deployables · Build",
+    blurb: "Worldbuilder blocks · placeables · claim kits",
+    kind: "local",
+    mode: "voxel",
+    needsHero: false,
+  },
+  {
     id: "undead",
     label: "Voxel Undead",
     blurb: "Arcade sword survival cabinet",
@@ -394,7 +426,35 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       }
       if (dest.kind === "external" && dest.url) {
         setPanel(null);
-        window.open(dest.url, "_blank", "noopener,noreferrer");
+        // Handoff hero + token on fleet surfaces (world map, home island, harvest)
+        try {
+          const u = new URL(dest.url, window.location.origin);
+          u.searchParams.set("open", "1");
+          u.searchParams.set("from", "charactersgrudox");
+          if (active?.id) u.searchParams.set("characterId", active.id);
+          if (active?.baseId) u.searchParams.set("baseId", active.baseId);
+          if (active?.name) u.searchParams.set("characterName", active.name);
+          try {
+            const tok =
+              localStorage.getItem("grudge.open.token") ||
+              localStorage.getItem("grudge_auth_token") ||
+              sessionStorage.getItem("grudge.open.token");
+            if (tok) {
+              u.searchParams.set("grudge_token", tok);
+              u.searchParams.set("sso_token", tok);
+            }
+          } catch {
+            /* private mode */
+          }
+          // Same-origin Open surfaces: navigate in-place; foreign hosts: new tab
+          if (u.origin === window.location.origin) {
+            window.location.assign(u.toString());
+          } else {
+            window.open(u.toString(), "_blank", "noopener,noreferrer");
+          }
+        } catch {
+          window.open(dest.url, "_blank", "noopener,noreferrer");
+        }
       }
     },
     [active, bindHero, flash, launchLocal],
@@ -488,7 +548,8 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
                 const url =
                   typeof window !== "undefined"
                     ? `https://character.grudge-studio.com/?era=voxel&from=open&returnTo=${encodeURIComponent(
-                        window.location.origin + "/?door=characters",
+                        // Path SSOT: /characters always CampfireLobby (entryCatch)
+                        window.location.origin + "/characters",
                       )}`
                     : "https://character.grudge-studio.com/?era=voxel&from=open";
                 window.location.assign(url);
@@ -498,6 +559,23 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
             }}
           >
             Create hero
+          </button>
+          <button
+            type="button"
+            className="cfl-btn"
+            title="Aethermoor world map · sectors · POIs"
+            onClick={() =>
+              launchDest({
+                id: "world-map",
+                label: "World Map",
+                blurb: "",
+                kind: "external",
+                url: "https://client.grudge-studio.com/island-3d?mode=lobby",
+                needsHero: false,
+              })
+            }
+          >
+            World map
           </button>
           <button type="button" className="cfl-btn" onClick={() => onNavigate("doors")}>
             Library

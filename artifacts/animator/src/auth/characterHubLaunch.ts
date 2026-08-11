@@ -57,7 +57,13 @@ export type HubDestinationId =
   | "warlord-genesis"
   | "character-studio"
   | "dcq"
-  | "mine-loader";
+  | "mine-loader"
+  | "world-map"
+  | "home-island"
+  | "harvest-lab"
+  | "deployables"
+  | "assets-cdn"
+  | "poi-zones";
 
 export interface HubLaunchContext {
   characterId?: string | null;
@@ -100,10 +106,26 @@ function withHandoff(url: string, ctx: HubLaunchContext): string {
 export const HUB_DESTINATIONS: HubDestination[] = [
   {
     id: "island",
-    label: "GRUDOX Island",
-    blurb: "Harvest · craft · build · PvP island",
+    label: "GRUDOX Island / Realms",
+    blurb: "Harvest · craft · build · PvP (Mine-Loader Realms)",
     group: "play",
     localMode: "lobbyWorld",
+  },
+  {
+    id: "world-map",
+    label: "Aethermoor World Map",
+    blurb: "Warlords sector sail · islands · event POIs",
+    group: "play",
+    external: (ctx) =>
+      withHandoff("https://client.grudge-studio.com/island-3d?mode=lobby", ctx),
+  },
+  {
+    id: "home-island",
+    label: "Home Island",
+    blurb: "Warlords home island · bag · claim (Railway SSOT)",
+    group: "play",
+    external: (ctx) =>
+      withHandoff("https://client.grudge-studio.com/home-island", ctx),
   },
   {
     id: "pve-danger",
@@ -111,6 +133,14 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     blurb: "Combat sandbox with your hero",
     group: "play",
     localMode: "danger",
+  },
+  {
+    id: "harvest-lab",
+    label: "Harvestables Lab",
+    blurb: "Danger Room harvest activity · nature scatter · tools",
+    group: "play",
+    external: (ctx) =>
+      withHandoff(`${OPEN_HOST}/danger?activity=harvest`, ctx),
   },
   {
     id: "pve-lobby",
@@ -134,6 +164,20 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     localMode: "minegrudge",
   },
   {
+    id: "poi-zones",
+    label: "Zones · POIs catalog",
+    blurb: "Fleet zone deep-links · world standings",
+    group: "play",
+    localMode: "zones",
+  },
+  {
+    id: "deployables",
+    label: "Deployables · Worldbuilder",
+    blurb: "Blocks · NPC bags · placeables · dungeon pins",
+    group: "edit",
+    localMode: "voxel",
+  },
+  {
     id: "voxel-editor",
     label: "Worldbuilder",
     blurb: "Largest map editor · Play = Danger Room combat UX",
@@ -146,6 +190,13 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     blurb: "Gear · anim · VFX lab",
     group: "edit",
     localMode: "editor",
+  },
+  {
+    id: "assets-cdn",
+    label: "Fleet Assets CDN",
+    blurb: "assets.grudge-studio.com · GLB / textures (index only)",
+    group: "edit",
+    external: () => "https://assets.grudge-studio.com/",
   },
   {
     id: "gameopen",

@@ -1,0 +1,52 @@
+{
+  "id": "2d-gore-ui",
+  "version": "1.0.0",
+  "source": "2D Gore UI (1).zip · ummorpgdev/assets/voxelhandoff",
+  "cdnRoot": "https://assets.grudge-studio.com/ui/gore",
+  "sameOrigin": "/ui/gore",
+  "licenseNote": "Organize for Grudge combat HUD layering; keep pack license with source zip.",
+  "layers": {
+    "frames": {
+      "role": "Decorative chrome around HUD / popup panels",
+      "files": ["frames/backbone.png", "frames/rib.png"]
+    },
+    "buttons": {
+      "role": "Themed button skins (idle + pressed)",
+      "files": [
+        "buttons/backbone.png",
+        "buttons/backbone_pressed.png",
+        "buttons/flesh.png",
+        "buttons/flesh_pressed.png",
+        "buttons/zombie.png",
+        "buttons/zombie_pressed.png"
+      ]
+    },
+    "gauges": {
+      "role": "HP / resource bar fill + empty shells for 2D layering",
+      "files": [
+        "gauges/gore01_empty.png",
+        "gauges/gore02_empty.png",
+        "gauges/gore03_empty.png",
+        "gauges/gore_thick_empty.png",
+        "gauges/gore_thin_empty.png",
+        "gauges/flesh_thick_full.png",
+        "gauges/flesh_thin_full.png",
+        "gauges/fleshrotten_full.png",
+        "gauges/stomach_empty.png",
+        "gauges/stomach_full.png",
+        "gauges/zombieskin_thick_full.png",
+        "gauges/zombieskin_thick_half.png",
+        "gauges/zombieskin_thin_full.png",
+        "gauges/zombieskin_thin_half.png",
+        "gauges/zombieskinrotten_thick_full.png",
+        "gauges/zombieskinrotten_thin_full.png"
+      ]
+    }
+  },
+  "usage": {
+    "damagePopups": "CSS .gxo-float.kind-damage — optional rib/gore chrome; numbers stay CSS text",
+    "combatFxBillboards": "Existing GoreImpact2D still uses icons/pack/misc Slash/Effect (blood planes)",
+    "hudBars": "Stack gauges/* empty under full fill; 9-slice or background-size contain",
+    "buttons": "buttons/* for horror/zombie UI skins"
+  }
+}

@@ -130,7 +130,7 @@ function readMotion(raw: unknown): MotionReq | undefined {
 
 function systemPrompt(motion?: MotionReq, exactFrames?: number, mode: "clip" | "pose" = "clip"): string {
   const lines = [
-    "You are an animation engine for a humanoid Mixamo rig used by Grudge Studio games.",
+    "You are an animation engine for a humanoid Mixamo rig used by Grudge Studio / GRUDOX Animator.",
     "Output ONLY a single JSON object, no prose, no markdown fences.",
     mode === "pose"
       ? 'Schema: { "frames": [ { "duration": number, "pose": { boneName: [x,y,z,w] } } ] } — prefer 1–4 key poses.'
@@ -138,8 +138,27 @@ function systemPrompt(motion?: MotionReq, exactFrames?: number, mode: "clip" | "
     "- duration is seconds to interpolate to the NEXT frame, between 0.05 and 5.",
     `- at most ${MAX_FRAMES} frames.`,
     "- each pose value is a LOCAL-space unit quaternion [x,y,z,w] relative to the bind pose.",
-    "- identity (no rotation) is [0,0,0,1]. Only include bones that move.",
+    "- identity (no rotation) is [0,0,0,1]. Only include bones that move. NEVER emit Euler degrees.",
     "- Prefer readable, game-ready poses (combat / loco / gesture).",
+    "",
+    "LANGUAGE → MOTION (map player words to intent before posing):",
+    "- Locomotion: idle, stand, walk, run, sprint, crouch, sneak, strafe left/right, backpedal.",
+    "- Travel verbs: dash, dive, roll, dodge, slide, jump, land, wall-run — keep feet plantable; prefer in-place unless travel requested.",
+    "- Melee: slash, stab, thrust, overhead, inside/outside slash, combo, wind-up, recovery, finish.",
+    "- Defense: block, guard, parry, brace, block-react.",
+    "- Magic: cast, channel, release, area cast, aim staff.",
+    "- Ranged: aim, draw, fire, recoil, pistol-whip, charged shot.",
+    "- Reactions: hit, stagger, knockback, knocked-up, get-up, death, stun.",
+    "- Acrobatics: flip, corkscrew, kip-up, aerial evade.",
+    "- Quality words: grounded, weight on front foot, snappy, heavy, fluid, combat-ready, no foot slide.",
+    "",
+    "MATH / RIG RULES (hxyz = hips XYZ path):",
+    "- SI: 1 unit = 1 meter; adult ~1.8 m tall; hips near y≈1 m in bind.",
+    "- In-place cycles: first pose ≈ last pose; minimize planar hip drift (X/Z); keep subtle vertical hip bob.",
+    "- Root lock: engine re-baselines hip X/Z to bind; you author leg/arm swing, not sliding the body across the world.",
+    "- Spine chain reads as Hips→Spine→Spine1→Spine2→Neck→Head; keep spine coherent (no broken S-curves).",
+    "- One readable silhouette for combat keys (anticipation → strike → follow-through).",
+    "- Never invent Bip001 bone names — Mixamo only (mixamorig*).",
   ];
   if (exactFrames && exactFrames > 0) {
     lines.push(
@@ -150,12 +169,12 @@ function systemPrompt(motion?: MotionReq, exactFrames?: number, mode: "clip" | "
     const travels = (motion.distance ?? 0) > 0;
     lines.push(
       "",
-      "LOCOMOTION REQUEST — author as a clean IN-PLACE cycle (engine bakes travel):",
+      "LOCOMOTION REQUEST — author as a clean IN-PLACE cycle (engine bakes travel on hips):",
       travels
         ? `- Travel ${motion.distance} world units${motion.time ? ` over ${motion.time}s` : ""}. Looping gait; first≈last pose.`
         : `- Hold about ${motion.time}s total.`,
       travels
-        ? "- Alternating leg swing, arm counterswing, subtle hip bob."
+        ? "- Alternating leg swing, arm counterswing, subtle hip bob (hxyz vertical only)."
         : "- Grounded, balanced, exaggerated keys.",
     );
   }

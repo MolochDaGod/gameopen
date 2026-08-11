@@ -16,7 +16,7 @@ Open is the **Steam-like collection shell** for Grudge Studio: one browser app w
 | **Games** | Combat, brawler, survival, arcade cabinets, satellite titles | Native `AppMode` or canvas |
 | **Accounts** | Grudge ID SSO, profile, treaty | `/account` · `/login` · FleetBar |
 | **Saves** | Per-character progress under Railway `saveData.open` | `characterLoadout.ts` · GameSession |
-| **Characters** | Roster, race kit, equip, campfire hub | `/characters` · Account · Equipment |
+| **Characters** | **Campfire 4-avatar explorer hub** (Railway roster) · equip · enter play | `/characters` · `/lobby` · Account · Equipment |
 | **Editors** | Dressing Room, Avatar, Voxel, LED Mask, Vox lab | `/dressing` `/avatar` `/voxel` `/ledmask` `/world` |
 | **Mine-Loader worlds** | Realms lobby / play / build (1-replica world authority) | `/realms` · canvas → Mine-Loader SPA + Railway API |
 | **Warlord Genesis** | Live MOBA/RTS warcamp with fleet hero | `/genesis` → in-app canvas → `warlord-genesis.vercel.app` |
@@ -46,7 +46,9 @@ Grudge ID (id.grudge-studio.com)
   → saveData.open  (Open-only progress blob)
 ```
 
-- **Characters:** Builder Postgres — never a parallel puter-only roster for Open.  
+- **Characters:** Builder Postgres (same Grudge account DB) — **up to 4 campfire explorers** at `/characters` (`CampfireLobbyScene`). Never a parallel puter-only roster.  
+- **Not home island:** Warlords **home island** is a separate product (`grudgewarlords.com/home-island`). Open does **not** host voxel “home island.”  
+- **Camps:** Claim-flag camps are **account-owned**; camp storage can Send mats → account / home-island bag (see `CAMP_CLAIM_FLAG.md`).  
 - **Worlds:** Mine-Loader Railway (seed + block edits) — Open does not own multiplayer world authority.  
 - **Genesis:** Character + token query handoff; game state lives in Genesis deploy.
 

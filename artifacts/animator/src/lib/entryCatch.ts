@@ -26,6 +26,8 @@ export const ENTRY_HOSTS = {
   assets: "https://assets.grudge-studio.com",
   /** Voxel Realms (Mine-Loader) production */
   mineLoader: "https://mineloader.grudge-studio.com",
+  /** Client play host (home island · world map · pirate lobby) */
+  warlordsClient: "https://client.grudge-studio.com",
 } as const;
 
 /**
@@ -37,8 +39,10 @@ export const PRODUCT_STARTS = {
   openHub: `${ENTRY_HOSTS.open}/`,
   /** Combat sandbox */
   danger: `${ENTRY_HOSTS.open}/danger`,
-  /** Account / roster after Foundry or charactersgrudox */
+  /** Account / roster after Foundry equip handoff */
   account: `${ENTRY_HOSTS.open}/account`,
+  /** 4-seat TVS campfire hub (charactersgrudox) — not AccountPanel */
+  campfire: `${ENTRY_HOSTS.open}/characters`,
   /** Sign-in (fleet session) */
   signIn: `${ENTRY_HOSTS.open}/login`,
   /** Foundry create only */
@@ -46,9 +50,11 @@ export const PRODUCT_STARTS = {
   /** Foundry 4-slot hub */
   foundryHub: `${ENTRY_HOSTS.foundry}/`,
   /** Warlords home island (needs characterId on handoff) */
-  warlordsHome: `${ENTRY_HOSTS.warlords}/home-island`,
+  warlordsHome: `${ENTRY_HOSTS.warlordsClient}/home-island`,
+  /** Warlords Aethermoor world map / sector sail hub */
+  warlordsWorldMap: `${ENTRY_HOSTS.warlordsClient}/island-3d?mode=lobby`,
   /** Warlords tutorial (shipwreck / opening mesh — not Open /game) */
-  warlordsTutorial: `${ENTRY_HOSTS.warlords}/tutorial`,
+  warlordsTutorial: `${ENTRY_HOSTS.warlordsClient}/tutorial`,
   /** Warstrat warcamp lobby (shared Railway account characters) */
   warstratLobby: `${ENTRY_HOSTS.warstrat}/lobby`,
   /** GRUDOX arcade root */
@@ -57,6 +63,12 @@ export const PRODUCT_STARTS = {
   mineLoader: `${ENTRY_HOSTS.mineLoader}/`,
   /** Open in-app Realms surface */
   openRealms: `${ENTRY_HOSTS.open}/realms`,
+  /** Open voxel worldbuilder (deployables / blocks) */
+  openVoxel: `${ENTRY_HOSTS.open}/voxel`,
+  /** Open Danger harvest lab */
+  openHarvest: `${ENTRY_HOSTS.open}/danger?activity=harvest`,
+  /** CDN assets root (binaries — not a SPA mode) */
+  assetsCdn: `${ENTRY_HOSTS.assets}`,
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -260,9 +272,33 @@ export function catchEntry(input: CatchInput): CatchAction {
     }
   }
 
-  // ── 3. Charactersgrudox / GCS handoff → Account hub (not combat) ───────
+  // ── 3. Explicit campfire entry ALWAYS wins (before from= handoffs) ─────
+  // Product SSOT: door=characters / /characters / /lobby → CampfireLobby,
+  // never AccountPanel (AGENTS.md · productionSystemsPattern.CAMPFIRE_SURFACES).
+  const campfireDoor =
+    door === "characters" ||
+    door === "charactersgrudox" ||
+    door === "campfire" ||
+    door === "roster-hub" ||
+    door === "lobby";
+  const campfirePath =
+    parts[0] === "characters" ||
+    parts[0] === "campfire" ||
+    parts[0] === "lobby" ||
+    parts[0] === "charactersgrudox";
+  if (campfireDoor || campfirePath) {
+    return {
+      kind: "mode",
+      mode: "characters",
+      reason: "explicit campfire entry → CampfireLobby (not account)",
+      replace: true,
+    };
+  }
+
+  // ── 3b. Foundry / GCS / foreign handoff → Account hub (not combat) ─────
+  // Note: from=charactersgrudox alone used to force account and broke
+  // Create-hero returnTo ?door=characters. Campfire paths handled above.
   if (
-    from === "charactersgrudox" ||
     from === "character-studio" ||
     from === "gcs" ||
     from === "character" ||
@@ -275,8 +311,19 @@ export function catchEntry(input: CatchInput): CatchAction {
       replace: true,
     };
   }
+  // Soft handoff: charactersgrudox deep-link without door/path → campfire
+  if (from === "charactersgrudox" && (!parts[0] || parts[0] === "hub" || parts[0] === "doors")) {
+    return {
+      kind: "mode",
+      mode: "characters",
+      reason: "from=charactersgrudox hub → campfire roster",
+      replace: true,
+    };
+  }
+  // Combat deep-links with from=charactersgrudox keep target mode via openRoutes
+  // (do not steal /danger → account).
 
-  // ── 3b. Purge legacy /game — never Combat Sandbox SPA as "the game" ───
+  // ── 3c. Purge legacy /game — never Combat Sandbox SPA as "the game" ───
   // Historical: open.grudge-studio.com/game served a sandbox title. Production
   // island play is Mine-Loader; Warlords tutorial is client /tutorial.
   if (parts[0] === "game" || parts[0] === "games") {
@@ -462,6 +509,9 @@ export function startUrlForIntent(
     | "hub"
     | "danger"
     | "account"
+    | "campfire"
+    | "characters"
+    | "worldMap"
     | "signIn"
     | "foundryCreate"
     | "foundryHub"
@@ -473,7 +523,9 @@ export function startUrlForIntent(
     | "realms"
     | "islands"
     | "warstrat"
-    | "warlordGenesis",
+    | "warlordGenesis"
+    | "harvest"
+    | "deployables",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -483,6 +535,19 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.danger;
     case "account":
       return PRODUCT_STARTS.account;
+    case "campfire":
+    case "characters":
+      return PRODUCT_STARTS.campfire;
+    case "worldMap": {
+      const u = new URL(PRODUCT_STARTS.warlordsWorldMap);
+      if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);
+      u.searchParams.set("from", "charactersgrudox");
+      return u.toString();
+    }
+    case "harvest":
+      return PRODUCT_STARTS.openHarvest;
+    case "deployables":
+      return PRODUCT_STARTS.openVoxel;
     case "signIn":
       return PRODUCT_STARTS.signIn;
     case "foundryCreate": {

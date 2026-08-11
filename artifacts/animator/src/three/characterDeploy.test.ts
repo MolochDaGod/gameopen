@@ -11,7 +11,7 @@ import {
   liftForClipFootClearance,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
-import { stripPositionTracks } from "./clipTracks";
+import { stripPositionTracks, stripScaleTracks, stabilizeClipForMixer } from "./clipTracks";
 
 /**
  * Toy hero: Mesh (not incomplete SkinnedMesh) + Bip001 Pelvis bone.
@@ -191,5 +191,52 @@ describe("stripPositionTracks", () => {
     const out = stripPositionTracks(clip, { keepRootPosition: true });
     expect(out.tracks.some((t) => t.name === "Bip001 Pelvis.position")).toBe(true);
     expect(out.tracks.some((t) => t.name.includes("Foot.position"))).toBe(false);
+  });
+
+  it("stripScaleTracks drops scale keys that squash limbs", () => {
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.scale", [0, 1], [1, 1, 1, 2, 2, 2]),
+      new THREE.QuaternionKeyframeTrack("mixamorigHips.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+    ]);
+    const out = stripScaleTracks(clip);
+    expect(out.tracks.some((t) => t.name.includes(".scale"))).toBe(false);
+    expect(out.tracks.length).toBe(1);
+  });
+
+  it("stabilizeClipForMixer keeps hip bob, drops foot position", () => {
+    const root = new THREE.Object3D();
+    const hips = new THREE.Bone();
+    hips.name = "mixamorigHips";
+    root.add(hips);
+    const foot = new THREE.Bone();
+    foot.name = "mixamorigLeftFoot";
+    root.add(foot);
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.position", [0, 1], [5, 1, 5, 5, 1.05, 5]),
+      new THREE.VectorKeyframeTrack("mixamorigLeftFoot.position", [0, 1], [0, 0, 0, 0, -0.2, 0]),
+      new THREE.QuaternionKeyframeTrack("mixamorigHips.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+      new THREE.VectorKeyframeTrack("mixamorigHips.scale", [0, 1], [1, 1, 1, 1, 1, 1]),
+    ]);
+    const out = stabilizeClipForMixer(clip, {
+      root,
+      bindHip: { x: 0, y: 1, z: 0 },
+      keepRootPosition: true,
+      lockHorizontalRoot: (c, b) => {
+        for (const t of c.tracks) {
+          if (!t.name.endsWith(".position")) continue;
+          for (let i = 0; i < t.values.length; i += 3) {
+            t.values[i] = b.x;
+            t.values[i + 2] = b.z;
+          }
+        }
+      },
+    });
+    expect(out.tracks.some((t) => t.name.includes("Foot.position"))).toBe(false);
+    expect(out.tracks.some((t) => t.name.includes(".scale"))).toBe(false);
+    const hipPos = out.tracks.find((t) => t.name === "mixamorigHips.position");
+    expect(hipPos).toBeTruthy();
+    // X/Z locked to bind (0), Y bob kept relative
+    expect(hipPos!.values[0]).toBe(0);
+    expect(hipPos!.values[2]).toBe(0);
   });
 });

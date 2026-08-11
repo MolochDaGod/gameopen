@@ -80,7 +80,8 @@ Docs: `docs/ENTRY_CATCH_SSOT.md` · `docs/PRODUCTION_SYSTEMS_PATTERN.md` · `doc
 **Production reliability (do not regress):**
 - One JWT reader for AI + REST (`readProductionAuthToken` / dual-write fleet keys).
 - Lobby GLBs from R2 CDN first (`CAMPFIRE_TVS`) — never rely on Vercel SPA for `.glb`.
-- `door=characters` → campfire hub, not AccountPanel.
+- `door=characters` / `/characters` → campfire hub, not AccountPanel (entryCatch wins over `from=`).
+- Campfire wiring matrix: `docs/CAMPFIRE_WIRING_SSOT.md` (world map, harvest, deployables, zones, Realms).
 - Smoke: `npm run smoke:prod:open` includes `/characters`, `/api/ai/health`, TVS CDN HEADs.
 
 ---
