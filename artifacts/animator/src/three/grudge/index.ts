@@ -20,6 +20,16 @@ export { RACE_ASSETS, RACE_IDS } from "./raceAssets";
 export type { GearPreset, PresetId } from "./gearPresets";
 export { RACE_GEAR_PRESETS, PRESET_IDS, getPreset } from "./gearPresets";
 
+export type { GrudgePlaytestEntry } from "./playtestRoster";
+export {
+  GRUDGE6_PLAYTEST_ROSTER,
+  GRUDGE6_RACE_DEFAULTS,
+  DEFAULT_PLAYTEST_PRESET,
+  buildGrudge6PlaytestRoster,
+  grudge6PlaytestByRace,
+  isGrudge6PlaytestId,
+} from "./playtestRoster";
+
 export type { AnimPack, LoadoutClips } from "./anims";
 export {
   ANIM_PACK_CLIPS,

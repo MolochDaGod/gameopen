@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { CHARACTERS, WEAPONS } from "../three/assets";
+import {
+  CHARACTERS,
+  WEAPONS,
+  grudge6PlaytestByRace,
+  GRUDGE6_RACE_DEFAULTS,
+} from "../three/assets";
 import type {
   AleActor,
   AleCameraMode,
@@ -26,6 +31,19 @@ import { AleReviewPlayer } from "./AleReviewPlayer";
 import { MapCardGrid } from "./MapCard";
 import { ARENA_MAP_CARDS, type MapPreviewId } from "../lib/mapPreviews";
 import "./mapCard.css";
+
+/** Catalog rows that are not grudge6 modular / Heroes multipacks (lab specials). */
+const SPECIAL_CHARACTERS = CHARACTERS.filter(
+  (c) =>
+    !c.id.startsWith("grudge:") &&
+    !c.id.startsWith("grudge-") &&
+    !c.id.startsWith("race-"),
+);
+
+/** Heroes of Grudge class multipacks (baked GLB smoke). */
+const HEROES_OF_GRUDGE = CHARACTERS.filter((c) => c.id.startsWith("grudge-"));
+
+const GRUDGE6_BY_RACE = grudge6PlaytestByRace();
 
 const DIFFICULTIES: { id: Difficulty; label: string }[] = [
   { id: "passive", label: "Passive" },
@@ -172,12 +190,92 @@ export function AdminPanel({
     <>
       <div className="panel-section">
         <h3>
-          <Icon name="animator" size={16} /> Character
+          <Icon name="animator" size={16} /> Grudge races (playtest)
         </h3>
+        <p className="muted" style={{ fontSize: 12, margin: "0 0 8px", opacity: 0.75 }}>
+          Default modular kits — 6 races × gear class. CDN Toon RTS + Bip001 packs.
+        </p>
         <div className="grid2">
-          {CHARACTERS.map((c) => (
+          {GRUDGE6_RACE_DEFAULTS.map((c) => (
             <button
               key={c.id}
+              type="button"
+              title={c.blurb}
+              className={`opt opt-icon ${c.id === characterId ? "active" : ""}`}
+              style={
+                c.id === characterId
+                  ? { outline: `2px solid ${c.color}` }
+                  : { borderColor: `${c.color}66` }
+              }
+              onClick={() => onCharacter(c.id)}
+            >
+              <Icon name="anim-test" size={20} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+        {GRUDGE6_BY_RACE.map((group) => (
+          <div key={group.raceId} style={{ marginTop: 10 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                opacity: 0.8,
+                marginBottom: 4,
+                color: group.color,
+              }}
+            >
+              {group.raceName}
+            </div>
+            <div className="grid2">
+              {group.entries.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  title={c.blurb}
+                  className={`opt opt-icon ${c.id === characterId ? "active" : ""}`}
+                  onClick={() => onCharacter(c.id)}
+                >
+                  <Icon name="equip" size={18} />
+                  {c.presetId}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="panel-section">
+        <h3>
+          <Icon name="anim-test" size={16} /> Heroes of Grudge (class GLB)
+        </h3>
+        <p className="muted" style={{ fontSize: 12, margin: "0 0 8px", opacity: 0.75 }}>
+          Baked multipack smoke — {HEROES_OF_GRUDGE.length} kits under models/grudge/.
+        </p>
+        <div className="grid2">
+          {HEROES_OF_GRUDGE.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`opt opt-icon ${c.id === characterId ? "active" : ""}`}
+              onClick={() => onCharacter(c.id)}
+            >
+              <Icon name="anim-test" size={20} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <h3>
+          <Icon name="animator" size={16} /> Lab / specials
+        </h3>
+        <div className="grid2">
+          {SPECIAL_CHARACTERS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
               className={`opt opt-icon ${c.id === characterId ? "active" : ""}`}
               onClick={() => onCharacter(c.id)}
             >

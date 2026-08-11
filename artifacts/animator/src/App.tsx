@@ -1676,8 +1676,33 @@ export default function App() {
   }, []);
 
   const onCharacter = useCallback((id: string) => {
-    setCharacterId(id);
-    studioRef.current?.setCharacter(id);
+    // Keep lab specials + Heroes multipacks as-is; normalize race-* / bare
+    // race tokens → grudge:race:preset so modular kits always spawn GrudgeAvatar.
+    const keepRaw =
+      id === "explorer" ||
+      id === "led-monk" ||
+      id === "archmage" ||
+      id === "soulbinder" ||
+      id === "centurion" ||
+      id === "gunslinger" ||
+      id === "karate-boss" ||
+      id === "orc" ||
+      id === "sanji" ||
+      id === "tera-kasi" ||
+      id.startsWith("avatar-") ||
+      id.startsWith("grudge:") ||
+      // Heroes of Grudge multipack GLBs (models/grudge/*) — Character path
+      (id.startsWith("grudge-") && !id.startsWith("grudge:"));
+    if (keepRaw) {
+      setCharacterId(id);
+      studioRef.current?.setCharacter(id);
+      return;
+    }
+    void import("./lib/raceModel").then(({ normalizeToGrudgeAvatarId }) => {
+      const normalized = normalizeToGrudgeAvatarId(id);
+      setCharacterId(normalized);
+      studioRef.current?.setCharacter(normalized);
+    });
   }, []);
 
   const onWeapon = useCallback((id: WeaponId) => {
