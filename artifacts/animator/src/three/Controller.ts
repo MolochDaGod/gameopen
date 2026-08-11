@@ -1257,9 +1257,9 @@ export class Controller {
         const mv = this.smoothedSpeed;
         this.character.setLocomotionDirectional(Math.sin(rel) * mv, Math.cos(rel) * mv, mv);
       } else if (this.character.setLocomotion) {
-        // Weight-blended path (GLB Character): one continuous speed eases the
-        // idle/walk/run weights — no discrete role swap or rate hack needed.
-        this.character.setLocomotion(this.smoothedSpeed);
+        // Weight-blended path (GLB Character): continuous speed + sprint flag so
+        // Heroes of Grudge `sprint` clips engage at top speed (not just rate-hack).
+        this.character.setLocomotion(this.smoothedSpeed, sprinting);
       } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
         this.character.playRole("run");
         this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);

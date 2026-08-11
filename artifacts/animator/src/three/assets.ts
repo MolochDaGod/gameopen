@@ -694,12 +694,28 @@ interface GrudgeKit {
   signatureSkills: CharacterDef["signatureSkills"];
 }
 
+/**
+ * Clip names must match embedded GLB animation names (verified: idle|walk|run|sprint|attack|jump…).
+ * Prefer exact library names so autoMapClips does not steal attack from roll/dash clips.
+ */
+const GRUDGE_LOCO_CLIPS = {
+  idle: "idle",
+  walk: "walk",
+  run: "run",
+  sprint: "sprint",
+  jump: "jump",
+} as const;
+
 const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   knight: {
     label: "Knight",
     loadout: ["sword", "mace"],
     offHand: "shield",
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "sword_attack_c",
+      block: "sword_block",
+    },
     signatureSkills: [
       { label: "Blade Rush", clip: "sword_dash_attack", kind: "slash", mode: "dash" },
       { label: "Combo Finisher", clip: "sword_combo_finisher", kind: "slash" },
@@ -710,7 +726,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   warrior: {
     label: "Warrior",
     loadout: ["greataxe", "spear"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "sword_attack_c",
+      block: "sword_block",
+    },
     signatureSkills: [
       { label: "War Charge", clip: "sword_dash_attack", kind: "slam", mode: "dash" },
       { label: "Cleave", clip: "sword_combo_finisher", kind: "slash" },
@@ -721,7 +741,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   ranger: {
     label: "Ranger",
     loadout: ["bow", "dagger"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "attack",
+      jump: "jump",
+    },
     signatureSkills: [
       { label: "Aimed Shot", clip: "bow_aim_walk_fwd", kind: "witchArrow" },
       { label: "Piercing Arrow", clip: "attack", kind: "witchArrow" },
@@ -732,7 +756,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   mage: {
     label: "Mage",
     loadout: ["staffFire", "staffStorm"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "attack",
+      jump: "jump",
+    },
     signatureSkills: [
       { label: "Elemental Blast", clip: "attack", kind: "witchMissile" },
       { label: "Cataclysm", clip: "attack", kind: "witchDisk" },
@@ -756,7 +784,10 @@ for (const race of GRUDGE_RACES) {
       offHand: kit.offHand,
       hideNodes: GRUDGE_HIDE,
       handBone: "Hand",
-      modelYaw: Math.PI + Math.PI / 2,
+      // Heroes of Grudge class GLBs are authored art-forward +Z (clips: idle/walk/run/sprint).
+      // Was Math.PI + Math.PI/2 which stacked reverse + 90° → faces camera / moonwalks.
+      // Controller art-forward is +Z when root.yaw = 0 (grudge-character-correctness).
+      modelYaw: 0,
     });
   }
 }
