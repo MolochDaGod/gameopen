@@ -82,6 +82,7 @@ export type PremadeVoxelMap = {
 
 const PREMADE_TEMPLATE_ROWS: PremadeVoxelMap[] = [
   { id: "explorerStartingTown", label: "Explorer Starting Town", source: "template", role: "starting_town" },
+  { id: "shaderLabCave", label: "Shader.lab Voxel Cave", source: "template", role: "dungeon" },
   { id: "amidaFarmCamp", label: "Amida Farm Camp", source: "template", role: "starting_town" },
   { id: "biomeRoadLab", label: "Biome Roads Lab", source: "template", role: "lab" },
   { id: "boxingRing", label: "Boxing Ring", source: "template", role: "arena" },
@@ -308,7 +309,7 @@ export function placePortalsFromSeed(
         dungeonId,
         name: `${capitalize(theme)} depths`,
         seed: dungeonSeed,
-        templateId: themeToTemplate(theme),
+        templateId: dungeonTemplateForTheme(theme),
         theme,
         difficulty: difficultyFromIndex(i),
         returnToPortal: true,
@@ -323,12 +324,14 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function themeToTemplate(theme: string): string {
+/** Portal theme → Open MAP_TEMPLATES id. Mine/cave = Shader.lab #voxel tunnel + end room. */
+export function dungeonTemplateForTheme(theme: string): string {
   switch (theme) {
     case "crypt":
       return "arena3";
     case "mine":
-      return "challenge1";
+    case "cave":
+      return "shaderLabCave";
     case "temple":
       return "arena2";
     case "ruins":

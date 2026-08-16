@@ -8,6 +8,8 @@ import {
 } from "@workspace/voxel-canonical";
 import { catalogEntryToDeployment, customSeedDeployment } from "./seedWorlds";
 import { assembleSeedOverworldMap, explorerTownDeployment } from "../three/voxel/seedOverworldPlay";
+import { assemblePortalDungeonMap } from "../three/voxel/portalDungeonPlay";
+import { dungeonTemplateForTheme, SHADER_LAB_CAVE_TEMPLATE } from "@workspace/voxel-canonical";
 
 describe("explorer starting town + seed", () => {
   it("reviews premade voxel maps including the lobby spawn hub", () => {
@@ -63,5 +65,23 @@ describe("explorer starting town + seed", () => {
     const hubIdx =
       (0 - map.play!.minZ) * map.play!.width + (0 - map.play!.minX);
     expect(map.play!.heights[hubIdx]).toBe(0);
+  });
+
+  it("routes mine/cave portals into the Shader.lab voxel cave with an end room", () => {
+    expect(dungeonTemplateForTheme("mine")).toBe(SHADER_LAB_CAVE_TEMPLATE);
+    const dep = explorerTownDeployment("explorer-town");
+    const mine = dep.portals.find((p) => p.dungeon.theme === "mine");
+    expect(mine?.dungeon.templateId).toBe(SHADER_LAB_CAVE_TEMPLATE);
+    const cave = assemblePortalDungeonMap({
+      seed: mine?.dungeon.seed ?? 1,
+      templateId: SHADER_LAB_CAVE_TEMPLATE,
+      theme: "mine",
+    });
+    expect(cave.dungeon).toBe(true);
+    expect(cave.blocks.length).toBeGreaterThan(200);
+    expect(cave.deployables.some((d) => d.kind === "start")).toBe(true);
+    expect(cave.deployables.some((d) => d.kind === "npc" && d.difficulty === "elite")).toBe(true);
+    const maxZ = Math.max(...cave.blocks.map((b) => b.z));
+    expect(maxZ).toBeGreaterThan(30);
   });
 });

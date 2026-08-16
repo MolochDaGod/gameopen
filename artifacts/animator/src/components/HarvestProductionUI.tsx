@@ -102,6 +102,8 @@ export interface HarvestProductionUIProps {
   onOpenVoxel?: () => void;
   /** Play town + chunked seed in Open VoxelArena (not Mine-Loader). */
   onPlaySeedOverworld?: (dep: SeedWorldDeployment) => void;
+  /** Play a portal dungeon in Open (Shader.lab cave / arena templates). */
+  onPlayPortalDungeon?: (dep: SeedWorldDeployment, portalId: string) => void;
 }
 
 const TAB_ICON: Record<HarvestTabId, ReactNode> = {
@@ -125,6 +127,7 @@ export function HarvestProductionUI({
   onOpenRealms,
   onOpenVoxel,
   onPlaySeedOverworld,
+  onPlayPortalDungeon,
 }: HarvestProductionUIProps) {
   const [tab, setTab] = useState<HarvestTabId>("ops");
   const [recipes, setRecipes] = useState<CraftRecipe[]>([]);
@@ -928,6 +931,19 @@ export function HarvestProductionUI({
                             >
                               Jump dungeon (dev)
                             </button>
+                            {onPlayPortalDungeon ? (
+                              <button
+                                type="button"
+                                className="hp-btn primary"
+                                style={{ marginTop: 6, width: "100%" }}
+                                onClick={() => {
+                                  onPlayPortalDungeon(dep, p.id);
+                                  showNotice(`Opening ${p.dungeon.name} in Open…`);
+                                }}
+                              >
+                                Play dungeon in Open
+                              </button>
+                            ) : null}
                           </div>
                         ))}
                       </div>

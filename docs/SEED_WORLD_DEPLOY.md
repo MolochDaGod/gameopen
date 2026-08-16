@@ -108,6 +108,21 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
 5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.
 
+### Shader.lab `#voxel` cave dungeon
+
+[lo-th Shader.lab voxel](https://lo-th.github.io/Shader.lab/#voxel) is Shane's winding brick tunnel (`path` + DDA `map`). We **do not** run the Shadertoy fly-cam. We voxelize that SDF at 1 m and **open a chamber at the end** (dungeon room + elite).
+
+| Theme | Template |
+|-------|----------|
+| `mine` / `cave` | `shaderLabCave` — tunnel → open room |
+| `crypt` | `arena3` |
+| `temple` | `arena2` |
+| `ruins` | `arena1` |
+
+Play: Harvest Maps → **Play dungeon in Open**, or Voxel Editor template **Shader.lab Voxel Cave** → Test.
+
+Code: `lib/voxel-canonical/src/shaderLabCave.ts` · `artifacts/animator/src/three/voxel/shaderLabCavePlay.ts`
+
 **Open play (voxel-game ready):** Harvest Maps → **Play in Open (town + seed)**, or Voxel Editor template `explorerStartingTown` → Test.  
 `assembleSeedOverworldMap` → `VoxelArena.load` → instanced seed columns + Rapier heightfield + town trimesh/AABB. Same Controller / camera as other VoxelArena maps.
 

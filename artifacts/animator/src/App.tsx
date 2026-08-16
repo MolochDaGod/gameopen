@@ -50,6 +50,7 @@ import type {
   VoxelMap,
 } from "./three/voxel/types";
 import { assembleSeedOverworldMap } from "./three/voxel/seedOverworldPlay";
+import { assemblePortalDungeonMap } from "./three/voxel/portalDungeonPlay";
 import type { SeedWorldDeployment } from "./game/seedWorlds";
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
@@ -2249,6 +2250,18 @@ export default function App() {
     setMode("play");
   }, []);
 
+  const onPlayPortalDungeon = useCallback((dep: SeedWorldDeployment, portalId: string) => {
+    const portal = dep.portals.find((p) => p.id === portalId);
+    if (!portal) return;
+    playMapRef.current = assemblePortalDungeonMap({
+      seed: portal.dungeon.seed,
+      templateId: portal.dungeon.templateId,
+      theme: portal.dungeon.theme,
+    });
+    setHarvestUiOpen(false);
+    setMode("play");
+  }, []);
+
   // Reopen a scene chosen in the Lobby in the Scene Editor.
   const onLoadScenePost = useCallback((scene: SceneDescriptor) => {
     pendingSceneRef.current = scene;
@@ -3480,6 +3493,7 @@ export default function App() {
               setMode("voxel");
             }}
             onPlaySeedOverworld={onPlaySeedOverworld}
+            onPlayPortalDungeon={onPlayPortalDungeon}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}
@@ -3792,6 +3806,7 @@ export default function App() {
               setMode("voxel");
             }}
             onPlaySeedOverworld={onPlaySeedOverworld}
+            onPlayPortalDungeon={onPlayPortalDungeon}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}

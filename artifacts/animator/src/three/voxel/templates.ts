@@ -11,6 +11,7 @@ import type { BlockTypeId } from "@workspace/voxel-canonical";
 import { buildBiomeRoadBlocks } from "./roadPack";
 import { buildAmidaFarmBlocks } from "./amidaFields";
 import { buildExplorerStartingTownMap } from "./seedOverworldPlay";
+import { buildShaderLabCaveTemplate } from "./shaderLabCavePlay";
 
 /**
  * Code-defined starting-map templates for the Voxel Editor (`/voxel`).
@@ -369,6 +370,12 @@ export const MAP_TEMPLATES: MapTemplate[] = [
   { id: "arena1", label: "Arena 1", desc: "Walled pit with light cover · 2 foes", build: arena1 },
   { id: "arena2", label: "Arena 2", desc: "Pillars + raised platforms · 3 foes", build: arena2 },
   { id: "arena3", label: "Arena 3", desc: "Multi-level dungeon · elite boss", build: arena3 },
+  {
+    id: "shaderLabCave",
+    label: "Shader.lab Voxel Cave",
+    desc: "lo-th Shader.lab #voxel winding brick tunnel that opens into a dungeon room",
+    build: buildShaderLabCaveTemplate,
+  },
   { id: "challenge1", label: "Challenge Course 1", desc: "Parkour platforms to the goal", build: challenge1 },
   { id: "challenge2", label: "Challenge Course 2", desc: "Narrow beams + switchbacks", build: challenge2 },
 ];
