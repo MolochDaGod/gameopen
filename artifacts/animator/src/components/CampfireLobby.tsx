@@ -332,7 +332,7 @@ export function CampfireLobby({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);
-  const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
+  const [heroes, setHeroes] = useState<(GenesisHeroOption | null)[]>(() =>
     buildVoxelCampfireHeroes(
       gameSession.snapshot.characters,
       gameSession.snapshot.selectedCharacterId,
@@ -343,7 +343,7 @@ export function CampfireLobby({
   const [toast, setToast] = useState<string | null>(null);
   const [hoverTip, setHoverTip] = useState<CampfireHoverInfo>(null);
 
-  const active = heroes[selected] ?? heroes[0] ?? null;
+  const active = heroes[selected] ?? heroes.find(Boolean) ?? null;
 
   useEffect(() => {
     const unsub = gameSession.subscribe(() => {
@@ -352,7 +352,7 @@ export function CampfireLobby({
           gameSession.snapshot.characters,
           gameSession.snapshot.selectedCharacterId,
         );
-        return next.length ? next : prev;
+        return next.some(Boolean) ? next : prev;
       });
     });
     if (!gameSession.snapshot.ready) {
