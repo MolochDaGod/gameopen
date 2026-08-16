@@ -71,7 +71,8 @@ Camp hub **Storage** page lists camp vault + **Send → home island**.
 | weapon_tier | Per family × T0–T5 **UUID branch ids** (`wpn_tree_<family>_tN_<uuid>`) — progress keys, not bag instances |
 | unique gear instance | Railway **`grudge_uuid`** via `/api/uuid/generate` + `/api/ledger/*` (Open: `mintUniqueItemInstance`) |
 | stackable mats | definition id + qty; bag cache `stack_<templateId>`; deposit → `/api/account/resources` |
-| equip | kept loadout + ledger `EQUIPPED` / `UNEQUIPPED` when `grudgeUuid` present |
+| equip | kept loadout (mount / boat / main / side) + ledger `EQUIPPED` / `UNEQUIPPED` when `grudgeUuid` present |
+| body Back | **not** a 5th kept slot — `equipment.back` + `equip:back:*` mesh_ids + ledger slot **Back** (`equipBackFromBagWithLedger`) |
 | appearance | `PATCH /api/characters/:uuid` model3d + avatar + equipment mesh refs (`saveCharacterSlotAppearance`) |
 
 **Banned as production bag SSOT:** client-only `ent_*` / provisional uniques while signed in.

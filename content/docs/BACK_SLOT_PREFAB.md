@@ -66,3 +66,22 @@ SI: holy wingspan ~2.0 m · traveler ~1.55–1.75 m · windsurf stow 0.58 m.
 | `bck_cape` / `_long` / `_wide` | passive | procedural Unity cape |
 
 Full table: `content/backs/catalog.json`.
+
+---
+
+## 5. Production item process (same as weapons)
+
+Do **not** invent a second bag, ledger, or kept 2×2 slot. Back is body `mesh_ids`.
+
+| Step | System | What happens |
+|------|--------|----------------|
+| **Recipe** | Open harvest `rcp_back_*` in `content/harvest/recipes.json` | Inputs are stackable mats (account qty) |
+| **Craft** | `craftRecipeAsync` → `grantUniqueToBag` | Unique `itm_back_*` instance. Signed-in: Railway `/api/uuid` + `/api/ledger`. Guest: provisional. **Never** the harvest qty map. |
+| **Bag** | Character 3×3 | Ownership lives here. Not account vault. Not kept 2×2. |
+| **Equip** | Bag RMB **Equip** → `equipBackFromBagWithLedger` | Item **stays** in 3×3. Ledger `EQUIPPED` slot **Back**. Appearance `equipment.back` + `model3d.meshIds`. |
+| **Play** | `applyBackTemplateToMeshIds` → `setEquipmentMeshIds` | One `equip:back:*` tag. `Studio` attaches Wing/Stow/Cape. |
+| **Hydrate** | `resolveCharacterEquipmentVisual` | Reads `equipment.back` / `model3d` and merges `equip:back:*` onto kit mesh_ids. |
+
+Paperdoll **I** cycle persists `model3d.meshIds` + `equipment.back` through `saveCharacterSlotAppearance`. Swap / drop / death emit ledger `UNEQUIPPED` and clear `wornBack`.
+
+Open harvest craft still has **no profession-XP helper** (recipe `skill` is a label only). Do not invent one. Warlords ObjectStore `master-recipes.json` is the Warlords craft suite — Open harvest stays the Open path. Icons are verified R2 pack PNGs (dedicated wing/cape keys 404).

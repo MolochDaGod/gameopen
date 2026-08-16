@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyBackTemplateToMeshIds,
+  isKitBackMesh,
   collectKitSlotMeshes,
   cycleKitSlot,
   currentKitSlotMesh,
@@ -168,5 +170,31 @@ describe("Toon main-panel kit slots", () => {
       }
     }
     expect(sawWind).toBe(true);
+  });
+
+  it("applyBackTemplateToMeshIds stamps one equip:back tag and drops quiver", () => {
+    const withBow = [
+      "WK_Units_head_D",
+      "WK_Units_Body_C",
+      "WK_Units_Arms_B",
+      "WK_Units_Legs_B",
+      "WK_weapon_Bow",
+      "WK_Xtra_quiver",
+    ];
+    const next = applyBackTemplateToMeshIds(
+      "western-kingdoms",
+      withBow,
+      "itm_back_holy_wings",
+    );
+    expect(next).toContain("equip:back:holy_wings");
+    expect(next.some((m) => /quiver/i.test(m))).toBe(false);
+    expect(next).toContain("WK_weapon_Bow");
+  });
+
+  it("isKitBackMesh does not treat wooden weapons as Back", () => {
+    expect(isKitBackMesh("WK_Xtra_quiver")).toBe(true);
+    expect(isKitBackMesh("equip:back:holy_wings")).toBe(true);
+    expect(isKitBackMesh("WK_weapon_sword_B")).toBe(false);
+    expect(isKitBackMesh("BRB_weapon_staff_C")).toBe(false);
   });
 });

@@ -46,8 +46,25 @@ function cloneBag(bag: CharacterBagState): CharacterBagState {
     kept: cloneKept(bag.kept),
     // Always 3 utility slots (J / H / V)
     consumableHotkeys: [0, 1, 2].map((i) => (hk[i] ? { ...hk[i]! } : null)),
+    wornBack: bag.wornBack ? { ...bag.wornBack } : null,
     updatedAt: Date.now(),
   };
+}
+
+export function sameItemInstance(
+  a: ItemInstance | null | undefined,
+  b: ItemInstance | null | undefined,
+): boolean {
+  if (!a || !b) return false;
+  if (a.grudgeUuid && b.grudgeUuid) return a.grudgeUuid === b.grudgeUuid;
+  return a.instanceId === b.instanceId;
+}
+
+export function isWornBackItem(
+  bag: CharacterBagState,
+  item: ItemInstance | null | undefined,
+): boolean {
+  return sameItemInstance(bag.wornBack, item);
 }
 
 /** Ensure kept loadout exists (migrate old saves). */
@@ -391,6 +408,7 @@ export function dropCarryOnDeath(bag: CharacterBagState): {
       s.item = null;
     }
   }
+  next.wornBack = null;
   next.updatedAt = Date.now();
   return { bag: next, dropped };
 }

@@ -135,6 +135,8 @@ export function isLedgerUniqueTemplate(templateId: string): boolean {
   if (
     templateId.startsWith("wpn_") ||
     templateId.startsWith("arm_") ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_") ||
     templateId.startsWith("EQIP-") ||
     templateId.startsWith("ITEM-")
   ) {
@@ -192,6 +194,11 @@ export interface CharacterBagState {
    * Length always 3. Legacy name `consumableHotkeys` kept for save migration.
    */
   consumableHotkeys: (ItemInstance | null)[];
+  /**
+   * Body Back pointer (not a 5th kept 2×2 slot). Instance still lives in 3×3.
+   * Used for ledger UNEQUIP on swap/drop/death.
+   */
+  wornBack?: ItemInstance | null;
   updatedAt: number;
 }
 
@@ -311,6 +318,7 @@ export function newCharacterBag(characterId: string): CharacterBagState {
     slots,
     kept: emptyKeptLoadout(),
     consumableHotkeys: [null, null, null],
+    wornBack: null,
     updatedAt: Date.now(),
   };
 }

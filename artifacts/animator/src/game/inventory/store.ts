@@ -19,7 +19,7 @@ import {
   newCharacterBag,
   newItemInstance,
 } from "./types";
-import { isLedgerUniqueItem } from "./catalog";
+import { isBackItemTemplate, isLedgerUniqueItem } from "./catalog";
 import {
   ensureBagSize,
   ensureKeptLoadout,
@@ -29,6 +29,7 @@ import {
   listDepositable,
   equipBagToKept,
   unequipKeptToBag,
+  sameItemInstance,
 } from "./characterBag";
 import {
   depositInstances,
@@ -97,8 +98,24 @@ export function applyDeathBagDrop(characterId: string): {
   message: string;
 } {
   const bag = loadCharacterBag(characterId);
+  const worn = bag.wornBack ?? null;
   const { bag: next, dropped } = dropCarryOnDeath(bag);
   saveCharacterBag(next);
+  if (worn?.grudgeUuid && characterId && !characterId.startsWith("local")) {
+    void ledgerEquipChange({
+      item: worn,
+      characterId,
+      bodySlot: "back",
+      equip: false,
+    });
+    void import("./characterAppearance").then(({ saveCharacterSlotAppearance }) =>
+      saveCharacterSlotAppearance({
+        characterId,
+        bag: next,
+        back: null,
+      }),
+    );
+  }
   const n = dropped.reduce((s, i) => s + i.qty, 0);
   return {
     bag: next,
@@ -163,6 +180,14 @@ export async function grantUniqueToBag(opts: {
   message: string;
 }> {
   const bag = loadCharacterBag(opts.characterId);
+  if (isLedgerUniqueItem(opts.templateId) && !bag.slots.some((s) => !s.item)) {
+    return {
+      bag,
+      item: null,
+      ledgered: false,
+      message: "Bag full",
+    };
+  }
   if (!isLedgerUniqueItem(opts.templateId)) {
     const res = addToBag(bag, opts.templateId, 1);
     saveCharacterBag(res.bag);
@@ -306,6 +331,141 @@ export async function equipFromBagWithLedger(opts: {
     }
   }
   return { bag: res.bag, ok: true, ledgered };
+}
+
+/**
+ * Equip bag → body Back (mesh_ids + appearance.equipment.back).
+ * Does **not** use kept 2×2 — Back is a paperdoll body slot.
+ * Instance stays in the 3×3 bag as ownership.
+ */
+export async function equipBackFromBagWithLedger(opts: {
+  characterId: string;
+  bagIndex: number;
+  accountId?: string | null;
+  meshIds?: string[];
+}): Promise<{
+  bag: CharacterBagState;
+  ok: boolean;
+  reason?: string;
+  ledgered: boolean;
+  templateId?: string;
+  item?: ItemInstance | null;
+}> {
+  let bag = loadCharacterBag(opts.characterId);
+  const carry = bag.slots[opts.bagIndex]?.item;
+  if (!carry) {
+    return { bag, ok: false, reason: "Empty bag slot", ledgered: false };
+  }
+  if (!isBackItemTemplate(carry.templateId)) {
+    return { bag, ok: false, reason: "Not a back item", ledgered: false };
+  }
+
+  if (
+    readFleetToken() &&
+    isLedgerUniqueItem(carry.templateId) &&
+    (carry.provisional || !carry.grudgeUuid)
+  ) {
+    const minted = await mintUniqueItemInstance({
+      templateId: carry.templateId,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      sourceType: "open_equip_remint",
+      sourceRef: "back",
+    });
+    if (!minted) {
+      return {
+        bag,
+        ok: false,
+        reason: "Cannot equip: ledger mint failed (provisional gear)",
+        ledgered: false,
+      };
+    }
+    bag.slots[opts.bagIndex] = { index: opts.bagIndex, item: minted };
+    saveCharacterBag(bag);
+  }
+
+  const equipped = bag.slots[opts.bagIndex]?.item;
+  if (!equipped) {
+    return { bag, ok: false, reason: "Empty bag slot", ledgered: false };
+  }
+
+  const prev = bag.wornBack ?? null;
+  let ledgered = false;
+  if (prev && !sameItemInstance(prev, equipped) && prev.grudgeUuid) {
+    await ledgerEquipChange({
+      item: prev,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      bodySlot: "back",
+      equip: false,
+    });
+  }
+  if (equipped.grudgeUuid) {
+    ledgered = await ledgerEquipChange({
+      item: equipped,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      bodySlot: "back",
+      equip: true,
+    });
+  }
+  bag.wornBack = { ...equipped };
+  bag.updatedAt = Date.now();
+  saveCharacterBag(bag);
+
+  if (opts.characterId && !opts.characterId.startsWith("local")) {
+    void import("./characterAppearance").then(({ saveCharacterSlotAppearance }) =>
+      saveCharacterSlotAppearance({
+        characterId: opts.characterId,
+        bag,
+        back: equipped,
+        meshIds: opts.meshIds,
+      }),
+    );
+  }
+
+  return {
+    bag,
+    ok: true,
+    ledgered,
+    templateId: equipped.templateId,
+    item: equipped,
+  };
+}
+
+/** Clear body Back (drop / death / paperdoll empty). Ledger UNEQUIPPED. */
+export async function unequipBackWithLedger(opts: {
+  characterId: string;
+  accountId?: string | null;
+  item?: ItemInstance | null;
+  meshIds?: string[];
+}): Promise<{ bag: CharacterBagState; ok: boolean; ledgered: boolean }> {
+  const bag = loadCharacterBag(opts.characterId);
+  const was = opts.item ?? bag.wornBack ?? null;
+  bag.wornBack = null;
+  bag.updatedAt = Date.now();
+  saveCharacterBag(bag);
+  let ledgered = false;
+  if (was?.grudgeUuid) {
+    ledgered = await ledgerEquipChange({
+      item: was,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      bodySlot: "back",
+      equip: false,
+    });
+  }
+  if (opts.characterId && !opts.characterId.startsWith("local")) {
+    void import("./characterAppearance").then(({ saveCharacterSlotAppearance }) =>
+      saveCharacterSlotAppearance({
+        characterId: opts.characterId,
+        bag,
+        back: null,
+        meshIds: opts.meshIds,
+      }),
+    );
+  }
+  return { bag, ok: true, ledgered };
 }
 
 /** Unequip kept → bag + UNEQUIPPED ledger. */
