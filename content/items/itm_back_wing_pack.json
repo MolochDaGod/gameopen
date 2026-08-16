@@ -12,7 +12,11 @@
     "pack"
   ],
   "icon": {
-    "path": "icons/armor/back_wing_pack.png",
-    "status": "placeholder"
-  }
+    "path": "icons/pack/misc/Effect.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_wing_pack"
 }

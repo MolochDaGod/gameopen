@@ -33,6 +33,14 @@
     "data": "ready",
     "mesh": "ready",
     "combat": "ready",
-    "present": "ready"
-  }
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Effect.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_wing_pack"
 }

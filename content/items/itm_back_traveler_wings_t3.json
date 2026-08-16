@@ -12,7 +12,11 @@
     "wings"
   ],
   "icon": {
-    "path": "icons/armor/back_traveler_wings_t3.png",
-    "status": "placeholder"
-  }
+    "path": "icons/pack/misc/Slash_07.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_traveler_wings_t3"
 }

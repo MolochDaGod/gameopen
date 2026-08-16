@@ -26,6 +26,8 @@
       }
     },
     "assets": { "type": "object" },
+    "icon": { "type": "object" },
+    "recipeId": { "type": ["string", "null"] },
     "readiness": { "type": "object" }
   }
 }

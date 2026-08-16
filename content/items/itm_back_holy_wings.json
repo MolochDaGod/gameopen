@@ -12,7 +12,11 @@
     "wings"
   ],
   "icon": {
-    "path": "icons/armor/back_holy_wings.png",
-    "status": "placeholder"
-  }
+    "path": "icons/pack/misc/Naturecircle.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Naturecircle.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_holy_wings"
 }

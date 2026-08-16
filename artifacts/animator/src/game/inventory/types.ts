@@ -57,7 +57,8 @@ export type ItemKind =
   | "tool"
   | "relic"
   | "mount"
-  | "boat";
+  | "boat"
+  | "back";
 
 export type EquipSlot =
   | "mainHand"
@@ -70,7 +71,8 @@ export type EquipSlot =
   | "legs"
   | "feet"
   | "accessory"
-  | "tool";
+  | "tool"
+  | "back";
 
 export type ItemRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 

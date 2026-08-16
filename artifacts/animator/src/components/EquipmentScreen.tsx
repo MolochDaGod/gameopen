@@ -41,6 +41,7 @@ import {
   META_EQUIP_LABEL,
 } from "../three/grudge/toonKitCoverage";
 import { resolveSlotEffects, slotEffectLines } from "../three/grudge/slotEffects";
+import { backItemIconUrl } from "../three/equipment/backSlotItems";
 import { resolveRaceId } from "../lib/raceModel";
 import "./EquipmentScreen.css";
 
@@ -327,6 +328,15 @@ export function EquipmentScreen({
           <Icon name={WEAPON_ICON[currentWeapon]} size={28} className="eq-slot-icon" />
         ) : isOff && activeOff ? (
           <Icon name={WEAPON_ICON[activeOff.id]} size={28} className="eq-slot-icon" />
+        ) : kitSlot === "back" && kitMesh ? (
+          <img
+            src={backItemIconUrl(kitMesh)}
+            alt=""
+            className="eq-slot-icon"
+            width={28}
+            height={28}
+            referrerPolicy="no-referrer"
+          />
         ) : (
           <IconCmp className="eq-slot-icon" strokeWidth={1.4} />
         )}

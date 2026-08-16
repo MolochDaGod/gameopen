@@ -289,7 +289,25 @@ function packIconHint(id: string): string | null {
     return pack("weapons/Hammer_01.png");
   if (lower.includes("bow") || lower.includes("arrow")) return pack("weapons/Bow_01.png");
   if (lower.includes("staff") || lower.includes("wand")) return pack("weapons/Staff_01.png");
-  if (lower.includes("shield")) return pack("weapons/Shield_01.png");
+  if (lower.includes("shield") || lower.includes("cape") || lower.includes("shell"))
+    return pack("weapons/Shield_01.png");
+  if (lower.includes("quiver") || lower.includes("bow")) return pack("weapons/Bow_01.png");
+  if (lower.includes("holy") && lower.includes("wing")) return pack("misc/Naturecircle.png");
+  if (lower.includes("traveler") || lower.includes("flight") || lower.includes("invis"))
+    return pack("misc/Chaos_2.png");
+  if (
+    lower.includes("wind") ||
+    lower.includes("sail") ||
+    lower.includes("shark") ||
+    lower.includes("glider") ||
+    lower.includes("parachute") ||
+    lower.includes("hover")
+  ) {
+    return pack("misc/Flow.png");
+  }
+  if (lower.includes("itm_back_") || lower.includes("bck_") || lower.startsWith("back_")) {
+    return pack("misc/Effect.png");
+  }
   return null;
 }
 

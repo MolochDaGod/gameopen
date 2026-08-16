@@ -33,6 +33,14 @@
     "data": "ready",
     "mesh": "ready",
     "combat": "ready",
-    "present": "ready"
-  }
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_sail_deploy"
 }

@@ -77,6 +77,54 @@ export function paperdollBackIds(): string[] {
   return codedBackSlotItems().map((i) => backEquipId(i.id));
 }
 
+/** Verified 200 on assets.grudge-studio.com (HEAD 2026-08-16). */
+export const BACK_PACK_ICON: Record<string, string> = {
+  back_wing_pack: "icons/pack/misc/Effect.png",
+  back_parachute: "icons/pack/misc/Flow.png",
+  back_glider: "icons/pack/misc/Flow.png",
+  back_flight_rig: "icons/pack/misc/Chaos_2.png",
+  back_sail_deploy: "icons/pack/misc/Flow.png",
+  back_wind_surf: "icons/pack/misc/Flow.png",
+  back_shark_fin: "icons/pack/misc/Flow.png",
+  back_holy_wings: "icons/pack/misc/Naturecircle.png",
+  back_traveler_wings: "icons/pack/misc/Chaos_2.png",
+  back_traveler_wings_t2: "icons/pack/misc/Effect.png",
+  back_traveler_wings_t3: "icons/pack/misc/Slash_07.png",
+  back_cape: "icons/pack/weapons/Shield_01.png",
+  back_cape_long: "icons/pack/weapons/Shield_01.png",
+  back_cape_wide: "icons/pack/weapons/Shield_01.png",
+  back_quiver: "icons/pack/weapons/Bow_01.png",
+  "back:quiver": "icons/pack/weapons/Bow_01.png",
+  back_bag: "icons/pack/misc/Effect.png",
+  "back:bag": "icons/pack/misc/Effect.png",
+  back_wood: "icons/pack/misc/Slash_07.png",
+  "back:wood": "icons/pack/misc/Slash_07.png",
+  back_hover: "icons/pack/misc/Flow.png",
+  back_protective_shell: "icons/pack/weapons/Shield_01.png",
+  back_invisibility: "icons/pack/misc/Chaos_2.png",
+};
+
+const CDN = "https://assets.grudge-studio.com";
+
+export function backRuntimeFromAnyId(id: string): string {
+  const s = String(id || "");
+  if (s.startsWith("equip:back:")) return `back_${s.slice("equip:back:".length)}`;
+  if (s.startsWith("itm_back_")) return `back_${s.slice("itm_back_".length)}`;
+  if (s.startsWith("bck_")) return `back_${s.slice("bck_".length)}`;
+  if (s.startsWith("rcp_back_")) return `back_${s.slice("rcp_back_".length)}`;
+  return s;
+}
+
+export function backItemIconPath(id: string): string {
+  if (BACK_PACK_ICON[id]) return BACK_PACK_ICON[id]!;
+  const runtime = backRuntimeFromAnyId(id);
+  return BACK_PACK_ICON[runtime] || "icons/pack/misc/Effect.png";
+}
+
+export function backItemIconUrl(id: string): string {
+  return `${CDN}/${backItemIconPath(id)}`;
+}
+
 /**
  * Canonical back-slot catalog.
  * Do not invent a separate "effect slot" radial — equip here.
