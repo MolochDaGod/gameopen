@@ -417,6 +417,20 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       buffOnKill: "purple_might",
       tags: ["warlords", "flying", "beast", "elite", "seed"],
     },
+    {
+      id: "anomaly_hatchling",
+      name: "Anomaly Hatchling",
+      role: "camp_melee",
+      meshKeys: ["models/warlords-era/enemies/anomaly_hatchling.glb"],
+      heightM: 1.6,
+      hp: 75,
+      damage: 16,
+      speed: 2.4,
+      atkReach: 1.8,
+      xp: 50,
+      buffOnKill: "green_regen",
+      tags: ["warlords", "beast", "worm", "dungeon", "hatchling", "anomaly", "seed"],
+    },
   ],
   buffs: {
     blue_haste: {
@@ -461,6 +475,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "voodooist", count: 1, radius: 14 },
         { unitId: "zombie_redesigned", count: 2, radius: 10 },
         { unitId: "stormbird_galarian", count: 1, radius: 16 },
+        { unitId: "anomaly_hatchling", count: 2, radius: 8 },
       ],
     },
     session_voxel_pack: {
@@ -476,6 +491,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "voodooist", count: 2, radius: 12 },
         { unitId: "zombie_redesigned", count: 3, radius: 11 },
         { unitId: "stormbird_galarian", count: 1, radius: 16 },
+        { unitId: "anomaly_hatchling", count: 2, radius: 7 },
         { unitId: "blocker_broker", count: 1, radius: 6 },
       ],
     },
@@ -498,6 +514,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       spawns: [
         { unitId: "voodooist", count: 2, radius: 7 },
         { unitId: "zombie_redesigned", count: 2, radius: 6 },
+        { unitId: "anomaly_hatchling", count: 3, radius: 5 },
       ],
     },
     island_orc_tribe: {

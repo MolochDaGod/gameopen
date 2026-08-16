@@ -157,6 +157,25 @@
       "defaultStrategy": "flanker",
       "tags": ["voxel", "creature", "melee", "session"],
       "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "anomaly_hatchling": {
+      "id": "anomaly_hatchling",
+      "name": "Anomaly Hatchling",
+      "role": "camp_melee",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/warlords-era/enemies/anomaly_hatchling.glb"
+      ],
+      "heightM": 1.6,
+      "hp": 75,
+      "damage": 16,
+      "speed": 2.4,
+      "atkReach": 1.8,
+      "aggroRange": 12,
+      "xp": 50,
+      "defaultStrategy": "aggressive-rusher",
+      "tags": ["warlords", "beast", "worm", "dungeon", "hatchling", "anomaly", "seed"],
+      "allowOn": ["voxel", "seed", "dungeon", "brawl", "danger", "genesis", "forest", "sailtest"]
     }
   },
   "camps": {
@@ -173,6 +192,7 @@
         { "unitId": "voodooist", "count": 2, "radius": 12 },
         { "unitId": "zombie_redesigned", "count": 3, "radius": 11 },
         { "unitId": "stormbird_galarian", "count": 1, "radius": 16 },
+        { "unitId": "anomaly_hatchling", "count": 2, "radius": 7 },
         { "unitId": "blocker_broker", "count": 1, "radius": 6 }
       ]
     }
