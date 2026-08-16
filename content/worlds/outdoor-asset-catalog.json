@@ -264,6 +264,14 @@
       "notes": "Session pack — redesigned zombie for seed worlds (SI 1.8 m, native Z ≈ 1.82)"
     },
     {
+      "id": "build_zhunbei_cell",
+      "r2Key": "models/build/zhunbei.glb",
+      "category": "build",
+      "role": "placement_cell_frame",
+      "contentType": "model/gltf-binary",
+      "notes": "Grid-perfect place cell (inner plate + arrows). Ghost sits inside. Native inner ~3.457 m."
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",
