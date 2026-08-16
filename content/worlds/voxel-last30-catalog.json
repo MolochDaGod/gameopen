@@ -173,7 +173,7 @@
     },
     {
       "id": "wolf_street",
-      "src": "wolf_street.glb",
+      "src": "D:\\Games\\Models\\wolf_street.glb",
       "role": "map_chunk",
       "category": "voxel_map",
       "r2Key": "models/voxel/maps/wolf_street.glb",

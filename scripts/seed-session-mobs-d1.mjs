@@ -50,6 +50,7 @@ const ENTRIES = [
   { file: "mage_demon.glb", name: "mage_demon", height: 2.0, tags: ["enemy", "voxel", "magic", "session"] },
   { file: "lowpoly_rhino.glb", name: "lowpoly_rhino", height: 1.65, tags: ["enemy", "voxel", "beast", "session"] },
   { file: "violet_4_hn_creature.glb", name: "violet_4_hn_creature", height: 1.8, tags: ["enemy", "voxel", "creature", "session"] },
+  { file: "voodooist.glb", name: "voodooist", height: 1.8, tags: ["enemy", "voxel", "magic", "hex", "seed", "session"] },
 ];
 
 const now = Date.now();

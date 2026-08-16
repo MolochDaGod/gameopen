@@ -29,7 +29,7 @@ let copied = 0,
 
 for (const a of cat.assets || []) {
   const dest = path.join(publicRoot, a.r2Key);
-  const src = path.join(srcRoot, a.src);
+  const src = path.isAbsolute(a.src) ? a.src : path.join(srcRoot, a.src);
   const mb = Number(a.mb) || 0;
 
   if (!stageAll && (a.upload === "multipart" || mb > maxMb)) {
