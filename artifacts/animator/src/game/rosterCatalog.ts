@@ -44,6 +44,7 @@ export const ENEMIES: readonly CatalogEntity[] = [
   { id: "violet_4_hn_creature", name: "Violet HN Creature", kind: "enemy", model: "models/enemies/session/violet_4_hn_creature.glb", defaultStrategy: "flanker", tags: ["voxel", "creature", "session"] },
   { id: "voodooist", name: "Voodooist", kind: "enemy", model: "models/enemies/session/voodooist.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "hex", "seed", "session"] },
   { id: "zombie_redesigned", name: "Redesigned Zombie", kind: "enemy", model: "models/enemies/session/zombie_redesigned.glb", defaultStrategy: "swarm-horde", tags: ["voxel", "melee", "undead", "seed", "session"] },
+  { id: "stormbird_galarian", name: "Galarian Stormbird", kind: "enemy", model: "models/warlords-era/animals/flying/stormbird_galarian.glb", defaultStrategy: "aggressive-rusher", tags: ["warlords", "flying", "beast", "elite"] },
 ] as const;
 
 export const ALLIES: readonly CatalogEntity[] = [

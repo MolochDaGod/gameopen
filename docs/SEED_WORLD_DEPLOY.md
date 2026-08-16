@@ -112,6 +112,7 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 7. **Seed enemies** — session pack, stamped by `placeSeedHostilesFromSeed` and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`):
    - **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, SI 1.8 m).
    - **Redesigned Zombie** (`D:\Games\Models\zombie_redesigned.glb` → R2 `models/enemies/session/zombie_redesigned.glb`, native Z ≈ 1.82 m). Per-part idle/walk/run/attack/death clips; CampEnemySystem is still slide-only. Not `forest_zombie` (that mesh is `voxel-zombie-1.glb`).
+   - **Galarian Stormbird** (`D:\Games\Models\stormbird_galarian.glb` → R2 `models/warlords-era/animals/flying/stormbird_galarian.glb`, native ≈ 2.26 m). Warlords `animals/flying` (harpy / sky fauna). Encament `seed_voodoo` + forest/voxel camps. Slide XZ; spawn Y hover if tagged `flying`.
 
 ### Shader.lab `#voxel` cave dungeon
 

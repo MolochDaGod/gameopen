@@ -747,6 +747,7 @@ export class BrawlerScene {
         { path: "models/enemies/session/mage_demon.glb", heightM: 2.0 },
         { path: "models/enemies/session/voodooist.glb", heightM: 1.8 },
         { path: "models/enemies/session/zombie_redesigned.glb", heightM: 1.8 },
+        { path: "models/warlords-era/animals/flying/stormbird_galarian.glb", heightM: 2.2 },
         { path: "models/enemies/session/violet_4_hn_creature.glb", heightM: 1.8 },
         { path: "models/enemies/session/lowpoly_rhino.glb", heightM: 1.65 },
         { path: "models/enemies/session/hollow_knight_vengefly.glb", heightM: 0.95 },
