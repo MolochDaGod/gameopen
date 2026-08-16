@@ -16,12 +16,21 @@ export class BackStowAttach {
   private root: THREE.Object3D | null = null;
   private loadedUrl: string | null = null;
 
-  attachToCharacter(characterRoot: THREE.Object3D): void {
+  attachToCharacter(
+    characterRoot: THREE.Object3D,
+    pose?: { offset?: [number, number, number]; eulerDeg?: [number, number, number] },
+  ): void {
     const bone = findBackBone(characterRoot) || characterRoot;
     this.group.removeFromParent();
     bone.add(this.group);
-    this.group.position.set(0.02, 0.06, -0.14);
-    this.group.rotation.set(THREE.MathUtils.degToRad(8), Math.PI, 0);
+    const off = pose?.offset ?? [0.02, 0.06, -0.14];
+    const e = pose?.eulerDeg ?? [8, 180, 0];
+    this.group.position.set(off[0], off[1], off[2]);
+    this.group.rotation.set(
+      THREE.MathUtils.degToRad(e[0] || 0),
+      THREE.MathUtils.degToRad(e[1] || 0),
+      THREE.MathUtils.degToRad(e[2] || 0),
+    );
   }
 
   async show(url: string, stowLengthM = 0.58): Promise<boolean> {

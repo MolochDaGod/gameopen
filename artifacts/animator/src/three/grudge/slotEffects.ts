@@ -198,6 +198,15 @@ export const BACK_SLOT_EFFECTS: Record<string, SlotEffectSpec> = {
     summary: "Gather passive — harvest yield while carrying wood.",
     bonuses: { harvest: 10, craftSpeed: 4 },
   },
+  "equip:back:shark_fin": {
+    id: "equip:back:shark_fin",
+    slot: "back",
+    label: "Shark Fin",
+    kinds: ["passive"],
+    summary: "Passive water buff — 2× swim, shark aggro immune, breathe underwater.",
+    aura: "absorb",
+    bonuses: { swimSpeed: 100 },
+  },
 };
 
 export const SLOT_EFFECTS: Record<string, SlotEffectSpec> = {
@@ -225,10 +234,29 @@ export function effectForEquipId(id: string): SlotEffectSpec | null {
   if (/cape_long|long.?cape/.test(k)) return BACK_SLOT_EFFECTS["equip:back:cape_long"] ?? null;
   if (/cape_wide|wide.?cape/.test(k)) return BACK_SLOT_EFFECTS["equip:back:cape_wide"] ?? null;
   if (/equip:back:cape$|back_cape$/.test(k)) return BACK_SLOT_EFFECTS["equip:back:cape"] ?? null;
+  if (/shark.?fin/.test(k)) return BACK_SLOT_EFFECTS["equip:back:shark_fin"] ?? null;
   if (/quiver/.test(k)) return BACK_SLOT_EFFECTS["back:quiver"] ?? null;
   if (/wood/.test(k)) return BACK_SLOT_EFFECTS["back:wood"] ?? null;
   if (/bag/.test(k)) return BACK_SLOT_EFFECTS["back:bag"] ?? null;
   return null;
+}
+
+/** Class id for Shift+1–5 / class tree — from equipped class item (not Relic). */
+export function classIdFromMeshIds(meshIds: string[] | null | undefined): string | null {
+  for (const spec of resolveSlotEffects(meshIds)) {
+    if (spec.slot === "classItem" && spec.classRelicId) {
+      if (spec.id.endsWith(":warrior")) return "warrior";
+      if (spec.id.endsWith(":ranger")) return "ranger";
+      if (spec.id.endsWith(":mage")) return "mage";
+      if (spec.id.endsWith(":worge")) return "worge";
+    }
+  }
+  return null;
+}
+
+export function classTreeIdFromMeshIds(meshIds: string[] | null | undefined): string | null {
+  const id = classIdFromMeshIds(meshIds);
+  return id ? `class-${id}` : null;
 }
 
 export function resolveSlotEffects(meshIds: string[] | null | undefined): SlotEffectSpec[] {

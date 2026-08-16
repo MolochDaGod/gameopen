@@ -15,4 +15,4 @@ Most class design was already in place (Warbound Grip, Wand recipes, Grimoire fo
 
 Do not replace these files wholesale. Prefer additive fields on the existing relics.
 
-**Paperdoll:** these are the **Class item** slot (under the character camera), not Relic. Relic stays the four elemental orbs.
+**Paperdoll:** these are the **Class item** slot (under the character camera), not Relic. Relic stays the four elemental orbs. Warrior/Knight/Ranger/Mage presets stamp the matching `equip:class:*` id. Back also uses the shipped Casting shark fin (`equip:back:shark_fin`).

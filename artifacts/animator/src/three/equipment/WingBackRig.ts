@@ -68,9 +68,11 @@ export function physicsForMode(mode: WingMode): WingPhysicsProfile {
     case "parachute":
       return { drag: 0.85, glide: 0.15, lift: 0.05, maxFall: -3.5 };
     case "glide":
-      return { drag: 0.45, glide: 0.75, lift: 0.12, maxFall: -6 };
+      // Casting FLIGHT_DEFAULTS holy: glideSink 1.4 · glideSpeed 9.5
+      return { drag: 0.45, glide: 0.75, lift: 0.12, maxFall: -1.4 };
     case "flight":
-      return { drag: 0.25, glide: 0.9, lift: 0.55, maxFall: -2 };
+      // Casting traveler: faster glide 14, flap lift, shallower sink
+      return { drag: 0.25, glide: 0.9, lift: 0.55, maxFall: -1.2 };
     case "sail":
       // Ocean: wind-coupled later; moderate open wing + board link
       return { drag: 0.35, glide: 0.55, lift: 0.08, maxFall: -8 };
@@ -92,15 +94,55 @@ function loadGltf(url: string): Promise<{ scene: THREE.Group; animations: THREE.
   });
 }
 
-/** Find spine/back bone on grudge6 / Mixamo kits. */
+/** Find spine/back bone — Casting BackSlotEquip: quiver parent, then named Spine. */
 export function findBackBone(root: THREE.Object3D): THREE.Object3D | null {
+  let quiverMesh: THREE.Object3D | null = null;
+  root.traverse((n) => {
+    if (quiverMesh) return;
+    const k = (n.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (k.includes("xtraquiver") || k.includes("quiver") || k.includes("backcontainer")) {
+      quiverMesh = n;
+    }
+  });
+  if (quiverMesh) {
+    let p: THREE.Object3D | null = quiverMesh.parent;
+    while (p && p !== root) {
+      if ((p as THREE.Bone).isBone || /spine|chest|clavicle|bip001/i.test(p.name || "")) return p;
+      p = p.parent;
+    }
+    if (quiverMesh.parent) return quiverMesh.parent;
+  }
+
+  const prefer = [
+    "Bip001 Spine1",
+    "Bip001_Spine1",
+    "Bip001 Spine2",
+    "Bip001_Spine2",
+    "Bip001 Spine",
+    "Bip001_Spine",
+    "Spine2",
+    "Spine1",
+    "Spine",
+    "mixamorig:Spine2",
+    "mixamorig:Spine1",
+    "mixamorig:Spine",
+  ];
+  const map = new Map<string, THREE.Object3D>();
+  root.traverse((n) => {
+    if (n.name) map.set(n.name, n);
+  });
+  for (const name of prefer) {
+    const hit = map.get(name);
+    if (hit) return hit;
+  }
+
   let best: THREE.Object3D | null = null;
   let score = -1;
   root.traverse((o) => {
     const n = o.name || "";
     let s = 0;
-    if (/bip001.?spine2|mixamorig.?spine2/i.test(n)) s = 100;
-    else if (/bip001.?spine1|mixamorig.?spine1/i.test(n)) s = 80;
+    if (/bip001.?spine1|mixamorig.?spine1/i.test(n)) s = 100;
+    else if (/bip001.?spine2|mixamorig.?spine2/i.test(n)) s = 80;
     else if (/bip001.?spine|mixamorig.?spine$/i.test(n)) s = 60;
     else if (/spine/i.test(n)) s = 40;
     else if (/back.?attach|back.?slot|r_back|l_back/i.test(n)) s = 90;

@@ -967,6 +967,10 @@ export class Studio {
   private backStow: BackStowAttach | null = null;
   /** Last equipped back-slot item id (same slot as “effects”). */
   private _lastBackSlotItemId: string | null = "back_wing_pack";
+  /** StatusFx ids applied from Relic / Class item / Back — cleared on unequip. */
+  private slotAuraIds = new Set<StatusId>();
+  /** True while a back-slot water buff owns Controller.setSpeedMultiplier. */
+  private slotSpeedOwned = false;
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
   /** Hellmaw / volcanic / boss-event world boss (Shadow Flame Mantis + Ash Ghasts). */
@@ -1714,8 +1718,6 @@ export class Studio {
       }
     }
     this.wingRig.attachToCharacter(this.character.root);
-    // Default: visible pack circle on back (stowed)
-    this.wingRig.equipBackItem("back_wing_pack");
   }
 
   /** Equip / change back-slot item (effects live on the item — not a second slot). */
@@ -1734,8 +1736,11 @@ export class Studio {
       this.wingRig?.equipBackItem(null);
       this.capeRig?.setVisible(false);
       if (!this.backStow) this.backStow = new BackStowAttach();
-      this.backStow.attachToCharacter(root);
-      void this.backStow.show(def.stowUrl, 0.58);
+      this.backStow.attachToCharacter(root, {
+        offset: def.stowOffset,
+        eulerDeg: def.stowEulerDeg,
+      });
+      void this.backStow.show(def.stowUrl, def.stowLengthM ?? 0.58);
     } else {
       this.capeRig?.setVisible(false);
       this.backStow?.hide();
@@ -2128,12 +2133,19 @@ export class Studio {
     this.equipBackWing(backItem);
   }
 
-  /** Relic/Back passives: apply existing StatusFx auras while equipped. */
+  /** Relic/Back/Class passives: apply existing StatusFx auras while equipped. */
   private syncLoadoutSlotAuras(): void {
-    const fx = resolveSlotEffects(this.pendingMeshIds);
-    for (const spec of fx) {
-      if (spec.aura) this.applyStatus(spec.aura);
+    const wanted = new Set<StatusId>();
+    for (const spec of resolveSlotEffects(this.pendingMeshIds)) {
+      if (spec.aura) wanted.add(spec.aura);
     }
+    for (const id of this.slotAuraIds) {
+      if (!wanted.has(id)) this.status.clear(id);
+    }
+    for (const id of wanted) {
+      if (!this.slotAuraIds.has(id)) this.applyStatus(id);
+    }
+    this.slotAuraIds = wanted;
   }
 
   /** Relic/Back on-hit procs (StatusFx hostile). */
@@ -11252,11 +11264,25 @@ export class Studio {
     if (this.testWorldId === "sailtest" && this.forestWorld?.sail && this.character && this.controller) {
       const y = this.character.root.position.y;
       const wy = this.forestWorld.sail.waterSurfaceY;
-      if (y < wy + 1.2) {
+      const onWater = y < wy + 1.2;
+      if (onWater) {
         const w = this.forestWorld.sail.windVelocity(0.35);
         this.character.root.position.x += w.x * dt;
         this.character.root.position.z += w.z * dt;
       }
+      // Casting back waterBuffs (shark fin / windsurf) — existing Controller speed hook
+      const backDef = this._lastBackSlotItemId ? backSlotItem(this._lastBackSlotItemId) : null;
+      const swimMul = backDef?.waterBuffs?.swimSpeedMul ?? (backDef?.id === "back_wind_surf" && onWater ? 1.2 : 1);
+      if (onWater && swimMul > 1) {
+        this.controller.setSpeedMultiplier(swimMul);
+        this.slotSpeedOwned = true;
+      } else if (this.slotSpeedOwned) {
+        this.controller.setSpeedMultiplier(1);
+        this.slotSpeedOwned = false;
+      }
+    } else if (this.slotSpeedOwned && this.controller) {
+      this.controller.setSpeedMultiplier(1);
+      this.slotSpeedOwned = false;
     }
     // Camp / voxel hostiles (forest creeps + island tribes)
     this.campEnemies?.update(dt, this.character?.root.position ?? null);
