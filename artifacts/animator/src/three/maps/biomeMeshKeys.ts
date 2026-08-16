@@ -78,6 +78,7 @@ export const CDN_VOXEL_BIOME = {
   floatingMountains: "models/voxel/maps/floating_islands_dwarves_haven.glb",
   pirateBay: "models/voxel/maps/pirat_bay.glb",
   animalLobbyPlains: "models/voxel/maps/animal_company_lobby.glb",
+  wolfStreet: "models/voxel/maps/wolf_street.glb",
 } as const;
 
 /** Nature / harvest packs on R2 (HEAD 200). */

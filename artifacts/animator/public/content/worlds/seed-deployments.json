@@ -29,6 +29,28 @@
   ],
   "deployments": [
     {
+      "id": "mapchunk-wolf-street",
+      "name": "Wolf Street",
+      "blurb": "Seed prefab street — used when a voxel world has no map, or would duplicate another seed's map. 1 block = 1 m.",
+      "seed": "wolf-street",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "wolf_street",
+      "mesh": "models/voxel/maps/wolf_street.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/wolf_street.glb",
+      "codexBlocks": ["stone", "brickRed", "woodPlanks", "dirt"],
+      "codexDefs": ["street", "seed_prefab"],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 24,
+        "radiusMax": 80,
+        "surfaceY": 2,
+        "themes": ["ruins", "mine", "crypt"]
+      }
+    },
+    {
       "id": "mapchunk-grotto-cavern-cave",
       "name": "Grotto Cavern Cave",
       "blurb": "Grotto / cavern map chunk — stone+ore palette · mapChunk=grotto_cavern_cave · codex blocks linked",

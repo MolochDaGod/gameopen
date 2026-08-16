@@ -50,6 +50,36 @@ export const EXPLORER_STARTING_TOWN_TEMPLATE = "amidaFarmCamp";
 /** Featured seed-deployments.json id used for explorer / harvest default launch. */
 export const EXPLORER_STARTING_TOWN_DEPLOYMENT = "mapchunk-animal-company-lobby";
 
+/**
+ * Seed map prefab when a voxel world has no mapChunkId, or would clone another
+ * seed's map. Real GLB: models/voxel/maps/wolf_street.glb (1 block = 1 m).
+ */
+export const SEED_FALLBACK_PREFAB_CHUNK = "wolf_street";
+
+/**
+ * Pick the MAP_CHUNKS id for a seed world.
+ * Explicit unique maps win, then starting-town mesh. Missing or duplicate → Wolf Street.
+ */
+export function resolveSeedPrefabMapChunk(opts: {
+  mapChunkId?: string | null;
+  startingTownMapChunkId?: string | null;
+  usedMapChunkIds?: Iterable<string>;
+}): string {
+  const explicit = typeof opts.mapChunkId === "string" ? opts.mapChunkId.trim() : "";
+  const town =
+    typeof opts.startingTownMapChunkId === "string" ? opts.startingTownMapChunkId.trim() : "";
+  const used = opts.usedMapChunkIds ? new Set(opts.usedMapChunkIds) : null;
+  const pick =
+    explicit && MAP_CHUNKS[explicit] ? explicit : town && MAP_CHUNKS[town] ? town : "";
+  if (pick) {
+    if (used && used.has(pick) && pick !== SEED_FALLBACK_PREFAB_CHUNK) {
+      return SEED_FALLBACK_PREFAB_CHUNK;
+    }
+    return pick;
+  }
+  return SEED_FALLBACK_PREFAB_CHUNK;
+}
+
 export type StartingTownSpec = {
   mapChunkId: string;
   /** Open MAP_TEMPLATES id for block overlay when the GLB is unavailable. */
@@ -102,6 +132,9 @@ function roleFromChunkTags(tags: string[] | undefined, id: string): PremadeVoxel
   if (/cave|dungeon|crypt/.test(t) || /cave|grotto|dragon/.test(id)) return "dungeon";
   if (/overworld|mineways|island_life|realm/.test(t) || /island_life|awesome_realm/.test(id)) {
     return "overworld";
+  }
+  if (id === SEED_FALLBACK_PREFAB_CHUNK || /street|seed-prefab/.test(t)) {
+    return "structure";
   }
   if (/lab|road/.test(t)) return "lab";
   return "structure";
@@ -371,6 +404,18 @@ export function buildSeedDeployment(opts: {
 }): SeedWorldDeployment {
   const seedNumber = hashSeed(opts.seed);
   const chunkIdx = clampChunkIdx(opts.chunkIdx ?? DEFAULT_CHUNK_IDX);
+  const startingTown =
+    opts.startingTown === null
+      ? undefined
+      : opts.startingTown ??
+        (opts.mapChunkId === EXPLORER_STARTING_TOWN_CHUNK
+          ? { ...DEFAULT_EXPLORER_STARTING_TOWN }
+          : undefined);
+  const mapChunkId = resolveSeedPrefabMapChunk({
+    mapChunkId: opts.mapChunkId,
+    startingTownMapChunkId: startingTown?.mapChunkId,
+  });
+  const prefab = MAP_CHUNKS[mapChunkId];
   const portals =
     opts.portals?.length ?
       opts.portals.map((portal) => ({
@@ -396,18 +441,14 @@ export function buildSeedDeployment(opts: {
       worldId: opts.worldId,
       featured: opts.featured,
       deploy: opts.deploy ?? "both",
-      mapChunkId: opts.mapChunkId,
-      mesh: opts.mesh,
-      cdnUrl: opts.cdnUrl,
+      mapChunkId,
+      mesh: opts.mesh ?? prefab?.file,
+      cdnUrl:
+        opts.cdnUrl ??
+        (prefab?.file ? `https://assets.grudge-studio.com/${prefab.file}` : undefined),
       codexBlocks: opts.codexBlocks,
       codexDefs: opts.codexDefs,
-      startingTown:
-        opts.startingTown === null
-          ? undefined
-          : opts.startingTown ??
-            (opts.mapChunkId === EXPLORER_STARTING_TOWN_CHUNK
-              ? { ...DEFAULT_EXPLORER_STARTING_TOWN }
-              : undefined),
+      startingTown,
     },
     portals,
     sceneOverlay: opts.sceneOverlay ?? null,
@@ -494,7 +535,7 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
         side: chunkBlocks(dep.world.chunkIdx),
         seed: dep.world.seedNumber,
         /** Keep hub cells; generate wilderness outside this radius. */
-        hubRadius: dep.world.startingTown ? 36 : 8,
+        hubRadius: dep.world.startingTown || dep.world.mapChunkId ? 36 : 8,
       },
       portals: dep.portals.map((p) => ({
         id: p.id,
@@ -617,7 +658,13 @@ export function normalizeSeedDeployment(raw: unknown): SeedWorldDeployment | nul
       worldId: typeof world.worldId === "string" ? world.worldId : undefined,
       featured: !!world.featured,
       deploy: (world.deploy as SeedWorldMeta["deploy"]) || "both",
-      mapChunkId: typeof world.mapChunkId === "string" ? world.mapChunkId : undefined,
+      mapChunkId: resolveSeedPrefabMapChunk({
+        mapChunkId: typeof world.mapChunkId === "string" ? world.mapChunkId : undefined,
+        startingTownMapChunkId:
+          world.startingTown && typeof world.startingTown === "object"
+            ? (world.startingTown as StartingTownSpec).mapChunkId
+            : undefined,
+      }),
       startingTown:
         world.startingTown && typeof world.startingTown === "object"
           ? (world.startingTown as StartingTownSpec)

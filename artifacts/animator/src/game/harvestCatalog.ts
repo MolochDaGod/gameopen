@@ -532,6 +532,17 @@ export const MAP_LIBRARY: MapAsset[] = [
     codexDefs: ["canyon", "desert_biome"],
   },
   {
+    id: "wolf_street",
+    name: "Wolf Street",
+    path: "models/voxel/maps/wolf_street.glb",
+    kind: "map_chunk",
+    blurb: "Seed prefab for worlds with no map or a duplicate mapChunkId.",
+    r2Key: "models/voxel/maps/wolf_street.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone", "brickRed", "woodPlanks", "dirt"],
+    codexDefs: ["street", "seed_prefab"],
+  },
+  {
     id: "animal_company_lobby",
     name: "Animal Company Lobby",
     path: "models/voxel/maps/animal_company_lobby.glb",

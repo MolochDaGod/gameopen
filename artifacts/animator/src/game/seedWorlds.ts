@@ -9,6 +9,8 @@ import {
   DEFAULT_CHUNK_IDX,
   DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
+  resolveSeedPrefabMapChunk,
+  SEED_FALLBACK_PREFAB_CHUNK,
   deploymentToSharePayload,
   hashSeed,
   type SeedPortal,
@@ -143,7 +145,10 @@ export function catalogEntryToDeployment(entry: SeedCatalogEntry): SeedWorldDepl
     deploy: entry.deploy,
     portalPlan: entry.portalPlan,
     portals: entry.portals,
-    mapChunkId: entry.mapChunkId,
+    mapChunkId: resolveSeedPrefabMapChunk({
+      mapChunkId: entry.mapChunkId,
+      startingTownMapChunkId: entry.startingTown?.mapChunkId,
+    }),
     mesh: entry.mesh,
     cdnUrl: entry.cdnUrl,
     codexBlocks: entry.codexBlocks,
@@ -153,7 +158,16 @@ export function catalogEntryToDeployment(entry: SeedCatalogEntry): SeedWorldDepl
 }
 
 export function listDeployments(catalog: SeedCatalog): SeedWorldDeployment[] {
-  return catalog.deployments.map(catalogEntryToDeployment);
+  const used = new Set<string>();
+  return catalog.deployments.map((entry) => {
+    const mapChunkId = resolveSeedPrefabMapChunk({
+      mapChunkId: entry.mapChunkId,
+      startingTownMapChunkId: entry.startingTown?.mapChunkId,
+      usedMapChunkIds: used,
+    });
+    used.add(mapChunkId);
+    return catalogEntryToDeployment({ ...entry, mapChunkId });
+  });
 }
 
 /** Custom seed typed by player (Minecraft-style). */
@@ -181,6 +195,7 @@ export function customSeedDeployment(
       themes: ["ruins", "crypt", "mine", "temple"],
     },
     startingTown: { ...DEFAULT_EXPLORER_STARTING_TOWN },
+    mapChunkId: SEED_FALLBACK_PREFAB_CHUNK,
   });
 }
 

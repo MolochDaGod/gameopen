@@ -12,6 +12,7 @@ import {
   EXPLORER_STARTING_TOWN_DEPLOYMENT,
   EXPLORER_STARTING_TOWN_TEMPLATE,
   generateSeedTerrain,
+  resolveSeedPrefabMapChunk,
   heightAtCell,
   type SeedTerrainField,
   type SeedWorldDeployment,
@@ -106,7 +107,10 @@ function overlayFromDeployment(
  */
 export function assembleSeedOverworldMap(dep: SeedWorldDeployment): VoxelMap {
   const town = dep.world.startingTown;
-  const mapChunkId = dep.world.mapChunkId ?? town?.mapChunkId ?? EXPLORER_STARTING_TOWN_CHUNK;
+  const mapChunkId = resolveSeedPrefabMapChunk({
+    mapChunkId: dep.world.mapChunkId,
+    startingTownMapChunkId: town?.mapChunkId,
+  });
   const templateId = town?.templateId ?? EXPLORER_STARTING_TOWN_TEMPLATE;
   const scene = deploymentToScene(dep);
   const gen = (scene.map as { gen?: { hubRadius?: number } } | null)?.gen;

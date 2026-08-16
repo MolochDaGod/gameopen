@@ -90,6 +90,7 @@ Do **not** invent a second map table. These are the existing catalogs.
 | Id | Role |
 |----|------|
 | **`animal_company_lobby`** | **Explorer starting town / lobby spawn v3** |
+| **`wolf_street`** | **Seed prefab** — worlds with no map, or a duplicate `mapChunkId` |
 | `faction_spawn_castle_town` | Mega castle + town (multipart; optional hub) |
 | `island_life` · `awesome_realm_world` | Overworld shells |
 | `castle_eltz` · `pirat_bay` · `dalaran_fantasy_island` | Structure / coast / island |
@@ -106,7 +107,8 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 2. **Town** = real `animal_company_lobby` GLB via `loadMapChunk` / `placeMapChunk` at **1 block = 1 m** (never prop height-fit). Fallback blocks = `amidaFarmCamp`.  
 3. **Overworld** = `generateSeedTerrain` in `@workspace/voxel-canonical` — 16-column chunks, same `hashSeed` / `chunkIdx`, hub flattened so the town sits at y=0.  
 4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
-5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.
+5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.  
+6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → `models/voxel/maps/wolf_street.glb`). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).
 
 ### Shader.lab `#voxel` cave dungeon
 

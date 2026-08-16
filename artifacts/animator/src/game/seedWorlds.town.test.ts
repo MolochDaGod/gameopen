@@ -3,8 +3,11 @@ import {
   buildSeedDeployment,
   DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
+  evaluateAssetRole,
   EXPLORER_STARTING_TOWN_CHUNK,
   listPremadeVoxelMaps,
+  resolveSeedPrefabMapChunk,
+  SEED_FALLBACK_PREFAB_CHUNK,
 } from "@workspace/voxel-canonical";
 import { catalogEntryToDeployment, customSeedDeployment } from "./seedWorlds";
 import { assembleSeedOverworldMap, explorerTownDeployment } from "../three/voxel/seedOverworldPlay";
@@ -46,6 +49,21 @@ describe("explorer starting town + seed", () => {
     const b = customSeedDeployment("alpha-42");
     const c = customSeedDeployment("beta-99");
     expect(a.world.startingTown?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    expect(a.world.mapChunkId).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+    expect(resolveSeedPrefabMapChunk({})).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+    expect(
+      resolveSeedPrefabMapChunk({
+        mapChunkId: EXPLORER_STARTING_TOWN_CHUNK,
+        usedMapChunkIds: [EXPLORER_STARTING_TOWN_CHUNK],
+      }),
+    ).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+    const street = evaluateAssetRole({
+      name: "wolf_street.glb",
+      fileBytes: 92_270_532,
+      bounds: { x: 80, y: 20, z: 40 },
+    });
+    expect(street.role).toBe("map_chunk");
+    expect(street.forbidPropHeightFit).toBe(true);
     expect(a.portals.map((p) => p.position)).toEqual(b.portals.map((p) => p.position));
     expect(a.portals[0]!.position).not.toEqual(c.portals[0]!.position);
     expect(buildSeedDeployment({ id: "x", name: "x", seed: "alpha-42" }).world.seedNumber).toBe(
