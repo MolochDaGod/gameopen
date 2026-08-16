@@ -5,9 +5,32 @@ import {
   currentKitSlotMesh,
   getPreset,
 } from "./gearPresets";
-import { reconcileKitLimbs, reconcileKitLoadout } from "./toonKitCoverage";
+import {
+  reconcileKitLimbs,
+  reconcileKitLoadout,
+  UMMORPG_PLAYER_SLOTS,
+  UMMORPG_SLOT_TO_KIT,
+} from "./toonKitCoverage";
 
 describe("Toon main-panel kit slots", () => {
+  it("maps the Unity Player.prefab 10 slots onto kit panel slots", () => {
+    expect([...UMMORPG_PLAYER_SLOTS]).toEqual([
+      "MainHand",
+      "OffHand",
+      "Head",
+      "Shoulders",
+      "Body",
+      "Back",
+      "Hands",
+      "Ring",
+      "Boots",
+      "Relic",
+    ]);
+    expect(UMMORPG_SLOT_TO_KIT.Relic).toBe("relic");
+    expect(UMMORPG_SLOT_TO_KIT.Hands).toBe("arms");
+    expect(UMMORPG_SLOT_TO_KIT.Boots).toBe("legs");
+  });
+
   it("lists the full customizable WK wardrobe for weapons", () => {
     const weapons = collectKitSlotMeshes("western-kingdoms", "weapon");
     expect(weapons.length).toBeGreaterThan(6);
@@ -102,5 +125,48 @@ describe("Toon main-panel kit slots", () => {
     const mage = getPreset("western-kingdoms", "mage").visibleMeshes.slice();
     const next = cycleKitSlot("western-kingdoms", mage, "arms");
     expect(next).toEqual(mage);
+  });
+
+  it("warrior / ranger / mage presets stamp the Class item slot", () => {
+    expect(getPreset("western-kingdoms", "warrior").visibleMeshes).toContain("equip:class:warrior");
+    expect(getPreset("western-kingdoms", "ranger").visibleMeshes).toContain("equip:class:ranger");
+    expect(getPreset("western-kingdoms", "mage").visibleMeshes).toContain("equip:class:mage");
+    expect(getPreset("western-kingdoms", "unarmed").visibleMeshes.some((m) => /^equip:class:/.test(m))).toBe(
+      false,
+    );
+  });
+
+  it("bow keeps mobility back and does not force quiver", () => {
+    const next = reconcileKitLoadout("western-kingdoms", [
+      "WK_Units_head_D",
+      "WK_Units_Body_C",
+      "WK_Units_Arms_B",
+      "WK_Units_Legs_B",
+      "WK_weapon_Bow",
+      "equip:back:wind_surf",
+    ]);
+    expect(next).toContain("equip:back:wind_surf");
+    expect(next.some((m) => /quiver/i.test(m))).toBe(false);
+  });
+
+  it("bow can cycle Back onto windsurf instead of only quiver", () => {
+    const withBow = [
+      "WK_Units_head_D",
+      "WK_Units_Body_C",
+      "WK_Units_Arms_B",
+      "WK_Units_Legs_B",
+      "WK_weapon_Bow",
+      "WK_Xtra_quiver",
+    ];
+    let ids = withBow;
+    let sawWind = false;
+    for (let i = 0; i < 16; i++) {
+      ids = cycleKitSlot("western-kingdoms", ids, "back");
+      if (currentKitSlotMesh(ids, "back") === "equip:back:wind_surf") {
+        sawWind = true;
+        break;
+      }
+    }
+    expect(sawWind).toBe(true);
   });
 });

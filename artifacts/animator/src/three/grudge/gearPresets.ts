@@ -87,9 +87,20 @@ export const RACE_GEAR_PRESETS: Record<RaceId, GearPreset[]> = {
 
 export const PRESET_IDS: PresetId[] = ["mage", "knight", "ranger", "warrior", "unarmed"];
 
+/** Class item identity for a gear preset (paperdoll slot, not Relic). */
+export function classItemForPreset(preset: PresetId): string | null {
+  if (preset === "mage") return "equip:class:mage";
+  if (preset === "ranger") return "equip:class:ranger";
+  if (preset === "warrior" || preset === "knight") return "equip:class:warrior";
+  return null;
+}
+
 export function getPreset(race: RaceId, preset: PresetId): GearPreset {
   const list = RACE_GEAR_PRESETS[race];
-  return list.find((p) => p.id === preset) ?? list[0];
+  const base = list.find((p) => p.id === preset) ?? list[0];
+  const classItem = classItemForPreset(base.id);
+  if (!classItem || base.visibleMeshes.includes(classItem)) return base;
+  return { ...base, visibleMeshes: [...base.visibleMeshes, classItem] };
 }
 
 /** Main-panel families — Unity Player.prefab slotInfo + Toon child meshes. */
@@ -194,7 +205,8 @@ export function cycleKitSlot(race: RaceId, meshIds: string[], slot: KitPanelSlot
   if (slot === "back") {
     const weapon = meshIds.find((m) => meshMatchesSlot(m, "weapon"));
     if (kitWeaponFamily(weapon) === "bow") {
-      variants = variants.filter((m) => isQuiverMesh(m));
+      // Bow needs a back piece: quiver *or* a mobility back (windsurf / wings / cape).
+      variants = variants.filter((m) => isQuiverMesh(m) || /^equip:back:/i.test(m));
     }
   }
   if (!variants.length && !slotAllowsEmpty(race, meshIds, slot)) return meshIds.slice();

@@ -125,6 +125,36 @@ export function isShoulderMesh(name: string): boolean {
   return /shoulder/i.test(name);
 }
 
+/**
+ * Unity Player.prefab `slotInfo` — every race overrides C# 8-slot default to these 10.
+ * Class item is Open paperdoll-only (under the portrait), not a Unity slot.
+ */
+export const UMMORPG_PLAYER_SLOTS = [
+  "MainHand",
+  "OffHand",
+  "Head",
+  "Shoulders",
+  "Body",
+  "Back",
+  "Hands",
+  "Ring",
+  "Boots",
+  "Relic",
+] as const;
+
+export const UMMORPG_SLOT_TO_KIT = {
+  MainHand: "weapon",
+  OffHand: "shield",
+  Head: "head",
+  Shoulders: "shoulders",
+  Body: "body",
+  Back: "back",
+  Hands: "arms",
+  Ring: "ring",
+  Boots: "legs",
+  Relic: "relic",
+} as const;
+
 /** Relic slot: Unity elemental orbs only (not class items). */
 export const TOON_RELICS = [
   "equip:relic:nature",
@@ -170,6 +200,7 @@ export const META_EQUIP_LABEL: Record<string, string> = {
   "equip:back:glider": "Glider",
   "equip:back:flight_rig": "Flight Rig",
   "equip:back:sail_deploy": "Deployable Sail",
+  "equip:back:shark_fin": "Shark Fin",
   "equip:ring:silver": "Silver Band",
   "equip:ring:ranger": "Ranger's Ring",
   "equip:ring:warrior": "Warrior's Ring",
@@ -259,15 +290,19 @@ export function reconcileKitLoadout(race: RaceId, meshIds: string[]): string[] {
 
   const weapon = ids.find((m) => isWeaponMesh(m)) ?? null;
   const fam = kitWeaponFamily(weapon);
+  // equip:back:* lives in `meta` (stripped above) — do not look only at mesh ids.
+  const mobilityBack = meta.some((m) => /^equip:back:/i.test(m));
   if (fam === "bow") {
     ids = ids.filter((m) => !isShieldMesh(m));
-    const mobilityBack = ids.some((m) => /^equip:back:/i.test(m));
     if (!mobilityBack && !ids.some((m) => isQuiverMesh(m))) {
       const quiver = defaultSlotMesh(race, "quiver");
       if (quiver) {
         ids = ids.filter((m) => !isBackMesh(m));
         ids.push(quiver);
       }
+    }
+    if (mobilityBack) {
+      ids = ids.filter((m) => !isQuiverMesh(m) && !isBackMesh(m));
     }
   } else {
     ids = ids.filter((m) => !isQuiverMesh(m));

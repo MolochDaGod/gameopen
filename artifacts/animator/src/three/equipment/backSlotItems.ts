@@ -27,6 +27,14 @@ export type BackSlotItemDef = {
   /** Stow GLB on spine (windsurf pack). */
   stowUrl?: string;
   deployUrl?: string;
+  /** SI longest-axis length of the stowed mesh (Casting BackSlotEquip). */
+  stowLengthM?: number;
+  /** Local offset on spine [x,y,z] metres. */
+  stowOffset?: [number, number, number];
+  /** Local euler degrees. */
+  stowEulerDeg?: [number, number, number];
+  /** Casting waterBuffs (shark fin). */
+  waterBuffs?: { swimSpeedMul: number; sharkAggroImmune: boolean; breatheUnderwater: boolean };
   /** Unity cape variant (default / long / wide). */
   capeVariant?: "default" | "long" | "wide";
 };
@@ -109,6 +117,22 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     wingItemId: undefined,
     stowUrl: "models/ride/back_fly_windsurf.glb",
     deployUrl: "models/ride/windsurf_package.glb",
+    stowLengthM: 0.58,
+    stowOffset: [0.02, 0.06, -0.14],
+    stowEulerDeg: [8, 180, 0],
+  },
+  {
+    id: "back_shark_fin",
+    label: "Shark Fin",
+    effect: "2× swim · no shark aggro · breathe underwater (Casting waterBuffs)",
+    domains: ["ocean", "utility"],
+    status: "coded",
+    wingItemId: undefined,
+    stowUrl: "models/ride/shark_fin.glb",
+    stowLengthM: 0.55,
+    stowOffset: [0.0, 0.12, -0.18],
+    stowEulerDeg: [15, 180, 0],
+    waterBuffs: { swimSpeedMul: 2, sharkAggroImmune: true, breatheUnderwater: true },
   },
   {
     id: "back_holy_wings",

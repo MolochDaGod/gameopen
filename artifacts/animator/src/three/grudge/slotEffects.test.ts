@@ -3,6 +3,8 @@ import { collectKitSlotMeshes } from "./gearPresets";
 import {
   effectForEquipId,
   resolveSlotEffects,
+  classIdFromMeshIds,
+  classTreeIdFromMeshIds,
   RELIC_SLOT_EFFECTS,
   CLASS_ITEM_EFFECTS,
   BACK_SLOT_EFFECTS,
@@ -43,14 +45,21 @@ describe("Relic / Back slot effects", () => {
     expect(effectForEquipId("equip:relic:warrior")?.id).toBe("equip:class:warrior");
   });
 
-  it("paperdoll Back includes windsurf, wings, and cape variants", async () => {
+  it("paperdoll Back includes windsurf, shark fin, wings, and cape variants", async () => {
     const { collectKitSlotMeshes } = await import("./gearPresets");
     const backs = collectKitSlotMeshes("western-kingdoms", "back");
     expect(backs.some((b) => /wind_surf/.test(b))).toBe(true);
+    expect(backs.some((b) => /shark_fin/.test(b))).toBe(true);
     expect(backs.some((b) => /holy_wings/.test(b))).toBe(true);
     expect(backs.some((b) => /traveler_wings/.test(b))).toBe(true);
     expect(backs.some((b) => /cape_long/.test(b))).toBe(true);
     expect(backs.some((b) => /cape_wide/.test(b))).toBe(true);
+  });
+
+  it("class item mesh_ids resolve the class tree id", () => {
+    expect(classIdFromMeshIds(["equip:class:ranger", "WK_weapon_Bow"])).toBe("ranger");
+    expect(classTreeIdFromMeshIds(["equip:relic:warrior"])).toBe("class-warrior");
+    expect(classIdFromMeshIds(["equip:relic:nature"])).toBeNull();
   });
 
   it("Toon back quiver/bag/wood resolve as back passives", () => {
