@@ -230,6 +230,33 @@ const FALLBACK_RECIPES: CraftRecipe[] = [
     skill: "crafting",
     tier: 0,
   },
+  {
+    id: "rcp_back_cape",
+    name: "Cape",
+    station: "loom",
+    output: { id: "itm_back_cape", name: "Cape", qty: 1 },
+    inputs: [
+      { id: "mat_cloth", name: "Cloth", qty: 4 },
+      { id: "mat_leather_strap", name: "Leather strap", qty: 2 },
+    ],
+    timeSec: 6,
+    skill: "crafting",
+    tier: 0,
+  },
+  {
+    id: "rcp_back_holy_wings",
+    name: "Holy Wings",
+    station: "alchemy",
+    output: { id: "itm_back_holy_wings", name: "Holy Wings", qty: 1 },
+    inputs: [
+      { id: "mat_cloth", name: "Cloth", qty: 4 },
+      { id: "mat_crystal", name: "Crystal", qty: 2 },
+      { id: "mat_leather", name: "Leather", qty: 2 },
+    ],
+    timeSec: 14,
+    skill: "alchemy",
+    tier: 2,
+  },
 ];
 
 const FALLBACK_OPS: HarvestOp[] = [

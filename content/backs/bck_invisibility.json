@@ -30,6 +30,14 @@
     "data": "ready",
     "mesh": "placeholder",
     "combat": "placeholder",
-    "present": "placeholder"
-  }
+    "present": "placeholder",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_invisibility"
 }

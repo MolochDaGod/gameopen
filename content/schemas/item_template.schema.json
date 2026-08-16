@@ -18,8 +18,12 @@
       "required": ["path", "status"],
       "properties": {
         "path": { "type": "string" },
+        "cdnUrl": { "type": "string" },
+        "source": { "type": "string" },
         "status": { "enum": ["ready", "placeholder", "missing"] }
       }
-    }
+    },
+    "equipSlot": { "type": "string" },
+    "recipeId": { "type": ["string", "null"] }
   }
 }

@@ -3,23 +3,63 @@
   "label": "Voxel harvest & craft recipes",
   "notes": "SSOT for Open harvest mode. Expand with Mine-Loader item catalog packs (stations, tools, structures).",
   "stations": [
-    { "id": "hand", "name": "Hand craft", "glyph": "✋" },
-    { "id": "campfire", "name": "Campfire", "glyph": "🔥" },
-    { "id": "workbench", "name": "Workbench", "glyph": "🧰" },
-    { "id": "forge", "name": "Forge", "glyph": "⚒" },
-    { "id": "loom", "name": "Loom", "glyph": "🧵" },
-    { "id": "alchemy", "name": "Alchemy", "glyph": "⚗" },
-    { "id": "mason", "name": "Mason table", "glyph": "🧱" }
+    {
+      "id": "hand",
+      "name": "Hand craft",
+      "glyph": "✋"
+    },
+    {
+      "id": "campfire",
+      "name": "Campfire",
+      "glyph": "🔥"
+    },
+    {
+      "id": "workbench",
+      "name": "Workbench",
+      "glyph": "🧰"
+    },
+    {
+      "id": "forge",
+      "name": "Forge",
+      "glyph": "⚒"
+    },
+    {
+      "id": "loom",
+      "name": "Loom",
+      "glyph": "🧵"
+    },
+    {
+      "id": "alchemy",
+      "name": "Alchemy",
+      "glyph": "⚗"
+    },
+    {
+      "id": "mason",
+      "name": "Mason table",
+      "glyph": "🧱"
+    }
   ],
   "recipes": [
     {
       "id": "rcp_torch",
       "name": "Torch",
       "station": "hand",
-      "output": { "id": "itm_torch", "name": "Torch", "qty": 4 },
+      "output": {
+        "id": "itm_torch",
+        "name": "Torch",
+        "qty": 4
+      },
       "inputs": [
-        { "id": "mat_stick", "name": "Stick", "qty": 1 },
-        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 1
+        },
+        {
+          "id": "mat_coal",
+          "name": "Coal",
+          "qty": 1
+        }
       ],
       "timeSec": 1,
       "skill": "crafting",
@@ -29,8 +69,18 @@
       "id": "rcp_rope",
       "name": "Rope",
       "station": "hand",
-      "output": { "id": "mat_rope", "name": "Rope", "qty": 1 },
-      "inputs": [{ "id": "mat_fiber", "name": "Fiber", "qty": 3 }],
+      "output": {
+        "id": "mat_rope",
+        "name": "Rope",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_fiber",
+          "name": "Fiber",
+          "qty": 3
+        }
+      ],
       "timeSec": 1.5,
       "skill": "crafting",
       "tier": 0
@@ -39,8 +89,18 @@
       "id": "rcp_leather_strap",
       "name": "Leather strap",
       "station": "hand",
-      "output": { "id": "mat_leather_strap", "name": "Leather strap", "qty": 2 },
-      "inputs": [{ "id": "mat_leather", "name": "Leather", "qty": 1 }],
+      "output": {
+        "id": "mat_leather_strap",
+        "name": "Leather strap",
+        "qty": 2
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 1
+        }
+      ],
       "timeSec": 2,
       "skill": "crafting",
       "tier": 0
@@ -49,10 +109,22 @@
       "id": "rcp_cooked_meat",
       "name": "Cooked meat",
       "station": "campfire",
-      "output": { "id": "itm_cooked_meat", "name": "Cooked meat", "qty": 1 },
+      "output": {
+        "id": "itm_cooked_meat",
+        "name": "Cooked meat",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_raw_meat", "name": "Raw meat", "qty": 1 },
-        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+        {
+          "id": "mat_raw_meat",
+          "name": "Raw meat",
+          "qty": 1
+        },
+        {
+          "id": "mat_coal",
+          "name": "Coal",
+          "qty": 1
+        }
       ],
       "timeSec": 3,
       "skill": "cooking",
@@ -63,10 +135,22 @@
       "id": "rcp_grilled_fish",
       "name": "Grilled fish",
       "station": "campfire",
-      "output": { "id": "itm_grilled_fish", "name": "Grilled fish", "qty": 1 },
+      "output": {
+        "id": "itm_grilled_fish",
+        "name": "Grilled fish",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_fish", "name": "Fish", "qty": 1 },
-        { "id": "mat_stick", "name": "Stick", "qty": 1 }
+        {
+          "id": "mat_fish",
+          "name": "Fish",
+          "qty": 1
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 1
+        }
       ],
       "timeSec": 2.5,
       "skill": "cooking",
@@ -77,10 +161,22 @@
       "id": "rcp_berry_brew",
       "name": "Berry brew",
       "station": "campfire",
-      "output": { "id": "itm_berry_brew", "name": "Berry brew", "qty": 1 },
+      "output": {
+        "id": "itm_berry_brew",
+        "name": "Berry brew",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_berry", "name": "Berry", "qty": 3 },
-        { "id": "mat_herb", "name": "Herb", "qty": 1 }
+        {
+          "id": "mat_berry",
+          "name": "Berry",
+          "qty": 3
+        },
+        {
+          "id": "mat_herb",
+          "name": "Herb",
+          "qty": 1
+        }
       ],
       "timeSec": 4,
       "skill": "cooking",
@@ -91,8 +187,18 @@
       "id": "rcp_wood_plank",
       "name": "Wood planks",
       "station": "workbench",
-      "output": { "id": "mat_plank", "name": "Plank", "qty": 4 },
-      "inputs": [{ "id": "mat_log", "name": "Log", "qty": 1 }],
+      "output": {
+        "id": "mat_plank",
+        "name": "Plank",
+        "qty": 4
+      },
+      "inputs": [
+        {
+          "id": "mat_log",
+          "name": "Log",
+          "qty": 1
+        }
+      ],
       "timeSec": 1.5,
       "skill": "crafting",
       "tier": 0
@@ -101,8 +207,18 @@
       "id": "rcp_stick_bundle",
       "name": "Stick bundle",
       "station": "workbench",
-      "output": { "id": "mat_stick", "name": "Stick", "qty": 8 },
-      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 1 }],
+      "output": {
+        "id": "mat_stick",
+        "name": "Stick",
+        "qty": 8
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 1
+        }
+      ],
       "timeSec": 1,
       "skill": "crafting",
       "tier": 0
@@ -111,10 +227,22 @@
       "id": "rcp_wood_pick",
       "name": "Wood pickaxe",
       "station": "workbench",
-      "output": { "id": "tool_pick_wood", "name": "Wood pickaxe", "qty": 1 },
+      "output": {
+        "id": "tool_pick_wood",
+        "name": "Wood pickaxe",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 3 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 3
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 3,
       "skill": "crafting",
@@ -124,10 +252,22 @@
       "id": "rcp_wood_axe",
       "name": "Wood axe",
       "station": "workbench",
-      "output": { "id": "tool_axe_wood", "name": "Wood axe", "qty": 1 },
+      "output": {
+        "id": "tool_axe_wood",
+        "name": "Wood axe",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 3 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 3
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 3,
       "skill": "crafting",
@@ -137,10 +277,22 @@
       "id": "rcp_wood_shovel",
       "name": "Wood shovel",
       "station": "workbench",
-      "output": { "id": "tool_shovel_wood", "name": "Wood shovel", "qty": 1 },
+      "output": {
+        "id": "tool_shovel_wood",
+        "name": "Wood shovel",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 1 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 1
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 2,
       "skill": "crafting",
@@ -150,11 +302,27 @@
       "id": "rcp_campfire_kit",
       "name": "Campfire kit",
       "station": "workbench",
-      "output": { "id": "build_campfire", "name": "Campfire", "qty": 1 },
+      "output": {
+        "id": "build_campfire",
+        "name": "Campfire",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_log", "name": "Log", "qty": 3 },
-        { "id": "mat_stick", "name": "Stick", "qty": 4 },
-        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+        {
+          "id": "mat_log",
+          "name": "Log",
+          "qty": 3
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 4
+        },
+        {
+          "id": "mat_coal",
+          "name": "Coal",
+          "qty": 1
+        }
       ],
       "timeSec": 4,
       "skill": "building",
@@ -164,10 +332,22 @@
       "id": "rcp_workbench_kit",
       "name": "Workbench kit",
       "station": "hand",
-      "output": { "id": "build_workbench", "name": "Workbench", "qty": 1 },
+      "output": {
+        "id": "build_workbench",
+        "name": "Workbench",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 8 },
-        { "id": "mat_stick", "name": "Stick", "qty": 4 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 8
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 4
+        }
       ],
       "timeSec": 5,
       "skill": "building",
@@ -177,10 +357,22 @@
       "id": "rcp_wood_wall",
       "name": "Wood wall kit",
       "station": "workbench",
-      "output": { "id": "build_wall_wood", "name": "Wood wall", "qty": 1 },
+      "output": {
+        "id": "build_wall_wood",
+        "name": "Wood wall",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 6 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 6
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 3,
       "skill": "building",
@@ -190,8 +382,18 @@
       "id": "rcp_wood_floor",
       "name": "Wood floor kit",
       "station": "workbench",
-      "output": { "id": "build_floor_wood", "name": "Wood floor", "qty": 2 },
-      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 4 }],
+      "output": {
+        "id": "build_floor_wood",
+        "name": "Wood floor",
+        "qty": 2
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 4
+        }
+      ],
       "timeSec": 2,
       "skill": "building",
       "tier": 0
@@ -200,10 +402,22 @@
       "id": "rcp_wood_door",
       "name": "Wood door kit",
       "station": "workbench",
-      "output": { "id": "build_door_wood", "name": "Wood door", "qty": 1 },
+      "output": {
+        "id": "build_door_wood",
+        "name": "Wood door",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_plank", "name": "Plank", "qty": 6 },
-        { "id": "mat_leather_strap", "name": "Leather strap", "qty": 1 }
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 6
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 1
+        }
       ],
       "timeSec": 4,
       "skill": "building",
@@ -213,8 +427,18 @@
       "id": "rcp_wood_ramp",
       "name": "Wood ramp kit",
       "station": "workbench",
-      "output": { "id": "build_ramp_wood", "name": "Wood ramp", "qty": 2 },
-      "inputs": [{ "id": "mat_plank", "name": "Plank", "qty": 3 }],
+      "output": {
+        "id": "build_ramp_wood",
+        "name": "Wood ramp",
+        "qty": 2
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 3
+        }
+      ],
       "timeSec": 2,
       "skill": "building",
       "tier": 0
@@ -223,8 +447,18 @@
       "id": "rcp_stone_brick",
       "name": "Stone brick",
       "station": "mason",
-      "output": { "id": "mat_stone_brick", "name": "Stone brick", "qty": 1 },
-      "inputs": [{ "id": "mat_stone", "name": "Stone", "qty": 4 }],
+      "output": {
+        "id": "mat_stone_brick",
+        "name": "Stone brick",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_stone",
+          "name": "Stone",
+          "qty": 4
+        }
+      ],
       "timeSec": 2,
       "skill": "building",
       "tier": 1
@@ -233,10 +467,22 @@
       "id": "rcp_stone_wall",
       "name": "Stone wall kit",
       "station": "mason",
-      "output": { "id": "build_wall_stone", "name": "Stone wall", "qty": 1 },
+      "output": {
+        "id": "build_wall_stone",
+        "name": "Stone wall",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_stone_brick", "name": "Stone brick", "qty": 6 },
-        { "id": "mat_clay", "name": "Clay", "qty": 1 }
+        {
+          "id": "mat_stone_brick",
+          "name": "Stone brick",
+          "qty": 6
+        },
+        {
+          "id": "mat_clay",
+          "name": "Clay",
+          "qty": 1
+        }
       ],
       "timeSec": 4,
       "skill": "building",
@@ -246,10 +492,22 @@
       "id": "rcp_iron_ingot",
       "name": "Iron ingot",
       "station": "forge",
-      "output": { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 },
+      "output": {
+        "id": "mat_iron_ingot",
+        "name": "Iron ingot",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_iron_ore", "name": "Iron ore", "qty": 2 },
-        { "id": "mat_coal", "name": "Coal", "qty": 1 }
+        {
+          "id": "mat_iron_ore",
+          "name": "Iron ore",
+          "qty": 2
+        },
+        {
+          "id": "mat_coal",
+          "name": "Coal",
+          "qty": 1
+        }
       ],
       "timeSec": 5,
       "skill": "smithing",
@@ -259,10 +517,22 @@
       "id": "rcp_iron_pick",
       "name": "Iron pickaxe",
       "station": "forge",
-      "output": { "id": "tool_pick_iron", "name": "Iron pickaxe", "qty": 1 },
+      "output": {
+        "id": "tool_pick_iron",
+        "name": "Iron pickaxe",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 3 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 3
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 6,
       "skill": "smithing",
@@ -272,10 +542,22 @@
       "id": "rcp_iron_axe",
       "name": "Iron axe",
       "station": "forge",
-      "output": { "id": "tool_axe_iron", "name": "Iron axe", "qty": 1 },
+      "output": {
+        "id": "tool_axe_iron",
+        "name": "Iron axe",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 3 },
-        { "id": "mat_stick", "name": "Stick", "qty": 2 }
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 3
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 2
+        }
       ],
       "timeSec": 6,
       "skill": "smithing",
@@ -285,8 +567,18 @@
       "id": "rcp_nail",
       "name": "Iron nails",
       "station": "forge",
-      "output": { "id": "mat_nail", "name": "Nail", "qty": 8 },
-      "inputs": [{ "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 }],
+      "output": {
+        "id": "mat_nail",
+        "name": "Nail",
+        "qty": 8
+      },
+      "inputs": [
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 1
+        }
+      ],
       "timeSec": 3,
       "skill": "smithing",
       "tier": 1
@@ -295,11 +587,27 @@
       "id": "rcp_forge_kit",
       "name": "Forge kit",
       "station": "workbench",
-      "output": { "id": "build_forge", "name": "Forge", "qty": 1 },
+      "output": {
+        "id": "build_forge",
+        "name": "Forge",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_stone_brick", "name": "Stone brick", "qty": 12 },
-        { "id": "mat_iron_ore", "name": "Iron ore", "qty": 4 },
-        { "id": "mat_coal", "name": "Coal", "qty": 4 }
+        {
+          "id": "mat_stone_brick",
+          "name": "Stone brick",
+          "qty": 12
+        },
+        {
+          "id": "mat_iron_ore",
+          "name": "Iron ore",
+          "qty": 4
+        },
+        {
+          "id": "mat_coal",
+          "name": "Coal",
+          "qty": 4
+        }
       ],
       "timeSec": 8,
       "skill": "building",
@@ -309,8 +617,18 @@
       "id": "rcp_cloth_bandage",
       "name": "Cloth bandage",
       "station": "loom",
-      "output": { "id": "itm_bandage", "name": "Bandage", "qty": 2 },
-      "inputs": [{ "id": "mat_cloth", "name": "Cloth", "qty": 1 }],
+      "output": {
+        "id": "itm_bandage",
+        "name": "Bandage",
+        "qty": 2
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 1
+        }
+      ],
       "timeSec": 2,
       "skill": "crafting",
       "tier": 0,
@@ -320,8 +638,18 @@
       "id": "rcp_cloth",
       "name": "Cloth",
       "station": "loom",
-      "output": { "id": "mat_cloth", "name": "Cloth", "qty": 1 },
-      "inputs": [{ "id": "mat_fiber", "name": "Fiber", "qty": 4 }],
+      "output": {
+        "id": "mat_cloth",
+        "name": "Cloth",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_fiber",
+          "name": "Fiber",
+          "qty": 4
+        }
+      ],
       "timeSec": 3,
       "skill": "crafting",
       "tier": 0
@@ -330,11 +658,27 @@
       "id": "rcp_leather_tunic",
       "name": "Leather tunic kit",
       "station": "loom",
-      "output": { "id": "armor_leather_chest", "name": "Leather tunic", "qty": 1 },
+      "output": {
+        "id": "armor_leather_chest",
+        "name": "Leather tunic",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_leather", "name": "Leather", "qty": 4 },
-        { "id": "mat_leather_strap", "name": "Leather strap", "qty": 2 },
-        { "id": "mat_cloth", "name": "Cloth", "qty": 1 }
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 4
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 1
+        }
       ],
       "timeSec": 8,
       "skill": "crafting",
@@ -344,11 +688,27 @@
       "id": "rcp_healing_salve",
       "name": "Healing salve",
       "station": "alchemy",
-      "output": { "id": "itm_salve", "name": "Healing salve", "qty": 1 },
+      "output": {
+        "id": "itm_salve",
+        "name": "Healing salve",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_herb", "name": "Herb", "qty": 2 },
-        { "id": "mat_mushroom", "name": "Mushroom", "qty": 1 },
-        { "id": "mat_resin", "name": "Resin", "qty": 1 }
+        {
+          "id": "mat_herb",
+          "name": "Herb",
+          "qty": 2
+        },
+        {
+          "id": "mat_mushroom",
+          "name": "Mushroom",
+          "qty": 1
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 1
+        }
       ],
       "timeSec": 4,
       "skill": "alchemy",
@@ -359,12 +719,629 @@
       "id": "rcp_crystal_lamp",
       "name": "Crystal lamp kit",
       "station": "alchemy",
-      "output": { "id": "build_crystal_lamp", "name": "Crystal lamp", "qty": 1 },
+      "output": {
+        "id": "build_crystal_lamp",
+        "name": "Crystal lamp",
+        "qty": 1
+      },
       "inputs": [
-        { "id": "mat_crystal", "name": "Crystal", "qty": 2 },
-        { "id": "mat_iron_ingot", "name": "Iron ingot", "qty": 1 }
+        {
+          "id": "mat_crystal",
+          "name": "Crystal",
+          "qty": 2
+        },
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 1
+        }
       ],
       "timeSec": 5,
+      "skill": "alchemy",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_cape",
+      "name": "Cape",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_cape",
+        "name": "Cape",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 4
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        }
+      ],
+      "timeSec": 6,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_back_cape_long",
+      "name": "Long Cape",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_cape_long",
+        "name": "Long Cape",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 6
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        }
+      ],
+      "timeSec": 8,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_cape_wide",
+      "name": "Wide Cape",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_cape_wide",
+        "name": "Wide Cape",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 7
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        }
+      ],
+      "timeSec": 8,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_bag",
+      "name": "Traveler Bag",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_bag",
+        "name": "Traveler Bag",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 3
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 1
+        }
+      ],
+      "timeSec": 5,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_back_quiver",
+      "name": "Quiver",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_quiver",
+        "name": "Quiver",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        },
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 4
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 1
+        }
+      ],
+      "timeSec": 5,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_wood",
+      "name": "Carry Wood",
+      "station": "hand",
+      "output": {
+        "id": "itm_back_wood",
+        "name": "Carry Wood",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_log",
+          "name": "Log",
+          "qty": 3
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 1
+        }
+      ],
+      "timeSec": 2,
+      "skill": "crafting",
+      "tier": 0
+    },
+    {
+      "id": "rcp_back_wing_pack",
+      "name": "Wing Pack",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_wing_pack",
+        "name": "Wing Pack",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 4
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 2
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 1
+        }
+      ],
+      "timeSec": 6,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_parachute",
+      "name": "Parachute",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_parachute",
+        "name": "Parachute",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 6
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 2
+        },
+        {
+          "id": "mat_leather_strap",
+          "name": "Leather strap",
+          "qty": 2
+        }
+      ],
+      "timeSec": 7,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_glider",
+      "name": "Glider",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_glider",
+        "name": "Glider",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 6
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 4
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 2
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        }
+      ],
+      "timeSec": 10,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_flight_rig",
+      "name": "Flight Rig",
+      "station": "forge",
+      "output": {
+        "id": "itm_back_flight_rig",
+        "name": "Flight Rig",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 4
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 2
+        }
+      ],
+      "timeSec": 12,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_sail_deploy",
+      "name": "Deployable Sail",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_sail_deploy",
+        "name": "Deployable Sail",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 8
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 4
+        },
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 2
+        }
+      ],
+      "timeSec": 10,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_wind_surf",
+      "name": "Wind Surf",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_wind_surf",
+        "name": "Wind Surf",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 4
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 6
+        },
+        {
+          "id": "mat_rope",
+          "name": "Rope",
+          "qty": 3
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 2
+        }
+      ],
+      "timeSec": 12,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_shark_fin",
+      "name": "Shark Fin",
+      "station": "alchemy",
+      "output": {
+        "id": "itm_back_shark_fin",
+        "name": "Shark Fin",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_fish",
+          "name": "Fish",
+          "qty": 2
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 1
+        }
+      ],
+      "timeSec": 8,
+      "skill": "alchemy",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_holy_wings",
+      "name": "Holy Wings",
+      "station": "alchemy",
+      "output": {
+        "id": "itm_back_holy_wings",
+        "name": "Holy Wings",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 4
+        },
+        {
+          "id": "mat_crystal",
+          "name": "Crystal",
+          "qty": 2
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        }
+      ],
+      "timeSec": 14,
+      "skill": "alchemy",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_traveler_wings",
+      "name": "Traveler Wings I",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_traveler_wings",
+        "name": "Traveler Wings I",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 4
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 3
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 2
+        }
+      ],
+      "timeSec": 10,
+      "skill": "crafting",
+      "tier": 1
+    },
+    {
+      "id": "rcp_back_traveler_wings_t2",
+      "name": "Traveler Wings II",
+      "station": "loom",
+      "output": {
+        "id": "itm_back_traveler_wings_t2",
+        "name": "Traveler Wings II",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 5
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 4
+        },
+        {
+          "id": "mat_crystal",
+          "name": "Crystal",
+          "qty": 1
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 2
+        }
+      ],
+      "timeSec": 12,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_traveler_wings_t3",
+      "name": "Traveler Wings III",
+      "station": "alchemy",
+      "output": {
+        "id": "itm_back_traveler_wings_t3",
+        "name": "Traveler Wings III",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 6
+        },
+        {
+          "id": "mat_crystal",
+          "name": "Crystal",
+          "qty": 3
+        },
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 2
+        },
+        {
+          "id": "mat_resin",
+          "name": "Resin",
+          "qty": 3
+        }
+      ],
+      "timeSec": 16,
+      "skill": "alchemy",
+      "tier": 3
+    },
+    {
+      "id": "rcp_back_hover",
+      "name": "Hover Rig",
+      "station": "workbench",
+      "output": {
+        "id": "itm_back_hover",
+        "name": "Hover Rig",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_plank",
+          "name": "Plank",
+          "qty": 4
+        },
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 2
+        },
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 2
+        }
+      ],
+      "timeSec": 10,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_protective_shell",
+      "name": "Protective Shell",
+      "station": "forge",
+      "output": {
+        "id": "itm_back_protective_shell",
+        "name": "Protective Shell",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_iron_ingot",
+          "name": "Iron ingot",
+          "qty": 6
+        },
+        {
+          "id": "mat_leather",
+          "name": "Leather",
+          "qty": 2
+        }
+      ],
+      "timeSec": 12,
+      "skill": "crafting",
+      "tier": 2
+    },
+    {
+      "id": "rcp_back_invisibility",
+      "name": "Cloak Pack",
+      "station": "alchemy",
+      "output": {
+        "id": "itm_back_invisibility",
+        "name": "Cloak Pack",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_cloth",
+          "name": "Cloth",
+          "qty": 6
+        },
+        {
+          "id": "mat_crystal",
+          "name": "Crystal",
+          "qty": 2
+        },
+        {
+          "id": "mat_herb",
+          "name": "Herb",
+          "qty": 4
+        }
+      ],
+      "timeSec": 14,
       "skill": "alchemy",
       "tier": 2
     }

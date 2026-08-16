@@ -39,6 +39,8 @@ Combat **R** stays heavy. Combat **E** stays guard unless you are *on* a back ve
 | **effects** | aura · onHit · bonuses (UI + StatusFx) | `slotEffects.ts` row |
 | **runtime** | wing / stow / cape / Toon extra | One attach path |
 | **loadout** | paperdoll Back · Hold R · mesh_ids | One item at a time |
+| **icon** | R2 pack PNG (`icons/pack/…`) | HEAD 200 on `assets.grudge-studio.com` |
+| **recipe** | `rcp_back_*` in `content/harvest/recipes.json` | Craft → `itm_back_*` unique bag row |
 
 ---
 

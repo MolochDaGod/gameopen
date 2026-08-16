@@ -12,7 +12,11 @@
     "pack"
   ],
   "icon": {
-    "path": "icons/armor/back_protective_shell.png",
-    "status": "placeholder"
-  }
+    "path": "icons/pack/weapons/Shield_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_protective_shell"
 }

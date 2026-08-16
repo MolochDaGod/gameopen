@@ -10,6 +10,7 @@
 import type { ItemTemplate } from "./types";
 import { MATERIAL_STACK_MAX } from "./types";
 import { materialIconPath, resolveIconUrl } from "../../lib/objectStore";
+import { BACK_SLOT_ITEMS, backItemIconUrl } from "../../three/equipment/backSlotItems";
 
 const mat = (
   id: string,
@@ -160,10 +161,36 @@ export const LOADOUT_TEMPLATES: Record<string, ItemTemplate> = {
   },
 };
 
+/** Back-slot gear — unique instances; craft via rcp_back_* (harvest recipes). */
+export const BACK_TEMPLATES: Record<string, ItemTemplate> = (() => {
+  const out: Record<string, ItemTemplate> = {};
+  const extras = [
+    { id: "back_quiver", label: "Quiver" },
+    { id: "back_bag", label: "Traveler's Bag" },
+    { id: "back_wood", label: "Carry Wood" },
+  ];
+  for (const i of [...BACK_SLOT_ITEMS, ...extras]) {
+    const itemId = `itm_${i.id}`;
+    out[itemId] = {
+      id: itemId,
+      kind: "back",
+      name: i.label,
+      description: "effect" in i ? String((i as { effect?: string }).effect || "") : "",
+      rarity: "status" in i && i.status === "planned" ? "uncommon" : "common",
+      maxStack: 1,
+      icon: backItemIconUrl(i.id),
+      equipSlot: "back",
+      tags: ["back", "equip"],
+    };
+  }
+  return out;
+})();
+
 const CACHE: Record<string, ItemTemplate> = {
   ...MATERIAL_TEMPLATES,
   ...CONSUMABLE_TEMPLATES,
   ...LOADOUT_TEMPLATES,
+  ...BACK_TEMPLATES,
 };
 
 export function getItemTemplate(templateId: string): ItemTemplate {
@@ -175,13 +202,18 @@ export function getItemTemplate(templateId: string): ItemTemplate {
       ? "weapon"
       : templateId.startsWith("arm_")
         ? "equipment"
-        : templateId.startsWith("itm_")
-          ? "consumable"
-          : "material",
+        : templateId.startsWith("itm_back_") || templateId.startsWith("bck_")
+          ? "back"
+          : templateId.startsWith("itm_")
+            ? "consumable"
+            : "material",
     name: templateId.replace(/^itm_|^wpn_|^arm_/, "").replace(/_/g, " "),
     rarity: "common",
     maxStack:
-      templateId.startsWith("wpn_") || templateId.startsWith("arm_")
+      templateId.startsWith("wpn_") ||
+      templateId.startsWith("arm_") ||
+      templateId.startsWith("itm_back_") ||
+      templateId.startsWith("bck_")
         ? 1
         : MATERIAL_STACK_MAX,
     icon: "/icons/pack/misc/Effect.png",
@@ -206,6 +238,8 @@ export function isLedgerUniqueItem(templateId: string): boolean {
   if (
     templateId.startsWith("wpn_") ||
     templateId.startsWith("arm_") ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_") ||
     templateId.startsWith("EQIP-") ||
     templateId.startsWith("ITEM-")
   ) {
@@ -219,7 +253,8 @@ export function isLedgerUniqueItem(templateId: string): boolean {
       t.kind === "mount" ||
       t.kind === "boat" ||
       t.kind === "tool" ||
-      t.kind === "relic"
+      t.kind === "relic" ||
+      t.kind === "back"
     ) {
       return true;
     }

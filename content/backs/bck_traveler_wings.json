@@ -38,6 +38,14 @@
     "data": "ready",
     "mesh": "ready",
     "combat": "ready",
-    "present": "ready"
-  }
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_traveler_wings"
 }

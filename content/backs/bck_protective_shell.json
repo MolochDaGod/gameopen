@@ -31,6 +31,14 @@
     "data": "ready",
     "mesh": "placeholder",
     "combat": "placeholder",
-    "present": "placeholder"
-  }
+    "present": "placeholder",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/weapons/Shield_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_protective_shell"
 }

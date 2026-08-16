@@ -1,13 +1,16 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BACK_SLOT_ITEMS, backUseLegend, codedBackSlotItems } from "./backSlotItems";
+import { BACK_SLOT_ITEMS, backUseLegend, codedBackSlotItems, backItemIconUrl } from "./backSlotItems";
+import { getItemTemplate, isLedgerUniqueItem } from "../../game/inventory/catalog";
 
 type Catalog = {
   prefabs: Array<{
     id: string;
     itemId: string;
     runtimeId: string;
+    recipeId?: string | null;
+    icon?: { status?: string; cdnUrl?: string };
     useKind: string;
     useKey: string | null;
     status: string;
@@ -40,11 +43,32 @@ describe("Back slot prefabs", () => {
     expect(BACK_SLOT_ITEMS.some((i) => i.useKey === "R")).toBe(false);
   });
 
+  it("bag templates are unique back gear with CDN icons", () => {
+    expect(isLedgerUniqueItem("itm_back_holy_wings")).toBe(true);
+    const t = getItemTemplate("itm_back_holy_wings");
+    expect(t.kind).toBe("back");
+    expect(t.equipSlot).toBe("back");
+    expect(t.maxStack).toBe(1);
+    expect(backItemIconUrl("itm_back_holy_wings")).toContain("Naturecircle.png");
+  });
+
   it("backUseLegend prints PASSIVE or the existing key", () => {
     const fin = BACK_SLOT_ITEMS.find((i) => i.id === "back_shark_fin")!;
     expect(backUseLegend(fin).startsWith("PASSIVE")).toBe(true);
     const holy = BACK_SLOT_ITEMS.find((i) => i.id === "back_holy_wings")!;
     expect(backUseLegend(holy).startsWith("Space")).toBe(true);
+  });
+
+  it("every coded prefab has a harvest recipe and a ready pack icon", () => {
+    const recipes = JSON.parse(
+      readFileSync(resolve(process.cwd(), "../../content/harvest/recipes.json"), "utf8"),
+    ) as { recipes: Array<{ id: string; output: { id: string } }> };
+    const byOut = new Map(recipes.recipes.map((r) => [r.output.id, r.id]));
+    for (const p of catalog.prefabs) {
+      expect(byOut.get(p.itemId), p.itemId).toBe(p.recipeId);
+      expect(p.icon?.status).toBe("ready");
+      expect(p.icon?.cdnUrl).toMatch(/^https:\/\/assets\.grudge-studio\.com\/icons\/pack\//);
+    }
   });
 
   it("every prefab has a bck_ file and an itm_back_ bag template", () => {

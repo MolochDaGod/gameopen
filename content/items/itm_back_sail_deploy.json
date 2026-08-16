@@ -12,7 +12,11 @@
     "wings"
   ],
   "icon": {
-    "path": "icons/armor/back_sail_deploy.png",
-    "status": "placeholder"
-  }
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_sail_deploy"
 }

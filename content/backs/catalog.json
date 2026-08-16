@@ -2,12 +2,19 @@
   "version": 1,
   "slot": "back",
   "contract": "content/docs/BACK_SLOT_PREFAB.md",
-  "equip": ["paperdoll I", "Hold R harvest Back", "equip:back:*"],
+  "equip": [
+    "paperdoll I",
+    "Hold R harvest Back",
+    "equip:back:*"
+  ],
   "keys": {
     "cycle": "Hold R (harvest Back wedge)",
     "hotkey": "Space",
     "dismount": "E",
-    "doNotSteal": ["combat R heavy", "combat E guard"]
+    "doNotSteal": [
+      "combat R heavy",
+      "combat E guard"
+    ]
   },
   "prefabs": [
     {
@@ -21,10 +28,25 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Visual pack only",
-      "domains": ["mobility", "utility"],
+      "domains": [
+        "mobility",
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "mesh": "models/equipment/wing_animated.glb", "mode": "stowed" },
-      "passive": { "bonuses": {} }
+      "assets": {
+        "mesh": "models/equipment/wing_animated.glb",
+        "mode": "stowed"
+      },
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Effect.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_wing_pack"
     },
     {
       "id": "bck_parachute",
@@ -37,10 +59,24 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Airborne Space — high drag, slow fall",
-      "domains": ["mobility"],
+      "domains": [
+        "mobility"
+      ],
       "status": "coded",
-      "assets": { "mesh": "models/equipment/wing_animated.glb", "mode": "parachute" },
-      "passive": { "bonuses": {} }
+      "assets": {
+        "mesh": "models/equipment/wing_animated.glb",
+        "mode": "parachute"
+      },
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_parachute"
     },
     {
       "id": "bck_glider",
@@ -53,10 +89,25 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Airborne Space — glide",
-      "domains": ["mobility", "utility"],
+      "domains": [
+        "mobility",
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "mesh": "models/equipment/wing_animated.glb", "mode": "glide" },
-      "passive": { "bonuses": {} }
+      "assets": {
+        "mesh": "models/equipment/wing_animated.glb",
+        "mode": "glide"
+      },
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_glider"
     },
     {
       "id": "bck_flight_rig",
@@ -69,10 +120,25 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Airborne Space — lift",
-      "domains": ["mobility", "combat"],
+      "domains": [
+        "mobility",
+        "combat"
+      ],
       "status": "coded",
-      "assets": { "mesh": "models/equipment/wing_animated.glb", "mode": "flight" },
-      "passive": { "bonuses": {} }
+      "assets": {
+        "mesh": "models/equipment/wing_animated.glb",
+        "mode": "flight"
+      },
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Chaos_2.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_flight_rig"
     },
     {
       "id": "bck_sail_deploy",
@@ -85,10 +151,25 @@
       "useKind": "deploy",
       "useKey": "Space",
       "useHint": "Sailtest wind + airborne sail mode",
-      "domains": ["ocean", "mobility"],
+      "domains": [
+        "ocean",
+        "mobility"
+      ],
       "status": "coded",
-      "assets": { "mesh": "models/equipment/wing_animated.glb", "mode": "sail" },
-      "passive": { "bonuses": {} }
+      "assets": {
+        "mesh": "models/equipment/wing_animated.glb",
+        "mode": "sail"
+      },
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_sail_deploy"
     },
     {
       "id": "bck_wind_surf",
@@ -101,7 +182,10 @@
       "useKind": "deploy",
       "useKey": "Space",
       "useHint": "Space on water deploy · E get-off",
-      "domains": ["mobility", "ocean"],
+      "domains": [
+        "mobility",
+        "ocean"
+      ],
       "status": "coded",
       "assets": {
         "stow": "models/ride/back_fly_windsurf.glb",
@@ -109,7 +193,19 @@
         "stowLengthM": 0.58,
         "author": "Casting ride SSOT"
       },
-      "passive": { "aura": "haste", "bonuses": { "swimSpeed": 20 } }
+      "passive": {
+        "aura": "haste",
+        "bonuses": {
+          "swimSpeed": 20
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_wind_surf"
     },
     {
       "id": "bck_shark_fin",
@@ -122,10 +218,28 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Always on in water",
-      "domains": ["ocean", "utility"],
+      "domains": [
+        "ocean",
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "stow": "models/ride/shark_fin.glb", "stowLengthM": 0.55 },
-      "passive": { "aura": "absorb", "bonuses": { "swimSpeed": 100 } }
+      "assets": {
+        "stow": "models/ride/shark_fin.glb",
+        "stowLengthM": 0.55
+      },
+      "passive": {
+        "aura": "absorb",
+        "bonuses": {
+          "swimSpeed": 100
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_shark_fin"
     },
     {
       "id": "bck_holy_wings",
@@ -138,15 +252,32 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Space jump → glide · Stand on land · Run in air",
-      "domains": ["mobility"],
+      "domains": [
+        "mobility"
+      ],
       "status": "coded",
       "assets": {
         "mesh": "models/ride/wings/holy_wings.glb",
         "author": "D:/Games/Models/wing_379_1781615558571.glb",
-        "wingSpanM": 2.0,
-        "clips": ["Stand", "Run"]
+        "wingSpanM": 2,
+        "clips": [
+          "Stand",
+          "Run"
+        ]
       },
-      "passive": { "aura": "blessed", "bonuses": { "moveSpeed": 4 } }
+      "passive": {
+        "aura": "blessed",
+        "bonuses": {
+          "moveSpeed": 4
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Naturecircle.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Naturecircle.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_holy_wings"
     },
     {
       "id": "bck_traveler_wings",
@@ -159,7 +290,9 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Air Space = fly · Space again = flap (max 2)",
-      "domains": ["mobility"],
+      "domains": [
+        "mobility"
+      ],
       "status": "coded",
       "assets": {
         "mesh": "models/ride/wings/traveler_wings_variants.glb",
@@ -168,7 +301,19 @@
         "wingSpanM": 1.55,
         "flightTier": 1
       },
-      "passive": { "aura": "haste", "bonuses": { "moveSpeed": 8 } }
+      "passive": {
+        "aura": "haste",
+        "bonuses": {
+          "moveSpeed": 8
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Chaos_2.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_traveler_wings"
     },
     {
       "id": "bck_traveler_wings_t2",
@@ -181,7 +326,9 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Same Space flaps as T1 · better glide",
-      "domains": ["mobility"],
+      "domains": [
+        "mobility"
+      ],
       "status": "coded",
       "assets": {
         "mesh": "models/ride/wings/traveler_wings_variants.glb",
@@ -190,7 +337,19 @@
         "wingSpanM": 1.65,
         "flightTier": 2
       },
-      "passive": { "aura": "haste", "bonuses": { "moveSpeed": 10 } }
+      "passive": {
+        "aura": "haste",
+        "bonuses": {
+          "moveSpeed": 10
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Effect.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_traveler_wings_t2"
     },
     {
       "id": "bck_traveler_wings_t3",
@@ -203,7 +362,9 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Same Space flaps as T1 · best glide",
-      "domains": ["mobility"],
+      "domains": [
+        "mobility"
+      ],
       "status": "coded",
       "assets": {
         "mesh": "models/ride/wings/traveler_wings_variants.glb",
@@ -212,7 +373,19 @@
         "wingSpanM": 1.75,
         "flightTier": 3
       },
-      "passive": { "aura": "haste", "bonuses": { "moveSpeed": 12 } }
+      "passive": {
+        "aura": "haste",
+        "bonuses": {
+          "moveSpeed": 12
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Slash_07.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_traveler_wings_t3"
     },
     {
       "id": "bck_cape",
@@ -225,10 +398,25 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Always on",
-      "domains": ["utility"],
+      "domains": [
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "capeVariant": "default" },
-      "passive": { "bonuses": { "defense": 2 } }
+      "assets": {
+        "capeVariant": "default"
+      },
+      "passive": {
+        "bonuses": {
+          "defense": 2
+        }
+      },
+      "icon": {
+        "path": "icons/pack/weapons/Shield_01.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_cape"
     },
     {
       "id": "bck_cape_long",
@@ -241,10 +429,25 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Always on",
-      "domains": ["utility"],
+      "domains": [
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "capeVariant": "long" },
-      "passive": { "bonuses": { "defense": 3 } }
+      "assets": {
+        "capeVariant": "long"
+      },
+      "passive": {
+        "bonuses": {
+          "defense": 3
+        }
+      },
+      "icon": {
+        "path": "icons/pack/weapons/Shield_01.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_cape_long"
     },
     {
       "id": "bck_cape_wide",
@@ -257,10 +460,25 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Always on",
-      "domains": ["utility"],
+      "domains": [
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "capeVariant": "wide" },
-      "passive": { "bonuses": { "defense": 3 } }
+      "assets": {
+        "capeVariant": "wide"
+      },
+      "passive": {
+        "bonuses": {
+          "defense": 3
+        }
+      },
+      "icon": {
+        "path": "icons/pack/weapons/Shield_01.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_cape_wide"
     },
     {
       "id": "bck_quiver",
@@ -273,10 +491,31 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Toon Xtra_quiver while bow equipped",
-      "domains": ["combat"],
+      "domains": [
+        "combat"
+      ],
       "status": "coded",
-      "assets": { "toonMesh": "Xtra_quiver" },
-      "passive": { "aura": "haste", "onHit": { "status": "haste", "chance": 0.12 }, "bonuses": { "attackSpeed": 8, "crit": 3 } }
+      "assets": {
+        "toonMesh": "Xtra_quiver"
+      },
+      "passive": {
+        "aura": "haste",
+        "onHit": {
+          "status": "haste",
+          "chance": 0.12
+        },
+        "bonuses": {
+          "attackSpeed": 8,
+          "crit": 3
+        }
+      },
+      "icon": {
+        "path": "icons/pack/weapons/Bow_01.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Bow_01.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_quiver"
     },
     {
       "id": "bck_bag",
@@ -289,10 +528,27 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Toon Xtra_bag",
-      "domains": ["utility"],
+      "domains": [
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "toonMesh": "Xtra_bag" },
-      "passive": { "aura": "absorb", "bonuses": { "extraInventory": 1, "defense": 3 } }
+      "assets": {
+        "toonMesh": "Xtra_bag"
+      },
+      "passive": {
+        "aura": "absorb",
+        "bonuses": {
+          "extraInventory": 1,
+          "defense": 3
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Effect.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_bag"
     },
     {
       "id": "bck_wood",
@@ -305,10 +561,26 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Toon Xtra_wood",
-      "domains": ["utility"],
+      "domains": [
+        "utility"
+      ],
       "status": "coded",
-      "assets": { "toonMesh": "Xtra_wood" },
-      "passive": { "bonuses": { "harvest": 10, "craftSpeed": 4 } }
+      "assets": {
+        "toonMesh": "Xtra_wood"
+      },
+      "passive": {
+        "bonuses": {
+          "harvest": 10,
+          "craftSpeed": 4
+        }
+      },
+      "icon": {
+        "path": "icons/pack/misc/Slash_07.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_wood"
     },
     {
       "id": "bck_hover",
@@ -321,10 +593,22 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Planned — Space hover",
-      "domains": ["mobility", "utility"],
+      "domains": [
+        "mobility",
+        "utility"
+      ],
       "status": "planned",
       "assets": {},
-      "passive": { "bonuses": {} }
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Flow.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_hover"
     },
     {
       "id": "bck_protective_shell",
@@ -337,10 +621,23 @@
       "useKind": "passive",
       "useKey": null,
       "useHint": "Planned — absorb while equipped",
-      "domains": ["combat", "utility"],
+      "domains": [
+        "combat",
+        "utility"
+      ],
       "status": "planned",
       "assets": {},
-      "passive": { "aura": "absorb", "bonuses": {} }
+      "passive": {
+        "aura": "absorb",
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/weapons/Shield_01.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_protective_shell"
     },
     {
       "id": "bck_invisibility",
@@ -353,10 +650,22 @@
       "useKind": "hotkey",
       "useKey": "Space",
       "useHint": "Planned — Space stealth pulse (not a new combat key)",
-      "domains": ["stealth", "combat"],
+      "domains": [
+        "stealth",
+        "combat"
+      ],
       "status": "planned",
       "assets": {},
-      "passive": { "bonuses": {} }
+      "passive": {
+        "bonuses": {}
+      },
+      "icon": {
+        "path": "icons/pack/misc/Chaos_2.png",
+        "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+        "source": "r2-pack",
+        "status": "ready"
+      },
+      "recipeId": "rcp_back_invisibility"
     }
   ]
 }
