@@ -46,7 +46,9 @@ Do **not** invent a second roster hub. Extend this wiring only.
 Railway remains **player** SSOT (characters, bag, island claim).  
 CDN/R2 remains **mesh** SSOT. D1 is **asset index** only.
 
-**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` → Explorer `createAnimatedCharacter` sit/idle on chairs. Do **not** put Warlords grudge6 bodies in these seats.
+**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` (length-4, holes stay empty) → Explorer `createAnimatedCharacter` sit/idle on that **slot**. Each seat is that row’s Railway UUID + `saveData.open.voxelLook` (not a shared local draft). Do **not** put Warlords grudge6 bodies in these seats.
+
+Encament bake is surface-sampled onto lobby y=0 (do not lift on AABB min.y — ravines float the village).
 
 ---
 
