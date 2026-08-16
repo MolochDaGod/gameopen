@@ -45,6 +45,7 @@ export const ENEMIES: readonly CatalogEntity[] = [
   { id: "voodooist", name: "Voodooist", kind: "enemy", model: "models/enemies/session/voodooist.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "hex", "seed", "session"] },
   { id: "zombie_redesigned", name: "Redesigned Zombie", kind: "enemy", model: "models/enemies/session/zombie_redesigned.glb", defaultStrategy: "swarm-horde", tags: ["voxel", "melee", "undead", "seed", "session"] },
   { id: "stormbird_galarian", name: "Galarian Stormbird", kind: "enemy", model: "models/warlords-era/animals/flying/stormbird_galarian.glb", defaultStrategy: "aggressive-rusher", tags: ["warlords", "flying", "beast", "elite"] },
+  { id: "anomaly_hatchling", name: "Anomaly Hatchling", kind: "enemy", model: "models/warlords-era/enemies/anomaly_hatchling.glb", defaultStrategy: "aggressive-rusher", tags: ["warlords", "beast", "worm", "dungeon", "hatchling"] },
 ] as const;
 
 export const ALLIES: readonly CatalogEntity[] = [

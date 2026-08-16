@@ -55,7 +55,7 @@
     "enemies": {
       "era": "warlords",
       "use": ["boss events", "dungeon"],
-      "items": ["abyss_demon", "baphomet_ancient"]
+      "items": ["abyss_demon", "baphomet_ancient", "anomaly_hatchling"]
     },
     "units": {
       "era": "warlords",

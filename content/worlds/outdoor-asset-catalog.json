@@ -280,6 +280,14 @@
       "notes": "Warlords animals/flying — aggressive storm bird (native ~2.26 m). Harpy/sky-fauna slot. Encament + forest camps."
     },
     {
+      "id": "enemy_anomaly_hatchling",
+      "r2Key": "models/warlords-era/enemies/anomaly_hatchling.glb",
+      "category": "enemy",
+      "role": "dungeon_hatchling",
+      "contentType": "model/gltf-binary",
+      "notes": "Prefab Anomaly Hatchling from worm_monster.glb. Native ~3.5 m, play SI 1.6 m. Warlords enemies / cave camps. Not a grudge6 kit."
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",
