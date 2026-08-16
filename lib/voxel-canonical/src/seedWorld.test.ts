@@ -69,6 +69,7 @@ describe("seedWorld", () => {
 
   it("reviews premade maps and marks Animal Company lobby as spawn hub", () => {
     const maps = listPremadeVoxelMaps();
+    expect(maps.some((m) => m.id === "explorerStartingTown" && m.source === "template")).toBe(true);
     expect(maps.some((m) => m.id === "amidaFarmCamp" && m.source === "template")).toBe(true);
     const lobby = maps.find((m) => m.id === EXPLORER_STARTING_TOWN_CHUNK);
     expect(lobby?.source).toBe("map_chunk");

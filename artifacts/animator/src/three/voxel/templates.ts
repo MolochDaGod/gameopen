@@ -10,6 +10,7 @@ import type { WeaponId } from "../types";
 import type { BlockTypeId } from "@workspace/voxel-canonical";
 import { buildBiomeRoadBlocks } from "./roadPack";
 import { buildAmidaFarmBlocks } from "./amidaFields";
+import { buildExplorerStartingTownMap } from "./seedOverworldPlay";
 
 /**
  * Code-defined starting-map templates for the Voxel Editor (`/voxel`).
@@ -346,6 +347,12 @@ function amidaFarmCampLab(): VoxelMap {
 
 /** Selectable templates, in picker order. */
 export const MAP_TEMPLATES: MapTemplate[] = [
+  {
+    id: "explorerStartingTown",
+    label: "Explorer Starting Town",
+    desc: "Animal Company lobby (real GLB, 1 block = 1 m) + chunked seed wilderness + dungeon portals",
+    build: buildExplorerStartingTownMap,
+  },
   {
     id: "amidaFarmCamp",
     label: "Amida Farm Camp",

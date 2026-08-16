@@ -100,6 +100,8 @@ export interface HarvestProductionUIProps {
   onImportCharacter?: (id: string) => void;
   onOpenRealms?: () => void;
   onOpenVoxel?: () => void;
+  /** Play town + chunked seed in Open VoxelArena (not Mine-Loader). */
+  onPlaySeedOverworld?: (dep: SeedWorldDeployment) => void;
 }
 
 const TAB_ICON: Record<HarvestTabId, ReactNode> = {
@@ -122,6 +124,7 @@ export function HarvestProductionUI({
   onImportCharacter,
   onOpenRealms,
   onOpenVoxel,
+  onPlaySeedOverworld,
 }: HarvestProductionUIProps) {
   const [tab, setTab] = useState<HarvestTabId>("ops");
   const [recipes, setRecipes] = useState<CraftRecipe[]>([]);
@@ -944,6 +947,18 @@ export function HarvestProductionUI({
                         >
                           <ExternalLink size={14} /> Deploy / play seed world
                         </button>
+                        {onPlaySeedOverworld ? (
+                          <button
+                            type="button"
+                            className="hp-btn primary"
+                            onClick={() => {
+                              onPlaySeedOverworld(dep);
+                              showNotice("Opening explorer town + seed in Open…");
+                            }}
+                          >
+                            Play in Open (town + seed)
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="hp-btn ghost"

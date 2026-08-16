@@ -103,10 +103,15 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 ### Explorer start + Minecraft seed
 
 1. Explorer / harvest / DRC launch (no `mapId`) → deployment `mapchunk-animal-company-lobby`.  
-2. **Town** = `animal_company_lobby` GLB at spawn (block fallback `amidaFarmCamp`).  
-3. **Overworld** = same `hashSeed` / `chunkIdx` gen as other seed worlds.  
-4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals).  
+2. **Town** = real `animal_company_lobby` GLB via `loadMapChunk` / `placeMapChunk` at **1 block = 1 m** (never prop height-fit). Fallback blocks = `amidaFarmCamp`.  
+3. **Overworld** = `generateSeedTerrain` in `@workspace/voxel-canonical` — 16-column chunks, same `hashSeed` / `chunkIdx`, hub flattened so the town sits at y=0.  
+4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
 5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.
+
+**Open play (voxel-game ready):** Harvest Maps → **Play in Open (town + seed)**, or Voxel Editor template `explorerStartingTown` → Test.  
+`assembleSeedOverworldMap` → `VoxelArena.load` → instanced seed columns + Rapier heightfield + town trimesh/AABB. Same Controller / camera as other VoxelArena maps.
+
+Code: `lib/voxel-canonical/src/seedTerrain.ts` · `artifacts/animator/src/three/voxel/seedOverworldPlay.ts` · `VoxelArena.ts`.
 
 ---
 

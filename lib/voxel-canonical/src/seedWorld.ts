@@ -81,6 +81,7 @@ export type PremadeVoxelMap = {
 };
 
 const PREMADE_TEMPLATE_ROWS: PremadeVoxelMap[] = [
+  { id: "explorerStartingTown", label: "Explorer Starting Town", source: "template", role: "starting_town" },
   { id: "amidaFarmCamp", label: "Amida Farm Camp", source: "template", role: "starting_town" },
   { id: "biomeRoadLab", label: "Biome Roads Lab", source: "template", role: "lab" },
   { id: "boxingRing", label: "Boxing Ring", source: "template", role: "arena" },
@@ -613,6 +614,13 @@ export function normalizeSeedDeployment(raw: unknown): SeedWorldDeployment | nul
       worldId: typeof world.worldId === "string" ? world.worldId : undefined,
       featured: !!world.featured,
       deploy: (world.deploy as SeedWorldMeta["deploy"]) || "both",
+      mapChunkId: typeof world.mapChunkId === "string" ? world.mapChunkId : undefined,
+      startingTown:
+        world.startingTown && typeof world.startingTown === "object"
+          ? (world.startingTown as StartingTownSpec)
+          : world.mapChunkId === EXPLORER_STARTING_TOWN_CHUNK
+            ? { ...DEFAULT_EXPLORER_STARTING_TOWN }
+            : undefined,
     },
     portals: Array.isArray(o.portals) ? (o.portals as SeedPortal[]) : [],
     sceneOverlay: (o.sceneOverlay as Partial<VoxelRealmsScene>) ?? null,

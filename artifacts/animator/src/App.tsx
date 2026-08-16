@@ -49,6 +49,8 @@ import type {
   GizmoMode,
   VoxelMap,
 } from "./three/voxel/types";
+import { assembleSeedOverworldMap } from "./three/voxel/seedOverworldPlay";
+import type { SeedWorldDeployment } from "./game/seedWorlds";
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { CursorManager } from "./components/CursorManager";
@@ -1355,7 +1357,11 @@ export default function App() {
       studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
       studio.onCharacterLoaded = () => {
         refreshAnim();
-        void studioRef.current?.enterArena(map);
+        if (map.play?.kind === "seed-overworld") {
+          void studioRef.current?.enterSeedOverworld(map);
+        } else {
+          void studioRef.current?.enterArena(map);
+        }
         setHelpersLoad((s) =>
           s.visible ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" } : s,
         );
@@ -2233,6 +2239,13 @@ export default function App() {
   // Launch a map chosen in the Lobby straight into a play session.
   const onPlayPost = useCallback((map: VoxelMap) => {
     playMapRef.current = map;
+    setMode("play");
+  }, []);
+
+  // Harvest Maps tab: real lobby town + chunked seed in VoxelArena.
+  const onPlaySeedOverworld = useCallback((dep: SeedWorldDeployment) => {
+    playMapRef.current = assembleSeedOverworldMap(dep);
+    setHarvestUiOpen(false);
     setMode("play");
   }, []);
 
@@ -3466,6 +3479,7 @@ export default function App() {
               setHarvestUiOpen(false);
               setMode("voxel");
             }}
+            onPlaySeedOverworld={onPlaySeedOverworld}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}
@@ -3777,6 +3791,7 @@ export default function App() {
               setHarvestUiOpen(false);
               setMode("voxel");
             }}
+            onPlaySeedOverworld={onPlaySeedOverworld}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}

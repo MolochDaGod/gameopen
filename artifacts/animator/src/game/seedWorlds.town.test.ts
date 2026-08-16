@@ -7,10 +7,12 @@ import {
   listPremadeVoxelMaps,
 } from "@workspace/voxel-canonical";
 import { catalogEntryToDeployment, customSeedDeployment } from "./seedWorlds";
+import { assembleSeedOverworldMap, explorerTownDeployment } from "../three/voxel/seedOverworldPlay";
 
 describe("explorer starting town + seed", () => {
   it("reviews premade voxel maps including the lobby spawn hub", () => {
     const maps = listPremadeVoxelMaps();
+    expect(maps.some((m) => m.id === "explorerStartingTown" && m.role === "starting_town")).toBe(true);
     expect(maps.some((m) => m.id === "amidaFarmCamp" && m.role === "starting_town")).toBe(true);
     const lobby = maps.find((m) => m.id === EXPLORER_STARTING_TOWN_CHUNK);
     expect(lobby?.role).toBe("lobby");
@@ -47,5 +49,19 @@ describe("explorer starting town + seed", () => {
     expect(buildSeedDeployment({ id: "x", name: "x", seed: "alpha-42" }).world.seedNumber).toBe(
       a.world.seedNumber,
     );
+  });
+
+  it("assembles a voxel-playable map with the real lobby chunk and chunked heights", () => {
+    const map = assembleSeedOverworldMap(explorerTownDeployment("explorer-town"));
+    expect(map.play?.kind).toBe("seed-overworld");
+    expect(map.play?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    expect(map.play?.hubRadius).toBeGreaterThan(0);
+    expect(map.play?.heights.length).toBe(map.play!.width * map.play!.depth);
+    expect(map.play!.heights.length).toBeGreaterThan(32 * 32);
+    expect(map.deployables.some((d) => d.kind === "start")).toBe(true);
+    expect(map.blocks.some((b) => b.type === "diamond")).toBe(true);
+    const hubIdx =
+      (0 - map.play!.minZ) * map.play!.width + (0 - map.play!.minX);
+    expect(map.play!.heights[hubIdx]).toBe(0);
   });
 });

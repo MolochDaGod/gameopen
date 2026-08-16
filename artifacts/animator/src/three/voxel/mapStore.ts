@@ -166,5 +166,6 @@ export function importMap(json: string): VoxelMap | null {
     dungeon: !!map.dungeon,
     blocks: Array.isArray(map.blocks) ? map.blocks : [],
     deployables: Array.isArray(map.deployables) ? (map.deployables as VoxelMap["deployables"]) : [],
+    play: (map as VoxelMap).play,
   };
 }
