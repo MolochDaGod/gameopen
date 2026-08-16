@@ -302,18 +302,21 @@ export function HarvestProductionUI({
       window.setTimeout(() => {
         void (async () => {
           const charId =
-            typeof window !== "undefined"
+            gameSession.selectedCharacter()?.id ||
+            (typeof window !== "undefined"
               ? localStorage.getItem("grudge.activeCharId") ||
-                localStorage.getItem("grudge.open.selectedCharacterId") ||
-                null
-              : null;
-          // Prefer async craft: unique → ledger; mats → Railway dual-write
+                localStorage.getItem("grudge.open.selectedCharacterId")
+              : null) ||
+            "local";
+          const accountId = gameSession.snapshot.account?.grudgeId || null;
+          // Prefer async craft: unique → character bag (ledger or provisional)
           const res = await craftRecipeAsync(r, bag, {
             characterId: charId,
+            accountId,
           });
           setCraftingId(null);
           if (!res.ok) {
-            // Fallback guest sync path
+            // Stackables only — unique gear must stay on grantUniqueToBag
             const sync = craftRecipe(r, bag);
             if (!sync.ok) {
               showNotice(res.reason ?? sync.reason ?? "Cannot craft");
@@ -325,8 +328,10 @@ export function HarvestProductionUI({
           }
           setBag(res.bag);
           showNotice(
-            res.uniqueGranted
-              ? `Crafted ${r.output.name} · ledger UUID`
+            res.uniqueOutput
+              ? res.uniqueGranted
+                ? `Crafted ${r.output.name} · ledger UUID`
+                : `Crafted ${r.output.name} · character bag`
               : `Crafted ${r.output.name} ×${r.output.qty}`,
           );
         })();

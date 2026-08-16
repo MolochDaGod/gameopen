@@ -135,6 +135,8 @@ export function isLedgerUniqueTemplate(templateId: string): boolean {
   if (
     templateId.startsWith("wpn_") ||
     templateId.startsWith("arm_") ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_") ||
     templateId.startsWith("EQIP-") ||
     templateId.startsWith("ITEM-")
   ) {

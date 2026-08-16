@@ -87,6 +87,7 @@ import {
   DEFAULT_BAG_SLOTS,
   useConsumableHotkey,
   equipFromBagWithLedger,
+  equipBackFromBagWithLedger,
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
@@ -127,7 +128,8 @@ import {
   buildGenesisHeroOptions,
   type GenesisHeroOption,
 } from "./lib/grudoxRoster";
-import { normalizeToGrudgeAvatarId, resolveRaceModel } from "./lib/raceModel";
+import { normalizeToGrudgeAvatarId, resolveRaceId, resolveRaceModel } from "./lib/raceModel";
+import { applyBackTemplateToMeshIds } from "./three/grudge";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
@@ -683,6 +685,33 @@ export default function App() {
     gameSession.snapshot.account?.grudgeId ||
     (gameSession.snapshot.account?.source === "guest" ? "guest" : null) ||
     "guest";
+
+  const handleEquipBack = useCallback(
+    (bagIndex: number, item: ItemInstance) => {
+      const race = resolveRaceId(gameSession.selectedCharacter()?.raceId);
+      const next = applyBackTemplateToMeshIds(race, equipMeshIds, item.templateId);
+      setEquipMeshIds(next);
+      studioRef.current?.setEquipmentMeshIds(next);
+      void equipBackFromBagWithLedger({
+        characterId: activeCharacterId,
+        bagIndex,
+        accountId: accountIdForBag,
+        meshIds: next,
+      }).then((res) => {
+        if (!res.ok) {
+          studioRef.current?.flashMessage?.(res.reason || "Cannot equip back", 1.6);
+          return;
+        }
+        refreshBagMeta();
+        const name = getItemTemplate(item.templateId).name;
+        studioRef.current?.flashMessage?.(
+          `Equipped ${name}${res.ledgered ? " · ledger Back" : ""}`,
+          1.5,
+        );
+      });
+    },
+    [activeCharacterId, accountIdForBag, equipMeshIds, refreshBagMeta],
+  );
 
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {
@@ -3285,6 +3314,7 @@ export default function App() {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
+            onEquipBack={handleEquipBack}
           />
           <LockpickPanel
             open={!!lockpickChallenge}
@@ -3631,6 +3661,7 @@ export default function App() {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
+            onEquipBack={handleEquipBack}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}

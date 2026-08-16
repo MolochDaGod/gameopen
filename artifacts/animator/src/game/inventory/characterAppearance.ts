@@ -6,7 +6,7 @@
  */
 
 import { patchCharacterAppearance } from "./ledgerClient";
-import type { CharacterBagState, KeptLoadoutSlotId } from "./types";
+import type { CharacterBagState, ItemInstance, KeptLoadoutSlotId } from "./types";
 import { KEPT_LOADOUT_ORDER } from "./types";
 
 export type AppearanceSaveInput = {
@@ -23,6 +23,10 @@ export type AppearanceSaveInput = {
   saveDataPatch?: Record<string, unknown>;
   /** Character bag kept loadout → equipment refs for mesh hydrate */
   bag?: CharacterBagState | null;
+  /** Body Back instance (not kept 2×2). Stamped on equipment.back. */
+  back?: ItemInstance | null;
+  /** Live play mesh_ids including `equip:back:*` when known. */
+  meshIds?: string[];
 };
 
 /** Build equipment mesh refs from kept loadout (grudgeUuid + templateId). */
@@ -46,6 +50,24 @@ export function equipmentFromKept(
   return out;
 }
 
+export type WornEquipRef = {
+  templateId: string;
+  grudgeUuid?: string;
+  instanceId: string;
+};
+
+/** Body Back ref — same shape as kept slots, different persist key. */
+export function equipmentBackFromItem(
+  item: ItemInstance | null | undefined,
+): WornEquipRef | null {
+  if (!item) return null;
+  return {
+    templateId: item.templateId,
+    grudgeUuid: item.grudgeUuid,
+    instanceId: item.instanceId,
+  };
+}
+
 /**
  * Persist appearance + worn equipment mesh refs to Railway for this UUID only.
  */
@@ -58,6 +80,9 @@ export async function saveCharacterSlotAppearance(
   }
 
   const equipment = equipmentFromKept(input.bag);
+  const backRef = equipmentBackFromItem(input.back);
+  if (backRef) equipment.back = backRef;
+
   const saveData: Record<string, unknown> = {
     ...(input.saveDataPatch || {}),
   };
@@ -72,8 +97,8 @@ export async function saveCharacterSlotAppearance(
   const model3d: Record<string, unknown> = {
     ...(input.model3d || {}),
   };
-  // Always stamp mesh refs from worn unique gear when bag provided
-  if (input.bag) {
+  // Always stamp mesh refs from worn unique gear when bag / back provided
+  if (input.bag || backRef) {
     const meshIds = Object.values(equipment)
       .map((e) => e.templateId)
       .filter(Boolean);
@@ -81,6 +106,9 @@ export async function saveCharacterSlotAppearance(
       model3d.equippedMeshes = meshIds;
       model3d.equipmentSlots = equipment;
     }
+  }
+  if (input.meshIds?.length) {
+    model3d.meshIds = input.meshIds.slice();
   }
 
   const body: Parameters<typeof patchCharacterAppearance>[1] = {};

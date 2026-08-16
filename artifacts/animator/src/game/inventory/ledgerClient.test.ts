@@ -44,6 +44,17 @@ describe("ledgerClient helpers", () => {
   it("maps weapon templates to slot labels", () => {
     expect(slotLabelForTemplate("wpn_sword_01")).toBe("Weapon");
     expect(slotLabelForTemplate("arm_shield_01")).toBe("Shield");
+    expect(slotLabelForTemplate("itm_back_holy_wings")).toBe("Back");
+    expect(slotLabelForTemplate("bck_wind_surf")).toBe("Back");
+  });
+
+  it("back templates mint as unique instances, not stacks", () => {
+    expect(isLedgerUniqueTemplate("itm_back_holy_wings")).toBe(true);
+    expect(isStackableTemplate("itm_back_holy_wings")).toBe(false);
+    const wings = newItemInstance("itm_back_holy_wings", 1);
+    expect(wings.provisional).toBe(true);
+    expect(wings.instanceId.startsWith("prov_")).toBe(true);
+    expect(wings.instanceId.startsWith("stack_")).toBe(false);
   });
 
   it("stable numeric item ids", () => {

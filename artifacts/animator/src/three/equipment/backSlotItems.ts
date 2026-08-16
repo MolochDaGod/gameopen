@@ -115,6 +115,23 @@ export function backRuntimeFromAnyId(id: string): string {
   return s;
 }
 
+/** True for bag / prefab / mesh / recipe ids in the Back family. */
+export function isBackTemplateId(id: string): boolean {
+  const s = String(id || "");
+  return (
+    s.startsWith("itm_back_") ||
+    s.startsWith("bck_") ||
+    s.startsWith("equip:back:") ||
+    s.startsWith("rcp_back_") ||
+    s.startsWith("back_")
+  );
+}
+
+/** Paperdoll / play mesh tag from any back family id. */
+export function backEquipTagFromAnyId(id: string): string {
+  return backEquipId(backRuntimeFromAnyId(id));
+}
+
 export function backItemIconPath(id: string): string {
   if (BACK_PACK_ICON[id]) return BACK_PACK_ICON[id]!;
   const runtime = backRuntimeFromAnyId(id);

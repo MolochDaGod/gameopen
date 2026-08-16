@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BACK_SLOT_ITEMS, backUseLegend, codedBackSlotItems, backItemIconUrl } from "./backSlotItems";
+import {
+  BACK_SLOT_ITEMS,
+  backUseLegend,
+  codedBackSlotItems,
+  backItemIconUrl,
+  backEquipTagFromAnyId,
+} from "./backSlotItems";
 import { getItemTemplate, isLedgerUniqueItem } from "../../game/inventory/catalog";
 
 type Catalog = {
@@ -50,6 +56,12 @@ describe("Back slot prefabs", () => {
     expect(t.equipSlot).toBe("back");
     expect(t.maxStack).toBe(1);
     expect(backItemIconUrl("itm_back_holy_wings")).toContain("Naturecircle.png");
+  });
+
+  it("back family ids collapse to one equip tag", () => {
+    expect(backEquipTagFromAnyId("itm_back_holy_wings")).toBe("equip:back:holy_wings");
+    expect(backEquipTagFromAnyId("bck_holy_wings")).toBe("equip:back:holy_wings");
+    expect(backEquipTagFromAnyId("equip:back:holy_wings")).toBe("equip:back:holy_wings");
   });
 
   it("backUseLegend prints PASSIVE or the existing key", () => {

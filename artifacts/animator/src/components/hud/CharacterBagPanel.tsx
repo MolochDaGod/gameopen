@@ -37,6 +37,8 @@ export interface CharacterBagPanelProps {
   onConsume?: (heal: number, stamina: number, name: string) => void;
   /** Deploy placeable from bag (e.g. claim flag → ghost place). */
   onDeployPlaceable?: (placeableId: string) => void;
+  /** Body Back equip (not kept 2×2). */
+  onEquipBack?: (bagIndex: number, item: ItemInstance) => void;
 }
 
 export function CharacterBagPanel({
@@ -49,6 +51,7 @@ export function CharacterBagPanel({
   onFlash,
   onConsume,
   onDeployPlaceable,
+  onEquipBack,
 }: CharacterBagPanelProps) {
   const [bag, setBag] = useState<CharacterBagState>(() => loadCharacterBag(characterId));
   const [menu, setMenu] = useState<{
@@ -162,6 +165,14 @@ export function CharacterBagPanel({
       return;
     }
     if (action === "equip") {
+      if (tpl.kind === "back" || tpl.equipSlot === "back") {
+        if (onEquipBack) {
+          onEquipBack(index, slot.item);
+          return;
+        }
+        onFlash?.(`Equip ${tpl.name} — open Main Panel (I) for Back`);
+        return;
+      }
       onFlash?.(`Equip ${tpl.name} — open Main Panel (I) for equipment`);
       return;
     }
@@ -191,7 +202,12 @@ export function CharacterBagPanel({
     if (tpl.tags?.some((t) => t.startsWith("placeable:") || t === "claim")) {
       acts.unshift("deploy");
     }
-    if (tpl.kind === "weapon" || tpl.kind === "equipment" || tpl.kind === "tool") {
+    if (
+      tpl.kind === "weapon" ||
+      tpl.kind === "equipment" ||
+      tpl.kind === "tool" ||
+      tpl.kind === "back"
+    ) {
       if (!tpl.tags?.includes("claim")) acts.push("equip");
     }
     if (tpl.kind === "material" || tpl.kind === "consumable") acts.push("deposit");

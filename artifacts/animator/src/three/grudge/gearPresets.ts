@@ -15,7 +15,10 @@ import {
   kitWeaponFamily,
   isQuiverMesh,
 } from "./toonKitCoverage";
-import { paperdollBackIds } from "../equipment/backSlotItems";
+import {
+  backEquipTagFromAnyId,
+  paperdollBackIds,
+} from "../equipment/backSlotItems";
 
 export type PresetId = "mage" | "knight" | "ranger" | "warrior" | "unarmed";
 
@@ -229,4 +232,18 @@ export function cycleKitSlot(race: RaceId, meshIds: string[], slot: KitPanelSlot
   const stripped = meshIds.filter((m) => !meshMatchesSlot(m, slot));
   const nextIds = next ? [...stripped, next] : stripped;
   return reconcileKitLoadout(race, nextIds);
+}
+
+/**
+ * Bag / recipe template → one Back mesh tag. Does not invent a 5th kept slot.
+ */
+export function applyBackTemplateToMeshIds(
+  race: RaceId,
+  meshIds: string[],
+  templateId: string | null | undefined,
+): string[] {
+  const stripped = meshIds.filter((m) => !meshMatchesSlot(m, "back"));
+  if (!templateId) return reconcileKitLoadout(race, stripped);
+  const tag = backEquipTagFromAnyId(templateId);
+  return reconcileKitLoadout(race, [...stripped, tag]);
 }

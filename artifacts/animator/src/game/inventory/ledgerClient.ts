@@ -45,6 +45,14 @@ export function slotLabelForTemplate(templateId: string): string {
   if (eq === "chest") return "Chest";
   if (eq === "legs") return "Legs";
   if (eq === "feet") return "Feet";
+  if (
+    eq === "back" ||
+    tpl.kind === "back" ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_")
+  ) {
+    return "Back";
+  }
   if (tpl.kind === "weapon") return "Weapon";
   if (tpl.kind === "tool") return "Item";
   return "Item";
@@ -295,15 +303,24 @@ export async function ledgerEquipChange(opts: {
   item: ItemInstance;
   characterId: string;
   accountId?: string | null;
-  keptSlot: KeptLoadoutSlotId;
+  /** Kept 2×2 (mount / boat / main / side). */
+  keptSlot?: KeptLoadoutSlotId;
+  /** Body paperdoll slot that is not kept 2×2 (Back). */
+  bodySlot?: "back";
   equip: boolean;
 }): Promise<boolean> {
   const uuid = opts.item.grudgeUuid || opts.item.instanceId;
   if (!uuid || opts.item.provisional) return false;
   if (!isLedgerUniqueItem(opts.item.templateId)) return false;
   if (!readFleetToken()) return false;
+  const slotKey = opts.bodySlot || opts.keptSlot;
+  if (!slotKey) return false;
 
   const tpl = getItemTemplate(opts.item.templateId);
+  const itemSlot =
+    opts.bodySlot === "back"
+      ? "Back"
+      : String(KEPT_TO_EQUIP[opts.keptSlot!] || opts.keptSlot);
   return logLedgerEvent({
     grudgeUuid: uuid,
     eventType: opts.equip ? "EQUIPPED" : "UNEQUIPPED",
@@ -312,10 +329,14 @@ export async function ledgerEquipChange(opts: {
     itemId: opts.item.templateId,
     itemName: tpl.name,
     itemTier: opts.item.tier ?? tierForTemplate(opts.item.templateId),
-    itemSlot: String(KEPT_TO_EQUIP[opts.keptSlot] || opts.keptSlot),
+    itemSlot,
     sourceType: "open_equip",
-    sourceRef: opts.keptSlot,
-    metadata: { keptSlot: opts.keptSlot, templateId: opts.item.templateId },
+    sourceRef: slotKey,
+    metadata: {
+      keptSlot: opts.keptSlot,
+      bodySlot: opts.bodySlot,
+      templateId: opts.item.templateId,
+    },
   });
 }
 

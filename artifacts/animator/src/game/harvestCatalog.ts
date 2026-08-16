@@ -1479,15 +1479,33 @@ export function canCraft(recipe: CraftRecipe, bag: Record<string, number>): bool
   return recipe.inputs.every((i) => (bag[i.id] ?? 0) >= i.qty);
 }
 
+/** Unique outputs must go through grantUniqueToBag — never the harvest qty map. */
+function isUniqueCraftOutput(id: string): boolean {
+  return (
+    id.startsWith("wpn_") ||
+    id.startsWith("arm_") ||
+    id.startsWith("itm_back_") ||
+    id.startsWith("bck_") ||
+    id.startsWith("itm_mount") ||
+    id.startsWith("itm_boat") ||
+    id.startsWith("tool_") ||
+    id.startsWith("EQIP-") ||
+    id.startsWith("ITEM-")
+  );
+}
+
 /**
- * Synchronous craft for UI timers (mat qty only).
- * Prefer craftRecipeAsync when signed in (unique outputs + Railway mats).
+ * Synchronous craft for UI timers (stackable mats only).
+ * Unique gear must use craftRecipeAsync → grantUniqueToBag.
  */
 export function craftRecipe(
   recipe: CraftRecipe,
   bag: Record<string, number>,
 ): { ok: boolean; bag: Record<string, number>; reason?: string } {
   if (!canCraft(recipe, bag)) return { ok: false, bag, reason: "missing materials" };
+  if (isUniqueCraftOutput(recipe.output.id)) {
+    return { ok: false, bag, reason: "unique gear requires craftRecipeAsync" };
+  }
   const next = { ...bag };
   for (const i of recipe.inputs) next[i.id] = (next[i.id] ?? 0) - i.qty;
   next[recipe.output.id] = (next[recipe.output.id] ?? 0) + recipe.output.qty;
@@ -1508,6 +1526,7 @@ export async function craftRecipeAsync(
   bag: Record<string, number>;
   reason?: string;
   uniqueGranted?: boolean;
+  uniqueOutput?: boolean;
 }> {
   if (!canCraft(recipe, bag)) {
     return { ok: false, bag, reason: "missing materials" };
@@ -1520,41 +1539,38 @@ export async function craftRecipeAsync(
   const { isLedgerUniqueItem } = await import("./inventory/catalog");
   const outId = recipe.output.id;
   let uniqueGranted = false;
+  const uniqueOutput = isLedgerUniqueItem(outId);
 
-  if (isLedgerUniqueItem(outId)) {
-    const { getStoredToken } = await import("../lib/grudgeAuth");
-    if (getStoredToken() && opts?.characterId) {
-      const { grantUniqueToBag } = await import("./inventory/store");
-      for (let n = 0; n < recipe.output.qty; n++) {
-        const g = await grantUniqueToBag({
-          characterId: opts.characterId,
-          templateId: outId,
-          accountId: opts.accountId,
-          sourceType: "open_craft",
-          sourceRef: recipe.id,
-        });
-        if (!g.item) {
-          // roll back mats in memory only if mint fails mid-loop
-          return {
-            ok: false,
-            bag,
-            reason: g.message || "Ledger craft mint failed",
-          };
-        }
-        uniqueGranted = g.ledgered;
+  if (uniqueOutput) {
+    const { grantUniqueToBag } = await import("./inventory/store");
+    const characterId = opts?.characterId || "local";
+    for (let n = 0; n < recipe.output.qty; n++) {
+      const g = await grantUniqueToBag({
+        characterId,
+        templateId: outId,
+        accountId: opts?.accountId,
+        sourceType: "open_craft",
+        sourceRef: recipe.id,
+      });
+      if (!g.item) {
+        // roll back mats in memory only if mint fails mid-loop
+        return {
+          ok: false,
+          bag,
+          reason: g.message || "Unique craft mint failed",
+          uniqueOutput: true,
+        };
       }
-      // Unique gear lives on character bag (ledger), not mat map
-    } else {
-      // Guest: keep qty map for UI only (provisional)
-      next[outId] = (next[outId] ?? 0) + recipe.output.qty;
+      uniqueGranted = g.ledgered;
     }
+    // Unique gear lives on character bag (ledger or guest provisional), not mat map
   } else {
     next[outId] = (next[outId] ?? 0) + recipe.output.qty;
     await pushMatsToRailway({ [outId]: recipe.output.qty });
   }
 
   saveBag(next);
-  return { ok: true, bag: next, uniqueGranted };
+  return { ok: true, bag: next, uniqueGranted, uniqueOutput };
 }
 
 /** Seed starter mats for first-run UX. */

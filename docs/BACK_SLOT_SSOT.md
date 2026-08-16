@@ -14,4 +14,4 @@ One Back equip. Items *are* the effects. No second effect radial. No new combat 
 
 See catalog for per-item assets and `useKind`.
 
-Icons: R2 pack (`icons/pack/…`, HEAD 200). Recipes: `rcp_back_*` in `content/harvest/recipes.json` (also `public/content/harvest/recipes.json`). Craft output is unique `itm_back_*` (ledger when signed in).
+Icons: R2 pack (`icons/pack/…`, HEAD 200). Recipes: `rcp_back_*` in `content/harvest/recipes.json` (also `public/content/harvest/recipes.json`). Craft output is unique `itm_back_*` via `grantUniqueToBag` (ledger when signed in). Bag RMB Equip → `equipment.back` + `equip:back:*` + ledger slot **Back** — not a 5th kept 2×2 slot.

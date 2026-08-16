@@ -19,7 +19,7 @@ import {
   newCharacterBag,
   newItemInstance,
 } from "./types";
-import { isLedgerUniqueItem } from "./catalog";
+import { getItemTemplate, isLedgerUniqueItem } from "./catalog";
 import {
   ensureBagSize,
   ensureKeptLoadout,
@@ -306,6 +306,99 @@ export async function equipFromBagWithLedger(opts: {
     }
   }
   return { bag: res.bag, ok: true, ledgered };
+}
+
+/**
+ * Equip bag → body Back (mesh_ids + appearance.equipment.back).
+ * Does **not** use kept 2×2 — Back is a paperdoll body slot.
+ * Instance stays in the 3×3 bag as ownership.
+ */
+export async function equipBackFromBagWithLedger(opts: {
+  characterId: string;
+  bagIndex: number;
+  accountId?: string | null;
+  meshIds?: string[];
+}): Promise<{
+  bag: CharacterBagState;
+  ok: boolean;
+  reason?: string;
+  ledgered: boolean;
+  templateId?: string;
+  item?: ItemInstance | null;
+}> {
+  let bag = loadCharacterBag(opts.characterId);
+  const carry = bag.slots[opts.bagIndex]?.item;
+  if (!carry) {
+    return { bag, ok: false, reason: "Empty bag slot", ledgered: false };
+  }
+  const tpl = getItemTemplate(carry.templateId);
+  const isBack =
+    tpl.kind === "back" ||
+    tpl.equipSlot === "back" ||
+    carry.templateId.startsWith("itm_back_") ||
+    carry.templateId.startsWith("bck_");
+  if (!isBack) {
+    return { bag, ok: false, reason: "Not a back item", ledgered: false };
+  }
+
+  if (
+    readFleetToken() &&
+    isLedgerUniqueItem(carry.templateId) &&
+    (carry.provisional || !carry.grudgeUuid)
+  ) {
+    const minted = await mintUniqueItemInstance({
+      templateId: carry.templateId,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      sourceType: "open_equip_remint",
+      sourceRef: "back",
+    });
+    if (!minted) {
+      return {
+        bag,
+        ok: false,
+        reason: "Cannot equip: ledger mint failed (provisional gear)",
+        ledgered: false,
+      };
+    }
+    bag.slots[opts.bagIndex] = { index: opts.bagIndex, item: minted };
+    saveCharacterBag(bag);
+  }
+
+  const equipped = bag.slots[opts.bagIndex]?.item;
+  if (!equipped) {
+    return { bag, ok: false, reason: "Empty bag slot", ledgered: false };
+  }
+
+  let ledgered = false;
+  if (equipped.grudgeUuid) {
+    ledgered = await ledgerEquipChange({
+      item: equipped,
+      characterId: opts.characterId,
+      accountId: opts.accountId,
+      bodySlot: "back",
+      equip: true,
+    });
+  }
+
+  if (opts.characterId && !opts.characterId.startsWith("local")) {
+    void import("./characterAppearance").then(({ saveCharacterSlotAppearance }) =>
+      saveCharacterSlotAppearance({
+        characterId: opts.characterId,
+        bag,
+        back: equipped,
+        meshIds: opts.meshIds,
+      }),
+    );
+  }
+
+  return {
+    bag,
+    ok: true,
+    ledgered,
+    templateId: equipped.templateId,
+    item: equipped,
+  };
 }
 
 /** Unequip kept → bag + UNEQUIPPED ledger. */
