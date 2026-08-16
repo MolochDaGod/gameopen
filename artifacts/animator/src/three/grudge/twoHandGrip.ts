@@ -1,15 +1,12 @@
 /**
- * Two-hand grip assist for spear / 2H weapons on grudge6 kits.
+ * Two-hand grip assist for spear / 2H / bow / staff on grudge6 kits.
  *
- * Polearm / Madarame anims already drive both arms via Bip001 rotation tracks.
- * This helper is a light **post-mixer** correction so the off-hand stays near the
- * weapon shaft when the arsenal mesh is parented only to the main hand socket
- * (common for Open arsenal attach).
- *
- * Not full CCD IK — a damped look-at blend of the left forearm toward a grip
- * point on the weapon. Safe no-op when bones/weapon missing.
+ * Post-mixer two-bone arm IK ({@link solveArmToTarget} / same math as foot IK).
+ * Weapon stays on R_hand_container; IK solves Bip001 hand bones only.
+ * Safe no-op when the arm chain or grip target is missing.
  */
 import * as THREE from "three";
+import { armPoleHint, findArmChain, solveArmToTarget, type ArmChain } from "../anim/armIk";
 import { findHandBone } from "./skeleton";
 
 export type TwoHandGripOpts = {
@@ -22,11 +19,7 @@ export type TwoHandGripOpts = {
 };
 
 const _gripWorld = new THREE.Vector3();
-const _handWorld = new THREE.Vector3();
-const _dir = new THREE.Vector3();
-const _q = new THREE.Quaternion();
-const _q2 = new THREE.Quaternion();
-const _up = new THREE.Vector3(0, 1, 0);
+const _pole = new THREE.Vector3();
 
 export class TwoHandGrip {
   enabled = true;
@@ -35,15 +28,15 @@ export class TwoHandGrip {
   onlyWhileAttacking = false;
 
   private model: THREE.Object3D | null = null;
-  private leftHand: THREE.Object3D | null = null;
-  private leftForearm: THREE.Object3D | null = null;
+  private leftArm: ArmChain | null = null;
+  private rightHand: THREE.Object3D | null = null;
   private weapon: THREE.Object3D | null = null;
   private attacking = false;
 
   bind(model: THREE.Object3D, weapon?: THREE.Object3D | null): void {
     this.model = model;
-    this.leftHand = findHandBone(model, "L");
-    this.leftForearm = this.findForearm(model, "L");
+    this.leftArm = findArmChain(model, "L");
+    this.rightHand = findHandBone(model, "R");
     this.weapon = weapon ?? null;
   }
 
@@ -55,60 +48,33 @@ export class TwoHandGrip {
     this.attacking = on;
   }
 
-  private findForearm(root: THREE.Object3D, side: "L" | "R"): THREE.Object3D | null {
-    let found: THREE.Object3D | null = null;
-    const re =
-      side === "L"
-        ? /bip001.*l.*forearm|leftforearm|left_forearm/i
-        : /bip001.*r.*forearm|rightforearm|right_forearm/i;
-    root.traverse((n) => {
-      if (found) return;
-      if ((n as THREE.Bone).isBone && re.test(n.name)) found = n;
-    });
-    return found;
-  }
-
   /**
-   * Call after mixer.update each frame. Blends left hand toward a point on the
-   * weapon so 2H / spear shafts read as gripped.
+   * Call after mixer.update each frame. Two-bone IK pulls the left hand to a
+   * shaft point on the weapon (or 0.35 m along the right-hand bone if no mesh).
    */
   apply(dt: number, opts?: TwoHandGripOpts): void {
-    if (!this.enabled || !this.leftHand) return;
+    if (!this.enabled || !this.leftArm || !this.model) return;
     if (opts?.onlyWhileAttacking ?? this.onlyWhileAttacking) {
       if (!this.attacking) return;
     }
-    const weapon = this.weapon;
-    if (!weapon) return;
-
     const strength = opts?.strength ?? this.strength;
     if (strength <= 0.01) return;
     const along = opts?.gripAlong ?? this.gripAlong;
 
-    weapon.updateWorldMatrix(true, false);
-    // Grip point: weapon origin + along local Y (common shaft axis for arsenal GLBs)
-    _gripWorld.set(0, along, 0).applyMatrix4(weapon.matrixWorld);
-    this.leftHand.updateWorldMatrix(true, false);
-    this.leftHand.getWorldPosition(_handWorld);
-
-    _dir.subVectors(_gripWorld, _handWorld);
-    if (_dir.lengthSq() < 1e-8) return;
-    _dir.normalize();
-
-    // Desired hand orientation: +Y toward grip direction (approx)
-    _q.setFromUnitVectors(_up, _dir);
-    // Convert desired world rot into parent-local if we have a forearm parent
-    const target = this.leftForearm || this.leftHand;
-    const parent = target.parent;
-    if (parent) {
-      parent.updateWorldMatrix(true, false);
-      parent.getWorldQuaternion(_q2);
-      _q2.invert();
-      _q.premultiply(_q2);
+    const weapon = this.weapon;
+    if (weapon) {
+      weapon.updateWorldMatrix(true, false);
+      _gripWorld.set(0, along, 0).applyMatrix4(weapon.matrixWorld);
+    } else if (this.rightHand) {
+      this.rightHand.updateWorldMatrix(true, false);
+      _gripWorld.set(0, along, 0).applyMatrix4(this.rightHand.matrixWorld);
+    } else {
+      return;
     }
 
-    // Damped slerp so idle locomotion isn't yanked
-    const t = 1 - Math.exp(-10 * Math.max(0.001, dt));
-    target.quaternion.slerp(_q, strength * t);
+    armPoleHint(this.model, _pole);
+    solveArmToTarget(this.leftArm, _gripWorld, _pole);
+    void dt;
   }
 }
 
@@ -122,6 +88,10 @@ export function wantsTwoHandGrip(weaponId: string | null | undefined): boolean {
     w === "hammer2h" ||
     w === "halberd" ||
     w === "lance" ||
-    w === "javelin"
+    w === "javelin" ||
+    w === "bow" ||
+    w === "longbow" ||
+    w === "staff" ||
+    w.startsWith("staff")
   );
 }

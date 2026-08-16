@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "updated": "2026-08-11",
+  "skeleton": "Bip001",
+  "sources": {
+    "attack-combo-01": {
+      "file": "anim/combo/melee-combo-1.glb",
+      "sketchfab": "https://sketchfab.com/3d-models/attackcombo01-578057e0f49e448eaf0a9758676ecf59",
+      "note": "quick Attack Combo (Kassimkot)"
+    },
+    "attack-combo-02": {
+      "file": "anim/combo/melee-combo-2.glb",
+      "sketchfab": "https://sketchfab.com/3d-models/attack-combo-2-66bbad5ffe1940c088451a2e56c288a1",
+      "note": "strong Attack Combo 2 (Kassimkot)"
+    }
+  },
+  "policy": {
+    "rotationOnly": true,
+    "hipYxz": "controller",
+    "primaryAttack": "attack / attack1 ← attack-combo-01 trimmed 1s",
+    "strongAttack": "attack2 / skill ← attack-combo-02 full"
+  },
+  "roles": [
+    {
+      "role": "attack-combo-01",
+      "ok": true,
+      "source": "melee-combo-1.glb",
+      "sourceClip": "Attack Combo",
+      "duration": 6.916666507720947,
+      "tracks": 22,
+      "trimStart": 0
+    },
+    {
+      "role": "attack-combo-01-trimmed",
+      "ok": true,
+      "source": "melee-combo-1.glb",
+      "sourceClip": "Attack Combo",
+      "duration": 5.916666507720947,
+      "tracks": 22,
+      "trimStart": 1
+    },
+    {
+      "role": "attack",
+      "ok": true,
+      "source": "melee-combo-1.glb",
+      "sourceClip": "Attack Combo",
+      "duration": 5.916666507720947,
+      "tracks": 22,
+      "trimStart": 1
+    },
+    {
+      "role": "attack1",
+      "ok": true,
+      "source": "melee-combo-1.glb",
+      "sourceClip": "Attack Combo",
+      "duration": 5.916666507720947,
+      "tracks": 22,
+      "trimStart": 1
+    },
+    {
+      "role": "attack-combo-02",
+      "ok": true,
+      "source": "melee-combo-2.glb",
+      "sourceClip": "Take 001",
+      "duration": 12.083333015441895,
+      "tracks": 22,
+      "trimStart": 0
+    },
+    {
+      "role": "attack2",
+      "ok": true,
+      "source": "melee-combo-2.glb",
+      "sourceClip": "Take 001",
+      "duration": 12.083333015441895,
+      "tracks": 22,
+      "trimStart": 0
+    },
+    {
+      "role": "skill",
+      "ok": true,
+      "source": "melee-combo-2.glb",
+      "sourceClip": "Take 001",
+      "duration": 12.083333015441895,
+      "tracks": 22,
+      "trimStart": 0
+    }
+  ],
+  "missing": []
+}

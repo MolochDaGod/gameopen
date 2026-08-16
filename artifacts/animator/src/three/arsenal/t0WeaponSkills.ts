@@ -26,7 +26,7 @@ import {
   mmToMeters as mmToM,
 } from "../math/worldMath";
 import { DEFENSE_WINDOWS } from "../math/defenseMath";
-import { skillPackForWeaponId } from "../grudge/weaponSkillPacks";
+import { familyFromWeaponId, skillPackForWeaponId } from "../grudge/weaponSkillPacks";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -338,6 +338,32 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
         iconUrl: resolveSlotIconUrl(role, weaponId as WeaponId),
       };
     });
+  }
+  // Sword / gun / bow / mace: SkillPack rows = live baked clips + labels.
+  {
+    const family = familyFromWeaponId(String(weaponId));
+    if (family === "sword" || family === "gun" || family === "longbow" || family === "mace") {
+      const pack = skillPackForWeaponId(String(weaponId));
+      if (pack.length) {
+        return pack.map((s, i) => {
+          const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+          return {
+            label: s.label,
+            clip: s.bakedRole || s.animRole || "attack",
+            kind: fleetKindFromPack(s.effectKind, s.projectile),
+            mode: s.useDash ? ("dash" as const) : ("default" as const),
+            mm: family === "sword" || family === "mace" ? 70 + i * 8 : -70 - i * 8,
+            cooldown: s.cooldown > 0 ? s.cooldown : 1.2,
+            damage: s.damage,
+            reach: s.reach,
+            castEffectId: s.castEffectId,
+            impactEffectId: s.impactEffectId,
+            skillId: s.animKey,
+            iconUrl: resolveSlotIconUrl(role, weaponId as WeaponId),
+          };
+        });
+      }
+    }
   }
   // Heavy 2H: Madarame + annihilate GS (variable MM / intensity)
   if (isHeavy2hWeapon(weaponId)) {

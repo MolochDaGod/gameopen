@@ -27,8 +27,13 @@ export type FleetAnimSurface =
 export const FLEET_ANIM_HOSTS = {
   /** Mesh / texture CDN */
   assets: "https://assets.grudge-studio.com",
-  /** Baked Bip001 JSON + prod anim packages */
+  /**
+   * Dead play path — `prod/anims/*.json|glb` 404s on assets + Open.
+   * Play clips are Bip001 JSON under `/anims/baked` only.
+   */
   prodAnims: "https://assets.grudge-studio.com/prod/anims",
+  /** Canonical Open baked Bip001 JSON */
+  openBaked: "https://open.grudge-studio.com/anims/baked",
   /** Canonical same-origin baked path on Open */
   bakedPrefix: "/anims/baked",
   /** Explorer Mixamo authoring / runtime FBX tree */
@@ -181,7 +186,7 @@ export function grudge6RaceMeshCandidates(
   ];
 }
 
-/** Baked clip relative path → production URL candidates (JSON preferred). */
+/** Baked clip relative path → production URL candidates (JSON only). */
 export function bip001BakedUrlCandidates(bakeRel: string): string[] {
   const clean = String(bakeRel || "")
     .trim()
@@ -189,17 +194,7 @@ export function bip001BakedUrlCandidates(bakeRel: string): string[] {
     .replace(/\.json$/i, "")
     .replace(/\.glb$/i, "");
   const bakedJson = `anims/baked/${clean}.json`;
-  const parts = clean.split("/").filter(Boolean);
-  const pack = parts[0] || "";
-  const stem = parts.slice(1).join("/") || pack;
-  const slug = stem.replace(/\s+/g, "-");
-  const urls: string[] = [`/${bakedJson}`, `${FLEET_ANIM_HOSTS.assets}/${bakedJson}`];
-  if (pack && stem) {
-    urls.push(`${FLEET_ANIM_HOSTS.prodAnims}/${pack}/${slug}.json`);
-    urls.push(`${FLEET_ANIM_HOSTS.prodAnims}/${pack}/${slug}.glb`);
-    urls.push(`/prod/anims/${pack}/${slug}.json`);
-  }
-  return [...new Set(urls)];
+  return [...new Set([`/${bakedJson}`, `${FLEET_ANIM_HOSTS.openBaked}/${clean}.json`])];
 }
 
 /** Explorer Mixamo clip id → URL under /anim/animations. */
@@ -296,7 +291,7 @@ export function fleetAnimContractSummary(): string {
     "FLEET ANIM SSOT",
     "lanes: bip001-baked | mixamo-explorer (never mix)",
     `meshes: ${FLEET_ANIM_HOSTS.grudge6Races}/{PREFIX}_Characters.glb`,
-    `clips:  ${FLEET_ANIM_HOSTS.bakedPrefix}/{pack}/…json → prod/anims`,
+    `clips:  ${FLEET_ANIM_HOSTS.bakedPrefix}/{pack}/…json (Open baked JSON; never prod/anims GLB)`,
     "explorer: /anim/animations/… Mixamo only",
     "loader: sharedGltfLoader only for fleet GLB",
     "danger binary: open.grudge-studio.com/danger",

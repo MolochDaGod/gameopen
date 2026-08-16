@@ -26,6 +26,7 @@ export type WeaponFamily =
   | "spear"       // Spear / lance
   | "magic"       // Staff / tome — ranged spells
   | "longbow"     // Bow — ranged physical
+  | "gun"         // Pistol / rifle / shotgun — live /anims/baked clips
   | "unarmed"     // Kick / striker
   | "chain";      // Hellfire chain — ranged-melee extending projectile
 
@@ -59,7 +60,7 @@ export interface SkillPack {
   /** Human-readable label. */
   label: string;
   /**
-   * Baked clip path (relative to public/) — prefer anims/baked or prod/anims.
+   * Baked clip path (relative to public/) — /anims/baked JSON only.
    * Mixamo FBX is authoring only (not on Vercel).
    */
   clipPath: string;
@@ -114,8 +115,8 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_slash",
     slot: 1,
     label: "Slash",
-    // Production: samurai 1H SSOT (thin arena sword_shield attack purged)
-    clipPath: "anims/baked/greatsword_samurai/gs_samurai_combo_a.json",
+    // Production: Sketchfab AttackCombo01 (trimmed wind-up) on Open baked
+    clipPath: "anims/baked/sword_shield/attack-combo-01-trimmed.json",
     animRole: "attack",
     bakedRole: "attack",
     reach: 1.8, damage: 18, lungeSpeed: 3.5, lungeDuration: 0.22,
@@ -125,7 +126,7 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_two_hit",
     slot: 2,
     label: "Twin Slash",
-    clipPath: "anims/baked/greatsword_samurai/gs_samurai_combo_b.json",
+    clipPath: "anims/baked/sword_shield/attack-combo-02.json",
     animRole: "attack2",
     bakedRole: "attack2",
     reach: 1.9, damage: 26, lungeSpeed: 4.0, lungeDuration: 0.28,
@@ -135,7 +136,7 @@ export const SWORD_SKILLS: readonly SkillPack[] = [
     animKey: "sword_spin_high",
     slot: 3,
     label: "Spin High",
-    clipPath: "anims/baked/greatsword_samurai/gs_samurai_dash_opener.json",
+    clipPath: "anims/baked/dual_wield/sword_dash_attack.json",
     animRole: "skill2",
     bakedRole: "skill2",
     reach: 2.4, damage: 34, lungeSpeed: 2.0, lungeDuration: 0.45,
@@ -457,6 +458,57 @@ export const LONGBOW_SKILLS: readonly SkillPack[] = [
   },
 ] as const;
 
+// ── Gun pack (live Open /anims/baked pistol + rifle) ────────────────────────
+export const GUN_SKILLS: readonly SkillPack[] = [
+  {
+    animKey: "gun_shot",
+    slot: 1,
+    label: "Quick Draw",
+    clipPath: "anims/baked/pistol/gunplay.json",
+    animRole: "attack",
+    bakedRole: "attack",
+    reach: 18.0, damage: 22, lungeSpeed: 0, lungeDuration: 0,
+    vfxColor: 0xffd080, cooldown: 0,
+    effectKind: "impact",
+    projectile: "bolt",
+  },
+  {
+    animKey: "gun_charged",
+    slot: 2,
+    label: "Charged Shot",
+    clipPath: "anims/baked/pistol/charged-pistol.json",
+    animRole: "skill1",
+    bakedRole: "skill1",
+    reach: 24.0, damage: 36, lungeSpeed: 0, lungeDuration: 0,
+    vfxColor: 0xffa040, cooldown: 2.8,
+    effectKind: "impact",
+    projectile: "bolt",
+  },
+  {
+    animKey: "gun_whip",
+    slot: 3,
+    label: "Pistol Whip",
+    clipPath: "anims/baked/pistol/pistol-whip.json",
+    animRole: "skill2",
+    bakedRole: "skill2",
+    reach: 1.8, damage: 24, lungeSpeed: 3.5, lungeDuration: 0.2,
+    vfxColor: 0xc8a070, cooldown: 4.0,
+    effectKind: "slam",
+  },
+  {
+    animKey: "gun_burst",
+    slot: 4,
+    label: "Rifle Burst",
+    clipPath: "anims/baked/rifle/firing-rifle.json",
+    animRole: "skill3",
+    bakedRole: "skill3",
+    reach: 28.0, damage: 48, lungeSpeed: 0, lungeDuration: 0,
+    vfxColor: 0xffe0a0, cooldown: 8.0,
+    effectKind: "impact",
+    projectile: "bolt",
+  },
+] as const;
+
 // ── Striker / unarmed pack ───────────────────────────────────────────────────
 export const STRIKER_SKILLS: readonly SkillPack[] = [
   {
@@ -504,6 +556,7 @@ export function skillPackForFamily(family: WeaponFamily): readonly SkillPack[] {
     case "spear":     return SPEAR_SKILLS;
     case "magic":     return MAGIC_SKILLS;
     case "longbow":   return LONGBOW_SKILLS;
+    case "gun":       return GUN_SKILLS;
     case "unarmed":   return STRIKER_SKILLS;
     default:          return SWORD_SKILLS;
   }
@@ -541,7 +594,8 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
       return "longbow"; // same ranged family until dedicated family ships
     case "rifle":
     case "gun":
-      return "longbow"; // ranged VFX path; T0 skills still use rifle kit by weaponId
+    case "pistol":
+      return "gun";
     case "sword_shield":
       return "sword";
     case "polearm":
@@ -552,8 +606,6 @@ export function familyFromAnimPack(animPack: string): WeaponFamily {
       return "magic";
     case "unarmed":
       return "unarmed";
-    case "pistol":
-      return "longbow"; // ranged VFX; clips from pistol pack via animPack
     default:
       return "sword";
   }
@@ -586,6 +638,16 @@ export function familyFromWeaponId(weaponId: string | null | undefined): WeaponF
   if (w === "axe") return "axe";
   if (w.startsWith("staff") || w === "wand") return "magic";
   if (w === "bow" || w === "longbow" || w === "crossbow") return "longbow";
+  if (
+    w === "pistol" ||
+    w === "rifle" ||
+    w === "shotgun" ||
+    w === "hunter-rifle" ||
+    w === "flintlock" ||
+    w.includes("gun")
+  ) {
+    return "gun";
+  }
   if (w === "none" || w === "unarmed" || w === "fist") return "unarmed";
   return "sword";
 }

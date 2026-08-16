@@ -33,10 +33,12 @@ describe("fleetAnimSsot", () => {
     expect(c[0]).toContain("assets.grudge-studio.com");
   });
 
-  it("baked urls prefer anims/baked then prod", () => {
+  it("baked urls are JSON under /anims/baked only (no prod/anims GLB)", () => {
     const c = bip001BakedUrlCandidates("sword_shield/idle");
     expect(c.some((u) => u.includes("/anims/baked/sword_shield/idle.json"))).toBe(true);
-    expect(c.some((u) => u.includes("prod/anims"))).toBe(true);
+    expect(c.some((u) => u.includes("open.grudge-studio.com/anims/baked"))).toBe(true);
+    expect(c.some((u) => u.includes("prod/anims"))).toBe(false);
+    expect(c.every((u) => u.endsWith(".json"))).toBe(true);
   });
 
   it("weapon pack map", () => {
