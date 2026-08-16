@@ -4,6 +4,7 @@ import {
   AI_WIRING,
   CAMPFIRE_SURFACES,
   CAMPFIRE_TVS,
+  campfireTvsTextureUrl,
   campfireTvsUrls,
   ENCAMPMENT_BACKDROP,
   encampmentBackdropUrls,
@@ -65,6 +66,16 @@ describe("productionSystemsPattern", () => {
     expect(urls[0]).toContain(PROD_HOSTS.assetsCdn);
     expect(urls[0]).toContain("campfire-lobby/tvs/campfire.glb");
     expect(CAMPFIRE_TVS.smokeCritical.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("maps palette farm props to live TVS Voxel Farm textures", () => {
+    expect(campfireTvsTextureUrl("haybale.glb")).toBe(
+      `${PROD_HOSTS.assetsCdn}/models/voxels/tvs/voxel-farm/textures/voxel-farm-haybale-texture.png`,
+    );
+    expect(campfireTvsTextureUrl("fencepost.glb")).toContain("voxel-farm-fence-post-texture.png");
+    expect(campfireTvsTextureUrl("appletree.glb")).toContain("voxel-farm-apple-tree-texture.png");
+    expect(campfireTvsTextureUrl("campfire.glb")).toBeNull();
+    expect(campfireTvsTextureUrl("chair.glb")).toBeNull();
   });
 
   it("Encament backdrop is CDN-first and play starts at Encament", () => {
