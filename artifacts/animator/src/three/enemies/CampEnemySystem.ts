@@ -60,7 +60,7 @@ export class CampEnemySystem {
   }
 
   /**
-   * Seed overworld / cave dungeon — voodooist hostiles (session voxel enemy).
+   * Seed overworld / cave dungeon — session hostiles (voodooist + redesigned zombie).
    * campId: seed_voodoo | seed_voodoo_dungeon
    */
   async spawnSeedHostiles(
@@ -77,7 +77,7 @@ export class CampEnemySystem {
       const ok = await this.spawnOne(s.unit, s.x, center.y, s.z);
       if (ok) n++;
     }
-    if (n) this.cbs.flash?.(`SEED HOSTILES · ${n} voodooist`, 1.2);
+    if (n) this.cbs.flash?.(`SEED HOSTILES · ${n}`, 1.2);
     return n;
   }
 

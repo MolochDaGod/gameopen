@@ -101,6 +101,25 @@
       "tags": ["voxel", "magic", "hex", "seed", "session"],
       "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
     },
+    "zombie_redesigned": {
+      "id": "zombie_redesigned",
+      "name": "Redesigned Zombie",
+      "role": "camp_melee",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/zombie_redesigned.glb"
+      ],
+      "heightM": 1.8,
+      "hp": 90,
+      "damage": 14,
+      "speed": 1.8,
+      "atkReach": 1.6,
+      "aggroRange": 14,
+      "xp": 45,
+      "defaultStrategy": "swarm-horde",
+      "tags": ["voxel", "melee", "undead", "seed", "session"],
+      "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
     "violet_4_hn_creature": {
       "id": "violet_4_hn_creature",
       "name": "Violet HN Creature",
@@ -133,6 +152,7 @@
         { "unitId": "lowpoly_rhino", "count": 1, "radius": 10 },
         { "unitId": "mage_demon", "count": 1, "radius": 7 },
         { "unitId": "voodooist", "count": 2, "radius": 12 },
+        { "unitId": "zombie_redesigned", "count": 3, "radius": 11 },
         { "unitId": "blocker_broker", "count": 1, "radius": 6 }
       ]
     }

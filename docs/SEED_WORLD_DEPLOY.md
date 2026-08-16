@@ -109,7 +109,9 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
 5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.  
 6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → R2 `models/voxel/maps/wolf_street.glb`, HEAD 200 `glTF` 92 270 532). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).  
-7. **Seed enemy** — voxel **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, HEAD 200 `glTF` 47 756, SI 1.8 m). Same session-pack pattern as mage_demon. D1 `asset_registry` + catalog `content/enemies/session-mobs.json` on R2. Stamped on seed scenes (`placeSeedHostilesFromSeed`) and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`).
+7. **Seed enemies** — session pack, stamped by `placeSeedHostilesFromSeed` and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`):
+   - **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, SI 1.8 m).
+   - **Redesigned Zombie** (`D:\Games\Models\zombie_redesigned.glb` → R2 `models/enemies/session/zombie_redesigned.glb`, native Z ≈ 1.82 m). Per-part idle/walk/run/attack/death clips; CampEnemySystem is still slide-only. Not `forest_zombie` (that mesh is `voxel-zombie-1.glb`).
 
 ### Shader.lab `#voxel` cave dungeon
 

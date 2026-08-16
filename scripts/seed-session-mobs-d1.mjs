@@ -51,6 +51,7 @@ const ENTRIES = [
   { file: "lowpoly_rhino.glb", name: "lowpoly_rhino", height: 1.65, tags: ["enemy", "voxel", "beast", "session"] },
   { file: "violet_4_hn_creature.glb", name: "violet_4_hn_creature", height: 1.8, tags: ["enemy", "voxel", "creature", "session"] },
   { file: "voodooist.glb", name: "voodooist", height: 1.8, tags: ["enemy", "voxel", "magic", "hex", "seed", "session"] },
+  { file: "zombie_redesigned.glb", name: "zombie_redesigned", height: 1.8, tags: ["enemy", "voxel", "melee", "undead", "seed", "session"] },
 ];
 
 const now = Date.now();

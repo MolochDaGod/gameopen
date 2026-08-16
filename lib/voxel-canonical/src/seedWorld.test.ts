@@ -15,6 +15,7 @@ import {
   placePortalsFromSeed,
   placeSeedHostilesFromSeed,
   SEED_VOODOOIST_UNIT,
+  SEED_ZOMBIE_REDESIGNED_UNIT,
   portalsToTriggers,
 } from "./seedWorld";
 
@@ -71,17 +72,20 @@ describe("seedWorld", () => {
     expect(markers[0]!.kind).toBe("portal");
   });
 
-  it("places the same voodooist hostiles for the same seed", () => {
+  it("places the same voodooist and redesigned-zombie hostiles for the same seed", () => {
     const a = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
     const b = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
     expect(a).toEqual(b);
-    expect(a.length).toBe(3);
-    expect(a[0]!.unitId ?? a[0]!.model).toBeTruthy();
+    expect(a.length).toBe(6);
+    expect(a.filter((n) => n.unitId === SEED_VOODOOIST_UNIT)).toHaveLength(3);
+    expect(a.filter((n) => n.unitId === SEED_ZOMBIE_REDESIGNED_UNIT)).toHaveLength(3);
     expect(String(a[0]!.model)).toContain(SEED_VOODOOIST_UNIT);
+    expect(a.some((n) => String(n.model).includes(SEED_ZOMBIE_REDESIGNED_UNIT))).toBe(true);
     const scene = deploymentToScene(
       buildSeedDeployment({ id: "h", name: "h", seed: "explorer-town" }),
     );
     expect(scene.npcs.some((n) => String(n.model).includes("voodooist"))).toBe(true);
+    expect(scene.npcs.some((n) => String(n.model).includes("zombie_redesigned"))).toBe(true);
   });
 
   it("reviews premade maps and marks Animal Company lobby as spawn hub", () => {

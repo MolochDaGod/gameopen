@@ -389,6 +389,20 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       buffOnKill: "blue_haste",
       tags: ["voxel", "magic", "hex", "seed", "session"],
     },
+    {
+      id: "zombie_redesigned",
+      name: "Redesigned Zombie",
+      role: "camp_melee",
+      meshKeys: ["models/enemies/session/zombie_redesigned.glb"],
+      heightM: 1.8,
+      hp: 90,
+      damage: 14,
+      speed: 1.8,
+      atkReach: 1.6,
+      xp: 45,
+      buffOnKill: "red_rage",
+      tags: ["voxel", "melee", "undead", "seed", "session"],
+    },
   ],
   buffs: {
     blue_haste: {
@@ -431,6 +445,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "hollow_knight_vengefly", count: 3, radius: 11 },
         { unitId: "violet_4_hn_creature", count: 1, radius: 9 },
         { unitId: "voodooist", count: 1, radius: 14 },
+        { unitId: "zombie_redesigned", count: 2, radius: 10 },
       ],
     },
     session_voxel_pack: {
@@ -444,22 +459,29 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "lowpoly_rhino", count: 1, radius: 10 },
         { unitId: "mage_demon", count: 1, radius: 7 },
         { unitId: "voodooist", count: 2, radius: 12 },
+        { unitId: "zombie_redesigned", count: 3, radius: 11 },
         { unitId: "blocker_broker", count: 1, radius: 6 },
       ],
     },
     seed_voodoo: {
-      label: "Seed overworld voodooists",
+      label: "Seed overworld voodooists + redesigned zombies",
       use: ["voxel", "seed"],
       buffOnClear: "blue_haste",
       xpBonus: 40,
-      spawns: [{ unitId: "voodooist", count: 3, radius: 22 }],
+      spawns: [
+        { unitId: "voodooist", count: 3, radius: 22 },
+        { unitId: "zombie_redesigned", count: 3, radius: 18 },
+      ],
     },
     seed_voodoo_dungeon: {
-      label: "Seed cave / dungeon voodooists",
+      label: "Seed cave / dungeon voodooists + redesigned zombies",
       use: ["voxel", "seed", "dungeon"],
       buffOnClear: "blue_haste",
       xpBonus: 30,
-      spawns: [{ unitId: "voodooist", count: 2, radius: 7 }],
+      spawns: [
+        { unitId: "voodooist", count: 2, radius: 7 },
+        { unitId: "zombie_redesigned", count: 2, radius: 6 },
+      ],
     },
     island_orc_tribe: {
       label: "Island orc tribe (red mushroom)",
