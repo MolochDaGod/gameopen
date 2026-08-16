@@ -101,6 +101,12 @@ Do **not** invent a second map table. These are the existing catalogs.
 
 Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 
+### Starter harvest (sticks & stones)
+
+On Encament / Starting Lobby Town, `tagStartSceneHarvest` classifies town + seed meshes (names + `classifyForestMeshGeometry`). Small debris → **stick** / **stone** (hand gather). Tall trees → wood (axe). Large slabs → terrain (not harvest). If the GLB has no debris, 8 sticks + 6 stones scatter outside the hub.
+
+**Q harvest** · LMB select · RMB walk+pick. Yields `mat_stick` / `mat_stone` into the character bag. Hand-craft **Campfire** (`rcp_starter_campfire`: 4 sticks + 3 stones) — first fire, no workbench.
+
 ### Explorer start + Minecraft seed
 
 1. Explorer / harvest / DRC launch (no `mapId`) → deployment `mapchunk-animal-company-lobby`.  
