@@ -71,7 +71,8 @@ import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
 import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { ExplorerCharacterPage } from "./components/characterPage";
-import { isVoxelCharacter } from "./lib/characterPortrait";
+import { isWarlordsToonPlayCharacter } from "./lib/characterPortrait";
+
 import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
@@ -131,7 +132,7 @@ import {
   type GenesisHeroOption,
 } from "./lib/grudoxRoster";
 import { normalizeToGrudgeAvatarId, resolveRaceId, resolveRaceModel } from "./lib/raceModel";
-import { applyBackTemplateToMeshIds } from "./three/grudge";
+import { applyBackTemplateToMeshIds, RACE_ASSETS } from "./three/grudge";
 import { backEquipTagFromAnyId, backItemIdFromEquip } from "./three/equipment/backSlotItems";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
@@ -691,6 +692,8 @@ export default function App() {
 
   const persistPaperdollMeshes = useCallback(
     (ids: string[]) => {
+      const ch = gameSession.selectedCharacter();
+      if (ch && !isWarlordsToonPlayCharacter(ch)) return;
       setEquipMeshIds(ids);
       studioRef.current?.setEquipmentMeshIds(ids);
       const bag = loadCharacterBag(activeCharacterId);
@@ -732,7 +735,15 @@ export default function App() {
 
   const handleEquipBack = useCallback(
     async (bagIndex: number, item: ItemInstance) => {
-      const race = resolveRaceId(gameSession.selectedCharacter()?.raceId);
+      const ch = gameSession.selectedCharacter();
+      if (ch && !isWarlordsToonPlayCharacter(ch)) {
+        studioRef.current?.flashMessage?.(
+          "Back equips on Warlords Toon RTS kit only",
+          1.8,
+        );
+        return;
+      }
+      const race = resolveRaceId(ch?.raceId);
       const next = applyBackTemplateToMeshIds(race, equipMeshIds, item.templateId);
       const res = await equipBackFromBagWithLedger({
         characterId: activeCharacterId,
@@ -886,18 +897,21 @@ export default function App() {
       void Promise.all([
         import("./lib/characterLoadout"),
         import("./lib/characterEquipmentMesh"),
-        import("./lib/characterPortrait"),
       ]).then(
         ([
           { loadoutFromCharacter },
           { resolveCharacterEquipmentVisual },
-          { isVoxelCharacter },
         ]) => {
           const loadout = loadoutFromCharacter(ch);
           // Explorer cube body ONLY for true voxel/Mine-Loader characters.
           // Stale saveData.open.avatarId:"explorer" from Avatar Edit must NOT
           // override grudge6 / RTS_TOON warlords heroes (mesh+atlas+Bip001 packs).
-          const preferExplorer = isVoxelCharacter(ch);
+          if (!isWarlordsToonPlayCharacter(ch)) {
+            // Voxel / other-era rows do not drive Open Danger Toon body or Back mesh_ids.
+            setIsVoxelHero(false);
+            return;
+          }
+          const preferExplorer = false;
           setIsVoxelHero(preferExplorer);
           const avatarId = preferExplorer
             ? "explorer"
@@ -1187,8 +1201,8 @@ export default function App() {
     void import("./lib/productionSystemsPattern").then(({ warmupProductionSurface }) => {
       void warmupProductionSurface("danger", {
         prefetchMeshes: [
-          "models/grudge6/races/WK_Characters.fbx",
-          "models/grudge6/races/ELF_Characters.fbx",
+          RACE_ASSETS["western-kingdoms"].modelUrl,
+          RACE_ASSETS["high-elves"].modelUrl,
         ],
       }).then((r) => {
         if (cancelled) return;

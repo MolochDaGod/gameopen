@@ -23,6 +23,7 @@ import { getPreset, type RaceId, type PresetId } from "../three/grudge";
 import { familyFromAnimPack, type WeaponFamily } from "../three/grudge/weaponSkillPacks";
 import type { AnimPack } from "../three/grudge/anims";
 import { resolveCharacterEquipmentVisualSync } from "./characterEquipmentMesh";
+import { isWarlordsToonPlayCharacter } from "./characterPortrait";
 
 export type PlayableSource = "url-hero" | "url-are" | "fleet-character" | "default";
 
@@ -225,8 +226,8 @@ export function resolveDangerPlayable(opts: {
     };
   }
 
-  // 3) Fleet selected character
-  if (opts.fleetCharacter) {
+  // 3) Fleet selected character — Warlords Toon RTS kit only (not voxel / other eras)
+  if (opts.fleetCharacter && isWarlordsToonPlayCharacter(opts.fleetCharacter)) {
     return playableFromFleetCharacter(opts.fleetCharacter);
   }
 

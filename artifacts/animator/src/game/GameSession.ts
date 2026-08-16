@@ -9,6 +9,7 @@ import type { FighterBias } from "../three/ai/FighterBrain";
 import type { GrudgeAccount, GrudgeCharacter } from "../lib/grudgeAuth";
 import { fetchCharacters, initFleetAuth } from "../lib/grudgeAuth";
 import { loadGrudoxCharacters } from "../lib/grudoxRoster";
+import { characterGameEra, isVoxelCharacter } from "../lib/characterPortrait";
 
 export type GameSessionSnapshot = {
   mode: GameModeDef;
@@ -55,6 +56,10 @@ function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
     if (!c?.id || seen.has(c.id)) continue;
     // Never treat procedural explorer ids as campfire heroes
     if (c.id === "explorer" || c.id.startsWith("unit-")) continue;
+    // Open play roster is Warlords Toon only — voxel seats stay on GRUDOX / Realms.
+    const era = characterGameEra(c);
+    if (era && era !== "warlords") continue;
+    if (isVoxelCharacter(c)) continue;
     seen.add(c.id);
     out.push(c);
   }
@@ -221,7 +226,9 @@ class GameSession {
         raceId: "western-kingdoms",
         classId: "warrior",
         level: 1,
-        config: { source: "open-guest-boot", catalogId: "race-western-kingdoms" },
+        gameEra: "warlords",
+        model3d: { renderPipeline: "rts_toon" },
+        config: { source: "open-guest-boot", catalogId: "race-western-kingdoms", gameEra: "warlords" },
       };
       this.upsertLocalCharacter(draft);
     }
@@ -237,7 +244,7 @@ class GameSession {
    * the Lobby character picker's reload action.
    */
   async refreshCharacters(): Promise<GrudgeCharacter[]> {
-    const characters = await fetchCharacters();
+    const characters = await fetchCharacters({ eras: ["warlords"] });
     this.characters = mergeRoster(characters);
     if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
       this.selectedCharacterId = this.characters[0]?.id ?? null;

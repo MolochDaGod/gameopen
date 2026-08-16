@@ -111,12 +111,43 @@ function strField(obj: Record<string, unknown>, keys: string[]): string | null {
   return null;
 }
 
+/** Railway `game_era` / `gameEra` on a character row (empty = Open default warlords). */
+export function characterGameEra(ch: GrudgeCharacter | null | undefined): string {
+  if (!ch) return "";
+  const cfg = (ch.config || {}) as Record<string, unknown>;
+  const save = (ch.saveData || {}) as Record<string, unknown>;
+  const raw =
+    ch.gameEra ||
+    (ch as { game_era?: string }).game_era ||
+    cfg.gameEra ||
+    cfg.era ||
+    save.gameEra ||
+    "";
+  return String(raw).toLowerCase().trim();
+}
+
+/**
+ * Open Danger / paperdoll / Back body: Warlords-era grudge6 Toon RTS kit only.
+ * Voxel / nexus / armada rows stay on their own hosts — never this mesh_ids path.
+ */
+export function isWarlordsToonPlayCharacter(
+  ch: GrudgeCharacter | null | undefined,
+): boolean {
+  if (!ch) return false;
+  const era = characterGameEra(ch);
+  if (era === "voxel" || era === "nexus" || era === "armada") return false;
+  if (isVoxelCharacter(ch)) return false;
+  return true;
+}
+
 /**
  * Detect voxel / cube-head / Explorer modular-head characters.
  * These must NOT show grudge6 race GLB portraits as if they were warlords meshes.
  */
 export function isVoxelCharacter(ch: GrudgeCharacter | null | undefined): boolean {
   if (!ch) return false;
+  const era = characterGameEra(ch);
+  if (era === "voxel") return true;
   const m3 = ch.model3d || (ch.config?.model3d as Record<string, unknown>) || {};
   const pipeline = String(
     (m3 as { renderPipeline?: string }).renderPipeline ||

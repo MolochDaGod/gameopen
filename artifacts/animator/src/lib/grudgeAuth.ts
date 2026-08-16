@@ -932,14 +932,14 @@ export async function initFleetAuth(): Promise<{
   // Always try characters when we have any token (guest or full).
   let characters: GrudgeCharacter[] = [];
   if (account || getStoredToken()) {
-    characters = await fetchCharacters();
+    characters = await fetchCharacters({ eras: ["warlords"] });
     // Token rejected mid-list → recover guest and retry once
     if (!characters.length && !getStoredToken() && !forceLogin) {
       account = (await ensureGuestSession()) || account;
-      if (getStoredToken()) characters = await fetchCharacters();
+      if (getStoredToken()) characters = await fetchCharacters({ eras: ["warlords"] });
     } else if (!characters.length && getStoredToken()) {
       account = (await fetchFleetAccount(true)) || account;
-      characters = await fetchCharacters();
+      characters = await fetchCharacters({ eras: ["warlords"] });
     }
     // Auto-create first Warlords hero so choose-survivor / rooms aren't empty.
     if (!characters.length && getStoredToken()) {
@@ -954,7 +954,7 @@ export async function initFleetAuth(): Promise<{
           gameEra: "warlords",
         });
         if (created.ok) {
-          characters = await fetchCharacters();
+          characters = await fetchCharacters({ eras: ["warlords"] });
           if (!characters.length) {
             characters = [
               {
