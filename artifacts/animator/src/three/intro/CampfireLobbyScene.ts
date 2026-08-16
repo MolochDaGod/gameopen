@@ -8,7 +8,11 @@
  *  - SI: human ~1.8 m
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createAnimatedCharacter } from "../explorer/loader";
 import type { Animator } from "../explorer/Animator";
 import type { CharacterLook } from "../explorer/types";
@@ -23,8 +27,11 @@ import {
 } from "../explorer/voxelAvatarSave";
 import {
   CAMPFIRE_TVS,
+  campfireTvsTextureUrl,
   campfireTvsUrls,
 } from "../../lib/productionSystemsPattern";
+import { bindKtx2, makeGltfLoader } from "../loaders/gltf";
+import { bindTextureAnisotropy, prepObjectMaterials } from "../texturePrep";
 
 export interface CampfireSlotView {
   index: number;
@@ -75,7 +82,7 @@ function tvsUrl(file: string): string[] {
 }
 
 async function loadGltfFirst(
-  loader: GLTFLoader,
+  loader: { loadAsync: (url: string) => Promise<{ scene: THREE.Group }> },
   urls: string[],
 ): Promise<THREE.Group | null> {
   for (const url of urls) {
@@ -89,8 +96,86 @@ async function loadGltfFirst(
   return null;
 }
 
+const tvsTexCache = new Map<string, Promise<THREE.Texture | null>>();
+
+function loadTvsPalette(url: string): Promise<THREE.Texture | null> {
+  const hit = tvsTexCache.get(url);
+  if (hit) return hit;
+  const pending = new Promise<THREE.Texture | null>((resolve) => {
+    new THREE.TextureLoader().load(
+      url,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = false;
+        tex.generateMipmaps = false;
+        tex.minFilter = THREE.NearestFilter;
+        tex.magFilter = THREE.NearestFilter;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.needsUpdate = true;
+        resolve(tex);
+      },
+      undefined,
+      () => resolve(null),
+    );
+  });
+  tvsTexCache.set(url, pending);
+  return pending;
+}
+
+/** TVS Voxel Farm palettes are 1-mesh atlas UVs — nearest, white multiply, low metal. */
+function bindTvsPalette(root: THREE.Object3D, tex: THREE.Texture): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      if (!m) continue;
+      const std = m as THREE.MeshStandardMaterial;
+      if (!std.map) {
+        std.map = tex;
+        if (std.color) std.color.setHex(0xffffff);
+      }
+      if ("metalness" in std) std.metalness = Math.min(std.metalness ?? 0, 0.08);
+      if ("roughness" in std) std.roughness = Math.max(std.roughness ?? 0.88, 0.78);
+      if ("flatShading" in std) std.flatShading = true;
+      std.needsUpdate = true;
+    }
+  });
+}
+
+function applyVoxelFilters(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      const std = m as THREE.MeshStandardMaterial | undefined;
+      if (!std?.map) continue;
+      const name = (std.name || "").toLowerCase();
+      if (!name.startsWith("palette")) continue;
+      std.map.colorSpace = THREE.SRGBColorSpace;
+      std.map.generateMipmaps = false;
+      std.map.minFilter = THREE.NearestFilter;
+      std.map.magFilter = THREE.NearestFilter;
+      std.map.needsUpdate = true;
+    }
+  });
+}
+
+async function finishTvsProp(root: THREE.Object3D, file: string): Promise<void> {
+  prepObjectMaterials(root, { neutralizeMetal: true });
+  const texUrl = campfireTvsTextureUrl(file);
+  if (texUrl) {
+    const tex = await loadTvsPalette(texUrl);
+    if (tex) bindTvsPalette(root, tex);
+  }
+  applyVoxelFilters(root);
+}
+
 export class CampfireLobbyScene {
   private renderer: THREE.WebGLRenderer;
+  private composer: EffectComposer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private clock = new THREE.Clock();
@@ -115,7 +200,7 @@ export class CampfireLobbyScene {
   private lastHeroes: GenesisHeroOption[] = [];
   private fireLight: THREE.PointLight | null = null;
   private fireLight2: THREE.PointLight | null = null;
-  private gltf = new GLTFLoader();
+  private gltf!: ReturnType<typeof makeGltfLoader>;
   private glowMats: Map<number, THREE.MeshStandardMaterial[]> = new Map();
   private seatMode: ("sit" | "stand")[] = ["sit", "sit", "sit", "sit"];
   private gestureCd = 0;
@@ -144,15 +229,30 @@ export class CampfireLobbyScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.18;
+    bindKtx2(this.renderer);
+    bindTextureAnisotropy(this.renderer);
+    this.gltf = makeGltfLoader({ renderer: this.renderer });
 
     // Warm dusk farm — no purple dungeon sky
     this.scene.background = new THREE.Color(0x0a1420);
-    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.028);
+    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.022);
 
     this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 120);
     this.camera.position.copy(CAM_POS);
     this.camera.lookAt(CAM_LOOK);
+
+    const room = new RoomEnvironment();
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+    this.scene.environmentIntensity = 0.9;
+    pmrem.dispose();
+
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.42, 0.5, 0.28));
+    this.composer.addPass(new OutputPass());
+    this.composer.setSize(w, h);
 
     this.scene.add(this.envRoot);
     this.scene.add(this.farmRoot);
@@ -275,6 +375,8 @@ export class CampfireLobbyScene {
     this.ro?.disconnect();
     for (const h of this.heroes) h?.dispose();
     this.heroes = [null, null, null, null];
+    this.composer.dispose();
+    this.scene.environment?.dispose();
     this.renderer.dispose();
   }
 
@@ -285,9 +387,9 @@ export class CampfireLobbyScene {
   };
 
   private buildLightsAndGround(): void {
-    this.scene.add(new THREE.AmbientLight(0x4a5a48, 0.42));
-    this.scene.add(new THREE.HemisphereLight(0x9ab8d0, 0x2a2010, 0.55));
-    const sun = new THREE.DirectionalLight(0xffe0b0, 0.85);
+    this.scene.add(new THREE.AmbientLight(0x4a5a48, 0.5));
+    this.scene.add(new THREE.HemisphereLight(0x9ab8d0, 0x2a2010, 0.62));
+    const sun = new THREE.DirectionalLight(0xffe0b0, 0.95);
     sun.position.set(6, 12, 4);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -339,6 +441,7 @@ export class CampfireLobbyScene {
           console.warn("[CampfireLobby] TVS prop skip (no CDN/local)", file);
           return;
         }
+        await finishTvsProp(root, file);
         root.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
@@ -391,6 +494,7 @@ export class CampfireLobbyScene {
     try {
       const root = await loadGltfFirst(this.gltf, tvsUrl("campfire.glb"));
       if (root) {
+        await finishTvsProp(root, "campfire.glb");
         root.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
@@ -525,6 +629,7 @@ export class CampfireLobbyScene {
     try {
       const chair = await loadGltfFirst(this.gltf, tvsUrl("chair.glb"));
       if (!chair) return;
+      await finishTvsProp(chair, "chair.glb");
       chair.traverse((o) => {
         const m = o as THREE.Mesh;
         if (m.isMesh) {
@@ -780,6 +885,7 @@ export class CampfireLobbyScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
+    this.composer.setSize(w, h);
   }
 
   private animate(): void {
@@ -821,7 +927,7 @@ export class CampfireLobbyScene {
       h.update(dt);
     }
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 }
 

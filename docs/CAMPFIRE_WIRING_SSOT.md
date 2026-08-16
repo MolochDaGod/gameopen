@@ -58,7 +58,11 @@ CDN first (Vercel bans `.glb` in SPA):
 https://assets.grudge-studio.com/models/campfire-lobby/tvs/{campfire,chair,fence,tree,…}.glb
 ```
 
-Smoke: `npm run smoke:prod:open` · HEAD critical TVS files.
+Palette props (`fence`, `tree`, `barn`, hay, crops…) bind the live TVS Voxel Farm atlases at  
+`assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/*-texture.png`  
+(sRGB + nearest). Scene look: `prepObjectMaterials` + RoomEnvironment IBL + IntroScene bloom/`OutputPass`.
+
+Smoke: `npm run smoke:prod:open` · HEAD critical TVS files + farm palettes.
 
 ---
 

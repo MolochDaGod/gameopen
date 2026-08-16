@@ -103,6 +103,24 @@ export const CAMPFIRE_TVS = {
   ] as const,
   /** Critical for first paint of farm camp (smoke critical subset). */
   smokeCritical: ["campfire.glb", "chair.glb", "fence.glb", "tree.glb"] as const,
+  /**
+   * Lobby GLBs shipped without embedded palettes. Bind the live TVS Voxel Farm
+   * atlas (already on R2) — do not invent a second texture root.
+   * campfire / chair keep their own materials (Sketchfab, not palette.*).
+   */
+  farmPackTextures: `${PROD_HOSTS.assetsCdn}/models/voxels/tvs/voxel-farm/textures`,
+  paletteByFile: {
+    "fence.glb": "voxel-farm-fence-texture.png",
+    "fencepost.glb": "voxel-farm-fence-post-texture.png",
+    "haybale.glb": "voxel-farm-haybale-texture.png",
+    "watertrough.glb": "voxel-farm-water-trough-texture.png",
+    "soil.glb": "voxel-farm-soil-texture.png",
+    "wheat.glb": "voxel-farm-wheat-texture.png",
+    "pumpkin.glb": "voxel-farm-pumpkin-texture.png",
+    "tree.glb": "voxel-farm-tree-texture.png",
+    "appletree.glb": "voxel-farm-apple-tree-texture.png",
+    "barn.glb": "voxel-farm-barn-texture.png",
+  } as const,
 } as const;
 
 /** CDN-first URL candidates for a TVS farm prop filename. */
@@ -112,6 +130,13 @@ export function campfireTvsUrls(file: string): string[] {
     `${CAMPFIRE_TVS.cdnBase}/${name}`,
     `/${CAMPFIRE_TVS.localRel}/${name}`,
   ];
+}
+
+/** Live TVS Voxel Farm palette for a lobby prop, or null when the GLB owns its look. */
+export function campfireTvsTextureUrl(file: string): string | null {
+  const name = file.replace(/^\//, "") as keyof typeof CAMPFIRE_TVS.paletteByFile;
+  const slug = CAMPFIRE_TVS.paletteByFile[name];
+  return slug ? `${CAMPFIRE_TVS.farmPackTextures}/${slug}` : null;
 }
 
 /**
