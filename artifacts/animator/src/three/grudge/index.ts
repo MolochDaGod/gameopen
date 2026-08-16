@@ -88,6 +88,7 @@ export {
   isBadLocoClipName,
   isUnsuitableLocoCycle,
   bakedClipUrl,
+  resolveBakeRel,
   toRotationOnlyClip,
   loadBakedClip,
 } from "./anims";
@@ -129,6 +130,8 @@ export {
   skillBakedRole,
   MAGIC_SKILLS,
   SAMURAI_2H_SKILLS,
+  GUN_SKILLS,
+  SWORD_SKILLS,
 } from "./weaponSkillPacks";
 export {
   skillPackForStaffWeaponId,

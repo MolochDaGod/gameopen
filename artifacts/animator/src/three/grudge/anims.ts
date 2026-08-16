@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { assetLoadError } from "./assetBase";
-import { FLEET_ASSET_HOSTS } from "../fleetAssetResolver";
 import {
   assertClipMatchesLane,
   bip001BakedUrlCandidates,
@@ -258,16 +257,16 @@ export const MOBILITY_CLIPS: ReadonlyArray<{
   { role: "mantle", bakeRel: "climb/to_top", mixamoRel: "anim/climb/climbing-to-top.fbx", loop: false },
   { role: "wallRun", bakeRel: "climb/wall_run", mixamoRel: "anim/climb/wall-run.fbx", loop: true },
   { role: "grab", bakeRel: "climb/jump_to_hang", mixamoRel: "anim/climb/jump-to-freehang.fbx", loop: false },
-  // Fall / land / dive (bow pack has proven fall loops)
-  { role: "jumpAir", bakeRel: "longbow/fall-a-loop", mixamoRel: "anim/bow/fall-a-loop.fbx", loop: true },
-  { role: "land", bakeRel: "longbow/fall-a-land", mixamoRel: "anim/bow/fall-a-land-to-standing-idle-01.fbx", loop: false },
+  // Fall / land / dive — Mixamo bow names were never baked; use live Open JSON.
+  { role: "jumpAir", bakeRel: "locomotion/jump", mixamoRel: "anim/bow/fall-a-loop.fbx", loop: true },
+  { role: "land", bakeRel: "locomotion/land_roll", mixamoRel: "anim/bow/fall-a-land-to-standing-idle-01.fbx", loop: false },
   // Ghost Rider roll → landRoll (shared for every hero)
   { role: "landRoll", bakeRel: "locomotion/land_roll", mixamoRel: "anim/striker/roll.fbx", loop: false },
-  { role: "dive", bakeRel: "longbow/standing-dive-forward", mixamoRel: "anim/bow/standing-dive-forward.fbx", loop: false },
+  { role: "dive", bakeRel: "locomotion/dodge_fwd", mixamoRel: "anim/bow/standing-dive-forward.fbx", loop: false },
   // Hit / knockback hybrid ragdoll (prefer clip + impulse over full multi-body)
   { role: "hurt", bakeRel: "polearm/hurt", mixamoRel: "anim/reactions/react-small-from-front.fbx", loop: false },
   { role: "hitfly", bakeRel: "polearm/hitfly", mixamoRel: "anim/reactions/hit-fly.fbx", loop: false },
-  { role: "getUp", bakeRel: "polearm/getup", mixamoRel: "anim/reactions/get-up.fbx", loop: false },
+  { role: "getUp", bakeRel: "locomotion/land_roll", mixamoRel: "anim/reactions/get-up.fbx", loop: false },
 ];
 
 /**
@@ -477,35 +476,43 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
   },
   /**
    * 1H sword / shield / axe / dagger — PURGED thin arena sword_shield primary.
-   * Uses retargeted **samurai sword stance** loco+attack + dual_wield skills/dash
-   * + Ghost Rider rolls/finishers. Old sword_shield run/attack are BANNED.
+   * Loco: samurai sword stance. Attacks: Kassimkot Sketchfab combos baked Bip001
+   * (AttackCombo01 + Attack Combo 2 → sword_shield/attack-combo-0{1,2}).
+   * Skills/dash: dual_wield + Ghost Rider. Old sword_shield run BANNED.
    */
   sword_shield: {
     idle: "greatsword_samurai/gs_samurai_idle_sword",
     walk: "greatsword_samurai/gs_samurai_walk_sword",
     run: "greatsword_samurai/gs_samurai_run_sword",
-    attack: "greatsword_samurai/gs_samurai_combo_a",
+    // Quick Attack Combo (Sketchfab AttackCombo01) — 1s wind-up stripped on bake
+    attack: "sword_shield/attack-combo-01-trimmed",
     extras: [
-      // 1H skill / combo layer (samurai + dual_wield)
-      "greatsword_samurai/gs_samurai_combo_b",
-      "greatsword_samurai/gs_samurai_dash_opener",
-      "greatsword_samurai/gs_samurai_teleport_strike",
-      "greatsword_samurai/gs_samurai_jump_sword",
-      "dual_wield/attack",
-      "dual_wield/attack2",
-      "dual_wield/attack3",
-      "dual_wield/combo",
+      // Full + role aliases for LMB chain / skill slots
+      "sword_shield/attack-combo-01",
+      "sword_shield/attack-combo-01-trimmed",
+      "sword_shield/attack",
+      "sword_shield/attack1",
+      // Strong Attack Combo 2 (Sketchfab) — skill / heavy follow-up
+      "sword_shield/attack-combo-02",
+      "sword_shield/attack2",
+      "sword_shield/skill",
+      // Mobility / dash layer (dual_wield)
+      "dual_wield/dash",
+      "dual_wield/sword_dash_attack",
       "dual_wield/slash",
       "dual_wield/thrust",
       "dual_wield/overhead",
-      "dual_wield/dash",
-      "dual_wield/sword_dash_attack",
       "dual_wield/block",
       "dual_wield/hit",
       "dual_wield/hurt",
       "dual_wield/death",
       "dual_wield/jump",
-      // Ghost Rider chain / finisher (slash VFX + dash attacks)
+      // Soft fallbacks if combo bake missing
+      "greatsword_samurai/gs_samurai_combo_a",
+      "greatsword_samurai/gs_samurai_combo_b",
+      "greatsword_samurai/gs_samurai_dash_opener",
+      "greatsword_samurai/gs_samurai_jump_sword",
+      // Ghost Rider chain / finisher
       "ghost_rider/quakesmash",
       "ghost_rider/chain_spin",
       "ghost_rider/chain_stab",
@@ -518,7 +525,6 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "locomotion/roll_forward",
       "locomotion/run_forward",
       CANONICAL_LOCO.walk,
-      // Soft: dual_wield idle if samurai 404
       "dual_wield/idle",
       "dual_wield/walk",
       "dual_wield/run",
@@ -778,7 +784,7 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "dodge_left", rel: "locomotion/dodge_l" },
   { role: "dodge_right", rel: "locomotion/dodge_r" },
   { role: "dodge_backward", rel: "locomotion/dodge_back" },
-  // Mobility SSOT (bake plan + prod/anims fallbacks via loadBakedClip candidates)
+  // Mobility SSOT (bake plan + /anims/baked JSON via loadBakedClip)
   ...MOBILITY_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
   // Dual-wield melee dash / attacks / hits (dual_wieldingandothers.glb → Bip001)
   ...DUAL_WIELD_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
@@ -968,47 +974,44 @@ export function skillSlotToClipRole(slot: 1 | 2 | 3 | 4): string {
   return (`skill${slot}` as const);
 }
 
-// Build the primary URL for a baked clip (R2 default; loaders try all hosts).
+// Build the primary URL for a baked clip (Open /anims/baked JSON).
 export function bakedClipUrl(rel: string, baseOverride?: string): string {
-  const path = `anims/baked/${rel}.json`;
+  const path = `anims/baked/${resolveBakeRel(rel)}.json`;
   if (baseOverride !== undefined) {
     return `${baseOverride.replace(/\/+$/, "")}/${path}`;
   }
-  return `${FLEET_ASSET_HOSTS.r2}/${path}`;
+  return `https://open.grudge-studio.com/${path}`;
 }
 
 /**
- * Map logical pack folder → production CDN pack id under prod/anims/.
+ * Manifest names that were never baked under that path.
+ * Resolve to a live Open `/anims/baked` clip instead of probing prod/anims.
  */
-function prodAnimPackId(pack: string): string {
-  const p = pack.toLowerCase();
-  if (p === "samurai" || p === "greatsword_samurai") return "greatsword_samurai";
-  if (p === "twohand" || p === "2h" || p === "2h_melee") return "2h_melee";
-  if (p === "spear") return "spear";
-  return pack;
+const BAKE_REL_ALIASES: Record<string, string> = {
+  "longbow/fall-a-land": "locomotion/land_roll",
+  "longbow/fall-a-loop": "locomotion/jump",
+  "longbow/standing-dive-forward": "locomotion/dodge_fwd",
+  "polearm/getup": "locomotion/land_roll",
+};
+
+export function resolveBakeRel(rel: string): string {
+  const clean = String(rel || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\.json$/i, "")
+    .replace(/\.glb$/i, "");
+  return BAKE_REL_ALIASES[clean] || clean;
 }
 
 /**
  * Candidate URLs for a clip rel like `sword_shield/sword and shield idle`
  * or `pistol/idle` or `2h_melee/great-sword-idle`.
  *
- * Order: same-origin baked JSON → prod CDN JSON → prod CDN GLB → arena → R2.
- * Heroes use baked anims only (no Mixamo FBX on Vercel).
+ * Play SSOT: Bip001 JSON under /anims/baked only.
+ * `assets…/prod/anims` and GLB libraries 404 — do not probe them.
  */
 export function bakedClipCandidates(rel: string, baseOverride?: string): string[] {
-  const clean = String(rel || "")
-    .trim()
-    .replace(/\\/g, "/")
-    .replace(/\.json$/i, "")
-    .replace(/\.glb$/i, "");
-  const parts = clean.split("/").filter(Boolean);
-  const pack = parts[0] || "";
-  const file = parts.slice(1).join("/") || pack;
-  const fileSlug = file.replace(/\s+/g, "-");
-  const fileUnderscore = file.replace(/\s+/g, "_");
-  const prodPack = prodAnimPackId(pack);
-
-  // Fleet SSOT order (docs/ANIMATION_FLEET_SSOT.md): same-origin baked → R2 prod → hosts
+  const clean = resolveBakeRel(rel);
   const urls: string[] = [...bip001BakedUrlCandidates(clean)];
   const bakedJson = `anims/baked/${clean}.json`;
 
@@ -1016,30 +1019,19 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
     urls.unshift(`${window.location.origin}/${bakedJson}`);
   }
   if (baseOverride) {
-    urls.push(`${baseOverride.replace(/\/+$/, "")}/${bakedJson}`);
-  }
-
-  // Production packages (JSON tracks + GLB animation libraries)
-  const prodBase = PROD_ANIMS_CDN.replace(/\/+$/, "");
-  if (prodPack && file) {
-    for (const stem of [file, fileSlug, fileUnderscore]) {
-      if (!stem) continue;
-      urls.push(`${prodBase}/${prodPack}/${stem}.json`);
-      urls.push(`${prodBase}/${prodPack}/${stem}.glb`);
+    const base = baseOverride.replace(/\/+$/, "");
+    if (/anims\/baked/i.test(base) || /open\.grudge-studio\.com/i.test(base)) {
+      urls.push(`${base}/${bakedJson.replace(/^anims\/baked\//, "")}`);
+      urls.push(`${base}/${bakedJson}`);
     }
-    urls.push(`/prod/anims/${prodPack}/${fileSlug}.json`);
-    urls.push(`/prod/anims/${prodPack}/${fileSlug}.glb`);
   }
 
-  // Same-origin + assets CDN only for baked clips.
-  // NEVER fetch grudge-arena / gameopen.vercel.app from open.grudge-studio.com —
-  // those hosts have no CORS for Open and spam the console with net::ERR_FAILED.
-  // Missing mobility clips (dive/getup/climb placeholders) 404 once on SSOT hosts
-  // and loaders soft-fail; do not cascade across broken cross-origin hosts.
   const filtered = [...new Set(urls)].filter(
     (u) =>
       !/grudge-arena\.grudge-studio\.com/i.test(u) &&
-      !/gameopen\.vercel\.app/i.test(u),
+      !/gameopen\.vercel\.app/i.test(u) &&
+      !/\/prod\/anims\//i.test(u) &&
+      !/\.glb(\?|$)/i.test(u),
   );
   return filtered;
 }
@@ -1052,81 +1044,57 @@ export function toRotationOnlyClip(clip: THREE.AnimationClip): THREE.AnimationCl
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
 
-/** Load first animation from a production GLB anim library (FBX→GLB bake). */
-async function loadClipFromGlbUrl(url: string): Promise<THREE.AnimationClip> {
-  const { sharedGltfLoader } = await import("../loaders/gltf");
-  const loader = sharedGltfLoader();
-  const gltf = await loader.loadAsync(url);
-  const list = gltf.animations ?? [];
-  if (!list.length) {
-    throw new Error(`GLB has no animations: ${url}`);
-  }
-  // Prefer named clip matching URL stem
-  const stem = url.split("/").pop()?.replace(/\.glb$/i, "") ?? "";
-  const named =
-    list.find((c) => c.name && stem && c.name.toLowerCase().includes(stem.slice(0, 12))) ??
-    list[0]!;
-  return toRotationOnlyClip(named);
-}
+const bakedClipFail = new Set<string>();
+const bakedUrlFail = new Set<string>();
 
-// Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip (multi-host).
-// Supports JSON track packs and prod/anims/*.glb animation libraries.
+// Fetch + parse a baked Bip001 clip as a rotation-only AnimationClip.
+// JSON only — do not probe prod/anims GLB (404 + GLTFLoader relative 404s).
+// Walk/run/sprint loco gates live in grudge6Runtime, not here (dodge/climb/skills are not gait).
 export async function loadBakedClip(rel: string, baseOverride?: string): Promise<THREE.AnimationClip> {
-  if (isBannedLocomotionClip(rel)) {
+  const resolved = resolveBakeRel(rel);
+  if (isBannedLocomotionClip(resolved) || isBannedLocomotionClip(rel)) {
     throw assetLoadError(
-      `anims/baked/${rel}.json`,
+      `anims/baked/${resolved}.json`,
       new Error(
         `banned locomotion clip (run-to-roll / tipping walk): ${rel} — use pack standing walk/run cycles`,
       ),
     );
   }
+  const failKey = `${resolved}|${baseOverride || ""}`;
+  if (bakedClipFail.has(failKey)) {
+    throw assetLoadError(`anims/baked/${resolved}.json`, new Error("cached miss"));
+  }
   let lastErr: unknown;
-  for (const url of bakedClipCandidates(rel, baseOverride)) {
+  for (const url of bakedClipCandidates(resolved, baseOverride)) {
+    if (bakedUrlFail.has(url)) continue;
     try {
-      if (/\.glb(\?|$)/i.test(url)) {
-        const clip = await loadClipFromGlbUrl(url);
-        if (isNonLoopingLocoClip(clip, rel)) {
-          lastErr = new Error(`non-looping loco GLB ${rel} dur=${clip.duration.toFixed(2)}`);
-          continue;
-        }
-        clip.name = clip.name || rel.split("/").pop() || rel;
-        return clip;
-      }
-
       const res = await fetch(url, { mode: "cors" });
       if (!res.ok) {
+        bakedUrlFail.add(url);
         lastErr = assetLoadError(`${url} (HTTP ${res.status})`);
         continue;
       }
       const ct = res.headers.get("content-type") || "";
       if (ct.includes("text/html")) {
+        bakedUrlFail.add(url);
         lastErr = assetLoadError(`HTML fake-200 ${url}`);
         continue;
       }
-      // Some CDN keys may return binary mislabeled — sniff
-      if (ct.includes("model/gltf") || ct.includes("octet-stream")) {
-        const clip = await loadClipFromGlbUrl(url);
-        return clip;
-      }
       const json = (await res.json()) as THREE.AnimationClipJSON;
       const clip = toRotationOnlyClip(THREE.AnimationClip.parse(json));
-      if (isNonLoopingLocoClip(clip, rel)) {
-        lastErr = new Error(
-          `non-looping loco (roll/transition) ${rel} dur=${clip.duration.toFixed(2)} pelvisErr=${pelvisLoopError(clip).toFixed(3)}`,
-        );
-        continue;
-      }
-      // Refuse Mixamo tracks on bip001-baked lane (wrong bake / wrong path)
       try {
-        assertClipMatchesLane("bip001-baked", clip, rel);
+        assertClipMatchesLane("bip001-baked", clip, resolved);
       } catch (laneErr) {
         lastErr = laneErr;
         continue;
       }
+      clip.name = clip.name || resolved.split("/").pop() || resolved;
       return clip;
     } catch (err) {
+      bakedUrlFail.add(url);
       lastErr = err;
     }
   }
-  throw assetLoadError(`anims/baked|prod/anims/${rel}`, lastErr);
+  bakedClipFail.add(failKey);
+  throw assetLoadError(`anims/baked/${resolved}`, lastErr);
 }

@@ -46,6 +46,11 @@ describe("skillPackForWeaponId — Casting element staff trees", () => {
 
   it("non-staff weapons still resolve family packs", () => {
     const sword = skillPackForWeaponId("sword");
+    expect(sword[0]?.clipPath).toContain("attack-combo-01-trimmed");
+    const pistol = skillPackForWeaponId("pistol");
+    expect(pistol[0]?.animKey).toBe("gun_shot");
+    const rifle = skillPackForWeaponId("rifle");
+    expect(rifle[0]?.animKey).toBe("gun_shot");
     expect(sword.length).toBeGreaterThanOrEqual(1);
     expect(sword[0]!.slot).toBe(1);
   });
