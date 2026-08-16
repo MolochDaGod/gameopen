@@ -37,6 +37,14 @@ export type BackSlotItemDef = {
   waterBuffs?: { swimSpeedMul: number; sharkAggroImmune: boolean; breatheUnderwater: boolean };
   /** Unity cape variant (default / long / wide). */
   capeVariant?: "default" | "long" | "wide";
+  /** Dedicated wing GLB (holy / traveler tiers) — WingBackRig, not a second attach. */
+  meshUrl?: string;
+  /** Multipack root to keep visible (gorilla traveler variants). */
+  isolateName?: string;
+  /** SI wingspan after normalize (holy ~2 m, traveler ~1.6 m). */
+  wingSpanM?: number;
+  /** Traveler wardrobe tier 1–3 (same pack, better flight). */
+  flightTier?: 1 | 2 | 3;
 };
 
 /** Paperdoll / mesh_ids tag for a back item. */
@@ -137,18 +145,48 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
   {
     id: "back_holy_wings",
     label: "Holy Wings",
-    effect: "Jump → glide down (wing type 1)",
+    effect: "Jump → glide (SZ_Wing_233 Stand / Run)",
     domains: ["mobility"],
     status: "coded",
     wingItemId: "back_holy_wings",
+    meshUrl: "models/ride/wings/holy_wings.glb",
+    wingSpanM: 2.0,
   },
   {
     id: "back_traveler_wings",
-    label: "Traveler's Wings",
-    effect: "Double-jump fly pose · two flaps · then glide (wing type 2)",
+    label: "Traveler's Wings I",
+    effect: "T1 fire-wing wardrobe · double-jump fly · two flaps · glide",
     domains: ["mobility"],
     status: "coded",
     wingItemId: "back_traveler_wings",
+    meshUrl: "models/ride/wings/traveler_wings_variants.glb",
+    isolateName: "FireWings_Wardrobe Variant_2",
+    wingSpanM: 1.55,
+    flightTier: 1,
+  },
+  {
+    id: "back_traveler_wings_t2",
+    label: "Traveler's Wings II",
+    effect: "T2 fire-wing wardrobe · faster glide than T1",
+    domains: ["mobility"],
+    status: "coded",
+    wingItemId: "back_traveler_wings_t2",
+    meshUrl: "models/ride/wings/traveler_wings_variants.glb",
+    isolateName: "FireWings_Wardrobe Variant.001_5",
+    wingSpanM: 1.65,
+    flightTier: 2,
+  },
+  {
+    id: "back_traveler_wings_t3",
+    label: "Traveler's Wings III",
+    effect: "T3 fire-wing wardrobe · longest glide / most lift",
+    domains: ["mobility"],
+    status: "coded",
+    wingItemId: "back_traveler_wings_t3",
+    meshUrl: "models/ride/wings/traveler_wings_variants.glb",
+    isolateName: "FireWings_Wardrobe Variant.002_8",
+    wingSpanM: 1.75,
+    flightTier: 3,
   },
   {
     id: "back_cape",

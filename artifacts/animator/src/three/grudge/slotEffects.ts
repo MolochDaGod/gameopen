@@ -134,18 +134,36 @@ export const BACK_SLOT_EFFECTS: Record<string, SlotEffectSpec> = {
     slot: "back",
     label: "Holy Wings",
     kinds: ["passive"],
-    summary: "Jump → glide (wing type 1).",
+    summary: "Jump → glide. Mesh: wing_379 (SZ_Wing_233 Stand / Run).",
     aura: "blessed",
     bonuses: { moveSpeed: 4 },
   },
   "equip:back:traveler_wings": {
     id: "equip:back:traveler_wings",
     slot: "back",
-    label: "Traveler's Wings",
+    label: "Traveler's Wings I",
     kinds: ["passive", "proc"],
-    summary: "Double-jump + two flaps, then glide (wing type 2).",
+    summary: "T1 fire-wing wardrobe. Double-jump + two flaps, then glide.",
     aura: "haste",
     bonuses: { moveSpeed: 8 },
+  },
+  "equip:back:traveler_wings_t2": {
+    id: "equip:back:traveler_wings_t2",
+    slot: "back",
+    label: "Traveler's Wings II",
+    kinds: ["passive", "proc"],
+    summary: "T2 fire-wing wardrobe — faster glide than T1.",
+    aura: "haste",
+    bonuses: { moveSpeed: 10 },
+  },
+  "equip:back:traveler_wings_t3": {
+    id: "equip:back:traveler_wings_t3",
+    slot: "back",
+    label: "Traveler's Wings III",
+    kinds: ["passive", "proc"],
+    summary: "T3 fire-wing wardrobe — longest glide / most lift.",
+    aura: "haste",
+    bonuses: { moveSpeed: 12 },
   },
   "equip:back:cape": {
     id: "equip:back:cape",
@@ -230,6 +248,12 @@ export function effectForEquipId(id: string): SlotEffectSpec | null {
     return BACK_SLOT_EFFECTS["equip:back:wind_surf"] ?? null;
   }
   if (/holy.?wing/.test(k)) return BACK_SLOT_EFFECTS["equip:back:holy_wings"] ?? null;
+  if (/traveler.?wing.*t3|t3.*traveler/.test(k)) {
+    return BACK_SLOT_EFFECTS["equip:back:traveler_wings_t3"] ?? null;
+  }
+  if (/traveler.?wing.*t2|t2.*traveler/.test(k)) {
+    return BACK_SLOT_EFFECTS["equip:back:traveler_wings_t2"] ?? null;
+  }
   if (/traveler.?wing/.test(k)) return BACK_SLOT_EFFECTS["equip:back:traveler_wings"] ?? null;
   if (/cape_long|long.?cape/.test(k)) return BACK_SLOT_EFFECTS["equip:back:cape_long"] ?? null;
   if (/cape_wide|wide.?cape/.test(k)) return BACK_SLOT_EFFECTS["equip:back:cape_wide"] ?? null;

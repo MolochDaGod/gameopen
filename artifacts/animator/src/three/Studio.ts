@@ -1707,15 +1707,26 @@ export class Studio {
    * Load wing GLB once and parent to spine. Default stowed (back circle only).
    * Call equipBackWing(itemId) for parachute/glide/flight/sail.
    */
-  private async ensureWingRigAttached(): Promise<void> {
+  private async ensureWingRigAttached(opts?: {
+    url?: string;
+    isolate?: string;
+    dedicated?: boolean;
+    spanM?: number;
+    flightTier?: 1 | 2 | 3;
+  }): Promise<void> {
     if (!this.character) return;
-    if (!this.wingRig) {
-      this.wingRig = new WingBackRig();
-      const ok = await this.wingRig.load({ toon: true });
-      if (!ok) {
-        this.wingRig = null;
-        return;
-      }
+    if (!this.wingRig) this.wingRig = new WingBackRig();
+    const ok = await this.wingRig.load({
+      toon: true,
+      url: opts?.url,
+      isolate: opts?.isolate,
+      dedicated: opts?.dedicated,
+      targetSpanM: opts?.spanM,
+      flightTier: opts?.flightTier,
+    });
+    if (!ok) {
+      this.wingRig = null;
+      return;
     }
     this.wingRig.attachToCharacter(this.character.root);
   }
@@ -1741,6 +1752,16 @@ export class Studio {
         eulerDeg: def.stowEulerDeg,
       });
       void this.backStow.show(def.stowUrl, def.stowLengthM ?? 0.58);
+    } else if (def?.meshUrl && root) {
+      this.capeRig?.setVisible(false);
+      this.backStow?.hide();
+      void this.ensureWingRigAttached({
+        url: def.meshUrl,
+        isolate: def.isolateName,
+        dedicated: true,
+        spanM: def.wingSpanM,
+        flightTier: def.flightTier,
+      }).then(() => this.wingRig?.equipBackItem(itemId));
     } else {
       this.capeRig?.setVisible(false);
       this.backStow?.hide();
@@ -11248,6 +11269,7 @@ export class Studio {
       this.wingRig.update(dt);
       if (this.controller && this.character) {
         const airborne = !this.controller.isGrounded;
+        this.wingRig.syncAirborne(airborne);
         const fwd = this.controller.forward();
         const wind =
           this.testWorldId === "sailtest" && this.forestWorld?.sail
