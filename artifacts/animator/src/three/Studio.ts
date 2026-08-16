@@ -155,6 +155,7 @@ import {
 import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
+import { innerMFromFootprint } from "./build/zhunbeiFrame";
 import { WingBackRig } from "./equipment/WingBackRig";
 import { CapeBackRig } from "./equipment/CapeBackRig";
 import { BackStowAttach } from "./equipment/BackStowAttach";
@@ -11369,8 +11370,16 @@ export class Studio {
         place.y = 0;
         this.campBuild.updateGhost(place);
       }
+      const fp = this.campBuild.activeFootprint;
+      this.buildGrid?.setSnap(this.campBuild.activeSnap);
+      this.buildGrid?.setInnerM(fp ? innerMFromFootprint(fp) : this.campBuild.activeSnap);
+      this.buildGrid?.setValid(this.campBuild.isGhostValid);
+      const gp = this.campBuild.ghostPosition;
+      if (gp) this.buildGrid?.setCell(gp);
     } else if (this.buildGrid?.isVisible && this.character && this.activityMode === "build") {
-      // Keep grid cursor live even without ghost (planning)
+      // Keep zhunbei selection cell live even without a ghost (planning)
+      this.buildGrid.setInnerM(1);
+      this.buildGrid.setValid(true);
       const origin = this.character.root.position.clone();
       origin.y += 1.2;
       const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
@@ -12358,6 +12367,11 @@ export class Studio {
       // Minecraft-like third person: over-shoulder crosshair, mid body look-at
       this.applyActivityCamera(mode);
       this.buildGrid?.setVisible(mode === "build");
+      if (mode === "build") {
+        this.buildGrid?.setSnap(1);
+        this.buildGrid?.setInnerM(1);
+        this.buildGrid?.setValid(true);
+      }
     } else if (mode === "combat") {
       // Leaving build → cancel place ghost
       if (prev === "build") this.campBuild?.cancelGhost?.();

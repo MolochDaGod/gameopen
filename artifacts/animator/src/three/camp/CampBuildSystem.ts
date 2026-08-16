@@ -185,6 +185,22 @@ export class CampBuildSystem {
     return this.activeDef?.id ?? null;
   }
 
+  get isGhostValid(): boolean {
+    return this.valid;
+  }
+
+  get activeSnap(): number {
+    return this.activeDef?.snap ?? 1;
+  }
+
+  get activeFootprint(): PlaceableDef["footprint"] | null {
+    return this.activeDef?.footprint ?? null;
+  }
+
+  get ghostPosition(): THREE.Vector3 | null {
+    return this.ghost ? this.ghost.position.clone() : null;
+  }
+
   get structures(): readonly PlacedStructure[] {
     return this.placed;
   }
