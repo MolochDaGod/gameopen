@@ -72,6 +72,7 @@ Optional: `faction`, `claimId`, `zoneId`, `rewardId`.
 - `createEnemyZoneBox(center, half, zoneId)` — box sensor  
 - Island maps call `applyGameLayer` from `classifyIslandScene`  
 - Forest mountains: terrain → `terrain`, harvest → `harvest`  
+- Starting Encament / lobby: `tagStartSceneHarvest` — trees/rocks → `harvest`, ground → `terrain`  
 
 ---
 

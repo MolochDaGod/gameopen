@@ -12119,7 +12119,7 @@ export class Studio {
           }
         }
         this.setCombatFlash(
-          `START · Q harvest · sticks & stones · hand-craft campfire (${tagged.nodes.length} nodes)`,
+          `START · Q harvest · trees ${tagged.trees} · rocks ${tagged.rocks} · nodes ${tagged.nodes.length}`,
           2.4,
         );
       }

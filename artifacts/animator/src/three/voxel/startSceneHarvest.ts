@@ -1,11 +1,14 @@
 /**
  * Starting-scene terrain + mesh recognition for Encament / lobby seed play.
  *
- * Reuses classifyForestMeshGeometry (Forest Mountains) plus name tokens.
- * Tags sticks / stones / logs so Q-harvest + pinata work — no second gather engine.
+ * Layers world meshes with GamePlayLayers (same as island maps):
+ * terrain · harvest (tree/rock/stick/stone) · solid · prop.
+ * Harvest script: userData.harvest + pinata. No second gather engine.
  */
 import * as THREE from "three";
 import { classifyForestMeshGeometry } from "../maps/forestMountainsMap";
+import { classifyIslandMesh, materialNamesOf } from "../maps/islandMapLayers";
+import { applyGameLayer } from "../gameplay/GamePlayLayers";
 import { locationIdForCell } from "../harvest/harvestIds";
 
 export type StartHarvestKind = "stick" | "stone" | "wood" | "ore" | "terrain" | "skip";
@@ -26,20 +29,30 @@ export type StartHarvestReport = {
   classified: number;
   scattered: number;
   terrain: number;
+  trees: number;
+  rocks: number;
 };
 
-const NAME_STICK = /stick|twig|branch|log|wood|plank|fence|post|timber|bark|trunk|stump/i;
-const NAME_STONE = /stone|rock|pebble|cobble|boulder|gravel|rubble|slate/i;
+const NAME_WOOD = /tree|pine|oak|fir|spruce|cedar|canopy|foliage|bark|leaf|leaves|trunk|stump|log|palm/i;
+const NAME_STICK = /stick|twig|branch/i;
+const NAME_STONE = /stone|rock|pebble|boulder|gravel|rubble|slate/i;
 const NAME_TERRAIN = /ground|terrain|floor|path|dirt|sand|grass|water|hub|road|tile/i;
-const NAME_SKIP = /building|wall|roof|house|door|window|chair|table|npc|enemy|character|collider/i;
+const NAME_SKIP = /building|wall|roof|house|door|window|chair|table|npc|enemy|character|collider|fence/i;
 
-export function classifyStartMeshName(name: string): StartHarvestKind | null {
-  const n = name || "";
+export function classifyStartMeshName(name: string, materials: string[] = []): StartHarvestKind | null {
+  const n = `${name} ${materials.join(" ")}`;
   if (NAME_SKIP.test(n)) return "skip";
-  if (NAME_TERRAIN.test(n)) return "terrain";
-  if (NAME_STONE.test(n)) return "stone";
+  if (NAME_TERRAIN.test(n) && !NAME_WOOD.test(n) && !NAME_STONE.test(n)) return "terrain";
   if (NAME_STICK.test(n)) return "stick";
+  if (NAME_WOOD.test(n)) return "wood";
+  if (NAME_STONE.test(n)) return sizeHintStoneOrOre(n);
   return null;
+}
+
+function sizeHintStoneOrOre(n: string): StartHarvestKind {
+  if (/boulder|ore|vein/i.test(n)) return "ore";
+  if (/pebble|gravel/i.test(n)) return "stone";
+  return "ore";
 }
 
 export function classifyStartMeshGeometry(size: THREE.Vector3): StartHarvestKind {
@@ -89,6 +102,8 @@ export function tagStartSceneHarvest(
   const nodes: StartHarvestNode[] = [];
   let classified = 0;
   let terrain = 0;
+  let trees = 0;
+  let rocks = 0;
 
   root.updateMatrixWorld(true);
   const size = new THREE.Vector3();
@@ -98,7 +113,9 @@ export function tagStartSceneHarvest(
     const mesh = o as THREE.Mesh;
     if (!mesh.isMesh || mesh.userData.mapChunk) return;
     if ((mesh as THREE.InstancedMesh).isInstancedMesh) {
+      applyGameLayer(mesh, "terrain");
       mesh.userData.selectable = "ground";
+      mesh.userData.islandRole = "ground";
       mesh.userData.startTerrain = true;
       terrain++;
       classified++;
@@ -108,29 +125,50 @@ export function tagStartSceneHarvest(
     box.setFromObject(mesh);
     if (box.isEmpty()) return;
     box.getSize(size);
-    const byName = classifyStartMeshName(mesh.name);
-    const kind = byName ?? classifyStartMeshGeometry(size);
+    const mats = materialNamesOf(mesh);
+    const islandRole = classifyIslandMesh(mesh.name, mats, "generic");
+    const byName = classifyStartMeshName(mesh.name, mats);
+    let kind: StartHarvestKind;
+    if (islandRole === "ground") kind = "terrain";
+    else if (islandRole === "harvest") kind = byName === "stick" || byName === "stone" ? byName : byName === "wood" ? "wood" : "ore";
+    else if (islandRole === "solid" || islandRole === "interact" || islandRole === "vehicle") kind = "skip";
+    else kind = byName ?? classifyStartMeshGeometry(size);
     classified++;
     if (kind === "terrain") {
       terrain++;
+      applyGameLayer(mesh, "terrain");
       mesh.userData.selectable = "ground";
+      mesh.userData.islandRole = "ground";
       mesh.userData.startTerrain = true;
       return;
     }
     const spec = metaFor(kind);
     if (!spec) {
+      applyGameLayer(mesh, islandRole === "solid" ? "prop" : "prop");
+      mesh.userData.islandRole = islandRole;
       mesh.userData.startHarvestSkip = true;
       return;
     }
     const pos = box.getCenter(new THREE.Vector3());
     const id = locationIdForCell(seed, pos.x, pos.y, pos.z, kind);
+    applyGameLayer(mesh, "harvest");
+    mesh.userData.islandRole = "harvest";
     mesh.userData.harvestable = true;
     mesh.userData.harvestId = id;
     mesh.userData.harvestKind = kind;
     mesh.userData.harvestTool = spec.tool;
     mesh.userData.harvestMaterialId = spec.materialId;
     mesh.userData.harvestYields = spec.yields;
+    mesh.userData.harvest = {
+      kind: kind === "wood" || kind === "stick" ? "wood" : "ore",
+      tool: spec.tool,
+      hp: spec.hp,
+      label: mesh.name || kind,
+      materialId: spec.materialId,
+    };
     mesh.userData.selectable = "harvest";
+    if (kind === "wood") trees++;
+    if (kind === "ore" || kind === "stone") rocks++;
     nodes.push({
       id,
       kind,
@@ -148,7 +186,7 @@ export function tagStartSceneHarvest(
     scattered = scatterStarterPickups(root, seed, hub, nodes);
   }
 
-  return { nodes, classified, scattered, terrain };
+  return { nodes, classified, scattered, terrain, trees, rocks };
 }
 
 function scatterStarterPickups(
@@ -190,6 +228,8 @@ function scatterStarterPickups(
     mesh.userData.harvestYields = spec.yields;
     mesh.userData.selectable = "harvest";
     mesh.userData.startScattered = true;
+    applyGameLayer(mesh, "harvest");
+    mesh.userData.islandRole = "harvest";
     group.add(mesh);
     nodes.push({
       id,
