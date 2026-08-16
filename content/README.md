@@ -4,10 +4,11 @@ Authoritative **templates** for weapons, skills, items, and armor.
 
 | Folder | Purpose |
 |--------|---------|
-| `docs/` | Contracts (read before editing) — **WEAPON_PREFAB** spine + layers |
+| `docs/` | Contracts (read before editing) — **WEAPON_PREFAB** · **BACK_SLOT_PREFAB** |
 | `schemas/` | JSON Schema for each entity |
 | `items/` | Item templates (`itm_*`) |
 | `weapons/` | Weapon defs (`wpn_*`) + optional `spine` / `physics` / `effects` |
+| `backs/` | Back-slot prefabs (`bck_*`) — one equip, item *is* the effect |
 | `skills/` | Skill defs (`family.action`) |
 | `armor/` | Armor defs (`arm_*`) |
 | `manifests/` | Generated indexes + readiness (do not hand-edit) |

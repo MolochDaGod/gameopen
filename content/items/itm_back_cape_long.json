@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_cape_long",
+  "kind": "back",
+  "name": "Long Cape",
+  "description": "Unity Long Cape 1",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "cape"
+  ],
+  "icon": {
+    "path": "icons/armor/back_cape_long.png",
+    "status": "placeholder"
+  }
+}

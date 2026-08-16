@@ -1,0 +1,36 @@
+{
+  "id": "bck_protective_shell",
+  "itemId": "itm_back_protective_shell",
+  "runtimeId": "back_protective_shell",
+  "equipId": "equip:back:protective_shell",
+  "slot": "back",
+  "family": "pack",
+  "label": "Protective Shell",
+  "effect": "Damage absorb / bubble while active",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Planned — absorb while equipped",
+  "domains": [
+    "combat",
+    "utility"
+  ],
+  "status": "planned",
+  "assets": {},
+  "passive": {
+    "aura": "absorb",
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "pack",
+    "passive",
+    "planned"
+  ],
+  "ship": false,
+  "readiness": {
+    "data": "ready",
+    "mesh": "placeholder",
+    "combat": "placeholder",
+    "present": "placeholder"
+  }
+}

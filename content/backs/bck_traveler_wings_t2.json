@@ -1,0 +1,43 @@
+{
+  "id": "bck_traveler_wings_t2",
+  "itemId": "itm_back_traveler_wings_t2",
+  "runtimeId": "back_traveler_wings_t2",
+  "equipId": "equip:back:traveler_wings_t2",
+  "slot": "back",
+  "family": "wings",
+  "label": "Traveler's Wings II",
+  "effect": "T2 fire-wing wardrobe — faster glide than T1",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Same Space flaps as T1 · better glide",
+  "domains": [
+    "mobility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/ride/wings/traveler_wings_variants.glb",
+    "isolate": "FireWings_Wardrobe Variant.001_5",
+    "author": "D:/Games/Models/gorilla_tag_new_wing_varients.glb",
+    "wingSpanM": 1.65,
+    "flightTier": 2
+  },
+  "passive": {
+    "aura": "haste",
+    "bonuses": {
+      "moveSpeed": 10
+    }
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

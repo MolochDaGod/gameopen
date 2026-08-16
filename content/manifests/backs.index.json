@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "count": 20,
+  "backs": [
+    {
+      "id": "bck_wing_pack",
+      "itemId": "itm_back_wing_pack",
+      "runtimeId": "back_wing_pack",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_parachute",
+      "itemId": "itm_back_parachute",
+      "runtimeId": "back_parachute",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_glider",
+      "itemId": "itm_back_glider",
+      "runtimeId": "back_glider",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_flight_rig",
+      "itemId": "itm_back_flight_rig",
+      "runtimeId": "back_flight_rig",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_sail_deploy",
+      "itemId": "itm_back_sail_deploy",
+      "runtimeId": "back_sail_deploy",
+      "useKind": "deploy",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_wind_surf",
+      "itemId": "itm_back_wind_surf",
+      "runtimeId": "back_wind_surf",
+      "useKind": "deploy",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_shark_fin",
+      "itemId": "itm_back_shark_fin",
+      "runtimeId": "back_shark_fin",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_holy_wings",
+      "itemId": "itm_back_holy_wings",
+      "runtimeId": "back_holy_wings",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_traveler_wings",
+      "itemId": "itm_back_traveler_wings",
+      "runtimeId": "back_traveler_wings",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_traveler_wings_t2",
+      "itemId": "itm_back_traveler_wings_t2",
+      "runtimeId": "back_traveler_wings_t2",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_traveler_wings_t3",
+      "itemId": "itm_back_traveler_wings_t3",
+      "runtimeId": "back_traveler_wings_t3",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_cape",
+      "itemId": "itm_back_cape",
+      "runtimeId": "back_cape",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_cape_long",
+      "itemId": "itm_back_cape_long",
+      "runtimeId": "back_cape_long",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_cape_wide",
+      "itemId": "itm_back_cape_wide",
+      "runtimeId": "back_cape_wide",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_quiver",
+      "itemId": "itm_back_quiver",
+      "runtimeId": "back_quiver",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_bag",
+      "itemId": "itm_back_bag",
+      "runtimeId": "back_bag",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_wood",
+      "itemId": "itm_back_wood",
+      "runtimeId": "back_wood",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "coded",
+      "ship": true
+    },
+    {
+      "id": "bck_hover",
+      "itemId": "itm_back_hover",
+      "runtimeId": "back_hover",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "planned",
+      "ship": false
+    },
+    {
+      "id": "bck_protective_shell",
+      "itemId": "itm_back_protective_shell",
+      "runtimeId": "back_protective_shell",
+      "useKind": "passive",
+      "useKey": null,
+      "status": "planned",
+      "ship": false
+    },
+    {
+      "id": "bck_invisibility",
+      "itemId": "itm_back_invisibility",
+      "runtimeId": "back_invisibility",
+      "useKind": "hotkey",
+      "useKey": "Space",
+      "status": "planned",
+      "ship": false
+    }
+  ]
+}

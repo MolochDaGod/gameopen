@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_traveler_wings_t2",
+  "kind": "back",
+  "name": "Traveler's Wings II",
+  "description": "T2 fire-wing wardrobe — faster glide than T1",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "hotkey",
+    "wings"
+  ],
+  "icon": {
+    "path": "icons/armor/back_traveler_wings_t2.png",
+    "status": "placeholder"
+  }
+}

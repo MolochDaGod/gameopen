@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_wing_pack",
+  "kind": "back",
+  "name": "Wing Pack",
+  "description": "Stowed back circle — base for deployables",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/armor/back_wing_pack.png",
+    "status": "placeholder"
+  }
+}

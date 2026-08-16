@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_bag",
+  "kind": "back",
+  "name": "Traveler's Bag",
+  "description": "Carry absorb ward",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "toon"
+  ],
+  "icon": {
+    "path": "icons/armor/back_bag.png",
+    "status": "placeholder"
+  }
+}

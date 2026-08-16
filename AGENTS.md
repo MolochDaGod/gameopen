@@ -55,6 +55,7 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 | Campfire roster | `/characters` · `/lobby` → `CampfireLobbyScene` (TVS CDN props) |
 | AI hub client | `artifacts/animator/src/ai/aiGateway.ts` → same JWT reader |
 | **Weapon prefab** (combat mesh sockets) | `content/docs/WEAPON_PREFAB.md` · `arsenal/weaponPrefabSpine.ts` |
+| **Back slot prefab** (one equip = effect) | `content/docs/BACK_SLOT_PREFAB.md` · `content/backs/` · `backSlotItems.ts` |
 | Prefab spine points | cast · barrel · blade · blunt · tip · special · physics · effect |
 | Prefab UUID graph | `docs/WEAPON_PREFAB_UUID_SSOT.md` |
 | **Voxel era wiring** (avatar/gear/DB) | `docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md` — no parallel stores |

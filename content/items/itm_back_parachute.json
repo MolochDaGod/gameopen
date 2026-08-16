@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_parachute",
+  "kind": "back",
+  "name": "Parachute",
+  "description": "Slow descent / fall soft",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "hotkey",
+    "wings"
+  ],
+  "icon": {
+    "path": "icons/armor/back_parachute.png",
+    "status": "placeholder"
+  }
+}

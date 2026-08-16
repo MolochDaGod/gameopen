@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_invisibility",
+  "kind": "back",
+  "name": "Cloak Pack",
+  "description": "Stealth windows",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 0,
+  "tags": [
+    "back",
+    "hotkey",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/armor/back_invisibility.png",
+    "status": "placeholder"
+  }
+}

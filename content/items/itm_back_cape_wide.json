@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_cape_wide",
+  "kind": "back",
+  "name": "Wide Cape",
+  "description": "Unity Wide Cape 1",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "cape"
+  ],
+  "icon": {
+    "path": "icons/armor/back_cape_wide.png",
+    "status": "placeholder"
+  }
+}

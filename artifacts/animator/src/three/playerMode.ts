@@ -192,6 +192,13 @@ export const HARVEST_TOOL_SKILLS: Record<string, RadialOption[]> = {
     skill("farm_water", "Water", "💧", "#70b0e0", "3"),
     skill("farm_harvest", "Reap", "✂", "#e0c060", "4"),
   ],
+  /** Back wedge equipped — existing keys only (BACK_SLOT_PREFAB). */
+  back: [
+    skill("back_use", "Use / Jump", "🪽", "#b0c8ff", "Space"),
+    skill("back_dismount", "Get off", "↓", "#90b0e0", "E"),
+    skill("back_passive", "Passive", "◆", "#c0d0ff", "on"),
+    skill("back_cycle", "Cycle", "↻", "#a8c0f0", "Hold R"),
+  ],
 };
 
 /** Tool skills for the equipped harvest tool (slots 2–5). */
@@ -206,7 +213,8 @@ export function toolSkillsFor(toolId: string): RadialOption[] {
   if (id === "rod" || id === "fishing" || id === "fishingpole" || id === "fish") return HARVEST_TOOL_SKILLS.fish!;
   if (id === "hoe" || id === "farm") return HARVEST_TOOL_SKILLS.farm!;
   if (id === "shovel" || id === "dig" || id === "bucket") return HARVEST_TOOL_SKILLS.dig!;
-  if (id === "back_slot" || id === "buildhammer") return HARVEST_TOOL_SKILLS.gather!;
+  if (id === "back_slot" || id === "effect_slot") return HARVEST_TOOL_SKILLS.back!;
+  if (id === "buildhammer") return HARVEST_TOOL_SKILLS.gather!;
   return HARVEST_TOOL_SKILLS.gather!;
 }
 
