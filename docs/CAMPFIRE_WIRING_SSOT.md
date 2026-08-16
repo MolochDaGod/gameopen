@@ -62,7 +62,9 @@ Palette props (`fence`, `tree`, `barn`, hay, crops…) bind the live TVS Voxel F
 `assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/*-texture.png`  
 (sRGB + nearest). Scene look: `prepObjectMaterials` + RoomEnvironment IBL + IntroScene bloom/`OutputPass`.
 
-Smoke: `npm run smoke:prod:open` · HEAD critical TVS files + farm palettes.
+Encament backdrop GLB (behind the fire): `assets.grudge-studio.com/models/lobby/chicken_gun_fruzer_encampment.glb`.
+
+Smoke: `npm run smoke:prod:open` · HEAD critical TVS files + farm palettes + Encament bake.
 
 ---
 

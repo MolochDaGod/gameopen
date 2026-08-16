@@ -29,6 +29,7 @@ import {
   CAMPFIRE_TVS,
   campfireTvsTextureUrl,
   campfireTvsUrls,
+  encampmentBackdropUrls,
 } from "../../lib/productionSystemsPattern";
 import { bindKtx2, makeGltfLoader } from "../loaders/gltf";
 import { bindTextureAnisotropy, prepObjectMaterials } from "../texturePrep";
@@ -236,9 +237,9 @@ export class CampfireLobbyScene {
 
     // Warm dusk farm — no purple dungeon sky
     this.scene.background = new THREE.Color(0x0a1420);
-    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.022);
+    this.scene.fog = new THREE.Fog(0x0c1824, 28, 220);
 
-    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 120);
+    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 280);
     this.camera.position.copy(CAM_POS);
     this.camera.lookAt(CAM_LOOK);
 
@@ -261,6 +262,7 @@ export class CampfireLobbyScene {
     this.buildCampfireProcedural();
     this.buildStars();
     void this.loadTvsFarmProps();
+    void this.loadEncampmentBackdrop();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
@@ -423,6 +425,57 @@ export class CampfireLobbyScene {
     this.envRoot.add(dirt);
 
     // Soft sky dome (flat color already set)
+  }
+
+  /**
+   * Encament village behind the fire (camera is +Z looking toward origin).
+   * Author scale 1 — decade unit-fix only if bake is cm. Not a second lobby.
+   */
+  private async loadEncampmentBackdrop(): Promise<void> {
+    try {
+      const root = await loadGltfFirst(this.gltf, encampmentBackdropUrls());
+      if (!root || this.disposed) return;
+      root.name = "encampment-backdrop";
+      prepObjectMaterials(root, { neutralizeMetal: true, receiveShadow: true });
+      root.scale.set(1, 1, 1);
+      root.updateMatrixWorld(true);
+      let box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      if (size.y > 80) {
+        root.scale.multiplyScalar(0.01);
+        root.updateMatrixWorld(true);
+        box.setFromObject(root);
+      }
+      root.position.y -= box.min.y;
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      const center = box.getCenter(new THREE.Vector3());
+      const depth = Math.max(8, box.max.z - box.min.z);
+      const zBack = -(16 + Math.min(depth * 0.35, 36));
+      root.position.x += -center.x;
+      root.position.z += -center.z + zBack;
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      // Keep the 4-seat ring clear — Encament must stay behind the fire.
+      if (box.max.z > -10) {
+        root.position.z += -10 - box.max.z;
+        root.updateMatrixWorld(true);
+      }
+      root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh) return;
+        m.castShadow = false;
+        m.receiveShadow = true;
+      });
+      this.envRoot.add(root);
+      const fill = new THREE.DirectionalLight(0xffd8a0, 0.35);
+      fill.position.set(-8, 18, zBack - 6);
+      fill.target.position.set(0, 1, zBack);
+      this.envRoot.add(fill);
+      this.envRoot.add(fill.target);
+    } catch (e) {
+      console.warn("[CampfireLobby] Encament backdrop skip", e);
+    }
   }
 
   /** Load TVS Voxel Farm GLBs — soft-fail; keep procedural ground if missing. */
