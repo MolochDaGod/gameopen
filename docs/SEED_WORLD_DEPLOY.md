@@ -108,7 +108,8 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 3. **Overworld** = `generateSeedTerrain` in `@workspace/voxel-canonical` — 16-column chunks, same `hashSeed` / `chunkIdx`, hub flattened so the town sits at y=0.  
 4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
 5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.  
-6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → `models/voxel/maps/wolf_street.glb`). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).
+6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → `models/voxel/maps/wolf_street.glb`). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).  
+7. **Seed enemy** — voxel **Voodooist** (`D:\Games\Models\voodooist.glb` → `models/enemies/session/voodooist.glb`, SI 1.8 m). Same session-pack pattern as mage_demon. Stamped on seed scenes (`placeSeedHostilesFromSeed`) and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`).
 
 ### Shader.lab `#voxel` cave dungeon
 

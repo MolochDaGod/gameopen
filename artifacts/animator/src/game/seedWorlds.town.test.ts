@@ -6,6 +6,8 @@ import {
   evaluateAssetRole,
   EXPLORER_STARTING_TOWN_CHUNK,
   listPremadeVoxelMaps,
+  placeSeedHostilesFromSeed,
+  SEED_VOODOOIST_UNIT,
   resolveSeedPrefabMapChunk,
   SEED_FALLBACK_PREFAB_CHUNK,
 } from "@workspace/voxel-canonical";
@@ -64,6 +66,9 @@ describe("explorer starting town + seed", () => {
     });
     expect(street.role).toBe("map_chunk");
     expect(street.forbidPropHeightFit).toBe(true);
+    const mobs = placeSeedHostilesFromSeed(a.world.seedNumber);
+    expect(mobs).toHaveLength(3);
+    expect(mobs[0]!.unitId ?? "").toBe(SEED_VOODOOIST_UNIT);
     expect(a.portals.map((p) => p.position)).toEqual(b.portals.map((p) => p.position));
     expect(a.portals[0]!.position).not.toEqual(c.portals[0]!.position);
     expect(buildSeedDeployment({ id: "x", name: "x", seed: "alpha-42" }).world.seedNumber).toBe(

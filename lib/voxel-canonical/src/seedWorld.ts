@@ -9,7 +9,7 @@
  * Open authors deployments and playtests; promote scenes with portal triggers.
  */
 
-import type { SceneTrigger, Vec3i, VoxelRealmsScene } from "./types";
+import type { SceneNpc, SceneTrigger, Vec3i, VoxelRealmsScene } from "./types";
 import { VOXEL_REALMS_SCENE_VERSION } from "./types";
 import { MAP_CHUNKS } from "./mapAssetScale";
 
@@ -55,6 +55,33 @@ export const EXPLORER_STARTING_TOWN_DEPLOYMENT = "mapchunk-animal-company-lobby"
  * seed's map. Real GLB: models/voxel/maps/wolf_street.glb (1 block = 1 m).
  */
 export const SEED_FALLBACK_PREFAB_CHUNK = "wolf_street";
+
+/** Voxel seed enemy — session pack voodooist (SI 1.8 m). */
+export const SEED_VOODOOIST_UNIT = "voodooist";
+export const SEED_VOODOOIST_MESH = "models/enemies/session/voodooist.glb";
+
+/**
+ * Deterministic seed-world hostiles (same seed ⇒ same stand).
+ * Placed outside the starting-town hub so they hunt the wilderness.
+ */
+export function placeSeedHostilesFromSeed(worldSeed: number, count = 3): SceneNpc[] {
+  const rng = makeSeedRng(mixSeed(worldSeed, 0x900d00));
+  const npcs: SceneNpc[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = rng() * Math.PI * 2;
+    const dist = 40 + rng() * 24;
+    npcs.push({
+      id: `seed_${SEED_VOODOOIST_UNIT}_${i}`,
+      kind: "enemy",
+      model: SEED_VOODOOIST_MESH,
+      unitId: SEED_VOODOOIST_UNIT,
+      x: Math.round(Math.cos(angle) * dist),
+      y: 1,
+      z: Math.round(Math.sin(angle) * dist),
+    });
+  }
+  return npcs;
+}
 
 /**
  * Pick the MAP_CHUNKS id for a seed world.
@@ -507,7 +534,10 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
   return {
     version: base.version,
     props: Array.isArray(overlay.props) ? overlay.props : [],
-    npcs: Array.isArray(overlay.npcs) ? overlay.npcs : [],
+    npcs: [
+      ...placeSeedHostilesFromSeed(dep.world.seedNumber),
+      ...(Array.isArray(overlay.npcs) ? overlay.npcs : []),
+    ],
     colliders: Array.isArray(overlay.colliders) ? overlay.colliders : [],
     triggers,
     paths: Array.isArray(overlay.paths) ? overlay.paths : [],

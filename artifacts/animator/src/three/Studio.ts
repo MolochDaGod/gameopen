@@ -12063,6 +12063,18 @@ export class Studio {
       this.defeated = false;
       this.controller?.setCollision(arena.collision, arena.spawn);
       this.controller?.setCameraOccluders(arena.occluders);
+
+      if (this.campEnemies) {
+        const campId =
+          map.play?.kind === "seed-overworld"
+            ? "seed_voodoo"
+            : map.dungeon
+              ? "seed_voodoo_dungeon"
+              : null;
+        if (campId) {
+          void this.campEnemies.spawnSeedHostiles(arena.spawn, campId);
+        }
+      }
     } catch (err) {
       console.error("[Studio] arena load failed", err);
       arena?.dispose();

@@ -82,6 +82,25 @@
       "tags": ["voxel", "beast", "charge", "session"],
       "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
     },
+    "voodooist": {
+      "id": "voodooist",
+      "name": "Voodooist",
+      "role": "camp_elite",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/voodooist.glb"
+      ],
+      "heightM": 1.8,
+      "hp": 120,
+      "damage": 18,
+      "speed": 2.3,
+      "atkReach": 6.5,
+      "aggroRange": 20,
+      "xp": 80,
+      "defaultStrategy": "ranged-skirmisher",
+      "tags": ["voxel", "magic", "hex", "seed", "session"],
+      "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
     "violet_4_hn_creature": {
       "id": "violet_4_hn_creature",
       "name": "Violet HN Creature",
@@ -113,6 +132,7 @@
         { "unitId": "violet_4_hn_creature", "count": 2, "radius": 8 },
         { "unitId": "lowpoly_rhino", "count": 1, "radius": 10 },
         { "unitId": "mage_demon", "count": 1, "radius": 7 },
+        { "unitId": "voodooist", "count": 2, "radius": 12 },
         { "unitId": "blocker_broker", "count": 1, "radius": 6 }
       ]
     }

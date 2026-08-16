@@ -42,6 +42,7 @@ export const ENEMIES: readonly CatalogEntity[] = [
   { id: "mage_demon", name: "Mage Demon", kind: "enemy", model: "models/enemies/session/mage_demon.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "ranged", "session"] },
   { id: "lowpoly_rhino", name: "Rhino", kind: "enemy", model: "models/enemies/session/lowpoly_rhino.glb", defaultStrategy: "aggressive-rusher", tags: ["voxel", "beast", "session"] },
   { id: "violet_4_hn_creature", name: "Violet HN Creature", kind: "enemy", model: "models/enemies/session/violet_4_hn_creature.glb", defaultStrategy: "flanker", tags: ["voxel", "creature", "session"] },
+  { id: "voodooist", name: "Voodooist", kind: "enemy", model: "models/enemies/session/voodooist.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "hex", "seed", "session"] },
 ] as const;
 
 export const ALLIES: readonly CatalogEntity[] = [

@@ -13,6 +13,8 @@ import {
   hashSeed,
   listPremadeVoxelMaps,
   placePortalsFromSeed,
+  placeSeedHostilesFromSeed,
+  SEED_VOODOOIST_UNIT,
   portalsToTriggers,
 } from "./seedWorld";
 
@@ -67,6 +69,19 @@ describe("seedWorld", () => {
 
     const markers = portalsToTriggers(dep.portals);
     expect(markers[0]!.kind).toBe("portal");
+  });
+
+  it("places the same voodooist hostiles for the same seed", () => {
+    const a = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
+    const b = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
+    expect(a).toEqual(b);
+    expect(a.length).toBe(3);
+    expect(a[0]!.unitId ?? a[0]!.model).toBeTruthy();
+    expect(String(a[0]!.model)).toContain(SEED_VOODOOIST_UNIT);
+    const scene = deploymentToScene(
+      buildSeedDeployment({ id: "h", name: "h", seed: "explorer-town" }),
+    );
+    expect(scene.npcs.some((n) => String(n.model).includes("voodooist"))).toBe(true);
   });
 
   it("reviews premade maps and marks Animal Company lobby as spawn hub", () => {

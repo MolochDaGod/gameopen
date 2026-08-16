@@ -59,6 +59,28 @@ export class CampEnemySystem {
     this.enemies = [];
   }
 
+  /**
+   * Seed overworld / cave dungeon — voodooist hostiles (session voxel enemy).
+   * campId: seed_voodoo | seed_voodoo_dungeon
+   */
+  async spawnSeedHostiles(
+    center: THREE.Vector3,
+    campId: "seed_voodoo" | "seed_voodoo_dungeon" = "seed_voodoo",
+  ): Promise<number> {
+    this.cat = await loadForestCreepCatalog();
+    const spawns = expandCampSpawns(this.cat, campId, {
+      x: center.x,
+      z: center.z,
+    });
+    let n = 0;
+    for (const s of spawns) {
+      const ok = await this.spawnOne(s.unit, s.x, center.y, s.z);
+      if (ok) n++;
+    }
+    if (n) this.cbs.flash?.(`SEED HOSTILES · ${n} voodooist`, 1.2);
+    return n;
+  }
+
   async spawnVoxelCamp(center: THREE.Vector3): Promise<number> {
     this.clear();
     this.cat = await loadForestCreepCatalog();
