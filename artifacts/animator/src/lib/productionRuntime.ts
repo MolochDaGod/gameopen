@@ -16,6 +16,12 @@
  * Physics constants — re-export fleet SSOT from `@workspace/grudge-physics`
  * so every Open surface shares one capsule / tick / gravity definition.
  */
+import {
+  EXPLORER_STARTING_TOWN_CHUNK,
+  EXPLORER_STARTING_TOWN_DEPLOYMENT,
+  hashSeed,
+} from "@workspace/voxel-canonical";
+
 export {
   PHYSICS_HZ,
   PHYSICS_DT,
@@ -241,6 +247,14 @@ export function mineLoaderPlayUrl(opts: {
   const q = hashQ.toString();
   u.hash = q ? `#/play?${q}` : "#/play";
   applyMineHandoff(u, { ...opts, mode });
+  // No authored mapId → explorer starting town + Minecraft-like seed overworld.
+  if (!opts.mapId) {
+    u.searchParams.set("deploymentId", EXPLORER_STARTING_TOWN_DEPLOYMENT);
+    u.searchParams.set("startingTown", EXPLORER_STARTING_TOWN_CHUNK);
+    u.searchParams.set("seed", String(hashSeed("explorer-town")));
+    u.searchParams.set("seedLabel", "explorer-town");
+    u.searchParams.set("worldMode", "seed-overworld");
+  }
   return u.toString();
 }
 

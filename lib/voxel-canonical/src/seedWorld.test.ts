@@ -5,8 +5,11 @@ import {
   chunkBlocks,
   CHUNK_IDX_MAX,
   DEFAULT_CHUNK_IDX,
+  DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
+  EXPLORER_STARTING_TOWN_CHUNK,
   hashSeed,
+  listPremadeVoxelMaps,
   placePortalsFromSeed,
   portalsToTriggers,
 } from "./seedWorld";
@@ -62,5 +65,31 @@ describe("seedWorld", () => {
 
     const markers = portalsToTriggers(dep.portals);
     expect(markers[0]!.kind).toBe("portal");
+  });
+
+  it("reviews premade maps and marks Animal Company lobby as spawn hub", () => {
+    const maps = listPremadeVoxelMaps();
+    expect(maps.some((m) => m.id === "amidaFarmCamp" && m.source === "template")).toBe(true);
+    const lobby = maps.find((m) => m.id === EXPLORER_STARTING_TOWN_CHUNK);
+    expect(lobby?.source).toBe("map_chunk");
+    expect(lobby?.role).toBe("lobby");
+  });
+
+  it("stamps explorer starting town on the lobby map chunk + seed scene", () => {
+    const dep = buildSeedDeployment({
+      id: "mapchunk-animal-company-lobby",
+      name: "Animal Company Lobby",
+      seed: "explorer-town",
+      mapChunkId: EXPLORER_STARTING_TOWN_CHUNK,
+    });
+    expect(dep.world.startingTown?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    expect(dep.world.startingTown?.templateId).toBe(
+      DEFAULT_EXPLORER_STARTING_TOWN.templateId,
+    );
+    const scene = deploymentToScene(dep);
+    expect((scene.map as { startingTown?: { mapChunkId: string } }).startingTown?.mapChunkId).toBe(
+      EXPLORER_STARTING_TOWN_CHUNK,
+    );
+    expect(scene.spawn).toEqual({ x: 0, y: 2, z: 0 });
   });
 });

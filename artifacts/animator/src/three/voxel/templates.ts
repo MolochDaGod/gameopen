@@ -349,7 +349,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
   {
     id: "amidaFarmCamp",
     label: "Amida Farm Camp",
-    desc: "Fields near Amida — farm plots, fence, camp pad, crop rows (codex-mapped)",
+    desc: "Explorer starting-town block overlay — farm plots, fence, camp pad (pairs with animal_company_lobby seed hub)",
     build: amidaFarmCampLab,
   },
   {

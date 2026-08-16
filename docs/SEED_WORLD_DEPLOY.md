@@ -71,6 +71,45 @@ npm run assets:voxel-last30:seed-d1:apply    # D1 registry
 
 ---
 
+## Premade voxel maps (review)
+
+Do **not** invent a second map table. These are the existing catalogs.
+
+### Open `/voxel` templates (`MAP_TEMPLATES`)
+
+| Id | Role |
+|----|------|
+| `amidaFarmCamp` | **Starting-town block overlay** (Amida fields farm/camp) |
+| `biomeRoadLab` | Lab — road pack |
+| `boxingRing` · `arena1` · `arena2` | Arena |
+| `arena3` | Dungeon (portal theme `crypt`) |
+| `challenge1` · `challenge2` | Parkour labs |
+
+### MAP_CHUNKS (CDN / last-30)
+
+| Id | Role |
+|----|------|
+| **`animal_company_lobby`** | **Explorer starting town / lobby spawn v3** |
+| `faction_spawn_castle_town` | Mega castle + town (multipart; optional hub) |
+| `island_life` · `awesome_realm_world` | Overworld shells |
+| `castle_eltz` · `pirat_bay` · `dalaran_fantasy_island` | Structure / coast / island |
+| `geonosis_arena` · `tower_koth` · `koth_bundle` | Arena / KOTH |
+| `grotto_cavern_cave` · `dragon_head_cave` | Dungeon chunks |
+| `floating_islands_dwarves_haven` · `glowstone_mountain*` | Sky / mountain |
+| `queen_annes_revenge` | Ship structure |
+
+Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
+
+### Explorer start + Minecraft seed
+
+1. Explorer / harvest / DRC launch (no `mapId`) → deployment `mapchunk-animal-company-lobby`.  
+2. **Town** = `animal_company_lobby` GLB at spawn (block fallback `amidaFarmCamp`).  
+3. **Overworld** = same `hashSeed` / `chunkIdx` gen as other seed worlds.  
+4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals).  
+5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.
+
+---
+
 ## Goal
 
 Ship **Minecraft-like game maps**:

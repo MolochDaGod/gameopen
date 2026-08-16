@@ -7,6 +7,7 @@ import {
   clampChunkIdx,
   chunkBlocks,
   DEFAULT_CHUNK_IDX,
+  DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
   deploymentToSharePayload,
   hashSeed,
@@ -14,6 +15,7 @@ import {
   type SeedPortalPlan,
   type SeedWorldBiome,
   type SeedWorldDeployment,
+  type StartingTownSpec,
 } from "@workspace/voxel-canonical";
 
 export { chunkBlocks, clampChunkIdx, DEFAULT_CHUNK_IDX };
@@ -48,6 +50,8 @@ export interface SeedCatalogEntry {
   /** Mine-Loader definition ids */
   codexDefs?: string[];
   sourceCollection?: string;
+  /** Explorer spawn hub (Animal Company lobby by default). */
+  startingTown?: StartingTownSpec;
 }
 
 export interface SeedCatalog {
@@ -144,6 +148,7 @@ export function catalogEntryToDeployment(entry: SeedCatalogEntry): SeedWorldDepl
     cdnUrl: entry.cdnUrl,
     codexBlocks: entry.codexBlocks,
     codexDefs: entry.codexDefs,
+    startingTown: entry.startingTown,
   });
 }
 
@@ -175,6 +180,7 @@ export function customSeedDeployment(
       portalCount: opts?.portalCount ?? 4,
       themes: ["ruins", "crypt", "mine", "temple"],
     },
+    startingTown: { ...DEFAULT_EXPLORER_STARTING_TOWN },
   });
 }
 
@@ -193,6 +199,7 @@ export function buildSeedWorldLaunchUrl(dep: SeedWorldDeployment): string {
     deploymentId: dep.world.id,
     chunkIdx: clampChunkIdx(dep.world.chunkIdx),
     worldMode: "seed-overworld",
+    startingTown: dep.world.startingTown?.mapChunkId,
   });
 }
 

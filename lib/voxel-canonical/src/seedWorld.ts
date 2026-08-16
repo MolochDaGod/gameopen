@@ -11,6 +11,7 @@
 
 import type { SceneTrigger, Vec3i, VoxelRealmsScene } from "./types";
 import { VOXEL_REALMS_SCENE_VERSION } from "./types";
+import { MAP_CHUNKS } from "./mapAssetScale";
 
 function emptyScene(): VoxelRealmsScene {
   return {
@@ -38,6 +39,83 @@ export const CHUNK_IDX_MIN = 0;
 export const CHUNK_IDX_MAX = CHUNK_SIZES.length - 1; // 7
 /** Default playable seed world size (256 blocks) — index 5. */
 export const DEFAULT_CHUNK_IDX = 5;
+
+/**
+ * Explorer starting town — premade lobby spawn (voxel-last30).
+ * Seed overworld generates around this hub (Minecraft spawn + stronghold ring).
+ */
+export const EXPLORER_STARTING_TOWN_CHUNK = "animal_company_lobby";
+/** Voxel-editor block overlay at spawn (Amida farm camp). */
+export const EXPLORER_STARTING_TOWN_TEMPLATE = "amidaFarmCamp";
+/** Featured seed-deployments.json id used for explorer / harvest default launch. */
+export const EXPLORER_STARTING_TOWN_DEPLOYMENT = "mapchunk-animal-company-lobby";
+
+export type StartingTownSpec = {
+  mapChunkId: string;
+  /** Open MAP_TEMPLATES id for block overlay when the GLB is unavailable. */
+  templateId?: string;
+  spawn?: Vec3i;
+};
+
+export const DEFAULT_EXPLORER_STARTING_TOWN: StartingTownSpec = {
+  mapChunkId: EXPLORER_STARTING_TOWN_CHUNK,
+  templateId: EXPLORER_STARTING_TOWN_TEMPLATE,
+  spawn: { x: 0, y: 2, z: 0 },
+};
+
+export type PremadeVoxelMapRole =
+  | "starting_town"
+  | "lobby"
+  | "overworld"
+  | "arena"
+  | "dungeon"
+  | "lab"
+  | "structure";
+
+export type PremadeVoxelMap = {
+  id: string;
+  label: string;
+  source: "map_chunk" | "template";
+  role: PremadeVoxelMapRole;
+  file?: string;
+};
+
+const PREMADE_TEMPLATE_ROWS: PremadeVoxelMap[] = [
+  { id: "amidaFarmCamp", label: "Amida Farm Camp", source: "template", role: "starting_town" },
+  { id: "biomeRoadLab", label: "Biome Roads Lab", source: "template", role: "lab" },
+  { id: "boxingRing", label: "Boxing Ring", source: "template", role: "arena" },
+  { id: "arena1", label: "Arena 1", source: "template", role: "arena" },
+  { id: "arena2", label: "Arena 2", source: "template", role: "arena" },
+  { id: "arena3", label: "Arena 3", source: "template", role: "dungeon" },
+  { id: "challenge1", label: "Challenge Course 1", source: "template", role: "lab" },
+  { id: "challenge2", label: "Challenge Course 2", source: "template", role: "lab" },
+];
+
+function roleFromChunkTags(tags: string[] | undefined, id: string): PremadeVoxelMapRole {
+  const t = (tags || []).join(" ").toLowerCase();
+  if (id === EXPLORER_STARTING_TOWN_CHUNK || /lobby|spawn/.test(t) || /castle_town|faction_spawn/.test(id)) {
+    return id.includes("lobby") || id === EXPLORER_STARTING_TOWN_CHUNK ? "lobby" : "starting_town";
+  }
+  if (/arena|koth|pvp/.test(t) || /arena|koth/.test(id)) return "arena";
+  if (/cave|dungeon|crypt/.test(t) || /cave|grotto|dragon/.test(id)) return "dungeon";
+  if (/overworld|mineways|island_life|realm/.test(t) || /island_life|awesome_realm/.test(id)) {
+    return "overworld";
+  }
+  if (/lab|road/.test(t)) return "lab";
+  return "structure";
+}
+
+/** Review catalog: Open MAP_TEMPLATES + MAP_CHUNKS (no second map DB). */
+export function listPremadeVoxelMaps(): PremadeVoxelMap[] {
+  const chunks: PremadeVoxelMap[] = Object.values(MAP_CHUNKS).map((c) => ({
+    id: c.id,
+    label: c.label,
+    source: "map_chunk" as const,
+    role: roleFromChunkTags(c.tags, c.id),
+    file: c.file,
+  }));
+  return [...PREMADE_TEMPLATE_ROWS, ...chunks];
+}
 
 /** Clamp catalog / query chunkIdx into the engine table. */
 export function clampChunkIdx(idx: number | undefined | null): number {
@@ -159,6 +237,8 @@ export interface SeedWorldMeta {
   codexBlocks?: string[];
   /** Mine-Loader definition ids. */
   codexDefs?: string[];
+  /** Premade spawn hub (explorer starting town). Seed terrain generates around it. */
+  startingTown?: StartingTownSpec;
 }
 
 /**
@@ -283,6 +363,7 @@ export function buildSeedDeployment(opts: {
   /** Fixed portals override auto-placement (still dungeon seeds mix from world). */
   portals?: SeedPortal[];
   sceneOverlay?: Partial<VoxelRealmsScene> | null;
+  startingTown?: StartingTownSpec | null;
 }): SeedWorldDeployment {
   const seedNumber = hashSeed(opts.seed);
   const chunkIdx = clampChunkIdx(opts.chunkIdx ?? DEFAULT_CHUNK_IDX);
@@ -316,6 +397,13 @@ export function buildSeedDeployment(opts: {
       cdnUrl: opts.cdnUrl,
       codexBlocks: opts.codexBlocks,
       codexDefs: opts.codexDefs,
+      startingTown:
+        opts.startingTown === null
+          ? undefined
+          : opts.startingTown ??
+            (opts.mapChunkId === EXPLORER_STARTING_TOWN_CHUNK
+              ? { ...DEFAULT_EXPLORER_STARTING_TOWN }
+              : undefined),
     },
     portals,
     sceneOverlay: opts.sceneOverlay ?? null,
@@ -383,19 +471,26 @@ export function deploymentToScene(dep: SeedWorldDeployment): VoxelRealmsScene {
       ...spawnPad,
       ...portalBlocks,
     ],
-    spawn: overlay.spawn ?? { x: 0, y: 2, z: 0 },
+    spawn:
+      overlay.spawn ??
+      dep.world.startingTown?.spawn ??
+      { x: 0, y: 2, z: 0 },
     map: {
       kind: "seed-overworld",
       seed: dep.world.seedNumber,
       chunkIdx: dep.world.chunkIdx,
       chunkBlocks: chunkBlocks(dep.world.chunkIdx),
       biome: dep.world.biome,
+      mapChunkId: dep.world.mapChunkId ?? dep.world.startingTown?.mapChunkId,
+      startingTown: dep.world.startingTown ?? null,
       /** Chunk gen hint for Mine-Loader: regenerate columns from seed. */
       gen: {
         mode: "chunked",
         chunkIdx: dep.world.chunkIdx,
         side: chunkBlocks(dep.world.chunkIdx),
         seed: dep.world.seedNumber,
+        /** Keep hub cells; generate wilderness outside this radius. */
+        hubRadius: dep.world.startingTown ? 36 : 8,
       },
       portals: dep.portals.map((p) => ({
         id: p.id,
