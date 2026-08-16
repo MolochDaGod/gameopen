@@ -272,6 +272,14 @@
       "notes": "Grid-perfect place cell (inner plate + arrows). Ghost sits inside. Native inner ~3.457 m."
     },
     {
+      "id": "animal_stormbird_galarian",
+      "r2Key": "models/warlords-era/animals/flying/stormbird_galarian.glb",
+      "category": "animal",
+      "role": "flying_hostile",
+      "contentType": "model/gltf-binary",
+      "notes": "Warlords animals/flying — aggressive storm bird (native ~2.26 m). Harpy/sky-fauna slot. Encament + forest camps."
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",

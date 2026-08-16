@@ -187,7 +187,8 @@ export class CampEnemySystem {
         tpl = scene;
       }
       const root = tpl.clone(true);
-      root.position.set(x, y, z);
+      const fly = unit.tags?.includes("flying") ? unit.heightM * 0.45 : 0;
+      root.position.set(x, y + fly, z);
       root.name = `camp-enemy:${unit.id}`;
       root.userData.campEnemy = true;
       root.userData.unitId = unit.id;

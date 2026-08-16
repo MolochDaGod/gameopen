@@ -403,6 +403,20 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       buffOnKill: "red_rage",
       tags: ["voxel", "melee", "undead", "seed", "session"],
     },
+    {
+      id: "stormbird_galarian",
+      name: "Galarian Stormbird",
+      role: "camp_elite",
+      meshKeys: ["models/warlords-era/animals/flying/stormbird_galarian.glb"],
+      heightM: 2.2,
+      hp: 140,
+      damage: 22,
+      speed: 3.6,
+      atkReach: 2.2,
+      xp: 95,
+      buffOnKill: "purple_might",
+      tags: ["warlords", "flying", "beast", "elite", "seed"],
+    },
   ],
   buffs: {
     blue_haste: {
@@ -446,6 +460,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "violet_4_hn_creature", count: 1, radius: 9 },
         { unitId: "voodooist", count: 1, radius: 14 },
         { unitId: "zombie_redesigned", count: 2, radius: 10 },
+        { unitId: "stormbird_galarian", count: 1, radius: 16 },
       ],
     },
     session_voxel_pack: {
@@ -460,6 +475,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "mage_demon", count: 1, radius: 7 },
         { unitId: "voodooist", count: 2, radius: 12 },
         { unitId: "zombie_redesigned", count: 3, radius: 11 },
+        { unitId: "stormbird_galarian", count: 1, radius: 16 },
         { unitId: "blocker_broker", count: 1, radius: 6 },
       ],
     },
@@ -471,6 +487,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       spawns: [
         { unitId: "voodooist", count: 3, radius: 22 },
         { unitId: "zombie_redesigned", count: 3, radius: 18 },
+        { unitId: "stormbird_galarian", count: 2, radius: 20 },
       ],
     },
     seed_voodoo_dungeon: {
@@ -543,6 +560,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       spawns: [
         { unitId: "jungle_ogre", count: 1, radius: 0 },
         { unitId: "forest_zombie", count: 2, radius: 4 },
+        { unitId: "stormbird_galarian", count: 1, radius: 6 },
       ],
     },
   },

@@ -29,7 +29,7 @@
     "animals/flying": {
       "era": "warlords",
       "use": ["sky fauna", "harpy enemy", "ambient birds"],
-      "items": ["eagle", "eagle_baby", "owl", "crow", "crow_baby", "harpia"]
+      "items": ["eagle", "eagle_baby", "owl", "crow", "crow_baby", "harpia", "stormbird_galarian"]
     },
     "buildings": {
       "era": "warlords",
