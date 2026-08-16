@@ -64,25 +64,37 @@ export const SEED_FALLBACK_PREFAB_CHUNK = "wolf_street";
 export const SEED_VOODOOIST_UNIT = "voodooist";
 export const SEED_VOODOOIST_MESH = "models/enemies/session/voodooist.glb";
 
+/** Voxel seed enemy — session pack redesigned zombie (SI 1.8 m, native Z ≈ 1.82). */
+export const SEED_ZOMBIE_REDESIGNED_UNIT = "zombie_redesigned";
+export const SEED_ZOMBIE_REDESIGNED_MESH = "models/enemies/session/zombie_redesigned.glb";
+
+const SEED_HOSTILE_UNITS: { unitId: string; mesh: string; mix: number }[] = [
+  { unitId: SEED_VOODOOIST_UNIT, mesh: SEED_VOODOOIST_MESH, mix: 0x900d00 },
+  { unitId: SEED_ZOMBIE_REDESIGNED_UNIT, mesh: SEED_ZOMBIE_REDESIGNED_MESH, mix: 0x20b1e5 },
+];
+
 /**
  * Deterministic seed-world hostiles (same seed ⇒ same stand).
  * Placed outside the starting-town hub so they hunt the wilderness.
+ * Each session seed unit gets its own mix so stands do not stack.
  */
 export function placeSeedHostilesFromSeed(worldSeed: number, count = 3): SceneNpc[] {
-  const rng = makeSeedRng(mixSeed(worldSeed, 0x900d00));
   const npcs: SceneNpc[] = [];
-  for (let i = 0; i < count; i++) {
-    const angle = rng() * Math.PI * 2;
-    const dist = 40 + rng() * 24;
-    npcs.push({
-      id: `seed_${SEED_VOODOOIST_UNIT}_${i}`,
-      kind: "enemy",
-      model: SEED_VOODOOIST_MESH,
-      unitId: SEED_VOODOOIST_UNIT,
-      x: Math.round(Math.cos(angle) * dist),
-      y: 1,
-      z: Math.round(Math.sin(angle) * dist),
-    });
+  for (const unit of SEED_HOSTILE_UNITS) {
+    const rng = makeSeedRng(mixSeed(worldSeed, unit.mix));
+    for (let i = 0; i < count; i++) {
+      const angle = rng() * Math.PI * 2;
+      const dist = 40 + rng() * 24;
+      npcs.push({
+        id: `seed_${unit.unitId}_${i}`,
+        kind: "enemy",
+        model: unit.mesh,
+        unitId: unit.unitId,
+        x: Math.round(Math.cos(angle) * dist),
+        y: 1,
+        z: Math.round(Math.sin(angle) * dist),
+      });
+    }
   }
   return npcs;
 }
