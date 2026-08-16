@@ -66,6 +66,32 @@
       "tier": 0
     },
     {
+      "id": "rcp_starter_campfire",
+      "name": "Campfire",
+      "station": "hand",
+      "output": {
+        "id": "campfire",
+        "name": "Campfire",
+        "qty": 1
+      },
+      "inputs": [
+        {
+          "id": "mat_stick",
+          "name": "Stick",
+          "qty": 4
+        },
+        {
+          "id": "mat_stone",
+          "name": "Stone",
+          "qty": 3
+        }
+      ],
+      "timeSec": 2,
+      "skill": "crafting",
+      "tier": 0,
+      "blurb": "First fire from sticks and stones — no workbench."
+    },
+    {
       "id": "rcp_rope",
       "name": "Rope",
       "station": "hand",
