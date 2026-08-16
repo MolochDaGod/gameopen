@@ -447,7 +447,7 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
     {
       name: "equip_back_wing",
       description:
-        "Equip back-slot items (back slot = effect slot): back_wing_pack, back_parachute, back_glider, back_flight_rig, back_sail_deploy. Planned: wind_surf, hover, protective_shell, invisibility — see backSlotItems.ts. Pass null/empty to hide.",
+        "Equip the Back slot prefab (one equip = the effect). Coded: wing pack, parachute, glider, flight rig, sail, windsurf, shark fin, holy, traveler T1–T3, capes. Prefabs: content/backs/. Pass null/empty to hide.",
       parameters: {
         type: "object",
         properties: {
@@ -459,6 +459,15 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
               "back_glider",
               "back_flight_rig",
               "back_sail_deploy",
+              "back_wind_surf",
+              "back_shark_fin",
+              "back_holy_wings",
+              "back_traveler_wings",
+              "back_traveler_wings_t2",
+              "back_traveler_wings_t3",
+              "back_cape",
+              "back_cape_long",
+              "back_cape_wide",
               "none",
             ],
           },

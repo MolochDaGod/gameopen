@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_glider",
+  "kind": "back",
+  "name": "Glider",
+  "description": "Horizontal glide from height",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "hotkey",
+    "wings"
+  ],
+  "icon": {
+    "path": "icons/armor/back_glider.png",
+    "status": "placeholder"
+  }
+}

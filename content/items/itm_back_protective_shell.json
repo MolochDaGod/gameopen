@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_protective_shell",
+  "kind": "back",
+  "name": "Protective Shell",
+  "description": "Damage absorb / bubble while active",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 0,
+  "tags": [
+    "back",
+    "passive",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/armor/back_protective_shell.png",
+    "status": "placeholder"
+  }
+}

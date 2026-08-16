@@ -1,0 +1,38 @@
+{
+  "id": "bck_cape",
+  "itemId": "itm_back_cape",
+  "runtimeId": "back_cape",
+  "equipId": "equip:back:cape",
+  "slot": "back",
+  "family": "cape",
+  "label": "Cape",
+  "effect": "Land cloth back — Unity default cape",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Always on",
+  "domains": [
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "capeVariant": "default"
+  },
+  "passive": {
+    "bonuses": {
+      "defense": 2
+    }
+  },
+  "tags": [
+    "back",
+    "cape",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

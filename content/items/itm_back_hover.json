@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_hover",
+  "kind": "back",
+  "name": "Hover Rig",
+  "description": "Short hover / soft land",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 0,
+  "tags": [
+    "back",
+    "hotkey",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/armor/back_hover.png",
+    "status": "placeholder"
+  }
+}

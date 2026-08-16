@@ -1,0 +1,45 @@
+{
+  "id": "bck_holy_wings",
+  "itemId": "itm_back_holy_wings",
+  "runtimeId": "back_holy_wings",
+  "equipId": "equip:back:holy_wings",
+  "slot": "back",
+  "family": "wings",
+  "label": "Holy Wings",
+  "effect": "Jump → glide. SZ_Wing_233 Stand / Run.",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Space jump → glide · Stand on land · Run in air",
+  "domains": [
+    "mobility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/ride/wings/holy_wings.glb",
+    "author": "D:/Games/Models/wing_379_1781615558571.glb",
+    "wingSpanM": 2,
+    "clips": [
+      "Stand",
+      "Run"
+    ]
+  },
+  "passive": {
+    "aura": "blessed",
+    "bonuses": {
+      "moveSpeed": 4
+    }
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

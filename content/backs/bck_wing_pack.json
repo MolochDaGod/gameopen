@@ -1,0 +1,38 @@
+{
+  "id": "bck_wing_pack",
+  "itemId": "itm_back_wing_pack",
+  "runtimeId": "back_wing_pack",
+  "equipId": "equip:back:wing_pack",
+  "slot": "back",
+  "family": "pack",
+  "label": "Wing Pack",
+  "effect": "Stowed back circle — base for deployables",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Visual pack only",
+  "domains": [
+    "mobility",
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/equipment/wing_animated.glb",
+    "mode": "stowed"
+  },
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "pack",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

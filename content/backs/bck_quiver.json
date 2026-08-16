@@ -1,0 +1,44 @@
+{
+  "id": "bck_quiver",
+  "itemId": "itm_back_quiver",
+  "runtimeId": "back_quiver",
+  "equipId": "back:quiver",
+  "slot": "back",
+  "family": "toon",
+  "label": "Quiver",
+  "effect": "Ranged tempo. Hits can proc Haste.",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Toon Xtra_quiver while bow equipped",
+  "domains": [
+    "combat"
+  ],
+  "status": "coded",
+  "assets": {
+    "toonMesh": "Xtra_quiver"
+  },
+  "passive": {
+    "aura": "haste",
+    "onHit": {
+      "status": "haste",
+      "chance": 0.12
+    },
+    "bonuses": {
+      "attackSpeed": 8,
+      "crit": 3
+    }
+  },
+  "tags": [
+    "back",
+    "toon",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

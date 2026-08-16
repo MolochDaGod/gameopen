@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_quiver",
+  "kind": "back",
+  "name": "Quiver",
+  "description": "Ranged tempo. Hits can proc Haste.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "toon"
+  ],
+  "icon": {
+    "path": "icons/armor/back_quiver.png",
+    "status": "placeholder"
+  }
+}

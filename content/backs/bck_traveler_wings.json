@@ -1,0 +1,43 @@
+{
+  "id": "bck_traveler_wings",
+  "itemId": "itm_back_traveler_wings",
+  "runtimeId": "back_traveler_wings",
+  "equipId": "equip:back:traveler_wings",
+  "slot": "back",
+  "family": "wings",
+  "label": "Traveler's Wings I",
+  "effect": "T1 fire-wing wardrobe · double-jump · two flaps · glide",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Air Space = fly · Space again = flap (max 2)",
+  "domains": [
+    "mobility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/ride/wings/traveler_wings_variants.glb",
+    "isolate": "FireWings_Wardrobe Variant_2",
+    "author": "D:/Games/Models/gorilla_tag_new_wing_varients.glb",
+    "wingSpanM": 1.55,
+    "flightTier": 1
+  },
+  "passive": {
+    "aura": "haste",
+    "bonuses": {
+      "moveSpeed": 8
+    }
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

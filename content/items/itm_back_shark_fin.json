@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_shark_fin",
+  "kind": "back",
+  "name": "Shark Fin",
+  "description": "2× swim · no shark aggro · breathe underwater",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "stow"
+  ],
+  "icon": {
+    "path": "icons/armor/back_shark_fin.png",
+    "status": "placeholder"
+  }
+}

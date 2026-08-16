@@ -1,0 +1,38 @@
+{
+  "id": "bck_cape_wide",
+  "itemId": "itm_back_cape_wide",
+  "runtimeId": "back_cape_wide",
+  "equipId": "equip:back:cape_wide",
+  "slot": "back",
+  "family": "cape",
+  "label": "Wide Cape",
+  "effect": "Unity Wide Cape 1",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Always on",
+  "domains": [
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "capeVariant": "wide"
+  },
+  "passive": {
+    "bonuses": {
+      "defense": 3
+    }
+  },
+  "tags": [
+    "back",
+    "cape",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

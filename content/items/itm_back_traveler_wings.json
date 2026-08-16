@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_traveler_wings",
+  "kind": "back",
+  "name": "Traveler's Wings I",
+  "description": "T1 fire-wing wardrobe · double-jump · two flaps · glide",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "hotkey",
+    "wings"
+  ],
+  "icon": {
+    "path": "icons/armor/back_traveler_wings.png",
+    "status": "placeholder"
+  }
+}

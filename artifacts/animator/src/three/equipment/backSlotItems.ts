@@ -12,6 +12,9 @@ export type BackSlotDomain = "mobility" | "ocean" | "combat" | "stealth" | "util
 
 export type BackSlotStatus = "coded" | "planned";
 
+/** How the item is used — existing keys only (see BACK_SLOT_PREFAB.md). */
+export type BackUseKind = "passive" | "hotkey" | "deploy";
+
 export type BackSlotItemDef = {
   id: string;
   label: string;
@@ -19,6 +22,12 @@ export type BackSlotItemDef = {
   effect: string;
   domains: BackSlotDomain[];
   status: BackSlotStatus;
+  /** content/backs/bck_*.json */
+  prefabId?: string;
+  useKind?: BackUseKind;
+  /** Existing controller key: Space (jump/air) or E (get-off). Never combat R. */
+  useKey?: "Space" | "E" | null;
+  useHint?: string;
   /**
    * When coded: maps to WingBackRig equip id (if wing-driven).
    * Non-wing effects use the same back slot later (shell, stealth, …).
@@ -80,6 +89,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Stowed back pack (circle) — base for deployables",
     domains: ["mobility", "utility"],
     status: "coded",
+    prefabId: "bck_wing_pack",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Visual pack only",
     wingItemId: "back_wing_pack",
   },
   {
@@ -88,6 +101,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Slow descent / fall soft",
     domains: ["mobility"],
     status: "coded",
+    prefabId: "bck_parachute",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Airborne Space — high drag, slow fall",
     wingItemId: "back_parachute",
   },
   {
@@ -96,6 +113,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Horizontal glide from height",
     domains: ["mobility", "utility"],
     status: "coded",
+    prefabId: "bck_glider",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Airborne Space — glide",
     wingItemId: "back_glider",
   },
   {
@@ -104,6 +125,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Powered lift / flight skill",
     domains: ["mobility", "combat"],
     status: "coded",
+    prefabId: "bck_flight_rig",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Airborne Space — lift",
     wingItemId: "back_flight_rig",
   },
   {
@@ -112,6 +137,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Ocean sail / waterboard couple",
     domains: ["ocean", "mobility"],
     status: "coded",
+    prefabId: "bck_sail_deploy",
+    useKind: "deploy",
+    useKey: "Space",
+    useHint: "Sailtest wind + airborne sail mode",
     wingItemId: "back_sail_deploy",
   },
   // ── Planned (catalog only — not all coded yet) ────────────────────
@@ -122,6 +151,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
       "Water-only vehicle — stow back_fly_windsurf.glb; deploy windsurf_package (Casting ride SSOT)",
     domains: ["mobility", "ocean"],
     status: "coded",
+    prefabId: "bck_wind_surf",
+    useKind: "deploy",
+    useKey: "Space",
+    useHint: "Space on water deploy · E get-off",
     wingItemId: undefined,
     stowUrl: "models/ride/back_fly_windsurf.glb",
     deployUrl: "models/ride/windsurf_package.glb",
@@ -135,6 +168,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "2× swim · no shark aggro · breathe underwater (Casting waterBuffs)",
     domains: ["ocean", "utility"],
     status: "coded",
+    prefabId: "bck_shark_fin",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Always on in water",
     wingItemId: undefined,
     stowUrl: "models/ride/shark_fin.glb",
     stowLengthM: 0.55,
@@ -148,6 +185,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Jump → glide (SZ_Wing_233 Stand / Run)",
     domains: ["mobility"],
     status: "coded",
+    prefabId: "bck_holy_wings",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Space jump → glide · Stand on land · Run in air",
     wingItemId: "back_holy_wings",
     meshUrl: "models/ride/wings/holy_wings.glb",
     wingSpanM: 2.0,
@@ -158,6 +199,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "T1 fire-wing wardrobe · double-jump fly · two flaps · glide",
     domains: ["mobility"],
     status: "coded",
+    prefabId: "bck_traveler_wings",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Air Space = fly · Space again = flap (max 2)",
     wingItemId: "back_traveler_wings",
     meshUrl: "models/ride/wings/traveler_wings_variants.glb",
     isolateName: "FireWings_Wardrobe Variant_2",
@@ -170,6 +215,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "T2 fire-wing wardrobe · faster glide than T1",
     domains: ["mobility"],
     status: "coded",
+    prefabId: "bck_traveler_wings_t2",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Same Space flaps as T1 · better glide",
     wingItemId: "back_traveler_wings_t2",
     meshUrl: "models/ride/wings/traveler_wings_variants.glb",
     isolateName: "FireWings_Wardrobe Variant.001_5",
@@ -182,6 +231,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "T3 fire-wing wardrobe · longest glide / most lift",
     domains: ["mobility"],
     status: "coded",
+    prefabId: "bck_traveler_wings_t3",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Same Space flaps as T1 · best glide",
     wingItemId: "back_traveler_wings_t3",
     meshUrl: "models/ride/wings/traveler_wings_variants.glb",
     isolateName: "FireWings_Wardrobe Variant.002_8",
@@ -194,6 +247,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Land cloth back — Unity Empty/default cape",
     domains: ["utility"],
     status: "coded",
+    prefabId: "bck_cape",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Always on",
     wingItemId: undefined,
     capeVariant: "default",
   },
@@ -203,6 +260,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Unity Long Cape 1 — longer hem",
     domains: ["utility"],
     status: "coded",
+    prefabId: "bck_cape_long",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Always on",
     wingItemId: undefined,
     capeVariant: "long",
   },
@@ -212,6 +273,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Unity Wide Cape 1 — broader shoulders",
     domains: ["utility"],
     status: "coded",
+    prefabId: "bck_cape_wide",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Always on",
     wingItemId: undefined,
     capeVariant: "wide",
   },
@@ -221,6 +286,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Short hover / soft land",
     domains: ["mobility", "utility"],
     status: "planned",
+    prefabId: "bck_hover",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Planned — Space hover",
   },
   {
     id: "back_protective_shell",
@@ -228,6 +297,10 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Damage absorb / bubble while active",
     domains: ["combat", "utility"],
     status: "planned",
+    prefabId: "bck_protective_shell",
+    useKind: "passive",
+    useKey: null,
+    useHint: "Planned — absorb while equipped",
   },
   {
     id: "back_invisibility",
@@ -235,8 +308,18 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     effect: "Go invisible (stealth windows)",
     domains: ["stealth", "combat"],
     status: "planned",
+    prefabId: "bck_invisibility",
+    useKind: "hotkey",
+    useKey: "Space",
+    useHint: "Planned — Space stealth pulse",
   },
 ];
+
+/** HUD line: PASSIVE · or Space · hint */
+export function backUseLegend(def: BackSlotItemDef): string {
+  if (def.useKind === "passive" || !def.useKey) return `PASSIVE · ${def.useHint || def.effect}`;
+  return `${def.useKey} · ${def.useHint || def.effect}`;
+}
 
 export function backSlotItem(id: string): BackSlotItemDef | undefined {
   return BACK_SLOT_ITEMS.find((i) => i.id === id);

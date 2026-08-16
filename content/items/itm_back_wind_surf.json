@@ -1,0 +1,18 @@
+{
+  "id": "itm_back_wind_surf",
+  "kind": "back",
+  "name": "Wind Surf",
+  "description": "Water-only vehicle. Stow pack on spine; deploy on ocean.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "deploy",
+    "stow"
+  ],
+  "icon": {
+    "path": "icons/armor/back_wind_surf.png",
+    "status": "placeholder"
+  }
+}

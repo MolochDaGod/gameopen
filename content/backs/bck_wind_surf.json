@@ -1,0 +1,43 @@
+{
+  "id": "bck_wind_surf",
+  "itemId": "itm_back_wind_surf",
+  "runtimeId": "back_wind_surf",
+  "equipId": "equip:back:wind_surf",
+  "slot": "back",
+  "family": "stow",
+  "label": "Wind Surf",
+  "effect": "Water-only vehicle. Stow pack on spine; deploy on ocean.",
+  "useKind": "deploy",
+  "useKey": "Space",
+  "useHint": "Space on water deploy · E get-off",
+  "domains": [
+    "mobility",
+    "ocean"
+  ],
+  "status": "coded",
+  "assets": {
+    "stow": "models/ride/back_fly_windsurf.glb",
+    "deploy": "models/ride/windsurf_package.glb",
+    "stowLengthM": 0.58,
+    "author": "Casting ride SSOT"
+  },
+  "passive": {
+    "aura": "haste",
+    "bonuses": {
+      "swimSpeed": 20
+    }
+  },
+  "tags": [
+    "back",
+    "stow",
+    "deploy",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready"
+  }
+}

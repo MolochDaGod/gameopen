@@ -162,6 +162,7 @@ import {
   backSlotItem,
   backItemIdFromEquip,
   nextCodedBackSlotId,
+  backUseLegend,
 } from "./equipment/backSlotItems";
 import { loadCampClaimState, ensureDemoRoster } from "../lib/campClaimPersist";
 import {
@@ -1774,7 +1775,7 @@ export class Studio {
     this.setCombatFlash(
       itemId
         ? `BACK · ${(def?.label || itemId).replace(/_/g, " ").toUpperCase()}${
-            def?.effect ? ` · ${def.effect}` : ""
+            def ? ` · ${backUseLegend(def)}` : ""
           }`
         : "BACK · cleared",
       0.8,
