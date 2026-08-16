@@ -51,7 +51,9 @@ describe("Relic / Back slot effects", () => {
     expect(backs.some((b) => /wind_surf/.test(b))).toBe(true);
     expect(backs.some((b) => /shark_fin/.test(b))).toBe(true);
     expect(backs.some((b) => /holy_wings/.test(b))).toBe(true);
-    expect(backs.some((b) => /traveler_wings/.test(b))).toBe(true);
+    expect(backs).toContain("equip:back:traveler_wings");
+    expect(backs).toContain("equip:back:traveler_wings_t2");
+    expect(backs).toContain("equip:back:traveler_wings_t3");
     expect(backs.some((b) => /cape_long/.test(b))).toBe(true);
     expect(backs.some((b) => /cape_wide/.test(b))).toBe(true);
   });

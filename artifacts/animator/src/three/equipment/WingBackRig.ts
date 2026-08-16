@@ -49,7 +49,9 @@ export const BACK_SLOT_WING_ITEMS: Record<
   back_flight_rig: { mode: "flight", type: 2, label: "Flight Rig" },
   back_sail_deploy: { mode: "sail", type: 1, label: "Deployable Sail" },
   back_holy_wings: { mode: "glide", type: 1, label: "Holy Wings" },
-  back_traveler_wings: { mode: "flight", type: 2, label: "Traveler's Wings" },
+  back_traveler_wings: { mode: "flight", type: 2, label: "Traveler's Wings I" },
+  back_traveler_wings_t2: { mode: "flight", type: 2, label: "Traveler's Wings II" },
+  back_traveler_wings_t3: { mode: "flight", type: 2, label: "Traveler's Wings III" },
 };
 
 export type WingPhysicsProfile = {
@@ -63,16 +65,23 @@ export type WingPhysicsProfile = {
   maxFall: number;
 };
 
-export function physicsForMode(mode: WingMode): WingPhysicsProfile {
+export function physicsForMode(mode: WingMode, flightTier: 1 | 2 | 3 = 1): WingPhysicsProfile {
   switch (mode) {
     case "parachute":
       return { drag: 0.85, glide: 0.15, lift: 0.05, maxFall: -3.5 };
     case "glide":
       // Casting FLIGHT_DEFAULTS holy: glideSink 1.4 · glideSpeed 9.5
       return { drag: 0.45, glide: 0.75, lift: 0.12, maxFall: -1.4 };
-    case "flight":
-      // Casting traveler: faster glide 14, flap lift, shallower sink
-      return { drag: 0.25, glide: 0.9, lift: 0.55, maxFall: -1.2 };
+    case "flight": {
+      // Traveler tiers from gorilla_tag_new_wing_varients.glb (T1 < T2 < T3)
+      const t = flightTier === 3 ? 3 : flightTier === 2 ? 2 : 1;
+      return {
+        drag: 0.25 - (t - 1) * 0.03,
+        glide: 0.9 + (t - 1) * 0.04,
+        lift: 0.55 + (t - 1) * 0.12,
+        maxFall: -1.2 + (t - 1) * 0.15,
+      };
+    }
     case "sail":
       // Ocean: wind-coupled later; moderate open wing + board link
       return { drag: 0.35, glide: 0.55, lift: 0.08, maxFall: -8 };
@@ -182,6 +191,29 @@ export function applyDeployedVisibility(root: THREE.Object3D): void {
   });
 }
 
+function meshKey(name: string): string {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/** Keep one wardrobe root visible in a multipack (traveler T1/T2/T3). */
+export function isolateNamedChild(root: THREE.Object3D, name: string): boolean {
+  const want = meshKey(name);
+  if (!want) return false;
+  let hit: THREE.Object3D | null = null;
+  root.traverse((o) => {
+    if (hit) return;
+    const k = meshKey(o.name);
+    if (k === want || k.includes(want)) hit = o;
+  });
+  if (!hit) return false;
+  const parent = hit.parent;
+  if (!parent) return true;
+  for (const c of parent.children) c.visible = c === hit;
+  return true;
+}
+
 export class WingBackRig {
   readonly group = new THREE.Group();
   private root: THREE.Object3D | null = null;
@@ -192,6 +224,12 @@ export class WingBackRig {
   private wingType: WingType = 1;
   private attachedBone: THREE.Object3D | null = null;
   private ready = false;
+  private loadedUrl: string | null = null;
+  private isolateName: string | null = null;
+  private dedicated = false;
+  private targetSpanM = 0.35;
+  private airMode: WingMode = "glide";
+  private flightTier: 1 | 2 | 3 = 1;
   /** Local offset on spine (metres SI). */
   offset = new THREE.Vector3(0, 0.12, -0.18);
   euler = new THREE.Euler(0, Math.PI, 0);
@@ -205,11 +243,28 @@ export class WingBackRig {
   }
 
   getPhysics(): WingPhysicsProfile {
-    return physicsForMode(this.mode);
+    return physicsForMode(this.mode, this.flightTier);
   }
 
-  async load(opts?: { toon?: boolean; url?: string }): Promise<boolean> {
-    const url = opts?.url ?? `${BASE}models/equipment/wing_animated.glb`;
+  async load(opts?: {
+    toon?: boolean;
+    url?: string;
+    isolate?: string;
+    dedicated?: boolean;
+    targetSpanM?: number;
+    flightTier?: 1 | 2 | 3;
+  }): Promise<boolean> {
+    const url = opts?.url
+      ? opts.url.startsWith("http") || opts.url.startsWith("/")
+        ? opts.url
+        : `${BASE}${opts.url}`
+      : `${BASE}models/equipment/wing_animated.glb`;
+    const isolate = opts?.isolate ?? null;
+    if (this.ready && this.loadedUrl === url && this.isolateName === isolate && this.root) {
+      if (opts?.flightTier) this.flightTier = opts.flightTier;
+      if (opts?.targetSpanM) this.targetSpanM = opts.targetSpanM;
+      return true;
+    }
     try {
       const { scene, animations } = await loadGltf(url);
       prepObjectMaterials(scene, { neutralizeMetal: true });
@@ -219,7 +274,14 @@ export class WingBackRig {
       this.root.name = "WingBackRig";
       applyGameLayer(this.root, "prop");
       this.root.userData.backSlot = true;
-      this.root.userData.equipment = "wing_animated";
+      this.root.userData.equipment = isolate || url;
+      this.dedicated = !!opts?.dedicated;
+      this.isolateName = isolate;
+      this.loadedUrl = url;
+      this.targetSpanM = opts?.targetSpanM ?? (this.dedicated ? 1.8 : 0.35);
+      this.flightTier = opts?.flightTier ?? 1;
+
+      if (isolate) isolateNamedChild(this.root, isolate);
 
       this.group.clear();
       this.group.add(this.root);
@@ -230,7 +292,8 @@ export class WingBackRig {
         this.clips.set(c.name, c);
       }
 
-      applyStowedVisibility(this.root);
+      if (this.dedicated) applyDeployedVisibility(this.root);
+      else applyStowedVisibility(this.root);
       this.ready = true;
       return true;
     } catch (e) {
@@ -251,8 +314,7 @@ export class WingBackRig {
     this.group.position.copy(this.offset);
     this.group.rotation.copy(this.euler);
     this.group.scale.setScalar(1);
-    // Fit ring to ~human back (asset may be cm)
-    this.normalizeScale(0.35);
+    this.normalizeScale(this.targetSpanM);
     return true;
   }
 
@@ -282,6 +344,14 @@ export class WingBackRig {
     this.mode = mode;
     if (!this.root || !this.mixer) return;
 
+    if (this.dedicated) {
+      applyDeployedVisibility(this.root);
+      if (this.isolateName) isolateNamedChild(this.root, this.isolateName);
+      if (mode === "stowed") this.playFuzzy(["stand", "idle", "close"], true);
+      else this.playFuzzy(["run", "flap", "fly", "open", "expand"], true);
+      return;
+    }
+
     if (mode === "stowed") {
       if (!opts?.snap && prev !== "stowed") {
         void this.playClip(this.clipName("close"), 0.2);
@@ -309,7 +379,16 @@ export class WingBackRig {
     const def = BACK_SLOT_WING_ITEMS[itemId]!;
     this.group.visible = true;
     this.setWingType(def.type);
-    this.setMode(def.mode);
+    this.airMode = def.mode;
+    this.setMode(this.dedicated ? "stowed" : def.mode);
+  }
+
+  /** Dedicated holy/traveler: Stand on ground, Run/open in air. */
+  syncAirborne(airborne: boolean): void {
+    if (!this.dedicated || !this.ready) return;
+    const next = airborne ? this.airMode : "stowed";
+    if (this.mode === next) return;
+    this.setMode(next);
   }
 
   private clipName(kind: "open" | "expand" | "dispand" | "close"): string {
@@ -330,7 +409,7 @@ export class WingBackRig {
       this.clips.get(name.toLowerCase()) ||
       [...this.clips.values()].find((c) => c.name.toLowerCase() === name.toLowerCase());
     if (!clip) {
-      console.warn("[WingBackRig] missing clip", name, [...this.clips.keys()]);
+      if (!this.dedicated) console.warn("[WingBackRig] missing clip", name, [...this.clips.keys()]);
       return false;
     }
     const next = this.mixer.clipAction(clip);
@@ -339,6 +418,25 @@ export class WingBackRig {
     next.clampWhenFinished = true;
     if (this.currentAction) this.currentAction.fadeOut(fade);
     next.fadeIn(fade).play();
+    this.currentAction = next;
+    return true;
+  }
+
+  /** Holy Stand/Run (and similar) — loop while dedicated mesh is equipped. */
+  playFuzzy(needles: string[], loop = false): boolean {
+    if (!this.mixer || !this.clips.size) return false;
+    const clip = [...this.clips.values()].find((c) => {
+      const n = c.name.toLowerCase();
+      return needles.some((k) => n.includes(k));
+    });
+    if (!clip) return false;
+    if (this.currentAction && this.currentAction.getClip() === clip) return true;
+    const next = this.mixer.clipAction(clip);
+    next.reset();
+    next.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
+    next.clampWhenFinished = !loop;
+    if (this.currentAction) this.currentAction.fadeOut(0.15);
+    next.fadeIn(0.15).play();
     this.currentAction = next;
     return true;
   }
@@ -362,7 +460,7 @@ export class WingBackRig {
     wind?: THREE.Vector3,
   ): void {
     if (!airborne || this.mode === "stowed") return;
-    const p = physicsForMode(this.mode);
+    const p = physicsForMode(this.mode, this.flightTier);
     if (vel.y < p.maxFall) vel.y = p.maxFall;
     // Glide: pull velocity toward forward * glide
     if (p.glide > 0) {

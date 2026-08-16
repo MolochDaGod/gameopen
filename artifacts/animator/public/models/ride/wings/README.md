@@ -1,10 +1,16 @@
 # Wing mesh drop zone
 
-Place animated wing GLBs here (not committed until assets exist):
+| Prefab | File | Notes |
+|--------|------|--------|
+| Holy | `holy_wings.glb` | Author `D:\Games\Models\wing_379_1781615558571.glb` (SZ_Wing_233 Stand / Run) |
+| Traveler T1–T3 | `traveler_wings_variants.glb` | Author `D:\Games\Models\gorilla_tag_new_wing_varients.glb` — three wardrobe roots |
 
-| Prefab | Stow (back) | Open (deploy) |
-|--------|-------------|-----------------|
-| holy_wings | holy_wings_stow.glb | holy_wings_open.glb |
-| traveler_wings | traveler_wings_stow.glb | traveler_wings_open.glb |
+Traveler isolate roots (one visible per tier):
 
-See docs/BACK_SLOT_MOBILITY_SSOT.md and src/config/backSlotMobilitySsot.js
+| Tier | Root name |
+|------|-----------|
+| I | `FireWings_Wardrobe Variant_2` |
+| II | `FireWings_Wardrobe Variant.001_5` |
+| III | `FireWings_Wardrobe Variant.002_8` |
+
+Runtime: `backSlotItems.ts` + `WingBackRig` (same back slot — not a second attach).
