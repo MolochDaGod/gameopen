@@ -12017,6 +12017,14 @@ export class Studio {
    * physics bags react to hits, NPCs spawn armed + difficulty-scaled, and the
    * player spawns at the start marker. Exiting disposes the whole Studio.
    */
+  /**
+   * Explorer / harvest seed overworld — same VoxelArena path as authored maps.
+   * Map must carry {@link VoxelMap.play} (town GLB + chunked heights).
+   */
+  async enterSeedOverworld(map: VoxelMap): Promise<void> {
+    return this.enterArena(map);
+  }
+
   async enterArena(map: VoxelMap): Promise<void> {
     if (this.inArena || this.enteringArena || this.disposed) return;
     this.enteringArena = true;
@@ -12055,6 +12063,18 @@ export class Studio {
       this.defeated = false;
       this.controller?.setCollision(arena.collision, arena.spawn);
       this.controller?.setCameraOccluders(arena.occluders);
+
+      if (this.campEnemies) {
+        const campId =
+          map.play?.kind === "seed-overworld"
+            ? "seed_voodoo"
+            : map.dungeon
+              ? "seed_voodoo_dungeon"
+              : null;
+        if (campId) {
+          void this.campEnemies.spawnSeedHostiles(arena.spawn, campId);
+        }
+      }
     } catch (err) {
       console.error("[Studio] arena load failed", err);
       arena?.dispose();

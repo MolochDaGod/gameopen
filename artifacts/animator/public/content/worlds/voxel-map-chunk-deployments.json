@@ -761,6 +761,32 @@
       }
     },
     {
+      "id": "mapchunk-wolf-street",
+      "name": "Wolf Street",
+      "blurb": "Seed prefab street — no unique map or duplicate mapChunkId",
+      "seed": "mapchunk-wolf_street",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "wolf_street",
+      "mesh": "models/voxel/maps/wolf_street.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/wolf_street.glb",
+      "forceMap": true,
+      "codexBlocks": ["stone", "brickRed", "woodPlanks", "dirt"],
+      "codexDefs": ["street", "seed_prefab"],
+      "d1Category": "voxel_map",
+      "mb": 88.0,
+      "uploadPolicy": "stage",
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 24,
+        "radiusMax": 80,
+        "surfaceY": 2,
+        "themes": ["ruins", "mine", "crypt"]
+      }
+    },
+    {
       "id": "mapchunk-animal-company-lobby",
       "name": "Animal Company Lobby",
       "blurb": "Animal Company lobby spawn v3",

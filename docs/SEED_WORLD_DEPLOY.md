@@ -71,6 +71,68 @@ npm run assets:voxel-last30:seed-d1:apply    # D1 registry
 
 ---
 
+## Premade voxel maps (review)
+
+Do **not** invent a second map table. These are the existing catalogs.
+
+### Open `/voxel` templates (`MAP_TEMPLATES`)
+
+| Id | Role |
+|----|------|
+| `amidaFarmCamp` | **Starting-town block overlay** (Amida fields farm/camp) |
+| `biomeRoadLab` | Lab — road pack |
+| `boxingRing` · `arena1` · `arena2` | Arena |
+| `arena3` | Dungeon (portal theme `crypt`) |
+| `challenge1` · `challenge2` | Parkour labs |
+
+### MAP_CHUNKS (CDN / last-30)
+
+| Id | Role |
+|----|------|
+| **`animal_company_lobby`** | **Explorer starting town / lobby spawn v3** |
+| **`wolf_street`** | **Seed prefab** — worlds with no map, or a duplicate `mapChunkId` |
+| `faction_spawn_castle_town` | Mega castle + town (multipart; optional hub) |
+| `island_life` · `awesome_realm_world` | Overworld shells |
+| `castle_eltz` · `pirat_bay` · `dalaran_fantasy_island` | Structure / coast / island |
+| `geonosis_arena` · `tower_koth` · `koth_bundle` | Arena / KOTH |
+| `grotto_cavern_cave` · `dragon_head_cave` | Dungeon chunks |
+| `floating_islands_dwarves_haven` · `glowstone_mountain*` | Sky / mountain |
+| `queen_annes_revenge` | Ship structure |
+
+Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
+
+### Explorer start + Minecraft seed
+
+1. Explorer / harvest / DRC launch (no `mapId`) → deployment `mapchunk-animal-company-lobby`.  
+2. **Town** = real `animal_company_lobby` GLB via `loadMapChunk` / `placeMapChunk` at **1 block = 1 m** (never prop height-fit). Fallback blocks = `amidaFarmCamp`.  
+3. **Overworld** = `generateSeedTerrain` in `@workspace/voxel-canonical` — 16-column chunks, same `hashSeed` / `chunkIdx`, hub flattened so the town sits at y=0.  
+4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
+5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.  
+6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → R2 `models/voxel/maps/wolf_street.glb`, HEAD 200 `glTF` 92 270 532). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).  
+7. **Seed enemy** — voxel **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, HEAD 200 `glTF` 47 756, SI 1.8 m). Same session-pack pattern as mage_demon. D1 `asset_registry` + catalog `content/enemies/session-mobs.json` on R2. Stamped on seed scenes (`placeSeedHostilesFromSeed`) and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`).
+
+### Shader.lab `#voxel` cave dungeon
+
+[lo-th Shader.lab voxel](https://lo-th.github.io/Shader.lab/#voxel) is Shane's winding brick tunnel (`path` + DDA `map`). We **do not** run the Shadertoy fly-cam. We voxelize that SDF at 1 m and **open a chamber at the end** (dungeon room + elite).
+
+| Theme | Template |
+|-------|----------|
+| `mine` / `cave` | `shaderLabCave` — tunnel → open room |
+| `crypt` | `arena3` |
+| `temple` | `arena2` |
+| `ruins` | `arena1` |
+
+Play: Harvest Maps → **Play dungeon in Open**, or Voxel Editor template **Shader.lab Voxel Cave** → Test.
+
+Code: `lib/voxel-canonical/src/shaderLabCave.ts` · `artifacts/animator/src/three/voxel/shaderLabCavePlay.ts`
+
+**Open play (voxel-game ready):** Harvest Maps → **Play in Open (town + seed)**, or Voxel Editor template `explorerStartingTown` → Test.  
+`assembleSeedOverworldMap` → `VoxelArena.load` → instanced seed columns + Rapier heightfield + town trimesh/AABB. Same Controller / camera as other VoxelArena maps.
+
+Code: `lib/voxel-canonical/src/seedTerrain.ts` · `artifacts/animator/src/three/voxel/seedOverworldPlay.ts` · `VoxelArena.ts`.
+
+---
+
 ## Goal
 
 Ship **Minecraft-like game maps**:

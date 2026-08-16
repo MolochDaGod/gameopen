@@ -1,5 +1,5 @@
 import type { WeaponId } from "../types";
-import type { BlockTypeId } from "@workspace/voxel-canonical";
+import type { BlockTypeId, SeedWorldBiome, TerrainBlockId } from "@workspace/voxel-canonical";
 
 export {
   PLACEABLE_TERRAIN,
@@ -242,12 +242,38 @@ export interface DeployableNode {
   selected: boolean;
 }
 
+/**
+ * Seed-overworld play extras — chunked terrain field + real map-chunk town.
+ * Overlay blocks stay in {@link VoxelMap.blocks} (portals / pad).
+ */
+export interface SeedOverworldPlay {
+  kind: "seed-overworld";
+  seed: number;
+  biome: SeedWorldBiome;
+  /** MAP_CHUNKS id — Animal Company lobby by default. */
+  mapChunkId?: string;
+  /** Block overlay when the town GLB fails. */
+  templateId?: string;
+  hubRadius: number;
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  width: number;
+  depth: number;
+  /** Row-major surface top Y (metres). Hub = 0. */
+  heights: number[];
+  types: TerrainBlockId[];
+}
+
 /** A serialized map (blocks + deployables + dungeon flag). */
 export interface VoxelMap {
   version: number;
   dungeon: boolean;
   blocks: BlockData[];
   deployables: DeployableData[];
+  /** Present on explorer / harvest seed-overworld play maps. */
+  play?: SeedOverworldPlay;
 }
 
 /** Live counts pushed to the React HUD. */

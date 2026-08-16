@@ -7,13 +7,17 @@ import {
   clampChunkIdx,
   chunkBlocks,
   DEFAULT_CHUNK_IDX,
+  DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
+  resolveSeedPrefabMapChunk,
+  SEED_FALLBACK_PREFAB_CHUNK,
   deploymentToSharePayload,
   hashSeed,
   type SeedPortal,
   type SeedPortalPlan,
   type SeedWorldBiome,
   type SeedWorldDeployment,
+  type StartingTownSpec,
 } from "@workspace/voxel-canonical";
 
 export { chunkBlocks, clampChunkIdx, DEFAULT_CHUNK_IDX };
@@ -48,6 +52,8 @@ export interface SeedCatalogEntry {
   /** Mine-Loader definition ids */
   codexDefs?: string[];
   sourceCollection?: string;
+  /** Explorer spawn hub (Animal Company lobby by default). */
+  startingTown?: StartingTownSpec;
 }
 
 export interface SeedCatalog {
@@ -139,16 +145,29 @@ export function catalogEntryToDeployment(entry: SeedCatalogEntry): SeedWorldDepl
     deploy: entry.deploy,
     portalPlan: entry.portalPlan,
     portals: entry.portals,
-    mapChunkId: entry.mapChunkId,
+    mapChunkId: resolveSeedPrefabMapChunk({
+      mapChunkId: entry.mapChunkId,
+      startingTownMapChunkId: entry.startingTown?.mapChunkId,
+    }),
     mesh: entry.mesh,
     cdnUrl: entry.cdnUrl,
     codexBlocks: entry.codexBlocks,
     codexDefs: entry.codexDefs,
+    startingTown: entry.startingTown,
   });
 }
 
 export function listDeployments(catalog: SeedCatalog): SeedWorldDeployment[] {
-  return catalog.deployments.map(catalogEntryToDeployment);
+  const used = new Set<string>();
+  return catalog.deployments.map((entry) => {
+    const mapChunkId = resolveSeedPrefabMapChunk({
+      mapChunkId: entry.mapChunkId,
+      startingTownMapChunkId: entry.startingTown?.mapChunkId,
+      usedMapChunkIds: used,
+    });
+    used.add(mapChunkId);
+    return catalogEntryToDeployment({ ...entry, mapChunkId });
+  });
 }
 
 /** Custom seed typed by player (Minecraft-style). */
@@ -175,6 +194,8 @@ export function customSeedDeployment(
       portalCount: opts?.portalCount ?? 4,
       themes: ["ruins", "crypt", "mine", "temple"],
     },
+    startingTown: { ...DEFAULT_EXPLORER_STARTING_TOWN },
+    mapChunkId: SEED_FALLBACK_PREFAB_CHUNK,
   });
 }
 
@@ -193,6 +214,7 @@ export function buildSeedWorldLaunchUrl(dep: SeedWorldDeployment): string {
     deploymentId: dep.world.id,
     chunkIdx: clampChunkIdx(dep.world.chunkIdx),
     worldMode: "seed-overworld",
+    startingTown: dep.world.startingTown?.mapChunkId,
   });
 }
 

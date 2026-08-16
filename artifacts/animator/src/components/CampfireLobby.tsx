@@ -20,9 +20,10 @@ import {
 } from "react";
 import { gameSession } from "../game/GameSession";
 import {
-  buildGenesisHeroOptions,
+  buildVoxelCampfireHeroes,
   type GenesisHeroOption,
 } from "../lib/grudoxRoster";
+import { fetchCharacters } from "../lib/grudgeAuth";
 import {
   HUB_DESTINATIONS,
   HUB_GROUPS,
@@ -44,6 +45,8 @@ interface Props {
   onAvatarEdit?: () => void;
   /** Enter Danger Room with selected hero. */
   onPlayDanger?: (hero: GenesisHeroOption) => void;
+  /** Encament / starting lobby — Open VoxelArena with campfire explorer. */
+  onPlayVoxelStart?: (hero: GenesisHeroOption, kind: "encampment" | "starting-lobby") => void;
 }
 
 type Panel =
@@ -77,6 +80,22 @@ const MENU = (file: string) => `/ui/menu/${file}`;
 
 /** PvE titles hosted on open.grudge-studio.com (T0 native + Realms). */
 const PVE_DESTS: MenuDest[] = [
+  {
+    id: "grudges-encament",
+    label: "Grudges · Encament",
+    blurb: "Walk the Encament village behind the fire · your campfire explorer",
+    kind: "local",
+    mode: "encampment",
+    needsHero: true,
+  },
+  {
+    id: "starting-lobby",
+    label: "Starting Lobby Town",
+    blurb: "Animal Company lobby + seed wilderness · campfire explorer",
+    kind: "local",
+    mode: "starting-lobby",
+    needsHero: true,
+  },
   {
     id: "danger",
     label: "Danger Room",
@@ -304,11 +323,17 @@ function arcadeUrl(path: string): string {
  * Floating-island 4-seat campfire — **sole** WebGL owner for /lobby and /characters.
  * Do not wrap this in ProductionCinema / CinemaFlowGate with dungeon shells.
  */
-export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }: Props) {
+export function CampfireLobby({
+  onExit,
+  onNavigate,
+  onAvatarEdit,
+  onPlayDanger,
+  onPlayVoxelStart,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);
   const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
-    buildGenesisHeroOptions(
+    buildVoxelCampfireHeroes(
       gameSession.snapshot.characters,
       gameSession.snapshot.selectedCharacterId,
     ),
@@ -322,16 +347,25 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
 
   useEffect(() => {
     const unsub = gameSession.subscribe(() => {
-      setHeroes(
-        buildGenesisHeroOptions(
+      setHeroes((prev) => {
+        const next = buildVoxelCampfireHeroes(
           gameSession.snapshot.characters,
           gameSession.snapshot.selectedCharacterId,
-        ),
-      );
+        );
+        return next.length ? next : prev;
+      });
     });
     if (!gameSession.snapshot.ready) {
       void gameSession.boot().catch(() => undefined);
     }
+    void fetchCharacters({ eras: ["voxel"] })
+      .then((voxel) => {
+        if (!voxel.length) return;
+        setHeroes(
+          buildVoxelCampfireHeroes(voxel, gameSession.snapshot.selectedCharacterId),
+        );
+      })
+      .catch(() => undefined);
     return unsub;
   }, []);
 
@@ -414,6 +448,14 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
 
       if (dest.kind === "local" && dest.mode) {
         setPanel(null);
+        if (
+          (dest.mode === "encampment" || dest.mode === "starting-lobby") &&
+          active &&
+          onPlayVoxelStart
+        ) {
+          onPlayVoxelStart(active, dest.mode);
+          return;
+        }
         launchLocal(dest.mode, active);
         return;
       }
@@ -457,7 +499,7 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
         }
       }
     },
-    [active, bindHero, flash, launchLocal],
+    [active, bindHero, flash, launchLocal, onPlayVoxelStart],
   );
 
   const launchHub = useCallback(
@@ -471,6 +513,10 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       }
       const ctx = heroCtx(active);
       setPanel(null);
+      if (dest.id === "voxgrudge" && active && onPlayVoxelStart) {
+        onPlayVoxelStart(active, "encampment");
+        return;
+      }
       launchHubDestination(dest, ctx, {
         newTab: !dest.localMode,
         onLocal: (mode: LocalHubMode) => {
@@ -486,7 +532,7 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
         },
       });
     },
-    [active, flash, onNavigate, onPlayDanger],
+    [active, flash, onNavigate, onPlayDanger, onPlayVoxelStart],
   );
 
   const openPanel = (p: Panel) => {
@@ -522,11 +568,11 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       <div className="cfl-head">
         <img className="cfl-helmet" src={MENU("grudge-helmet.png")} alt="" />
         <img className="cfl-logo" src={MENU("grudge-logo.png")} alt="GRUDGE" />
-        <p className="cfl-kicker">Grudge Studio · 4 hero seats</p>
+        <p className="cfl-kicker">Voxel era · 4 seats · Encament behind the fire</p>
         <p className="cfl-sub">
           {active
-            ? "TVS farm camp — heroes sit by the fire · hover to stand"
-            : "Farm campfire · four chairs · first hero free · Account to create more"}
+            ? "Campfire roster — Encament is the village behind you · Enter Encament to play"
+            : "Four chairs · first hero free · Encament start · Account to create more"}
         </p>
       </div>
 
@@ -680,6 +726,24 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
             <button
               type="button"
               className="cfl-btn primary"
+              onClick={() =>
+                launchDest({
+                  id: "grudges-encament",
+                  label: "Grudges · Encament",
+                  blurb: "Voxel era play start",
+                  kind: "local",
+                  mode: "encampment",
+                  needsHero: true,
+                })
+              }
+            >
+              Enter Encament
+            </button>
+          )}
+          {active && (
+            <button
+              type="button"
+              className="cfl-btn"
               onClick={() => active && onPlayDanger?.(active)}
             >
               Quick Danger

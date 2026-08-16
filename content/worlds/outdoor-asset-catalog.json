@@ -248,6 +248,14 @@
       "notes": "Session pack — Violet HN creature melee (SI ~1.8 m)"
     },
     {
+      "id": "enemy_voodooist",
+      "r2Key": "models/enemies/session/voodooist.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Voodooist hexer for seed worlds (SI 1.8 m)"
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",

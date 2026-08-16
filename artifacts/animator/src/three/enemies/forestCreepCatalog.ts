@@ -375,6 +375,20 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
       buffOnKill: "green_regen",
       tags: ["voxel", "creature", "session"],
     },
+    {
+      id: "voodooist",
+      name: "Voodooist",
+      role: "camp_elite",
+      meshKeys: ["models/enemies/session/voodooist.glb"],
+      heightM: 1.8,
+      hp: 120,
+      damage: 18,
+      speed: 2.3,
+      atkReach: 6.5,
+      xp: 80,
+      buffOnKill: "blue_haste",
+      tags: ["voxel", "magic", "hex", "seed", "session"],
+    },
   ],
   buffs: {
     blue_haste: {
@@ -416,6 +430,7 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "forest_bear", count: 1, radius: 8 },
         { unitId: "hollow_knight_vengefly", count: 3, radius: 11 },
         { unitId: "violet_4_hn_creature", count: 1, radius: 9 },
+        { unitId: "voodooist", count: 1, radius: 14 },
       ],
     },
     session_voxel_pack: {
@@ -428,8 +443,23 @@ export const FALLBACK_FOREST_CREEPS: ForestCreepCatalog = {
         { unitId: "violet_4_hn_creature", count: 2, radius: 8 },
         { unitId: "lowpoly_rhino", count: 1, radius: 10 },
         { unitId: "mage_demon", count: 1, radius: 7 },
+        { unitId: "voodooist", count: 2, radius: 12 },
         { unitId: "blocker_broker", count: 1, radius: 6 },
       ],
+    },
+    seed_voodoo: {
+      label: "Seed overworld voodooists",
+      use: ["voxel", "seed"],
+      buffOnClear: "blue_haste",
+      xpBonus: 40,
+      spawns: [{ unitId: "voodooist", count: 3, radius: 22 }],
+    },
+    seed_voodoo_dungeon: {
+      label: "Seed cave / dungeon voodooists",
+      use: ["voxel", "seed", "dungeon"],
+      buffOnClear: "blue_haste",
+      xpBonus: 30,
+      spawns: [{ unitId: "voodooist", count: 2, radius: 7 }],
     },
     island_orc_tribe: {
       label: "Island orc tribe (red mushroom)",

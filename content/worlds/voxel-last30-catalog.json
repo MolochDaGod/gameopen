@@ -172,6 +172,22 @@
       }
     },
     {
+      "id": "wolf_street",
+      "src": "D:\\Games\\Models\\wolf_street.glb",
+      "role": "map_chunk",
+      "category": "voxel_map",
+      "r2Key": "models/voxel/maps/wolf_street.glb",
+      "mb": 88.0,
+      "upload": "stage",
+      "forceMap": true,
+      "codex": {
+        "kind": "terrain",
+        "blocks": ["stone", "brickRed", "woodPlanks", "dirt"],
+        "defs": ["street", "seed_prefab"],
+        "hint": "Seed prefab when a voxel world has no map or would duplicate another"
+      }
+    },
+    {
       "id": "animal_company_lobby",
       "src": "animal_company_-_lobby_spawn_v3.glb",
       "role": "map_chunk",

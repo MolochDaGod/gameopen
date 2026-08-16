@@ -118,6 +118,8 @@ export interface MineLoaderLaunchOpts {
   chunkIdx?: number | null;
   /** play mode: seed-overworld | dungeon | default */
   worldMode?: "seed-overworld" | "dungeon" | string | null;
+  /** Premade explorer starting town (MAP_CHUNKS id). */
+  startingTown?: string | null;
   /**
    * Absolute API origin for the SPA. Defaults to Railway authority.
    * Prefer Railway so /api never depends on Replit or a broken rewrite.
@@ -169,6 +171,7 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
     url.searchParams.set("chunkIdx", String(Math.trunc(Number(opts.chunkIdx))));
   }
   if (opts.worldMode) url.searchParams.set("mode", opts.worldMode);
+  if (opts.startingTown) url.searchParams.set("startingTown", opts.startingTown);
 
   // Always pin body form for Realms: explorer / box_hero path (never grudge6 race-*).
   if (!opts.baseId) url.searchParams.set("baseId", "explorer");

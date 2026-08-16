@@ -235,10 +235,20 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "voxgrudge",
-    label: "VoxGrudge Full World",
-    blurb: "Full open-world voxel survival",
-    group: "arcade",
-    external: (ctx) => withHandoff("https://voxgrudge.vercel.app/", ctx),
+    label: "Grudges · Encament",
+    blurb: "Walk Encament + seed wilderness as your campfire explorer",
+    group: "play",
+    external: (ctx) => {
+      const u = withHandoff("https://open.grudge-studio.com/characters", ctx);
+      try {
+        const parsed = new URL(u);
+        parsed.searchParams.set("era", "voxel");
+        parsed.searchParams.set("play", "encampment");
+        return parsed.toString();
+      } catch {
+        return u;
+      }
+    },
   },
   {
     id: "dcq",
