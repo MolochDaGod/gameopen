@@ -5,6 +5,8 @@ import {
   CAMPFIRE_SURFACES,
   CAMPFIRE_TVS,
   campfireTvsUrls,
+  ENCAMPMENT_BACKDROP,
+  encampmentBackdropUrls,
   DEPLOY_CHECKLIST,
   DEPLOY_LAYERS,
   PROD_AUTH_TOKEN_KEYS,
@@ -63,6 +65,15 @@ describe("productionSystemsPattern", () => {
     expect(urls[0]).toContain(PROD_HOSTS.assetsCdn);
     expect(urls[0]).toContain("campfire-lobby/tvs/campfire.glb");
     expect(CAMPFIRE_TVS.smokeCritical.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Encament backdrop is CDN-first and play starts at Encament", () => {
+    const urls = encampmentBackdropUrls();
+    expect(urls[0]).toContain(PROD_HOSTS.assetsCdn);
+    expect(urls[0]).toContain("chicken_gun_fruzer_encampment.glb");
+    expect(ENCAMPMENT_BACKDROP.era).toBe("voxel");
+    expect(ENCAMPMENT_BACKDROP.localPlay).toBe("encampment");
+    expect(ENCAMPMENT_BACKDROP.playUrl).toContain("/characters");
   });
 
   it("AI wiring has health path and auth error copy", () => {

@@ -560,6 +560,14 @@ export const MAP_CHUNKS: Record<string, MapChunkDef> = {
     tags: ["map", "ship", "pirate", "voxel-last30"],
     blurb: "Flagship structure — treat as map/structure, not prop height-fit.",
   },
+  grudges_encampment: {
+    id: "grudges_encampment",
+    label: "Grudges Encament",
+    file: "models/lobby/chicken_gun_fruzer_encampment.glb",
+    role: "map_chunk",
+    tags: ["map", "encampment", "lobby", "voxel", "seed"],
+    blurb: "Fruzer Encament village — campfire play start at SI scale (same bake as the lobby backdrop).",
+  },
   wolf_street: {
     id: "wolf_street",
     label: "Wolf Street",

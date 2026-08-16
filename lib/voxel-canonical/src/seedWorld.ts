@@ -50,6 +50,10 @@ export const EXPLORER_STARTING_TOWN_TEMPLATE = "amidaFarmCamp";
 /** Featured seed-deployments.json id used for explorer / harvest default launch. */
 export const EXPLORER_STARTING_TOWN_DEPLOYMENT = "mapchunk-animal-company-lobby";
 
+/** Encament village bake — campfire play start (same GLB as lobby backdrop). */
+export const EXPLORER_ENCAMPMENT_CHUNK = "grudges_encampment";
+export const EXPLORER_ENCAMPMENT_DEPLOYMENT = "grudges-encampment";
+
 /**
  * Seed map prefab when a voxel world has no mapChunkId, or would clone another
  * seed's map. Real GLB: models/voxel/maps/wolf_street.glb (1 block = 1 m).
@@ -152,7 +156,13 @@ const PREMADE_TEMPLATE_ROWS: PremadeVoxelMap[] = [
 
 function roleFromChunkTags(tags: string[] | undefined, id: string): PremadeVoxelMapRole {
   const t = (tags || []).join(" ").toLowerCase();
-  if (id === EXPLORER_STARTING_TOWN_CHUNK || /lobby|spawn/.test(t) || /castle_town|faction_spawn/.test(id)) {
+  if (
+    id === EXPLORER_STARTING_TOWN_CHUNK ||
+    id === EXPLORER_ENCAMPMENT_CHUNK ||
+    /lobby|spawn|encampment/.test(t) ||
+    /castle_town|faction_spawn/.test(id)
+  ) {
+    if (id === EXPLORER_ENCAMPMENT_CHUNK || /encampment/.test(t)) return "starting_town";
     return id.includes("lobby") || id === EXPLORER_STARTING_TOWN_CHUNK ? "lobby" : "starting_town";
   }
   if (/arena|koth|pvp/.test(t) || /arena|koth/.test(id)) return "arena";

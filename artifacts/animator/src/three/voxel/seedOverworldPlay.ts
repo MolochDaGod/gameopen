@@ -8,6 +8,8 @@ import {
   buildSeedDeployment,
   colorForBlockType,
   deploymentToScene,
+  EXPLORER_ENCAMPMENT_CHUNK,
+  EXPLORER_ENCAMPMENT_DEPLOYMENT,
   EXPLORER_STARTING_TOWN_CHUNK,
   EXPLORER_STARTING_TOWN_DEPLOYMENT,
   EXPLORER_STARTING_TOWN_TEMPLATE,
@@ -21,6 +23,35 @@ import {
 import { buildAmidaFarmBlocks } from "./amidaFields";
 import type { BlockData, SeedOverworldPlay, VoxelMap } from "./types";
 import { VOXEL_MAP_VERSION } from "./types";
+
+export function explorerEncampmentDeployment(
+  seed: string | number = "encampment-start",
+): SeedWorldDeployment {
+  return buildSeedDeployment({
+    id: EXPLORER_ENCAMPMENT_DEPLOYMENT,
+    name: "Grudges Encament",
+    blurb: "Encament village + chunked seed wilderness — campfire explorer play start.",
+    seed,
+    chunkIdx: 5,
+    biome: "plains",
+    featured: true,
+    deploy: "both",
+    mapChunkId: EXPLORER_ENCAMPMENT_CHUNK,
+    startingTown: {
+      mapChunkId: EXPLORER_ENCAMPMENT_CHUNK,
+      templateId: EXPLORER_STARTING_TOWN_TEMPLATE,
+      spawn: { x: 0, y: 2, z: 0 },
+    },
+  });
+}
+
+export function assembleEncampmentPlayMap(): VoxelMap {
+  return assembleSeedOverworldMap(explorerEncampmentDeployment());
+}
+
+export function assembleStartingLobbyPlayMap(): VoxelMap {
+  return assembleSeedOverworldMap(explorerTownDeployment());
+}
 
 export function explorerTownDeployment(seed: string | number = "explorer-town"): SeedWorldDeployment {
   return buildSeedDeployment({

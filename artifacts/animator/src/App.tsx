@@ -49,7 +49,11 @@ import type {
   GizmoMode,
   VoxelMap,
 } from "./three/voxel/types";
-import { assembleSeedOverworldMap } from "./three/voxel/seedOverworldPlay";
+import {
+  assembleEncampmentPlayMap,
+  assembleSeedOverworldMap,
+  assembleStartingLobbyPlayMap,
+} from "./three/voxel/seedOverworldPlay";
 import { assemblePortalDungeonMap } from "./three/voxel/portalDungeonPlay";
 import type { SeedWorldDeployment } from "./game/seedWorlds";
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
@@ -1058,6 +1062,7 @@ export default function App() {
   const [dungeon, setDungeon] = useState(false);
   /** The map handed to the play session, restored into the editor on exit. */
   const playMapRef = useRef<VoxelMap | null>(null);
+  const playReturnModeRef = useRef<"voxel" | "characters">("voxel");
   // A gallery map queued to load when the voxel editor next mounts.
   const pendingMapRef = useRef<VoxelMap | null>(null);
   // A gallery scene queued to load when the Scene Editor next mounts.
@@ -1343,7 +1348,7 @@ export default function App() {
     if (mode !== "play" || !mountRef.current) return;
     const map = playMapRef.current;
     if (!map) {
-      setMode("voxel");
+      setMode(playReturnModeRef.current);
       return;
     }
     // Same ENTER gate + pointer-lock flow as Danger Room.
@@ -2221,15 +2226,28 @@ export default function App() {
     if (!ed) return;
     const map = ed.serialize();
     if (!map.deployables.some((d) => d.kind === "start")) return;
+    playReturnModeRef.current = "voxel";
     playMapRef.current = map;
     setMode("play");
   }, []);
 
   // Leave the play session and return to the editor with the map intact.
   const onExitPlay = useCallback(() => {
-    cameFromPlayRef.current = true;
-    setMode("voxel");
+    cameFromPlayRef.current = playReturnModeRef.current === "voxel";
+    setMode(playReturnModeRef.current);
   }, []);
+
+  const onPlayVoxelStart = useCallback(
+    (hero: { id: string; baseId?: string }, kind: "encampment" | "starting-lobby") => {
+      gameSession.selectCharacter(hero.id);
+      setCharacterId("explorer");
+      playReturnModeRef.current = "characters";
+      playMapRef.current =
+        kind === "encampment" ? assembleEncampmentPlayMap() : assembleStartingLobbyPlayMap();
+      setMode("play");
+    },
+    [],
+  );
 
   // Load a map chosen in the Lobby into the Voxel Editor.
   const onLoadPost = useCallback((map: VoxelMap) => {
@@ -2850,6 +2868,7 @@ export default function App() {
           studioRef.current?.setCharacter(avatarId);
           navigate("danger");
         }}
+        onPlayVoxelStart={onPlayVoxelStart}
       />
     );
     return shell(
@@ -2919,6 +2938,7 @@ export default function App() {
             studioRef.current?.setCharacter(avatarId);
             navigate("danger");
           }}
+          onPlayVoxelStart={onPlayVoxelStart}
         />,
       ),
     );

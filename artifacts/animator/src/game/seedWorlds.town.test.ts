@@ -4,6 +4,7 @@ import {
   DEFAULT_EXPLORER_STARTING_TOWN,
   deploymentToScene,
   evaluateAssetRole,
+  EXPLORER_ENCAMPMENT_CHUNK,
   EXPLORER_STARTING_TOWN_CHUNK,
   listPremadeVoxelMaps,
   placeSeedHostilesFromSeed,
@@ -12,7 +13,12 @@ import {
   SEED_FALLBACK_PREFAB_CHUNK,
 } from "@workspace/voxel-canonical";
 import { catalogEntryToDeployment, customSeedDeployment } from "./seedWorlds";
-import { assembleSeedOverworldMap, explorerTownDeployment } from "../three/voxel/seedOverworldPlay";
+import {
+  assembleEncampmentPlayMap,
+  assembleSeedOverworldMap,
+  assembleStartingLobbyPlayMap,
+  explorerTownDeployment,
+} from "../three/voxel/seedOverworldPlay";
 import { assemblePortalDungeonMap } from "../three/voxel/portalDungeonPlay";
 import { dungeonTemplateForTheme, SHADER_LAB_CAVE_TEMPLATE } from "@workspace/voxel-canonical";
 
@@ -80,6 +86,12 @@ describe("explorer starting town + seed", () => {
     const map = assembleSeedOverworldMap(explorerTownDeployment("explorer-town"));
     expect(map.play?.kind).toBe("seed-overworld");
     expect(map.play?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    const lobby = assembleStartingLobbyPlayMap();
+    expect(lobby.play?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    const enc = assembleEncampmentPlayMap();
+    expect(enc.play?.kind).toBe("seed-overworld");
+    expect(enc.play?.mapChunkId).toBe(EXPLORER_ENCAMPMENT_CHUNK);
+    expect(enc.deployables.some((d) => d.kind === "start")).toBe(true);
     expect(map.play?.hubRadius).toBeGreaterThan(0);
     expect(map.play?.heights.length).toBe(map.play!.width * map.play!.depth);
     expect(map.play!.heights.length).toBeGreaterThan(32 * 32);

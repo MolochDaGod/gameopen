@@ -114,6 +114,29 @@ export function campfireTvsUrls(file: string): string[] {
   ];
 }
 
+/**
+ * Voxel-era Encament bake — sits BEHIND the 4-seat campfire (visual + play start).
+ * Same Fruzer hub as Grudges `/voxgrudge/#world`. Scale 1. Do not stretch.
+ */
+export const ENCAMPMENT_BACKDROP = {
+  id: "grudges_encampment",
+  /** Open VoxelArena play — campfire explorer on Encament + seed. */
+  localPlay: "encampment" as const,
+  playUrl: "https://open.grudge-studio.com/characters",
+  playHash: "",
+  era: "voxel",
+  kit: "voxel",
+  urls: [
+    `${PROD_HOSTS.assetsCdn}/models/lobby/chicken_gun_fruzer_encampment.glb`,
+    "https://grudox.grudge-studio.com/voxgrudge/models/lobby/chicken_gun_fruzer_encampment.glb",
+    "/voxgrudge/models/lobby/chicken_gun_fruzer_encampment.glb",
+  ],
+} as const;
+
+export function encampmentBackdropUrls(): string[] {
+  return [...ENCAMPMENT_BACKDROP.urls];
+}
+
 /** Product surface routes that own CampfireLobby (not AccountPanel). */
 export const CAMPFIRE_SURFACES = {
   modes: ["characters", "lobby"] as const,
@@ -441,14 +464,21 @@ export async function warmupProductionSurface(
 export const AI_PRODUCTION_SYSTEMS_PROMPT = `
 You ship Grudge Open production systems with this stack only:
 1. Frontend: Vercel SPA (gameopen) — never put large GLBs in the JS bundle (vercelignore bans .glb).
-2. Edge: Cloudflare Worker open.grudge-studio.com → Vercel; R2 assets.grudge-studio.com; D1 asset index.
-3. REST: same-origin /api/* rewrites to Railway grudge-api (characters, account, island, wallet) and id auth.
-4. Auth JWT: readProductionAuthToken() — grudge.open.token first, then fleet keys. Dual-write all keys on login.
-5. AI: /api/ai → ai.grudge-studio.com; health public; chat/image Bearer JWT; use AI_WIRING error copy on 401.
-6. Campfire: /characters + /lobby + door=characters → CampfireLobby TVS farm; props from CAMPFIRE_TVS CDN first.
-7. Realtime: Railway or CF DO/Worker — Vercel cannot upgrade WebSockets alone.
-8. Load UX: BootGate (danger) OR ProductionCinema flow OR HelpersLoadScreen — parallelize REST + CDN, never serial block.
-9. Timing: rest warmup ≤2.5s budget; BootGate soft 8s / hard 30s per step; cinema skippableAfterSec from catalog.
-10. Assets: loadGltfFirst + fleetAssetResolver CDN-first; never assets…/gameopen incomplete prefix.
-11. QA: open.grudge-studio.com smoke:prod:open + /api/health + /api/ai/health + TVS CDN HEADs — not localhost-only.
+2. Edge: Cloudflare Worker open.grudge-studio.com → Vercel; R2 assets.grudge-studio.com; D1 asset index (NOT player SSOT).
+3. REST: same-origin /api/* rewrites to Railway grudge-api (characters, account, island, wallet, uuid, ledger) and id auth.
+4. Auth JWT: readProductionAuthToken() — grudge.open.token first, then fleet keys. Dual-write all keys on login. Prefer sso_token over launch grudge_token. No guest product auto-login.
+5. PLAYER DATA LAW (account vs game vs UUID):
+   - Account grudge_id (GRUDGE_…): shared bag, resources, inventory, wallet, home island, camps.
+   - Character characters.id (RFC UUID) + game_era: progress, professions, body equipment, skills. Handoff only via ?characterId=<uuid>&era=.
+   - grudge_code (GRDG-…) is display stamp only — never PK or handoff alone.
+   - Unique items: server grudge_uuid + /api/ledger/* (never client-only ent_* bag SSOT).
+   - Craft: materials → account bag; profession XP → character progress.
+   - ObjectStore = definitions; R2/D1 = assets only. One Railway player DB for all eras/games.
+6. AI: /api/ai → ai.grudge-studio.com; health public; chat/image Bearer JWT; use AI_WIRING error copy on 401.
+7. Campfire: /characters + /lobby + door=characters → CampfireLobby TVS farm; props from CAMPFIRE_TVS CDN first. Encament Fruzer bake behind the fire (ENCAMPMENT_BACKDROP). Voxel play start = Open Encament / starting lobby with campfire explorer (VoxelArena).
+8. Realtime: Railway or CF DO/Worker — Vercel cannot upgrade WebSockets alone.
+9. Load UX: BootGate (danger) OR ProductionCinema flow OR HelpersLoadScreen — parallelize REST + CDN, never serial block.
+10. Timing: rest warmup ≤2.5s budget; BootGate soft 8s / hard 30s per step; cinema skippableAfterSec from catalog.
+11. Assets: loadGltfFirst + fleetAssetResolver CDN-first; never assets…/gameopen incomplete prefix.
+12. QA: open.grudge-studio.com smoke:prod:open + /api/health + /api/ai/health + TVS CDN HEADs — not localhost-only.
 `.trim();
