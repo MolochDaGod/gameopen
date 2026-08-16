@@ -190,6 +190,11 @@ export function currentKitSlotMesh(meshIds: string[], slot: KitPanelSlot): strin
   return meshIds.find((m) => meshMatchesSlot(m, slot)) ?? null;
 }
 
+/** True for paperdoll Back meshes (quiver / xtra / equip:back). Not wooden weapons. */
+export function isKitBackMesh(name: string): boolean {
+  return meshMatchesSlot(name, "back");
+}
+
 function slotAllowsEmpty(race: RaceId, meshIds: string[], slot: KitPanelSlot): boolean {
   if (!OPTIONAL_EMPTY.has(slot)) return false;
   if (slot === "back") {

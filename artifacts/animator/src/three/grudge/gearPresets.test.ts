@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyBackTemplateToMeshIds,
+  isKitBackMesh,
   collectKitSlotMeshes,
   cycleKitSlot,
   currentKitSlotMesh,
@@ -188,5 +189,12 @@ describe("Toon main-panel kit slots", () => {
     expect(next).toContain("equip:back:holy_wings");
     expect(next.some((m) => /quiver/i.test(m))).toBe(false);
     expect(next).toContain("WK_weapon_Bow");
+  });
+
+  it("isKitBackMesh does not treat wooden weapons as Back", () => {
+    expect(isKitBackMesh("WK_Xtra_quiver")).toBe(true);
+    expect(isKitBackMesh("equip:back:holy_wings")).toBe(true);
+    expect(isKitBackMesh("WK_weapon_sword_B")).toBe(false);
+    expect(isKitBackMesh("BRB_weapon_staff_C")).toBe(false);
   });
 });

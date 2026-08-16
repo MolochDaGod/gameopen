@@ -49,4 +49,25 @@ describe("equipment.back hydrate", () => {
     expect(vis.meshIds).toContain("equip:back:wind_surf");
     expect(vis.meshIds.some((m) => /quiver/i.test(m))).toBe(false);
   });
+
+  it("does not strip a wooden weapon when applying back", () => {
+    const vis = resolveCharacterEquipmentVisualSync(
+      wkWarrior({
+        model3d: {
+          meshIds: [
+            "WK_Units_head_D",
+            "WK_Units_Body_C",
+            "WK_weapon_sword_B",
+            "WK_Shield_B",
+          ],
+          equipmentSlots: {
+            back: { templateId: "itm_back_cape", instanceId: "x" },
+          },
+        },
+      }),
+    );
+    expect(vis.meshIds).toContain("equip:back:cape");
+    expect(vis.meshIds).toContain("WK_weapon_sword_B");
+    expect(vis.meshIds).toContain("WK_Shield_B");
+  });
 });

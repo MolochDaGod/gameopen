@@ -88,6 +88,8 @@ import {
   useConsumableHotkey,
   equipFromBagWithLedger,
   equipBackFromBagWithLedger,
+  unequipBackWithLedger,
+  saveCharacterSlotAppearance,
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
@@ -130,6 +132,7 @@ import {
 } from "./lib/grudoxRoster";
 import { normalizeToGrudgeAvatarId, resolveRaceId, resolveRaceModel } from "./lib/raceModel";
 import { applyBackTemplateToMeshIds } from "./three/grudge";
+import { backEquipTagFromAnyId, backItemIdFromEquip } from "./three/equipment/backSlotItems";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
@@ -686,29 +689,88 @@ export default function App() {
     (gameSession.snapshot.account?.source === "guest" ? "guest" : null) ||
     "guest";
 
+  const persistPaperdollMeshes = useCallback(
+    (ids: string[]) => {
+      setEquipMeshIds(ids);
+      studioRef.current?.setEquipmentMeshIds(ids);
+      const bag = loadCharacterBag(activeCharacterId);
+      const tag = ids.find((m) => /^equip:back:/i.test(m)) ?? null;
+      const match = tag
+        ? bag.slots.find(
+            (s) => s.item && backEquipTagFromAnyId(s.item.templateId) === tag,
+          )?.item ?? null
+        : null;
+      if (match) bag.wornBack = match;
+      else if (!tag) bag.wornBack = null;
+      else if (
+        bag.wornBack &&
+        backEquipTagFromAnyId(bag.wornBack.templateId) !== tag
+      ) {
+        bag.wornBack = null;
+      }
+      saveCharacterBag(bag);
+      const back = match
+        ? match
+        : tag
+          ? {
+              templateId: `itm_${backItemIdFromEquip(tag) || "back"}`,
+              instanceId: bag.wornBack?.instanceId || `mesh:${tag}`,
+              qty: 1,
+            }
+          : null;
+      if (activeCharacterId && !activeCharacterId.startsWith("local")) {
+        void saveCharacterSlotAppearance({
+          characterId: activeCharacterId,
+          bag,
+          back,
+          meshIds: ids,
+        });
+      }
+    },
+    [activeCharacterId],
+  );
+
   const handleEquipBack = useCallback(
-    (bagIndex: number, item: ItemInstance) => {
+    async (bagIndex: number, item: ItemInstance) => {
       const race = resolveRaceId(gameSession.selectedCharacter()?.raceId);
       const next = applyBackTemplateToMeshIds(race, equipMeshIds, item.templateId);
-      setEquipMeshIds(next);
-      studioRef.current?.setEquipmentMeshIds(next);
-      void equipBackFromBagWithLedger({
+      const res = await equipBackFromBagWithLedger({
         characterId: activeCharacterId,
         bagIndex,
         accountId: accountIdForBag,
         meshIds: next,
-      }).then((res) => {
-        if (!res.ok) {
-          studioRef.current?.flashMessage?.(res.reason || "Cannot equip back", 1.6);
-          return;
-        }
-        refreshBagMeta();
-        const name = getItemTemplate(item.templateId).name;
-        studioRef.current?.flashMessage?.(
-          `Equipped ${name}${res.ledgered ? " · ledger Back" : ""}`,
-          1.5,
-        );
       });
+      if (!res.ok) {
+        studioRef.current?.flashMessage?.(res.reason || "Cannot equip back", 1.6);
+        return res.bag;
+      }
+      setEquipMeshIds(next);
+      studioRef.current?.setEquipmentMeshIds(next);
+      refreshBagMeta();
+      const name = getItemTemplate(item.templateId).name;
+      studioRef.current?.flashMessage?.(
+        `Equipped ${name}${res.ledgered ? " · ledger Back" : ""}`,
+        1.5,
+      );
+      return res.bag;
+    },
+    [activeCharacterId, accountIdForBag, equipMeshIds, refreshBagMeta],
+  );
+
+  const handleUnequipBack = useCallback(
+    async (item: ItemInstance) => {
+      const race = resolveRaceId(gameSession.selectedCharacter()?.raceId);
+      const next = applyBackTemplateToMeshIds(race, equipMeshIds, null);
+      const res = await unequipBackWithLedger({
+        characterId: activeCharacterId,
+        accountId: accountIdForBag,
+        item,
+        meshIds: next,
+      });
+      setEquipMeshIds(next);
+      studioRef.current?.setEquipmentMeshIds(next);
+      refreshBagMeta();
+      return res.bag;
     },
     [activeCharacterId, accountIdForBag, equipMeshIds, refreshBagMeta],
   );
@@ -1240,6 +1302,9 @@ export default function App() {
         const res = applyDeathBagDrop(charId);
         studio?.flashMessage?.(res.message, 2.2);
         refreshBagMeta();
+        persistPaperdollMeshes(
+          applyBackTemplateToMeshIds(resolveRaceId(gameSession.selectedCharacter()?.raceId), equipMeshIds, null),
+        );
       };
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
       refreshAnim();
@@ -1298,6 +1363,9 @@ export default function App() {
         const res = applyDeathBagDrop(charId);
         studio?.flashMessage?.(res.message, 2.2);
         refreshBagMeta();
+        persistPaperdollMeshes(
+          applyBackTemplateToMeshIds(resolveRaceId(gameSession.selectedCharacter()?.raceId), equipMeshIds, null),
+        );
       };
       applyFleetLoadoutRef.current();
       refreshAnim();
@@ -3315,6 +3383,7 @@ export default function App() {
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
             onEquipBack={handleEquipBack}
+            onUnequipBack={handleUnequipBack}
           />
           <LockpickPanel
             open={!!lockpickChallenge}
@@ -3578,10 +3647,7 @@ export default function App() {
                 currentWeapon={hud?.weapon ?? weaponId}
                 currentOffHand={offHand}
                 meshIds={equipMeshIds}
-                onMeshIds={(ids) => {
-                  setEquipMeshIds(ids);
-                  studioRef.current?.setEquipmentMeshIds(ids);
-                }}
+                onMeshIds={persistPaperdollMeshes}
                 onEquip={onWeapon}
                 onEquipOff={onOffHand}
                 onClose={() => setEquipOpen(false)}
@@ -3662,6 +3728,7 @@ export default function App() {
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
             onEquipBack={handleEquipBack}
+            onUnequipBack={handleUnequipBack}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
@@ -3918,10 +3985,7 @@ export default function App() {
                 currentWeapon={hud?.weapon ?? weaponId}
                 currentOffHand={offHand}
                 meshIds={equipMeshIds}
-                onMeshIds={(ids) => {
-                  setEquipMeshIds(ids);
-                  studioRef.current?.setEquipmentMeshIds(ids);
-                }}
+                onMeshIds={persistPaperdollMeshes}
                 onEquip={onWeapon}
                 onEquipOff={onOffHand}
                 onClose={() => setEquipOpen(false)}

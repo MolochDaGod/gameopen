@@ -48,6 +48,12 @@ describe("ledgerClient helpers", () => {
     expect(slotLabelForTemplate("bck_wind_surf")).toBe("Back");
   });
 
+  it("tool_ and _tool_ ids stay unique (not harvest qty map)", () => {
+    expect(isLedgerUniqueTemplate("tool_jade_axe")).toBe(true);
+    expect(isLedgerUniqueTemplate("itm_logging_tool_01")).toBe(true);
+    expect(isStackableTemplate("tool_jade_axe")).toBe(false);
+  });
+
   it("back templates mint as unique instances, not stacks", () => {
     expect(isLedgerUniqueTemplate("itm_back_holy_wings")).toBe(true);
     expect(isStackableTemplate("itm_back_holy_wings")).toBe(false);

@@ -11,6 +11,7 @@
 import type { GrudgeCharacter } from "./grudgeAuth";
 import {
   getPreset,
+  isKitBackMesh,
   RACE_GEAR_PRESETS,
   type PresetId,
   type RaceId,
@@ -241,11 +242,11 @@ const SLOT_MESH_HINTS: Record<string, string[]> = {
   staff: ["staff"],
   quiver: ["quiver", "xtra"],
   bag: ["bag", "xtra"],
-  back: ["equip:back:", "xtra", "quiver", "bag"],
+  back: ["equip:back:", "xtra", "quiver"],
 };
 
 function isBackMeshName(name: string): boolean {
-  return /^equip:back:/i.test(name) || /xtra|quiver|(?:^|_)bag(?:_|$)|wood/i.test(name);
+  return isKitBackMesh(name);
 }
 
 function backTagFromEq(eq: Record<string, unknown>): string | null {

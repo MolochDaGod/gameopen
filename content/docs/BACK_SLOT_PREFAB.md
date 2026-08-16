@@ -82,4 +82,6 @@ Do **not** invent a second bag, ledger, or kept 2×2 slot. Back is body `mesh_id
 | **Play** | `applyBackTemplateToMeshIds` → `setEquipmentMeshIds` | One `equip:back:*` tag. `Studio` attaches Wing/Stow/Cape. |
 | **Hydrate** | `resolveCharacterEquipmentVisual` | Reads `equipment.back` / `model3d` and merges `equip:back:*` onto kit mesh_ids. |
 
-Profession XP on Open harvest craft is still a remaining gap (no existing helper — do not invent). Paperdoll **I** cycle still does not persist appearance unless bag Equip is used.
+Paperdoll **I** cycle persists `model3d.meshIds` + `equipment.back` through `saveCharacterSlotAppearance`. Swap / drop / death emit ledger `UNEQUIPPED` and clear `wornBack`.
+
+Open harvest craft still has **no profession-XP helper** (recipe `skill` is a label only). Do not invent one. Warlords ObjectStore `master-recipes.json` is the Warlords craft suite — Open harvest stays the Open path. Icons are verified R2 pack PNGs (dedicated wing/cape keys 404).

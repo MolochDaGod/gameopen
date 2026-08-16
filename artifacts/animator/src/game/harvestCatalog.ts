@@ -19,6 +19,7 @@ import {
 import { MAP_TEMPLATES } from "../three/voxel/templates";
 import { listMapChunks } from "../three/voxel/mapChunks";
 import { gameSession } from "./GameSession";
+import { isLedgerUniqueTemplate } from "./inventory/types";
 
 export type HarvestTabId =
   | "ops"
@@ -1481,17 +1482,7 @@ export function canCraft(recipe: CraftRecipe, bag: Record<string, number>): bool
 
 /** Unique outputs must go through grantUniqueToBag — never the harvest qty map. */
 function isUniqueCraftOutput(id: string): boolean {
-  return (
-    id.startsWith("wpn_") ||
-    id.startsWith("arm_") ||
-    id.startsWith("itm_back_") ||
-    id.startsWith("bck_") ||
-    id.startsWith("itm_mount") ||
-    id.startsWith("itm_boat") ||
-    id.startsWith("tool_") ||
-    id.startsWith("EQIP-") ||
-    id.startsWith("ITEM-")
-  );
+  return isLedgerUniqueTemplate(id);
 }
 
 /**

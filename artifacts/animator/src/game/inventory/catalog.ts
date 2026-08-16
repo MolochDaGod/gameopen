@@ -10,7 +10,11 @@
 import type { ItemTemplate } from "./types";
 import { MATERIAL_STACK_MAX } from "./types";
 import { materialIconPath, resolveIconUrl } from "../../lib/objectStore";
-import { BACK_SLOT_ITEMS, backItemIconUrl } from "../../three/equipment/backSlotItems";
+import {
+  BACK_SLOT_ITEMS,
+  backItemIconUrl,
+  isBackTemplateId,
+} from "../../three/equipment/backSlotItems";
 
 const mat = (
   id: string,
@@ -218,6 +222,14 @@ export function getItemTemplate(templateId: string): ItemTemplate {
         : MATERIAL_STACK_MAX,
     icon: "/icons/pack/misc/Effect.png",
   };
+}
+
+/** Bag / prefab / paperdoll Back family — one predicate for equip + ledger. */
+export function isBackItemTemplate(templateId: string): boolean {
+  if (!templateId) return false;
+  if (isBackTemplateId(templateId)) return true;
+  const t = getItemTemplate(templateId);
+  return t.kind === "back" || t.equipSlot === "back";
 }
 
 export function isStackableMaterial(templateId: string): boolean {

@@ -80,8 +80,8 @@ export async function saveCharacterSlotAppearance(
   }
 
   const equipment = equipmentFromKept(input.bag);
-  const backRef = equipmentBackFromItem(input.back);
-  if (backRef) equipment.back = backRef;
+  const backRef = equipmentBackFromItem(input.back ?? undefined);
+  if (input.back !== null && backRef) equipment.back = backRef;
 
   const saveData: Record<string, unknown> = {
     ...(input.saveDataPatch || {}),

@@ -11,6 +11,7 @@ import {
   type DepositContext,
   type ItemInstance,
   getItemTemplate,
+  isWornBackItem,
   loadCharacterBag,
   saveCharacterBag,
   quickDepositAll,
@@ -37,8 +38,15 @@ export interface CharacterBagPanelProps {
   onConsume?: (heal: number, stamina: number, name: string) => void;
   /** Deploy placeable from bag (e.g. claim flag → ghost place). */
   onDeployPlaceable?: (placeableId: string) => void;
-  /** Body Back equip (not kept 2×2). */
-  onEquipBack?: (bagIndex: number, item: ItemInstance) => void;
+  /** Body Back equip (not kept 2×2). Return the saved bag so remint is not overwritten. */
+  onEquipBack?: (
+    bagIndex: number,
+    item: ItemInstance,
+  ) => void | CharacterBagState | Promise<void | CharacterBagState>;
+  /** Drop / unequip worn Back — clear mesh + ledger. */
+  onUnequipBack?: (
+    item: ItemInstance,
+  ) => void | CharacterBagState | Promise<void | CharacterBagState>;
 }
 
 export function CharacterBagPanel({
@@ -52,6 +60,7 @@ export function CharacterBagPanel({
   onConsume,
   onDeployPlaceable,
   onEquipBack,
+  onUnequipBack,
 }: CharacterBagPanelProps) {
   const [bag, setBag] = useState<CharacterBagState>(() => loadCharacterBag(characterId));
   const [menu, setMenu] = useState<{
@@ -157,17 +166,30 @@ export function CharacterBagPanel({
       return;
     }
     if (action === "drop") {
-      const { bag: next, removed } = removeFromSlot(bag, index, slot.item.qty);
-      if (removed) {
-        commit(next);
-        onFlash?.(`Dropped ${tpl.name} ×${removed.qty}`);
+      const qty = slot.item.qty;
+      const worn = isWornBackItem(bag, slot.item);
+      const finishDrop = (base: CharacterBagState) => {
+        const { bag: next, removed } = removeFromSlot(base, index, qty);
+        if (removed) {
+          commit(next);
+          onFlash?.(`Dropped ${tpl.name} ×${removed.qty}`);
+        }
+      };
+      if (worn && onUnequipBack) {
+        void Promise.resolve(onUnequipBack(slot.item)).then((nextBag) => {
+          finishDrop(nextBag ?? loadCharacterBag(characterId));
+        });
+        return;
       }
+      finishDrop(bag);
       return;
     }
     if (action === "equip") {
       if (tpl.kind === "back" || tpl.equipSlot === "back") {
         if (onEquipBack) {
-          onEquipBack(index, slot.item);
+          void Promise.resolve(onEquipBack(index, slot.item)).then((next) => {
+            commit(next ?? loadCharacterBag(characterId));
+          });
           return;
         }
         onFlash?.(`Equip ${tpl.name} — open Main Panel (I) for Back`);

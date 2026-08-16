@@ -27,6 +27,7 @@ export {
   currentKitSlotMesh,
   cycleKitSlot,
   applyBackTemplateToMeshIds,
+  isKitBackMesh,
 } from "./gearPresets";
 export type { KitPanelSlot } from "./gearPresets";
 export {

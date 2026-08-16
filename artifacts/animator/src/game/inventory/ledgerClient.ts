@@ -11,7 +11,7 @@
  */
 
 import { apiUrl, readFleetToken } from "../../auth/fleetCore";
-import { getItemTemplate, isLedgerUniqueItem } from "./catalog";
+import { getItemTemplate, isBackItemTemplate, isLedgerUniqueItem } from "./catalog";
 import type { EquipSlot, ItemInstance, KeptLoadoutSlotId } from "./types";
 
 export type LedgerEventType =
@@ -45,12 +45,7 @@ export function slotLabelForTemplate(templateId: string): string {
   if (eq === "chest") return "Chest";
   if (eq === "legs") return "Legs";
   if (eq === "feet") return "Feet";
-  if (
-    eq === "back" ||
-    tpl.kind === "back" ||
-    templateId.startsWith("itm_back_") ||
-    templateId.startsWith("bck_")
-  ) {
+  if (eq === "back" || tpl.kind === "back" || isBackItemTemplate(templateId)) {
     return "Back";
   }
   if (tpl.kind === "weapon") return "Weapon";
