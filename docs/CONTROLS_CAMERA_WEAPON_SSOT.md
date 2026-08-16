@@ -28,6 +28,8 @@ artifacts/animator
 ├── three/controlsSettings.ts  load/save via controlsStorage
 ├── components/Crosshair.tsx   weapon shapes
 ├── components/CursorManager.tsx
+├── components/TouchControls.tsx  mobile pad (Kenney Mobile Controls 1 chrome)
+├── lib/kenneyMobile.ts           CDN + prefab URLs
 └── three/aim/* · pointerPresence.ts   thin re-exports (compat)
 ```
 
@@ -57,6 +59,17 @@ Best practice:
 1. Depend on `@workspace/grudge-physics` (or copy the package into monorepo workspace).
 2. Wire `screenAimRay` + reticle profiles + camera profiles — do not re-implement soft lock.
 3. Persist controls under the same `grudge:controls` key if sharing browser origin; otherwise mirror schema in that game’s settings UI.
+
+## Phone / Kenney pad
+
+Open play on `data-device=phone` uses **`TouchControls`** + Kenney Mobile Controls 1.0  
+(`public/ui/kenney/mobile-controls-1/` · `src/lib/kenneyMobile.ts`).
+
+| On canvas | In edge tabs |
+|-----------|----------------|
+| Move stick, jump/block/parry/dodge, skill stick, mini hotbar | Sprint, crouch, harvest/combat, bag, build, maps, skills |
+
+Steam header hides on phone Danger/Play/Brawl/Survival — Kenney menu FAB opens the existing sheet. Do **not** invent TouchControls2.
 
 ## Deploy
 

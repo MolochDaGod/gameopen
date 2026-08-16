@@ -1,6 +1,7 @@
 /**
  * Mobile / tablet touch pad — open.grudge-studio.com
  * Safe-area aware, thumb-zone layout, pull-out drawers.
+ * Chrome: Kenney Mobile Controls 1.0 (CC0) via --km-* vars from kenneyMobile.ts
  */
 
 .mtouch {
@@ -56,32 +57,31 @@
   justify-content: center;
   gap: 2px;
   min-width: 56px;
-  height: 48px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(120, 200, 255, 0.35);
-  background: rgba(8, 14, 28, 0.72);
+  height: 52px;
+  padding: 6px 8px 8px;
+  border: none;
+  border-radius: 0;
+  background: var(--km-btn-bean) center / 100% 100% no-repeat;
+  background-color: transparent;
   color: #d8e8ff;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
 }
 
 .mtouch-tog.on {
-  border-color: rgba(120, 230, 180, 0.75);
-  background: rgba(30, 90, 70, 0.75);
-  box-shadow: 0 0 12px rgba(80, 220, 160, 0.35);
+  filter: drop-shadow(0 0 8px rgba(80, 220, 160, 0.65));
 }
 
 .mtouch-tog.combat {
-  border-color: rgba(255, 140, 120, 0.55);
+  filter: drop-shadow(0 0 6px rgba(255, 140, 120, 0.45));
 }
 
 .mtouch-tog.harvest {
-  border-color: rgba(120, 230, 160, 0.55);
+  filter: drop-shadow(0 0 6px rgba(120, 230, 160, 0.45));
 }
 
 .mtouch-ico {
@@ -115,38 +115,44 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
-  border-radius: 50%;
-  border: 2px solid rgba(120, 200, 255, 0.45);
-  background: rgba(12, 22, 40, 0.78);
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border: none;
+  border-radius: 0;
+  background: var(--km-btn-circle) center / contain no-repeat;
+  background-color: transparent;
   color: #eaf4ff;
-  font-size: 11px;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   transform: rotate(var(--ang, 0deg)) translate(78px) rotate(calc(-1 * var(--ang, 0deg)));
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+.mtouch-ring-ico {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .mtouch-ring-btn:active {
   transform: rotate(var(--ang, 0deg)) translate(78px) rotate(calc(-1 * var(--ang, 0deg))) scale(0.92);
-  background: rgba(60, 120, 200, 0.65);
+  background-image: var(--km-hi-circle), var(--km-btn-circle);
 }
 
-.mtouch-jump {
-  border-color: rgba(120, 255, 170, 0.65) !important;
-}
-.mtouch-block {
-  border-color: rgba(120, 190, 255, 0.7) !important;
-}
-.mtouch-parry {
-  border-color: rgba(255, 220, 120, 0.7) !important;
-}
+.mtouch-jump,
+.mtouch-block,
+.mtouch-parry,
 .mtouch-dodge {
-  border-color: rgba(160, 230, 255, 0.55) !important;
-  font-size: 13px;
+  border: none !important;
 }
 
 /* Sticks */
@@ -158,9 +164,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 40% 35%, rgba(40, 70, 110, 0.45), rgba(8, 14, 28, 0.75));
-  border: 2px solid rgba(120, 200, 255, 0.4);
-  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.45), 0 6px 20px rgba(0, 0, 0, 0.35);
+  background: var(--km-pad-move) center / contain no-repeat;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
   z-index: 2;
 }
 
@@ -179,29 +186,28 @@
   position: absolute;
   inset: 10px;
   border-radius: 50%;
-  border: 1px dashed rgba(150, 210, 255, 0.25);
+  border: none;
   pointer-events: none;
 }
 
-.mtouch-stick-ring.skill {
-  border-color: rgba(200, 160, 255, 0.3);
+.mtouch-skill {
+  background-image: var(--km-pad-skill);
 }
 
 .mtouch-stick-thumb {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(160, 220, 255, 0.95), rgba(50, 130, 210, 0.7));
-  border: 2px solid rgba(200, 235, 255, 0.75);
-  box-shadow: 0 0 18px rgba(80, 180, 255, 0.55);
+  background: var(--km-nub-move) center / contain no-repeat;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
   will-change: transform;
   z-index: 2;
 }
 
 .mtouch-stick-thumb.skill {
-  background: radial-gradient(circle at 35% 30%, rgba(220, 190, 255, 0.95), rgba(140, 90, 220, 0.7));
-  border-color: rgba(230, 210, 255, 0.8);
-  box-shadow: 0 0 18px rgba(180, 120, 255, 0.5);
+  background-image: var(--km-nub-skill);
 }
 
 .mtouch-stick-label {
@@ -350,10 +356,11 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   color: #b8d0f0;
-  background: rgba(10, 16, 30, 0.8);
-  border: 1px solid rgba(120, 200, 255, 0.35);
-  border-radius: 999px;
-  padding: 4px 14px;
+  background: var(--km-btn-wide) center / 100% 100% no-repeat;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 8px 22px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -373,13 +380,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid rgba(120, 200, 255, 0.3);
-  background: rgba(20, 32, 52, 0.75);
+  border-radius: 0;
+  border: none;
+  background: var(--km-btn-square) center / contain no-repeat;
+  background-color: transparent;
   padding: 0;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
-  transition: width 0.15s ease, height 0.15s ease, border-color 0.15s;
+  transition: width 0.15s ease, height 0.15s ease, filter 0.15s;
 }
 
 .mtouch-slot img {
@@ -405,12 +413,11 @@
 }
 
 .mtouch-slot.sel {
-  border-color: rgba(120, 255, 200, 0.75);
-  box-shadow: 0 0 12px rgba(80, 220, 160, 0.35);
+  filter: drop-shadow(0 0 8px rgba(80, 220, 160, 0.55));
 }
 
 .mtouch-slot.atk {
-  border-color: rgba(255, 120, 120, 0.55);
+  filter: drop-shadow(0 0 6px rgba(255, 120, 120, 0.45));
 }
 
 /* ── Pull-out edge tabs ── */
@@ -418,32 +425,31 @@
   position: absolute;
   top: 42%;
   z-index: 6;
-  width: 22px;
+  width: 28px;
   height: 64px;
   padding: 0;
-  border: 1px solid rgba(120, 200, 255, 0.4);
-  background: rgba(12, 20, 36, 0.88);
+  border: none;
+  background: var(--km-dir-right) center / contain no-repeat;
+  background-color: transparent;
   color: #9ec8ff;
   font-size: 14px;
   font-weight: 800;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 .mtouch-tab-left {
   left: 0;
-  border-radius: 0 10px 10px 0;
-  border-left: none;
+  background-image: var(--km-dir-right);
 }
 
 .mtouch-tab-right {
   right: 0;
-  border-radius: 10px 0 0 10px;
-  border-right: none;
+  background-image: var(--km-dir-left);
 }
 
 .mtouch-tab.open {
-  background: rgba(40, 90, 160, 0.75);
+  filter: drop-shadow(0 0 8px rgba(80, 160, 255, 0.55));
 }
 
 .mtouch-drawer {
@@ -492,14 +498,18 @@
 }
 
 .mtouch-drawer button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   text-align: left;
   font-size: 13px;
   font-weight: 700;
   color: #eaf4ff;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(120, 200, 255, 0.25);
-  background: rgba(20, 32, 52, 0.7);
+  padding: 10px 14px;
+  border: none;
+  border-radius: 0;
+  background: var(--km-btn-wide) center / 100% 100% no-repeat;
+  background-color: transparent;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -525,9 +535,9 @@
     height: 156px;
   }
   .mtouch-ring-btn {
-    width: 54px;
-    height: 54px;
-    margin: -27px 0 0 -27px;
+    width: 58px;
+    height: 58px;
+    margin: -29px 0 0 -29px;
     transform: rotate(var(--ang, 0deg)) translate(90px) rotate(calc(-1 * var(--ang, 0deg)));
   }
   .mtouch-tog {
@@ -558,5 +568,71 @@
   display: none !important;
 }
 .studio.touch .click-hint {
+  display: none !important;
+}
+
+/* Phone: Kenney pad only — extras live in edge tabs */
+html[data-device="phone"] .mtouch-toggles {
+  display: none;
+}
+html[data-device="phone"] .mtouch-stick-label,
+html[data-device="phone"] .mtouch-stick-hint,
+html[data-device="phone"] .mtouch-skill-cardinals,
+html[data-device="phone"] .mtouch-ring-btn span {
+  display: none;
+}
+html[data-device="phone"] .mtouch-move-wrap {
+  width: 118px;
+  height: 118px;
+}
+html[data-device="phone"] .mtouch-stick {
+  width: 100px;
+  height: 100px;
+}
+html[data-device="phone"] .mtouch-skill {
+  width: 108px;
+  height: 108px;
+  position: relative;
+}
+html[data-device="phone"] .mtouch-stick-thumb {
+  width: 40px;
+  height: 40px;
+}
+html[data-device="phone"] .mtouch-ring-btn {
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  transform: rotate(var(--ang, 0deg)) translate(58px) rotate(calc(-1 * var(--ang, 0deg)));
+}
+html[data-device="phone"] .mtouch-ring-btn:active {
+  transform: rotate(var(--ang, 0deg)) translate(58px) rotate(calc(-1 * var(--ang, 0deg)))
+    scale(0.92);
+}
+html[data-device="phone"] .mtouch-left {
+  bottom: max(64px, calc(env(safe-area-inset-bottom) + 52px));
+  left: max(8px, env(safe-area-inset-left));
+}
+html[data-device="phone"] .mtouch-right {
+  bottom: max(64px, calc(env(safe-area-inset-bottom) + 52px));
+  right: max(8px, env(safe-area-inset-right));
+}
+html[data-device="phone"] .mtouch-bar {
+  max-width: min(92vw, 340px);
+  bottom: max(6px, env(safe-area-inset-bottom));
+}
+html[data-device="phone"] .mtouch-bar.mini {
+  transform: translateX(-50%) scale(0.86);
+  transform-origin: bottom center;
+}
+html[data-device="phone"] .mtouch-tab {
+  width: 22px;
+  height: 56px;
+  font-size: 14px;
+}
+
+html[data-device="phone"] .fx-toggle,
+html[data-device="phone"] .map-toggle,
+html[data-device="phone"] .click-hint,
+html[data-device="phone"] .csb-root {
   display: none !important;
 }

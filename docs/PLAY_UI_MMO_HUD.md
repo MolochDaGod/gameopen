@@ -19,6 +19,7 @@ Production UI for **https://open.grudge-studio.com** games / play.
 | MMO UI 4 slices | `public/ui/mmo-ui-4/**` | craftpix-net-699601 RPG & MMO pack (Textures only) |
 | PSD masters (author) | zip `PSD Files/RPG & MMO 5 - HUD.psd` | not shipped |
 | Craftpix windows | `public/ui/craftpix/windows/*` | 896711 window-PSD family |
+| Kenney Mobile Controls 1 | `public/ui/kenney/mobile-controls-1/**` + CDN `ui/kenney/mobile-controls-1/` | CC0 pads/nubs/icons — skins `TouchControls` |
 
 Runtime path helpers: `src/lib/mmoUi.ts` (`MMO`, `HUD_ART`, `CRAFTPIX_WIN`).
 
