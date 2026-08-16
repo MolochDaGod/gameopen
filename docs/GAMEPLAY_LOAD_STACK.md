@@ -125,7 +125,7 @@ Industry-aligned rules for Open combat UIs:
 7. **Fail soft** — missing icon → local PNG; missing clip → idle + console warn; never blank white screen.  
 8. **60 fps budget** — HUD DOM updates via snapshot throttle (~10–20 Hz for bars is OK; combat must stay 60).  
 9. **Color** — damage red, heal green, stamina yellow, skill CD grey overlay.  
-10. **Mobile later** — desktop first; touch pads already exist (`TouchControls`) but secondary.
+10. **Mobile** — existing `TouchControls` (Kenney Mobile Controls 1 chrome on CDN `ui/kenney/mobile-controls-1/`). Not a second stick.
 
 ---
 

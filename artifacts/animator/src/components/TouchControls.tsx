@@ -12,8 +12,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HARVEST_TOOLS } from "../game/inventory/harvestTools";
+import { KM, kenneyMobileCssVars } from "../lib/kenneyMobile";
 import type { PlayerActivityMode } from "../three/playerMode";
-import { MODE_ICON, MODE_LABEL } from "../three/playerMode";
+import { MODE_LABEL } from "../three/playerMode";
 import "./touchControls.css";
 
 const CDN = "https://assets.grudge-studio.com";
@@ -96,16 +97,23 @@ function cardinalFromStick(nx: number, ny: number): Cardinal | null {
   return "down";
 }
 
+function stickRadius(el: HTMLElement | null, fallback: number): number {
+  if (!el) return fallback;
+  return Math.max(36, el.getBoundingClientRect().width / 2 - 6);
+}
+
 export function TouchControls({
   api,
   activityMode: activityProp,
   onOpenBag,
   onOpenSystems,
+  onOpenMap,
 }: {
   api: TouchApi;
   activityMode?: PlayerActivityMode;
   onOpenBag?: () => void;
   onOpenSystems?: () => void;
+  onOpenMap?: () => void;
 }) {
   const [mode, setMode] = useState<PlayerActivityMode>(activityProp ?? "combat");
   const [sprintOn, setSprintOn] = useState(false);
@@ -158,6 +166,7 @@ export function TouchControls({
     moveId.current = e.pointerId;
     const r = moveBase.current!.getBoundingClientRect();
     moveOrigin.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    (moveBase.current as HTMLElement).dataset.r = String(stickRadius(moveBase.current, STICK_R));
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     e.preventDefault();
   };
@@ -166,12 +175,13 @@ export function TouchControls({
     let dx = e.clientX - moveOrigin.current.x;
     let dy = e.clientY - moveOrigin.current.y;
     const len = Math.hypot(dx, dy);
-    if (len > STICK_R) {
-      dx = (dx / len) * STICK_R;
-      dy = (dy / len) * STICK_R;
+    const cap = stickRadius(moveBase.current, STICK_R);
+    if (len > cap) {
+      dx = (dx / len) * cap;
+      dy = (dy / len) * cap;
     }
     setMoveThumb(dx, dy);
-    apiRef.current.touchMoveInput(dx / STICK_R, -dy / STICK_R);
+    apiRef.current.touchMoveInput(dx / cap, -dy / cap);
   };
   const onMoveUp = (e: React.PointerEvent) => {
     if (e.pointerId !== moveId.current) return;
@@ -213,13 +223,14 @@ export function TouchControls({
     let dx = e.clientX - skillOrigin.current.x;
     let dy = e.clientY - skillOrigin.current.y;
     const len = Math.hypot(dx, dy);
-    if (len > SKILL_STICK_R) {
-      dx = (dx / len) * SKILL_STICK_R;
-      dy = (dy / len) * SKILL_STICK_R;
+    const cap = stickRadius(skillBase.current, SKILL_STICK_R);
+    if (len > cap) {
+      dx = (dx / len) * cap;
+      dy = (dy / len) * cap;
     }
     setSkillThumb(dx, dy);
-    const nx = dx / SKILL_STICK_R;
-    const ny = dy / SKILL_STICK_R;
+    const nx = dx / cap;
+    const ny = dy / cap;
     const c = cardinalFromStick(nx, ny);
     if (c) {
       skillArmed.current = true;
@@ -231,12 +242,13 @@ export function TouchControls({
     let dx = e.clientX - skillOrigin.current.x;
     let dy = e.clientY - skillOrigin.current.y;
     const len = Math.hypot(dx, dy);
-    if (len > SKILL_STICK_R) {
-      dx = (dx / len) * SKILL_STICK_R;
-      dy = (dy / len) * SKILL_STICK_R;
+    const cap = stickRadius(skillBase.current, SKILL_STICK_R);
+    if (len > cap) {
+      dx = (dx / len) * cap;
+      dy = (dy / len) * cap;
     }
-    const nx = dx / SKILL_STICK_R;
-    const ny = dy / SKILL_STICK_R;
+    const nx = dx / cap;
+    const ny = dy / cap;
     const c = cardinalFromStick(nx, ny);
     skillId.current = null;
     setSkillThumb(0, 0);
@@ -334,7 +346,12 @@ export function TouchControls({
       }));
 
   return (
-    <div className={`mtouch ${harvest ? "mtouch--harvest" : "mtouch--combat"}`} data-mode={mode}>
+    <div
+      className={`mtouch ${harvest ? "mtouch--harvest" : "mtouch--combat"}`}
+      data-mode={mode}
+      data-kenney-pack="mobile-controls-1"
+      style={kenneyMobileCssVars() as React.CSSProperties}
+    >
       {/* Ambient look pad — upper-right, under skill stick */}
       <div
         className="mtouch-lookpad"
@@ -356,7 +373,7 @@ export function TouchControls({
             }}
             aria-pressed={sprintOn}
           >
-            <img src={`${CDN}/icons/pack/misc/Flow.png`} alt="" className="mtouch-ico" onError={(ev) => { (ev.target as HTMLImageElement).style.display = "none"; }} />
+            <img src={KM.iconSprint} alt="" className="mtouch-ico" onError={(ev) => { (ev.target as HTMLImageElement).style.display = "none"; }} />
             <span>Sprint</span>
           </button>
           <button
@@ -368,7 +385,7 @@ export function TouchControls({
             }}
             aria-pressed={crouchOn}
           >
-            <span className="mtouch-glyph">⬇</span>
+            <img src={KM.iconCrouch} alt="" className="mtouch-ico" />
             <span>Crouch</span>
           </button>
           <button
@@ -380,12 +397,9 @@ export function TouchControls({
             }}
           >
             <img
-              src={iconUrl(MODE_ICON[harvest ? "combat" : "harvest"])}
+              src={harvest ? KM.iconCombat : KM.iconHarvest}
               alt=""
               className="mtouch-ico"
-              onError={(ev) => {
-                (ev.target as HTMLImageElement).src = `${CDN}/icons/pack/weapons/Sword_01.png`;
-              }}
             />
             <span>{harvest ? "Combat" : "Harvest"}</span>
           </button>
@@ -403,7 +417,8 @@ export function TouchControls({
                 api.touchJump();
               }}
             >
-              JMP
+              <img src={KM.iconJump} alt="" className="mtouch-ring-ico" />
+              <span>JMP</span>
             </button>
             <button
               type="button"
@@ -416,7 +431,8 @@ export function TouchControls({
               onPointerUp={() => api.touchGuard?.(false)}
               onPointerCancel={() => api.touchGuard?.(false)}
             >
-              BLK
+              <img src={KM.iconBlock} alt="" className="mtouch-ring-ico" />
+              <span>BLK</span>
             </button>
             <button
               type="button"
@@ -427,7 +443,8 @@ export function TouchControls({
                 api.touchParry?.();
               }}
             >
-              PRY
+              <img src={KM.iconParry} alt="" className="mtouch-ring-ico" />
+              <span>PRY</span>
             </button>
             <button
               type="button"
@@ -438,7 +455,8 @@ export function TouchControls({
                 api.touchDodge?.();
               }}
             >
-              X
+              <img src={KM.iconDodge} alt="" className="mtouch-ring-ico" />
+              <span>X</span>
             </button>
           </div>
 
@@ -535,7 +553,7 @@ export function TouchControls({
                 api.touchAttack();
               }}
             >
-              <img src={`${CDN}/icons/pack/weapons/Sword_10.png`} alt="Attack" />
+              <img src={KM.iconAttack} alt="Attack" />
               {barExpanded && <span>Attack</span>}
             </button>
           )}
@@ -552,15 +570,22 @@ export function TouchControls({
         {leftDrawer ? "‹" : "›"}
       </button>
       <aside className={`mtouch-drawer mtouch-drawer-left ${leftDrawer ? "open" : ""}`}>
-        <h4>Quick</h4>
+        <h4>Play</h4>
+        <button type="button" onClick={() => { toggleSprint(); }}>
+          <img src={KM.iconSprint} alt="" className="mtouch-ico" /> {sprintOn ? "Sprint on" : "Sprint"}
+        </button>
+        <button type="button" onClick={() => { toggleCrouch(); }}>
+          <img src={KM.iconCrouch} alt="" className="mtouch-ico" /> {crouchOn ? "Crouch on" : "Crouch"}
+        </button>
+        <button type="button" onClick={() => { setActivity(harvest ? "combat" : "harvest"); }}>
+          <img src={harvest ? KM.iconCombat : KM.iconHarvest} alt="" className="mtouch-ico" />
+          {harvest ? "Combat" : "Harvest"}
+        </button>
         <button type="button" onClick={() => { onOpenBag?.(); setLeftDrawer(false); }}>
-          Bag / Equip
+          <img src={KM.iconBag} alt="" className="mtouch-ico" /> Bag
         </button>
         <button type="button" onClick={() => { setActivity("build"); setLeftDrawer(false); }}>
-          Build mode
-        </button>
-        <button type="button" onClick={() => { api.touchCycleActivityMode?.(); setLeftDrawer(false); }}>
-          Cycle mode (Q)
+          <img src={KM.iconBuild} alt="" className="mtouch-ico" /> Build
         </button>
       </aside>
 
@@ -573,10 +598,15 @@ export function TouchControls({
         {rightDrawer ? "›" : "‹"}
       </button>
       <aside className={`mtouch-drawer mtouch-drawer-right ${rightDrawer ? "open" : ""}`}>
-        <h4>Systems</h4>
+        <h4>More</h4>
         <button type="button" onClick={() => { onOpenSystems?.(); setRightDrawer(false); }}>
-          Skills / Tree
+          <img src={KM.iconSkills} alt="" className="mtouch-ico" /> Skills
         </button>
+        {onOpenMap && (
+          <button type="button" onClick={() => { onOpenMap(); setRightDrawer(false); }}>
+            <img src={KM.iconMenu} alt="" className="mtouch-ico" /> Maps
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -584,10 +614,10 @@ export function TouchControls({
             setRightDrawer(false);
           }}
         >
-          Toggle focus
+          <img src={KM.iconFocus} alt="" className="mtouch-ico" /> Focus
         </button>
         <p className="mtouch-drawer-note">
-          Skill stick: drag N/E/S/W for abilities · tap center for focus (RMB)
+          Move + jump on the left. Skill stick: drag for abilities, tap center to focus.
         </p>
       </aside>
     </div>
