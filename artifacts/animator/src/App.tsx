@@ -69,8 +69,9 @@ import { HotkeyHelpOverlay } from "./components/HotkeyHelpOverlay";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
-import { loadoutRaceFromFleet } from "./components/EquipmentScreen";
+import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { ExplorerCharacterPage } from "./components/characterPage";
+import { isVoxelCharacter } from "./lib/characterPortrait";
 import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
@@ -478,6 +479,10 @@ export default function App() {
   const [equipOpen, setEquipOpen] = useState(false);
   const equipOpenRef = useRef(false);
   equipOpenRef.current = equipOpen;
+  /** Live Toon kit mesh_ids for the Danger main panel. */
+  const [equipMeshIds, setEquipMeshIds] = useState<string[]>([]);
+  /** Voxel explorer uses ExplorerCharacterPage; Toon uses EquipmentScreen. */
+  const [isVoxelHero, setIsVoxelHero] = useState(false);
   /** Creator mainTabBar skillbook / systems panel (Character · Class · Wpn Skills · …). */
   const [systemsOpen, setSystemsOpen] = useState(false);
   const systemsOpenRef = useRef(false);
@@ -802,6 +807,7 @@ export default function App() {
           // Stale saveData.open.avatarId:"explorer" from Avatar Edit must NOT
           // override grudge6 / RTS_TOON warlords heroes (mesh+atlas+Bip001 packs).
           const preferExplorer = isVoxelCharacter(ch);
+          setIsVoxelHero(preferExplorer);
           const avatarId = preferExplorer
             ? "explorer"
             : raceAvatar.startsWith("grudge:")
@@ -812,6 +818,8 @@ export default function App() {
           setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
           // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
           void resolveCharacterEquipmentVisual(ch).then((vis) => {
+            if (!preferExplorer) setEquipMeshIds(vis.meshIds);
+            else setEquipMeshIds([]);
             const studio = studioRef.current;
             if (!studio) {
               // Studio not mounted yet — characterId/weapon state still updated;
@@ -3513,26 +3521,42 @@ export default function App() {
             </>
           )}
 
-          {equipOpen && (
-            <ExplorerCharacterPage
-              characterName={hud?.character ?? characterId}
-              characterId={activeCharacterId}
-              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
-              currentWeapon={hud?.weapon ?? weaponId}
-              currentOffHand={offHand}
-              onEquip={onWeapon}
-              onEquipOff={onOffHand}
-              onClose={() => setEquipOpen(false)}
-              onOpenAvatarEdit={() => {
-                setEquipOpen(false);
-                navigate("avatar");
-              }}
-              onOpenCrafting={() => {
-                setEquipOpen(false);
-                setHarvestUiOpen(true);
-              }}
-            />
-          )}
+          {equipOpen &&
+            (isVoxelHero ? (
+              <ExplorerCharacterPage
+                characterName={hud?.character ?? characterId}
+                characterId={activeCharacterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+                onOpenAvatarEdit={() => {
+                  setEquipOpen(false);
+                  navigate("avatar");
+                }}
+                onOpenCrafting={() => {
+                  setEquipOpen(false);
+                  setHarvestUiOpen(true);
+                }}
+              />
+            ) : (
+              <EquipmentScreen
+                characterName={hud?.character ?? characterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                meshIds={equipMeshIds}
+                onMeshIds={(ids) => {
+                  setEquipMeshIds(ids);
+                  studioRef.current?.setEquipmentMeshIds(ids);
+                }}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+              />
+            ))}
         </>
       )}
 
@@ -3836,26 +3860,42 @@ export default function App() {
             </>
           )}
 
-          {equipOpen && (
-            <ExplorerCharacterPage
-              characterName={hud?.character ?? characterId}
-              characterId={activeCharacterId}
-              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
-              currentWeapon={hud?.weapon ?? weaponId}
-              currentOffHand={offHand}
-              onEquip={onWeapon}
-              onEquipOff={onOffHand}
-              onClose={() => setEquipOpen(false)}
-              onOpenAvatarEdit={() => {
-                setEquipOpen(false);
-                navigate("avatar");
-              }}
-              onOpenCrafting={() => {
-                setEquipOpen(false);
-                setHarvestUiOpen(true);
-              }}
-            />
-          )}
+          {equipOpen &&
+            (isVoxelHero ? (
+              <ExplorerCharacterPage
+                characterName={hud?.character ?? characterId}
+                characterId={activeCharacterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+                onOpenAvatarEdit={() => {
+                  setEquipOpen(false);
+                  navigate("avatar");
+                }}
+                onOpenCrafting={() => {
+                  setEquipOpen(false);
+                  setHarvestUiOpen(true);
+                }}
+              />
+            ) : (
+              <EquipmentScreen
+                characterName={hud?.character ?? characterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                meshIds={equipMeshIds}
+                onMeshIds={(ids) => {
+                  setEquipMeshIds(ids);
+                  studioRef.current?.setEquipmentMeshIds(ids);
+                }}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+              />
+            ))}
           {systemsOpen && (
             <GrudgeSystemsPanel
               key={`sys-${systemsTab}`}

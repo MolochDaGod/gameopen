@@ -87,6 +87,9 @@ artifacts/animator/public/models/**/*.fbx
 !artifacts/animator/public/models/maps/pirate/**/*.glb
 !artifacts/animator/public/models/equipment/
 !artifacts/animator/public/models/equipment/wing_animated.glb
+!artifacts/animator/public/models/ride/
+!artifacts/animator/public/models/ride/**
+!artifacts/animator/public/models/ride/**/*.glb
 # Danger Room: Racalvin disc_jockey show + climbingwall hold mesh
 !artifacts/animator/public/models/dj/
 !artifacts/animator/public/models/dj/**
@@ -115,6 +118,9 @@ artifacts/animator/public/models/**/*.fbx
 !artifacts/animator/dist/public/models/maps/pirate/**/*.glb
 !artifacts/animator/dist/public/models/equipment/
 !artifacts/animator/dist/public/models/equipment/wing_animated.glb
+!artifacts/animator/dist/public/models/ride/
+!artifacts/animator/dist/public/models/ride/**
+!artifacts/animator/dist/public/models/ride/**/*.glb
 
 # Dev / reports / local bake dumps — never in deploy tarball
 reports/

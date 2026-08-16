@@ -196,6 +196,26 @@
   grid-row: 1 / 6;
   min-height: 0;
 }
+
+.eq-class-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+.eq-class-item-label {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fde68a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
 .eq-portrait-mesh {
   /* Mesh canvas fills the paperdoll center; slots stay on the CSS grid */
   touch-action: none;

@@ -19,6 +19,7 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { buildAnimationClip, listStoredClips } from "./anim/clipStore";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
+import { resolveSlotEffects } from "./grudge/slotEffects";
 import { skillPackForWeaponId } from "./grudge/weaponSkillPacks";
 import { normalizeToGrudgeAvatarId, parseGrudgeAvatarId } from "../lib/raceModel";
 import {
@@ -155,8 +156,11 @@ import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
 import { WingBackRig } from "./equipment/WingBackRig";
+import { CapeBackRig } from "./equipment/CapeBackRig";
+import { BackStowAttach } from "./equipment/BackStowAttach";
 import {
   backSlotItem,
+  backItemIdFromEquip,
   nextCodedBackSlotId,
 } from "./equipment/backSlotItems";
 import { loadCampClaimState, ensureDemoRoster } from "../lib/campClaimPersist";
@@ -959,6 +963,8 @@ export class Studio {
   private buildGrid: BuildGridOverlay | null = null;
   /** Back-slot wing pack (parachute / glide / flight / ocean sail). */
   private wingRig: WingBackRig | null = null;
+  private capeRig: CapeBackRig | null = null;
+  private backStow: BackStowAttach | null = null;
   /** Last equipped back-slot item id (same slot as “effects”). */
   private _lastBackSlotItemId: string | null = "back_wing_pack";
   private campEnemies: CampEnemySystem | null = null;
@@ -1715,12 +1721,30 @@ export class Studio {
   /** Equip / change back-slot item (effects live on the item — not a second slot). */
   equipBackWing(itemId: string | null) {
     if (itemId) this._lastBackSlotItemId = itemId;
-    if (!this.wingRig?.isReady) {
-      void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
-      return;
-    }
-    this.wingRig.equipBackItem(itemId);
     const def = itemId ? backSlotItem(itemId) : null;
+    const root = this.character?.root;
+    if (def?.capeVariant && root) {
+      this.wingRig?.equipBackItem(null);
+      this.backStow?.hide();
+      if (!this.capeRig) this.capeRig = new CapeBackRig();
+      this.capeRig.attachToCharacter(root);
+      this.capeRig.setVariant(def.capeVariant);
+      this.capeRig.setVisible(true);
+    } else if (def?.stowUrl && root) {
+      this.wingRig?.equipBackItem(null);
+      this.capeRig?.setVisible(false);
+      if (!this.backStow) this.backStow = new BackStowAttach();
+      this.backStow.attachToCharacter(root);
+      void this.backStow.show(def.stowUrl, 0.58);
+    } else {
+      this.capeRig?.setVisible(false);
+      this.backStow?.hide();
+      if (itemId && !this.wingRig?.isReady) {
+        void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
+      } else {
+        this.wingRig?.equipBackItem(itemId);
+      }
+    }
     this.setCombatFlash(
       itemId
         ? `BACK · ${(def?.label || itemId).replace(/_/g, " ").toUpperCase()}${
@@ -2095,6 +2119,31 @@ export class Studio {
     this.pendingMeshIds = ids?.length ? ids.slice() : null;
     if (this.character instanceof GrudgeAvatar) {
       this.character.setMeshIds(this.pendingMeshIds);
+    }
+    this.syncLoadoutSlotAuras();
+    const backTag = (this.pendingMeshIds || []).find(
+      (m) => /^equip:back:/i.test(m) || /^back_/.test(m),
+    );
+    const backItem = backTag ? backItemIdFromEquip(backTag) : null;
+    this.equipBackWing(backItem);
+  }
+
+  /** Relic/Back passives: apply existing StatusFx auras while equipped. */
+  private syncLoadoutSlotAuras(): void {
+    const fx = resolveSlotEffects(this.pendingMeshIds);
+    for (const spec of fx) {
+      if (spec.aura) this.applyStatus(spec.aura);
+    }
+  }
+
+  /** Relic/Back on-hit procs (StatusFx hostile). */
+  private tryLoadoutOnHitProc(center: THREE.Vector3): void {
+    const fx = resolveSlotEffects(this.pendingMeshIds);
+    for (const spec of fx) {
+      if (!spec.onHit) continue;
+      if (Math.random() > spec.onHit.chance) continue;
+      this.applyStatusScoped(spec.onHit.status, "hostile");
+      if (spec.onHit.aoe) this.vfx.aoeBlast(center, 0xb070ff, 1.4);
     }
   }
 
@@ -3891,6 +3940,7 @@ export class Studio {
         this.setCombatFlash("COUNTER!", 0.6);
       }
       if (landed) {
+        this.tryLoadoutOnHitProc(center);
         this.bumpMusicHeat(finisher || fx.kind === "finisher" ? 0.45 : 0.28);
         if (fx.fireAuraScale > 0) {
           this.vfx.fireAura(center, fx.fireAuraScale, this.fireThemeApplied, {
@@ -5387,7 +5437,11 @@ export class Studio {
     };
     // A skill/AoE blast is a heavy offensive beat — swell the combat music.
     this.bumpMusicHeat(0.4);
-    return this.targets.playerHit(center, radius, payload, force, this.sparCtx);
+    const result = this.targets.playerHit(center, radius, payload, force, this.sparCtx);
+    if (!result || result.outcome === "hit" || result.outcome === "crit") {
+      this.tryLoadoutOnHitProc(center);
+    }
+    return result;
   }
 
   /**

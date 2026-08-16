@@ -24,4 +24,8 @@ export class HarvestPhysicsBake {
   clear() {
     this.handles = [];
   }
+
+  count(): number {
+    return this.handles.length;
+  }
 }

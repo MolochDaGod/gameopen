@@ -17,10 +17,9 @@ import {
   Sword,
   Shield,
   Gem,
-  Anchor,
   Sparkles,
   Circle,
-  Plus,
+  BookOpen,
   X,
 } from "lucide-react";
 import type { WeaponGroup, WeaponId } from "../three/types";
@@ -28,6 +27,21 @@ import { WEAPONS, OFF_HAND_WEAPONS, offHandEligible } from "../three/arsenal";
 import { WEAPON_ICON } from "../three/icons";
 import { Icon } from "./Icon";
 import { LoadoutMeshStage } from "./equip/LoadoutMeshStage";
+import {
+  cycleKitSlot,
+  currentKitSlotMesh,
+  getPreset,
+  type KitPanelSlot,
+  type RaceId,
+} from "../three/grudge/gearPresets";
+import {
+  arsenalIdFromKitWeapon,
+  kitSlotGate,
+  kitWeaponFamily,
+  META_EQUIP_LABEL,
+} from "../three/grudge/toonKitCoverage";
+import { resolveSlotEffects, slotEffectLines } from "../three/grudge/slotEffects";
+import { resolveRaceId } from "../lib/raceModel";
 import "./EquipmentScreen.css";
 
 export type LoadoutRaceKey =
@@ -47,6 +61,9 @@ interface Props {
   onEquip: (id: WeaponId) => void;
   onEquipOff: (id: WeaponId | null) => void;
   onClose: () => void;
+  /** Live Toon RTS mesh_ids (main-panel SSOT). */
+  meshIds?: string[];
+  onMeshIds?: (ids: string[]) => void;
 }
 
 type SlotId =
@@ -57,11 +74,10 @@ type SlotId =
   | "boots"
   | "weapon"
   | "offhand"
-  | "amulet"
-  | "belt"
   | "cloak"
   | "ring"
-  | "add";
+  | "relic"
+  | "classItem";
 
 type SlotDef = {
   id: SlotId;
@@ -73,20 +89,42 @@ type SlotDef = {
   live?: "weapon" | "offhand";
 };
 
+/**
+ * Paperdoll = uMMORPG Player race prefab slotInfo
+ * (`Assets/uMMORPG/Prefabs/Entities/Players/{Human,Barbarian,Elf,Dwarf,Orc,Undead}.prefab`).
+ * All six races override C# defaults to these 10 categories.
+ *
+ * Prefab extra clothing (Hands 1–3, Boots 1–3, capes) is not on the Toon GLB.
+ * Play maps Hands→Arms_*, Boots→Legs_*, Back→Xtra_bag/wood/quiver.
+ */
 const LEFT_SLOTS: SlotDef[] = [
-  { id: "helmet", label: "Helmet", emoji: "⛑", Icon: HardHat, col: 1, row: 1 },
-  { id: "chest", label: "Chest", emoji: "🛡", Icon: Shirt, col: 1, row: 2 },
-  { id: "gloves", label: "Gloves", emoji: "🧤", Icon: Hand, col: 1, row: 3 },
-  { id: "legs", label: "Leggings", emoji: "🦵", Icon: ShieldHalf, col: 1, row: 4 },
+  { id: "helmet", label: "Head", emoji: "⛑", Icon: HardHat, col: 1, row: 1 },
+  { id: "legs", label: "Shoulders", emoji: "🧥", Icon: ShieldHalf, col: 1, row: 2 },
+  { id: "chest", label: "Body", emoji: "🛡", Icon: Shirt, col: 1, row: 3 },
+  { id: "gloves", label: "Hands", emoji: "🧤", Icon: Hand, col: 1, row: 4 },
   { id: "boots", label: "Boots", emoji: "👢", Icon: Footprints, col: 1, row: 5 },
 ];
+
+const DOLL_TO_KIT: Partial<Record<SlotId, KitPanelSlot>> = {
+  helmet: "head",
+  chest: "body",
+  gloves: "arms",
+  boots: "legs",
+  legs: "shoulders",
+  cloak: "back",
+  weapon: "weapon",
+  offhand: "shield",
+  ring: "ring",
+  relic: "relic",
+  classItem: "classItem",
+};
 
 const RIGHT_SLOTS: SlotDef[] = [
   { id: "weapon", label: "Main Hand", emoji: "⚔", Icon: Sword, col: 3, row: 1, live: "weapon" },
   { id: "offhand", label: "Off Hand", emoji: "🛡", Icon: Shield, col: 3, row: 2, live: "offhand" },
-  { id: "amulet", label: "Amulet", emoji: "💎", Icon: Gem, col: 3, row: 3 },
-  { id: "belt", label: "Belt", emoji: "🔗", Icon: Anchor, col: 3, row: 4 },
-  { id: "cloak", label: "Cloak", emoji: "🧥", Icon: Sparkles, col: 3, row: 5 },
+  { id: "cloak", label: "Back", emoji: "🧥", Icon: Sparkles, col: 3, row: 3 },
+  { id: "ring", label: "Ring", emoji: "💍", Icon: Circle, col: 3, row: 4 },
+  { id: "relic", label: "Relic", emoji: "💎", Icon: Gem, col: 3, row: 5 },
 ];
 
 const GROUP_ORDER: { id: WeaponGroup; label: string }[] = [
@@ -108,6 +146,10 @@ const RACE_LABEL: Record<LoadoutRaceKey, string> = {
 
 const PANEL_W = 420;
 
+function fleetRaceFromLoadout(race: LoadoutRaceKey): RaceId {
+  return resolveRaceId(race);
+}
+
 export function EquipmentScreen({
   characterName,
   race = "human",
@@ -116,9 +158,14 @@ export function EquipmentScreen({
   onEquip,
   onEquipOff,
   onClose,
+  meshIds,
+  onMeshIds,
 }: Props) {
   const [query, setQuery] = useState("");
   const [lastAction, setLastAction] = useState("");
+  const raceId = fleetRaceFromLoadout(race);
+  const liveMeshes = meshIds?.length ? meshIds : getPreset(raceId, "warrior").visibleMeshes;
+  const liveSlotFx = useMemo(() => resolveSlotEffects(liveMeshes), [liveMeshes]);
 
   const active = WEAPONS.find((w) => w.id === currentWeapon);
   const activeOff = currentOffHand ? WEAPONS.find((w) => w.id === currentOffHand) : null;
@@ -173,7 +220,40 @@ export function EquipmentScreen({
     }
   }, [offEligible, currentOffHand, onEquipOff]);
 
+  const applyMeshes = (ids: string[], note: string) => {
+    onMeshIds?.(ids);
+    setLastAction(note);
+  };
+
   const onSlotClick = (id: SlotId) => {
+    const kitSlot = DOLL_TO_KIT[id];
+    if (kitSlot && onMeshIds) {
+      const gate = kitSlotGate(raceId, liveMeshes, kitSlot);
+      if (!gate.ok) {
+        setLastAction(gate.reason ?? `${id} locked by current body`);
+        return;
+      }
+      if (kitSlot === "shield") {
+        const fam = kitWeaponFamily(currentKitSlotMesh(liveMeshes, "weapon"));
+        if (fam === "bow" || fam === "staff" || fam === "2h") {
+          setLastAction("Off Hand locked — bow / staff / spear uses both hands");
+          return;
+        }
+      }
+      const next = cycleKitSlot(raceId, liveMeshes, kitSlot);
+      const shown = currentKitSlotMesh(next, kitSlot);
+      const pretty = shown ? (META_EQUIP_LABEL[shown] ?? shown) : "empty";
+      applyMeshes(next, `${id} → ${pretty}`);
+      if (kitSlot === "weapon") {
+        onEquip(arsenalIdFromKitWeapon(currentKitSlotMesh(next, "weapon")) as WeaponId);
+        const fam = kitWeaponFamily(currentKitSlotMesh(next, "weapon"));
+        if (fam === "bow" || fam === "staff" || fam === "2h") onEquipOff(null);
+      }
+      if (kitSlot === "shield") {
+        onEquipOff(currentKitSlotMesh(next, "shield") ? "shield" : null);
+      }
+      return;
+    }
     if (id === "weapon") {
       cycleWeapon();
       return;
@@ -182,43 +262,41 @@ export function EquipmentScreen({
       cycleOffHand();
       return;
     }
-    if (id === "add") {
-      setLastAction("Open catalogue on the right to pick weapons");
-      return;
-    }
-    setLastAction(`${id} — modular armor soon (TI paperdoll parity)`);
+    setLastAction(`${id} — no kit piece on this race`);
   };
 
   const applyStarter = () => {
     onEquip("sword");
     onEquipOff(null);
-    setLastAction("Applied Starter preset (sword)");
+    applyMeshes(getPreset(raceId, "warrior").visibleMeshes.slice(), "Warrior kit (chain + sword)");
   };
   const applyVeteran = () => {
-    const twoH = WEAPONS.find((w) => w.group === "melee-2h") ?? WEAPONS.find((w) => w.id === "sword");
-    if (twoH) onEquip(twoH.id);
-    onEquipOff(null);
-    setLastAction(twoH ? `Applied Veteran preset (${twoH.label})` : "Veteran preset unavailable");
+    onEquip("sword");
+    onEquipOff("shield");
+    applyMeshes(getPreset(raceId, "knight").visibleMeshes.slice(), "Knight kit (plate + sword)");
   };
   const clearLoadout = () => {
     onEquip("none");
     onEquipOff(null);
-    setLastAction("Cleared loadout");
+    applyMeshes(getPreset(raceId, "unarmed").visibleMeshes.slice(), "Unarmed cloth kit");
   };
 
   const renderSlot = (slot: SlotDef) => {
     const isWeapon = slot.live === "weapon";
     const isOff = slot.live === "offhand";
+    const kitSlot = DOLL_TO_KIT[slot.id];
+    const kitMesh = kitSlot ? currentKitSlotMesh(liveMeshes, kitSlot) : null;
+    const kitLabel = kitMesh ? (META_EQUIP_LABEL[kitMesh] ?? kitMesh) : null;
     const filled = isWeapon
-      ? currentWeapon !== "none"
+      ? currentWeapon !== "none" || !!kitMesh
       : isOff
-        ? !!currentOffHand
-        : false;
+        ? !!currentOffHand || !!kitMesh
+        : !!kitMesh;
     const label = isWeapon
-      ? active?.label ?? slot.label
+      ? kitLabel ?? active?.label ?? slot.label
       : isOff
-        ? activeOff?.label ?? slot.label
-        : slot.label;
+        ? kitLabel ?? activeOff?.label ?? slot.label
+        : kitLabel ?? slot.label;
     const IconCmp = slot.Icon;
     const disabled = isOff && !offEligible;
 
@@ -266,7 +344,7 @@ export function EquipmentScreen({
           <p className="eq-banner-kicker">Equipment</p>
           <h1 className="eq-banner-title">GRUDGE WARLORD LOADOUT</h1>
           <p className="eq-banner-sub">
-            {characterName} · Three.js mesh preview · click slots to cycle · <kbd>Esc</kbd> close
+            {characterName} · Toon RTS mesh_ids · click armor to cycle kit parts · <kbd>Esc</kbd> close
           </p>
         </div>
         <div className="eq-banner-actions">
@@ -323,24 +401,27 @@ export function EquipmentScreen({
 
             <button
               type="button"
-              className="eq-slot"
-              style={{ gridColumn: 1, gridRow: 6 }}
-              title="Ring"
-              onClick={() => onSlotClick("ring")}
+              className={[
+                "eq-slot eq-class-item",
+                currentKitSlotMesh(liveMeshes, "classItem") ? "on" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{ gridColumn: 2, gridRow: 6 }}
+              title={
+                currentKitSlotMesh(liveMeshes, "classItem")
+                  ? `${META_EQUIP_LABEL[currentKitSlotMesh(liveMeshes, "classItem")!] ?? currentKitSlotMesh(liveMeshes, "classItem")} — click to cycle class item`
+                  : "Class item — Battle Forms / Ranger's Log / Wand / Grimoire"
+              }
+              onClick={() => onSlotClick("classItem")}
             >
-              <Circle className="eq-slot-icon" strokeWidth={1.6} />
-            </button>
-            <div className="eq-slot-divider">
-              <div className="eq-slot-divider-line" />
-            </div>
-            <button
-              type="button"
-              className="eq-slot eq-slot-add"
-              style={{ gridColumn: 3, gridRow: 6 }}
-              title="Add item"
-              onClick={() => onSlotClick("add")}
-            >
-              <Plus size={28} strokeWidth={2.2} />
+              <BookOpen className="eq-slot-icon" strokeWidth={1.4} />
+              <span className="eq-class-item-label">
+                {(() => {
+                  const id = currentKitSlotMesh(liveMeshes, "classItem");
+                  return id ? (META_EQUIP_LABEL[id] ?? "Class") : "Class item";
+                })()}
+              </span>
             </button>
           </div>
         </div>
@@ -357,13 +438,23 @@ export function EquipmentScreen({
                   · Off: <strong>{activeOff.label}</strong>
                 </>
               ) : null}
+              {" "}
+              · kit <strong>{liveMeshes.length}</strong> meshes
             </p>
             <p style={{ marginTop: 6 }}>
-              UI chrome from Warlords water equipment patterns (
-              <strong>water.grudge-studio.com</strong>). Center stage is a{" "}
-              <strong>Three.js</strong> race mesh with live hand-mounted weapons (same{" "}
-              <code>Character</code> + <code>mountWeaponModel</code> stack as Danger Room).
+              Relic = elemental orbs. Class item (under the portrait) = Battle
+              Forms / Ranger's Log / Wand / Grimoire. Back = windsurf / wings / cape.
             </p>
+            {liveSlotFx.length > 0 && (
+              <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13, lineHeight: 1.45 }}>
+                {liveSlotFx.map((fx) => (
+                  <li key={fx.id}>
+                    <strong>{fx.slot === "relic" ? "Relic" : "Back"}:</strong>{" "}
+                    {slotEffectLines(fx).slice(0, 2).join(" — ")}
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="eq-status-action">{lastAction}</div>
           </div>
 

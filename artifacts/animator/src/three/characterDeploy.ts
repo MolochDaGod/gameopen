@@ -350,6 +350,41 @@ export function reGroundAfterAnimSample(
   return groundFeetLocal(model, groundY);
 }
 
+/** Walk a remapped bone up to the scene-graph root Bone (Bip001 / Hips). */
+function rootMostBone(bone: THREE.Bone): THREE.Bone {
+  let last: THREE.Bone = bone;
+  let n: THREE.Object3D | null = bone.parent;
+  while (n) {
+    if ((n as THREE.Bone).isBone) last = n as THREE.Bone;
+    n = n.parent;
+  }
+  return last;
+}
+
+/**
+ * How many disconnected *character* skeletons a kit still has.
+ *
+ * unifySkeletons() allocates a new THREE.Skeleton per SkinnedMesh (inverses
+ * differ) but remaps bones onto the same Bip001 nodes. Helmet / weapon skins
+ * often omit pelvis from their bone array — do not treat bones[0] as a kit.
+ * Count unique root-most Bip001/Hips objects on **visible** skins only.
+ */
+export function countVisibleSkeletonRoots(model: THREE.Object3D): number {
+  const roots = new Set<string>();
+  model.traverse((o) => {
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh || sm.visible === false) return;
+    const bones = sm.skeleton?.bones;
+    if (!bones?.length) return;
+    for (const b of bones) {
+      if (!b?.name) continue;
+      if (!/Bip001|mixamorig|Pelvis|^Hips$|Spine/i.test(b.name)) continue;
+      roots.add(rootMostBone(b).uuid);
+    }
+  });
+  return roots.size;
+}
+
 /** Validate a deployed kit is playable before unlocking input. */
 export function validateCharacterDeploy(model: THREE.Object3D): {
   ok: boolean;
@@ -359,22 +394,16 @@ export function validateCharacterDeploy(model: THREE.Object3D): {
   prepareSkinnedMeasure(model);
   const issues: string[] = [];
   let skinned = 0;
-  let skeletonCount = 0;
-  const skeletonIds = new Set<string>();
   model.traverse((o) => {
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
-      skinned++;
-      const sk = (o as THREE.SkinnedMesh).skeleton;
-      if (sk) {
-        skeletonCount++;
-        skeletonIds.add(String(sk.uuid));
-      }
-    }
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh || sm.visible === false) return;
+    skinned++;
   });
   if (skinned === 0) issues.push("no SkinnedMesh");
-  // Multiple disconnected skeletons → T-pose / partial deform (must unifySkeletons)
-  if (skeletonIds.size > 1) {
-    issues.push(`multiple skeletons (${skeletonIds.size}) — run unifySkeletons`);
+  const skeletonRoots = countVisibleSkeletonRoots(model);
+  // Disconnected kits = more than one Bip001/Hips *object* after unify.
+  if (skeletonRoots > 1) {
+    issues.push(`multiple skeletons (${skeletonRoots}) — run unifySkeletons`);
   }
   const h = bodyBox(model).getSize(new THREE.Vector3()).y;
   if (!(h > 0.5 && h < 4)) issues.push(`height ${h.toFixed(2)}m not human-scale`);
@@ -419,13 +448,7 @@ export function diagnoseCharacterLook(model: THREE.Object3D): {
   const warnings: string[] = [];
   const box = bodyBox(model);
   const pelvis = findPelvisBone(model);
-  let skeletonCount = 0;
-  const ids = new Set<string>();
-  model.traverse((o) => {
-    const sk = (o as THREE.SkinnedMesh).skeleton;
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh && sk) ids.add(sk.uuid);
-  });
-  skeletonCount = ids.size;
+  const skeletonCount = countVisibleSkeletonRoots(model);
 
   const pipeline = (model.userData.importPipeline as string) || null;
   if (pipeline === "fbx-atlas" && !model.userData.artForwardSet) {

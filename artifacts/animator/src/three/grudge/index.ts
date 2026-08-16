@@ -18,7 +18,37 @@ export type { RaceId, RaceAsset } from "./raceAssets";
 export { RACE_ASSETS, RACE_IDS } from "./raceAssets";
 
 export type { GearPreset, PresetId } from "./gearPresets";
-export { RACE_GEAR_PRESETS, PRESET_IDS, getPreset } from "./gearPresets";
+export {
+  RACE_GEAR_PRESETS,
+  PRESET_IDS,
+  getPreset,
+  collectKitSlotMeshes,
+  currentKitSlotMesh,
+  cycleKitSlot,
+} from "./gearPresets";
+export type { KitPanelSlot } from "./gearPresets";
+export {
+  TOON_WARDROBE,
+  TOON_RELICS,
+  TOON_CLASS_ITEMS,
+  TOON_RINGS,
+  META_EQUIP_LABEL,
+  reconcileKitLimbs,
+  reconcileKitLoadout,
+  bodyLimbCover,
+  kitSlotGate,
+  kitWeaponFamily,
+  arsenalIdFromKitWeapon,
+} from "./toonKitCoverage";
+export {
+  resolveSlotEffects,
+  effectForEquipId,
+  slotEffectLines,
+  RELIC_SLOT_EFFECTS,
+  CLASS_ITEM_EFFECTS,
+  BACK_SLOT_EFFECTS,
+} from "./slotEffects";
+export type { SlotEffectSpec, SlotEffectKind } from "./slotEffects";
 
 export type { GrudgePlaytestEntry } from "./playtestRoster";
 export {
@@ -109,6 +139,7 @@ export {
   buildBoneNameLookup,
   rematchClipToSkeleton,
   unifySkeletons,
+  boneTreeRoot,
   findHandBone,
 } from "./skeleton";
 

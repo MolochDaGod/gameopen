@@ -97,6 +97,68 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     expect(Math.abs(box.min.y)).toBeLessThan(0.1);
   });
 
+  function bindSkin(root: THREE.Object3D, bones: THREE.Bone[], visible = true) {
+    const geo = new THREE.BoxGeometry(0.3, 1.8, 0.3);
+    const count = geo.attributes.position.count;
+    const skinIndex = new THREE.BufferAttribute(new Uint16Array(count * 4), 4);
+    const skinWeight = new THREE.BufferAttribute(new Float32Array(count * 4), 4);
+    for (let v = 0; v < count; v++) skinWeight.setXYZW(v, 1, 0, 0, 0);
+    geo.setAttribute("skinIndex", skinIndex);
+    geo.setAttribute("skinWeight", skinWeight);
+    const mesh = new THREE.SkinnedMesh(geo, new THREE.MeshBasicMaterial());
+    mesh.visible = visible;
+    mesh.bind(new THREE.Skeleton(bones));
+    root.add(mesh);
+    return mesh;
+  }
+
+  it("validateCharacterDeploy treats remapped bones as one skeleton", () => {
+    const root = new THREE.Group();
+    const hip = new THREE.Bone();
+    hip.name = "Bip001 Pelvis";
+    root.add(hip);
+    for (let i = 0; i < 3; i++) bindSkin(root, [hip]);
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(false);
+  });
+
+  it("validateCharacterDeploy treats helm/weapon child skins as one Bip001 tree", () => {
+    const root = new THREE.Group();
+    const bip = new THREE.Bone();
+    bip.name = "Bip001";
+    const hip = new THREE.Bone();
+    hip.name = "Bip001 Pelvis";
+    const head = new THREE.Bone();
+    head.name = "Bip001 Head";
+    const hand = new THREE.Bone();
+    hand.name = "Bip001 R Hand";
+    bip.add(hip);
+    hip.add(head);
+    hip.add(hand);
+    root.add(bip);
+    bindSkin(root, [bip, hip]);
+    bindSkin(root, [head]);
+    bindSkin(root, [hand]);
+    const hiddenWardrobe = bindSkin(root, [new THREE.Bone()], false);
+    hiddenWardrobe.skeleton.bones[0].name = "Bip001";
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(false);
+  });
+
+  it("validateCharacterDeploy still flags two disconnected Bip001 trees", () => {
+    const root = new THREE.Group();
+    const a = new THREE.Bone();
+    a.name = "Bip001";
+    const b = new THREE.Bone();
+    b.name = "Bip001";
+    root.add(a);
+    root.add(b);
+    bindSkin(root, [a]);
+    bindSkin(root, [b]);
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(true);
+  });
+
   it("validateCharacterDeploy reports height issues on tiny models", () => {
     const root = new THREE.Group();
     const geo = new THREE.BoxGeometry(0.05, 0.05, 0.05);

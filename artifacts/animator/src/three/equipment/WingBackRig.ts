@@ -48,6 +48,8 @@ export const BACK_SLOT_WING_ITEMS: Record<
   back_glider: { mode: "glide", type: 2, label: "Glider" },
   back_flight_rig: { mode: "flight", type: 2, label: "Flight Rig" },
   back_sail_deploy: { mode: "sail", type: 1, label: "Deployable Sail" },
+  back_holy_wings: { mode: "glide", type: 1, label: "Holy Wings" },
+  back_traveler_wings: { mode: "flight", type: 2, label: "Traveler's Wings" },
 };
 
 export type WingPhysicsProfile = {

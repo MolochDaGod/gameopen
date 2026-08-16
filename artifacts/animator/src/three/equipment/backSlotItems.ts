@@ -24,7 +24,33 @@ export type BackSlotItemDef = {
    * Non-wing effects use the same back slot later (shell, stealth, …).
    */
   wingItemId?: string;
+  /** Stow GLB on spine (windsurf pack). */
+  stowUrl?: string;
+  deployUrl?: string;
+  /** Unity cape variant (default / long / wide). */
+  capeVariant?: "default" | "long" | "wide";
 };
+
+/** Paperdoll / mesh_ids tag for a back item. */
+export function backEquipId(itemId: string): string {
+  return itemId.startsWith("equip:back:") ? itemId : `equip:back:${itemId.replace(/^back_/, "")}`;
+}
+
+export function backItemIdFromEquip(tag: string): string | null {
+  if (tag.startsWith("equip:back:")) {
+    const slug = tag.slice("equip:back:".length);
+    const withPrefix = slug.startsWith("back_") ? slug : `back_${slug}`;
+    if (backSlotItem(withPrefix)) return withPrefix;
+    if (backSlotItem(slug)) return slug;
+    return withPrefix;
+  }
+  if (tag.startsWith("back_") && backSlotItem(tag)) return tag;
+  return null;
+}
+
+export function paperdollBackIds(): string[] {
+  return codedBackSlotItems().map((i) => backEquipId(i.id));
+}
 
 /**
  * Canonical back-slot catalog.
@@ -77,11 +103,55 @@ export const BACK_SLOT_ITEMS: BackSlotItemDef[] = [
     id: "back_wind_surf",
     label: "Wind Surf",
     effect:
-      "Deploy vehicle (casting.grudge-studio.com windsurf_package) — parent seat + RideIK until get-off",
+      "Water-only vehicle — stow back_fly_windsurf.glb; deploy windsurf_package (Casting ride SSOT)",
     domains: ["mobility", "ocean"],
-    // Lab vehicle: CastingAbilitiesThreeJS WalkController + HoverboardRide + RideIK
     status: "coded",
     wingItemId: undefined,
+    stowUrl: "models/ride/back_fly_windsurf.glb",
+    deployUrl: "models/ride/windsurf_package.glb",
+  },
+  {
+    id: "back_holy_wings",
+    label: "Holy Wings",
+    effect: "Jump → glide down (wing type 1)",
+    domains: ["mobility"],
+    status: "coded",
+    wingItemId: "back_holy_wings",
+  },
+  {
+    id: "back_traveler_wings",
+    label: "Traveler's Wings",
+    effect: "Double-jump fly pose · two flaps · then glide (wing type 2)",
+    domains: ["mobility"],
+    status: "coded",
+    wingItemId: "back_traveler_wings",
+  },
+  {
+    id: "back_cape",
+    label: "Cape",
+    effect: "Land cloth back — Unity Empty/default cape",
+    domains: ["utility"],
+    status: "coded",
+    wingItemId: undefined,
+    capeVariant: "default",
+  },
+  {
+    id: "back_cape_long",
+    label: "Long Cape",
+    effect: "Unity Long Cape 1 — longer hem",
+    domains: ["utility"],
+    status: "coded",
+    wingItemId: undefined,
+    capeVariant: "long",
+  },
+  {
+    id: "back_cape_wide",
+    label: "Wide Cape",
+    effect: "Unity Wide Cape 1 — broader shoulders",
+    domains: ["utility"],
+    status: "coded",
+    wingItemId: undefined,
+    capeVariant: "wide",
   },
   {
     id: "back_hover",

@@ -724,8 +724,8 @@ export async function loadGrudge6CombatRig(
   if (!(check.heightM >= 1.45 && check.heightM <= 2.25)) {
     hardErrors.push(`height ${check.heightM.toFixed(3)}m outside SI human band`);
   }
+  // diagnoseCharacterLook already copies validateCharacterDeploy issues.
   if (look.errors?.length) hardErrors.push(...look.errors);
-  if (check.issues?.length && !check.ok) hardErrors.push(...check.issues);
   if (hardErrors.length) {
     console.error(
       `[grudge6Runtime] HARD FAIL race=${raceId} preset=${presetId} pack=${animPack}`,

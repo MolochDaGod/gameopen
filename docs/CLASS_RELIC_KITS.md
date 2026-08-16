@@ -14,3 +14,5 @@ Most class design was already in place (Warbound Grip, Wand recipes, Grimoire fo
 | **Ranger** | Quick Fingers, long dodge, ranged flow | Rename **Ranger's Log** (not Nimble Book); **sidearm half-slot**; **quick swap on ranged CD**; **auto poison** + **invisible** path notes |
 
 Do not replace these files wholesale. Prefer additive fields on the existing relics.
+
+**Paperdoll:** these are the **Class item** slot (under the character camera), not Relic. Relic stays the four elemental orbs.

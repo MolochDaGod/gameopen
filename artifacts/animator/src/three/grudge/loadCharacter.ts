@@ -220,7 +220,10 @@ function meshRole(key: string): string | null {
  */
 export function applyGearPreset(group: THREE.Object3D, visibleMeshes: string[]): void {
   if (!visibleMeshes.length) return;
-  const wantKeys = visibleMeshes.map(meshKey).filter(Boolean);
+  const wantKeys = visibleMeshes
+    .filter((m) => !/^equip:/i.test(m))
+    .map(meshKey)
+    .filter(Boolean);
 
   // 1) Hide entire kit wardrobe (not only "equippable" regex — that missed junk)
   hideAllKitMeshes(group);
