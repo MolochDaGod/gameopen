@@ -46,6 +46,8 @@ export const FLEET = {
    * Override: VITE_AI_URL · client helpers: lib/engineStack.ts · ai/aiGateway.ts
    */
   ai: "https://ai.grudge-studio.com",
+  /** Player account User-Pays FS + puter.site — never bag/roster SSOT */
+  puterSpace: "https://ai.grudge-studio.com/puter-space",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   /** Canonical play host — multiplayer, maps, harvest, DRC + explorer avatar */
