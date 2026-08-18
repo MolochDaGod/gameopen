@@ -59,23 +59,19 @@ export function definitionBaseCandidates(): string[] {
   );
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const list = [
-    // Same-origin first (vercel rewrites → assets CDN / ObjectStore)
+    // Same-origin ObjectStore rewrite is the live catalog mount.
+    origin ? `${origin}/api/objectstore/v1` : "",
+    FLEET.objectStoreInfo,
+    FLEET.objectStore,
+    "https://info.grudge-studio.com/content",
+    // Same-origin /content + /api/v1 (Open worker + vercel.json → info)
     origin ? `${origin}/content` : "",
     origin ? `${origin}/api/v1` : "",
-    origin ? `${origin}/api/objectstore/v1` : "",
-    // R2 CDN definitions (primary when info.pages is down)
     FLEET.definitions,
     "https://assets.grudge-studio.com/content",
-    // Live ObjectStore Worker (multi-upstream serveStaticJson)
-    FLEET.objectStore,
-    // GitHub Pages archive
     "https://molochdagod.github.io/ObjectStore/api/v1",
-    // Same-origin → ObjectStore Worker root
     origin ? `${origin}/api/os/api/v1` : "",
     env || "",
-    // info Pages last (often 404 in 2026-08)
-    FLEET.objectStoreInfo,
-    "https://info.grudge-studio.com/content",
   ];
   return [...new Set(list.filter(Boolean))];
 }

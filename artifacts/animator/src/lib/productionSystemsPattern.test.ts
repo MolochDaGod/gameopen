@@ -129,6 +129,16 @@ describe("productionSystemsPattern", () => {
     expect(calls.some((c) => c.includes("/api/health"))).toBe(true);
   });
 
+  it("mesh prefetch keeps absolute CDN URLs intact", async () => {
+    const { meshPrefetchUrls } = await import("./productionSystemsPattern");
+    const abs = "https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/human.glb";
+    expect(meshPrefetchUrls(abs)).toEqual([abs]);
+    expect(meshPrefetchUrls("models/racalvin.glb")).toEqual([
+      "/models/racalvin.glb",
+      "https://assets.grudge-studio.com/models/racalvin.glb",
+    ]);
+  });
+
   it("doors critical meshes use live CDN heroes not introgamer", () => {
     const meshes = SURFACE_LOAD_PLAN.doors?.criticalMeshes ?? [];
     expect(meshes.some((m) => m.includes("introgamer"))).toBe(false);

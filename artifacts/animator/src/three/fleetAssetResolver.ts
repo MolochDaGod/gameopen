@@ -45,11 +45,13 @@ function cleanPath(path: string): string {
 }
 
 function sameOriginUrl(clean: string): string {
+  if (/^([a-z]+:)?\/\//i.test(clean) || clean.startsWith("data:")) return clean;
   const base = _viteBase.replace(/\/$/, "");
   return `${base}/${clean}`;
 }
 
 function abs(host: string, clean: string): string {
+  if (/^([a-z]+:)?\/\//i.test(clean) || clean.startsWith("data:")) return clean;
   return `${host.replace(/\/$/, "")}/${clean}`;
 }
 
