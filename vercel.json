@@ -103,12 +103,16 @@
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/nfts/:path*"
     },
     {
+      "source": "/api/objectstore/search",
+      "destination": "https://objectstore.grudge-studio.com/api/search"
+    },
+    {
       "source": "/api/objectstore/v1/:path*",
       "destination": "https://objectstore.grudge-studio.com/api/v1/:path*"
     },
     {
       "source": "/api/objectstore/:path*",
-      "destination": "https://assets.grudge-studio.com/api/:path*"
+      "destination": "https://objectstore.grudge-studio.com/:path*"
     },
     {
       "source": "/api/v1/:path*",
