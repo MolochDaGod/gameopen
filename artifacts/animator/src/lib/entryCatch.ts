@@ -69,6 +69,12 @@ export const PRODUCT_STARTS = {
   openHarvest: `${ENTRY_HOSTS.open}/danger?activity=harvest`,
   /** CDN assets root (binaries — not a SPA mode) */
   assetsCdn: `${ENTRY_HOSTS.assets}`,
+  /** Agentic Three.js editor */
+  grokBuilder: "https://grok-builder.vercel.app/",
+  /** Warlords scene editor (not Forge) */
+  threeFlow: "https://threeflow.vercel.app/",
+  /** Open mimic encounter */
+  mimic: `${ENTRY_HOSTS.open}/mimic`,
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -525,7 +531,10 @@ export function startUrlForIntent(
     | "warstrat"
     | "warlordGenesis"
     | "harvest"
-    | "deployables",
+    | "deployables"
+    | "grokBuilder"
+    | "threeFlow"
+    | "mimic",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -558,6 +567,12 @@ export function startUrlForIntent(
     }
     case "foundryHub":
       return PRODUCT_STARTS.foundryHub;
+    case "grokBuilder":
+      return PRODUCT_STARTS.grokBuilder;
+    case "threeFlow":
+      return PRODUCT_STARTS.threeFlow;
+    case "mimic":
+      return PRODUCT_STARTS.mimic;
     case "warlordsHome": {
       const u = new URL(PRODUCT_STARTS.warlordsHome);
       if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);

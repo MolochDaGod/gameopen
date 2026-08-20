@@ -143,6 +143,9 @@ describe("entryCatch", () => {
 
   it("startUrlForIntent builds correct starts", () => {
     expect(startUrlForIntent("danger")).toContain("/danger");
+    expect(startUrlForIntent("grokBuilder")).toContain("grok-builder");
+    expect(startUrlForIntent("threeFlow")).toContain("threeflow");
+    expect(startUrlForIntent("mimic")).toContain("/mimic");
     expect(startUrlForIntent("arcadeCabinet", { cabinetId: "racer" })).toContain(
       "grudox.grudge-studio.com",
     );

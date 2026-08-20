@@ -15,6 +15,8 @@ Related: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · [WARLORDS_P
 |----|------|-----|--------|-------|
 | `default` | **Forge Depths** | `models/minecraft-kit.glb` (~0.6 MB) | **Live** | Tight corridors; auto water column + **sealed boss pit**; surface wave + pit climax |
 | `chicken-gun-town` | **Chicken Gun Town** | `models/chicken-gun-town.glb` (~4.0 MB) | **Live** | Open streets; ranged-friendly; same enemy system |
+| `modular-crypt` | **Modular Crypt** | `models/packs/modular-dungeon/assembled-crypt.glb` (~0.5 MB) | **Wired** | Gapless 5×5 of isolated 2 m floor+wall+door tiles. Pieces in `models/packs/modular-dungeon/` |
+| `npc-village` | **NPC Village** | `models/packs/npc-village/npc-village.glb` (~9.6 MB) | **Wired** | Mineways **block-type layers** (Oak_Planks, Chest, …) — not houses. Isolate by `Object_N` |
 
 **Code:** `DungeonMaps.ts` · `dungeon/Dungeon.ts` (trimesh colliders + ray navmesh + depths) · `DungeonEnemies.ts` (AI)
 

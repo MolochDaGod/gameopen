@@ -1,0 +1,46 @@
+{
+  "pack": "graves",
+  "source": "grave_stone_collection.glb",
+  "isolate": "isolateNode parent",
+  "si": "metres",
+  "file": "models/packs/graves/grave-stone-collection.glb",
+  "note": "One collection GLB (20 MB textures). Do not explode 4×. isolateNode Grave1–Grave4, targetHeightM 1.4.",
+  "pieces": [
+    {
+      "id": "grave1",
+      "name": "Grave1",
+      "role": "grave",
+      "file": "models/packs/graves/grave-stone-collection.glb",
+      "isolateNode": "Grave1",
+      "snap_m": 0.5,
+      "targetHeightM": 1.4
+    },
+    {
+      "id": "grave2",
+      "name": "Grave2",
+      "role": "grave",
+      "file": "models/packs/graves/grave-stone-collection.glb",
+      "isolateNode": "Grave2",
+      "snap_m": 0.5,
+      "targetHeightM": 1.4
+    },
+    {
+      "id": "grave3",
+      "name": "Grave3",
+      "role": "grave",
+      "file": "models/packs/graves/grave-stone-collection.glb",
+      "isolateNode": "Grave3",
+      "snap_m": 0.5,
+      "targetHeightM": 1.4
+    },
+    {
+      "id": "grave4",
+      "name": "Grave4",
+      "role": "grave",
+      "file": "models/packs/graves/grave-stone-collection.glb",
+      "isolateNode": "Grave4",
+      "snap_m": 0.5,
+      "targetHeightM": 1.4
+    }
+  ]
+}

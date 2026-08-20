@@ -7,6 +7,7 @@
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
+  DELIVERY_SHELVES,
   ERA_CATEGORIES,
   GAME_LIBRARY,
   MINE_LOADER,
@@ -16,7 +17,9 @@ import {
   getGame,
   iconUrl,
   libraryByCategory,
+  libraryByShelf,
   posterUrl,
+  type DeliveryShelf,
   type GameCategory,
   type GameEntry,
 } from "../game/gameLibrary";
@@ -51,12 +54,15 @@ export type LibraryNavigateMode =
   | "minegrudge"
   | "survival";
 
-type FilterId = "all" | "featured" | GameCategory;
+type FilterId = "all" | "featured" | DeliveryShelf | GameCategory;
 
-/** Era-first filters — Voxel / Warlords / Nexus / Armada (+ Account). */
+const SHELF_IDS = new Set<string>(DELIVERY_SHELVES.map((s) => s.id));
+
+/** Delivery shelves first (account / games / editors / content), then era. */
 const FILTERS: { id: FilterId; label: string }[] = [
-  { id: "all", label: "All Games" },
+  { id: "all", label: "All" },
   { id: "featured", label: "Featured" },
+  ...DELIVERY_SHELVES.map((s) => ({ id: s.id as FilterId, label: s.label })),
   ...ERA_CATEGORIES.map((e) => ({ id: e.id as FilterId, label: e.label })),
 ];
 
@@ -83,7 +89,9 @@ export function GameLibrary({ onNavigate, onOpenAccount, onOpenInApp }: Props) {
         ? featuredGames()
         : filter === "all"
           ? [...GAME_LIBRARY]
-          : libraryByCategory(filter as GameCategory);
+          : SHELF_IDS.has(filter)
+            ? libraryByShelf(filter as DeliveryShelf)
+            : libraryByCategory(filter as GameCategory);
     const s = q.trim().toLowerCase();
     if (s) {
       base = base.filter(

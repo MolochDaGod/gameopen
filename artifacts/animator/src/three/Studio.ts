@@ -11896,7 +11896,11 @@ export class Studio {
 
     let dungeon: Dungeon | null = null;
     try {
-      dungeon = new Dungeon(this.scene, { file: DUNGEON_MAPS[loadDungeonMap()].file });
+      const dungeonMap = DUNGEON_MAPS[loadDungeonMap()];
+      dungeon = new Dungeon(this.scene, {
+        file: dungeonMap.file,
+        keepSi: dungeonMap.keepSi,
+      });
       await dungeon.load();
       if (this.disposed) {
         dungeon.dispose();

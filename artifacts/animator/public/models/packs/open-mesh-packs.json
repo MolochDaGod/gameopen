@@ -1,0 +1,2389 @@
+{
+  "si": "metres",
+  "isolate": "parent-group",
+  "tile_m": 2.0,
+  "packs": [
+    {
+      "id": "barrel-015",
+      "name": "barrel.015",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-015.glb",
+      "isolateParent": "barrel.015",
+      "childMeshes": [
+        "barrel.015_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.226,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-016",
+      "name": "barrel.016",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-016.glb",
+      "isolateParent": "barrel.016",
+      "childMeshes": [
+        "barrel.016_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.162,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-017",
+      "name": "barrel.017",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-017.glb",
+      "isolateParent": "barrel.017",
+      "childMeshes": [
+        "barrel.017_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.204,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-018",
+      "name": "barrel.018",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-018.glb",
+      "isolateParent": "barrel.018",
+      "childMeshes": [
+        "barrel.018_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 4.783,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-019",
+      "name": "barrel.019",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-019.glb",
+      "isolateParent": "barrel.019",
+      "childMeshes": [
+        "barrel.019_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 5.181,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-020",
+      "name": "barrel.020",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-020.glb",
+      "isolateParent": "barrel.020",
+      "childMeshes": [
+        "barrel.020_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 5.379,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-021",
+      "name": "barrel.021",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-021.glb",
+      "isolateParent": "barrel.021",
+      "childMeshes": [
+        "barrel.021_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 4.849,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-022",
+      "name": "barrel.022",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-022.glb",
+      "isolateParent": "barrel.022",
+      "childMeshes": [
+        "barrel.022_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.5,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-023",
+      "name": "barrel.023",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-023.glb",
+      "isolateParent": "barrel.023",
+      "childMeshes": [
+        "barrel.023_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.226,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-024",
+      "name": "barrel.024",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-024.glb",
+      "isolateParent": "barrel.024",
+      "childMeshes": [
+        "barrel.024_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.43,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel-025",
+      "name": "barrel.025",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel-025.glb",
+      "isolateParent": "barrel.025",
+      "childMeshes": [
+        "barrel.025_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.82,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "barrel",
+      "name": "barrel",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/barrel.glb",
+      "isolateParent": "barrel",
+      "childMeshes": [
+        "barrel_light brown_0",
+        "barrel_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.073,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bars-001",
+      "name": "bars.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bars-001.glb",
+      "isolateParent": "bars.001",
+      "childMeshes": [
+        "bars.001_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.308,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bars-002",
+      "name": "bars.002",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bars-002.glb",
+      "isolateParent": "bars.002",
+      "childMeshes": [
+        "bars.002_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.308,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bars-003",
+      "name": "bars.003",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bars-003.glb",
+      "isolateParent": "bars.003",
+      "childMeshes": [
+        "bars.003_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.308,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bars-013",
+      "name": "bars.013",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bars-013.glb",
+      "isolateParent": "bars.013",
+      "childMeshes": [
+        "bars.013_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.308,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "blade-trap-base",
+      "name": "blade trap base",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/blade-trap-base.glb",
+      "isolateParent": "blade trap base",
+      "childMeshes": [
+        "blade trap base_dark grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.603,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "blade-trap",
+      "name": "blade trap",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/blade-trap.glb",
+      "isolateParent": "blade trap",
+      "childMeshes": [
+        "blade trap_dark brown_0",
+        "blade trap_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.008,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bone",
+      "name": "bone",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bone.glb",
+      "isolateParent": "bone",
+      "childMeshes": [
+        "bone_beige_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.346,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-with-bars-001",
+      "name": "brick wall with bars.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-with-bars-001.glb",
+      "isolateParent": "brick wall with bars.001",
+      "childMeshes": [
+        "brick wall with bars.001_dark grey_0",
+        "brick wall with bars.001_grey_0",
+        "brick wall with bars.001_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.12,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-with-bars",
+      "name": "brick wall with bars",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-with-bars.glb",
+      "isolateParent": "brick wall with bars",
+      "childMeshes": [
+        "brick wall with bars_dark grey_0",
+        "brick wall with bars_grey_0",
+        "brick wall with bars_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.12,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-with-door-001",
+      "name": "brick wall with door.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-with-door-001.glb",
+      "isolateParent": "brick wall with door.001",
+      "childMeshes": [
+        "brick wall with door.001_dark grey_0",
+        "brick wall with door.001_grey_0",
+        "brick wall with door.001_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.12,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-with-door",
+      "name": "brick wall with door",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-with-door.glb",
+      "isolateParent": "brick wall with door",
+      "childMeshes": [
+        "brick wall with door_dark grey_0",
+        "brick wall with door_grey_0",
+        "brick wall with door_red_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.119,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-without-door-001",
+      "name": "brick wall without door.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-without-door-001.glb",
+      "isolateParent": "brick wall without door.001",
+      "childMeshes": [
+        "brick wall without door.001_dark grey_0",
+        "brick wall without door.001_grey_0",
+        "brick wall without door.001_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.12,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-without-door",
+      "name": "brick wall without door",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-without-door.glb",
+      "isolateParent": "brick wall without door",
+      "childMeshes": [
+        "brick wall without door_dark grey_0",
+        "brick wall without door_grey_0",
+        "brick wall without door_red_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.119,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-001",
+      "name": "brick wall.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-001.glb",
+      "isolateParent": "brick wall.001",
+      "childMeshes": [
+        "brick wall.001_dark grey_0",
+        "brick wall.001_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.908,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-002",
+      "name": "brick wall.002",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-002.glb",
+      "isolateParent": "brick wall.002",
+      "childMeshes": [
+        "brick wall.002_dark grey_0",
+        "brick wall.002_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.908,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-003",
+      "name": "brick wall.003",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-003.glb",
+      "isolateParent": "brick wall.003",
+      "childMeshes": [
+        "brick wall.003_dark grey_0",
+        "brick wall.003_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.908,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-004",
+      "name": "brick wall.004",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-004.glb",
+      "isolateParent": "brick wall.004",
+      "childMeshes": [
+        "brick wall.004_dark grey_0",
+        "brick wall.004_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.908,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall-005",
+      "name": "brick wall.005",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall-005.glb",
+      "isolateParent": "brick wall.005",
+      "childMeshes": [
+        "brick wall.005_dark grey_0",
+        "brick wall.005_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.902,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick-wall",
+      "name": "brick wall",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick-wall.glb",
+      "isolateParent": "brick wall",
+      "childMeshes": [
+        "brick wall_dark grey_0",
+        "brick wall_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.908,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "brick",
+      "name": "brick",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/brick.glb",
+      "isolateParent": "brick",
+      "childMeshes": [
+        "brick_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.163,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bricks-001",
+      "name": "bricks.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bricks-001.glb",
+      "isolateParent": "bricks.001",
+      "childMeshes": [
+        "bricks.001_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.58,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "bricks",
+      "name": "bricks",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/bricks.glb",
+      "isolateParent": "bricks",
+      "childMeshes": [
+        "bricks_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.669,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "candle-001",
+      "name": "candle.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/candle-001.glb",
+      "isolateParent": "candle.001",
+      "childMeshes": [
+        "candle.001_beige_0",
+        "candle.001_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.114,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "candle-002",
+      "name": "candle.002",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/candle-002.glb",
+      "isolateParent": "candle.002",
+      "childMeshes": [
+        "candle.002_beige_0",
+        "candle.002_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.725,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "candle-003",
+      "name": "candle.003",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/candle-003.glb",
+      "isolateParent": "candle.003",
+      "childMeshes": [
+        "candle.003_beige_0",
+        "candle.003_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 5.407,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "candle",
+      "name": "candle",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/candle.glb",
+      "isolateParent": "candle",
+      "childMeshes": [
+        "candle_beige_0",
+        "candle_black_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 4.437,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "chest-bottom",
+      "name": "chest bottom",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/chest-bottom.glb",
+      "isolateParent": "chest bottom",
+      "childMeshes": [
+        "chest bottom_dark brown_0",
+        "chest bottom_light brown_0",
+        "chest bottom_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.652,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "chest-top",
+      "name": "chest top",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/chest-top.glb",
+      "isolateParent": "chest top",
+      "childMeshes": [
+        "chest top_black_0",
+        "chest top_dark brown_0",
+        "chest top_light brown_0",
+        "chest top_light grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.601,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "chest-s-gold",
+      "name": "chest's gold",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/chest-s-gold.glb",
+      "isolateParent": "chest's gold",
+      "childMeshes": [
+        "chest's gold_yellow_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.644,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "coin-001",
+      "name": "Coin.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/coin-001.glb",
+      "isolateParent": "Coin.001",
+      "childMeshes": [
+        "Coin.001_yellow_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.309,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "damaged-railing-left",
+      "name": "damaged railing left",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/damaged-railing-left.glb",
+      "isolateParent": "damaged railing left",
+      "childMeshes": [
+        "damaged railing left_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.916,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "damaged-railing-right",
+      "name": "damaged railing right",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/damaged-railing-right.glb",
+      "isolateParent": "damaged railing right",
+      "childMeshes": [
+        "damaged railing right_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.916,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "debris",
+      "name": "debris",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/debris.glb",
+      "isolateParent": "debris",
+      "childMeshes": [
+        "debris_dark grey_0",
+        "debris_grey_0",
+        "debris_light brown_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.592,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-arc-037",
+      "name": "door arc.037",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-arc-037.glb",
+      "isolateParent": "door arc.037",
+      "childMeshes": [
+        "door arc.037_dark grey_0",
+        "door arc.037_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.594,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-arc-038",
+      "name": "door arc.038",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-arc-038.glb",
+      "isolateParent": "door arc.038",
+      "childMeshes": [
+        "door arc.038_dark grey_0",
+        "door arc.038_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.594,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-arc",
+      "name": "door arc",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-arc.glb",
+      "isolateParent": "door arc",
+      "childMeshes": [
+        "door arc_dark grey_0",
+        "door arc_red_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.507,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-001",
+      "name": "door.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-001.glb",
+      "isolateParent": "door.001",
+      "childMeshes": [
+        "door.001_brown_0",
+        "door.001_dark brown_0",
+        "door.001_dark grey_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.679,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-002",
+      "name": "door.002",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-002.glb",
+      "isolateParent": "door.002",
+      "childMeshes": [
+        "door.002_brown_0",
+        "door.002_dark brown_0",
+        "door.002_dark grey_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.679,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-003",
+      "name": "door.003",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-003.glb",
+      "isolateParent": "door.003",
+      "childMeshes": [
+        "door.003_brown_0",
+        "door.003_dark brown_0",
+        "door.003_dark grey_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.679,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "door-013",
+      "name": "door.013",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/door-013.glb",
+      "isolateParent": "door.013",
+      "childMeshes": [
+        "door.013_brown_0",
+        "door.013_dark brown_0",
+        "door.013_dark grey_0"
+      ],
+      "approxXZ_m": 2.003,
+      "approxY_m": 2.679,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-001",
+      "name": "floor.001",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-001.glb",
+      "isolateParent": "floor.001",
+      "childMeshes": [
+        "floor.001_dark grey_0",
+        "floor.001_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.237,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-002",
+      "name": "floor.002",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-002.glb",
+      "isolateParent": "floor.002",
+      "childMeshes": [
+        "floor.002_dark grey_0",
+        "floor.002_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.306,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-003",
+      "name": "floor.003",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-003.glb",
+      "isolateParent": "floor.003",
+      "childMeshes": [
+        "floor.003_dark grey_0",
+        "floor.003_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.237,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-004",
+      "name": "floor.004",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-004.glb",
+      "isolateParent": "floor.004",
+      "childMeshes": [
+        "floor.004_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.272,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-005",
+      "name": "floor.005",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-005.glb",
+      "isolateParent": "floor.005",
+      "childMeshes": [
+        "floor.005_dark grey_0",
+        "floor.005_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.237,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-006",
+      "name": "floor.006",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-006.glb",
+      "isolateParent": "floor.006",
+      "childMeshes": [
+        "floor.006_dark grey_0",
+        "floor.006_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.306,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-007",
+      "name": "floor.007",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-007.glb",
+      "isolateParent": "floor.007",
+      "childMeshes": [
+        "floor.007_dark grey_0",
+        "floor.007_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.235,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-008",
+      "name": "floor.008",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-008.glb",
+      "isolateParent": "floor.008",
+      "childMeshes": [
+        "floor.008_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.899,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-011",
+      "name": "floor.011",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-011.glb",
+      "isolateParent": "floor.011",
+      "childMeshes": [
+        "floor.011_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-012",
+      "name": "floor.012",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-012.glb",
+      "isolateParent": "floor.012",
+      "childMeshes": [
+        "floor.012_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-013",
+      "name": "floor.013",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-013.glb",
+      "isolateParent": "floor.013",
+      "childMeshes": [
+        "floor.013_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-014",
+      "name": "floor.014",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-014.glb",
+      "isolateParent": "floor.014",
+      "childMeshes": [
+        "floor.014_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-015",
+      "name": "floor.015",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-015.glb",
+      "isolateParent": "floor.015",
+      "childMeshes": [
+        "floor.015_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-016",
+      "name": "floor.016",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-016.glb",
+      "isolateParent": "floor.016",
+      "childMeshes": [
+        "floor.016_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-017",
+      "name": "floor.017",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-017.glb",
+      "isolateParent": "floor.017",
+      "childMeshes": [
+        "floor.017_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-018",
+      "name": "floor.018",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-018.glb",
+      "isolateParent": "floor.018",
+      "childMeshes": [
+        "floor.018_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-029",
+      "name": "floor.029",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-029.glb",
+      "isolateParent": "floor.029",
+      "childMeshes": [
+        "floor.029_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-030",
+      "name": "floor.030",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-030.glb",
+      "isolateParent": "floor.030",
+      "childMeshes": [
+        "floor.030_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-031",
+      "name": "floor.031",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-031.glb",
+      "isolateParent": "floor.031",
+      "childMeshes": [
+        "floor.031_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-032",
+      "name": "floor.032",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-032.glb",
+      "isolateParent": "floor.032",
+      "childMeshes": [
+        "floor.032_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-033",
+      "name": "floor.033",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-033.glb",
+      "isolateParent": "floor.033",
+      "childMeshes": [
+        "floor.033_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-034",
+      "name": "floor.034",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-034.glb",
+      "isolateParent": "floor.034",
+      "childMeshes": [
+        "floor.034_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-035",
+      "name": "floor.035",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-035.glb",
+      "isolateParent": "floor.035",
+      "childMeshes": [
+        "floor.035_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-036",
+      "name": "floor.036",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-036.glb",
+      "isolateParent": "floor.036",
+      "childMeshes": [
+        "floor.036_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-037",
+      "name": "floor.037",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-037.glb",
+      "isolateParent": "floor.037",
+      "childMeshes": [
+        "floor.037_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.632,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-038",
+      "name": "floor.038",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-038.glb",
+      "isolateParent": "floor.038",
+      "childMeshes": [
+        "floor.038_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.632,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-039",
+      "name": "floor.039",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-039.glb",
+      "isolateParent": "floor.039",
+      "childMeshes": [
+        "floor.039_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-041",
+      "name": "floor.041",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-041.glb",
+      "isolateParent": "floor.041",
+      "childMeshes": [
+        "floor.041_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-043",
+      "name": "floor.043",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-043.glb",
+      "isolateParent": "floor.043",
+      "childMeshes": [
+        "floor.043_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-044",
+      "name": "floor.044",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-044.glb",
+      "isolateParent": "floor.044",
+      "childMeshes": [
+        "floor.044_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.749,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-045",
+      "name": "floor.045",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-045.glb",
+      "isolateParent": "floor.045",
+      "childMeshes": [
+        "floor.045_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.292,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-046",
+      "name": "floor.046",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-046.glb",
+      "isolateParent": "floor.046",
+      "childMeshes": [
+        "floor.046_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.292,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-047",
+      "name": "floor.047",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-047.glb",
+      "isolateParent": "floor.047",
+      "childMeshes": [
+        "floor.047_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.632,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-048",
+      "name": "floor.048",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-048.glb",
+      "isolateParent": "floor.048",
+      "childMeshes": [
+        "floor.048_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-049",
+      "name": "floor.049",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-049.glb",
+      "isolateParent": "floor.049",
+      "childMeshes": [
+        "floor.049_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-050",
+      "name": "floor.050",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-050.glb",
+      "isolateParent": "floor.050",
+      "childMeshes": [
+        "floor.050_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-051",
+      "name": "floor.051",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-051.glb",
+      "isolateParent": "floor.051",
+      "childMeshes": [
+        "floor.051_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "floor-052",
+      "name": "floor.052",
+      "role": "tile",
+      "file": "models/packs/modular-dungeon/floor-052.glb",
+      "isolateParent": "floor.052",
+      "childMeshes": [
+        "floor.052_grey_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 1.682,
+      "snap_m": 2.0,
+      "pack": "modular-dungeon"
+    },
+    {
+      "id": "grave1",
+      "name": "Grave1",
+      "role": "grave",
+      "file": "models/packs/graves/grave1.glb",
+      "isolateParent": "Grave1",
+      "childMeshes": [
+        "Grave1_Graves_0"
+      ],
+      "approxXZ_m": 5.161,
+      "approxY_m": 1.4,
+      "snap_m": 0.5,
+      "pack": "graves"
+    },
+    {
+      "id": "grave2",
+      "name": "Grave2",
+      "role": "grave",
+      "file": "models/packs/graves/grave2.glb",
+      "isolateParent": "Grave2",
+      "childMeshes": [
+        "Grave2_Graves_0"
+      ],
+      "approxXZ_m": 0.957,
+      "approxY_m": 1.4,
+      "snap_m": 0.5,
+      "pack": "graves"
+    },
+    {
+      "id": "grave3",
+      "name": "Grave3",
+      "role": "grave",
+      "file": "models/packs/graves/grave3.glb",
+      "isolateParent": "Grave3",
+      "childMeshes": [
+        "Grave3_Graves_0"
+      ],
+      "approxXZ_m": 0.746,
+      "approxY_m": 1.4,
+      "snap_m": 0.5,
+      "pack": "graves"
+    },
+    {
+      "id": "grave4",
+      "name": "Grave4",
+      "role": "grave",
+      "file": "models/packs/graves/grave4.glb",
+      "isolateParent": "Grave4",
+      "childMeshes": [
+        "Grave4_Graves_0"
+      ],
+      "approxXZ_m": 3.36,
+      "approxY_m": 1.4,
+      "snap_m": 0.5,
+      "pack": "graves"
+    },
+    {
+      "id": "cube-1",
+      "name": "Cube_1",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube-1.glb",
+      "isolateParent": "Cube_1",
+      "childMeshes": [
+        "Cube_1_planks2_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0,
+      "pack": "stylised-planks"
+    },
+    {
+      "id": "cube-2",
+      "name": "Cube_2",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube-2.glb",
+      "isolateParent": "Cube_2",
+      "childMeshes": [
+        "Cube_2_planks3_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0,
+      "pack": "stylised-planks"
+    },
+    {
+      "id": "cube",
+      "name": "Cube",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube.glb",
+      "isolateParent": "Cube",
+      "childMeshes": [
+        "Cube_planks1_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0,
+      "pack": "stylised-planks"
+    },
+    {
+      "id": "arch-door-l-004",
+      "name": "Arch_Door_L.004",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Arch_Door_L.004",
+      "childMeshes": [
+        "Arch_Door_L.004_Set3_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "arch-door-l",
+      "name": "Arch_Door_L",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Arch_Door_L",
+      "childMeshes": [
+        "Arch_Door_L_Set1_0",
+        "Arch_Door_L_Set3_0"
+      ],
+      "approxXZ_m": 2.165,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "barell-lid",
+      "name": "Barell_Lid",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Barell_Lid",
+      "childMeshes": [
+        "Barell_Lid_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.461,
+      "approxY_m": 0.019,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "barrel",
+      "name": "Barrel",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Barrel",
+      "childMeshes": [
+        "Barrel_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.664,
+      "approxY_m": 0.935,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "bookcase",
+      "name": "BookCase",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "BookCase",
+      "childMeshes": [
+        "BookCase_Set5_0"
+      ],
+      "approxXZ_m": 1.136,
+      "approxY_m": 2.224,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "broken-end-007",
+      "name": "Broken_End.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Broken_End.007",
+      "childMeshes": [
+        "Broken_End.007_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "broken-end",
+      "name": "Broken_End",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Broken_End",
+      "childMeshes": [
+        "Broken_End_Set1_0",
+        "Broken_End_Set2.001_0"
+      ],
+      "approxXZ_m": 2.44,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cage-001",
+      "name": "Cage.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage.001",
+      "childMeshes": [
+        "Cage.001_Set2_0"
+      ],
+      "approxXZ_m": 2.045,
+      "approxY_m": 3.189,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cage-002",
+      "name": "Cage.002",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage.002",
+      "childMeshes": [
+        "Cage.002_Set2_0"
+      ],
+      "approxXZ_m": 18.063,
+      "approxY_m": 18.993,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cage-door-001",
+      "name": "Cage_Door.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage_Door.001",
+      "childMeshes": [
+        "Cage_Door.001_Set2_0"
+      ],
+      "approxXZ_m": 1.085,
+      "approxY_m": 1.958,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cage-door",
+      "name": "Cage_Door",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage_Door",
+      "childMeshes": [
+        "Cage_Door_Set2.001_0"
+      ],
+      "approxXZ_m": 2.21,
+      "approxY_m": 1.17,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cage",
+      "name": "Cage",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage",
+      "childMeshes": [
+        "Cage_Set2.001_0"
+      ],
+      "approxXZ_m": 3.885,
+      "approxY_m": 2.423,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "chain-001",
+      "name": "Chain.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chain.001",
+      "childMeshes": [
+        "Chain.001_Set2_0"
+      ],
+      "approxXZ_m": 0.162,
+      "approxY_m": 2.471,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "chain",
+      "name": "Chain",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chain",
+      "childMeshes": [
+        "Chain_Set2.001_0"
+      ],
+      "approxXZ_m": 4.978,
+      "approxY_m": 2.688,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "chandelier",
+      "name": "Chandelier",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chandelier",
+      "childMeshes": [
+        "Chandelier_Set5_0",
+        "Chandelier_Set5_0.001"
+      ],
+      "approxXZ_m": 2.042,
+      "approxY_m": 4.685,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "crate",
+      "name": "Crate",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Crate",
+      "childMeshes": [
+        "Crate_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.521,
+      "approxY_m": 0.52,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-042",
+      "name": "Cube.042",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.042",
+      "childMeshes": [
+        "Cube.042_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.847,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-044",
+      "name": "Cube.044",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.044",
+      "childMeshes": [
+        "Cube.044_Set1_0"
+      ],
+      "approxXZ_m": 2.479,
+      "approxY_m": 0.847,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-064",
+      "name": "Cube.064",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.064",
+      "childMeshes": [
+        "Cube.064_Set4_0"
+      ],
+      "approxXZ_m": 0.298,
+      "approxY_m": 0.43,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-077",
+      "name": "Cube.077",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.077",
+      "childMeshes": [
+        "Cube.077_Set4_0"
+      ],
+      "approxXZ_m": 1.078,
+      "approxY_m": 5.301,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-078",
+      "name": "Cube.078",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.078",
+      "childMeshes": [
+        "Cube.078_Set4_0"
+      ],
+      "approxXZ_m": 1.078,
+      "approxY_m": 5.301,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-082",
+      "name": "Cube.082",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.082",
+      "childMeshes": [
+        "Cube.082_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.34,
+      "approxY_m": 0.652,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-093",
+      "name": "Cube.093",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.093",
+      "childMeshes": [
+        "Cube.093_Set1_0"
+      ],
+      "approxXZ_m": 0.95,
+      "approxY_m": 0.258,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cube-094",
+      "name": "Cube.094",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.094",
+      "childMeshes": [
+        "Cube.094_Dwarf_0"
+      ],
+      "approxXZ_m": 5.363,
+      "approxY_m": 6.155,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cylinder-020",
+      "name": "Cylinder.020",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cylinder.020",
+      "childMeshes": [
+        "Cylinder.020_Set4_0"
+      ],
+      "approxXZ_m": 0.979,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "cylinder-021",
+      "name": "Cylinder.021",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cylinder.021",
+      "childMeshes": [
+        "Cylinder.021_Set4_0"
+      ],
+      "approxXZ_m": 5.0,
+      "approxY_m": 0.606,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "doorl",
+      "name": "DoorL",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "DoorL",
+      "childMeshes": [
+        "DoorL_Set2.001_0"
+      ],
+      "approxXZ_m": 0.782,
+      "approxY_m": 1.871,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "doorr",
+      "name": "DoorR",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "DoorR",
+      "childMeshes": [
+        "DoorR_Set2.001_0"
+      ],
+      "approxXZ_m": 0.782,
+      "approxY_m": 1.871,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-038",
+      "name": "Floor.038",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.038",
+      "childMeshes": [
+        "Floor.038_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.058,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-162",
+      "name": "Floor.162",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.162",
+      "childMeshes": [
+        "Floor.162_Set2.001_0"
+      ],
+      "approxXZ_m": 26.726,
+      "approxY_m": 12.183,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-195",
+      "name": "Floor.195",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.195",
+      "childMeshes": [
+        "Floor.195_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-196",
+      "name": "Floor.196",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.196",
+      "childMeshes": [
+        "Floor.196_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-197",
+      "name": "Floor.197",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.197",
+      "childMeshes": [
+        "Floor.197_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.251,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-199",
+      "name": "Floor.199",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.199",
+      "childMeshes": [
+        "Floor.199_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor-202",
+      "name": "Floor.202",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.202",
+      "childMeshes": [
+        "Floor.202_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 1.777,
+      "approxY_m": 0.271,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "floor",
+      "name": "Floor",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor",
+      "childMeshes": [
+        "Floor_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "pedestal",
+      "name": "Pedestal",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Pedestal",
+      "childMeshes": [
+        "Pedestal_Set5_0"
+      ],
+      "approxXZ_m": 0.853,
+      "approxY_m": 1.235,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "pillar",
+      "name": "Pillar",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Pillar",
+      "childMeshes": [
+        "Pillar_Set2.001_0"
+      ],
+      "approxXZ_m": 1.251,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Plank",
+      "childMeshes": [
+        "Plank_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 1.18,
+      "approxY_m": 0.033,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "torus-007",
+      "name": "Torus.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Torus.007",
+      "childMeshes": [
+        "Torus.007_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 8.719,
+      "approxY_m": 3.874,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "torus-008",
+      "name": "Torus.008",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Torus.008",
+      "childMeshes": [
+        "Torus.008_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 7.537,
+      "approxY_m": 2.611,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-012",
+      "name": "Wall_1.012",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.012",
+      "childMeshes": [
+        "Wall_1.012_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-013",
+      "name": "Wall_1.013",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.013",
+      "childMeshes": [
+        "Wall_1.013_Set1_0",
+        "Wall_1.013_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.694,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-016",
+      "name": "Wall_1.016",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.016",
+      "childMeshes": [
+        "Wall_1.016_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.694,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-029",
+      "name": "Wall_1.029",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.029",
+      "childMeshes": [
+        "Wall_1.029_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-055",
+      "name": "Wall_1.055",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.055",
+      "childMeshes": [
+        "Wall_1.055_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-057",
+      "name": "Wall_1.057",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.057",
+      "childMeshes": [
+        "Wall_1.057_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-102",
+      "name": "Wall_1.102",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.102",
+      "childMeshes": [
+        "Wall_1.102_Set1_0"
+      ],
+      "approxXZ_m": 2.475,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-172",
+      "name": "Wall_1.172",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.172",
+      "childMeshes": [
+        "Wall_1.172_Set4_0"
+      ],
+      "approxXZ_m": 2.762,
+      "approxY_m": 5.668,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-181",
+      "name": "Wall_1.181",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.181",
+      "childMeshes": [
+        "Wall_1.181_Set1_0"
+      ],
+      "approxXZ_m": 4.0,
+      "approxY_m": 6.129,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1-204",
+      "name": "Wall_1.204",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.204",
+      "childMeshes": [
+        "Wall_1.204_Set1.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-1",
+      "name": "Wall_1",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1",
+      "childMeshes": [
+        "Wall_1_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-corner-007",
+      "name": "Wall_Corner.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_Corner.007",
+      "childMeshes": [
+        "Wall_Corner.007_Set1_0"
+      ],
+      "approxXZ_m": 2.44,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    },
+    {
+      "id": "wall-corner",
+      "name": "Wall_Corner",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_Corner",
+      "childMeshes": [
+        "Wall_Corner_Set1_0"
+      ],
+      "approxXZ_m": 2.475,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA",
+      "pack": "dungeon-essential"
+    }
+  ]
+}

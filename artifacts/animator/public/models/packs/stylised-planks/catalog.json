@@ -1,0 +1,47 @@
+{
+  "pack": "stylised-planks",
+  "source": "stylised_planks_materials.glb",
+  "isolate": "parent-group",
+  "si": "metres",
+  "pieces": [
+    {
+      "id": "cube-1",
+      "name": "Cube_1",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube-1.glb",
+      "isolateParent": "Cube_1",
+      "childMeshes": [
+        "Cube_1_planks2_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0
+    },
+    {
+      "id": "cube-2",
+      "name": "Cube_2",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube-2.glb",
+      "isolateParent": "Cube_2",
+      "childMeshes": [
+        "Cube_2_planks3_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0
+    },
+    {
+      "id": "cube",
+      "name": "Cube",
+      "role": "plank",
+      "file": "models/packs/stylised-planks/cube.glb",
+      "isolateParent": "Cube",
+      "childMeshes": [
+        "Cube_planks1_0"
+      ],
+      "approxXZ_m": 1.0,
+      "approxY_m": 1.0,
+      "snap_m": 1.0
+    }
+  ]
+}

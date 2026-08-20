@@ -1,0 +1,64 @@
+{
+  "pack": "stylised-planks",
+  "source": "stylised_planks_materials.glb",
+  "bytes": 32048176,
+  "meshCount": 3,
+  "nodeCount": 9,
+  "uniqueStems": [
+    "Cube_1_planks2_0",
+    "Cube_2_planks3_0",
+    "Cube_planks1_0"
+  ],
+  "stemCount": 3,
+  "images": [
+    "Image_0",
+    "Image_1",
+    "Image_2",
+    "Image_3",
+    "Image_4",
+    "Image_5",
+    "Image_6",
+    "Image_7",
+    "Image_8"
+  ],
+  "meshes": [
+    {
+      "name": "Cube_1_planks2_0",
+      "parent": "Cube_1",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "planks2"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Cube_2_planks3_0",
+      "parent": "Cube_2",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "planks3"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Cube_planks1_0",
+      "parent": "Cube",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "planks1"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    }
+  ],
+  "meshNames": [
+    "Cube_1_planks2_0",
+    "Cube_2_planks3_0",
+    "Cube_planks1_0"
+  ]
+}
