@@ -33,6 +33,7 @@ Showcase dungeon tiles sit apart in the Sketchfab scene. Isolation used to expor
 | Surface | Ids / files |
 |---------|-------------|
 | Dungeon picker | `modular-crypt`, `npc-village` in `DungeonMaps.ts` (`keepSi` — do not grow to 46 m) |
+| **Play modular + boss** | https://grudge-dungeons.vercel.app/ · boss `?linear=1` |
 | Camp placeables | `dungeon_floor`, `dungeon_wall`, `dungeon_door_wall`, `dungeon_chest`, `dungeon_barrel`, `dungeon_torch`, `grave_stone`, `grave_slab`, `plank_block` / `_b` / `_c` |
 | TS index | `src/three/packs/openMeshPacks.ts` |
 | Loader | existing `loadCampAsset` `isolateNode` (graves) |

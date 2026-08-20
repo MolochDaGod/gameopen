@@ -75,6 +75,10 @@ export const PRODUCT_STARTS = {
   threeFlow: "https://threeflow.vercel.app/",
   /** Open mimic encounter */
   mimic: `${ENTRY_HOSTS.open}/mimic`,
+  /** Warlords modular dungeon forge + crawl */
+  grudgeDungeons: "https://grudge-dungeons.vercel.app/",
+  /** Linear boss crawl (entrance → mini-boss → boss arena) */
+  grudgeDungeonBoss: "https://grudge-dungeons.vercel.app/?linear=1",
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -534,7 +538,9 @@ export function startUrlForIntent(
     | "deployables"
     | "grokBuilder"
     | "threeFlow"
-    | "mimic",
+    | "mimic"
+    | "dungeon"
+    | "dungeonBoss",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -573,6 +579,10 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.threeFlow;
     case "mimic":
       return PRODUCT_STARTS.mimic;
+    case "dungeon":
+      return PRODUCT_STARTS.grudgeDungeons;
+    case "dungeonBoss":
+      return PRODUCT_STARTS.grudgeDungeonBoss;
     case "warlordsHome": {
       const u = new URL(PRODUCT_STARTS.warlordsHome);
       if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);

@@ -906,6 +906,37 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
+    id: "grudge-dungeons",
+    title: "Grudge Dungeons",
+    short: "Modular forge · boss crawl",
+    blurb:
+      "grudge-dungeons.vercel.app — Warlords modular dungeon forge + playable crawl. Linear path: entrance → combat → elite/mini-boss → boss arena. Themes ancient/molten/frost/grim/verdant. Toon RTS CDN, Rapier capsule, SI cell 2.15 m / walls 3.85 m / human 1.82 m. Boss warlords per biome (lich, slag, glacier, death, bloom).",
+    category: "warlords",
+    tags: ["Dungeon", "Modular", "Boss", "Warlords", "Rapier"],
+    tone: "#c9a227",
+    posterKey: "mimic",
+    icon: "ambush",
+    engines: ["three", "rapier"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.grudgeDungeons,
+    deploy: { client: "vercel" },
+    deployNotes: [
+      "Live: https://grudge-dungeons.vercel.app/",
+      "Boss crawl: ?linear=1 (16 rooms, 0 loops, critical path to boss)",
+      "Repo: F:\\GitHub\\threejs-procedural-dungeon — not a second Open dungeon engine",
+      "Do not use threepipe autoScale — SI baked in DUNGEON_SI",
+    ],
+    playerInfo:
+      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat.",
+    sources: [
+      "https://grudge-dungeons.vercel.app/",
+      "F:\\GitHub\\threejs-procedural-dungeon",
+    ],
+    featured: true,
+    shelf: "games",
+    status: "live",
+  },
+  {
     id: "dungeon-crawler",
     title: "Dungeon Crawler Quest",
     short: "Voxel dungeon RPG",
@@ -1320,6 +1351,7 @@ const SHELF_BY_ID: Partial<Record<string, DeliveryShelf>> = {
   "grudge-pipeline": "content",
   "mimic-dungeon": "games",
   "danger-room": "games",
+  "grudge-dungeons": "games",
 };
 
 export function deliveryShelf(g: GameEntry): DeliveryShelf {

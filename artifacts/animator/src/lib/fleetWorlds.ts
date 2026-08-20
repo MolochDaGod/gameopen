@@ -73,6 +73,9 @@ export const FLEET_WORLD_HOSTS = {
   grudgeArena: "https://grudge-arena.grudge-studio.com/",
   /** Multiverse */
   multiverse: "https://grudge-multiverse.vercel.app/",
+  /** Warlords modular dungeon forge + playable crawl (boss arena on linear) */
+  grudgeDungeons: "https://grudge-dungeons.vercel.app/",
+  grudgeDungeonsBoss: "https://grudge-dungeons.vercel.app/?linear=1",
 } as const;
 
 export type FleetWorldId =
@@ -92,7 +95,8 @@ export type FleetWorldId =
   | "grudox-games"
   | "gst-islands"
   | "grudge-arena"
-  | "multiverse";
+  | "multiverse"
+  | "grudge-dungeons";
 
 export type FleetWorldDef = {
   id: FleetWorldId;
@@ -181,6 +185,16 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
       "C:\\Users\\nugye\\Documents\\grudge-studio\\artifacts\\hero-rts",
       "MolochDaGod/grudge-studio-games",
     ],
+    featured: true,
+  },
+  {
+    id: "grudge-dungeons",
+    title: "Grudge Dungeons",
+    url: FLEET_WORLD_HOSTS.grudgeDungeons,
+    blurb:
+      "Warlords modular dungeon forge + crawl. Linear = entrance → combat → mini-boss → boss arena. SI cell 2.15 m · wall 3.85 m · human 1.82 m. Toon RTS CDN, Rapier, no 100×.",
+    kind: "dungeon",
+    sources: ["F:\\GitHub\\threejs-procedural-dungeon"],
     featured: true,
   },
   {
