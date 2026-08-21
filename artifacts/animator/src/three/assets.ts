@@ -8,6 +8,7 @@ import {
   resolveIconUrl,
   resolveLiveAssetUrl,
   fetchAssetFirst,
+  fetchRealGlb,
   GRUDGE6_RACE_FBX,
   GRUDGE6_RACE_GLB,
   GRUDGE6_TEX_PATHS,
@@ -18,8 +19,11 @@ import {
   type GrudgePlaytestEntry,
 } from "./grudge/playtestRoster";
 import { RACE_ASSETS } from "./grudge/raceAssets";
+import { installAuthorUrlGuard } from "./loaders/authorUrl";
 
 export { WEAPONS };
+
+installAuthorUrlGuard();
 
 /**
  * Legacy Animator lab host (archived). Open ships models/grudge, weapons, anim,
@@ -53,7 +57,7 @@ export function asset(path: string): string {
 
 /**
  * Resilient URL list for GLB/FBX/texture loads across all Open games/scenes.
- * Same-origin → Open hosts → assets.grudge-studio.com (R2) → aliases → gameopen R2.
+ * R2 first for binaries, then same-origin / open. Never gameopen.vercel.app.
  */
 export function assetCandidates(path: string): string[] {
   return resolveAssetCandidates(path);
@@ -67,20 +71,53 @@ const _deadAssetUrls = new Set<string>();
 const DEAD_URL_TTL_MS = 10 * 60 * 1000;
 const _deadAssetAt = new Map<string, number>();
 
+function deadKey(url: string): string {
+  return String(url || "").split("?")[0];
+}
+
 function isDeadAssetUrl(url: string): boolean {
-  const t = _deadAssetAt.get(url);
+  const t = _deadAssetAt.get(deadKey(url));
   if (t == null) return false;
   if (Date.now() - t > DEAD_URL_TTL_MS) {
-    _deadAssetAt.delete(url);
-    _deadAssetUrls.delete(url);
+    const k = deadKey(url);
+    _deadAssetAt.delete(k);
+    _deadAssetUrls.delete(k);
     return false;
   }
   return true;
 }
 
 function markDeadAssetUrl(url: string): void {
-  _deadAssetUrls.add(url);
-  _deadAssetAt.set(url, Date.now());
+  const k = deadKey(url);
+  _deadAssetUrls.add(k);
+  _deadAssetAt.set(k, Date.now());
+}
+
+function parseGltfBuffer(
+  loader: {
+    loadAsync: (url: string) => Promise<{
+      scene: import("three").Object3D;
+      animations?: import("three").AnimationClip[];
+    }>;
+    parse?: (
+      data: ArrayBuffer,
+      path: string,
+      onLoad: (g: { scene: import("three").Object3D; animations?: import("three").AnimationClip[] }) => void,
+      onError: (e: Error) => void,
+    ) => void;
+  },
+  buf: ArrayBuffer,
+  url: string,
+): Promise<{ scene: import("three").Object3D; animations?: import("three").AnimationClip[] }> {
+  const base = url.replace(/[^/?#]+(?:\?.*)?$/, "");
+  if (typeof loader.parse === "function") {
+    return new Promise((resolve, reject) => {
+      loader.parse!(buf, base, resolve, (e) => reject(e));
+    });
+  }
+  const blob = new Blob([buf], { type: "model/gltf-binary" });
+  const obj = URL.createObjectURL(blob);
+  return loader.loadAsync(obj).finally(() => URL.revokeObjectURL(obj));
 }
 
 /**
@@ -110,7 +147,12 @@ export async function loadGltfFirst(
       if (isDeadAssetUrl(url)) continue;
       tried.push(url);
       try {
-        const gltf = await loader.loadAsync(url);
+        const buf = await fetchRealGlb(url);
+        const gltf = await parseGltfBuffer(
+          loader as Parameters<typeof parseGltfBuffer>[0],
+          buf,
+          url,
+        );
         // Default: fix colour-space + mips on every production load path.
         if (opts?.prepMaterials !== false) {
           const { prepObjectMaterials } = await import("./texturePrep");
@@ -685,7 +727,7 @@ const GRUDGE_RACES: GrudgeRace[] = [
   { slug: "high-elves", name: "High Elf" },
   { slug: "orcs", name: "Orc" },
   { slug: "undead", name: "Undead" },
-  { slug: "western-kingdoms", name: "Kingdom" },
+  { slug: "western-kingdoms", name: "Human" },
 ];
 
 const GRUDGE_HIDE = "weapon|shield|quiver|xtra|_container";
@@ -924,9 +966,7 @@ export function getCharacter(id: string): CharacterDef {
     const raceMeta = RACE_ASSETS[racePart as keyof typeof RACE_ASSETS];
     return {
       id,
-      name: raceMeta
-        ? `${raceMeta.abbr} ${presetPart}`
-        : id.replace(/^grudge:/, "").replace(/:/g, " "),
+      name: `${raceMeta?.name ?? racePart} ${presetPart.charAt(0).toUpperCase()}${presetPart.slice(1)}`,
       file: g6 || raceMeta?.modelUrl || "",
       scale: 1,
       clips: {

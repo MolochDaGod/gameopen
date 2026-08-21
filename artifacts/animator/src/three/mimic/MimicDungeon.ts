@@ -1,8 +1,9 @@
 /**
  * Test Dungeon (Mimic) — self-contained encounter on **vol.glb** (volcano scene).
  *
- * Player is a real **GrudgeAvatar** (skinned Bip001 + baked anim pack + arsenal
- * sword) — NOT the static 30characters T-pose roster.
+ * Player = **Toon RTS play GLB** (`loadGrudge6CombatRig` / GrudgeAvatar) +
+ * Rapier kinematic **capsule** (`PhysicsWorld.createPlayerKcc`).
+ * Not 30characters, not FBX+π/2, not forceAtlas, not raycast-Y as the body.
  *
  *   disguised (barrel) → [E] reveal → chase → attack → recover
  *
@@ -15,6 +16,16 @@ import { getWeapon } from "../assets";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
 import type { WeaponId } from "../types";
 import { buildT0SkillHud } from "../brawler/combatLoadout";
+import {
+  PhysicsWorld,
+  CharacterCapsuleKcc,
+  GRAVITY_Y,
+  PLAYER_CAPSULE,
+} from "../PhysicsSystem";
+import { LOCOMOTION, cameraProfileOpts } from "@workspace/grudge-physics";
+import { gameSession } from "../../game/GameSession";
+import { RACE_ASSETS, type RaceId } from "../grudge/raceAssets";
+import { meshToWorldTrimesh } from "../brawler/survivalEnvironment";
 import {
   MIMIC_ATTACKS,
   mimicAttackDuration,
@@ -46,13 +57,46 @@ const ACID_AOE = MIMIC_ATTACKS.acid.aoeRadius; // 3 m
  * Arena/dungeon substitutes are last-resort only.
  */
 const MAP_MESH_KEYS = [
+  // Repaired skins-stripped copy shipped with Open (CDN vol.glb still has null joints)
   "models/vol.glb",
-  "models/worlds/vol.glb",
-  // Fallback only if volcano CDN/path missing
+  "https://open.grudge-studio.com/models/vol.glb",
+  "https://assets.grudge-studio.com/models/vol.glb",
+  // Last-resort interiors if volcano parse still dies
   "models/dungeon.glb",
-  "models/minecraft-kit.glb",
+  "models/maps/arena/arena.glb",
 ] as const;
 const PLAYER_WEAPON: WeaponId = "sword";
+
+/** Combat-soft fleet profile (docs/CONTROLS_CAMERA_WEAPON_SSOT.md). */
+const CAM = cameraProfileOpts("combat-soft");
+const CAM_FOV = 70;
+const CAM_MIN_PITCH = -0.72;
+const CAM_MAX_PITCH = 1.12;
+const CAM_LOOK_AHEAD = 3.2;
+const CAM_BOOM_LIFT = 0.42;
+const CAM_SHOULDER = 0.58;
+
+const _lookDir = new THREE.Vector3();
+const _lookFlat = new THREE.Vector3();
+const _camRight = new THREE.Vector3();
+const _camDesired = new THREE.Vector3();
+const _camTarget = new THREE.Vector3();
+const _camAim = new THREE.Vector3();
+
+function mimicPlayRace(): RaceId {
+  const raw = String(gameSession.selectedCharacter()?.raceId || "").toLowerCase();
+  if (raw && raw in RACE_ASSETS) return raw as RaceId;
+  const map: Record<string, RaceId> = {
+    human: "western-kingdoms",
+    wk: "western-kingdoms",
+    barbarian: "barbarians",
+    elf: "high-elves",
+    "high-elf": "high-elves",
+    dwarf: "dwarves",
+    orc: "orcs",
+  };
+  return map[raw] || "western-kingdoms";
+}
 
 export type MimicPhase =
   | "loading"
@@ -95,7 +139,7 @@ export class MimicDungeon {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
-  private clock = new THREE.Clock();
+  private timer = new THREE.Timer();
   private raf = 0;
   private disposed = false;
   private ro?: ResizeObserver;
@@ -106,12 +150,19 @@ export class MimicDungeon {
   private ray = new THREE.Raycaster();
   private readonly DOWN = new THREE.Vector3(0, -1, 0);
 
-  // Player — GrudgeAvatar (skinned + mixer + director), not static baked mesh
+  // Player — Toon RTS GLB + Rapier capsule (same SSOT as Danger / Brawler)
   private player = new THREE.Group();
   private avatar: GrudgeAvatar | null = null;
+  private physics: PhysicsWorld | null = null;
+  private playerKcc: CharacterCapsuleKcc | null = null;
+  private playerVy = 0;
+  private playerGrounded = true;
   private mountedWeapon: MountedWeapon | null = null;
   private playerYaw = 0;
-  private camYaw = 0;
+  private camYaw = Math.PI;
+  private camPitch = CAM.pitch ?? 0.28;
+  private camDist = CAM.cameraDistance ?? 4.6;
+  private mimicBody: { setTranslation: (t: { x: number; y: number; z: number }, w: boolean) => void } | null = null;
   private playerHp = PLAYER_MAX_HP;
   private playerAtkCd = 0;
   private skills = buildT0SkillHud(PLAYER_WEAPON, 1).map((h) => ({
@@ -132,6 +183,7 @@ export class MimicDungeon {
   private sprinting = false;
   private pointerDragging = false;
   private lastPointerX = 0;
+  private lastPointerY = 0;
 
   // Mimic
   private mimicRoot = new THREE.Group(); // world nav transform (position + yaw)
@@ -171,12 +223,13 @@ export class MimicDungeon {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.scene.background = new THREE.Color(0x0a0c12);
     this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.012);
-    this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 500);
+    this.camera = new THREE.PerspectiveCamera(CAM_FOV, w / h, 0.08, 500);
 
+    this.timer.connect(document);
     this.vfx = new Vfx(this.scene);
     this.scene.add(this.mimicRoot);
     this.mimicRoot.add(this.mimicPose);
@@ -190,6 +243,7 @@ export class MimicDungeon {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     canvas.addEventListener("mousedown", this.onMouseDown);
+    canvas.addEventListener("wheel", this.onWheel, { passive: false });
     canvas.addEventListener("contextmenu", this.onContextMenu);
     window.addEventListener("mouseup", this.onMouseUp);
     window.addEventListener("mousemove", this.onMouseMove);
@@ -216,8 +270,8 @@ export class MimicDungeon {
   }
 
   /**
-   * Player: GrudgeAvatar (arena race GLB + Bip001 baked anims) + arsenal sword.
-   * Static 30characters mesh is forbidden here — that path is permanent T-pose.
+   * Player: Toon RTS GLB via GrudgeAvatar (`loadGrudge6CombatRig`) + Rapier capsule.
+   * CDN: assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/human.glb
    */
   private async buildPlayer() {
     try {
@@ -230,7 +284,7 @@ export class MimicDungeon {
       } catch {
         /* keep sword_shield */
       }
-      const av = new GrudgeAvatar("western-kingdoms", "warrior", {
+      const av = new GrudgeAvatar(mimicPlayRace(), "warrior", {
         animPack: pack,
       });
       await av.load();
@@ -265,18 +319,25 @@ export class MimicDungeon {
       }
       av.setLocomotion?.(0, false);
 
-      // Mount sword on hand sockets (Danger Room arsenal path)
-      try {
-        const def = getWeapon(PLAYER_WEAPON);
-        const rh = av.rightHand;
-        const lh = av.leftHand;
-        if (rh && lh) {
-          this.mountedWeapon = await mountWeaponModel(def, rh, lh, 0);
-        } else {
-          console.warn("[MimicDungeon] no hand bones on avatar — sword not mounted");
+      // Warrior preset already shows sword + shield mesh_ids. Extra GLB mount
+      // double-weapons the kit — only attach if no visible sword child.
+      let kitSword = false;
+      av.root.traverse((o) => {
+        if (kitSword) return;
+        const m = o as THREE.Mesh;
+        if ((m.isMesh || (m as THREE.SkinnedMesh).isSkinnedMesh) && m.visible && /sword/i.test(m.name)) {
+          kitSword = true;
         }
-      } catch (werr) {
-        console.warn("[MimicDungeon] weapon mount failed — combat still works", werr);
+      });
+      if (!kitSword) {
+        try {
+          const def = getWeapon(PLAYER_WEAPON);
+          const rh = av.rightHand;
+          const lh = av.leftHand;
+          if (rh && lh) this.mountedWeapon = await mountWeaponModel(def, rh, lh, 0);
+        } catch (werr) {
+          console.warn("[MimicDungeon] weapon mount failed — combat still works", werr);
+        }
       }
 
       const clips = av.clipNames?.() ?? [];
@@ -293,7 +354,7 @@ export class MimicDungeon {
     }
   }
 
-  /** Load GLB from the first working fleet candidate (same-origin → Open → R2). */
+  /** Load GLB from CDN-first candidates (vol.glb is R2; never gameopen.vercel.app). */
   private async loadGltf(path: string | string[]) {
     const { loadGltfFirst } = await import("../assets");
     const { sharedGltfLoader } = await import("../loaders/gltf");
@@ -336,25 +397,20 @@ export class MimicDungeon {
   private async load() {
     let gltf: Awaited<ReturnType<MimicDungeon["loadGltf"]>> | null = null;
     let usedKey = "";
-    const errors: string[] = [];
-    for (const key of MAP_MESH_KEYS) {
-      try {
-        gltf = await this.loadGltf(key);
-        usedKey = key;
-        break;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        errors.push(`${key}: ${msg.slice(0, 80)}`);
-        console.warn("[MimicDungeon] map candidate failed", key, msg);
-      }
+    try {
+      gltf = await this.loadGltf([...MAP_MESH_KEYS]);
+      usedKey = gltf.url;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[MimicDungeon] all map candidates failed", MAP_MESH_KEYS, msg);
     }
 
     if (!gltf) {
-      console.error("[MimicDungeon] all map candidates failed", errors);
       this.loadNote = "Volcano map failed — temporary arena (check models/vol.glb)";
       this.buildArenaFallback();
       this.spawnMimicFallback();
       this.finishSetup();
+      void this.mountRapierBody();
       this.emit();
       return;
     }
@@ -371,13 +427,12 @@ export class MimicDungeon {
       this.scene.fog = new THREE.FogExp2(0x1a0c08, 0.014);
     }
 
-    // Auto-scale to a playable footprint (~34–48 m), like the Dungeon loader.
+    // SI: 1 unit = 1 m. Only correct classic 100× (cm) or postage-stamp maps.
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.z) || 1;
-    if (maxDim > 300) root.scale.setScalar(0.01);
-    else if (maxDim > 80) root.scale.setScalar(48 / maxDim);
-    else if (maxDim > 0.001 && maxDim < 28) root.scale.setScalar(36 / maxDim);
+    if (maxDim > 400) root.scale.setScalar(0.01);
+    else if (maxDim > 0.001 && maxDim < 8) root.scale.setScalar(28 / maxDim);
     root.updateMatrixWorld(true);
 
     // Separate the real Mimic creature (from barrel) from the static environment.
@@ -420,8 +475,11 @@ export class MimicDungeon {
       creatureRoot.rotation.set(0, 0, 0);
       const cbox = new THREE.Box3().setFromObject(creatureRoot);
       const csize = cbox.getSize(new THREE.Vector3());
-      const cs = 1.6 / (csize.y || 1);
-      creatureRoot.scale.multiplyScalar(cs);
+      const nativeH = csize.y || 1;
+      // Chest-creature ~1.5–1.8 m — not a 100× giant, not a toy.
+      if (nativeH > 8) creatureRoot.scale.multiplyScalar(1.7 / nativeH);
+      else if (nativeH < 0.4) creatureRoot.scale.multiplyScalar(1.6 / nativeH);
+      else if (nativeH > 2.4) creatureRoot.scale.multiplyScalar(1.8 / nativeH);
       creatureRoot.updateMatrixWorld(true);
       const drop = new THREE.Box3().setFromObject(creatureRoot);
       creatureRoot.position.y -= drop.min.y;
@@ -456,6 +514,7 @@ export class MimicDungeon {
     this.scene.add(root);
     if (!this.mimicModel) this.spawnMimicFallback();
     this.finishSetup();
+    void this.mountRapierBody();
     this.emit();
   }
 
@@ -561,6 +620,50 @@ export class MimicDungeon {
     this.mimicPose.add(body);
   }
 
+  /** Rapier world + player capsule. Terrain = trimesh of groundMeshes + plane. */
+  private async mountRapierBody() {
+    try {
+      const world = new PhysicsWorld();
+      await world.init(GRAVITY_Y);
+      if (this.disposed) {
+        world.dispose();
+        return;
+      }
+      this.physics = world;
+      world.addGroundPlane(0);
+      let baked = 0;
+      for (const mesh of this.groundMeshes) {
+        const tri = meshToWorldTrimesh(mesh);
+        if (!tri || tri.verts.length < 9) continue;
+        try {
+          world.addStaticTrimesh(tri.verts, tri.indices);
+          baked++;
+        } catch {
+          /* skip degenerate */
+        }
+      }
+      const feet = this.player.position.clone();
+      this.playerKcc = world.createPlayerKcc(feet, {
+        radius: PLAYER_CAPSULE.radius,
+        halfHeight: PLAYER_CAPSULE.halfHeight,
+      });
+      this.playerKcc?.teleportFeet(feet);
+      const mimicCap = world.makeCapsuleBody(
+        {
+          x: this.mimicRoot.position.x,
+          y: this.mimicRoot.position.y + 0.85,
+          z: this.mimicRoot.position.z,
+        },
+        0.48,
+        0.42,
+      );
+      this.mimicBody = mimicCap?.body ?? null;
+      console.info(`[MimicDungeon] Rapier KCC ready · trimesh=${baked} · mimic collider`);
+    } catch (err) {
+      console.warn("[MimicDungeon] Rapier init failed — raycast Y remains", err);
+    }
+  }
+
   private finishSetup() {
     // Place the mimic (disguised) at origin; player a few metres away; decoy by
     // a simple "home door" a bit further out.
@@ -568,7 +671,10 @@ export class MimicDungeon {
     this.player.position.set(0, this.groundY(0, 7), 7);
     this.playerYaw = Math.PI; // face the mimic (−Z)
     this.camYaw = this.playerYaw;
+    this.camPitch = CAM.pitch ?? 0.28;
+    this.camDist = CAM.cameraDistance ?? 4.6;
     this.player.rotation.y = this.playerYaw;
+    this.playerKcc?.teleportFeet(this.player.position);
     void this.buildDecoyBarrel(new THREE.Vector3(9, 0, -3));
     this.setPhase("disguised");
     if (!this.raf) this.raf = requestAnimationFrame(this.animate);
@@ -650,6 +756,7 @@ export class MimicDungeon {
     if (e.button === 2 || e.button === 1) {
       this.pointerDragging = true;
       this.lastPointerX = e.clientX;
+      this.lastPointerY = e.clientY;
       e.preventDefault();
     }
   };
@@ -659,8 +766,22 @@ export class MimicDungeon {
   private onMouseMove = (e: MouseEvent) => {
     if (!this.pointerDragging) return;
     const dx = e.clientX - this.lastPointerX;
+    const dy = e.clientY - this.lastPointerY;
     this.lastPointerX = e.clientX;
-    this.camYaw -= dx * 0.005;
+    this.lastPointerY = e.clientY;
+    this.camYaw -= dx * 0.0024;
+    this.camPitch += dy * 0.0024;
+    if (this.camPitch < CAM_MIN_PITCH) this.camPitch = CAM_MIN_PITCH;
+    if (this.camPitch > CAM_MAX_PITCH) this.camPitch = CAM_MAX_PITCH;
+  };
+  private onWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1;
+    this.camDist = THREE.MathUtils.clamp(
+      this.camDist + (e.deltaY * scale) / 400,
+      3.2,
+      9.5,
+    );
   };
   /** React HUD may also forward an interact press (button). */
   interact() {
@@ -699,6 +820,7 @@ export class MimicDungeon {
       const fwd = new THREE.Vector3(Math.sin(this.playerYaw), 0, Math.cos(this.playerYaw));
       this.player.position.addScaledVector(fwd, Math.min(1.4, sk.lunge * MM_TO_M * 8));
       this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
+      this.playerKcc?.teleportFeet(this.player.position);
     }
 
     const mp = this.mimicRoot.position;
@@ -712,7 +834,7 @@ export class MimicDungeon {
     this.vfx.impact(hitPt, 0x9fe8ff, 1.1 + slot * 0.15);
 
     const reach = (sk.reach || PLAYER_MELEE_REACH) + 0.2;
-    if (this.phase !== "disguised" && this.phase !== "loading" && dist <= reach) {
+    if (this.phase !== "disguised" && dist <= reach) {
       this.damageMimic(sk.damage || 18 + slot * 4);
     }
     this.emit();
@@ -757,7 +879,7 @@ export class MimicDungeon {
         ? "The mimic is slain. Test complete."
         : this.phase === "defeat"
           ? "You were devoured. Refresh to retry."
-          : "WASD · Shift sprint · RMB drag camera · LMB/1–4 skills · E barrels";
+          : "WASD · Shift sprint · Space jump · RMB look · LMB/1–4 skills · E barrels";
     const state: MimicDungeonState = {
       phase: this.phase,
       prompt,
@@ -784,16 +906,19 @@ export class MimicDungeon {
   }
 
   // ── loop ─────────────────────────────────────────────────────────────────
-  private animate = () => {
+  private animate = (now?: number) => {
     if (this.disposed) return;
     this.raf = requestAnimationFrame(this.animate);
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    this.timer.update(now);
+    const dt = Math.min(this.timer.getDelta(), 0.05);
     this.animClock += dt;
     this.playerAtkCd = Math.max(0, this.playerAtkCd - dt);
 
+    this.syncMimicCollider();
     this.updatePlayer(dt);
     this.updateInteraction();
     this.updateMimic(dt);
+    this.syncMimicCollider();
     this.updateCamera();
     this.vfx.update(dt);
     this.renderer.render(this.scene, this.camera);
@@ -820,6 +945,11 @@ export class MimicDungeon {
     this.sprinting = this.keys.has("shift");
     this.moving = input.lengthSq() > 0;
 
+    if ((this.keys.has(" ") || this.keys.has("space")) && this.playerGrounded) {
+      this.playerVy = LOCOMOTION.jumpSpeed;
+      this.playerGrounded = false;
+    }
+
     if (this.moving) {
       input.normalize();
       // Rotate input into camera yaw plane
@@ -831,11 +961,32 @@ export class MimicDungeon {
         -input.x * sin + input.z * cos,
       );
       const speed = this.sprinting ? PLAYER_SPRINT : PLAYER_SPEED;
-      this.player.position.addScaledVector(world, speed * dt);
+      const wish = world.multiplyScalar(speed * dt);
       this.playerYaw = Math.atan2(world.x, world.z);
+      if (this.playerKcc) {
+        if (!this.playerGrounded) this.playerVy += GRAVITY_Y * dt;
+        else if (this.playerVy < 0) this.playerVy = 0;
+        wish.y = this.playerVy * dt;
+        const res = this.playerKcc.move(this.player.position, wish);
+        this.player.position.copy(res.pos);
+        this.playerGrounded = res.grounded;
+        if (res.grounded) this.playerVy = 0;
+      } else {
+        this.player.position.add(wish);
+        this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
+      }
+    } else if (this.playerKcc) {
+      if (!this.playerGrounded) this.playerVy += GRAVITY_Y * dt;
+      else this.playerVy = 0;
+      const fall = new THREE.Vector3(0, this.playerVy * dt, 0);
+      const res = this.playerKcc.move(this.player.position, fall);
+      this.player.position.copy(res.pos);
+      this.playerGrounded = res.grounded;
+      if (res.grounded) this.playerVy = 0;
+    } else {
+      this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
     }
 
-    this.player.position.y = this.groundY(this.player.position.x, this.player.position.z);
     this.player.rotation.y = this.playerYaw;
 
     // Skinned locomotion + mixer
@@ -1019,30 +1170,47 @@ export class MimicDungeon {
     return p;
   }
 
-  private updateCamera() {
-    // Third-person boom behind player yaw / orbit camYaw
-    const boom = 8.5;
-    const height = 3.2;
-    const lookY = 1.25;
-    const yaw = this.camYaw;
-    // Soft-follow cam yaw toward player facing when moving (optional glue)
-    if (this.moving && !this.pointerDragging) {
-      let diff = this.playerYaw - this.camYaw;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      this.camYaw += diff * 0.04;
-    }
-    const y = this.camYaw;
-    const target = this.player.position.clone();
-    target.y += lookY;
-    const desired = new THREE.Vector3(
-      target.x - Math.sin(y) * boom,
-      target.y + height,
-      target.z - Math.cos(y) * boom,
+  private syncMimicCollider() {
+    const b = this.mimicBody;
+    if (!b) return;
+    b.setTranslation(
+      {
+        x: this.mimicRoot.position.x,
+        y: this.mimicRoot.position.y + 0.85,
+        z: this.mimicRoot.position.z,
+      },
+      true,
     );
-    this.camera.position.lerp(desired, 0.14);
-    this.camera.lookAt(target);
-    void yaw;
+  }
+
+  private updateCamera() {
+    // Casting / combat-soft: owned yaw+pitch, look-along, shoulder. Not lookAt-chest.
+    if (this.camera.fov !== CAM_FOV) {
+      this.camera.fov = CAM_FOV;
+      this.camera.updateProjectionMatrix();
+    }
+    if (this.camPitch < CAM_MIN_PITCH) this.camPitch = CAM_MIN_PITCH;
+    if (this.camPitch > CAM_MAX_PITCH) this.camPitch = CAM_MAX_PITCH;
+    const cosP = Math.cos(this.camPitch);
+    const sinP = Math.sin(this.camPitch);
+    _lookDir.set(Math.sin(this.camYaw) * cosP, -sinP, Math.cos(this.camYaw) * cosP);
+    if (_lookDir.lengthSq() < 1e-8) _lookDir.set(0, 0, 1);
+    else _lookDir.normalize();
+    _lookFlat.set(Math.sin(this.camYaw), 0, Math.cos(this.camYaw));
+    if (_lookFlat.lengthSq() < 1e-8) _lookFlat.set(0, 0, 1);
+    else _lookFlat.normalize();
+    _camRight.set(_lookFlat.z, 0, -_lookFlat.x);
+    const th = 1.52;
+    const pp = this.player.position;
+    _camTarget.set(pp.x, pp.y + th, pp.z);
+    _camTarget.addScaledVector(_lookFlat, CAM_LOOK_AHEAD);
+    _camDesired.copy(_camTarget).addScaledVector(_lookDir, -this.camDist);
+    _camDesired.y += CAM_BOOM_LIFT;
+    _camDesired.addScaledVector(_camRight, CAM_SHOULDER);
+    if (_camDesired.y < 0.45) _camDesired.y = 0.45;
+    this.camera.position.lerp(_camDesired, 0.18);
+    _camAim.copy(this.camera.position).addScaledVector(_lookDir, 48);
+    this.camera.lookAt(_camAim);
   }
 
   private resize() {
@@ -1055,6 +1223,7 @@ export class MimicDungeon {
 
   dispose() {
     this.disposed = true;
+    this.timer.dispose();
     cancelAnimationFrame(this.raf);
     this.ro?.disconnect();
     window.removeEventListener("keydown", this.onKeyDown);
@@ -1062,6 +1231,7 @@ export class MimicDungeon {
     window.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("mousemove", this.onMouseMove);
     this.canvas.removeEventListener("mousedown", this.onMouseDown);
+    this.canvas.removeEventListener("wheel", this.onWheel);
     this.canvas.removeEventListener("contextmenu", this.onContextMenu);
     if (this.mountedWeapon) {
       unmountWeapon(this.mountedWeapon);
@@ -1069,6 +1239,9 @@ export class MimicDungeon {
     }
     this.avatar?.dispose?.();
     this.avatar = null;
+    this.playerKcc = null;
+    this.physics?.dispose();
+    this.physics = null;
     this.vfx.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;

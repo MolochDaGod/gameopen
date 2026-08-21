@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { installAuthorUrlGuard } from "./authorUrl";
 
 /**
  * Optimized glTF/GLB loading for the whole app.
@@ -37,6 +38,7 @@ const KTX2_TRANSCODER_PATH =
 
 /** Shared progress/error surface for every optimized load. */
 export const gltfManager = new THREE.LoadingManager();
+installAuthorUrlGuard(gltfManager);
 
 /** Draco decoder is process-wide (its worker pool is expensive to recreate). */
 let sharedDraco: DRACOLoader | null = null;
@@ -88,10 +90,60 @@ export interface GltfLoaderOptions {
   renderer?: THREE.WebGLRenderer;
 }
 
+/**
+ * vol.glb (and some Sketchfab packs) ship skins whose `joints` are null.
+ * GLTFLoader then does `undefined.isBone = true` and the whole load dies.
+ * Drop those skins before bind so the environment mesh still loads.
+ */
+function registerBrokenSkinGuard(loader: GLTFLoader): void {
+  loader.register((parser) => ({
+    name: "grudgeBrokenSkinGuard",
+    beforeRoot() {
+      const json = (parser as { json?: { skins?: unknown; nodes?: unknown } }).json;
+      if (!json || !Array.isArray(json.skins) || !json.skins.length) return null;
+      const nodes = Array.isArray(json.nodes) ? json.nodes : [];
+      const skins = json.skins as Array<{ joints?: unknown[] }>;
+      const drop = new Set<number>();
+      for (let i = 0; i < skins.length; i++) {
+        const joints = skins[i]?.joints;
+        if (!Array.isArray(joints) || joints.length === 0) {
+          drop.add(i);
+          continue;
+        }
+        const ok = joints.every(
+          (j) => typeof j === "number" && j >= 0 && j < nodes.length && nodes[j] != null,
+        );
+        if (!ok) drop.add(i);
+      }
+      if (!drop.size) return null;
+      const kept: typeof skins = [];
+      const remap = new Map<number, number>();
+      skins.forEach((s, i) => {
+        if (drop.has(i)) return;
+        remap.set(i, kept.length);
+        kept.push(s);
+      });
+      for (const n of nodes as Array<{ skin?: number }>) {
+        if (!n || typeof n.skin !== "number") continue;
+        const next = remap.get(n.skin);
+        if (next == null) delete n.skin;
+        else n.skin = next;
+      }
+      json.skins = kept;
+      if (!kept.length) delete (json as { skins?: unknown }).skins;
+      console.warn(
+        `[gltf] stripped ${drop.size} broken skin(s) (null joints) — mesh kept, no bind`,
+      );
+      return null;
+    },
+  }));
+}
+
 /** Build a decoder-optimized {@link GLTFLoader} (Draco + Meshopt, KTX2 opt-in). */
 export function makeGltfLoader(opts: GltfLoaderOptions = {}): GLTFLoader {
   const manager = opts.manager ?? gltfManager;
   const loader = new GLTFLoader(manager);
+  registerBrokenSkinGuard(loader);
   loader.setDRACOLoader(draco());
   loader.setMeshoptDecoder(MeshoptDecoder);
   if (opts.renderer) {

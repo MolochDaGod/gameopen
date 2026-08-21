@@ -10,8 +10,6 @@
  *  - models/assist/voxel-rpg — voxel T-pose character kit
  */
 
-import { fetchCatalogJson } from "../../lib/fleetSsot";
-
 export type ForestCreepRole =
   | "camp_elite"
   | "camp_melee"
@@ -531,8 +529,9 @@ let cache: ForestCreepCatalog | null = null;
 export async function loadForestCreepCatalog(): Promise<ForestCreepCatalog> {
   if (cache) return cache;
   try {
-    const r = await fetch(LOCAL, { mode: "cors" });
-    if (r.ok) {
+    const r = await fetch(LOCAL, { mode: "cors", credentials: "omit" });
+    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    if (r.ok && !ct.includes("text/html")) {
       const j = (await r.json()) as ForestCreepCatalog;
       if (j?.units?.length) {
         cache = j;
@@ -542,11 +541,7 @@ export async function loadForestCreepCatalog(): Promise<ForestCreepCatalog> {
   } catch {
     /* fall through */
   }
-  const fleet = await fetchCatalogJson<ForestCreepCatalog>("enemies/forest-creeps.json");
-  if (fleet?.units?.length) {
-    cache = fleet;
-    return fleet;
-  }
+  // In-module SSOT. Fleet hosts 404 this key and github.io is CSP-blocked.
   cache = FALLBACK_FOREST_CREEPS;
   return cache;
 }

@@ -25,6 +25,12 @@ export type OpenCharacterLoadout = {
    * Not the Voxel Codex bag item id — Mine held gear uses Codex / pixel tools.
    */
   weaponId: WeaponId;
+  /** Railway ledger UUID for the equipped main-hand instance, when available. */
+  equippedWeaponUuid?: string;
+  /** Content weapon prefab ID (`wpn_*`) that defines mesh, skills, and spine. */
+  weaponPrefabId?: string;
+  /** Content item template ID (`itm_*`) associated with the equipped prefab. */
+  weaponItemId?: string;
   /** Off-hand piece (shield, etc.) or null */
   offHand: WeaponId | null;
   /** Avatar catalog id if not using grudge: race path (e.g. race-human) */
@@ -55,6 +61,20 @@ const WEAPON_SET = new Set(WEAPONS.map((w) => w.id));
 function asWeaponId(v: unknown): WeaponId | null {
   if (typeof v !== "string" || !v) return null;
   return WEAPON_SET.has(v as WeaponId) ? (v as WeaponId) : null;
+}
+
+function asPrefixedId(value: unknown, prefix: "wpn_" | "itm_"): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const id = value.trim();
+  return id.startsWith(prefix) ? id : undefined;
+}
+
+function asUuid(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const id = value.trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    ? id
+    : undefined;
 }
 
 /** Deep-merge open blob from config + saveData. */
@@ -92,6 +112,23 @@ export function loadoutFromCharacter(ch: GrudgeCharacter | null | undefined): Op
       ? (b.mesh_ids as unknown[]).filter((x): x is string => typeof x === "string")
       : undefined;
 
+  const equipped = b.equippedWeapon && typeof b.equippedWeapon === "object"
+    ? (b.equippedWeapon as Record<string, unknown>)
+    : {};
+  const weaponPrefabId =
+    asPrefixedId(equipped.prefabId, "wpn_") ||
+    asPrefixedId(b.weaponPrefabId, "wpn_") ||
+    asPrefixedId(b.weaponPrefab, "wpn_");
+  const weaponItemId =
+    asPrefixedId(equipped.itemId, "itm_") ||
+    asPrefixedId(b.weaponItemId, "itm_") ||
+    asPrefixedId(b.itemId, "itm_");
+  const equippedWeaponUuid =
+    asUuid(equipped.instanceUuid) ||
+    asUuid(equipped.grudgeUuid) ||
+    asUuid(b.equippedWeaponUuid) ||
+    asUuid(b.weaponInstanceUuid);
+
   // Strip stale Avatar-Edit mistake: avatarId "explorer" on warlords race chars
   // (forces cube body in Danger). Modular head uses voxelLook only.
   let avatarId = typeof b.avatarId === "string" ? b.avatarId : undefined;
@@ -106,6 +143,9 @@ export function loadoutFromCharacter(ch: GrudgeCharacter | null | undefined): Op
 
   return {
     weaponId,
+    equippedWeaponUuid,
+    weaponPrefabId,
+    weaponItemId,
     offHand,
     avatarId,
     meshIds,
@@ -163,9 +203,17 @@ export async function saveCharacterOpenLoadout(
       body: JSON.stringify({ saveData }),
     });
     if (r.ok) return true;
-    // 403/404 = stale char id from another account — do not hammer PUT
-    if (r.status === 401 || r.status === 403 || r.status === 404) return false;
-    // Some gateways use PUT
+    // 401/403/404 = stale char id / guest. 5xx = Railway fault.
+    // Do not follow PATCH 500 with PUT — that 404s and doubles the console error.
+    if (
+      r.status === 401 ||
+      r.status === 403 ||
+      r.status === 404 ||
+      r.status >= 500
+    ) {
+      return false;
+    }
+    // Some gateways use PUT only when PATCH is not implemented (405/501).
     const r2 = await apiFetch(`/api/characters/${encodeURIComponent(characterId)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
