@@ -12,11 +12,12 @@
  * Networking is best-effort; offline local AI always runs.
  */
 import * as THREE from "three";
+import { Pathfinding } from "three-pathfinding";
 import { getCharacter, getWeapon } from "../assets";
 import { Character } from "../Character";
 import { Controller } from "../Controller";
 import { InputState } from "../input";
-import { PhysicsSystem } from "../PhysicsSystem";
+import { CharacterCapsuleKcc, PhysicsSystem } from "../PhysicsSystem";
 import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
 import {
@@ -148,6 +149,10 @@ export interface BrawlerSceneOptions {
   characterId?: string;
   /** Main-hand arsenal weapon (Danger Room WeaponId). */
   weaponId?: WeaponId;
+  /** UUID-backed Warlords equip identity; visual mount remains the arsenal definition. */
+  equippedWeaponUuid?: string;
+  weaponPrefabId?: string;
+  weaponItemId?: string;
   /** Off-hand (shield etc.) when main is 1H-eligible. */
   offHand?: WeaponId | null;
   /** Fleet combat power → skill damage scale. */
@@ -171,6 +176,9 @@ interface EnemyObj {
   /** Prefab attack cooldown (s) */
   attackCdMax: number;
   walkClock: number;
+  navPath: THREE.Vector3[];
+  navTarget: THREE.Vector3 | null;
+  navRefreshAt: number;
 }
 
 interface SkillDef {
@@ -206,6 +214,9 @@ export class BrawlerScene {
   private params: EditorParams;
   private controller: Controller | null = null;
   private physics: PhysicsSystem | null = null;
+  /** One Rapier capsule for the player, created after scaled terrain colliders. */
+  private playerKcc: CharacterCapsuleKcc | null = null;
+  private terrainPhysicsReady = false;
   private arenaColliders: THREE.Object3D[] = [];
 
   private avatar: Avatar | null = null;
@@ -223,6 +234,9 @@ export class BrawlerScene {
   private atkCd = 0;
   private dashCd = 0;
   private weaponId: WeaponId = "sword";
+  private equippedWeaponUuid: string | undefined;
+  private weaponPrefabId: string | undefined;
+  private weaponItemId: string | undefined;
   private offHandId: WeaponId | null = null;
   private atkPower = 16;
   private phase: BrawlerState["phase"] = "loading";
@@ -274,6 +288,12 @@ export class BrawlerScene {
   private waterLayer: SurvivalWaterLayer | null = null;
   private terrainHeightAt: ((x: number, z: number) => number | null) | null = null;
   private mapRoot: THREE.Object3D | null = null;
+  /** Scaled map boundary shared by player collision, spawning, and camera. */
+  private worldBound = ARENA_HALF;
+  /** Terrain-only navigation for survival hostiles; player movement stays Rapier KCC. */
+  private readonly nav = new Pathfinding();
+  private readonly navZone = "survival-terrain";
+  private navReady = false;
 
   constructor(canvas: HTMLCanvasElement, onState: StateCb, opts: BrawlerSceneOptions = {}) {
     this.canvas = canvas;
@@ -286,6 +306,9 @@ export class BrawlerScene {
       this.preferredAvatarId = opts.characterId;
     }
     if (opts.weaponId) this.weaponId = opts.weaponId;
+    this.equippedWeaponUuid = opts.equippedWeaponUuid;
+    this.weaponPrefabId = opts.weaponPrefabId;
+    this.weaponItemId = opts.weaponItemId;
     if (opts.offHand !== undefined) this.offHandId = opts.offHand;
     if (typeof opts.atk === "number" && opts.atk > 0) this.atkPower = opts.atk;
     if (typeof opts.maxHp === "number" && opts.maxHp > 20) {
@@ -378,12 +401,12 @@ export class BrawlerScene {
   }
 
   private async bootstrap() {
-    await Promise.all([
-      this.initPhysics(),
-      this.buildPlayer(),
-      this.loadEnemyTemplates(),
-      this.loadEnvironment(),
-    ]);
+    // Scale and bake the world before binding the shared character controller.
+    // This keeps terrain visuals, Rapier collision, water, and camera occluders
+    // in one coordinate system instead of allowing a flat fallback floor to win.
+    await this.initPhysics();
+    await this.loadEnvironment();
+    await Promise.all([this.buildPlayer(), this.loadEnemyTemplates()]);
     if (this.disposed) return;
     this.setPhase("playing");
     // Immediate wave presence — don't wait for first spawn-interval tick.
@@ -601,7 +624,7 @@ export class BrawlerScene {
   /** Wire Danger Room Controller to the loaded Avatar. */
   private bindController(av: Avatar) {
     this.controller = new Controller(av, this.camera, this.input, this.params);
-    this.controller.setRoomBound(ARENA_HALF);
+    this.controller.setRoomBound?.(this.worldBound);
     this.controller.setObstacles(() =>
       this.enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, r: 0.55 })),
     );
@@ -616,7 +639,22 @@ export class BrawlerScene {
       const wy = this.waterLayer.waterY;
       this.controller.setWaterBand(wy + 0.05, wy - 2.2);
     }
+    this.attachTerrainCollision();
     this.snapPlayerToTerrain();
+  }
+
+  /** Bind one shared Rapier KCC once scaled terrain colliders are ready. */
+  private attachTerrainCollision() {
+    if (!this.terrainPhysicsReady || !this.physics || !this.controller || !this.avatar) return;
+    const spawn = this.avatar.root.position;
+    this.playerKcc = this.physics.createPlayerKcc(
+      { x: spawn.x, y: spawn.y, z: spawn.z },
+      // Brawler advances the shared PhysicsWorld in its fixed 1/60 loop.
+      { stepOnMove: false },
+    );
+    if (!this.playerKcc) return;
+    this.controller.setCollision(this.playerKcc, spawn);
+    this.controller.setCameraOccluders(this.arenaColliders);
   }
 
   /** T0 weapon skills (+ optional content API labels) — Danger Room kit. */
@@ -680,6 +718,15 @@ export class BrawlerScene {
       return;
     }
     this.mounted = mounted;
+    // Preserve the authoritative Railway/content identity on the mounted root.
+    // The visual still comes from the validated arsenal WeaponDef, never a raw
+    // voxel scene prop or an arbitrary player-supplied asset URL.
+    for (const object of mounted.objects) {
+      object.userData.equippedWeaponUuid = this.equippedWeaponUuid;
+      object.userData.weaponPrefabId = this.weaponPrefabId;
+      object.userData.weaponItemId = this.weaponItemId;
+      object.userData.weaponId = weaponId;
+    }
 
     // Off-hand (shield) when eligible
     if (this.offHandId) {
@@ -806,7 +853,8 @@ export class BrawlerScene {
 
         // SI calibration (100× / Sketchfab / tiny maps) + terrain/water layers
         const scaled = scaleMapToSi(root, {
-          targetSpanM: path.includes("agama") ? 120 : 90,
+          targetDoorWidthM: 3,
+          minSpanM: path.includes("agama") ? 160 : 90,
           mapKey: path,
         });
         const half = scaled.half;
@@ -818,7 +866,8 @@ export class BrawlerScene {
             this.spawnRadius = autoSpawn;
           }
         }
-        const bound = Math.max(22, Math.min(90, half * 0.92));
+        const bound = Math.max(22, Math.min(320, half * 0.92));
+        this.worldBound = bound;
         this.controller?.setRoomBound(bound);
 
         // Materials + shadows
@@ -856,6 +905,8 @@ export class BrawlerScene {
         this.terrainHeightAt = createTerrainHeightSampler(terrainForRay);
         this.controller?.setGroundHeightAt(this.terrainHeightAt);
 
+        this.buildTerrainNavigation(half, scaled.waterY);
+
         // Water layer + buoyancy band
         if (scaled.waterY != null || path.includes("agama")) {
           const wy = scaled.waterY ?? 0.35;
@@ -866,8 +917,10 @@ export class BrawlerScene {
           this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
         }
 
-        // Physics: multi-mesh terrain colliders (game mechanics)
-        void this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
+        // Physics: the scaled terrain is the authoritative player collision layer.
+        await this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
+        this.terrainPhysicsReady = true;
+        this.attachTerrainCollision();
 
         // Snap player feet to terrain at spawn if already built
         this.snapPlayerToTerrain();
@@ -883,6 +936,10 @@ export class BrawlerScene {
           `${PLAYER_HEIGHT_M}m`,
           "unit=",
           scaled.unitScale.toFixed(5),
+          "door=",
+          scaled.doorWidthM?.toFixed(2) ?? "n/a",
+          "scaleReason=",
+          scaled.scaleReason,
         );
         return;
       } catch (err) {
@@ -931,6 +988,71 @@ export class BrawlerScene {
       }
     }
     console.info("[BrawlerScene] terrain/prop colliders baked:", baked);
+  }
+
+  /**
+   * Bake a coarse terrain navmesh after scale/grounding. The mesh is a navigation
+   * representation only: Rapier remains authoritative for player collision.
+   * Deep water and slopes above the shared 45 degree terrain limit are omitted.
+   */
+  private buildTerrainNavigation(half: number, waterY: number | null) {
+    if (!this.terrainHeightAt || half < 4) return;
+    const cell = 2;
+    const columns = Math.max(2, Math.ceil((half * 2) / cell));
+    const span = columns * cell;
+    const start = -span * 0.5;
+    const heights = new Float32Array((columns + 1) * (columns + 1));
+    const positions = new Float32Array((columns + 1) * (columns + 1) * 3);
+    const vertex = (row: number, col: number) => row * (columns + 1) + col;
+
+    for (let row = 0; row <= columns; row++) {
+      for (let col = 0; col <= columns; col++) {
+        const index = vertex(row, col);
+        const x = start + col * cell;
+        const z = start + row * cell;
+        const y = this.terrainYAt(x, z);
+        heights[index] = y;
+        positions[index * 3] = x;
+        positions[index * 3 + 1] = y;
+        positions[index * 3 + 2] = z;
+      }
+    }
+
+    const indices: number[] = [];
+    const maxRise = cell; // tan(45 deg) * cell
+    for (let row = 0; row < columns; row++) {
+      for (let col = 0; col < columns; col++) {
+        const a = vertex(row, col);
+        const b = vertex(row, col + 1);
+        const c = vertex(row + 1, col);
+        const d = vertex(row + 1, col + 1);
+        const values = [heights[a]!, heights[b]!, heights[c]!, heights[d]!];
+        const deepWater = waterY != null && Math.max(...values) < waterY - 0.6;
+        const steep = Math.max(...values) - Math.min(...values) > maxRise;
+        if (!deepWater && !steep) indices.push(a, c, b, b, c, d);
+      }
+    }
+    if (!indices.length) return;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    try {
+      this.nav.setZoneData(this.navZone, Pathfinding.createZone(geometry));
+      this.navReady = true;
+      console.info("[BrawlerScene] survival terrain navmesh cells:", indices.length / 6);
+    } catch (err) {
+      this.navReady = false;
+      console.warn("[BrawlerScene] terrain navmesh build failed", err);
+    } finally {
+      geometry.dispose();
+    }
+  }
+
+  /** Ground height from the same scaled terrain mesh used for player collision. */
+  private terrainYAt(x: number, z: number): number {
+    const y = this.terrainHeightAt?.(x, z);
+    return y != null && Number.isFinite(y) ? y : 0;
   }
 
   /** Place player feet on terrain height at current XZ. */
@@ -1361,24 +1483,21 @@ export class BrawlerScene {
 
   private damagePlayer(amount: number) {
     if (this.phase !== "playing") return;
+    const feet = this.playerPos();
+    if (!feet) return;
     const effective = Math.max(1, amount - this.playerArmor * 0.1);
     this.playerHp = Math.max(0, this.playerHp - effective);
     this.avatar?.playRoleOnce("hurt", 0.08);
-    // 2D gore on player torso
-    if (this.controller) {
-      const p = this.controller.position.clone();
-      p.y += 1.1;
-      this.vfx.impact(p, 0xaa2028, 0.85);
-    }
-    // Knockback via Controller (Danger Room parity)
+    const p = feet.clone();
+    p.y += 1.1;
+    this.vfx.impact(p, 0xaa2028, 0.85);
     if (this.controller) {
       const away = this.controller.forward().multiplyScalar(-1);
       this.controller.applyImpulse(away, 4.5, 0.8, 3);
     }
-    const p = this.playerPos().clone();
-    p.y += 1;
-    // Fire-aura take-damage indication (same stack as Danger Room skill prefabs)
-    this.vfx.fireAura?.(p, 0.95);
+    const aura = feet.clone();
+    aura.y += 1;
+    this.vfx.fireAura?.(aura, 0.95);
     if (this.playerHp <= 0) {
       this.avatar?.playRoleOnce("death", 0.1);
       this.controller?.setLockTarget(null);
@@ -1392,11 +1511,8 @@ export class BrawlerScene {
     if (this.enemies.length >= this.maxEnemies || this.phase !== "playing") return;
     const angle = Math.random() * Math.PI * 2;
     const r = this.spawnRadius;
-    const pos = new THREE.Vector3(
-      Math.sin(angle) * r,
-      0,
-      Math.cos(angle) * r,
-    );
+    const pos = new THREE.Vector3(Math.sin(angle) * r, 0, Math.cos(angle) * r);
+    pos.y = this.terrainYAt(pos.x, pos.z);
     const loaded = this.enemyTemplates.filter(Boolean) as THREE.Group[];
     const tpl =
       loaded.length > 0
@@ -1455,6 +1571,9 @@ export class BrawlerScene {
       attackDamage,
       attackCdMax,
       walkClock: Math.random() * Math.PI * 2,
+      navPath: [],
+      navTarget: null,
+      navRefreshAt: 0,
     });
   }
 
@@ -1465,10 +1584,9 @@ export class BrawlerScene {
       const dir = new THREE.Vector3(pp.x - en.pos.x, 0, pp.z - en.pos.z);
       const dist = dir.length();
       if (dist > 0.1) {
-        dir.normalize();
-        en.pos.addScaledVector(dir, en.speed * dt);
+        this.moveEnemyOnTerrainNav(en, pp, en.speed * dt);
+        en.pos.y = this.terrainYAt(en.pos.x, en.pos.z);
         en.mesh.position.copy(en.pos);
-        en.mesh.rotation.y = Math.atan2(dir.x, dir.z);
       }
       en.walkClock += dt * 4;
       en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
@@ -1477,6 +1595,36 @@ export class BrawlerScene {
         this.damagePlayer(en.attackDamage);
       }
     }
+  }
+
+  /** Follow the scaled terrain navmesh, falling back to direct steering only while it is unavailable. */
+  private moveEnemyOnTerrainNav(enemy: EnemyObj, target: THREE.Vector3, step: number) {
+    const targetMoved = !enemy.navTarget || enemy.navTarget.distanceToSquared(target) > 1;
+    if (this.navReady && (targetMoved || this.clock.elapsedTime >= enemy.navRefreshAt || !enemy.navPath.length)) {
+      enemy.navTarget = target.clone();
+      enemy.navRefreshAt = this.clock.elapsedTime + 0.4;
+      enemy.navPath = [];
+      try {
+        const group = this.nav.getGroup(this.navZone, enemy.pos);
+        const node = group !== null ? this.nav.getClosestNode(enemy.pos, this.navZone, group, true) : null;
+        enemy.navPath = node ? this.nav.findPath(enemy.pos, target, this.navZone, group!) ?? [] : [];
+      } catch {
+        // The direct fallback below keeps a hostile responsive at navmesh edges.
+      }
+    }
+
+    const waypoint = enemy.navPath[0] ?? target;
+    const dx = waypoint.x - enemy.pos.x;
+    const dz = waypoint.z - enemy.pos.z;
+    const distance = Math.hypot(dx, dz);
+    if (distance < 0.4 && enemy.navPath.length) {
+      enemy.navPath.shift();
+      return;
+    }
+    if (distance <= 1e-4) return;
+    enemy.pos.x += (dx / distance) * Math.min(step, distance);
+    enemy.pos.z += (dz / distance) * Math.min(step, distance);
+    enemy.mesh.rotation.y = Math.atan2(dx, dz);
   }
 
   /** GF-style residual for fixed 1/60 sim (FleetGameLoop pattern). */
@@ -1514,8 +1662,14 @@ export class BrawlerScene {
       if (this.controller) {
         this.controller.update(dt);
         this.moving = this.controller.state.speed > 0.15;
-        // Soft plant feet on terrain heightfield when grounded (L0 SSOT)
-        if (this.terrainHeightAt && this.controller.state.grounded && this.avatar) {
+        // Visual-only fallback for hosts without Rapier terrain collision. When
+        // the KCC is active, its collider is the sole position authority.
+        if (
+          this.terrainHeightAt &&
+          !this.controller.hasCollision &&
+          this.controller.state.grounded &&
+          this.avatar
+        ) {
           const p = this.avatar.root.position;
           const ty = this.terrainHeightAt(p.x, p.z);
           if (ty != null && Math.abs(p.y - ty) < 2.5) {

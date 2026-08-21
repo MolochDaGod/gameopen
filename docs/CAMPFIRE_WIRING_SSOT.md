@@ -4,7 +4,7 @@
 **UI:** `CampfireLobby` + `CampfireLobbyScene` (TVS farm props)  
 **Entry:** `lib/entryCatch.ts` · `lib/openRoutes.ts` · `auth/characterHubLaunch.ts`  
 **Assets:** `lib/productionSystemsPattern.CAMPFIRE_TVS` → `assets.grudge-studio.com/models/campfire-lobby/tvs/*`  
-**Voxel backdrop:** Encament Fruzer bake (`ENCAMPMENT_BACKDROP`) sits **behind** the fire. Play start = Open **Enter Encament** / **Starting Lobby Town** with the selected campfire explorer (`ExplorerCharacter` + `voxelLook`).
+**Voxel backdrop:** Encament Fruzer bake (`ENCAMPMENT_BACKDROP`) sits **behind** the plaza, ground-grounded to the same y=0 as the 4 seats **outside the gate**. Play start = Open **Enter Encament** / **Starting Lobby Town** with the selected campfire explorer (`ExplorerCharacter` + per-character `voxelLook`).
 
 Do **not** invent a second roster hub. Extend this wiring only.
 

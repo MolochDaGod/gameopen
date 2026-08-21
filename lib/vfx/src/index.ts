@@ -37,3 +37,21 @@ export type {
   TrailOptions,
 } from "./primitives.js";
 export type { TextureName } from "./textures.js";
+export {
+  FootAuraSystem,
+  attachFootAuraSystem,
+  type ApplyAuraOptions,
+  type FootAuraHandle,
+  type FootAuraOrient,
+  type FootAuraSystemOptions,
+  type FootAuraChangeListener,
+} from "./footAura.js";
+export {
+  FOOT_AURA_DEFS,
+  ALL_FOOT_AURA_IDS,
+  footAuraFrameUrl,
+  footAuraIconUrl,
+  type FootAuraId,
+  type FootAuraDef,
+  type FootAuraKind,
+} from "./footAuraCatalog.js";

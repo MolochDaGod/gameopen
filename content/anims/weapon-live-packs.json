@@ -5,8 +5,8 @@
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
-    "prodAnimsRoot": "prod/anims",
-    "prodAnimsCdn": "https://assets.grudge-studio.com/prod/anims",
+    "prodAnimsRoot": "anims/baked",
+    "prodAnimsCdn": "https://open.grudge-studio.com/anims/baked",
     "mixamoRoot": "anim",
     "integrity": "sha256",
     "stripPositionTracks": true,
@@ -14,8 +14,8 @@
     "notes": [
       "Danger heroes: preset mesh_ids only (gear preset weapons) — load baked anims for that weapon family, never equip extra weapon meshes at runtime.",
       "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal (climb/swim/dodge/roll/harvest/block).",
-      "If pack missing/incomplete, use fallbackPack (still Bip001 baked) then prod/anims CDN.",
-      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON or prod/anims GLB libraries.",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked JSON under /anims/baked).",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON only — prod/anims GLB is a dead 404 path.",
       "Never load locomotion/running (banned run-to-roll)."
     ]
   },
@@ -94,31 +94,30 @@
         "idle": "greatsword_samurai/gs_samurai_idle_sword",
         "walk": "greatsword_samurai/gs_samurai_walk_sword",
         "run": "greatsword_samurai/gs_samurai_run_sword",
-        "attack": "greatsword_samurai/gs_samurai_combo_a",
-        "skill1": "greatsword_samurai/gs_samurai_combo_b",
-        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
-        "skill3": "dual_wield/sword_dash_attack",
+        "attack": "sword_shield/attack-combo-01-trimmed",
+        "skill1": "sword_shield/attack-combo-02",
+        "skill2": "dual_wield/sword_dash_attack",
+        "skill3": "dual_wield/dash",
         "skill4": "ghost_rider/quakesmash",
         "dodge": "locomotion/dodge_back",
         "roll": "locomotion/roll_forward"
       },
       "liveWhenIncomplete": {
-        "note": "Samurai sword stance SSOT; dual_wield/locomotion soft fallbacks",
+        "note": "AttackCombo01/2 Bip001 bake; samurai loco; dual_wield soft fallback",
         "idle": "dual_wield/idle",
         "walk": "magic/Standing Walk Forward",
         "run": "locomotion/run_forward",
         "attack": "dual_wield/attack"
       },
       "mixamoSources": [
+        "anim/combo/melee-combo-1.glb",
+        "anim/combo/melee-combo-2.glb",
         "anim/sword/sword-and-shield-idle.fbx",
-        "anim/sword/sword-and-shield-run.fbx",
-        "anim/sword/sword-and-shield-attack.fbx",
-        "anim/sword/one-hand-sword-combo.fbx",
         "anim/sword/slash-advance.fbx"
       ],
       "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"],
       "notes": [
-        "2026-08: purged thin sword_shield run/attack as primary — samurai + dual_wield + GR finishers"
+        "2026-08: LMB = Kassimkot AttackCombo01 (sword_shield/attack-combo-01-trimmed); skill1 = Attack Combo 2; loco = samurai sword stance"
       ]
     },
     "shield": {
@@ -393,22 +392,32 @@
         "attack": "pistol/gunplay",
         "skill1": "pistol/charged-pistol",
         "skill2": "pistol/pistol-whip",
+        "reload": "pistol/reload",
         "jump": "pistol/pistol-jump"
       },
       "liveWhenIncomplete": {
-        "note": "pistol Bip001 bake from handgun loco pack",
+        "note": "pistol Bip001 bake from handgun loco pack; reload = drawing-gun stamp until dedicated FBX",
         "idle": "pistol/idle",
         "walk": "pistol/walk-forward",
         "run": "pistol/run-forward",
-        "attack": "pistol/gunplay"
+        "attack": "pistol/gunplay",
+        "reload": "pistol/drawing-gun"
       },
       "mixamoSources": [
         "anim/pistol/idle.fbx",
         "anim/pistol/walk-forward.fbx",
         "anim/pistol/run-forward.fbx",
-        "anim/pistol/gunplay.fbx"
+        "anim/pistol/gunplay.fbx",
+        "anim/pistol/drawing-gun.fbx"
       ],
-      "skillSlots": ["pistol_shot", "pistol_double", "pistol_fan", "pistol_reload"]
+      "skillSlots": ["pistol_shot", "pistol_double", "pistol_fan", "pistol_reload"],
+      "castingT0": {
+        "note": "Casting lab t0-gun maps Open skillSlots → catalog + chamber",
+        "pistol_shot": "t0_gun_practice_shot",
+        "pistol_double": "t0_gun_burst_fire",
+        "pistol_fan": "t0_gun_suppressing_shot",
+        "pistol_reload": "t0_gun_reload · empty key 1"
+      }
     },
     "gunblade": {
       "label": "Gunblade",

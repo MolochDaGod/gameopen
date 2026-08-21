@@ -26,9 +26,10 @@ import { CharacterPicker } from "./CharacterPicker";
 import { CampfireLobbyScene } from "../three/intro/CampfireLobbyScene";
 import { gameSession } from "../game/GameSession";
 import {
-  buildGenesisHeroOptions,
+  buildVoxelCampfireHeroes,
   type GenesisHeroOption,
 } from "../lib/grudoxRoster";
+import { fetchCharacters } from "../lib/grudgeAuth";
 import { setLobbyAvatarSlotTarget } from "../three/avatar/playerHead";
 
 interface Props {
@@ -114,7 +115,9 @@ function timeAgo(iso: string): string {
  */
 export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, onEnterRoom }: Props) {
   const { user, isSignedIn } = useOptionalUser();
-  const { data, isLoading, isError, refetch, isFetching } = useListPosts();
+  const { data, isLoading, isError, refetch, isFetching } = useListPosts(undefined, {
+    query: { retry: false, refetchOnWindowFocus: false },
+  });
 
   const posts = useMemo<Post[]>(() => data ?? [], [data]);
   // Keep the welcome handler reading the freshest posts without resubscribing.
@@ -130,7 +133,7 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);
   const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
-    buildGenesisHeroOptions(
+    buildVoxelCampfireHeroes(
       gameSession.snapshot.characters,
       gameSession.snapshot.selectedCharacterId,
     ),
@@ -142,7 +145,7 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
   useEffect(() => {
     const unsub = gameSession.subscribe(() => {
       setHeroes(
-        buildGenesisHeroOptions(
+        buildVoxelCampfireHeroes(
           gameSession.snapshot.characters,
           gameSession.snapshot.selectedCharacterId,
         ),
@@ -151,6 +154,14 @@ export function Lobby({ onLoad, onPlay, onLoadScene, onExit, onAvatarEdit, net, 
     if (!gameSession.snapshot.ready) {
       void gameSession.boot().catch(() => undefined);
     }
+    void fetchCharacters({ eras: ["voxel"] })
+      .then((voxel) => {
+        if (!voxel.length) return;
+        setHeroes(
+          buildVoxelCampfireHeroes(voxel, gameSession.snapshot.selectedCharacterId),
+        );
+      })
+      .catch(() => undefined);
     return unsub;
   }, []);
 

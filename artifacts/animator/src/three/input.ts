@@ -19,7 +19,9 @@ export class InputState {
   // the last *fresh* press per key; a second fresh press inside DOUBLE_TAP_MS
   // queues the code in `doubleTaps` for a consumer to drain via consumeDoubleTap.
   private tapAt: Record<string, number> = {};
+  private tapCount: Record<string, number> = {};
   private doubleTaps = new Set<string>();
+  private tripleTaps = new Set<string>();
   // Single fresh-press edges (one entry per keydown that wasn't OS key-repeat),
   // drained via consumePress — used for stance-gated single-tap actions.
   private pressed = new Set<string>();
@@ -53,10 +55,20 @@ export class InputState {
       const now = performance.now();
       const last = this.tapAt[e.code] ?? 0;
       if (now - last <= DOUBLE_TAP_MS) {
-        this.doubleTaps.add(e.code);
-        this.tapAt[e.code] = 0;
+        const n = (this.tapCount[e.code] || 1) + 1;
+        this.tapCount[e.code] = n;
+        if (n >= 3) {
+          this.tripleTaps.add(e.code);
+          this.doubleTaps.delete(e.code);
+          this.tapAt[e.code] = 0;
+          this.tapCount[e.code] = 0;
+        } else {
+          this.doubleTaps.add(e.code);
+          this.tapAt[e.code] = now;
+        }
       } else {
         this.tapAt[e.code] = now;
+        this.tapCount[e.code] = 1;
       }
     }
     if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
@@ -93,8 +105,10 @@ export class InputState {
     } else {
       this.keys.clear();
       this.doubleTaps.clear();
+      this.tripleTaps.clear();
       this.pressed.clear();
       this.tapAt = {};
+      this.tapCount = {};
     }
   };
 
@@ -143,6 +157,15 @@ export class InputState {
   consumeDoubleTap(code: string): boolean {
     if (this.doubleTaps.has(code)) {
       this.doubleTaps.delete(code);
+      return true;
+    }
+    return false;
+  }
+
+  /** Drain a queued triple-tap (ice-staff slide). Safe no-op if never queued. */
+  consumeTripleTap(code: string): boolean {
+    if (this.tripleTaps.has(code)) {
+      this.tripleTaps.delete(code);
       return true;
     }
     return false;

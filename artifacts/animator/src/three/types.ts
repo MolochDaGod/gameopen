@@ -125,10 +125,12 @@ export interface StatusView {
   kind: StatusKind;
   /** CSS color string. */
   color: string;
-  /** Non-emoji symbol glyph for the chip. */
+  /** Non-emoji solid glyph for the chip. */
   glyph: string;
   remaining: number;
   duration: number;
+  /** CraftPix buff icon URL when mapped (foot-aura pack). */
+  iconUrl?: string;
 }
 
 /**
@@ -994,6 +996,16 @@ export interface HudSnapshot {
   maxHealth: number;
   stamina: number;
   maxStamina: number;
+  mana?: number;
+  maxMana?: number;
+  armor?: number;
+  maxArmor?: number;
+  oxygen?: number;
+  maxOxygen?: number;
+  hunger?: number;
+  maxHunger?: number;
+  thirst?: number;
+  maxThirst?: number;
   /** Current poise (from the sparring CombatController). */
   poise: number;
   maxPoise: number;

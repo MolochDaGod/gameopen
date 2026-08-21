@@ -27,7 +27,7 @@ import {
   skeletonBoneNames,
 } from "../retargetLibrary";
 import { buildRetargetNameMap } from "../retargetMap";
-import { asset, getCharacter, getWeapon } from "../assets";
+import { asset, getCharacter, getWeapon, raceCharacterIdForFleetRace } from "../assets";
 import { WEAPONS, WEAPON_GRIPS } from "../arsenal";
 import { mountWeaponModel, unmountWeapon, type MountedWeapon } from "../Weapons";
 import { Controller } from "../Controller";
@@ -2156,7 +2156,33 @@ export class EditorScene {
    * Map legacy catalog ids → race/class presets when possible.
    */
   async loadCatalogCharacter(charId: string): Promise<void> {
+    if (charId.startsWith("grudge:")) {
+      const parts = charId.split(":");
+      await this.loadGrudgeCharacter(
+        (parts[1] || "western-kingdoms") as RaceId,
+        (parts[2] || "warrior") as PresetId,
+      );
+      return;
+    }
+    if (charId.startsWith("race-")) {
+      const mapped = raceCharacterIdForFleetRace(charId.replace(/^race-/, ""));
+      const parts = mapped.split(":");
+      await this.loadGrudgeCharacter(
+        (parts[1] || "western-kingdoms") as RaceId,
+        (parts[2] || "warrior") as PresetId,
+      );
+      return;
+    }
     const def = getCharacter(charId);
+    if (/toon-rts-characters|\/characters\/(human|elf|dwarf|orc|undead|barbarian)\.glb/i.test(def.file || "")) {
+      const mapped = raceCharacterIdForFleetRace(charId.replace(/^race-/, ""));
+      const parts = mapped.split(":");
+      await this.loadGrudgeCharacter(
+        (parts[1] || "western-kingdoms") as RaceId,
+        (parts[2] || "warrior") as PresetId,
+      );
+      return;
+    }
     // Production SSOT: never spawn Explorer/Mixamo for Dressing Room heroes
     if (def.procedural || !def.file) {
       const race = (def as { grudgeRace?: RaceId }).grudgeRace || "western-kingdoms";

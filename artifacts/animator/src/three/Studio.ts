@@ -156,6 +156,13 @@ import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
 import { WingBackRig } from "./equipment/WingBackRig";
+import { VoxelHarvestToolRig } from "./equipment/VoxelHarvestToolRig";
+import {
+  deriveCharacterVitals,
+  fillVitals,
+  tickVitals,
+  type VitalsState,
+} from "../game/characterVitals";
 import { CapeBackRig } from "./equipment/CapeBackRig";
 import { BackStowAttach } from "./equipment/BackStowAttach";
 import {
@@ -790,6 +797,15 @@ export class Studio {
   private stamina = 120;
   /** Must match the player CC maxStamina in SparringCombat so the HUD is accurate. */
   private maxStamina = 120;
+  private mana = 100;
+  private maxMana = 100;
+  private armor = 0;
+  private oxygen = 80;
+  private maxOxygen = 80;
+  private hunger = 100;
+  private maxHunger = 100;
+  private thirst = 80;
+  private maxThirst = 80;
   private skillCooldown = 0;
   private skillCooldownMax = 0;
   private swingTimer = 0;
@@ -964,6 +980,8 @@ export class Studio {
   private buildGrid: BuildGridOverlay | null = null;
   /** Back-slot wing pack (parachute / glide / flight / ocean sail). */
   private wingRig: WingBackRig | null = null;
+  /** toolsvoxel.glb isolate → uMMORPG hand sockets (harvest only). */
+  private voxelToolRig: VoxelHarvestToolRig | null = null;
   private capeRig: CapeBackRig | null = null;
   private backStow: BackStowAttach | null = null;
   /** Last equipped back-slot item id (same slot as “effects”). */
@@ -1435,7 +1453,9 @@ export class Studio {
         if (yaw != null && this.character) this.character.root.rotation.y = yaw;
       },
     });
-    void this.setTestWorld(loadTestWorldId());
+    void this.setTestWorld(loadTestWorldId()).catch((e) =>
+      console.warn("[Studio] setTestWorld boot failed", e),
+    );
     this.status = new StatusController(this.scene);
     this.indicators = new TargetIndicators(this.scene);
     this.telegraphs = new TelegraphField(this.scene);
@@ -2332,6 +2352,7 @@ export class Studio {
     this.character.root.visible = !this.spectating;
     this.scene.add(this.character.root);
     this.characterId = id;
+    this.applyBuilderVitals();
     // Back-slot wing pack (circle stowed · deploy parachute/glide/flight/sail)
     void this.ensureWingRigAttached();
     if (!this.controller) {
@@ -4473,6 +4494,56 @@ export class Studio {
     this.sparring?.resetPlayer();
     this.health = this.maxHealth;
     this.stamina = this.maxStamina;
+    this.mana = this.maxMana;
+    this.oxygen = this.maxOxygen;
+    this.hunger = this.maxHunger;
+    this.thirst = this.maxThirst;
+  }
+
+  /** Apply character-builder 8-attr derived pools (info SSOT). */
+  applyBuilderVitals(attributes?: Record<string, number>, current?: Partial<VitalsState>) {
+    const filled = fillVitals(deriveCharacterVitals(attributes), current);
+    this.maxHealth = filled.maxHealth;
+    this.maxMana = filled.maxMana;
+    this.maxStamina = filled.maxStamina;
+    this.armor = filled.armor;
+    this.maxOxygen = filled.maxOxygen;
+    this.maxHunger = filled.maxHunger;
+    this.maxThirst = filled.maxThirst;
+    this.health = filled.health;
+    this.mana = filled.mana;
+    this.stamina = filled.stamina;
+    this.oxygen = filled.oxygen;
+    this.hunger = filled.hunger;
+    this.thirst = filled.thirst;
+  }
+
+  private tickBuilderVitals(dt: number) {
+    const next = tickVitals(
+      {
+        health: this.health,
+        mana: this.mana,
+        stamina: this.stamina,
+        armor: this.armor,
+        oxygen: this.oxygen,
+        hunger: this.hunger,
+        thirst: this.thirst,
+        maxHealth: this.maxHealth,
+        maxMana: this.maxMana,
+        maxStamina: this.maxStamina,
+        maxOxygen: this.maxOxygen,
+        maxHunger: this.maxHunger,
+        maxThirst: this.maxThirst,
+      },
+      dt,
+      { underwater: this.controller?.isInWater() ?? false },
+    );
+    this.health = next.health;
+    this.mana = next.mana;
+    this.stamina = next.stamina;
+    this.oxygen = next.oxygen;
+    this.hunger = next.hunger;
+    this.thirst = next.thirst;
   }
 
   /** Build compact health bars for the arena HUD strip. */
@@ -10895,8 +10966,8 @@ export class Studio {
       //  • Ice staff: triple-tap  → extended slide; double-tap still slides
       //  • Key X                  → timed dodge-roll (any direction held)
       {
-        const tripA = this.input.consumeTripleTap("KeyA");
-        const tripD = this.input.consumeTripleTap("KeyD");
+        const tripA = this.input.consumeTripleTap?.("KeyA") ?? false;
+        const tripD = this.input.consumeTripleTap?.("KeyD") ?? false;
         const dblA = this.input.consumeDoubleTap("KeyA");
         const dblD = this.input.consumeDoubleTap("KeyD");
         if (this.isIceStaff() && !this.locked) {
@@ -11265,6 +11336,7 @@ export class Studio {
       this.updateHarvestUnitAbsorbTarget();
       this.pinataHarvest.update(dt);
     }
+    this.tickBuilderVitals(dt);
     // Wing pack anim + air assist (parachute / glide / flight / sail)
     if (this.wingRig) {
       this.wingRig.update(dt);
@@ -11695,6 +11767,16 @@ export class Studio {
       maxHealth: this.maxHealth,
       stamina: Math.round(this.stamina),
       maxStamina: this.maxStamina,
+      mana: Math.round(this.mana),
+      maxMana: this.maxMana,
+      armor: this.armor,
+      maxArmor: this.armor,
+      oxygen: Math.round(this.oxygen),
+      maxOxygen: this.maxOxygen,
+      hunger: Math.round(this.hunger),
+      maxHunger: this.maxHunger,
+      thirst: Math.round(this.thirst),
+      maxThirst: this.maxThirst,
       poise: Math.round(this.sparring.getPlayerPoise()),
       maxPoise: this.sparring.getPlayerMaxPoise(),
       combatState: this.sparring.getPlayerState(),
@@ -11870,7 +11952,11 @@ export class Studio {
 
     let dungeon: Dungeon | null = null;
     try {
-      dungeon = new Dungeon(this.scene, { file: DUNGEON_MAPS[loadDungeonMap()].file });
+      const dungeonMap = DUNGEON_MAPS[loadDungeonMap()];
+      dungeon = new Dungeon(this.scene, {
+        file: dungeonMap.file,
+        keepSi: dungeonMap.keepSi,
+      });
       await dungeon.load();
       if (this.disposed) {
         dungeon.dispose();
@@ -12351,6 +12437,8 @@ export class Studio {
       // Leave combat focus stance; tools use free-aim soft select
       this.locked = false;
       this.controller?.setLockTarget(null);
+      if (mode === "harvest") void this.equipVoxelHarvestTool(this.activityTool);
+      else this.clearVoxelHarvestTool();
       // Leaving build cancels ghost; entering build must NOT wipe a fresh beginPlace
       if (prev === "build" && mode !== "build") {
         this.campBuild?.cancelGhost?.();
@@ -12359,6 +12447,7 @@ export class Studio {
       this.applyActivityCamera(mode);
       this.buildGrid?.setVisible(mode === "build");
     } else if (mode === "combat") {
+      this.clearVoxelHarvestTool();
       // Leaving build → cancel place ghost
       if (prev === "build") this.campBuild?.cancelGhost?.();
       this.buildGrid?.setVisible(false);
@@ -12405,12 +12494,17 @@ export class Studio {
       this.controller.setViewMode("third");
     }
 
+    const era =
+      (typeof location !== "undefined" &&
+        new URLSearchParams(location.search).get("era")) ||
+      "";
     const key = resolveCameraProfileKey({
       firstPerson: this.viewMode === "first",
       swimming: this.controller.isInWater(),
       climbing: this.controller.isWallRunning,
       activity: mode,
       hardFocus: mode === "combat" && this.locked,
+      era,
     });
 
     if (key === this.lastCamProfile) return;
@@ -12795,23 +12889,27 @@ export class Studio {
       const base = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, 0);
       this.raiderBoats?.setBase(base);
       // Sailtest dual-island stands in for volcanic / boss-event host when tagged
-      void this.volcanoBoss?.spawnIfAllowed({
-        sectorId: "s",
-        archetype: "volcanic",
-        eventTags: ["boss_event", "volcanic", "hellmaw"],
-        origin: base.clone().setY(0),
-      });
+      void this.volcanoBoss
+        ?.spawnIfAllowed({
+          sectorId: "s",
+          archetype: "volcanic",
+          eventTags: ["boss_event", "volcanic", "hellmaw"],
+          origin: base.clone().setY(0),
+        })
+        .catch((e) => console.warn("[Studio] volcanoBoss spawn failed", e));
     } else if (def.kind !== "combat" && def.kind !== "loco_qa" && this.campEnemies) {
       const center = this.character?.root.position.clone() ?? new THREE.Vector3(0, 0, -4);
       void this.campEnemies.spawnVoxelCamp(center);
       // Forest / outdoor maps: still allow boss if event tags request it
       if (id === "forest-map" || def.kind === "harvest_forest") {
-        void this.volcanoBoss?.spawnIfAllowed({
-          sectorId: "s",
-          archetype: "boss",
-          eventTags: ["boss_event", "volcanic"],
-          origin: center.clone().setY(0),
-        });
+        void this.volcanoBoss
+          ?.spawnIfAllowed({
+            sectorId: "s",
+            archetype: "boss",
+            eventTags: ["boss_event", "volcanic"],
+            origin: center.clone().setY(0),
+          })
+          .catch((e) => console.warn("[Studio] volcanoBoss spawn failed", e));
       }
     }
 
@@ -12933,6 +13031,7 @@ export class Studio {
     // Harvest tool equip (hold R) or options tool pick
     this.activityTool = id;
     this.setCombatFlash(id.replace(/_/g, " ").toUpperCase(), 0.4);
+    if (this.activityMode === "harvest") void this.equipVoxelHarvestTool(id);
     // Immediate combat shortcuts from the options wheel
     if (this.activityMode === "combat" && kind === "options") {
       if (id === "dodge") this.performTimedDodgeRoll();
@@ -12943,6 +13042,17 @@ export class Studio {
       else if (id === "skill") this.useSkill();
       else if (id === "block") this.forceFieldGuard();
     }
+  }
+
+  private async equipVoxelHarvestTool(toolId: string) {
+    const root = this.character?.root;
+    if (!root) return;
+    this.voxelToolRig ??= new VoxelHarvestToolRig();
+    await this.voxelToolRig.equip(root, toolId);
+  }
+
+  private clearVoxelHarvestTool() {
+    this.voxelToolRig?.clear();
   }
 
   /**
@@ -13253,6 +13363,19 @@ export class Studio {
   /** Plant / has claim rights in sandbox (true after seed or claim_flag place). */
   hasCampClaim(): boolean {
     return this.campBuild?.hasClaim ?? false;
+  }
+
+  /** Paint guild emblem onto planted claim-flag cloth (uMMORPG Flag1 bake). */
+  applyClaimFlagEmblem(dataUrl: string | null) {
+    const camp = this.campBuild;
+    if (!camp) return;
+    void import("./camp/claimFlagEmblem").then(({ applyClaimFlagMaterials, textureFromDataUrl }) => {
+      const tex = dataUrl ? textureFromDataUrl(dataUrl) : null;
+      this.scene.traverse((o) => {
+        if (o.userData?.placeableId !== "claim_flag") return;
+        applyClaimFlagMaterials(o, tex);
+      });
+    });
   }
 
   /** True when player is within interact range of a planted claim flag (~3.5 m). */

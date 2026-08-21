@@ -15,6 +15,7 @@
  */
 
 import type { PlaceableBehavior, PlaceableCategory } from "./placeables";
+import { packPieceById } from "../packs/openMeshPacks";
 
 /** Fleet asset types for camp builds (maps to D1/registry categories). */
 export type CampAssetType =
@@ -63,6 +64,8 @@ export type CampAssetBinding = {
   category?: PlaceableCategory;
   behavior?: PlaceableBehavior;
   notes?: string;
+  /** Multipack isolate — clone this node only (buildworkers.glb). */
+  isolateNode?: string;
 };
 
 const P = {
@@ -95,9 +98,20 @@ const P = {
   humanCrate: "models/props/human-props/crate.glb",
   humanFence: "models/props/human-props/fence-1.glb",
   humanLamp: "models/props/human-props/lamp-1.glb",
+  buildworkers: "models/camp/buildworkers.glb",
+
   // RTS siege keys listed in rtsModels.json — not yet on open/R2 public root
   // (probed 2026-07 MISS). Prefer open-hosted turret/cannon until fleet mirrors them.
 } as const;
+
+function fromPack(pieceId: string) {
+  const p = packPieceById(pieceId);
+  return {
+    meshKeys: p ? [p.file] : [],
+    isolateNode: p?.isolateNode,
+    targetHeightM: p?.targetHeightM,
+  };
+}
 
 /**
  * Canonical bindings for every placeable id used by CampBuildSystem.
@@ -122,7 +136,8 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "campfire",
     assetType: "prop",
     importer: "gltf",
-    meshKeys: [P.dyingTorch, P.torch],
+    meshKeys: [P.buildworkers, P.dyingTorch, P.torch],
+    isolateNode: "campfire_3",
     // Fire_01 not on CDN; use verified pack + local camp badge
     iconKeys: ["icons/pack/misc/Slash_07.png", "icons/camp/camp_logistics.png"],
     targetHeightM: 0.7,
@@ -153,12 +168,79 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "barracks",
     assetType: "building",
     importer: "gltf",
-    meshKeys: [P.fortress],
+    meshKeys: [P.buildworkers, P.fortress],
+    isolateNode: "command-tent_4",
     iconKeys: ["icons/pack/weapons/Sword_01.png"],
     targetHeightM: 3.2,
     category: "production",
     behavior: "npc_spawn",
-    notes: "modular-fortress stand-in until dedicated Barracks GLB on R2",
+    notes: "buildworkers command-tent isolate",
+  },
+  bw_tent: {
+    placeableId: "bw_tent",
+    assetType: "building",
+    importer: "gltf",
+    meshKeys: [P.buildworkers],
+    isolateNode: "tent_14",
+    iconKeys: ["icons/pack/misc/Naturecircle.png"],
+    targetHeightM: 2.4,
+    category: "utility",
+    behavior: "static",
+  },
+  bw_fort_fence: {
+    placeableId: "bw_fort_fence",
+    assetType: "building",
+    importer: "gltf",
+    meshKeys: [P.buildworkers],
+    isolateNode: "fort-fence_6",
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    targetHeightM: 1.8,
+    category: "defensive",
+    behavior: "static",
+  },
+  bw_fort_gate: {
+    placeableId: "bw_fort_gate",
+    assetType: "building",
+    importer: "gltf",
+    meshKeys: [P.buildworkers],
+    isolateNode: "fort-gate_7",
+    iconKeys: ["icons/pack/misc/Flow.png"],
+    targetHeightM: 2.8,
+    category: "defensive",
+    behavior: "gate",
+  },
+  bw_tower_l1: {
+    placeableId: "bw_tower_l1",
+    assetType: "building",
+    importer: "gltf",
+    meshKeys: [P.buildworkers],
+    isolateNode: "guard-tower-L1_8",
+    iconKeys: ["icons/pack/misc/Chaos_2.png"],
+    targetHeightM: 6,
+    category: "defensive",
+    behavior: "tower",
+  },
+  bw_stables: {
+    placeableId: "bw_stables",
+    assetType: "building",
+    importer: "gltf",
+    meshKeys: [P.buildworkers, P.fortress],
+    isolateNode: "stables_13",
+    iconKeys: ["icons/pack/misc/Naturecircle.png"],
+    targetHeightM: 3.4,
+    category: "production",
+    behavior: "npc_spawn",
+  },
+  bw_crate: {
+    placeableId: "bw_crate",
+    assetType: "prop",
+    importer: "gltf",
+    meshKeys: [P.buildworkers],
+    isolateNode: "crate_5",
+    iconKeys: ["icons/pack/misc/Naturecircle.png"],
+    targetHeightM: 0.8,
+    category: "storage",
+    behavior: "static",
   },
   archery: {
     placeableId: "archery",
@@ -184,7 +266,8 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "stable",
     assetType: "building",
     importer: "gltf",
-    meshKeys: [P.fortress],
+    meshKeys: [P.buildworkers, P.fortress],
+    isolateNode: "stables_13",
     iconKeys: ["icons/pack/misc/Naturecircle.png"],
     targetHeightM: 2.6,
     category: "production",
@@ -204,7 +287,8 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "wall",
     assetType: "building",
     importer: "gltf",
-    meshKeys: [P.fortress],
+    meshKeys: [P.buildworkers, P.fortress],
+    isolateNode: "fort-fence_6",
     iconKeys: ["icons/pack/misc/Effect.png"],
     targetHeightM: 2.2,
     category: "defensive",
@@ -224,7 +308,8 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "watchtower",
     assetType: "siege",
     importer: "gltf",
-    meshKeys: [P.turret, P.turretAlt, P.cannon],
+    meshKeys: [P.buildworkers, P.turret, P.turretAlt, P.cannon],
+    isolateNode: "guard-tower-L1_8",
     iconKeys: ["icons/pack/misc/Chaos_2.png"],
     targetHeightM: 3.6,
     category: "defensive",
@@ -254,7 +339,8 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     placeableId: "gate",
     assetType: "door",
     importer: "gltf",
-    meshKeys: [P.door],
+    meshKeys: [P.buildworkers, P.door],
+    isolateNode: "fort-gate_7",
     iconKeys: ["icons/pack/misc/Flow.png"],
     targetHeightM: 2.8,
     category: "defensive",
@@ -531,6 +617,111 @@ export const CAMP_ASSET_BINDINGS: Record<string, CampAssetBinding> = {
     iconKeys: ["icons/pack/misc/Naturecircle.png"],
     targetHeightM: 0.55,
     category: "storage",
+    behavior: "static",
+  },
+  dungeon_floor: {
+    placeableId: "dungeon_floor",
+    assetType: "building",
+    importer: "gltf",
+    ...fromPack("mod-floor"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "defensive",
+    behavior: "static",
+    notes: "OPEN_MESH_PACKS mod-floor — 2 m snap",
+  },
+  dungeon_wall: {
+    placeableId: "dungeon_wall",
+    assetType: "building",
+    importer: "gltf",
+    ...fromPack("mod-wall"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "defensive",
+    behavior: "static",
+  },
+  dungeon_door_wall: {
+    placeableId: "dungeon_door_wall",
+    assetType: "door",
+    importer: "gltf",
+    ...fromPack("mod-wall-door"),
+    iconKeys: ["icons/pack/misc/Flow.png"],
+    category: "defensive",
+    behavior: "door",
+  },
+  dungeon_chest: {
+    placeableId: "dungeon_chest",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("mod-chest"),
+    meshKeys: [...fromPack("mod-chest").meshKeys, P.chest],
+    iconKeys: ["icons/pack/misc/Naturecircle.png"],
+    category: "storage",
+    behavior: "static",
+  },
+  dungeon_barrel: {
+    placeableId: "dungeon_barrel",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("mod-barrel"),
+    meshKeys: [...fromPack("mod-barrel").meshKeys, P.barrel],
+    iconKeys: ["icons/pack/misc/Naturecircle.png"],
+    category: "storage",
+    behavior: "static",
+  },
+  dungeon_torch: {
+    placeableId: "dungeon_torch",
+    assetType: "furniture",
+    importer: "gltf",
+    ...fromPack("mod-torch"),
+    meshKeys: [...fromPack("mod-torch").meshKeys, P.torch],
+    iconKeys: ["icons/pack/misc/Slash_07.png"],
+    category: "furniture",
+    behavior: "static",
+  },
+  grave_stone: {
+    placeableId: "grave_stone",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("grave-2"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "furniture",
+    behavior: "static",
+    notes: "OPEN_MESH_PACKS grave-2 isolateNode (author cm → 1.4 m)",
+  },
+  grave_slab: {
+    placeableId: "grave_slab",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("grave-1"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "furniture",
+    behavior: "static",
+    notes: "OPEN_MESH_PACKS grave-1 wide slab",
+  },
+  plank_block: {
+    placeableId: "plank_block",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("planks-1"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "furniture",
+    behavior: "static",
+  },
+  plank_block_b: {
+    placeableId: "plank_block_b",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("planks-2"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "furniture",
+    behavior: "static",
+  },
+  plank_block_c: {
+    placeableId: "plank_block_c",
+    assetType: "prop",
+    importer: "gltf",
+    ...fromPack("planks-3"),
+    iconKeys: ["icons/pack/misc/Effect.png"],
+    category: "furniture",
     behavior: "static",
   },
   storage_chest: {

@@ -9,11 +9,12 @@
  *  - Each subtype has **exactly 6 weapons** (T0…T5) — same shape as melee /
  *    bows. T0 ships with a canonical GLB; T1+ fill model + skill overrides as
  *    assets land.
- *  - Models (strict):
- *      pistol  → models/weapons/revolver.glb only
- *      rifle   → models/weapons/rifle.glb only
- *      sniper  → models/weapons/rifle.glb (longer hold; sniper.glb when ready)
- *      shotgun → models/weapons/rifle.glb stand-in until shotgun.glb ships
+ *  - Models (Ultimate Guns / Poly Pizza pack SSOT):
+ *      pistol  → models/weapons/ultimate-guns/revolver.glb
+ *      rifle   → models/weapons/ultimate-guns/assault-rifle.glb
+ *      sniper  → models/weapons/ultimate-guns/sniper-rifle.glb
+ *      shotgun → models/weapons/ultimate-guns/shotgun.glb
+ *    See ultimateGuns.ts + catalog.json for variants, ammo, loot.
  *
  * Scriptable layer: {@link generateScriptableGun} + anim/VFX key patterns so
  * generators and master-weaponSkills can fill kits without hardcoding Studio.
@@ -129,7 +130,7 @@ export const GUN_FAMILIES: Record<GunFamilyId, GunFamilyDef> = {
     weaponId: "pistol",
     label: "Revolver",
     blurb: "Canonical gun kit — one-hand revolver, kiter mobility, 5-round cylinder.",
-    modelFile: "models/weapons/revolver.glb",
+    modelFile: "models/weapons/ultimate-guns/revolver.glb",
     modelLength: 0.26,
     modelForward: "x-",
     modelAlign: "z",
@@ -233,7 +234,7 @@ export const GUN_FAMILIES: Record<GunFamilyId, GunFamilyDef> = {
     weaponId: "rifle",
     label: "Rifle",
     blurb: "Two-hand carbine — 3-round burst, combat vault, deploy turrets.",
-    modelFile: "models/weapons/rifle.glb",
+    modelFile: "models/weapons/ultimate-guns/assault-rifle.glb",
     modelLength: 0.9,
     modelForward: "z-",
     modelAlign: "z",
@@ -337,8 +338,7 @@ export const GUN_FAMILIES: Record<GunFamilyId, GunFamilyDef> = {
     weaponId: "hunter-rifle",
     label: "Sniper Rifle",
     blurb: "Long-range marksman — harder hits, slower fire, heavy turret power.",
-    // No dedicated sniper.glb yet — longer rifle hold until asset ships.
-    modelFile: "models/weapons/rifle.glb",
+    modelFile: "models/weapons/ultimate-guns/sniper-rifle.glb",
     modelLength: 1.15,
     modelForward: "z-",
     modelAlign: "z",
@@ -442,8 +442,7 @@ export const GUN_FAMILIES: Record<GunFamilyId, GunFamilyDef> = {
     weaponId: "shotgun",
     label: "Shotgun",
     blurb: "Close-range cone pellets, strong knockback, breath / slug skills.",
-    // Stand-in mesh until models/weapons/shotgun.glb ships.
-    modelFile: "models/weapons/rifle.glb",
+    modelFile: "models/weapons/ultimate-guns/shotgun.glb",
     modelLength: 0.75,
     modelForward: "z-",
     modelAlign: "z",

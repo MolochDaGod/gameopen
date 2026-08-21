@@ -8,10 +8,14 @@
  *  - Never fit characters to map; fit map to metres
  */
 import * as THREE from "three";
-import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
 
 export type MapScaleResult = {
   unitScale: number;
+  /** Median named doorway width after scale, when the map exposes door meshes. */
+  doorWidthM: number | null;
+  /** Scene feature that established the post-unit world scale. */
+  scaleReference: { kind: string; observedM: number; targetM: number } | null;
+  scaleReason: string;
   half: number;
   spanX: number;
   spanZ: number;
@@ -25,6 +29,12 @@ export type MapScaleResult = {
 const WATER_NAME_RE = /water|ocean|sea|lake|river|pond|pool|flood|wave/i;
 const TERRAIN_NAME_RE =
   /terrain|ground|floor|road|path|dirt|grass|rock|cliff|hill|land|island|sand|mud|field|farm|street/i;
+const DOOR_NAME_RE = /door|doorway|arch|gate|entrance|portal|opening|threshold/i;
+const GRID_NAME_RE = /grid|grid[_\s-]?cell|tile|voxel|block/i;
+const CHARACTER_NAME_RE = /character|hero|human|humanoid|npc|player|unit|soldier|warrior|knight/i;
+const ANIMAL_NAME_RE = /animal|wolf|bear|boar|deer|horse|cow|pig|sheep|goat|fox|gator/i;
+const TREE_NAME_RE = /tree|palm|oak|pine|fir|spruce|mangrove/i;
+const BUILDING_NAME_RE = /house|building|hut|cabin|barn|tower|shop|temple|ruin/i;
 
 /**
  * Robust world AABB from individual meshes, discarding quantization junk
@@ -96,11 +106,10 @@ function isSketchfabRoot(root: THREE.Object3D): boolean {
  */
 export function scaleMapToSi(
   root: THREE.Object3D,
-  opts?: { targetSpanM?: number; mapKey?: string },
+  opts?: { minSpanM?: number; targetDoorWidthM?: number; mapKey?: string },
 ): MapScaleResult {
-  const playerH = PLAYER_HEIGHT_M;
-  const TARGET_SPAN = opts?.targetSpanM ?? 110;
-  const MIN_SPAN = 40;
+  const MIN_SPAN = opts?.minSpanM ?? 80;
+  const TARGET_DOOR_WIDTH = opts?.targetDoorWidthM ?? 3;
 
   root.scale.set(1, 1, 1);
   root.position.set(0, 0, 0);
@@ -128,16 +137,28 @@ export function scaleMapToSi(
     ({ maxXZ, height } = measureMapRobust(root));
   }
 
-  // Playable footprint vs human
+  // Building maps are calibrated by a real authored reference first. A map with
+  // 3 m doorways stays at that scale even when its footprint is much larger
+  // than an arena; no hidden target-span downscale is allowed.
   let playScale = 1;
-  if (maxXZ > TARGET_SPAN * 1.5) {
-    playScale = TARGET_SPAN / maxXZ;
-  } else if (maxXZ < MIN_SPAN) {
-    playScale = MIN_SPAN / Math.max(maxXZ, 0.01);
-  }
-  // Agama survival: prefer roomy combat ring even if unit fix was partial
-  if (opts?.mapKey?.includes("agama") && maxXZ * playScale < 70) {
-    playScale = Math.max(playScale, 80 / Math.max(maxXZ, 0.01));
+  let scaleReason = "si_author";
+  let scaleReference: MapScaleResult["scaleReference"] = null;
+  const doorWidth = measureDoorWidths(root);
+  const medianDoorWidth = doorWidth.length ? median(doorWidth) : null;
+  if (medianDoorWidth != null && medianDoorWidth > 0.05) {
+    playScale = TARGET_DOOR_WIDTH / medianDoorWidth;
+    scaleReason = `door_width ${medianDoorWidth.toFixed(2)}→${TARGET_DOOR_WIDTH.toFixed(2)}m`;
+    scaleReference = { kind: "doorway", observedM: medianDoorWidth, targetM: TARGET_DOOR_WIDTH };
+  } else {
+    const reference = measureSceneScaleReference(root);
+    if (reference) {
+      playScale = reference.targetM / reference.observedM;
+      scaleReason = `${reference.kind} ${reference.observedM.toFixed(2)}→${reference.targetM.toFixed(2)}m`;
+      scaleReference = reference;
+    } else if (maxXZ < MIN_SPAN) {
+      playScale = MIN_SPAN / Math.max(maxXZ, 0.01);
+      scaleReason = `minimum_footprint ${maxXZ.toFixed(1)}→${MIN_SPAN.toFixed(1)}m`;
+    }
   }
 
   if (Math.abs(playScale - 1) > 0.02) {
@@ -172,6 +193,12 @@ export function scaleMapToSi(
     finalSize.z.toFixed(1),
     "h=",
     finalSize.y.toFixed(1),
+    "doorWidth=",
+    medianDoorWidth != null ? (medianDoorWidth * playScale).toFixed(2) : "n/a",
+    "reference=",
+    scaleReference ? `${scaleReference.kind}:${(scaleReference.observedM * playScale).toFixed(2)}m` : "none",
+    "reason=",
+    scaleReason,
     "m  waterY=",
     waterY?.toFixed(2) ?? "n/a",
     "meshes=",
@@ -184,6 +211,13 @@ export function scaleMapToSi(
 
   return {
     unitScale,
+    doorWidthM: medianDoorWidth != null ? medianDoorWidth * playScale : null,
+    scaleReference:
+      scaleReference && {
+        ...scaleReference,
+        observedM: scaleReference.observedM * playScale,
+      },
+    scaleReason,
     half,
     spanX: finalSize.x,
     spanZ: finalSize.z,
@@ -191,6 +225,81 @@ export function scaleMapToSi(
     waterY,
     ...classified,
   };
+}
+
+/** Horizontal width of named door/arch/gate meshes, measured in world units. */
+function measureDoorWidths(root: THREE.Object3D): number[] {
+  root.updateMatrixWorld(true);
+  const widths: number[] = [];
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh || !DOOR_NAME_RE.test(`${mesh.name} ${mesh.parent?.name || ""}`)) return;
+    const box = new THREE.Box3().setFromObject(mesh);
+    if (box.isEmpty()) return;
+    const size = box.getSize(new THREE.Vector3());
+    const width = Math.max(size.x, size.z);
+    if (width > 0.1 && width < 80 && size.y > 0.2) widths.push(width);
+  });
+  return widths;
+}
+
+/**
+ * Secondary scale references for asset packs with no named doorway. The ordering
+ * intentionally prefers explicit one-metre grid cells over decorative meshes.
+ */
+function measureSceneScaleReference(
+  root: THREE.Object3D,
+): { kind: string; observedM: number; targetM: number } | null {
+  const candidates: Record<string, number[]> = {
+    grid: [],
+    character: [],
+    animal: [],
+    tree: [],
+    building: [],
+  };
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const label = `${mesh.name} ${mesh.parent?.name || ""}`;
+    const box = new THREE.Box3().setFromObject(mesh);
+    if (box.isEmpty()) return;
+    const size = box.getSize(new THREE.Vector3());
+    const horizontal = Math.max(size.x, size.z);
+    const height = size.y;
+    if (GRID_NAME_RE.test(label) && horizontal > 0.05 && horizontal < 20 && height > 0.02) {
+      candidates.grid.push(horizontal);
+    } else if (CHARACTER_NAME_RE.test(label) && height > 0.3 && height < 12) {
+      candidates.character.push(height);
+    } else if (ANIMAL_NAME_RE.test(label) && height > 0.2 && height < 8) {
+      candidates.animal.push(height);
+    } else if (TREE_NAME_RE.test(label) && height > 0.5 && height < 120) {
+      candidates.tree.push(height);
+    } else if (BUILDING_NAME_RE.test(label) && height > 0.8 && height < 40) {
+      candidates.building.push(height);
+    }
+  });
+
+  const pick = (kind: keyof typeof candidates, targetM: number) => {
+    const values = candidates[kind];
+    return values.length ? { kind, observedM: median(values), targetM } : null;
+  };
+  return (
+    pick("grid", 1) ||
+    pick("character", 1.8) ||
+    pick("animal", 1.4) ||
+    // Forest scale target deliberately sits inside the 4–9 m tree band.
+    pick("tree", 6) ||
+    pick("building", 3.8)
+  );
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[middle]!
+    : (sorted[middle - 1]! + sorted[middle]!) * 0.5;
 }
 
 function classifyMeshes(root: THREE.Object3D): {

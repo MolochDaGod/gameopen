@@ -43,6 +43,8 @@ export const LOCOMOTION = {
   jumpSpeed: 7.2,
   maxJumps: 2,
   knockbackDamp: 7,
+  /** Nexus: smoother slide (Marvel Rivals-like, not a teleport). */
+  nexusKnockbackDamp: 4.2,
   roomBound: 15,
   /** Wall-run / wall-jump probe reach (m) */
   wallProbe: 0.62,

@@ -12,6 +12,8 @@
 
 Code SSOT: `artifacts/animator/src/game/gameLibrary.ts` (`ERA_CATEGORIES`, `GAME_LIBRARY`).
 
+**Roster (do not regress):** Open session boot fetches **all** `FLEET_CHARACTER_ERAS`. Surfaces filter (`charactersForEra` / campfire voxel seats). Never drop voxel/nexus/armada in `GameSession.mergeRoster`.
+
 ### Warlords in-game only (`warlordsInGameOnly`)
 
 These are **cataloged for agents** but **hidden** from the Open library UI. Launch always goes to the Warlords client.

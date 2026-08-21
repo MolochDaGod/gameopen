@@ -9,7 +9,7 @@
  * Never store account bag only in localStorage.
  */
 
-import { apiFetch } from "./grudgeAuth";
+import { apiFetch, getStoredToken } from "./grudgeAuth";
 
 /** Era slot row from Railway `accounts.eraSlots`. */
 export type EraSlotInfo = {
@@ -187,6 +187,9 @@ export async function fetchAccountProfile(): Promise<FleetAccountProfile | null>
 }
 
 /** GET /api/account/resources — shared bag across all characters. */
+export const fetchAccountResources = fetchAccountBag;
+
+/** GET /api/account/resources — shared bag across all characters. */
 export async function fetchAccountBag(): Promise<ResourceMap> {
   try {
     const r = await apiFetch("/api/account/resources", { method: "GET" });
@@ -219,6 +222,7 @@ export async function fetchAccountInventory(): Promise<unknown[]> {
 
 /** GET /api/wallet/status — custodial / linked wallet on the same account row. */
 export async function fetchWalletStatus(): Promise<FleetWalletStatus | null> {
+  if (!getStoredToken()) return null;
   try {
     const r = await apiFetch("/api/wallet/status", { method: "GET" });
     if (!r.ok) return null;
@@ -280,6 +284,16 @@ export async function loadSharedAccountBundle(): Promise<{
   island: FleetIslandSummary | null;
   inventory: unknown[];
 }> {
+  if (!getStoredToken()) {
+    return {
+      account: null,
+      wallet: null,
+      nfts: [],
+      resources: {},
+      island: null,
+      inventory: [],
+    };
+  }
   const [account, wallet, nfts, resources, island, inventory] = await Promise.all([
     fetchAccountProfile(),
     fetchWalletStatus(),

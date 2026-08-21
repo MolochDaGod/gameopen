@@ -149,7 +149,9 @@ import { AnimEditorUI, type AnimApi } from "./components/AnimEditorUI";
 import { AiAnimatorPanel } from "./components/AiAnimatorPanel";
 import { AnimEditor, type AnimEditorState } from "./three/anim/AnimEditor";
 import { UiStudioMode } from "./components/UiStudioMode";
+import { CharacterInfoMode } from "./components/CharacterInfoMode";
 import { CampfireLobby } from "./components/CampfireLobby";
+import { WarlordGenesis } from "./components/WarlordGenesis";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
 import { CollectionHealth } from "./components/CollectionHealth";
@@ -2566,6 +2568,7 @@ export default function App() {
         onToolLaunch={onToolLaunch}
         music={toolboxMusic}
         showFleetStrip={mode !== "doors"}
+        showModeSelect={mode === "danger" || mode === "play"}
       >
         {content}
       </AppShell>
@@ -2699,6 +2702,14 @@ export default function App() {
           navigate("characters");
         }}
       />
+    );
+  }
+
+  if (mode === "equipment") {
+    return shell(
+      withScreenTheme(
+        <CharacterInfoMode onExit={() => navigate("doors")} />,
+      ),
     );
   }
 
@@ -3518,11 +3529,13 @@ export default function App() {
           <CampClaimFlagPanel
             open={claimFlagOpen}
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            accountId={accountIdForBag}
             onClose={() => setClaimFlagOpen(false)}
             onBeginPlace={(id) => {
               setClaimFlagOpen(false);
               studioRef.current?.beginPlacePlaceable(id);
             }}
+            onApplyEmblem={(url) => studioRef.current?.applyClaimFlagEmblem(url)}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -3629,10 +3642,11 @@ export default function App() {
               api={touchApi}
               onOpenBag={() => setEquipOpen(true)}
               onOpenSystems={() => setSystemsOpen(true)}
+              onOpenMap={() => setMapPickerOpen(true)}
             />
           )}
 
-          {!dangerStartOpen && (
+          {!dangerStartOpen && !isMobile && (
             <>
               <button
                 type="button"
@@ -3642,7 +3656,13 @@ export default function App() {
               >
                 MAP
               </button>
-              {mapPickerOpen && (
+              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
+                FX
+              </button>
+              {dockOpen && <StatusDock onApply={onApplyStatus} />}
+            </>
+          )}
+          {mapPickerOpen && (
                 <div className="danger-map-picker" role="dialog" aria-label="Test maps">
                   <div className="danger-map-picker-head">
                     <span>Playable maps</span>
@@ -3675,12 +3695,6 @@ export default function App() {
                   </p>
                 </div>
               )}
-              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
-                FX
-              </button>
-              {dockOpen && <StatusDock onApply={onApplyStatus} />}
-            </>
-          )}
 
           {equipOpen &&
             (isVoxelHero ? (
@@ -3831,11 +3845,13 @@ export default function App() {
           <CampClaimFlagPanel
             open={claimFlagOpen}
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            accountId={accountIdForBag}
             onClose={() => setClaimFlagOpen(false)}
             onBeginPlace={(id) => {
               setClaimFlagOpen(false);
               studioRef.current?.beginPlacePlaceable(id);
             }}
+            onApplyEmblem={(url) => studioRef.current?.applyClaimFlagEmblem(url)}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -3969,10 +3985,11 @@ export default function App() {
               api={touchApi}
               onOpenBag={() => setEquipOpen(true)}
               onOpenSystems={() => setSystemsOpen(true)}
+              onOpenMap={() => setMapPickerOpen(true)}
             />
           )}
 
-          {!panelsOpen && !dangerStartOpen && (
+          {!panelsOpen && !dangerStartOpen && !isMobile && (
             <>
               <button
                 type="button"
@@ -3982,7 +3999,13 @@ export default function App() {
               >
                 MAP
               </button>
-              {mapPickerOpen && (
+              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
+                FX
+              </button>
+              {dockOpen && <StatusDock onApply={onApplyStatus} />}
+            </>
+          )}
+          {mapPickerOpen && (
                 <div className="danger-map-picker" role="dialog" aria-label="Test maps">
                   <div className="danger-map-picker-head">
                     <span>Playable maps</span>
@@ -4015,12 +4038,6 @@ export default function App() {
                   </p>
                 </div>
               )}
-              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
-                FX
-              </button>
-              {dockOpen && <StatusDock onApply={onApplyStatus} />}
-            </>
-          )}
 
           {equipOpen &&
             (isVoxelHero ? (

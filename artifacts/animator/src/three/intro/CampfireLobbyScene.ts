@@ -1,10 +1,12 @@
 /**
- * CampfireLobbyScene — Open `/characters` 4-seat farm camp (TVS Voxel Farm props).
+ * CampfireLobbyScene — Open `/characters` 4-seat voxel roster.
  *
  * Product rules:
  *  - No dungeon / Ethereal Falls overlook
- *  - TVS farm props: fence, hay, soil, trees, wheat + chair + campfire center
- *  - Heroes sit idle in chairs; hover → stand, glow, tooltip, gesture
+ *  - Fruzer Encament village behind the plaza; 4 seats **outside the gate**
+ *  - Same terrain height (grind encampment walkable front to y = 0)
+ *  - Heroes sit idle; hover → stand, glow, tooltip, gesture
+ *  - Per-character voxelLook / Avatar Edit head (never steal a global look)
  *  - SI: human ~1.8 m
  */
 import * as THREE from "three";
@@ -16,14 +18,16 @@ import type { VoxelPart } from "../explorer/rig";
 import { CHARACTER_HEIGHT_M } from "../types";
 import { baseIdToRaceKey, type GenesisHeroOption } from "../../lib/grudoxRoster";
 import {
-  loadVoxelAvatarForCharacter,
   partOverridesFromSave,
+  resolveVoxelAvatar,
   voxelAvatarToLook,
   VOXEL_AVATAR_EVENT,
 } from "../explorer/voxelAvatarSave";
+import { resolveLobbySeatAvatar } from "../avatar/playerHead";
 import {
   CAMPFIRE_TVS,
   campfireTvsUrls,
+  encampmentBackdropUrls,
 } from "../../lib/productionSystemsPattern";
 
 export interface CampfireSlotView {
@@ -40,10 +44,14 @@ export type CampfireHoverInfo = {
   y: number;
 } | null;
 
-const SEAT_RADIUS = 3.55;
 const HERO_H = CHARACTER_HEIGHT_M;
-const CAM_POS = new THREE.Vector3(0.15, 2.55, 7.4);
-const CAM_LOOK = new THREE.Vector3(0, 0.95, 0.1);
+/** Line-up outside the village gate (camera is +Z, camp is −Z). */
+const SEAT_XS = [-4.9, -1.65, 1.65, 4.9] as const;
+const PLAZA_Z = 5.6;
+const ENCAMP_TARGET_W = 54;
+const ENCAMP_FRONT_Z = 1.35;
+const CAM_POS = new THREE.Vector3(0, 2.92, 13.4);
+const CAM_LOOK = new THREE.Vector3(0, 1.12, 3.4);
 // TVS URL SSOT: productionSystemsPattern.CAMPFIRE_TVS (CDN first — Vercel bans .glb)
 
 const LOOK_RACES: Record<string, Partial<CharacterLook>> = {
@@ -119,6 +127,9 @@ export class CampfireLobbyScene {
   private glowMats: Map<number, THREE.MeshStandardMaterial[]> = new Map();
   private seatMode: ("sit" | "stand")[] = ["sit", "sit", "sit", "sit"];
   private gestureCd = 0;
+  private camPos = CAM_POS.clone();
+  private camLook = CAM_LOOK.clone();
+  private plazaZ = PLAZA_Z;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -138,19 +149,19 @@ export class CampfireLobbyScene {
       powerPreference: "high-performance",
       alpha: false,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.setSize(w, h, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 0.86;
 
     // Warm dusk farm — no purple dungeon sky
-    this.scene.background = new THREE.Color(0x0a1420);
-    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.028);
+    this.scene.background = new THREE.Color(0x081018);
+    this.scene.fog = new THREE.Fog(0x0a141c, 22, 160);
 
-    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 120);
+    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.08, 360);
     this.camera.position.copy(CAM_POS);
     this.camera.lookAt(CAM_LOOK);
 
@@ -161,6 +172,7 @@ export class CampfireLobbyScene {
     this.buildCampfireProcedural();
     this.buildStars();
     void this.loadTvsFarmProps();
+    void this.loadEncampmentBackdrop();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
@@ -192,7 +204,11 @@ export class CampfireLobbyScene {
       if (!hero) continue;
       try {
         const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
-        const saved = loadVoxelAvatarForCharacter(hero.id || null);
+        const saved = resolveVoxelAvatar(hero.id || null, hero.voxelLook ?? null);
+        const headCfg = resolveLobbySeatAvatar(i, {
+          characterId: hero.id,
+          raceKey,
+        });
         let look: CharacterLook = {
           skin: "#c98c5a",
           shirt: "#c0392b",
@@ -200,18 +216,19 @@ export class CampfireLobbyScene {
           hat: "none",
           hatColor: "#b03030",
           avatarHead: true,
+          avatarConfig: headCfg,
           ...LOOK_RACES[raceKey],
         };
         let parts: Partial<Record<VoxelPart, string>> | null = null;
         if (saved) {
-          look = { ...look, ...voxelAvatarToLook(saved) };
+          look = { ...look, ...voxelAvatarToLook(saved), avatarConfig: headCfg };
           parts = partOverridesFromSave(saved);
         }
         const anim = await createAnimatedCharacter({
           height: HERO_H,
           weapon: "unarmed",
           look,
-          classes: ["unarmed", "sword"],
+          classes: ["unarmed"],
         });
         if (this.disposed) {
           anim.dispose();
@@ -225,22 +242,38 @@ export class CampfireLobbyScene {
         anim.setWeapon("unarmed", true);
         anim.root.position.set(0, 0, 0);
         anim.root.rotation.y = 0;
+        anim.root.frustumCulled = false;
+        anim.root.traverse((o) => {
+          o.frustumCulled = false;
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+            m.visible = true;
+          }
+        });
+        dressAvatarMaterials(anim.root);
         anim.root.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(anim.root);
         const size = box.getSize(new THREE.Vector3());
         if (size.y > 0.05) {
           const s = (HERO_H / size.y) * (anim.root.scale.x || 1);
-          anim.root.scale.setScalar(THREE.MathUtils.clamp(s, 0.9, 1.2));
+          anim.root.scale.setScalar(THREE.MathUtils.clamp(s, 0.85, 1.25));
           anim.root.updateMatrixWorld(true);
           const b2 = new THREE.Box3().setFromObject(anim.root);
           anim.root.position.y -= b2.min.y;
         }
-        // Sit: slight lower + crouch if available
         this.applySitPose(anim, true);
         const seat = this.seats[i]!;
         seat.add(anim.root);
         this.heroes[i] = anim;
         this.cacheGlowMats(i, anim.root);
+        try {
+          anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
+          anim.update(1 / 30);
+        } catch {
+          /* idle tick optional */
+        }
       } catch (err) {
         console.warn("[CampfireLobby] hero load failed", hero.name, err);
       }
@@ -285,45 +318,117 @@ export class CampfireLobbyScene {
   };
 
   private buildLightsAndGround(): void {
-    this.scene.add(new THREE.AmbientLight(0x4a5a48, 0.42));
-    this.scene.add(new THREE.HemisphereLight(0x9ab8d0, 0x2a2010, 0.55));
-    const sun = new THREE.DirectionalLight(0xffe0b0, 0.85);
-    sun.position.set(6, 12, 4);
+    this.scene.add(new THREE.AmbientLight(0x3a4450, 0.18));
+    this.scene.add(new THREE.HemisphereLight(0x6e8498, 0x1c1810, 0.26));
+    const sun = new THREE.DirectionalLight(0xd8c4a0, 0.38);
+    sun.position.set(10, 18, 14);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
-    const d = 16;
+    sun.shadow.bias = -0.00035;
+    const d = 28;
     sun.shadow.camera.left = -d;
     sun.shadow.camera.right = d;
     sun.shadow.camera.top = d;
     sun.shadow.camera.bottom = -d;
     this.scene.add(sun);
 
-    // Grass ground disc — farm clearing (no dungeon floor)
+    const rim = new THREE.DirectionalLight(0x6a88a8, 0.14);
+    rim.position.set(-8, 6, -12);
+    this.scene.add(rim);
+
+    const key = new THREE.DirectionalLight(0xffe8cc, 0.22);
+    key.position.set(2.5, 3.4, 10);
+    this.scene.add(key);
+
     const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(14, 64),
+      new THREE.CircleGeometry(48, 72),
       new THREE.MeshStandardMaterial({
-        color: 0x2d5a32,
-        roughness: 0.95,
-        metalness: 0.02,
+        color: 0x24382a,
+        roughness: 0.96,
+        metalness: 0,
       }),
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.envRoot.add(ground);
 
-    // Dirt ring around fire
     const dirt = new THREE.Mesh(
-      new THREE.CircleGeometry(2.4, 48),
-      new THREE.MeshStandardMaterial({ color: 0x3a2a18, roughness: 0.98 }),
+      new THREE.CircleGeometry(7.2, 48),
+      new THREE.MeshStandardMaterial({ color: 0x2c2418, roughness: 0.98, metalness: 0 }),
     );
     dirt.rotation.x = -Math.PI / 2;
-    dirt.position.y = 0.02;
+    dirt.position.set(0, 0.015, PLAZA_Z);
+    dirt.name = "plaza_dirt";
     this.envRoot.add(dirt);
-
-    // Soft sky dome (flat color already set)
   }
 
-  /** Load TVS Voxel Farm GLBs — soft-fail; keep procedural ground if missing. */
+  /**
+   * Encament village behind the plaza (camera +Z). Scale up, grind front
+   * walkable ground to y=0 (same terrain as the 4 seats), gate faces us.
+   */
+  private async loadEncampmentBackdrop(): Promise<void> {
+    try {
+      const root = await loadGltfFirst(this.gltf, encampmentBackdropUrls());
+      if (!root || this.disposed) return;
+      root.name = "encampment-backdrop";
+      root.scale.set(1, 1, 1);
+      root.updateMatrixWorld(true);
+      let box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      if (size.y > 80 || size.x > 400) {
+        root.scale.multiplyScalar(0.01);
+        root.updateMatrixWorld(true);
+        box.setFromObject(root);
+      }
+      const width = Math.max(0.5, box.max.x - box.min.x);
+      root.scale.multiplyScalar(ENCAMP_TARGET_W / width);
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      const center = box.getCenter(new THREE.Vector3());
+      root.position.x += -center.x;
+      root.position.z += -center.z;
+      root.position.y -= box.min.y;
+      root.updateMatrixWorld(true);
+      grindWalkableFrontToGround(root);
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      root.position.z += ENCAMP_FRONT_Z - box.max.z;
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh) return;
+        m.castShadow = true;
+        m.receiveShadow = true;
+        dressEnvMaterial(m);
+      });
+      this.envRoot.add(root);
+      this.layoutPlazaFromEncampment(box.max.z);
+    } catch (e) {
+      console.warn("[CampfireLobby] Encament backdrop skip", e);
+    }
+  }
+
+  /** Seats + fire + camera sit on the road just outside the gate. */
+  private layoutPlazaFromEncampment(gateZ: number): void {
+    const plazaZ = gateZ + 4.5;
+    this.plazaZ = plazaZ;
+    for (let i = 0; i < 4; i++) {
+      const seat = this.seats[i];
+      if (!seat) continue;
+      seat.position.set(SEAT_XS[i]!, 0, plazaZ);
+      seat.rotation.y = 0;
+    }
+    const fire = this.scene.getObjectByName("campfire_fx");
+    if (fire) fire.position.set(7.6, 0.02, plazaZ + 1.1);
+    const dirt = this.envRoot.getObjectByName("plaza_dirt");
+    if (dirt) dirt.position.set(0, 0.015, plazaZ);
+    this.camLook.set(0, 1.12, plazaZ);
+    this.camPos.set(0, 2.95, plazaZ + 8.1);
+    this.camera.position.copy(this.camPos);
+    this.camera.lookAt(this.camLook);
+  }
+
   private async loadTvsFarmProps(): Promise<void> {
     const place = async (
       file: string,
@@ -344,6 +449,7 @@ export class CampfireLobbyScene {
           if (m.isMesh) {
             m.castShadow = true;
             m.receiveShadow = true;
+            dressEnvMaterial(m);
           }
         });
         // Normalize height ~1–2 m for props
@@ -363,29 +469,20 @@ export class CampfireLobbyScene {
       }
     };
 
-    // Fence ring / farm edge
-    await place("fence.glb", -5.5, -2.2, 0.2, 1.1);
-    await place("fence.glb", 5.5, -1.8, Math.PI - 0.15, 1.1);
-    await place("fence.glb", -4.2, 4.5, Math.PI * 0.5, 1.0);
-    await place("fencepost.glb", -6.2, 3.8, 0, 1.2);
-    await place("fencepost.glb", 6.0, 3.5, 0, 1.2);
-
-    // Hay / trough / soil plots
-    await place("haybale.glb", -3.8, 2.4, 0.4, 1.0);
-    await place("haybale.glb", -4.6, 2.9, -0.3, 0.9);
-    await place("watertrough.glb", 4.2, 2.6, -0.6, 1.0);
-    await place("soil.glb", 3.6, -3.5, 0.1, 1.4);
-    await place("wheat.glb", 4.4, -3.2, 0.2, 1.0);
-    await place("wheat.glb", 3.2, -4.0, -0.4, 0.95);
-    await place("pumpkin.glb", 2.6, -3.0, 0.5, 0.7);
-
-    // Trees background
-    await place("tree.glb", -7.5, -5.5, 0.3, 1.0);
-    await place("appletree.glb", 7.2, -4.8, -0.4, 1.0);
-    await place("tree.glb", -2.0, -8.0, 0.1, 1.15);
-
-    // Distant barn silhouette
-    await place("barn.glb", 0.5, -10.5, Math.PI * 0.08, 1.0);
+    const pz = this.plazaZ;
+    await place("fence.glb", -8.2, pz + 2.2, 0.15, 1.15);
+    await place("fence.glb", 8.2, pz + 2.0, Math.PI - 0.12, 1.15);
+    await place("fencepost.glb", -8.8, pz + 0.4, 0, 1.2);
+    await place("fencepost.glb", 8.6, pz + 0.3, 0, 1.2);
+    await place("haybale.glb", -7.4, pz + 3.4, 0.4, 1.0);
+    await place("haybale.glb", -8.0, pz + 4.0, -0.3, 0.9);
+    await place("watertrough.glb", 7.8, pz + 3.6, -0.5, 1.0);
+    await place("soil.glb", 9.2, pz + 5.2, 0.1, 1.3);
+    await place("wheat.glb", 9.8, pz + 5.6, 0.2, 1.0);
+    await place("pumpkin.glb", 6.6, pz + 4.4, 0.5, 0.7);
+    await place("tree.glb", -12.5, pz - 2.0, 0.3, 1.15);
+    await place("appletree.glb", 12.2, pz - 1.6, -0.35, 1.1);
+    await place("tree.glb", -6.5, pz - 6.5, 0.1, 1.2);
 
     // Prefer TVS campfire mesh if present (replaces procedural if load ok)
     try {
@@ -404,7 +501,7 @@ export class CampfireLobbyScene {
         root.scale.setScalar(s);
         root.updateMatrixWorld(true);
         const b2 = new THREE.Box3().setFromObject(root);
-        root.position.set(0, -b2.min.y + 0.02, 0.1);
+        root.position.set(7.6, -b2.min.y + 0.02, this.plazaZ + 1.1);
         this.farmRoot.add(root);
       }
       // Keep procedural flames on top for glow
@@ -436,16 +533,17 @@ export class CampfireLobbyScene {
       fire.add(rock);
     }
     const flameTex = makeFlameTexture();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const mat = new THREE.SpriteMaterial({
         map: flameTex,
         color: i % 2 === 0 ? 0xff8a30 : 0xffc868,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
+        opacity: 0.72,
       });
       const sp = new THREE.Sprite(mat);
-      const w = 0.7 - i * 0.05;
+      const w = 0.52 - i * 0.05;
       sp.scale.set(w, w * 1.7, 1);
       sp.position.set((hash2(i, 4) - 0.5) * 0.18, 0.4 + i * 0.09, (hash2(i, 5) - 0.5) * 0.18);
       sp.userData.baseW = w;
@@ -453,28 +551,24 @@ export class CampfireLobbyScene {
       this.fireSprites.push(sp);
       fire.add(sp);
     }
-    const light = new THREE.PointLight(0xff7a2e, 26, 16, 1.8);
+    const light = new THREE.PointLight(0xff7a2e, 3.4, 9, 2);
     light.position.set(0, 1.0, 0);
-    light.castShadow = true;
+    light.castShadow = false;
     fire.add(light);
     this.fireLight = light;
-    const fill = new THREE.PointLight(0xffaa55, 9, 11, 2);
+    const fill = new THREE.PointLight(0xffaa55, 1.2, 6, 2.2);
     fill.position.set(0, 0.4, 0.7);
     fire.add(fill);
     this.fireLight2 = fill;
-    fire.position.set(0, 0.02, 0.1);
+    fire.position.set(7.6, 0.02, PLAZA_Z + 1.1);
     this.scene.add(fire);
   }
 
   private buildSeats(): void {
     for (let i = 0; i < 4; i++) {
-      const ang = -Math.PI * 0.55 + (i / 3) * Math.PI * 1.1;
-      const x = Math.sin(ang) * SEAT_RADIUS;
-      const z = -Math.cos(ang) * SEAT_RADIUS * 0.72 + 0.35;
-
       const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.rotation.y = Math.atan2(-x, -z + 0.1);
+      g.position.set(SEAT_XS[i]!, 0, PLAZA_Z);
+      g.rotation.y = 0;
       g.userData.slotIndex = i;
 
       // Chair from TVS pack (async attach) — placeholder log until loaded
@@ -553,8 +647,9 @@ export class CampfireLobbyScene {
     anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
     anim.setCrouch(sit);
     if (sit) {
-      anim.root.position.z = 0.06;
-      anim.root.position.y = Math.max(0, 0.02);
+      // Chair seat is ~0.4 m; sit on the plank, not inside the log stub / Encament dirt.
+      anim.root.position.z = 0.08;
+      anim.root.position.y = 0.42;
     } else {
       anim.root.position.z = 0;
       anim.root.updateMatrixWorld(true);
@@ -590,7 +685,7 @@ export class CampfireLobbyScene {
     for (const m of mats) {
       if (on) {
         m.emissive.setHex(0x44aaff);
-        m.emissiveIntensity = 0.55;
+        m.emissiveIntensity = 0.12;
       } else {
         m.emissive.setHex(m.userData.__campGlowColor ?? 0);
         m.emissiveIntensity = m.userData.__campGlowBase ?? 0;
@@ -794,20 +889,20 @@ export class CampfireLobbyScene {
       const f = Math.sin(t * (9 + i) + (sp.userData.phase as number)) * 0.5 + 0.5;
       const w = sp.userData.baseW as number;
       sp.scale.set(w * (0.88 + f * 0.3), w * 1.7 * (0.85 + f * 0.38), 1);
-      (sp.material as THREE.SpriteMaterial).opacity = 0.7 + f * 0.3;
+      (sp.material as THREE.SpriteMaterial).opacity = 0.55 + f * 0.18;
     }
     if (this.fireLight) {
-      this.fireLight.intensity = 24 + Math.sin(t * 11) * 3.2 + Math.random() * 2;
+      this.fireLight.intensity = 3.1 + Math.sin(t * 8) * 0.35;
     }
     if (this.fireLight2) {
-      this.fireLight2.intensity = 8 + Math.sin(t * 13.5) * 1.4;
+      this.fireLight2.intensity = 1.05 + Math.sin(t * 10) * 0.18;
     }
 
-    this.orbit += dt * 0.028;
-    this.camera.position.x = CAM_POS.x + Math.sin(this.orbit) * 0.22;
-    this.camera.position.y = CAM_POS.y + Math.sin(this.orbit * 0.65) * 0.08;
-    this.camera.position.z = CAM_POS.z + Math.cos(this.orbit) * 0.12;
-    this.camera.lookAt(CAM_LOOK);
+    this.orbit += dt * 0.022;
+    this.camera.position.x = this.camPos.x + Math.sin(this.orbit) * 0.16;
+    this.camera.position.y = this.camPos.y + Math.sin(this.orbit * 0.65) * 0.05;
+    this.camera.position.z = this.camPos.z + Math.cos(this.orbit) * 0.08;
+    this.camera.lookAt(this.camLook);
 
     const sel = this.seats[this.selected];
     if (sel?.userData.ring) {
@@ -823,6 +918,62 @@ export class CampfireLobbyScene {
 
     this.renderer.render(this.scene, this.camera);
   }
+}
+
+/** Sink encampment so sampled front-road height shares y=0 with the plaza. */
+function grindWalkableFrontToGround(root: THREE.Object3D): void {
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root);
+  const ray = new THREE.Raycaster();
+  const origin = new THREE.Vector3();
+  const down = new THREE.Vector3(0, -1, 0);
+  const hits: number[] = [];
+  const zFront = box.max.z - Math.min(2.4, (box.max.z - box.min.z) * 0.08);
+  for (let i = 0; i < 9; i++) {
+    const x = THREE.MathUtils.lerp(box.min.x + 3, box.max.x - 3, i / 8);
+    origin.set(x, box.max.y + 4, zFront);
+    ray.set(origin, down);
+    const rec = ray.intersectObject(root, true);
+    if (rec[0] && Number.isFinite(rec[0].point.y)) hits.push(rec[0].point.y);
+  }
+  if (!hits.length) {
+    root.position.y -= box.min.y;
+    return;
+  }
+  hits.sort((a, b) => a - b);
+  const med = hits[Math.floor(hits.length / 2)]!;
+  root.position.y -= med;
+}
+
+function dressEnvMaterial(mesh: THREE.Mesh): void {
+  const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  for (const raw of list) {
+    const m = raw as THREE.MeshStandardMaterial;
+    if (!m || !m.isMeshStandardMaterial) continue;
+    m.metalness = Math.min(m.metalness ?? 0, 0.12);
+    m.roughness = Math.max(m.roughness ?? 0.75, 0.68);
+    m.envMapIntensity = 0.28;
+    if (m.emissiveIntensity > 0.2) m.emissiveIntensity = 0.08;
+    if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+    m.needsUpdate = true;
+  }
+}
+
+function dressAvatarMaterials(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const raw of list) {
+      const m = raw as THREE.MeshStandardMaterial;
+      if (!m || !m.isMeshStandardMaterial) continue;
+      m.metalness = 0;
+      m.roughness = Math.max(m.roughness ?? 0.82, 0.72);
+      m.envMapIntensity = 0.22;
+      if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+      m.needsUpdate = true;
+    }
+  });
 }
 
 function makeFlameTexture(): THREE.Texture {

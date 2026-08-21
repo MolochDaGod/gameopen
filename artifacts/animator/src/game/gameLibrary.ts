@@ -101,6 +101,39 @@ export type GameCategory =
   | "armada"
   | "account";
 
+/**
+ * Delivery shelves — how Open presents the catalog (not a second era).
+ * Era (`category`) stays voxel/warlords/nexus/armada/account for import/deploy.
+ */
+export type DeliveryShelf = "account" | "games" | "editors" | "content";
+
+export const DELIVERY_SHELVES: readonly {
+  id: DeliveryShelf;
+  label: string;
+  blurb: string;
+}[] = [
+  {
+    id: "account",
+    label: "Account",
+    blurb: "Grudge ID · campfire roster · bag · wallet · Foundry",
+  },
+  {
+    id: "games",
+    label: "Games",
+    blurb: "Play in Open SPA or in-app fleet canvas",
+  },
+  {
+    id: "editors",
+    label: "Editors",
+    blurb: "Grok Builder · Forge · ThreeFlow · voxel · dressing",
+  },
+  {
+    id: "content",
+    label: "Content",
+    blurb: "Pipeline · mesh packs · maps · assets CDN",
+  },
+];
+
 /** Ordered era chips for the library UI. */
 export const ERA_CATEGORIES: readonly {
   id: GameCategory;
@@ -206,6 +239,8 @@ export type GameEntry = {
   sources: string[];
   /** Featured on library home row */
   featured?: boolean;
+  /** Library delivery shelf. Infer from id/tags when omitted. */
+  shelf?: DeliveryShelf;
   /**
    * Warlords **in-game** world (home island, sector map, scatter island, etc.).
    * Must not appear as a standalone Open library tile — use {@link warlordsClientUrl}.
@@ -308,6 +343,28 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
       "charactersgrudox races",
     ],
     featured: true,
+    shelf: "account",
+    status: "live",
+  },
+  {
+    id: "character-foundry",
+    title: "Character Foundry",
+    short: "Create · 4-slot · handoff",
+    blurb:
+      "character.grudge-studio.com — create-only Foundry + 4-slot My Heroes. Save to Railway, play with ?characterId=. Never a second roster.",
+    category: "account",
+    tags: ["Foundry", "Create", "SSO", "Characters"],
+    tone: "#e8c547",
+    posterKey: "library-account",
+    icon: "inventory",
+    engines: ["three"],
+    launch: "external",
+    url: "https://character.grudge-studio.com/",
+    deploy: { client: "cf-pages", edge: "cloudflare-worker" },
+    playerInfo: "Create at /foundry · pick a slot on / · Open /characters is campfire, not Foundry.",
+    sources: ["character.grudge-studio.com", "grudge-foundry skill"],
+    featured: true,
+    shelf: "account",
     status: "live",
   },
   {
@@ -327,6 +384,26 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     deploy: { client: "vercel", edge: "cloudflare-worker" },
     sources: ["F:\\GitHub\\grok-builder", "F:\\GitHub\\grudge-dev-tool"],
     featured: true,
+    shelf: "editors",
+    status: "live",
+  },
+  {
+    id: "threeflow",
+    title: "ThreeFlow",
+    short: "Warlords scene editor",
+    blurb:
+      "threeflow.vercel.app — Vue + three r185 scene editor. Elite/Dev Tool handoff ?asset=. Not Forge (R3F map deploy).",
+    category: "warlords",
+    tags: ["Editor", "Three.js", "Scenes", "Handoff"],
+    tone: "#7ec8e3",
+    posterKey: "voxel",
+    icon: "world-editor",
+    engines: ["three"],
+    launch: "external",
+    url: "https://threeflow.vercel.app/",
+    deploy: { client: "vercel" },
+    sources: ["F:\\GitHub\\ThreeFlow"],
+    shelf: "editors",
     status: "live",
   },
   {
@@ -829,6 +906,37 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
+    id: "grudge-dungeons",
+    title: "Grudge Dungeons",
+    short: "Modular forge · boss crawl",
+    blurb:
+      "grudge-dungeons.vercel.app — Warlords modular dungeon forge + playable crawl. Linear path: entrance → combat → elite/mini-boss → boss arena. Themes ancient/molten/frost/grim/verdant. Toon RTS CDN, Rapier capsule, SI cell 2.15 m / walls 3.85 m / human 1.82 m. Boss warlords per biome (lich, slag, glacier, death, bloom).",
+    category: "warlords",
+    tags: ["Dungeon", "Modular", "Boss", "Warlords", "Rapier"],
+    tone: "#c9a227",
+    posterKey: "mimic",
+    icon: "ambush",
+    engines: ["three", "rapier"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.grudgeDungeons,
+    deploy: { client: "vercel" },
+    deployNotes: [
+      "Live: https://grudge-dungeons.vercel.app/",
+      "Boss crawl: ?linear=1 (16 rooms, 0 loops, critical path to boss)",
+      "Repo: F:\\GitHub\\threejs-procedural-dungeon — not a second Open dungeon engine",
+      "Do not use threepipe autoScale — SI baked in DUNGEON_SI",
+    ],
+    playerInfo:
+      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat.",
+    sources: [
+      "https://grudge-dungeons.vercel.app/",
+      "F:\\GitHub\\threejs-procedural-dungeon",
+    ],
+    featured: true,
+    shelf: "games",
+    status: "live",
+  },
+  {
     id: "dungeon-crawler",
     title: "Dungeon Crawler Quest",
     short: "Voxel dungeon RPG",
@@ -881,7 +989,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     engines: ["three", "rapier"],
     launch: "external",
     /** Primary play URL — room hash selects Multiverse Railway room */
-    url: "https://grudge-multiverse.vercel.app/#room1",
+    url: "https://grudge-multiverse.vercel.app/?map=bermuda&mode=coop&seed=VALHEIM42#room1",
     deploy: { client: "vercel", server: "railway" },
     deployNotes: [
       "Client Vercel · Rooms Railway grudge-multiverse-room (not Carrier)",
@@ -1226,6 +1334,45 @@ export function isLibraryVisible(g: GameEntry): boolean {
 export function libraryByCategory(cat: GameCategory | "all"): GameEntry[] {
   const base =
     cat === "all" ? [...GAME_LIBRARY] : GAME_LIBRARY.filter((g) => g.category === cat);
+  return base.filter(isLibraryVisible);
+}
+
+const SHELF_BY_ID: Partial<Record<string, DeliveryShelf>> = {
+  "account-hub": "account",
+  "character-foundry": "account",
+  lobby: "account",
+  "grok-builder": "editors",
+  threeflow: "editors",
+  "forge-editor": "editors",
+  "asset-rig-editor": "editors",
+  "voxel-editor": "editors",
+  "dressing-room": "editors",
+  "voxgrudge-lab": "editors",
+  "grudge-pipeline": "content",
+  "mimic-dungeon": "games",
+  "danger-room": "games",
+  "grudge-dungeons": "games",
+};
+
+export function deliveryShelf(g: GameEntry): DeliveryShelf {
+  if (g.shelf) return g.shelf;
+  const pinned = SHELF_BY_ID[g.id];
+  if (pinned) return pinned;
+  if (g.category === "account") return "account";
+  if (g.launch === "editor") return "editors";
+  const tag = g.tags.join(" ");
+  if (/pipeline|assets|maps|cdn/i.test(tag) && /tool|pipeline|assets/i.test(tag)) {
+    return "content";
+  }
+  if (/editor|forge|create|builder|tool|rig/i.test(tag)) return "editors";
+  return "games";
+}
+
+export function libraryByShelf(shelf: DeliveryShelf | "all"): GameEntry[] {
+  const base =
+    shelf === "all"
+      ? [...GAME_LIBRARY]
+      : GAME_LIBRARY.filter((g) => deliveryShelf(g) === shelf);
   return base.filter(isLibraryVisible);
 }
 

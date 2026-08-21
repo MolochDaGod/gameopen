@@ -97,6 +97,20 @@ Pin versions in `artifacts/animator/package.json`. Prefer these roles only.
 | **Physics bodies** | Rapier via `@workspace/grudge-physics` | Cannon + Rapier same body |
 | **Nav AI** | `three-pathfinding` + `yuka` | One-off A* per map forever |
 | **Play camera** | `Controller` sole writer | Orbit + TPC both writing |
+| **Viewer / composer pipeline** | `three` + `postprocessing` + fleet loaders | **`threepipe` as a second engine** (see below) |
+
+### Threepipe (review only — do not add)
+
+The Custom Pipeline sample (`ThreeViewer` + `DepthBufferPlugin` + `pipeline = ['depth','render','screen']`) is a **composer demo**, not a Grudge play stack.
+
+| Their default | Grudge need |
+|---------------|-------------|
+| `autoScale: true` / `autoCenter: true` | **Ban for play.** That fits the AABB into ~2 units and causes 100× / dwarf / giant kits. Use `DUNGEON_SI` / `keepSi` / cm→m if AABB>40. |
+| HDR from `samples.threepipe.org` | Fleet CDN `assets.grudge-studio.com` + local env |
+| Own `three` re-export | Pin **`three` ^0.185** once; one `AnimationMixer` |
+| Import maps → `threepipe` | Open already has Draco/Meshopt/KTX2 via `sharedGltfLoader` |
+
+Depth prepass + screenshot blob are fine **patterns** to copy into existing `EffectComposer` / `renderer`. Do not `npm install threepipe`.
 | **Assets** | `assets.grudge-studio.com` | Meshy heroes / multi-GB git |
 
 ---

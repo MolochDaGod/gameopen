@@ -7,6 +7,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
 import { GAME_MODES, type GameModeId } from "../game/modes";
 import { loginWithGrudgeId, logoutGrudge, getStoredToken } from "../lib/grudgeAuth";
+import { characterGameEra } from "../lib/characterPortrait";
 import { assetUrl } from "../lib/fleet";
 import { lobbyIslandDeepLink } from "../game/grudoxZones";
 
@@ -60,9 +61,14 @@ const btnPrimary: CSSProperties = {
 type Props = {
   /** inline = shell header row; fixed = absolute float (legacy) */
   variant?: "inline" | "fixed";
+  /**
+   * Danger Room match catalog (Sparring / Horde / …).
+   * Off on product hubs — it is not the current app surface.
+   */
+  showModeSelect?: boolean;
 };
 
-export function FleetBar({ variant = "inline" }: Props) {
+export function FleetBar({ variant = "inline", showModeSelect = false }: Props) {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
 
   useEffect(() => gameSession.subscribe(() => setSnap(gameSession.snapshot)), []);
@@ -126,21 +132,23 @@ export function FleetBar({ variant = "inline" }: Props) {
         )}
       </div>
 
-      <div className="fleet-chip fleet-chip--mode" title={snap.mode.blurb}>
-        <ModeIcon id={snap.mode.id} />
-        <span className="fleet-label">Mode</span>
-        <select
-          className="fleet-select"
-          value={snap.mode.id}
-          onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
-        >
-          {GAME_MODES.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.title}
-            </option>
-          ))}
-        </select>
-      </div>
+      {showModeSelect && (
+        <div className="fleet-chip fleet-chip--mode" title={snap.mode.blurb}>
+          <ModeIcon id={snap.mode.id} />
+          <span className="fleet-label">Mode</span>
+          <select
+            className="fleet-select"
+            value={snap.mode.id}
+            onChange={(e) => gameSession.setMode(e.target.value as GameModeId)}
+          >
+            {GAME_MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {snap.characters.length > 0 && (
         <div className="fleet-chip fleet-chip--hero">
@@ -149,21 +157,24 @@ export function FleetBar({ variant = "inline" }: Props) {
             className="fleet-select"
             value={snap.selectedCharacterId || ""}
             onChange={(e) => gameSession.selectCharacter(e.target.value || null)}
-            title="Active Warlords hero"
+            title="Active hero (all eras)"
           >
-            {snap.characters.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-                {c.raceId ? ` (${c.raceId})` : ""}
-              </option>
-            ))}
+            {snap.characters.map((c) => {
+              const era = characterGameEra(c) || "warlords";
+              return (
+                <option key={c.id} value={c.id}>
+                  {c.name} · {era}
+                  {c.raceId ? ` · ${c.raceId}` : ""}
+                </option>
+              );
+            })}
           </select>
         </div>
       )}
 
       {snap.account && snap.characters.length === 0 && (
         <a
-          href="https://character.grudge-studio.com?era=warlords&from=gameopen"
+          href="https://character.grudge-studio.com?era=warlords&from=open&returnTo=https://open.grudge-studio.com/account"
           target="_blank"
           rel="noopener noreferrer"
           className="fleet-btn fleet-btn--primary"

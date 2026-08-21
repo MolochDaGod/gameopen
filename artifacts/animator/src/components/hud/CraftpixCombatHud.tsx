@@ -420,7 +420,7 @@ export function CraftpixCombatHud({
         {/* Right mana/stamina globe — circular blue liquid (D3-style) */}
         <div
           className="cx-globe cx-globe-sp"
-          title={`Mana ${Math.round(hud.stamina)}/${hud.maxStamina}`}
+          title={`Stamina ${Math.round(hud.stamina)}/${hud.maxStamina} · Mana ${Math.round(hud.mana ?? 0)}/${hud.maxMana ?? 0} · Armour ${hud.armor ?? 0}`}
         >
           <div className="cx-globe-well">
             <div className="cx-globe-fill sp" style={{ height: `${spPct}%` }} />

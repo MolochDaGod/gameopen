@@ -11,6 +11,7 @@ import {
   humanizeClipId,
   previewClipLabel,
   resolvePreviewClipId,
+  warlordClipLabel,
 } from "../../three/ExplorerCharacter";
 import type { WeaponClass } from "../../three/explorer/types";
 import { useClipLabels, type EffectKind, type SkillSlot } from "./useClipLabels";
@@ -351,22 +352,53 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
           ))}
         </datalist>
 
-        {/* Explorer = Mixamo 25-bone live library (public/anim/* weapon packs) */}
-        {!loaded ? (
+        {/* Warlords Toon clips first. Mixamo explorer is lab-only, not the play body. */}
+        {hasImported && (
+          <div className="ed-imported-clips">
+            <div className="ed-label" style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Warlords clips (Bip001 packs)</span>
+              {snap.importedPlaying && (
+                <button className="ed-tw" title="Stop" onClick={() => engine.stopImportedClip()}>
+                  ◼
+                </button>
+              )}
+            </div>
+            <div className="ed-empty" style={{ padding: "0 0 8px", fontSize: 10, opacity: 0.72 }}>
+              Toon RTS play kit · rotation-only <code>anims/baked</code>. Wardrobe → race / class / style.
+            </div>
+            {snap.importedClips.map((g) => {
+              const items: ClipItem[] = g.clips.map((c) => {
+                const key = `${g.rootId}::${c}`;
+                return {
+                  key,
+                  fallback: warlordClipLabel(c),
+                  playing: snap.importedPlaying === key,
+                  onPlay: () => engine.previewImportedClip(g.rootId, c),
+                };
+              });
+              return (
+                <div key={g.rootId} className="ed-field">
+                  <div className="ed-label" style={{ opacity: 0.6 }}>
+                    {g.name} — {g.clips.length}
+                  </div>
+                  <ClipList items={items} labels={labels} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {!loaded && !hasImported ? (
           <>
             <div className="ed-empty">
-              No Explorer Mixamo rig loaded.
+              Load a Warlords race in Wardrobe (Human, Elf, Orc…).
               <br />
               <span style={{ opacity: 0.75, fontSize: 11 }}>
-                Explorer uses the 25-bone <code>mixamorig*</code> skeleton. Grudge6 races use Bip001 +{" "}
-                <code>anims/baked</code> packs (see section below after Load race in Wardrobe).
+                Play body is Toon RTS Bip001. Mixamo Explorer is lab-only.
               </span>
             </div>
-            <button className="ed-btn" style={{ width: "100%" }} onClick={() => void engine.loadRig("sword")}>
-              Load Explorer (Mixamo 25-bone)
-            </button>
           </>
-        ) : (
+        ) : loaded ? (
           <>
             <div className="ed-field">
               <label className="ed-label">Weapon set (Mixamo class)</label>
@@ -421,7 +453,7 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
               </button>
             </div>
           </>
-        )}
+        ) : null}
 
         {/* Mixamo clips auto-retargeted onto the dressed character on import */}
         {snap.rigImportedClips.length > 0 && (
@@ -442,43 +474,6 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
                   fallback: prettyId(c),
                   playing: snap.rigImportedPlaying === key,
                   onPlay: () => engine.playRigImportedClip(g.rootId, c),
-                };
-              });
-              return (
-                <div key={g.rootId} className="ed-field">
-                  <div className="ed-label" style={{ opacity: 0.6 }}>
-                    {g.name} — {g.clips.length}
-                  </div>
-                  <ClipList items={items} labels={labels} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Catalog GLB + grudge6 Bip001 packs (Danger SSOT — Mixamo sources baked offline) */}
-        {hasImported && (
-          <div className="ed-imported-clips">
-            <div className="ed-label" style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Grudge6 / catalog clips (Bip001 bakes)</span>
-              {snap.importedPlaying && (
-                <button className="ed-tw" title="Stop" onClick={() => engine.stopImportedClip()}>
-                  ◼
-                </button>
-              )}
-            </div>
-            <div className="ed-empty" style={{ padding: "0 0 8px", fontSize: 10, opacity: 0.72 }}>
-              These are the retargeted animations from Mixamo (and other) sources, baked to Bip001 under{" "}
-              <code>anims/baked/&#123;sword_shield|magic|longbow|…&#125;</code>. Wardrobe → Style swaps the pack.
-            </div>
-            {snap.importedClips.map((g) => {
-              const items: ClipItem[] = g.clips.map((c) => {
-                const key = `${g.rootId}::${c}`;
-                return {
-                  key,
-                  fallback: prettyId(c),
-                  playing: snap.importedPlaying === key,
-                  onPlay: () => engine.previewImportedClip(g.rootId, c),
                 };
               });
               return (

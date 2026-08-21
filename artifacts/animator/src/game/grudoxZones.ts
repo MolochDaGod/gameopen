@@ -4,12 +4,16 @@
  * SSOT for cabinet games:
  *   https://grudox.grudge-studio.com/arcade/play/<id>
  *
- * Voxel Arcade (on GRUDOX) owns:
- *   racer  → Voxel Velocity (street racing) — NOT Danger Room
- *   zombie → Voxel Undead
- *   z-brawl → Z-Brawl
- *   brawler → Ruins Brawler (also has native gameopen surface)
- *   voxgrudge → open world (also native)
+ * Voxel Arcade (on GRUDOX) owns — SSOT package @workspace/arcade
+ * (source: vfc-build/artifacts/arcade from D:\\Games\\Models\\arcade.zip):
+ *   zombie   → Voxel Undead: Sword Master
+ *   boat     → Open Water
+ *   explorer → Explorer (voxel roam / dressing via ?dressing=1)
+ *   racer    → Voxel Velocity — NOT Danger Room
+ *   brawler  → Ruins Brawler (also has native Open surface)
+ *   arena    → Arena PvP (live /api/arena)
+ *   carrier  → external /carrier/ (not in-engine)
+ * Legacy (not zip roster): z-brawl → optional voxgrudge HTML only
  *
  * Never deep-link arcade cabinets back to open.grudge-studio.com in a self-loop.
  * Never remap Voxel Velocity to Danger Room.
@@ -124,8 +128,9 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "brawler",
     title: "Ruins Brawler",
-    blurb: "Twin-stick co-op survival — native Open surface or GRUDOX arcade.",
-    tone: "#ff7a7a",
+    blurb:
+      "Wave survival — Open native brawl preferred; GRUDOX /arcade/play/brawler is zip SPA cabinet.",
+    tone: "#ff2d55",
     native: true,
     nativeMode: "brawl",
   },
@@ -155,26 +160,57 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     productionUrl: "https://warstrat.grudge-studio.com/lobby",
   },
   {
+    id: "zombie",
+    title: "Voxel Undead: Sword Master",
+    blurb: "Sword survival — GRUDOX arcade SPA (arcade.zip SSOT).",
+    tone: "#ff0044",
+    native: false,
+  },
+  {
+    id: "boat",
+    title: "Open Water",
+    blurb: "Sailing sandbox — GRUDOX arcade SPA.",
+    tone: "#22d3ee",
+    native: false,
+  },
+  {
+    id: "explorer",
+    title: "Explorer",
+    blurb: "Voxel roam + dressing — GRUDOX arcade SPA (not Danger Room).",
+    tone: "#a78bfa",
+    native: false,
+  },
+  {
     id: "racer",
     title: "Voxel Velocity",
-    blurb: "Production strip racer — prefer in-app canvas via /arcade/play/racer proxy.",
-    tone: "#ffd24d",
+    blurb: "Arcade racing — GRUDOX /arcade/play/racer (not Danger Room).",
+    tone: "#00ffff",
     native: false,
+    // Brand alias only; cabinet SSOT is in-arcade zip engine
     productionUrl: "https://drive.grudge-studio.com/",
   },
   {
-    id: "zombie",
-    title: "Voxel Undead: Sword Master",
-    blurb: "Sword survival — in-app GRUDOX arcade canvas (not a new tab by default).",
-    tone: "#7ee0a0",
+    id: "arena",
+    title: "Arena PvP",
+    blurb: "Live third-person combat — GRUDOX arcade + /api/arena.",
+    tone: "#fb7185",
     native: false,
   },
   {
+    id: "carrier",
+    title: "Carrier",
+    blurb: "Mothership command — external Carrier host (not in-arcade engine).",
+    tone: "#88ff00",
+    native: false,
+    externalPath: "https://carrier.grudge-studio.com/",
+  },
+  {
     id: "z-brawl",
-    title: "Z-Brawl",
-    blurb: "Protocol Extinction arena — in-app GRUDOX arcade canvas.",
+    title: "Z-Brawl (legacy)",
+    blurb: "Legacy HTML cabinet — not in arcade.zip; optional external only.",
     tone: "#9d8bff",
     native: false,
+    externalPath: "https://grudox.grudge-studio.com/voxgrudge/z-brawl.html",
   },
   {
     id: "voxgrudge",

@@ -87,6 +87,17 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     expect(Math.abs(after.x)).toBeLessThan(Math.abs(before.x) + 0.01);
   });
 
+  it("does not yaw Toon play GLBs (already +Z)", () => {
+    const { root } = makeBip001Hero();
+    root.userData.importPipeline = "glb-baked";
+    root.userData.importUrl =
+      "https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/human.glb";
+    root.userData.artForwardProven = true;
+    const r = deployCharacterModel(root, { facePlusZ: "auto", refitIfAbsurd: false });
+    expect(r.facingApplied).toBe(false);
+    expect(root.rotation.y).toBe(0);
+  });
+
   it("deployCharacterModel marks userData and grounds", () => {
     const { root } = makeBip001Hero({ offsetY: 0.25 });
     const r = deployCharacterModel(root, { facePlusZ: false, refitIfAbsurd: false });

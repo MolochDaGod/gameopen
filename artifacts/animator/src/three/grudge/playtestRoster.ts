@@ -59,7 +59,7 @@ export function buildGrudge6PlaytestRoster(): GrudgePlaytestEntry[] {
         RACE_GEAR_PRESETS[raceId][0];
       out.push({
         id: `grudge:${raceId}:${presetId}`,
-        name: `${race.abbr} ${preset.label}`,
+        name: `${race.name} ${preset.label}`,
         blurb: `${race.name} · ${preset.description}`,
         raceId,
         presetId,

@@ -482,7 +482,7 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
    */
   sword_shield: {
     idle: "greatsword_samurai/gs_samurai_idle_sword",
-    walk: "greatsword_samurai/gs_samurai_walk_sword",
+    walk: CANONICAL_LOCO.walk,
     run: "greatsword_samurai/gs_samurai_run_sword",
     // Quick Attack Combo (Sketchfab AttackCombo01) — 1s wind-up stripped on bake
     attack: "sword_shield/attack-combo-01-trimmed",
@@ -522,7 +522,6 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
       "locomotion/dodge_back",
       "locomotion/dodge_l",
       "locomotion/dodge_r",
-      "locomotion/roll_forward",
       "locomotion/run_forward",
       CANONICAL_LOCO.walk,
       "dual_wield/idle",
@@ -537,7 +536,7 @@ export const ANIM_PACK_CLIPS: Record<AnimPack, LoadoutClips> = {
    */
   samurai: {
     idle: "greatsword_samurai/gs_samurai_idle_sword",
-    walk: "greatsword_samurai/gs_samurai_walk_sword",
+    walk: CANONICAL_LOCO.walk,
     run: "greatsword_samurai/gs_samurai_run_sword",
     attack: "greatsword_samurai/gs_samurai_combo_a",
     extras: [
@@ -794,9 +793,9 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   ...GHOST_RIDER_CLIPS.map((m) => ({ role: m.role, rel: m.bakeRel })),
   // Prefer GR land/roll over legacy roll_dodge (only if roll not already set)
   { role: "roll", rel: "locomotion/roll_forward" },
-  { role: "climbAlt", rel: "locomotion/climbup_1m" },
-  { role: "swimFast", rel: "locomotion/swim_fast" },
-  { role: "fall", rel: "locomotion/fall_in" },
+  { role: "climbAlt", rel: "climb/climbing" },
+  { role: "swimFast", rel: "swim/swimming" },
+  { role: "fall", rel: "locomotion/jump" },
   { role: "harvest", rel: "locomotion/plant_seed" },
   { role: "plant", rel: "harvest/plant-tree" },
   // Farming activity pack (public/anim/farming → bake-gun-farm-loco)
@@ -812,9 +811,7 @@ export const TRAVERSAL_CLIPS: ReadonlyArray<{ role: string; rel: string }> = [
   { role: "wheelbarrowWalk", rel: "harvest/wheelbarrow-walk" },
   { role: "wheelbarrowDump", rel: "harvest/wheelbarrow-dump" },
   { role: "milkCow", rel: "harvest/cow-milking" },
-  { role: "block", rel: "block/standing-block-idle" },
-  { role: "parry", rel: "block/parry" },
-  { role: "blockHit", rel: "block/block-react-large" },
+  { role: "block", rel: "locomotion/dodge_bwd" },
 ];
 
 /**
@@ -992,7 +989,24 @@ const BAKE_REL_ALIASES: Record<string, string> = {
   "longbow/fall-a-loop": "locomotion/jump",
   "longbow/standing-dive-forward": "locomotion/dodge_fwd",
   "polearm/getup": "locomotion/land_roll",
+  "locomotion/fall_in": "locomotion/jump",
 };
+
+/** Never baked under these names — do not GET (console 404 storm). */
+const UNPUBLISHED_BAKE_REL = new Set([
+  "locomotion/crawl",
+  "locomotion/climbup_1m",
+  "locomotion/swim_fast",
+  "locomotion/crouch_walk",
+  "block/standing-block-idle",
+  "block/parry",
+  "block/block-react-large",
+]);
+
+export function isUnpublishedBakeRel(rel: string): boolean {
+  const clean = resolveBakeRel(rel);
+  return UNPUBLISHED_BAKE_REL.has(clean);
+}
 
 export function resolveBakeRel(rel: string): string {
   const clean = String(rel || "")
@@ -1026,13 +1040,21 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
     }
   }
 
-  const filtered = [...new Set(urls)].filter(
-    (u) =>
-      !/grudge-arena\.grudge-studio\.com/i.test(u) &&
-      !/gameopen\.vercel\.app/i.test(u) &&
-      !/\/prod\/anims\//i.test(u) &&
-      !/\.glb(\?|$)/i.test(u),
-  );
+  const here =
+    typeof window !== "undefined" ? window.location.hostname : "";
+  const filtered = [...new Set(urls)].filter((u) => {
+    if (/grudge-arena\.grudge-studio\.com/i.test(u)) return false;
+    if (/\/prod\/anims\/.+\.glb(\?|$)/i.test(u)) return false;
+    if (/\.glb(\?|$)/i.test(u)) return false;
+    // Cross-origin Open from vercel.app is CORS-blocked — stay same-origin.
+    if (
+      here.includes("vercel.app") &&
+      /open\.grudge-studio\.com/i.test(u)
+    ) {
+      return false;
+    }
+    return true;
+  });
   return filtered;
 }
 
@@ -1052,6 +1074,14 @@ const bakedUrlFail = new Set<string>();
 // Walk/run/sprint loco gates live in grudge6Runtime, not here (dodge/climb/skills are not gait).
 export async function loadBakedClip(rel: string, baseOverride?: string): Promise<THREE.AnimationClip> {
   const resolved = resolveBakeRel(rel);
+  if (UNPUBLISHED_BAKE_REL.has(resolved) || UNPUBLISHED_BAKE_REL.has(rel.replace(/\.json$/i, ""))) {
+    const failKey = `${resolved}|${baseOverride || ""}`;
+    bakedClipFail.add(failKey);
+    throw assetLoadError(
+      `anims/baked/${resolved}.json`,
+      new Error(`unpublished bake (not on CDN): ${rel}`),
+    );
+  }
   if (isBannedLocomotionClip(resolved) || isBannedLocomotionClip(rel)) {
     throw assetLoadError(
       `anims/baked/${resolved}.json`,

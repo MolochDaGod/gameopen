@@ -26,6 +26,7 @@ Users and agents must **not**:
 | Open library | `https://open.grudge-studio.com/` |
 | Danger Room | `https://open.grudge-studio.com/danger` |
 | Account / roster handoff | `https://open.grudge-studio.com/account` |
+| Character info / equipment | `https://open.grudge-studio.com/equipment` |
 | Sign-in | `https://open.grudge-studio.com/login` |
 | Create hero | `https://character.grudge-studio.com/foundry` |
 | Foundry 4-slot | `https://character.grudge-studio.com/` |

@@ -1026,11 +1026,9 @@ export async function loadClassSkillTreesFromFleet(): Promise<SkillTree[]> {
       "https://objectstore.grudge-studio.com/api/v1/master-skillTrees.json",
     ]),
     tryJson<BridgeFile>([
-      "/api/objectstore/v1/class-skill-bridges.json",
-      "https://info.grudge-studio.com/api/v1/class-skill-bridges.json",
-      "https://objectstore.grudge-studio.com/api/v1/class-skill-bridges.json",
-      // Local fallback copy if published under content later
       "/content/class-skill-bridges.json",
+      "/api/objectstore/v1/class-skill-bridges.json",
+      "https://objectstore.grudge-studio.com/api/v1/class-skill-bridges.json",
     ]),
   ]);
   return mapMasterSkillTrees(data, bridgeData);

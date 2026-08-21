@@ -1,7 +1,7 @@
 /**
  * Floating-island campfire — voxel-era 4-slot character page (charactersgrudox UX).
  *
- * 4 hero seats around a fireplace on floating islands (SI heroes ~1.8 m).
+ * 4 hero seats on the road outside the Encament gate (SI heroes ~1.8 m).
  * Scene SSOT: three/intro/CampfireLobbyScene.ts (not Ethereal Falls overlook).
  * Menu art: public/ui/menu/*.png wooden-sign rail.
  *
@@ -36,6 +36,7 @@ import {
   CampfireLobbyScene,
   type CampfireHoverInfo,
 } from "../three/intro/CampfireLobbyScene";
+import { setLobbyAvatarSlotTarget } from "../three/avatar/playerHead";
 import "./campfireLobby.css";
 
 interface Props {
@@ -360,10 +361,12 @@ export function CampfireLobby({
     }
     void fetchCharacters({ eras: ["voxel"] })
       .then((voxel) => {
-        if (!voxel.length) return;
-        setHeroes(
-          buildVoxelCampfireHeroes(voxel, gameSession.snapshot.selectedCharacterId),
+        const merged = [...voxel, ...gameSession.snapshot.characters];
+        const next = buildVoxelCampfireHeroes(
+          merged,
+          gameSession.snapshot.selectedCharacterId,
         );
+        if (next.length) setHeroes(next);
       })
       .catch(() => undefined);
     return unsub;
@@ -568,11 +571,11 @@ export function CampfireLobby({
       <div className="cfl-head">
         <img className="cfl-helmet" src={MENU("grudge-helmet.png")} alt="" />
         <img className="cfl-logo" src={MENU("grudge-logo.png")} alt="GRUDGE" />
-        <p className="cfl-kicker">Voxel era · 4 seats · Encament behind the fire</p>
+        <p className="cfl-kicker">Voxel era · 4 seats outside the gate · Encament village</p>
         <p className="cfl-sub">
           {active
-            ? "Campfire roster — Encament is the village behind you · Enter Encament to play"
-            : "Four chairs · first hero free · Encament start · Account to create more"}
+            ? "Roster on the road — village behind you · Edit this hero’s look · Enter Encament to play"
+            : "Four seats outside the gate · first hero free · Encament start · Account to create more"}
         </p>
       </div>
 
@@ -583,8 +586,16 @@ export function CampfireLobby({
           <em>TVS farm camp · chairs · campfire (no dungeon)</em>
         </div>
         <div className="cfl-actions">
-          <button type="button" className="cfl-btn primary" onClick={() => onAvatarEdit?.()}>
-            Avatar editor
+          <button
+            type="button"
+            className="cfl-btn primary"
+            onClick={() => {
+              setLobbyAvatarSlotTarget(selected);
+              if (active) gameSession.selectCharacter(active.id);
+              onAvatarEdit?.();
+            }}
+          >
+            Edit look
           </button>
           <button
             type="button"

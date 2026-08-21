@@ -189,6 +189,10 @@ export function buildVoxelCampfireHeroes(
     const baseId =
       (typeof c.config?.baseId === "string" && c.config.baseId) || "explorer";
     const raceKey = baseIdToRaceKey(baseId) || baseIdToRaceKey(c.raceId);
+    const open =
+      c.saveData && typeof c.saveData === "object"
+        ? ((c.saveData as { open?: { voxelLook?: Record<string, unknown> } }).open ?? null)
+        : null;
     return {
       id: c.id,
       name: c.name,
@@ -197,6 +201,8 @@ export function buildVoxelCampfireHeroes(
       raceLabel: RACE_LABEL[raceKey] || c.raceId || "Explorer",
       slot,
       source,
+      voxelLook:
+        open?.voxelLook && typeof open.voxelLook === "object" ? open.voxelLook : null,
     };
   };
 
@@ -255,6 +261,8 @@ export type GenesisHeroOption = {
   raceLabel: string;
   slot: number;
   source: "grudox" | "fleet";
+  /** Railway saveData.open.voxelLook — per-character cosmetics. */
+  voxelLook?: Record<string, unknown> | null;
 };
 
 const RACE_LABEL: Record<string, string> = {

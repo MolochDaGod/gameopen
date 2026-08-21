@@ -47,6 +47,7 @@ import {
 import { GAME_LIBRARY, SHARED_ACCOUNT_SCHEME, type GameCategory } from "../game/gameLibrary";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CharacterPicker } from "./CharacterPicker";
+import { TraitStoreEmbed } from "./TraitStoreEmbed";
 import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
 import { matIconUrl, warmGameMedia } from "../lib/gameMedia";
 import { warmProductionMedia } from "../lib/productionMedia";
@@ -195,7 +196,15 @@ export function AccountPanel({
 }) {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
   const [era, setEra] = useState<EraId>("warlords");
-  const [panel, setPanel] = useState<PanelId>("overview");
+  const [panel, setPanel] = useState<PanelId>(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t && PANELS.some((p) => p.id === t)) return t as PanelId;
+    } catch {
+      /* */
+    }
+    return "overview";
+  });
   const [wallet, setWallet] = useState<GrudgeWallet | null>(() => getCachedWallet());
   const [walletStatus, setWalletStatus] = useState<FleetWalletStatus | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
@@ -775,57 +784,36 @@ export function AccountPanel({
             </section>
 
             <section style={card}>
-              <h3 style={{ ...h3, color: eraTone }}>Equipment · selected</h3>
-              {!selectedChar || !selectedVisual ? (
-                <p style={muted}>Select a character to see current gear.</p>
+              <h3 style={{ ...h3, color: eraTone }}>Trait Store · mesh look</h3>
+              {!selectedChar ? (
+                <p style={muted}>Select a character slot to open the Trait Store.</p>
               ) : (
                 <>
-                  <p style={{ margin: "0 0 10px", fontSize: 14 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 13 }}>
                     <strong>{selectedChar.name}</strong>
                     <span style={muted}>
                       {" "}
-                      · {selectedVisual.raceId}/{selectedVisual.presetId}
+                      · UUID <code>{selectedChar.id}</code>
+                      {" · "}
+                      {selectedVisual?.raceId || selectedChar.raceId || "—"}/
+                      {selectedVisual?.presetId || selectedChar.classId || "—"}
+                      {" · "}
+                      {selectedVisual?.meshIds.length ?? 0} meshes
+                      {" · "}
+                      {selectedVisual?.source || "railway"}
                     </span>
                   </p>
-                  <div style={equipGrid}>
-                    {Object.keys(selectedVisual.slotIcons).length === 0 &&
-                    Object.keys(selectedVisual.slotLabels).length === 0 ? (
-                      <p style={muted}>
-                        No slot map on this character yet — mesh kit:{" "}
-                        {selectedVisual.meshIds.slice(0, 8).join(", ") || "none"}
-                        {selectedVisual.meshIds.length > 8 ? "…" : ""}
-                      </p>
-                    ) : (
-                      Object.entries({
-                        ...Object.fromEntries(
-                          Object.keys(selectedVisual.slotLabels).map((k) => [k, selectedVisual.slotIcons[k] || ""]),
-                        ),
-                        ...selectedVisual.slotIcons,
-                      }).map(([slot, url]) => (
-                        <div key={slot} style={equipCell} title={selectedVisual.slotLabels[slot] || slot}>
-                          <img
-                            src={slotIcon(url, slot.includes("weapon") || slot === "mainHand" ? "attack" : "equip")}
-                            alt=""
-                            width={36}
-                            height={36}
-                            style={{ objectFit: "contain", imageRendering: "pixelated" }}
-                            onError={(e) => {
-                              e.currentTarget.src = iconUrl("equip");
-                            }}
-                          />
-                          <span style={{ fontSize: 10, opacity: 0.85, textAlign: "center" }}>
-                            {selectedVisual.slotLabels[slot] || slot}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  {selectedVisual.meshIds.length > 0 && (
-                    <details style={{ marginTop: 12, fontSize: 11, opacity: 0.75 }}>
-                      <summary>mesh_ids ({selectedVisual.meshIds.length})</summary>
-                      <code style={{ wordBreak: "break-all" }}>{selectedVisual.meshIds.join(", ")}</code>
-                    </details>
-                  )}
+                  <p style={{ ...muted, margin: "0 0 10px", fontSize: 11 }}>
+                    Railway character row + Toon RTS kit visibility. Mesh def UUID =
+                    sha1(grudge-asset:kit#meshId). Owned gear = ledger grudge_uuid. Unarmed body is locked.
+                  </p>
+                  <TraitStoreEmbed
+                    era={era}
+                    characterId={selectedChar.id}
+                    raceId={selectedVisual?.raceId || selectedChar.raceId}
+                    meshIds={selectedVisual?.meshIds || []}
+                    height={640}
+                  />
                 </>
               )}
             </section>

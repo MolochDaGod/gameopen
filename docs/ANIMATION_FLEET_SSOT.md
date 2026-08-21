@@ -25,7 +25,7 @@
 
 | Lane id | Skeleton | Clip source | Used by |
 |---------|----------|-------------|---------|
-| **`bip001-baked`** | Bip001 (Toon RTS / grudge6) | `/anims/baked/{rel}.json` (rotation-only) + `prod/anims` | grudge6 heroes, Warlords, Danger playable, Railway characters |
+| **`bip001-baked`** | Bip001 (Toon RTS / grudge6) | `/anims/baked/{rel}.json` (rotation-only) | grudge6 heroes, Warlords, Danger playable, Railway characters |
 | **`mixamo-explorer`** | 25-bone Mixamo | `/anim/animations/{pack}/*.fbx` or baked retarget **onto Mixamo only** | Explorer avatar, voxel explorer, thrcc gun packs |
 
 ```
@@ -54,6 +54,26 @@
 4. After idle/attack sample: **reGround** (`characterDeploy.sampleClipAndReground`).  
 5. **Weapon equip / class swap:** fade to **idle** only — equip/draw flourishes with root keys tip/spin the body.  
 6. **Stabilize every clip before `clipAction`:** `stabilizeClipForMixer` in `clipTracks.ts` (filter → strip limb/scale pos → hip X/Z lock → sanitize NaN).
+
+### 3.2 Feet IK on terrain (all play characters)
+
+**Code:** Open `anim/legIk.ts` + `terrainFootSample.ts` · ObjectStore / Casting `grudge6-foot-ik.js`  
+**Contract:** `warlordsPlayContract.footIk` stamp `2026-08-21.foot-ik.1`
+
+| Rule | Value |
+|------|--------|
+| When | After mixer, every frame, every play kit |
+| Sampler | **Same** `heightAt(x,z)` as Rapier CCT / body Y / grass roots |
+| Bones | Bip001 L/R Thigh · Calf · Foot + **Pelvis** (never `L Hip`) |
+| Order | `beginFrame()` → `mixer.update(dt)` → `apply(dt)` |
+| Map change | Rebind sampler only — keep Controller, mixer, weapon |
+| Flat lab | `FLAT_FOOT_SAMPLER` y=0 (no-op if already planted) |
+
+Ban: pelvis-as-feet, IK before mixer, second mixer, second physics.
+
+Rapier CCT: kinematic capsule, fixed 1/60, SI, `@dimforge/rapier3d-compat ^0.19`. TPS camera owned by combat Controller — never OrbitControls during combat.
+
+TPS blend: idle/walk/run **weights** on one mixer; attack = one-shot overlay; generate clips by baking Mixamo → **Bip001 rotation-only** packs (`grudge-asset-convert`), not Mixamo tracks on play kits.
 
 ### 3.1 Weapon spin / dive-into-ground (fixed pattern)
 
@@ -93,11 +113,12 @@ Explorer bind path: `Animator.action()` → `stabilizeClipForMixer` → single `
 
 ```
 1. same-origin /anims/baked/{rel}.json
-2. assets.grudge-studio.com/prod/anims/{pack}/…
-3. fleet host candidates (JSON then GLB library)
-4. reject BANNED_LOCOMOTION_CLIPS (run-to-roll, tipping walk)
-5. toRotationOnlyClip + rematch Bip001 names on bind
+2. https://open.grudge-studio.com/anims/baked/{rel}.json
+3. reject BANNED_LOCOMOTION_CLIPS (run-to-roll, tipping walk)
+4. toRotationOnlyClip + rematch Bip001 names on bind
 ```
+
+`assets.grudge-studio.com/prod/anims/*` and `*.glb` play probes are **dead** (404). Do not add them back. Walk/run/sprint loco rejection stays in `grudge6Runtime`, not on dodge/climb/skill JSON.
 
 Authoring FBX under `public/anim/**` is **bake input only**, not production player bind for grudge6.
 

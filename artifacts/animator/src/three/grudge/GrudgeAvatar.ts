@@ -25,19 +25,16 @@ import { stripPositionTracks } from "../clipTracks";
 import { reGroundAfterAnimSample, findDeployModel } from "../characterDeploy";
 
 /**
- * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
- * customizable race FBX (one shared body atlas, equipment-driven mesh
- * visibility) animated by pre-baked Bip001 clips streamed from the asset host.
+ * An {@link Avatar} backed by the **Toon RTS play GLB** (not FBX, not
+ * 30characters, not a capsule):
+ *   assets…/asset-packs/toon-rts-characters/glb/characters/{race}.glb
+ * via {@link loadGrudge6CombatRig} (same contract as Casting `loadRaceKit`).
  *
- * It mirrors {@link Character} (the GLB avatar) so the Animator's `Controller`
- * drives it unchanged — a continuous idle/walk/run locomotion blend plus
- * one-shot overlay actions (attack) that crossfade in and hand control back.
+ * Equipment = mesh_ids visibility. Anims = Bip001 baked packs. Yaw 0 (Toon is
+ * already +Z). Never forceAtlas on a good Toon kit.
  *
- * The normalized FBX group already faces +Z and sits with feet on y=0; an inner
- * `holder` carries the optional `modelYaw` so the art-forward can be re-aimed
- * without disturbing the group's self-contained centering transform.
- *
- * Foot IK plants Bip001 soles on terrain after the mixer (same order as Character).
+ * The inner `holder` is for optional modelYaw (FBX author kits only).
+ * Foot IK plants Bip001 soles on terrain after the mixer.
  */
 export class GrudgeAvatar implements Avatar {
   root = new THREE.Group();
@@ -197,7 +194,8 @@ export class GrudgeAvatar implements Avatar {
 
       const rig = await loadGrudge6CombatRig(this.raceId, this.presetId, {
         meshIds: this.meshIds || undefined,
-        rebindAtlas: true,
+        // Toon RTS GLB owns embedded maps. forceAtlas is the FBX-author anti-pattern.
+        rebindAtlas: false,
         animPack: this.animPackOverride || undefined,
       });
       if (this.disposed) {
@@ -208,6 +206,9 @@ export class GrudgeAvatar implements Avatar {
       this.mixer = rig.mixer;
       this.liveAnimPack = rig.animPack;
       this.holder.add(rig.root);
+      this.root.userData.warlordsPlayContract = "2026-08-18.play-kit.1";
+      this.root.userData.playMesh = "toon-rts-glb";
+      this.root.userData.physicsLayer = "character";
 
       // Register clips under role names so playRole / setLocomotion work.
       for (const [role, clip] of rig.clips) {
@@ -308,16 +309,20 @@ export class GrudgeAvatar implements Avatar {
       this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
       this.twoHandGrip.bind(this.model, null);
 
-      // AnimationDirector (uMMORPG Animator layers: loco + skill override)
-      try {
-        this.director = new AnimationDirector(
-          this.mixer,
-          clipsFromRoleMap(rig.clips),
-          { fade: this.blendTime },
-        );
-      } catch (e) {
-        this.director = null;
-        this.playRole("idle", 0);
+      // Hydration above builds the director from all core, traversal, and
+      // weapon roles. Only use the smaller rig clip map if hydration failed;
+      // recreating it unconditionally drops climb/swim/dodge roles.
+      if (!this.director) {
+        try {
+          this.director = new AnimationDirector(
+            this.mixer,
+            clipsFromRoleMap(rig.clips),
+            { fade: this.blendTime },
+          );
+        } catch (e) {
+          this.director = null;
+          this.playRole("idle", 0);
+        }
       }
       console.info(
         `[GrudgeAvatar] grudge6 ready race=${this.raceId} pack=${rig.animPack} pipeline=${String(this.model.userData?.importPipeline ?? "?")} equip=${this.meshIds?.length ? "account" : "preset"} meshes=${(this.meshIds || []).length || "preset"} sockets=${sockOk.ok ? "ok" : "partial"} director=${!!this.director} footIk=${this.footGrounder.isBound} clips=${[...rig.clips.keys()].join(",")}`,

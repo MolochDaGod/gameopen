@@ -69,6 +69,15 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/grudge-warlords/src/index.ts",
       ),
+      // Specific subpath first — `@workspace/vfx` would swallow `/footAuraCatalog`.
+      "@workspace/vfx/footAuraCatalog": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/footAuraCatalog.ts",
+      ),
+      "@workspace/vfx": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/index.ts",
+      ),
       // The @workspace/* libs above are aliased to their TS SOURCE, so their
       // bare external imports (e.g. @tanstack/react-query in the generated
       // api-client) must resolve to THIS app's installed copies regardless of

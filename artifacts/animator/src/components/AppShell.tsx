@@ -31,8 +31,20 @@ import { InstallAppButton } from "./InstallAppButton";
 import { ToolboxOverlay } from "./toolbox/ToolboxOverlay";
 import type { ToolDef } from "./toolbox/tools";
 import { FleetBar } from "./FleetBar";
+import { KM } from "../lib/kenneyMobile";
 import "./appShell.css";
 import "./toolbox/toolbox.css";
+
+const PHONE_PLAY_MODES = new Set<ShellMode>([
+  "danger",
+  "play",
+  "brawl",
+  "survival",
+  "mimic",
+  "genesis",
+  "voxgrudge-native",
+  "vox-battle",
+]);
 
 /** Library (and any child) can open the shell Toolbox without a covering float. */
 export type ShellChromeApi = {
@@ -86,6 +98,7 @@ function GameIcon({ name, tone, size = 20 }: { name: string; tone: string; size?
 
 /** Every mode the shell can route to. Mirrors App's `Mode` union. */
 export type ShellMode =
+  | "landing"
   | "doors"
   | "danger"
   | "voxel"
@@ -100,13 +113,16 @@ export type ShellMode =
   | "mimic"
   | "genesis"
   | "voxgrudge-native"
+  | "vox-battle"
   | "account"
   | "realms"
   | "minegrudge"
   | "avatar"
   | "anim"
   | "anim-ai"
-  | "ui";
+  | "ui"
+  | "characters"
+  | "equipment";
 
 interface NavItem {
   mode: ShellMode;
@@ -120,6 +136,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { mode: "doors",            label: "Library",         hint: "All titles",           icon: <Home size={20} />,                                       tone: "#66c0f4", group: "Home" },
   { mode: "account",          label: "Account",         hint: "Chars, wallet, treaty",icon: <GameIcon name="inventory"       tone="#4fc3ff" />,          tone: "#4fc3ff", group: "Home" },
+  { mode: "equipment",        label: "Character",       hint: "UUID · mesh bake · gear",icon: <GameIcon name="equip"         tone="#fbbf24" />,          tone: "#fbbf24", group: "Home" },
   { mode: "danger",           label: "Danger Room",     hint: "Combat sandbox",       icon: <GameIcon name="combat-pad"      tone="#ff7a7a" />,          tone: "#ff7a7a", group: "Play" },
   { mode: "genesis",          label: "Warlord Genesis", hint: "3-lane MOBA · fleet",  icon: <GameIcon name="skill-vfx-lab"   tone="#ffd24d" />,          tone: "#ffd24d", group: "Play" },
   { mode: "brawl",            label: "Ruins Brawler",   hint: "Live co-op survival",  icon: <GameIcon name="attack"          tone="#ff7a7a" />,          tone: "#ff9a7a", group: "Play" },
@@ -142,7 +159,12 @@ const NAV: NavItem[] = [
 /** The launcher pill reflects the active surface (play folds into the editor). */
 function activeNav(mode: ShellMode): NavItem {
   if (mode === "play") return { ...NAV.find((n) => n.mode === "voxel")!, label: "Playtest", hint: "Testing your map" };
-  return NAV.find((n) => n.mode === mode) ?? NAV[0];
+  if (mode === "characters") {
+    return { ...NAV.find((n) => n.mode === "lobby")!, label: "Characters", hint: "4-seat campfire · all eras" };
+  }
+  if (mode === "landing") return NAV[0]!;
+  if (mode === "vox-battle") return NAV.find((n) => n.mode === "brawl") ?? NAV[0]!;
+  return NAV.find((n) => n.mode === mode) ?? NAV[0]!;
 }
 
 interface Props {
@@ -166,6 +188,8 @@ interface Props {
    * Library hub uses its own Steam chrome — pass false there via host.
    */
   showFleetStrip?: boolean;
+  /** Danger Room match picker in the fleet strip (off on product hubs). */
+  showModeSelect?: boolean;
   children: ReactNode;
 }
 
@@ -177,10 +201,12 @@ export function AppShell({
   onToolLaunch,
   music,
   showFleetStrip = true,
+  showModeSelect = false,
   children,
 }: Props) {
   const { deviceClass } = useDevice();
   const phone = deviceClass === "phone";
+  const immersivePhone = phone && PHONE_PLAY_MODES.has(mode);
   const [navOpen, setNavOpen] = useState(false);
   const [toolboxOpen, setToolboxOpen] = useState(false);
   // A mode that owns its engine can override the host-provided config.
@@ -308,8 +334,23 @@ export function AppShell({
           Library hub owns its Steam top bar — DO NOT float toolbox over brand/logo.
           DoorSelect renders the Toolbox pill via useShellChrome().
         */}
+        {!hideLauncher && immersivePhone && (
+          <button
+            type="button"
+            className="shell-phone-fab"
+            onClick={() => {
+              setToolboxOpen(false);
+              setNavOpen(true);
+            }}
+            aria-label="Open menu"
+          >
+            <img src={KM.iconMenu} alt="" width={22} height={22} />
+          </button>
+        )}
+
         {!hideLauncher && (
           <>
+            {!immersivePhone && (
             <div className="shell-steam-bar" role="banner">
               <div className="shell-steam-brand">
                 <span className="shell-steam-brand-name">Grudge Open</span>
@@ -334,7 +375,7 @@ export function AppShell({
 
               {showFleetStrip && (
                 <div className="shell-steam-center">
-                  <FleetBar variant="inline" />
+                  <FleetBar variant="inline" showModeSelect={showModeSelect} />
                 </div>
               )}
 
@@ -352,6 +393,7 @@ export function AppShell({
                 </button>
               </div>
             </div>
+            )}
 
             <AnimatePresence>
               {navOpen && (

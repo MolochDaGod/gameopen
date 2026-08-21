@@ -22,7 +22,9 @@ export type CampPageId =
   | "buildings"
   | "upgrades"
   /** Albion location inventory for this claim — RTS spends from here */
-  | "storage";
+  | "storage"
+  /** Painted guild / claim emblem */
+  | "guild";
 
 export type CampPageDef = {
   id: CampPageId;
