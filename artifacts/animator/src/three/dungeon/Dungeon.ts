@@ -58,6 +58,7 @@ export class Dungeon {
 
   private scene: THREE.Scene;
   private file: string;
+  private keepSi = false;
   private physics = new PhysicsSystem();
   private meshes: THREE.Mesh[] = [];
   private charBody: import("@dimforge/rapier3d-compat").RigidBody | null = null;
@@ -67,9 +68,10 @@ export class Dungeon {
   private extras: THREE.Mesh[] = []; // owned water/pit meshes (disposed on teardown)
   private disposed = false;
 
-  constructor(scene: THREE.Scene, opts: { file?: string } = {}) {
+  constructor(scene: THREE.Scene, opts: { file?: string; keepSi?: boolean } = {}) {
     this.scene = scene;
     this.file = opts.file ?? DEFAULT_DUNGEON_FILE;
+    this.keepSi = !!opts.keepSi;
   }
 
   /** Load the GLB, build colliders + navmesh + the player KCC. */
@@ -83,7 +85,7 @@ export class Dungeon {
     const rawSize = rawBox.getSize(new THREE.Vector3());
     const maxDim = Math.max(rawSize.x, rawSize.z);
     if (maxDim > 300) root.scale.setScalar(0.01);
-    else if (maxDim > 0.01 && maxDim < TARGET_FOOTPRINT) {
+    else if (!this.keepSi && maxDim > 0.01 && maxDim < TARGET_FOOTPRINT) {
       root.scale.setScalar(TARGET_FOOTPRINT / maxDim);
     }
 

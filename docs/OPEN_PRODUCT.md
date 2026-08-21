@@ -17,10 +17,14 @@ Open is the **Steam-like collection shell** for Grudge Studio: one browser app w
 | **Accounts** | Grudge ID SSO, profile, treaty | `/account` · `/login` · FleetBar |
 | **Saves** | Per-character progress under Railway `saveData.open` | `characterLoadout.ts` · GameSession |
 | **Characters** | **Campfire 4-avatar explorer hub** (Railway roster) · equip · enter play | `/characters` · `/lobby` · Account · Equipment |
-| **Editors** | Dressing Room, Avatar, Voxel, LED Mask, Vox lab | `/dressing` `/avatar` `/voxel` `/ledmask` `/world` |
+| **Editors** | Dressing Room, Avatar, Voxel, LED Mask, Vox lab, **Grok Builder**, **Forge**, **ThreeFlow** | `/dressing` `/avatar` `/voxel` `/ledmask` `/world` · library Editors shelf |
+| **Content** | Mesh packs · pipeline · maps (not a second CDN) | `docs/OPEN_MESH_PACKS.md` · pipeline.grudge-studio.com · assets CDN |
+| **Modular dungeons** | Forge + crawl + **boss arena** | https://grudge-dungeons.vercel.app/ · `?linear=1` for boss path |
 | **Mine-Loader worlds** | Realms lobby / play / build (1-replica world authority) | `/realms` · canvas → Mine-Loader SPA + Railway API |
 | **Warlord Genesis** | Live MOBA/RTS warcamp with fleet hero | `/genesis` → in-app canvas → `warlord-genesis.vercel.app` |
 | **Arcade (GRUDOX)** | Velocity, zombie, z-brawl under one origin | `/arcade/play/*` (edge → grudox) |
+
+**Library chips** (`DELIVERY_SHELVES` in `gameLibrary.ts`): **Account · Games · Editors · Content**, then era (Voxel / Warlords / Nexus / Armada). Agents: `startUrlForIntent("account"|"danger"|"grokBuilder"|"threeFlow"|"foundryCreate"|"mimic")`.
 
 ---
 

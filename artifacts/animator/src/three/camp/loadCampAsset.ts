@@ -27,6 +27,20 @@ export type LoadedCampMesh = {
 
 const fbxLoader = new FBXLoader();
 
+/** Parent group (Grave2) or Sketchfab child (Grave2_Graves_0). */
+function findIsolateNode(scene: THREE.Object3D, name: string): THREE.Object3D | null {
+  const exact = scene.getObjectByName(name);
+  if (exact) return exact;
+  let found: THREE.Object3D | null = null;
+  const prefix = `${name}_`;
+  const dot = `${name}.`;
+  scene.traverse((o) => {
+    if (found) return;
+    if (o.name.startsWith(prefix) || o.name.startsWith(dot)) found = o;
+  });
+  return found;
+}
+
 function scaleLoaded(
   root: THREE.Object3D,
   placeableId: string,
@@ -90,9 +104,37 @@ export async function loadPlaceableMesh(
     const { scene, animations, url } = await loadGltfFirst(keys, sharedGltfLoader(), {
       prepMaterials: opts?.skipPrep ? false : true,
     });
-    scaleLoaded(scene, placeableId, opts);
+    const isolate = binding?.isolateNode;
+    let root: THREE.Object3D = scene;
+    if (isolate) {
+      const hit = findIsolateNode(scene, isolate);
+      if (!hit) {
+        console.warn("[camp] isolate miss", placeableId, isolate);
+        return null;
+      }
+      const cloned = hit.clone(true);
+      const box = new THREE.Box3().setFromObject(cloned);
+      if (!box.isEmpty()) {
+        const c = box.getCenter(new THREE.Vector3());
+        cloned.position.sub(c);
+        const box2 = new THREE.Box3().setFromObject(cloned);
+        if (!box2.isEmpty()) cloned.position.y -= box2.min.y;
+      }
+      cloned.name = isolate;
+      const g = new THREE.Group();
+      g.name = `placeable:${placeableId}`;
+      g.add(cloned);
+      root = g;
+    }
+    scaleLoaded(root, placeableId, opts);
+    if (placeableId === "claim_flag") {
+      const { applyClaimFlagMaterials, loadGuildEmblem, textureFromDataUrl } =
+        await import("./claimFlagEmblem");
+      const data = loadGuildEmblem("guest");
+      applyClaimFlagMaterials(root, data ? textureFromDataUrl(data) : null);
+    }
     return {
-      scene,
+      scene: root,
       animations: animations ?? [],
       url,
       placeableId,

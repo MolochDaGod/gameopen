@@ -1,15 +1,13 @@
 /**
  * Fleet asset resolver — D1/R2 + same-origin strategy for Open games/scenes.
  *
- * Production truth (probed 2026-07):
- *  - **Same-origin** (`open.grudge-studio.com` / gameopen.vercel.app public/) ships
- *    Open lab pack: karate-boss, races, 30characters, props, vfx, icons, grudge/*.glb.
- *  - **R2 CDN** `https://assets.grudge-studio.com` (NOT `/gameopen` prefix) holds
- *    fleet packs: weapons, grudge6 FBX races, textures, baked anim JSON,
- *    characters/*.glb, /assets/{race}/… modular kit, /anims/baked.
- *  - **Arena** `grudge-arena.grudge-studio.com` — skinned race GLBs for combat.
- *  - **ObjectStore/info** registry JSON for icons/definitions (optional lookup).
- *  - Incomplete `assets.grudge-studio.com/gameopen/*` — never use for loads.
+ * Production truth:
+ *  - **Play race kits** = R2 only:
+ *    `https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/{race}.glb`
+ *  - **R2 first** for models/anims/textures/prod/asset-packs. Same-origin next.
+ *  - **Never** gameopen.vercel.app (HTML + CORS). Never `/gameopen/` R2 prefix.
+ *  - **Never** parse HTML fake-200 as GLB (`fetchRealGlb`).
+ *  - **Arena** last-resort for cdn/assets characters only.
  *
  * Loaders must use {@link resolveAssetCandidates} / {@link loadGltfFirst} with
  * Draco + Meshopt (+ KTX2 when renderer bound) so compressed GLBs decode.
@@ -45,13 +43,15 @@ function cleanPath(path: string): string {
 }
 
 function sameOriginUrl(clean: string): string {
-  if (/^([a-z]+:)?\/\//i.test(clean) || clean.startsWith("data:")) return clean;
+  const fixed = clean.replace(/^https:\/(?!\/)/i, "https://").replace(/^http:\/(?!\/)/i, "http://");
+  if (/^https?:\/\//i.test(fixed) || fixed.startsWith("//") || fixed.startsWith("data:")) {
+    return fixed;
+  }
   const base = _viteBase.replace(/\/$/, "");
-  return `${base}/${clean}`;
+  return `${base}/${fixed.replace(/^\//, "")}`;
 }
 
 function abs(host: string, clean: string): string {
-  if (/^([a-z]+:)?\/\//i.test(clean) || clean.startsWith("data:")) return clean;
   return `${host.replace(/\/$/, "")}/${clean}`;
 }
 
@@ -182,6 +182,10 @@ export function pathAliases(path: string): string[] {
   }
   if (clean === "models/dj-booth.glb") {
     out.push("models/dj-booth.glb", "models/dungeon.glb");
+  }
+  if (clean === "models/tools/voxel/toolsvoxel.glb") {
+    out.length = 0;
+    out.push("models/tools/voxel/toolsvoxel.glb");
   }
   // Camp props — dying-torch lives on R2; same-origin often stale deploy
   if (clean === "models/props/dying-torch.glb") {
@@ -381,31 +385,47 @@ export function pathAliases(path: string): string[] {
 }
 
 /**
- * Paths that only exist on R2 (or arena) — never trust same-origin first.
- * (Probed: open.grudge-studio.com/textures/grudge6/* and models/grudge6/* 404 without rewrite.)
+ * Binary keys live on R2. Same-origin is a second try (Open public pack).
+ * Never treat gameopen.vercel.app as a binary host (HTML + CORS).
  */
 function isFleetCdnFirst(clean: string): boolean {
+  // Open pack isolates live in SPA public/ until an intentional R2 put.
+  // CDN-first would HTML-fake-200 then mark the key dead.
+  if (/^models\/packs\//i.test(clean)) return false;
   return (
-    clean.startsWith("textures/grudge6/") ||
-    clean.startsWith("models/grudge6/") ||
-    clean.startsWith("models/voxels/") ||
-    clean.startsWith("models/props/") ||
-    clean.startsWith("models/camp/") ||
-    clean.startsWith("models/vfx/") ||
-    clean === "models/racalvin.glb" ||
-    clean === "models/dj-booth.glb" ||
-    clean === "models/introgamer.glb" ||
-    clean.startsWith("models/landing/") ||
-    clean.startsWith("assets/western-kingdoms/") ||
-    clean.startsWith("assets/barbarians/") ||
-    clean.startsWith("assets/dwarves/") ||
-    clean.startsWith("assets/elves/") ||
-    clean.startsWith("assets/orcs/") ||
-    clean.startsWith("assets/undead/") ||
-    clean.startsWith("icons/pack/") ||
-    clean.startsWith("icons/wcs/") ||
-    clean.startsWith("cdn/assets/characters/")
+    /^(models|anims|textures|prod|asset-packs|icons|audio|sounds|cdn)\//i.test(clean) ||
+    /\.(glb|gltf|fbx|webp|png|jpe?g|ktx2|bin)$/i.test(clean)
   );
+}
+
+/** CF/Vercel SPA HTML served as 200 for missing R2 keys. */
+export function bufferLooksLikeHtml(buf: ArrayBuffer): boolean {
+  const n = Math.min(buf.byteLength, 24);
+  if (n < 1) return true;
+  const head = new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(buf, 0, n));
+  const t = head.trimStart();
+  return t.startsWith("<!DOCTYPE") || t.startsWith("<html") || t.startsWith("<HTML") || t.startsWith("<head");
+}
+
+export function isGlbMagic(buf: ArrayBuffer): boolean {
+  if (buf.byteLength < 4) return false;
+  const u = new Uint8Array(buf, 0, 4);
+  return u[0] === 0x67 && u[1] === 0x6c && u[2] === 0x54 && u[3] === 0x46; // glTF
+}
+
+/** GET + reject HTML fake-200. Used by loadGltfFirst so we never parse SPA HTML as GLB. */
+export async function fetchRealGlb(url: string): Promise<ArrayBuffer> {
+  const res = await fetch(url, { mode: "cors" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const buf = await res.arrayBuffer();
+  if (bufferLooksLikeHtml(buf)) throw new Error(`HTML fake-200: ${url.split("?")[0]}`);
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  if (ct.includes("text/html")) throw new Error(`HTML content-type: ${url.split("?")[0]}`);
+  if (!isGlbMagic(buf)) {
+    const head = new TextDecoder().decode(new Uint8Array(buf, 0, Math.min(8, buf.byteLength)));
+    if (!head.trimStart().startsWith("{")) throw new Error(`not glTF: ${url.split("?")[0]}`);
+  }
+  return buf;
 }
 
 /**
@@ -414,48 +434,47 @@ function isFleetCdnFirst(clean: string): boolean {
  * Absolute CDN URLs get Mine-Loader deploy-epoch ?v= bust when epoch is set.
  */
 export function resolveAssetCandidates(path: string): string[] {
+  const raw = String(path || "").trim();
+  const absHttp = raw.replace(/^https:\/(?!\/)/i, "https://").replace(/^http:\/(?!\/)/i, "http://");
   // Absolute URL → single candidate (still epoch-bust http(s) CDN)
-  if (/^([a-z]+:)?\/\//i.test(path) || path.startsWith("data:")) {
-    return [withFleetEpochBust(path)];
+  if (/^([a-z]+:)?\/\//i.test(absHttp) || absHttp.startsWith("data:")) {
+    return [withFleetEpochBust(absHttp)];
   }
 
   const aliases = pathAliases(path);
   const urls: string[] = [];
 
   for (const a of aliases) {
+    if (/^models\/worlds\//i.test(a)) continue; // HTML on R2 (vol.glb lives at models/vol.glb)
     const cdnFirst = isFleetCdnFirst(a);
 
     if (cdnFirst) {
-      // Production race kits / atlases / TVS — R2 then same-origin (after vercel rewrite)
       urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
-      urls.push(sameOriginUrl(a));
-      urls.push(abs(FLEET_ASSET_HOSTS.open, a));
-      urls.push(abs(FLEET_ASSET_HOSTS.gameopenVercel, a));
+      if (!a.startsWith("asset-packs/")) {
+        urls.push(sameOriginUrl(a));
+        urls.push(abs(FLEET_ASSET_HOSTS.open, a));
+      }
     } else {
-      // Open lab pack (karate, weapons stand-ins, local props)
       urls.push(sameOriginUrl(a));
       urls.push(abs(FLEET_ASSET_HOSTS.open, a));
-      urls.push(abs(FLEET_ASSET_HOSTS.gameopenVercel, a));
       urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
     }
 
-    // Arena: skinned race GLB fallback ONLY — never baked anims (CORS broken from Open).
     if (
       (a.startsWith("cdn/") || a.includes("grudge6") || a.startsWith("assets/")) &&
       !a.startsWith("anims/")
     ) {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }
-    // ObjectStore pages for icon registry paths
     if (a.startsWith("icons/")) {
       urls.push(abs(FLEET_ASSET_HOSTS.objectStorePages, a));
     }
   }
 
-  // Never append r2Gameopen — that prefix 404s for Open lab pack (props/races/vfx)
-  // and only pollutes the network panel + lastErr when all real hosts fail.
-
-  return [...new Set(urls.filter(Boolean).map(withFleetEpochBust))];
+  const unique = [...new Set(urls.filter(Boolean).map(withFleetEpochBust))].filter(
+    (u) => !/gameopen\.vercel\.app/i.test(u) && !/\/gameopen\//i.test(u),
+  );
+  return unique.slice(0, 6);
 }
 
 /** Deploy-epoch query for fleet CDN hosts (Mine-Loader worldFleet / stamp). */

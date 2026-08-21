@@ -251,6 +251,8 @@ export const DUNGEON_MAP_BOSS: Record<string, string> = {
   "forge-depths": "forge-moloch",
   "chicken-gun-town": "elite-ironclad",
   "crypt-halls": "crypt-death-knight",
+  "modular-crypt": "crypt-death-knight",
+  "npc-village": "elite-ironclad",
   dungeon: "crypt-death-knight",
   "temple-agama": "temple-bladewarden",
   "agama-map": "temple-bladewarden",

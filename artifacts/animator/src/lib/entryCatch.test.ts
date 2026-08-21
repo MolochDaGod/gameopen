@@ -143,6 +143,11 @@ describe("entryCatch", () => {
 
   it("startUrlForIntent builds correct starts", () => {
     expect(startUrlForIntent("danger")).toContain("/danger");
+    expect(startUrlForIntent("grokBuilder")).toContain("grok-builder");
+    expect(startUrlForIntent("threeFlow")).toContain("threeflow");
+    expect(startUrlForIntent("mimic")).toContain("/mimic");
+    expect(startUrlForIntent("dungeon")).toBe("https://grudge-dungeons.vercel.app/");
+    expect(startUrlForIntent("dungeonBoss")).toContain("linear=1");
     expect(startUrlForIntent("arcadeCabinet", { cabinetId: "racer" })).toContain(
       "grudox.grudge-studio.com",
     );

@@ -1,7 +1,11 @@
 # Warlords dungeon catalog — inventory + port design
 
-**Date:** 2026-07-18  
+**Date:** 2026-08-20  
 **Scope:** Every dungeon-like surface currently in Open / fleet + uMMORPG map packs + recommended production design (assets, env, navmesh, AI, clear meter 0–100%, boss).
+
+**Play host for modular + boss crawls:** https://grudge-dungeons.vercel.app/  
+Repo: `F:\GitHub\threejs-procedural-dungeon` · skill `grudge-dungeon`.  
+Agents: `startUrlForIntent("dungeon")` · boss path `startUrlForIntent("dungeonBoss")` (`?linear=1`).
 
 Related: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · [WARLORDS_PHYSICS_SSOT.md](./WARLORDS_PHYSICS_SSOT.md) · [UMMORPG_ENGINE_PRACTICES.md](./UMMORPG_ENGINE_PRACTICES.md) · [SEED_WORLD_DEPLOY.md](./SEED_WORLD_DEPLOY.md)
 
@@ -9,12 +13,27 @@ Related: [WARLORDS_PLATFORM_SSOT.md](./WARLORDS_PLATFORM_SSOT.md) · [WARLORDS_P
 
 ## 1. What exists today (Open / fleet)
 
+### 1.0 Production modular dungeon (use this)
+
+| Surface | URL | Role |
+|---------|-----|------|
+| **Grudge Dungeons** | https://grudge-dungeons.vercel.app/ | Forge + playable Warlords crawl |
+| **Boss dungeon** | https://grudge-dungeons.vercel.app/?linear=1 | 16 rooms, 0 loops: entrance → combat → mini-boss → **boss arena** |
+| Kit | `assets.grudge-studio.com/models/dungeons/warlords-dungeon-kit.json` | Isolated Kenney / KayKit / Sahara pieces — never fused multipack |
+| SI | `DUNGEON_SI` | cell **2.15 m** · wall **3.85 m** · human **1.82 m** · boss **2.35 m** |
+| Bosses | biome warlords | `lich_warlord` · `slag_warlord` · `glacier_warlord` · `death_warlord` · `bloom_warlord` |
+| Play body | Toon RTS `{race}.glb` | one mixer, rotation-only retarget |
+
+Open Danger Room GLB maps (`modular-crypt`, Forge Depths) stay **sandbox door maps**. Do **not** replace this host with a threepipe viewer or a second generator.
+
 ### 1.1 Danger Room door dungeons (GLB + Rapier + navmesh)
 
 | Id | Name | GLB | Status | Notes |
 |----|------|-----|--------|-------|
 | `default` | **Forge Depths** | `models/minecraft-kit.glb` (~0.6 MB) | **Live** | Tight corridors; auto water column + **sealed boss pit**; surface wave + pit climax |
 | `chicken-gun-town` | **Chicken Gun Town** | `models/chicken-gun-town.glb` (~4.0 MB) | **Live** | Open streets; ranged-friendly; same enemy system |
+| `modular-crypt` | **Modular Crypt** | `models/packs/modular-dungeon/assembled-crypt.glb` (~0.5 MB) | **Wired** | Gapless 5×5 of isolated 2 m floor+wall+door tiles. Pieces in `models/packs/modular-dungeon/` |
+| `npc-village` | **NPC Village** | `models/packs/npc-village/npc-village.glb` (~9.6 MB) | **Wired** | Mineways **block-type layers** (Oak_Planks, Chest, …) — not houses. Isolate by `Object_N` |
 
 **Code:** `DungeonMaps.ts` · `dungeon/Dungeon.ts` (trimesh colliders + ray navmesh + depths) · `DungeonEnemies.ts` (AI)
 
