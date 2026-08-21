@@ -9,6 +9,7 @@
  */
 import * as THREE from "three";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
+import { decideAgamaMapScale } from "./agamaBattleground";
 
 export type MapScaleResult = {
   unitScale: number;
@@ -96,48 +97,57 @@ function isSketchfabRoot(root: THREE.Object3D): boolean {
  */
 export function scaleMapToSi(
   root: THREE.Object3D,
-  opts?: { targetSpanM?: number; mapKey?: string },
+  opts?: { targetSpanM?: number; mapKey?: string; keepAuthoredSpan?: boolean },
 ): MapScaleResult {
-  const playerH = PLAYER_HEIGHT_M;
   const TARGET_SPAN = opts?.targetSpanM ?? 110;
   const MIN_SPAN = 40;
+  const battleground = !!opts?.keepAuthoredSpan || !!opts?.mapKey?.includes("agama");
 
-  root.scale.set(1, 1, 1);
+  // Do not reset child FBX 0.01 scales — only identity the wrapper.
   root.position.set(0, 0, 0);
-  root.rotation.set(0, 0, 0);
   root.updateMatrixWorld(true);
 
   let { maxXZ, height } = measureMapRobust(root);
   let unitScale = 1;
 
-  // Sketchfab / cm packs: force cm→m when span is absurd or root hints cm
-  const sketchfab = isSketchfabRoot(root);
-  if (sketchfab || maxXZ > 400 || height > 80) {
-    unitScale = 0.01;
-  } else if (maxXZ < 0.8 && height < 0.8) {
-    // Map authored as metres-as-cm (tiny) → blow up
-    unitScale = 100;
-  } else if (maxXZ < 3 && height < 3) {
-    // Borderline tiny island vs 1.8 m human → 10× or 100×
-    unitScale = maxXZ < 1.2 ? 100 : 10;
+  let hasFbxCmChild = false;
+  root.traverse((o) => {
+    if (hasFbxCmChild) return;
+    const s = o.scale;
+    if (Math.abs(s.x - 0.01) < 0.004 && Math.abs(s.x - s.y) < 0.002) hasFbxCmChild = true;
+  });
+
+  const decision = decideAgamaMapScale(
+    { spanXZ: maxXZ, height, hasFbxCmChild },
+    battleground,
+  );
+  unitScale = decision.unitScale;
+
+  if (!battleground) {
+    const sketchfab = isSketchfabRoot(root);
+    if (!hasFbxCmChild && (sketchfab || maxXZ > 400 || height > 80)) {
+      unitScale = 0.01;
+    } else if (maxXZ < 0.8 && height < 0.8) {
+      unitScale = 100;
+    } else if (maxXZ < 3 && height < 3) {
+      unitScale = maxXZ < 1.2 ? 100 : 10;
+    }
   }
 
   if (unitScale !== 1) {
-    root.scale.setScalar(unitScale);
+    root.scale.multiplyScalar(unitScale);
     root.updateMatrixWorld(true);
     ({ maxXZ, height } = measureMapRobust(root));
   }
 
-  // Playable footprint vs human
+  // Playable footprint vs human. Battleground never shrinks a kilometre farm to 90–120 m.
   let playScale = 1;
-  if (maxXZ > TARGET_SPAN * 1.5) {
+  if (battleground) {
+    playScale = 1;
+  } else if (maxXZ > TARGET_SPAN * 1.5) {
     playScale = TARGET_SPAN / maxXZ;
   } else if (maxXZ < MIN_SPAN) {
     playScale = MIN_SPAN / Math.max(maxXZ, 0.01);
-  }
-  // Agama survival: prefer roomy combat ring even if unit fix was partial
-  if (opts?.mapKey?.includes("agama") && maxXZ * playScale < 70) {
-    playScale = Math.max(playScale, 80 / Math.max(maxXZ, 0.01));
   }
 
   if (Math.abs(playScale - 1) > 0.02) {

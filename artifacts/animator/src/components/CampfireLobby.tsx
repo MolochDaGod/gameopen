@@ -115,7 +115,7 @@ const PVE_DESTS: MenuDest[] = [
   {
     id: "survival",
     label: "Agama Survival",
-    blurb: "Wave survival on the Agama map",
+    blurb: "Battleground survival — farms, harvest, faction wars, extract",
     kind: "local",
     mode: "survival",
     needsHero: true,

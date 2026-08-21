@@ -46,6 +46,44 @@ import {
   SurvivalWaterLayer,
 } from "./survivalEnvironment";
 import { ensureHumanScale } from "../characterDeploy";
+import {
+  AGAMA_AGGRO_HEARING_M,
+  AGAMA_AGGRO_LOS_M,
+  AGAMA_ALLY_ASSIST_M,
+  AGAMA_CAMERA_FAR,
+  AGAMA_CAMERA_NEAR,
+  AGAMA_EXTRACT_RADIUS_M,
+  AGAMA_FOG_FAR,
+  AGAMA_FOG_NEAR,
+  AGAMA_HARVEST_REACH_M,
+  AGAMA_MIN_SPAN_M,
+  buildAgamaLayout,
+  createCombatMemory,
+  desiredEngageRange,
+  harvestYieldCredits,
+  hasLineOfSight,
+  hostileToward,
+  inAgroRange,
+  rememberDamageTaken,
+  rememberHitLanded,
+  shouldLeash,
+  zoneAt,
+  type AgamaFactionId,
+  type AgamaHarvestNode,
+  type AgamaLayout,
+  type CombatMemory,
+  type Occluder2,
+} from "./agamaBattleground";
+import {
+  applyAgamaMeshLod,
+  buildFarmPlots,
+  buildHarvestMeshes,
+  buildPadTerrain,
+  buildZoneMarkers,
+  hideMapHelpers,
+  updateAgamaMeshLod,
+} from "./agamaMapFit";
+import { AgamaMinimap } from "./agamaMinimap";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYER_MAX_HP = 150;
@@ -68,6 +106,8 @@ const NET_TICK_HZ = 20;
 const FOCUS_ACQUIRE_RANGE = 18;
 const FOCUS_BREAK_RANGE = 28;
 const DASH_COOLDOWN = 2.0;
+const BATTLEGROUND_FOCUS_ACQUIRE = 32;
+const BATTLEGROUND_FOCUS_BREAK = 48;
 
 /** Full arsenal cycle (Danger Room weapon table). */
 const WEAPON_CYCLE: WeaponId[] = mainWeaponCycle();
@@ -119,6 +159,20 @@ export interface BrawlerState {
   avatarId: string;
   /** Weapon cycle list for HUD strip (arsenal ids). */
   weaponCycle: string[];
+  /** Agama battleground objective (extract / hold). */
+  objective: string;
+  objectiveDist: number;
+  zoneName: string;
+  harvestHint: string | null;
+  extractReady: boolean;
+  extracted: boolean;
+  matchTime: number;
+  wood: number;
+  fiber: number;
+  ore: number;
+  crop: number;
+  allyCount: number;
+  enemyCount: number;
 }
 
 export interface BrawlerSceneOptions {
@@ -154,6 +208,11 @@ export interface BrawlerSceneOptions {
   atk?: number;
   /** Fleet / class max HP. */
   maxHp?: number;
+  /**
+   * Agama Survival battleground: keep authored kilometre-scale map, LOD,
+   * farms/harvest, faction AI, extraction. Ruins Brawler stays compact.
+   */
+  battleground?: boolean;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -171,6 +230,15 @@ interface EnemyObj {
   /** Prefab attack cooldown (s) */
   attackCdMax: number;
   walkClock: number;
+  faction: AgamaFactionId;
+  role: "enemy" | "ally";
+  home: THREE.Vector3;
+  zoneId: string;
+  aggro: boolean;
+  mixer: THREE.AnimationMixer | null;
+  clips: THREE.AnimationClip[];
+  gait: "idle" | "walk" | "attack";
+  memory: CombatMemory;
 }
 
 interface SkillDef {
@@ -274,6 +342,32 @@ export class BrawlerScene {
   private waterLayer: SurvivalWaterLayer | null = null;
   private terrainHeightAt: ((x: number, z: number) => number | null) | null = null;
   private mapRoot: THREE.Object3D | null = null;
+  private battleground = false;
+  private mapHalf = ARENA_HALF;
+  private spawnPoint = new THREE.Vector3(0, 0, 8);
+  private layout: AgamaLayout | null = null;
+  private harvestNodes: AgamaHarvestNode[] = [];
+  private harvestRoot: THREE.Group | null = null;
+  private zoneRoot: THREE.Group | null = null;
+  private lodMeshes: THREE.Mesh[] = [];
+  private lodAcc = 0;
+  private lodScratch = new THREE.Vector3();
+  private minimap: AgamaMinimap | null = null;
+  private minimapAcc = 0;
+  private matchTime = 0;
+  private wood = 0;
+  private fiber = 0;
+  private ore = 0;
+  private crop = 0;
+  private extracted = false;
+  private harvestHint: string | null = null;
+  private occluderCache: Occluder2[] = [];
+  private occluderAcc = 0;
+  private keyLight: THREE.DirectionalLight | null = null;
+  private allies: EnemyObj[] = [];
+  private extractReady = false;
+  private extractHold = 0;
+  private nearestHarvest: AgamaHarvestNode | null = null;
 
   constructor(canvas: HTMLCanvasElement, onState: StateCb, opts: BrawlerSceneOptions = {}) {
     this.canvas = canvas;
@@ -309,6 +403,7 @@ export class BrawlerScene {
     if (typeof opts.initialSpawnCount === "number" && opts.initialSpawnCount >= 0) {
       this.initialSpawnCount = opts.initialSpawnCount;
     }
+    this.battleground = !!opts.battleground || /agama/i.test(this.mapPath);
 
     // Danger Room controls (persisted) — same loadControls() as Studio
     this.params = {
@@ -334,9 +429,16 @@ export class BrawlerScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    this.scene.background = new THREE.Color(0x0a0c12);
-    this.scene.fog = new THREE.FogExp2(0x0a0c12, 0.015);
-    this.camera = new THREE.PerspectiveCamera(this.params.fov, w / h, 0.1, 500);
+    this.scene.background = new THREE.Color(this.battleground ? 0x87a56a : 0x0a0c12);
+    this.scene.fog = this.battleground
+      ? new THREE.Fog(0x9bb58a, AGAMA_FOG_NEAR, AGAMA_FOG_FAR)
+      : new THREE.FogExp2(0x0a0c12, 0.015);
+    this.camera = new THREE.PerspectiveCamera(
+      this.params.fov,
+      w / h,
+      this.battleground ? AGAMA_CAMERA_NEAR : 0.1,
+      this.battleground ? AGAMA_CAMERA_FAR : 500,
+    );
     this.vfx = new Vfx(this.scene, this.camera);
     this.vfx.setGoreCamera(this.camera);
     // Same postprocessing stack as Danger Room (bloom / vignette / grain / ACES)
@@ -360,8 +462,11 @@ export class BrawlerScene {
     this.input = new InputState(canvas);
 
     this.buildLights();
-    this.buildSafeZoneRing();
+    if (!this.battleground) this.buildSafeZoneRing();
     this.buildFocusRing();
+    if (this.battleground) {
+      this.minimap = new AgamaMinimap(canvas.parentElement);
+    }
 
     this.raf = requestAnimationFrame(this.animate);
     void this.bootstrap();
@@ -388,6 +493,9 @@ export class BrawlerScene {
     this.setPhase("playing");
     // Immediate wave presence — don't wait for first spawn-interval tick.
     for (let i = 0; i < this.initialSpawnCount; i++) this.spawnEnemy();
+    if (this.battleground) {
+      for (let i = 0; i < 4; i++) this.spawnEnemy({ role: "ally", faction: "ally" });
+    }
     void this.initNetwork();
   }
 
@@ -404,7 +512,8 @@ export class BrawlerScene {
       physics.dispose();
       return;
     }
-    physics.addGroundPlane(0, ARENA_HALF + 10, 0.5);
+    const groundHalf = this.battleground ? 1200 : ARENA_HALF + 10;
+    physics.addGroundPlane(0, groundHalf, 0.5);
     this.physics = physics;
   }
 
@@ -421,15 +530,17 @@ export class BrawlerScene {
     const key = new THREE.DirectionalLight(0xfff1d8, 1.6);
     key.position.set(14, 26, 10);
     key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.mapSize.set(this.battleground ? 1024 : 2048, this.battleground ? 1024 : 2048);
     key.shadow.camera.near = 1;
-    key.shadow.camera.far = 90;
+    key.shadow.camera.far = this.battleground ? 220 : 90;
     const sc = key.shadow.camera as THREE.OrthographicCamera;
-    sc.left = -40;
-    sc.right = 40;
-    sc.top = 40;
-    sc.bottom = -40;
+    const shadowExtent = this.battleground ? 48 : 40;
+    sc.left = -shadowExtent;
+    sc.right = shadowExtent;
+    sc.top = shadowExtent;
+    sc.bottom = -shadowExtent;
     this.scene.add(key);
+    this.keyLight = key;
     const p1 = new THREE.PointLight(0xff6030, 1.2, 18);
     p1.position.set(-12, 3, -8);
     this.scene.add(p1);
@@ -504,7 +615,7 @@ export class BrawlerScene {
         this.avatar = av;
         this.characterId = id;
         this.ensureAvatarHumanScale(av);
-        av.root.position.set(0, 0, 8);
+        av.root.position.copy(this.spawnPoint);
         this.scene.add(av.root);
         this.bindController(av);
         this.installSkillsForWeapon(this.weaponId);
@@ -536,7 +647,7 @@ export class BrawlerScene {
       this.avatar = av;
       this.characterId = "grudge:western-kingdoms:warrior";
       this.ensureAvatarHumanScale(av);
-      av.root.position.set(0, 0, 8);
+      av.root.position.copy(this.spawnPoint);
       this.scene.add(av.root);
       this.bindController(av);
       this.installSkillsForWeapon(this.weaponId);
@@ -601,7 +712,7 @@ export class BrawlerScene {
   /** Wire Danger Room Controller to the loaded Avatar. */
   private bindController(av: Avatar) {
     this.controller = new Controller(av, this.camera, this.input, this.params);
-    this.controller.setRoomBound(ARENA_HALF);
+    this.controller.setRoomBound(this.mapHalf > 8 ? this.mapHalf * 0.98 : ARENA_HALF);
     this.controller.setObstacles(() =>
       this.enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, r: 0.55 })),
     );
@@ -729,7 +840,8 @@ export class BrawlerScene {
         });
         root.userData.selectable = "hostile";
         stampPrefabCombat(root, prefab);
-        // Stop mixer on template — spawns are static clones (AI walk bob handles motion)
+        root.userData.agamaClips = [...rig.clips.values()];
+        // Keep clips; stop template mixer so only spawn mixers tick
         rig.mixer.stopAllAction();
         this.enemyTemplates[i] = root as THREE.Group;
         console.info(
@@ -806,23 +918,38 @@ export class BrawlerScene {
         if (this.disposed) return;
         const root = gltf.scene;
         this.mapRoot = root;
+        const playerNode = hideMapHelpers(root);
 
-        // SI calibration (100× / Sketchfab / tiny maps) + terrain/water layers
+        // SI calibration. Agama battleground keeps authored kilometres —
+        // do NOT clamp to a 90–120 m pad (that is why farms felt dollhouse-sized).
         const scaled = scaleMapToSi(root, {
-          targetSpanM: path.includes("agama") ? 120 : 90,
+          targetSpanM: this.battleground ? 720 : 90,
           mapKey: path,
+          keepAuthoredSpan: this.battleground,
         });
         const half = scaled.half;
 
-        // Auto-fit spawn ring to map footprint
+        if (playerNode) {
+          const sp = new THREE.Vector3();
+          playerNode.getWorldPosition(sp);
+          this.spawnPoint.set(sp.x, 0, sp.z);
+        } else if (this.battleground) {
+          this.spawnPoint.set(0, 0, -Math.min(half * 0.45, 220));
+        }
+
         if (half > 8) {
-          const autoSpawn = Math.min(70, Math.max(16, half * 0.4));
-          if (this.spawnRadius <= SPAWN_RADIUS + 0.01) {
-            this.spawnRadius = autoSpawn;
+          const autoSpawn = this.battleground
+            ? Math.min(half * 0.35, 180)
+            : Math.min(70, Math.max(16, half * 0.4));
+          if (this.spawnRadius <= SPAWN_RADIUS + 0.01 || this.battleground) {
+            this.spawnRadius = Math.max(18, autoSpawn);
           }
         }
-        const bound = Math.max(22, Math.min(90, half * 0.92));
+        const bound = this.battleground
+          ? Math.max(80, half * 0.98)
+          : Math.max(22, Math.min(90, half * 0.92));
         this.controller?.setRoomBound(bound);
+        this.mapHalf = half;
 
         // Materials + shadows
         const occluders: THREE.Object3D[] = [];
@@ -865,14 +992,17 @@ export class BrawlerScene {
           this.waterLayer?.dispose();
           this.waterLayer = new SurvivalWaterLayer(Math.max(40, half * 1.1), wy);
           this.scene.add(this.waterLayer.group);
-          // Wade/swim band around water surface (Controller SurfaceLocomotion)
           this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
         }
 
-        // Physics: multi-mesh terrain colliders (game mechanics)
         void this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
 
-        // Snap player feet to terrain at spawn if already built
+        if (this.battleground) {
+          this.lodMeshes = applyAgamaMeshLod(root);
+          this.installBattleground(half);
+          if (this.avatar) this.avatar.root.position.copy(this.spawnPoint);
+          if (this.fallbackModel) this.fallbackModel.position.copy(this.spawnPoint);
+        }
         this.snapPlayerToTerrain();
 
         console.info(
@@ -886,6 +1016,7 @@ export class BrawlerScene {
           `${PLAYER_HEIGHT_M}m`,
           "unit=",
           scaled.unitScale.toFixed(5),
+          this.battleground ? "battleground" : "arena",
         );
         return;
       } catch (err) {
@@ -947,15 +1078,46 @@ export class BrawlerScene {
   }
 
   private buildFallbackGround() {
+    const half = this.battleground ? AGAMA_MIN_SPAN_M * 0.5 : ARENA_HALF;
     const g = new THREE.Mesh(
-      new THREE.CircleGeometry(ARENA_HALF, 64),
-      new THREE.MeshStandardMaterial({ color: 0x1a1e28, roughness: 0.96 }),
+      new THREE.CircleGeometry(half, 64),
+      new THREE.MeshStandardMaterial({
+        color: this.battleground ? 0x3d5a32 : 0x1a1e28,
+        roughness: 0.96,
+      }),
     );
     g.rotation.x = -Math.PI / 2;
     g.receiveShadow = true;
     g.userData.physicsLayer = "terrain";
     this.scene.add(g);
     this.controller?.setGroundHeightAt(() => 0);
+    if (this.battleground) {
+      this.mapHalf = half;
+      this.spawnPoint.set(0, 0, -half * 0.45);
+      this.installBattleground(half);
+    }
+  }
+
+  /** Farms, harvestables, faction camps, extraction — character-scale. */
+  private installBattleground(half: number) {
+    const spawn = { x: this.spawnPoint.x, z: this.spawnPoint.z };
+    const layout = buildAgamaLayout(half, spawn);
+    this.layout = layout;
+    this.harvestNodes = layout.harvest.map((h) => ({ ...h }));
+    this.safeZoneRadius = layout.zones.find((z) => z.kind === "safe")?.r ?? 18;
+    this.safeZoneRing?.position.set(spawn.x, 0.05, spawn.z);
+
+    if (half < AGAMA_MIN_SPAN_M * 0.48) {
+      this.scene.add(buildPadTerrain(AGAMA_MIN_SPAN_M * 0.5));
+    }
+    this.scene.add(buildFarmPlots(layout.zones));
+    this.zoneRoot = buildZoneMarkers(layout);
+    this.scene.add(this.zoneRoot);
+    this.harvestRoot = buildHarvestMeshes(this.harvestNodes);
+    this.scene.add(this.harvestRoot);
+    this.minimap?.setWorld(half, spawn);
+
+    this.controller?.setRoomBound(Math.max(80, half * 0.98));
   }
 
   private async initNetwork() {
@@ -1055,9 +1217,16 @@ export class BrawlerScene {
     if (e.code === "BracketLeft") this.cycleWeapon(-1);
     if (e.code === "BracketRight") this.cycleWeapon(1);
     if (e.code === "KeyQ") this.triggerSkill(1);
-    if (e.code === "KeyE") this.triggerSkill(2);
+    if (e.code === "KeyE") {
+      if (this.battleground && this.tryHarvest()) return;
+      this.triggerSkill(2);
+    }
     if (e.code === "KeyR") this.triggerSkill(3);
     if (e.code === "KeyF") this.triggerSkill(4);
+    if (e.code === "KeyM" && this.minimap) {
+      const vis = this.minimap.canvas.style.display !== "none";
+      this.minimap.canvas.style.display = vis ? "none" : "block";
+    }
   };
 
   private onContextMenu = (e: Event) => {
@@ -1125,14 +1294,16 @@ export class BrawlerScene {
     const pp = this.playerPos();
     if (this.focusTarget && this.enemies.includes(this.focusTarget)) {
       const d = pp.distanceTo(this.focusTarget.pos);
-      if (d <= FOCUS_BREAK_RANGE) {
+      const breakR = this.battleground ? BATTLEGROUND_FOCUS_BREAK : FOCUS_BREAK_RANGE;
+      if (d <= breakR) {
         this.controller?.setLockTarget(this.focusTarget.pos);
         return this.focusTarget;
       }
     }
     let best: EnemyObj | null = null;
-    let bestD = FOCUS_ACQUIRE_RANGE;
+    let bestD = this.battleground ? BATTLEGROUND_FOCUS_ACQUIRE : FOCUS_ACQUIRE_RANGE;
     for (const en of this.enemies) {
+      if (en.role === "ally") continue;
       const d = pp.distanceTo(en.pos);
       if (d < bestD) {
         bestD = d;
@@ -1333,6 +1504,15 @@ export class BrawlerScene {
     p.y += 0.9;
     this.vfx.fireAura?.(p, amount > 40 ? 1.15 : 0.75);
     this.vfx.impact(p, amount > 40 ? 0xff6040 : 0xff8060, amount > 40 ? 1.4 : 0.95);
+    const pp = this.playerPos();
+    en.memory = rememberDamageTaken(
+      en.memory,
+      { x: pp.x, z: pp.z },
+      pp.distanceTo(en.pos),
+      amount > 28,
+    );
+    en.aggro = true;
+    this.playFighterGait(en, "attack");
     if (this.focusRing && en === this.focusTarget) {
       const mat = this.focusRing.material as THREE.MeshBasicMaterial;
       mat.color.setHex(0xffe080);
@@ -1349,8 +1529,10 @@ export class BrawlerScene {
     const pos = en.pos.clone();
     pos.y += 0.8;
     this.vfx.blastImpact(pos, 0xff4400, 0.6);
+    en.mixer?.stopAllAction();
     this.scene.remove(en.mesh);
     this.enemies = this.enemies.filter((e) => e !== en);
+    this.allies = this.allies.filter((e) => e !== en);
     if (this.focusTarget === en) {
       this.focusTarget = null;
       this.controller?.setLockTarget(null);
@@ -1368,8 +1550,8 @@ export class BrawlerScene {
     this.playerHp = Math.max(0, this.playerHp - effective);
     this.avatar?.playRoleOnce("hurt", 0.08);
     // 2D gore on player torso
-    if (this.controller) {
-      const p = this.controller.position.clone();
+    {
+      const p = this.playerPos().clone();
       p.y += 1.1;
       this.vfx.impact(p, 0xaa2028, 0.85);
     }
@@ -1390,30 +1572,52 @@ export class BrawlerScene {
     this.emitState();
   }
 
-  // ── Enemies ────────────────────────────────────────────────────────────────
-  private spawnEnemy() {
-    if (this.enemies.length >= this.maxEnemies || this.phase !== "playing") return;
-    const angle = Math.random() * Math.PI * 2;
-    const r = this.spawnRadius;
-    const pos = new THREE.Vector3(
-      Math.sin(angle) * r,
-      0,
-      Math.cos(angle) * r,
-    );
+  // ── Enemies / allies ───────────────────────────────────────────────────────
+  private spawnEnemy(opts?: {
+    faction?: AgamaFactionId;
+    role?: "enemy" | "ally";
+    zoneId?: string;
+    pos?: THREE.Vector3;
+  }) {
+    const hostiles = this.enemies.filter((e) => e.role === "enemy");
+    if (hostiles.length >= this.maxEnemies && opts?.role !== "ally") return;
+    if (this.phase !== "playing") return;
+
+    const layout = this.layout;
+    let pos = opts?.pos?.clone() ?? null;
+    let zoneId = opts?.zoneId ?? "";
+    let faction: AgamaFactionId = opts?.faction ?? "orc";
+    const role = opts?.role ?? "enemy";
+    if (!pos && this.battleground && layout) {
+      const camps = layout.zones.filter((z) =>
+        role === "ally" ? z.faction === "ally" || z.kind === "safe" : z.kind === "war",
+      );
+      const camp = camps[Math.floor(Math.random() * Math.max(1, camps.length))] ?? layout.zones[0]!;
+      const a = Math.random() * Math.PI * 2;
+      const r = 4 + Math.random() * Math.max(6, camp.r * 0.55);
+      pos = new THREE.Vector3(camp.x + Math.sin(a) * r, 0, camp.z + Math.cos(a) * r);
+      zoneId = camp.id;
+      faction = opts?.faction ?? (role === "ally" ? "ally" : camp.faction);
+    }
+    if (!pos) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = this.spawnRadius;
+      pos = new THREE.Vector3(Math.sin(angle) * r, 0, Math.cos(angle) * r);
+    }
+
     const loaded = this.enemyTemplates.filter(Boolean) as THREE.Group[];
     const tpl =
       loaded.length > 0
         ? loaded[Math.floor(Math.random() * loaded.length)]!
         : null;
     const mesh = new THREE.Group();
+    let clips: THREE.AnimationClip[] = [];
     if (tpl) {
-      // Skinned Toon RTS kits need SkeletonUtils.clone (not Object3D.clone)
       try {
         mesh.add(cloneSkinned(tpl));
       } catch {
         mesh.add(tpl.clone(true));
       }
-      // Propagate EntityPrefab combat / identity onto the live spawn root
       mesh.userData.entityPrefab = tpl.userData.entityPrefab;
       mesh.userData.warlordsRole = tpl.userData.warlordsRole;
       mesh.userData.raceId = tpl.userData.raceId;
@@ -1423,31 +1627,40 @@ export class BrawlerScene {
       mesh.userData.combatCd = tpl.userData.combatCd;
       mesh.userData.moveSpeed = tpl.userData.moveSpeed;
       mesh.userData.maxHp = tpl.userData.maxHp;
+      const raw = tpl.userData.agamaClips;
+      if (Array.isArray(raw)) clips = raw as THREE.AnimationClip[];
     } else {
-      // Last resort only — prefer never shipping green box as final art
       console.warn("[BrawlerScene] spawn without grudge6 template — box placeholder");
       const fb = new THREE.Mesh(
         new THREE.BoxGeometry(0.7, 1.6, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x4a7a30, roughness: 0.9 }),
+        new THREE.MeshStandardMaterial({
+          color: role === "ally" ? 0x4a7ab0 : 0x4a7a30,
+          roughness: 0.9,
+        }),
       );
       fb.position.y = 0.8;
       fb.castShadow = true;
       mesh.add(fb);
     }
     mesh.position.copy(pos);
-    mesh.userData.selectable = "hostile";
+    mesh.userData.selectable = role === "ally" ? "ally" : "hostile";
     mesh.userData.physicsLayer = "npc";
     this.scene.add(mesh);
 
-    // Combat from EntityPrefab (template userData), with ENEMY_* constants as fallback
+    let mixer: THREE.AnimationMixer | null = null;
+    if (clips.length) {
+      mixer = new THREE.AnimationMixer(mesh);
+    }
+
     const baseHp = numUd(tpl, "maxHp", ENEMY_HP);
     const baseSpeed = numUd(tpl, "moveSpeed", ENEMY_SPEED);
     const attackReach = numUd(tpl, "combatRange", ENEMY_ATTACK_REACH);
     const attackDamage = numUd(tpl, "combatDamage", ENEMY_DAMAGE);
     const attackCdMax = numUd(tpl, "combatCd", ENEMY_ATTACK_CD);
     const waveHp = baseHp + Math.floor((this.wave - 1) * 8);
+    const home = pos.clone();
 
-    this.enemies.push({
+    const obj: EnemyObj = {
       mesh,
       hp: waveHp,
       maxHp: waveHp,
@@ -1458,26 +1671,151 @@ export class BrawlerScene {
       attackDamage,
       attackCdMax,
       walkClock: Math.random() * Math.PI * 2,
-    });
+      faction,
+      role,
+      home,
+      zoneId,
+      aggro: false,
+      mixer,
+      clips,
+      gait: "idle",
+      memory: createCombatMemory(attackReach),
+    };
+    this.playFighterGait(obj, "idle");
+    this.enemies.push(obj);
+    if (role === "ally") this.allies.push(obj);
+  }
+
+  private playFighterGait(en: EnemyObj, gait: EnemyObj["gait"]) {
+    if (en.gait === gait && en.mixer) return;
+    en.gait = gait;
+    const mixer = en.mixer;
+    if (!mixer || !en.clips.length) return;
+    mixer.stopAllAction();
+    const pick = (re: RegExp) => en.clips.find((c) => re.test(c.name));
+    const clip =
+      gait === "attack"
+        ? pick(/attack|slash|strike|combat/i) ?? pick(/walk|run/i)
+        : gait === "walk"
+          ? pick(/walk|run|jog/i) ?? pick(/idle/i)
+          : pick(/idle|stand/i) ?? en.clips[0];
+    if (!clip) return;
+    const act = mixer.clipAction(clip);
+    act.reset();
+    act.setLoop(gait === "attack" ? THREE.LoopOnce : THREE.LoopRepeat, gait === "attack" ? 1 : Infinity);
+    act.clampWhenFinished = gait === "attack";
+    act.play();
+  }
+
+  private fighterTarget(en: EnemyObj): THREE.Vector3 {
+    const pp = this.playerPos();
+    if (en.role === "ally") {
+      let best: EnemyObj | null = null;
+      let bestD = AGAMA_ALLY_ASSIST_M;
+      for (const other of this.enemies) {
+        if (other.role === "ally") continue;
+        if (!hostileToward(en.faction, other.faction) && other.role !== "enemy") continue;
+        const d = en.pos.distanceTo(other.pos);
+        if (d < bestD) {
+          bestD = d;
+          best = other;
+        }
+      }
+      if (best) return best.pos;
+      return pp;
+    }
+    let best: EnemyObj | null = null;
+    let bestD = 22;
+    for (const other of this.enemies) {
+      if (other === en) continue;
+      if (!hostileToward(en.faction, other.faction)) continue;
+      const d = en.pos.distanceTo(other.pos);
+      if (d < bestD) {
+        bestD = d;
+        best = other;
+      }
+    }
+    if (best && bestD < en.pos.distanceTo(pp) * 0.85) return best.pos;
+    return pp;
   }
 
   private updateEnemies(dt: number) {
     const pp = this.playerPos();
+    const occluders = this.occluderCache;
     for (const en of this.enemies) {
       en.attackCd = Math.max(0, en.attackCd - dt);
-      const dir = new THREE.Vector3(pp.x - en.pos.x, 0, pp.z - en.pos.z);
-      const dist = dir.length();
-      if (dist > 0.1) {
-        dir.normalize();
-        en.pos.addScaledVector(dir, en.speed * dt);
-        en.mesh.position.copy(en.pos);
-        en.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+      en.mixer?.update(dt);
+      const target = this.fighterTarget(en);
+      const los = hasLineOfSight(
+        { x: en.pos.x, z: en.pos.z },
+        { x: target.x, z: target.z },
+        occluders,
+      );
+      const hear = inAgroRange(
+        { x: en.pos.x, z: en.pos.z },
+        { x: target.x, z: target.z },
+        los,
+        AGAMA_AGGRO_HEARING_M,
+        en.role === "ally" ? 48 : AGAMA_AGGRO_LOS_M,
+      );
+      if (hear) en.aggro = true;
+      if (shouldLeash({ x: en.pos.x, z: en.pos.z }, { x: en.home.x, z: en.home.z }, en.aggro)) {
+        en.aggro = false;
       }
-      en.walkClock += dt * 4;
-      en.mesh.position.y = Math.abs(Math.sin(en.walkClock)) * 0.08;
-      if (dist <= en.attackReach && en.attackCd <= 0) {
-        en.attackCd = en.attackCdMax;
-        this.damagePlayer(en.attackDamage);
+
+      const dir = new THREE.Vector3();
+      let moving = false;
+      if (en.aggro) {
+        dir.set(target.x - en.pos.x, 0, target.z - en.pos.z);
+        const dist = dir.length();
+        const prefer = desiredEngageRange(en.memory, en.attackReach);
+        if (dist > prefer + 0.35) {
+          dir.normalize();
+          if (en.memory.dodgeBias > 0.25 && (en.walkClock * 3) % 1 < en.memory.dodgeBias) {
+            const side = new THREE.Vector3(-dir.z, 0, dir.x);
+            dir.addScaledVector(side, (en.walkClock % 2 < 1 ? 1 : -1) * 0.55).normalize();
+          }
+          en.pos.addScaledVector(dir, en.speed * dt);
+          moving = true;
+        } else if (dist < prefer - 0.8) {
+          dir.normalize();
+          en.pos.addScaledVector(dir, -en.speed * 0.7 * dt);
+          moving = true;
+        }
+        if (dir.lengthSq() > 0.0001) en.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+        if (dist <= en.attackReach && en.attackCd <= 0 && (los || dist < 2.2)) {
+          en.attackCd = en.attackCdMax;
+          this.playFighterGait(en, "attack");
+          if (en.role === "enemy" && target === pp) {
+            this.damagePlayer(en.attackDamage);
+            en.memory = rememberHitLanded(en.memory, en.memory.skillWeight > 0.35);
+          } else {
+            const victim = this.enemies.find(
+              (o) => o !== en && o.pos.distanceTo(en.pos) <= en.attackReach + 0.4,
+            );
+            if (victim && hostileToward(en.faction, victim.faction)) {
+              victim.hp -= en.attackDamage;
+              victim.aggro = true;
+              if (victim.hp <= 0) this.killEnemy(victim);
+            }
+          }
+        }
+      } else {
+        dir.set(en.home.x - en.pos.x, 0, en.home.z - en.pos.z);
+        if (dir.length() > 1.2) {
+          dir.normalize();
+          en.pos.addScaledVector(dir, en.speed * 0.55 * dt);
+          en.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          moving = true;
+        }
+      }
+      en.mesh.position.copy(en.pos);
+      if (!en.mixer) {
+        en.walkClock += dt * 4;
+        en.mesh.position.y = moving ? Math.abs(Math.sin(en.walkClock)) * 0.08 : 0;
+      }
+      if (!(en.gait === "attack" && en.attackCd > en.attackCdMax * 0.5)) {
+        this.playFighterGait(en, moving ? "walk" : "idle");
       }
     }
   }
@@ -1541,6 +1879,7 @@ export class BrawlerScene {
         this.spawnEnemy();
       }
       this.updateSafeZone(dt);
+      if (this.battleground) this.updateBattleground(dt);
       this.sendNetInput(dt);
       if (this.lmbDown && this.skills[0] && this.skills[0].cd <= 0) {
         this.triggerSkill(1);
@@ -1555,6 +1894,117 @@ export class BrawlerScene {
     if (this.postfx) this.postfx.render(dt);
     else this.renderer.render(this.scene, this.camera);
   };
+
+  private updateBattleground(dt: number) {
+    this.matchTime += dt;
+    const pp = this.playerPos();
+    this.lodAcc += dt;
+    if (this.lodAcc > 0.28 && this.lodMeshes.length) {
+      this.lodAcc = 0;
+      updateAgamaMeshLod(this.lodMeshes, pp, this.lodScratch);
+    }
+    this.occluderAcc += dt;
+    if (this.occluderAcc > 0.4) {
+      this.occluderAcc = 0;
+      this.rebuildOccluders(pp);
+    }
+    if (this.keyLight) {
+      this.keyLight.position.set(pp.x + 18, 42, pp.z + 12);
+      this.keyLight.target.position.copy(pp);
+      this.keyLight.target.updateMatrixWorld();
+      if (!this.keyLight.target.parent) this.scene.add(this.keyLight.target);
+    }
+
+    let nearest: AgamaHarvestNode | null = null;
+    let nd = AGAMA_HARVEST_REACH_M;
+    for (const h of this.harvestNodes) {
+      if (h.hp <= 0) continue;
+      const d = Math.hypot(pp.x - h.x, pp.z - h.z);
+      if (d < nd) {
+        nd = d;
+        nearest = h;
+      }
+    }
+    this.nearestHarvest = nearest;
+    const nextHint = nearest ? `E  harvest ${nearest.kind}` : null;
+    if (nextHint !== this.harvestHint) {
+      this.harvestHint = nextHint;
+      this.emitState();
+    }
+
+    const extract = this.layout?.extract;
+    if (extract) {
+      const d = Math.hypot(pp.x - extract.x, pp.z - extract.z);
+      const ready = d <= AGAMA_EXTRACT_RADIUS_M && this.kills >= 6;
+      if (ready !== this.extractReady) {
+        this.extractReady = ready;
+        this.emitState();
+      }
+      if (ready && !this.extracted) {
+        this.extractHold += dt;
+        if (this.extractHold >= 2.4) {
+          this.extracted = true;
+          this.emitState();
+        }
+      } else {
+        this.extractHold = 0;
+      }
+    }
+
+    this.minimapAcc += dt;
+    if (this.minimap && this.minimapAcc > 0.12 && this.layout) {
+      this.minimapAcc = 0;
+      const yaw = this.controller ? Math.atan2(this.controller.forward().x, this.controller.forward().z) : 0;
+      this.minimap.draw({
+        player: { x: pp.x, z: pp.z, yaw },
+        allies: this.allies.map((a) => ({ x: a.pos.x, z: a.pos.z })),
+        enemies: this.enemies.filter((e) => e.role === "enemy").map((e) => ({ x: e.pos.x, z: e.pos.z })),
+        harvest: this.harvestNodes,
+        zones: this.layout.zones,
+        extract: this.layout.extract,
+      });
+    }
+  }
+
+  private rebuildOccluders(player: THREE.Vector3) {
+    const out: Occluder2[] = [];
+    const maxD = 70;
+    for (const m of this.lodMeshes) {
+      if (!m.userData.agamaLandmark) continue;
+      m.getWorldPosition(this.lodScratch);
+      if (Math.hypot(this.lodScratch.x - player.x, this.lodScratch.z - player.z) > maxD) continue;
+      const box = new THREE.Box3().setFromObject(m);
+      const size = box.getSize(new THREE.Vector3());
+      const r = Math.max(0.8, Math.min(8, Math.max(size.x, size.z) * 0.35));
+      out.push({ x: this.lodScratch.x, z: this.lodScratch.z, r });
+      if (out.length > 48) break;
+    }
+    this.occluderCache = out;
+  }
+
+  private tryHarvest(): boolean {
+    if (!this.battleground || this.phase !== "playing") return false;
+    const h = this.nearestHarvest;
+    if (!h || h.hp <= 0) return false;
+    h.hp -= 8;
+    this.avatar?.playRoleOnce?.("attack", 0.08);
+    const pos = new THREE.Vector3(h.x, 1, h.z);
+    this.vfx.impact(pos, 0x8ecf6a, 0.6);
+    if (h.hp <= 0) {
+      this.credits += harvestYieldCredits(h.kind);
+      if (h.kind === "wood") this.wood += h.yieldQty;
+      else if (h.kind === "ore") this.ore += h.yieldQty;
+      else if (h.kind === "fiber") this.fiber += h.yieldQty;
+      else this.crop += h.yieldQty;
+      if (this.harvestRoot) {
+        for (const child of this.harvestRoot.children) {
+          if (child.userData.harvestId === h.id) child.visible = false;
+        }
+      }
+    }
+    this.emitState();
+    return true;
+  }
 
   private updateFocus(dt: number) {
     void dt;
@@ -1582,7 +2032,9 @@ export class BrawlerScene {
     const pp = this.playerPos();
     const xz = new THREE.Vector2(pp.x, pp.z);
     const wasIn = this.inSafeZone;
-    this.inSafeZone = xz.length() < this.safeZoneRadius;
+    this.inSafeZone = this.battleground
+      ? Math.hypot(pp.x - this.spawnPoint.x, pp.z - this.spawnPoint.z) < this.safeZoneRadius
+      : xz.length() < this.safeZoneRadius;
     if (this.inSafeZone) {
       this.playerHp = Math.min(this.playerMaxHp, this.playerHp + HEAL_RATE * dt);
     }
@@ -1637,6 +2089,12 @@ export class BrawlerScene {
     const weaponId = this.weaponId;
     const wdef = getWeapon(weaponId);
     const ft = this.focusTarget;
+    const pp = this.playerPos();
+    const extract = this.layout?.extract;
+    const objectiveDist = extract
+      ? Math.hypot(pp.x - extract.x, pp.z - extract.z)
+      : 0;
+    const znow = this.layout ? zoneAt(this.layout.zones, pp.x, pp.z) : null;
     const s: BrawlerState = {
       phase: this.phase,
       playerHp: Math.round(this.playerHp),
@@ -1670,6 +2128,23 @@ export class BrawlerScene {
       targetMaxHp: ft ? Math.round(ft.maxHp) : 0,
       avatarId: this.characterId,
       weaponCycle: [...WEAPON_CYCLE],
+      objective: this.extracted
+        ? "EXTRACTED"
+        : this.extractReady
+          ? "Hold the North Extraction"
+          : "Fight north to the Extraction",
+      objectiveDist,
+      zoneName: znow?.name ?? (this.battleground ? "Agama Fields" : "Arena"),
+      harvestHint: this.harvestHint,
+      extractReady: this.extractReady,
+      extracted: this.extracted,
+      matchTime: this.matchTime,
+      wood: this.wood,
+      fiber: this.fiber,
+      ore: this.ore,
+      crop: this.crop,
+      allyCount: this.allies.filter((a) => a.hp > 0).length,
+      enemyCount: this.enemies.filter((e) => e.role === "enemy").length,
     };
     const sig = JSON.stringify({
       p: s.phase,
@@ -1690,6 +2165,14 @@ export class BrawlerScene {
       fl: s.focusLocked ? 1 : 0,
       ht: s.hasTarget ? 1 : 0,
       th: s.targetHp,
+      zn: s.zoneName,
+      od: Math.round(s.objectiveDist),
+      hv: s.harvestHint || "",
+      ex: s.extracted ? 1 : 0,
+      wd: s.wood,
+      or: s.ore,
+      ac: s.allyCount,
+      ec: s.enemyCount,
     });
     if (sig === this.lastSig) return;
     this.lastSig = sig;
@@ -1701,8 +2184,11 @@ export class BrawlerScene {
     this.playerHp = this.playerMaxHp;
     this.playerArmor = PLAYER_BASE_ARMOR;
     this.ammo = PLAYER_BASE_AMMO;
-    if (this.avatar) this.avatar.root.position.set(0, 0, 8);
-    if (this.fallbackModel) this.fallbackModel.position.set(0, 0, 8);
+    if (this.avatar) this.avatar.root.position.copy(this.spawnPoint);
+    if (this.fallbackModel) this.fallbackModel.position.copy(this.spawnPoint);
+    this.extracted = false;
+    this.extractReady = false;
+    this.extractHold = 0;
     for (const en of this.enemies) this.scene.remove(en.mesh);
     this.enemies = [];
     this.spawnTimer = 0;
@@ -1777,6 +2263,8 @@ export class BrawlerScene {
     this.client?.dispose?.();
     this.postfx?.dispose();
     this.postfx = null;
+    this.minimap?.dispose();
+    this.minimap = null;
     this.vfx.dispose();
     if (this.mounted) {
       unmountWeapon(this.mounted);
