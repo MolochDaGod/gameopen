@@ -37,6 +37,7 @@
     "deploy:durable": "node scripts/deploy-durable.mjs",
     "deploy:durable:dry": "node scripts/deploy-durable.mjs --dry-run",
     "deploy:durable:assets": "node scripts/deploy-durable.mjs --assets",
+    "loaders:stage": "node scripts/stage-three-loaders.mjs",
     "deploy:prod": "node scripts/deploy-durable.mjs",
     "test:inventory": "npm --prefix artifacts/animator run test -- src/game/inventory/characterBag.test.ts src/game/inventory/ledgerClient.test.ts",
     "verify:assets": "node scripts/verify-fleet-assets.mjs",

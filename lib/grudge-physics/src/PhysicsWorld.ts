@@ -362,7 +362,7 @@ let initPromise: Promise<void> | null = null;
 
 /** Initialise the Rapier wasm runtime exactly once across all instances. */
 export function ensureRapier(): Promise<void> {
-  if (!initPromise) initPromise = RAPIER.init();
+  if (!initPromise) initPromise = RAPIER.init({});
   return initPromise;
 }
 

@@ -38,6 +38,14 @@ if (!fs.existsSync(rapier)) {
   console.error("[vercel-build] missing @dimforge/rapier3d-compat after npm install");
   process.exit(1);
 }
+const meshBvh = path.join(anim, "node_modules/three-mesh-bvh/package.json");
+if (!fs.existsSync(meshBvh)) {
+  console.error("[vercel-build] missing three-mesh-bvh after npm install");
+  process.exit(1);
+}
+
+// 2b. Same-origin Draco + Basis WASM (must match installed three)
+run("node", ["scripts/stage-three-loaders.mjs"]);
 
 // 3. Polish index.html meta for production
 const indexPath = path.join(anim, "index.html");

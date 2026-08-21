@@ -27,20 +27,12 @@ THREE.Cache.enabled = true;
  */
 
 /**
- * Google versioned Draco (WASM + JS glue).
- * Prefer versioned 1.5.7 — unversioned …/draco/v1/ can drift vs three r185.
- * Aligns with Casting `gltfPipeline.js` / DRACO_DECODER_PATH SSOT.
+ * Same-origin decoders staged from the installed `three` package
+ * (`scripts/stage-three-loaders.mjs` during vercel-build). CDN is fallback
+ * only if public/draco is missing in a slim local checkout.
  */
-/**
- * Google versioned Draco (WASM + JS glue).
- * Prefer versioned 1.5.7 — unversioned …/draco/v1/ can drift vs three r185.
- * Aligns with Casting `gltfPipeline.js` / DRACO_DECODER_PATH SSOT.
- */
-const DRACO_DECODER_PATH =
-  "https://www.gstatic.com/draco/versioned/decoders/1.5.7/";
-/** Basis Universal transcoder for KTX2 — pin to installed three (^0.185.1). */
-const KTX2_TRANSCODER_PATH =
-  "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/libs/basis/";
+const DRACO_DECODER_PATH = "/draco/";
+const KTX2_TRANSCODER_PATH = "/basis/";
 
 /** Shared progress/error surface for every optimized load. */
 export const gltfManager = new THREE.LoadingManager();

@@ -80,7 +80,7 @@ if (dryRun) {
 }
 
 // 4. Ship
-run("npx", ["vercel", "deploy", "--prod", "--yes"]);
+run("npx", ["vercel", "deploy", "--prod", "--yes", "--force"]);
 
 // 5. Post smoke
 run("node", ["scripts/smoke-prod.mjs", "--base", "https://open.grudge-studio.com"]);
