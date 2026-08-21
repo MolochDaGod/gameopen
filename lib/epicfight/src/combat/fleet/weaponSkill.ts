@@ -113,6 +113,21 @@ export type FleetWeaponSkill = {
   shieldBreak?: boolean;
   unparryable?: boolean;
 
+  // ── Play classes (Casting / ObjectStore SSOT) ──────────────────────────
+  /** melee | bullet | linear | bend */
+  travelMode?: "melee" | "bullet" | "linear" | "bend";
+  /** cct | heightfield | convex | trimesh | followConvex | sensor | hurtbox */
+  colliderClass?:
+    | "cct"
+    | "heightfield"
+    | "convex"
+    | "trimesh"
+    | "followConvex"
+    | "sensor"
+    | "hurtbox";
+  procs?: { id: string; chance?: number; on?: string }[];
+  editable?: boolean | { intensity?: boolean; aoe?: boolean; travelMode?: boolean };
+
   // ── Meta ──────────────────────────────────────────────────────────────
   iconUrl?: string | null;
   tags?: string[];
@@ -166,6 +181,8 @@ export function scaffoldWeaponSkill(
     force: 2,
     castDuration: 0.25,
     activeDuration: 0.2,
+    travelMode: partial.travelMode || (partial.projectile ? "linear" : "melee"),
+    colliderClass: partial.colliderClass || (partial.projectile ? "sensor" : "followConvex"),
     ...partial,
   };
 }

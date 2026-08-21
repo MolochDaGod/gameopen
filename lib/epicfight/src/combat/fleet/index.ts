@@ -9,4 +9,5 @@
 export * from "./constants.js";
 export * from "./rules.js";
 export * from "./weaponSkill.js";
+export * from "./playClasses.js";
 export * from "./host.js";
