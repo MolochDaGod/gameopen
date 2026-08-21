@@ -130,6 +130,14 @@ const PVE_DESTS: MenuDest[] = [
     needsHero: true,
   },
   {
+    id: "magma-core",
+    label: "Magma Core",
+    blurb: "Platforms over lava · Slag Warlord linear crawl",
+    kind: "external",
+    url: "https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
+    needsHero: true,
+  },
+  {
     id: "genesis",
     label: "Warlord Genesis",
     blurb: "3-lane MOBA / RTS — pick from your 4 campfire heroes",

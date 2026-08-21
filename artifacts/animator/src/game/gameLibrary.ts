@@ -927,9 +927,37 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
       "Do not use threepipe autoScale — SI baked in DUNGEON_SI",
     ],
     playerInfo:
-      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat.",
+      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat. Magma Core (platforms over lava): ?theme=molten&linear=1",
     sources: [
       "https://grudge-dungeons.vercel.app/",
+      "F:\\GitHub\\threejs-procedural-dungeon",
+    ],
+    featured: true,
+    shelf: "games",
+    status: "live",
+  },
+  {
+    id: "magma-core",
+    title: "Magma Core",
+    short: "Platforms over lava",
+    blurb:
+      "Molten linear crawl — dais platforms over lava, lava DPS pools, Slag Warlord. Same Grudge Dungeons host (theme=molten). Not Mimic / vol.glb.",
+    category: "warlords",
+    tags: ["Dungeon", "Lava", "Boss", "Warlords"],
+    tone: "#ff6a2a",
+    posterKey: "mimic",
+    icon: "ambush",
+    engines: ["three", "rapier"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.grudgeDungeonsMolten,
+    deploy: { client: "vercel" },
+    deployNotes: [
+      "Live: https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
+      "Open /lava redirects here (entryCatch)",
+    ],
+    playerInfo: "ENTER / E · WASD · 1–6 · lava pools hurt. Slag Warlord at the dais.",
+    sources: [
+      "https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
       "F:\\GitHub\\threejs-procedural-dungeon",
     ],
     featured: true,

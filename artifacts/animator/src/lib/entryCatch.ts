@@ -81,6 +81,9 @@ export const PRODUCT_STARTS = {
   grudgeDungeons: "https://grudge-dungeons.vercel.app/",
   /** Linear boss crawl (entrance → mini-boss → boss arena) */
   grudgeDungeonBoss: "https://grudge-dungeons.vercel.app/?linear=1",
+  /** Magma Core — platforms over lava, Slag Warlord, linear crawl */
+  grudgeDungeonMolten:
+    "https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -254,6 +257,28 @@ export function catchEntry(input: CatchInput): CatchAction {
       kind: "hard_redirect",
       url: dest.toString(),
       reason: "create/foundry intent → character.grudge-studio.com/foundry",
+    };
+  }
+
+  // ── 1b. Magma Core (platforms over lava) lives on Grudge Dungeons ─────
+  // Open /mimic stays the barrel Test Dungeon. Do not invent a second lava engine.
+  const lavaDoor =
+    door === "lava" ||
+    door === "molten" ||
+    door === "magma" ||
+    door === "magma-core" ||
+    door === "slag";
+  const lavaPath =
+    parts[0] === "lava" ||
+    parts[0] === "molten" ||
+    parts[0] === "magma" ||
+    parts[0] === "magma-core" ||
+    parts[0] === "slag";
+  if (lavaDoor || lavaPath || modeQ === "molten" || modeQ === "lava") {
+    return {
+      kind: "hard_redirect",
+      url: PRODUCT_STARTS.grudgeDungeonMolten,
+      reason: "lava/molten intent → Magma Core crawl (theme=molten&linear=1)",
     };
   }
 
@@ -543,6 +568,7 @@ export function startUrlForIntent(
     | "mimic"
     | "dungeon"
     | "dungeonBoss"
+    | "dungeonMolten"
     | "equipment",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
@@ -591,6 +617,8 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.grudgeDungeons;
     case "dungeonBoss":
       return PRODUCT_STARTS.grudgeDungeonBoss;
+    case "dungeonMolten":
+      return PRODUCT_STARTS.grudgeDungeonMolten;
     case "warlordsHome": {
       const u = new URL(PRODUCT_STARTS.warlordsHome);
       if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);

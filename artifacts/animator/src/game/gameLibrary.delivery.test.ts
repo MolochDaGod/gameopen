@@ -33,7 +33,9 @@ describe("Open delivery shelves", () => {
     expect(ids).toContain("mimic-dungeon");
     expect(ids).toContain("danger-room");
     expect(ids).toContain("grudge-dungeons");
+    expect(ids).toContain("magma-core");
     expect(getGame("grudge-dungeons")!.url).toBe("https://grudge-dungeons.vercel.app/");
+    expect(getGame("magma-core")!.url).toContain("theme=molten");
   });
 
   it("every library title maps to a shelf", () => {

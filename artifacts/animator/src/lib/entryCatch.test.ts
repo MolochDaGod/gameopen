@@ -22,6 +22,18 @@ describe("entryCatch", () => {
     }
   });
 
+  it("sends lava/molten paths to Magma Core crawl", () => {
+    for (const path of ["/lava", "/molten", "/magma-core"]) {
+      const r = catchEntry({ pathname: path, search: "" });
+      expect(r.kind).toBe("hard_redirect");
+      if (r.kind === "hard_redirect") {
+        expect(r.url).toContain("grudge-dungeons.vercel.app");
+        expect(r.url).toContain("theme=molten");
+        expect(r.url).toContain("linear=1");
+      }
+    }
+  });
+
   it("maps explorer arcade to Open danger", () => {
     const r = catchEntry({ pathname: "/arcade/play/explorer", search: "" });
     expect(r.kind).toBe("mode");
@@ -148,6 +160,8 @@ describe("entryCatch", () => {
     expect(startUrlForIntent("mimic")).toContain("/mimic");
     expect(startUrlForIntent("dungeon")).toBe("https://grudge-dungeons.vercel.app/");
     expect(startUrlForIntent("dungeonBoss")).toContain("linear=1");
+    expect(startUrlForIntent("dungeonMolten")).toContain("theme=molten");
+    expect(startUrlForIntent("dungeonMolten")).toContain("linear=1");
     expect(startUrlForIntent("arcadeCabinet", { cabinetId: "racer" })).toContain(
       "grudox.grudge-studio.com",
     );
