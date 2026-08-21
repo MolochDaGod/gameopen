@@ -1,8 +1,8 @@
 /**
  * Mixamo FBX pack gate.
  *
- * Arcade / Danger **runtime** must not call FBXLoader even if `public/anim/**/*.fbx`
- * is on disk (~179 MB, 808 files). Use baked `/anims/baked/*.json` + base GLB.
+ * Arcade / Danger runtime must not call FBXLoader even if Mixamo FBX files
+ * sit on disk (~179 MB, 808 files). Use baked /anims/baked JSON + base GLB.
  * Dressing Room / Anim Editor pass `allowFbx: true`.
  *
  * Probe **once** (same-origin HEAD only). When missing, all Mixamo clip loads
