@@ -8,6 +8,7 @@ import { getStoredToken } from "../lib/grudgeAuth";
 import { gameSession } from "../game/GameSession";
 
 const UI_ORIGIN = FLEET.ui;
+const TRAIT_ORIGIN = FLEET.traits;
 const INDEX_URL = `${UI_ORIGIN}/data/mesh-showcase-index.json`;
 
 type MeshItem = {
@@ -39,7 +40,7 @@ export function TraitStoreEmbed({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [index, setIndex] = useState<MeshIndex | null>(null);
   const src = useMemo(() => {
-    const u = new URL(`${UI_ORIGIN}/main-panel.html`);
+    const u = new URL(`${TRAIT_ORIGIN}/`);
     u.searchParams.set("embed", "1");
     u.searchParams.set("from", "open-account");
     u.searchParams.set("tab", "equipment");
@@ -76,13 +77,13 @@ export function TraitStoreEmbed({
         username: account?.displayName || null,
         user: account,
       },
-      UI_ORIGIN,
+      TRAIT_ORIGIN,
     );
   }, [characterId, era]);
 
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
-      if (e.origin !== UI_ORIGIN) return;
+      if (e.origin !== TRAIT_ORIGIN && e.origin !== UI_ORIGIN) return;
       const d = e.data;
       if (!d || typeof d !== "object") return;
       if (d.type === "GRUDGE_READY") postAuth();

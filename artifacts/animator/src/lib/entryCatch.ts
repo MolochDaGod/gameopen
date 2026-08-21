@@ -22,6 +22,7 @@ export const ENTRY_HOSTS = {
   warlordGenesis: "https://warlord-genesis.vercel.app",
   id: "https://id.grudge-studio.com",
   ui: "https://ui.grudge-studio.com",
+  traits: "https://traits.grudge.studio",
   forge: "https://forge.grudge-studio.com",
   assets: "https://assets.grudge-studio.com",
   /** Voxel Realms (Mine-Loader) production */
@@ -69,6 +70,8 @@ export const PRODUCT_STARTS = {
   openHarvest: `${ENTRY_HOSTS.open}/danger?activity=harvest`,
   /** Character info / equipment (UUID · mesh bake · owned gear) */
   equipment: `${ENTRY_HOSTS.open}/equipment`,
+  /** Canonical Trait Store (Unity paperdoll on Main Panel) */
+  traitStore: `${ENTRY_HOSTS.traits}/`,
   /** CDN assets root (binaries — not a SPA mode) */
   assetsCdn: `${ENTRY_HOSTS.assets}`,
   /** Agentic Three.js editor */
