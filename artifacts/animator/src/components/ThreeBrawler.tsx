@@ -1,7 +1,8 @@
 /**
  * ThreeBrawler — React shell for Ruins Brawler / Agama Survival.
  *
- * Full Danger Room combat stack surface:
+ * React canvas host (vanilla Three + Rapier — same contract as R3F Canvas +
+ * @react-three/rapier, without a second renderer). Full Danger Room stack:
  *  • Fleet character → grudge6 avatar + class kit
  *  • Arsenal weapons (mountWeaponModel) + T0 skill kits
  *  • Content API / ObjectStore skill labels + pack icons

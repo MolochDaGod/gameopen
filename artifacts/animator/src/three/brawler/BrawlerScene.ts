@@ -16,7 +16,13 @@ import { getCharacter, getWeapon } from "../assets";
 import { Character } from "../Character";
 import { Controller } from "../Controller";
 import { InputState } from "../input";
-import { PhysicsSystem } from "../PhysicsSystem";
+import {
+  PhysicsSystem,
+  CharacterCapsuleKcc,
+  installMeshBvh,
+  accelerateObject3D,
+} from "../PhysicsSystem";
+import { bindKtx2 } from "../loaders/gltf";
 import { GrudgeAvatar } from "../grudge/GrudgeAvatar";
 import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
 import {
@@ -342,6 +348,7 @@ export class BrawlerScene {
   private waterLayer: SurvivalWaterLayer | null = null;
   private terrainHeightAt: ((x: number, z: number) => number | null) | null = null;
   private mapRoot: THREE.Object3D | null = null;
+  private playerKcc: CharacterCapsuleKcc | null = null;
   private battleground = false;
   private mapHalf = ARENA_HALF;
   private spawnPoint = new THREE.Vector3(0, 0, 8);
@@ -428,6 +435,11 @@ export class BrawlerScene {
     this.renderer.toneMappingExposure = 1.1;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    try {
+      bindKtx2(this.renderer);
+    } catch (err) {
+      console.warn("[BrawlerScene] KTX2 bind skipped", err);
+    }
 
     this.scene.background = new THREE.Color(this.battleground ? 0x87a56a : 0x0a0c12);
     this.scene.fog = this.battleground
@@ -490,6 +502,7 @@ export class BrawlerScene {
       this.loadEnvironment(),
     ]);
     if (this.disposed) return;
+    this.attachPlayerKcc();
     this.setPhase("playing");
     // Immediate wave presence — don't wait for first spawn-interval tick.
     for (let i = 0; i < this.initialSpawnCount; i++) this.spawnEnemy();
@@ -499,11 +512,12 @@ export class BrawlerScene {
     void this.initNetwork();
   }
 
-  /** Rapier ground layer — same foundation as Danger Room Studio. */
+  /** Rapier world + ground — KCC is attached after the map colliders bake. */
   private async initPhysics() {
     const physics = new PhysicsSystem();
     try {
       await physics.init(GRAVITY_Y);
+      await installMeshBvh();
     } catch (err) {
       console.warn("[BrawlerScene] physics init failed — visual-only floor", err);
       return;
@@ -515,6 +529,35 @@ export class BrawlerScene {
     const groundHalf = this.battleground ? 1200 : ARENA_HALF + 10;
     physics.addGroundPlane(0, groundHalf, 0.5);
     this.physics = physics;
+  }
+
+  /**
+   * Rapier kinematic capsule on the Controller (same stack as Danger Room).
+   * Host already steps the world — KCC must not double-step.
+   */
+  private attachPlayerKcc() {
+    if (!this.physics?.world || !this.controller || this.playerKcc) return;
+    const feet = this.battleground ? this.spawnPoint.clone() : this.playerPos();
+    const y = this.sampleGroundY(feet.x, feet.z) ?? feet.y;
+    const spawn = { x: feet.x, y, z: feet.z };
+    this.spawnPoint.set(spawn.x, spawn.y, spawn.z);
+    this.playerKcc = this.physics.createPlayerKcc(spawn, { stepOnMove: false });
+    if (!this.playerKcc) return;
+    this.controller.setCollision(this.playerKcc, new THREE.Vector3(spawn.x, spawn.y, spawn.z), {
+      keepRoomBounds: true,
+    });
+    console.info(
+      "[BrawlerScene] Rapier KCC attached at",
+      spawn.x.toFixed(1),
+      spawn.y.toFixed(2),
+      spawn.z.toFixed(1),
+    );
+  }
+
+  private sampleGroundY(x: number, z: number): number | null {
+    const rap = this.physics?.heightAt(x, z);
+    if (rap != null && Number.isFinite(rap)) return rap;
+    return this.terrainHeightAt?.(x, z) ?? null;
   }
 
   /** Fleet multi-CDN GLB load (Draco + Meshopt via sharedGltfLoader). */
@@ -720,9 +763,7 @@ export class BrawlerScene {
       this.controller.setCameraOccluders(this.arenaColliders);
     }
     // Re-apply terrain / water after controller recreate (map may load first)
-    if (this.terrainHeightAt) {
-      this.controller.setGroundHeightAt(this.terrainHeightAt);
-    }
+    this.controller.setGroundHeightAt((x, z) => this.sampleGroundY(x, z));
     if (this.waterLayer) {
       const wy = this.waterLayer.waterY;
       this.controller.setWaterBand(wy + 0.05, wy - 2.2);
@@ -984,7 +1025,7 @@ export class BrawlerScene {
             ? scaled.terrainMeshes
             : (occluders.filter((o) => (o as THREE.Mesh).isMesh) as THREE.Mesh[]);
         this.terrainHeightAt = createTerrainHeightSampler(terrainForRay);
-        this.controller?.setGroundHeightAt(this.terrainHeightAt);
+        this.controller?.setGroundHeightAt((x, z) => this.sampleGroundY(x, z));
 
         // Water layer + buoyancy band
         if (scaled.waterY != null || path.includes("agama")) {
@@ -995,7 +1036,13 @@ export class BrawlerScene {
           this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
         }
 
-        void this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
+        await this.bakeTerrainColliders(scaled.terrainMeshes, scaled.propMeshes);
+        this.physics?.step(1 / 60);
+        try {
+          accelerateObject3D(root);
+        } catch {
+          /* optional BVH */
+        }
 
         if (this.battleground) {
           this.lodMeshes = applyAgamaMeshLod(root);
@@ -1071,7 +1118,7 @@ export class BrawlerScene {
   private snapPlayerToTerrain(): void {
     if (!this.terrainHeightAt || !this.avatar) return;
     const p = this.avatar.root.position;
-    const y = this.terrainHeightAt(p.x, p.z);
+    const y = this.sampleGroundY(p.x, p.z);
     if (y != null && Number.isFinite(y)) {
       p.y = y;
     }
@@ -1115,6 +1162,15 @@ export class BrawlerScene {
     this.scene.add(this.zoneRoot);
     this.harvestRoot = buildHarvestMeshes(this.harvestNodes);
     this.scene.add(this.harvestRoot);
+    if (this.physics?.world) {
+      for (const h of this.harvestNodes) {
+        this.physics.addStaticCuboid(
+          { x: h.x, y: 0.55, z: h.z },
+          { x: 0.45, y: 0.55, z: 0.45 },
+          { sensor: true },
+        );
+      }
+    }
     this.minimap?.setWorld(half, spawn);
 
     this.controller?.setRoomBound(Math.max(80, half * 0.98));
@@ -1681,9 +1737,34 @@ export class BrawlerScene {
       gait: "idle",
       memory: createCombatMemory(attackReach),
     };
+    const gy = this.sampleGroundY(pos.x, pos.z);
+    if (gy != null) {
+      pos.y = gy;
+      home.y = gy;
+      obj.pos.y = gy;
+      mesh.position.y = gy;
+    }
     this.playFighterGait(obj, "idle");
     this.enemies.push(obj);
     if (role === "ally") this.allies.push(obj);
+  }
+
+  private fighterLos(
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    occluders: readonly Occluder2[],
+  ): boolean {
+    if (this.physics?.ready) {
+      return this.physics.lineOfSight(
+        { x: from.x, y: from.y + 1.45, z: from.z },
+        { x: to.x, y: to.y + 1.45, z: to.z },
+      );
+    }
+    return hasLineOfSight(
+      { x: from.x, z: from.z },
+      { x: to.x, z: to.z },
+      occluders,
+    );
   }
 
   private playFighterGait(en: EnemyObj, gait: EnemyObj["gait"]) {
@@ -1746,11 +1827,7 @@ export class BrawlerScene {
       en.attackCd = Math.max(0, en.attackCd - dt);
       en.mixer?.update(dt);
       const target = this.fighterTarget(en);
-      const los = hasLineOfSight(
-        { x: en.pos.x, z: en.pos.z },
-        { x: target.x, z: target.z },
-        occluders,
-      );
+      const los = this.fighterLos(en.pos, target, occluders);
       const hear = inAgroRange(
         { x: en.pos.x, z: en.pos.z },
         { x: target.x, z: target.z },
@@ -1855,10 +1932,10 @@ export class BrawlerScene {
       if (this.controller) {
         this.controller.update(dt);
         this.moving = this.controller.state.speed > 0.15;
-        // Soft plant feet on terrain heightfield when grounded (L0 SSOT)
-        if (this.terrainHeightAt && this.controller.state.grounded && this.avatar) {
+        // Soft plant only when KCC is not the collision SSOT (KCC already snaps).
+        if (!this.playerKcc && this.controller.state.grounded && this.avatar) {
           const p = this.avatar.root.position;
-          const ty = this.terrainHeightAt(p.x, p.z);
+          const ty = this.sampleGroundY(p.x, p.z);
           if (ty != null && Math.abs(p.y - ty) < 2.5) {
             p.y = THREE.MathUtils.lerp(p.y, ty, 0.35);
           }
@@ -2257,7 +2334,9 @@ export class BrawlerScene {
     window.removeEventListener("blur", this.onWindowBlur);
     this.input.exitLock();
     this.input.dispose();
+    this.controller?.setCollision(null);
     this.controller = null;
+    this.playerKcc = null;
     this.physics?.dispose();
     this.physics = null;
     this.client?.dispose?.();

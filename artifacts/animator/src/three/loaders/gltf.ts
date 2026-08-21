@@ -4,6 +4,8 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
+THREE.Cache.enabled = true;
+
 /**
  * Optimized glTF/GLB loading for the whole app.
  *
@@ -24,6 +26,11 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
  * they can be self-hosted under `public/` later without touching call sites.
  */
 
+/**
+ * Google versioned Draco (WASM + JS glue).
+ * Prefer versioned 1.5.7 — unversioned …/draco/v1/ can drift vs three r185.
+ * Aligns with Casting `gltfPipeline.js` / DRACO_DECODER_PATH SSOT.
+ */
 /**
  * Google versioned Draco (WASM + JS glue).
  * Prefer versioned 1.5.7 — unversioned …/draco/v1/ can drift vs three r185.
