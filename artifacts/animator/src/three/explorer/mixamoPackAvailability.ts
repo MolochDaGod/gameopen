@@ -1,7 +1,9 @@
 /**
- * Mixamo FBX pack gate — production Open excludes **\/*.fbx via .vercelignore
- * and R2 does not host `/anim/animations/*`. Without a gate, Explorer
- * `loadClips(allReferencedClipIds())` fires hundreds of multi-host 404s.
+ * Mixamo FBX pack gate.
+ *
+ * Arcade / Danger **runtime** must not call FBXLoader even if `public/anim/**/*.fbx`
+ * is on disk (~179 MB, 808 files). Use baked `/anims/baked/*.json` + base GLB.
+ * Dressing Room / Anim Editor pass `allowFbx: true`.
  *
  * Probe **once** (same-origin HEAD only). When missing, all Mixamo clip loads
  * short-circuit with no network.

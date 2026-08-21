@@ -3926,8 +3926,8 @@ export class EditorScene {
         ? allReferencedClipIds()
         : allReferencedClipIds().filter((id) => id.startsWith("base/"));
       const [sourceScene, clips] = await Promise.all([
-        loadSkeletonSource(),
-        loadClips(clipIds),
+        loadSkeletonSource(mixamoOk),
+        loadClips(clipIds, { allowFbx: mixamoOk }),
       ]);
       const source = makeRetargetSource(sourceScene);
       if (!source || clips.size === 0) return [];

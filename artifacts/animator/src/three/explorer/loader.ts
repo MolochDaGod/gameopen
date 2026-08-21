@@ -431,14 +431,26 @@ export async function loadBasePackClips(): Promise<Map<string, THREE.AnimationCl
  * Always merges Layer A base pack (`base/*`) when any `base/` id is requested
  * or after style loads so gap-fill is available.
  */
-export async function loadClips(ids: string[]): Promise<Map<string, THREE.AnimationClip>> {
+export type LoadClipsOpts = {
+  /**
+   * Parse Mixamo `.fbx` (FBXLoader + full skinned mesh). Arcade / Danger runtime
+   * must stay false — use fleet baked JSON instead. Dressing Room / Anim Editor
+   * pass true.
+   */
+  allowFbx?: boolean;
+};
+
+export async function loadClips(
+  ids: string[],
+  opts: LoadClipsOpts = {},
+): Promise<Map<string, THREE.AnimationClip>> {
   const map = new Map<string, THREE.AnimationClip>();
   const needsBase = ids.some((id) => id.startsWith("base/"));
   const styleIds = ids.filter((id) => !id.startsWith("base/"));
 
-  // One probe: if Mixamo pack is gone (production), skip every FBX id with zero fetches.
+  // Arcade explorer: never FBXLoader. 808 Mixamo FBX ≈ 179 MB of CPU parse + texture 404s.
   const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
-  const mixamoOk = await isMixamoFbxPackAvailable();
+  const mixamoOk = opts.allowFbx === true && (await isMixamoFbxPackAvailable());
 
   await Promise.all(
     styleIds.map(async (id) => {
@@ -484,10 +496,10 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
 }
 
 /** Load the shared skeleton source scene (the bone hierarchy clips bind to). */
-export async function loadSkeletonSource(): Promise<THREE.Object3D> {
-  // Production: no Mixamo FBX — go straight to procedural (zero 404s).
+export async function loadSkeletonSource(allowFbx = false): Promise<THREE.Object3D> {
+  // Runtime: procedural Mixamo topology (no FBX mesh). Editor may load Mixamo FBX.
   const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
-  if (!(await isMixamoFbxPackAvailable())) {
+  if (!allowFbx || !(await isMixamoFbxPackAvailable())) {
     const { createProceduralMixamoSkeleton } = await import("./mixamoSkeletonSource");
     return createProceduralMixamoSkeleton();
   }
@@ -555,36 +567,32 @@ export async function createAnimatedCharacter(
         ]),
       ];
 
-  // If Mixamo pack is missing, skip style FBX ids entirely (base GLB still loads).
+  // Runtime: GLB base pack + baked JSON. Mixamo FBX only when preloadAll (editor).
+  const allowFbx = opts.preloadAll === true;
   const { isMixamoFbxPackAvailable } = await import("./mixamoPackAvailability");
-  const mixamoOk = await isMixamoFbxPackAvailable();
+  const mixamoOk = allowFbx && (await isMixamoFbxPackAvailable());
   const loadIds = mixamoOk
     ? ids
     : ids.filter((id) => id.startsWith("base/") || GLB_CLIP_IDS.has(id));
 
-  if (!mixamoOk && typeof console !== "undefined") {
+  if (!allowFbx && typeof console !== "undefined") {
     console.info(
-      "[loader] Mixamo FBX pack unavailable — Explorer uses procedural skeleton + base GLB only (no /anim/animations 404s)",
+      "[loader] Arcade explorer: skip Mixamo FBX (FBXLoader) — baked JSON + base GLB",
     );
   }
 
   const [source, clips] = await Promise.all([
-    loadSkeletonSource(),
-    loadClips(loadIds.length ? loadIds : ["base/idle"]),
+    loadSkeletonSource(allowFbx),
+    loadClips(loadIds.length ? loadIds : ["base/idle"], { allowFbx }),
   ]);
-  if (clips.size === 0 && typeof console !== "undefined") {
-    console.error(
-      "[loader] Explorer loaded ZERO clips (skeleton is bind/T-pose). " +
-        "Deploy public/anim (base GLB + Mixamo FBX) or host them on the fleet CDN.",
-    );
-  } else if (typeof console !== "undefined") {
-    console.info(
-      `[loader] Explorer ready: ${clips.size} clips, mixamo=${mixamoOk ? "yes" : "no"}, weapon=${weapon}`,
-    );
-  }
   const look: CharacterLook = { ...DEFAULT_LOOK, ...opts.look };
   const character = new VoxelCharacter(source, look, opts.height ?? 2);
   const animator = new Animator(character, clips);
+  if (typeof console !== "undefined") {
+    console.info(
+      `[loader] Explorer ready: clips map ${clips.size}+bake, mixamoFbx=${mixamoOk ? "yes" : "no"}, weapon=${weapon}`,
+    );
+  }
   animator.setWeapon(weapon);
 
   // DRC SSOT: always hydrate Bip001 baked packs onto Mixamo bones (rematch).
@@ -600,7 +608,7 @@ export async function createAnimatedCharacter(
       inject: (id, clip) => animator.registerCatalogClip(id, clip),
       has: (id) => animator.hasCatalogClip(id),
       weapons: classes,
-      log: !mixamoOk,
+      log: true,
     });
     await hydrateWeaponClassPack(
       character.skeletonRoot,

@@ -26,7 +26,7 @@
 | Lane id | Skeleton | Clip source | Used by |
 |---------|----------|-------------|---------|
 | **`bip001-baked`** | Bip001 (Toon RTS / grudge6) | `/anims/baked/{rel}.json` (rotation-only) | grudge6 heroes, Warlords, Danger playable, Railway characters |
-| **`mixamo-explorer`** | 25-bone Mixamo | `/anim/animations/{pack}/*.fbx` or baked retarget **onto Mixamo only** | Explorer avatar, voxel explorer, thrcc gun packs |
+| **`mixamo-explorer`** | 25-bone Mixamo | Play: `/anims/baked/{pack}/*.json` rematch + `base/*.glb`. Author Mixamo `.fbx` is **local editor only** — not shipped on Vercel. | Explorer avatar, voxel explorer, thrcc gun packs |
 
 ```
 ❌ bip001 kit  + mixamorig tracks

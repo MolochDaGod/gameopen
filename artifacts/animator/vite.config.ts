@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 
 /**
@@ -20,7 +22,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss({ optimize: false })],
+  plugins: [react(), tailwindcss({ optimize: false }), wasm(), topLevelAwait()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
