@@ -144,6 +144,14 @@ export type StabilizeClipOpts = {
   ) => void;
 };
 
+/** Cap mixer Δt so a hitch doesn't explode gait phase / overlay / IK (Casting Time.maxDelta). */
+export const MIXER_DT_MAX = 1 / 20;
+
+export function clampMixerDt(dt: number): number {
+  if (!Number.isFinite(dt) || dt <= 0) return 0;
+  return dt > MIXER_DT_MAX ? MIXER_DT_MAX : dt;
+}
+
 /**
  * Best-practice bind pipeline for ONE AnimationMixer on a grounded character:
  * 1. drop tracks that don't bind

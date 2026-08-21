@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { sharedGltfLoader } from "./loaders/gltf";
 import type { AnimRole, CharacterDef } from "./types";
 import { CHARACTER_HEIGHT_M } from "./types";
-import { filterBindableTracks } from "./clipTracks";
+import { filterBindableTracks, MIXER_DT_MAX } from "./clipTracks";
 import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
@@ -546,7 +546,7 @@ export class Character {
     // Fixed substeps match physics (PHYSICS_DT = 1/60) for stable timing.
     // Cap total advance so a long hitch doesn't skip an entire attack clip.
     const FIXED = PHYSICS_DT;
-    const maxAdvance = 0.1;
+    const maxAdvance = MIXER_DT_MAX;
     let remain = Math.min(Math.max(0, dt), maxAdvance);
 
     while (remain > 0) {

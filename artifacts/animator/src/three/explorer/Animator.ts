@@ -12,8 +12,10 @@ import {
 import { LocomotionBlend } from "./LocomotionBlend";
 import type { VoxelCharacter } from "./rig";
 import { mountWeapons, unmountWeapons, type MountedWeapons } from "./weapons";
-import { filterBindableTracks, stabilizeClipForMixer } from "../clipTracks";
+import { stabilizeClipForMixer, clampMixerDt } from "../clipTracks";
 import { isUpperBodyTrack } from "../upperBody";
+import { FootGrounder, type GroundSampler } from "../anim/legIk";
+import { FLAT_FOOT_SAMPLER } from "../anim/terrainFootSample";
 
 /** Horizontal speed below which the character is considered standing still. */
 const MOVE_EPS = 0.08;
@@ -31,9 +33,10 @@ const OVERLAY_RATE_MAX = 1.35;
  * Drives one {@link VoxelCharacter} with a single-active-clip state machine.
  *
  * **Fleet lane: mixamo-explorer only** (docs/ANIMATION_FLEET_SSOT.md).
- * Do not bind Bip001 `/anims/baked/*` packs here — that is grudge6Runtime.
+ * Play clips: baked JSON rematched onto Mixamo bones (`fleetBakeHydrate`) +
+ * base GLB. Mixamo FBX is editor-only. One mixer; attacks overlay or one-shot.
  *
- * Design: exactly one clip is dominant at a time and the mixer crossfades
+ * Design: locomotion blend + optional overlay/one-shot on the same mixer. Crossfades
  * between them. Locomotion, blocking/aim holds, and one-shot actions (attacks,
  * rolls, dashes, hits, death) all resolve to a clip and flow through the same
  * crossfade path, which keeps weight management bug-free at the cost of additive
@@ -53,6 +56,7 @@ export class Animator {
   private readonly mixer: THREE.AnimationMixer;
   private readonly clips: Map<string, THREE.AnimationClip>;
   private readonly actionCache = new Map<string, THREE.AnimationAction>();
+  private readonly footGrounder = new FootGrounder();
 
   private weapon: WeaponClass = "unarmed";
   private mounted: MountedWeapons | null = null;
@@ -112,6 +116,13 @@ export class Animator {
     this.root = character.root;
     this.clips = clips;
     this.mixer = new THREE.AnimationMixer(character.skeletonRoot);
+    this.footGrounder.maxLift = 0.28;
+    this.footGrounder.maxDrop = 0.22;
+    this.footGrounder.smooth = 16;
+    this.footGrounder.alignFeet = true;
+    this.footGrounder.bind(character.skeletonRoot);
+    this.footGrounder.setEnabled(true);
+    this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
     const hips =
       character.skeletonRoot.getObjectByName("mixamorigHips") ||
       character.skeletonRoot.getObjectByName("Hips") ||
@@ -505,7 +516,17 @@ export class Animator {
   registerCatalogClip(id: string, clip: THREE.AnimationClip): void {
     if (!id || !clip) return;
     this.clips.set(id, clip);
-    this.actionCache.delete(id);
+    const stale = this.actionCache.get(id);
+    if (stale) {
+      try {
+        stale.stop();
+        this.mixer.uncacheAction(stale.getClip());
+      } catch {
+        /* */
+      }
+      this.actionCache.delete(id);
+    }
+    this.actionCache.delete(`__additive__/${id}`);
   }
 
   /** Whether a catalog clip id is loaded (for fleet hydrate skip logic). */
@@ -557,7 +578,24 @@ export class Animator {
 
   // ----------------------------------------------------------------- per-frame
 
+  setGroundSampler(fn: GroundSampler | null): void {
+    this.footGrounder.setGroundSampler(fn ?? FLAT_FOOT_SAMPLER);
+  }
+
+  setFootIk(on: boolean): void {
+    this.footGrounder.setEnabled(on);
+  }
+
+  rebindFootIk(): void {
+    this.footGrounder.bind(this.character.skeletonRoot);
+  }
+
+  get footIkBound(): boolean {
+    return this.footGrounder.isBound;
+  }
+
   update(dt: number): void {
+    dt = clampMixerDt(dt);
     this.time += dt;
 
     // Expire elapsed one-shots (held poses persist until cleared explicitly).
@@ -592,7 +630,10 @@ export class Animator {
     // mixer just advances while it plays.
     if (this.mode !== "ground") {
       if (!this.once) this.updateTraversalLoco();
+      this.footGrounder.beginFrame();
       this.mixer.update(dt);
+      this.footGrounder.apply(dt);
+      this.character.updateHeadFx(this.time);
       return;
     }
 
@@ -630,8 +671,9 @@ export class Animator {
       if (!this.once && singleId) this.setActive(singleId, { loop: true });
     }
 
+    this.footGrounder.beginFrame();
     this.mixer.update(dt);
-    // Modular avatar head hair / talk loop (Avatar Edit → Explorer)
+    this.footGrounder.apply(dt);
     this.character.updateHeadFx(this.time);
   }
 

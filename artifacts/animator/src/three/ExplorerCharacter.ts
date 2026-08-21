@@ -897,6 +897,24 @@ export class ExplorerCharacter implements Avatar {
 
   // ---- per-frame ----
 
+  setGroundSampler(
+    fn: import("./anim/legIk").GroundSampler | null,
+  ): void {
+    this.animator?.setGroundSampler(fn);
+  }
+
+  setFootIk(on: boolean): void {
+    this.animator?.setFootIk(on);
+  }
+
+  rebindFootIk(): void {
+    this.animator?.rebindFootIk();
+  }
+
+  get footIkBound(): boolean {
+    return this.animator?.footIkBound ?? false;
+  }
+
   update(dt: number): void {
     if (!this.animator) return;
     // The controller drives root.position.y; observe the landing here to clear

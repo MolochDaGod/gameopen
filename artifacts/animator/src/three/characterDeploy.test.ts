@@ -11,7 +11,7 @@ import {
   liftForClipFootClearance,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
-import { stripPositionTracks, stripScaleTracks, stabilizeClipForMixer } from "./clipTracks";
+import { stripPositionTracks, stripScaleTracks, stabilizeClipForMixer, clampMixerDt } from "./clipTracks";
 
 /**
  * Toy hero: Mesh (not incomplete SkinnedMesh) + Bip001 Pelvis bone.
@@ -274,6 +274,13 @@ describe("stripPositionTracks", () => {
     const out = stripScaleTracks(clip);
     expect(out.tracks.some((t) => t.name.includes(".scale"))).toBe(false);
     expect(out.tracks.length).toBe(1);
+  });
+
+  it("clampMixerDt caps hitch frames at 1/20", () => {
+    expect(clampMixerDt(1)).toBeCloseTo(1 / 20);
+    expect(clampMixerDt(0.01)).toBeCloseTo(0.01);
+    expect(clampMixerDt(-1)).toBe(0);
+    expect(clampMixerDt(Number.NaN)).toBe(0);
   });
 
   it("stabilizeClipForMixer keeps hip bob, drops foot position", () => {
