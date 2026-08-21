@@ -21,7 +21,7 @@ import { FootGrounder, type GroundSampler } from "../anim/legIk";
 import { FLAT_FOOT_SAMPLER } from "../anim/terrainFootSample";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 import { SPRINT_LOCO_MULT, type AnimPack, asAnimPack } from "./anims";
-import { stripPositionTracks } from "../clipTracks";
+import { stripPositionTracks, clampMixerDt } from "../clipTracks";
 import { reGroundAfterAnimSample, findDeployModel } from "../characterDeploy";
 
 /**
@@ -269,6 +269,7 @@ export class GrudgeAvatar implements Avatar {
             for (const [name, act] of this.actions) {
               if (!clipMap.has(name)) clipMap.set(name, act.getClip());
             }
+            this.director?.detach();
             this.director = new AnimationDirector(
               this.mixer,
               clipsFromRoleMap(clipMap),
@@ -314,6 +315,7 @@ export class GrudgeAvatar implements Avatar {
       // recreating it unconditionally drops climb/swim/dodge roles.
       if (!this.director) {
         try {
+          this.director?.detach();
           this.director = new AnimationDirector(
             this.mixer,
             clipsFromRoleMap(rig.clips),
@@ -896,6 +898,7 @@ export class GrudgeAvatar implements Avatar {
           for (const [name, act] of this.actions) {
             if (!clipMap.has(name)) clipMap.set(name, act.getClip());
           }
+          this.director?.detach();
           this.director = new AnimationDirector(
             this.mixer,
             clipsFromRoleMap(clipMap),
@@ -928,6 +931,8 @@ export class GrudgeAvatar implements Avatar {
 
   update(dt: number): void {
     if (!this.mixer) return;
+    dt = clampMixerDt(dt);
+    if (dt <= 0) return;
     // beginFrame → mixer → apply (foot plant; matches Character)
     // Director owns mixer when present — never double-update (explodes bones).
     this.footGrounder.beginFrame();

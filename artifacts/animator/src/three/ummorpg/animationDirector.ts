@@ -9,8 +9,10 @@
  *  - One director owns gait + overlay
  *  - Attack = one-shot, never permanently kills idle
  *  - Pack swap: load first, then rebuild director
+ *  - One-shot end is mixer time (not wall clock) so hitch clamp cannot drop a swing
  */
 import * as THREE from "three";
+import { clampMixerDt } from "../clipTracks";
 
 export type LocoRole = "idle" | "walk" | "run" | "sprint";
 
@@ -38,7 +40,10 @@ export class AnimationDirector {
   private gaitRate: number;
   private fade: number;
   private oneShot: THREE.AnimationAction | null = null;
+  /** Mixer-accumulated time (seconds) when the one-shot should fade out. */
   private oneShotEnd = 0;
+  /** Accumulated mixer time — never wall clock. */
+  private mixerTime = 0;
   private busy = false;
 
   constructor(
@@ -173,19 +178,24 @@ export class AnimationDirector {
     this.oneShot = action;
     this.busy = true;
     const dur = action.getClip().duration / Math.max(0.05, ts);
-    this.oneShotEnd = performance.now() / 1000 + dur;
+    this.oneShotEnd = this.mixerTime + dur;
     return dur;
   }
 
   update(dt: number): void {
-    // Damp gait
+    dt = clampMixerDt(dt);
+    if (dt <= 0) return;
+    this.mixerTime += dt;
+
+    // Damp gait (clamped dt so a hitch cannot snap idle→sprint)
     const k = 1 - Math.exp(-this.gaitRate * dt);
     this.gait += (this.gaitTarget - this.gait) * k;
     this.applyLocoWeights(this.fade);
 
+    this.mixer.update(dt);
+
     if (this.busy && this.oneShot) {
-      const now = performance.now() / 1000;
-      if (now >= this.oneShotEnd || !this.oneShot.isRunning()) {
+      if (this.mixerTime >= this.oneShotEnd || !this.oneShot.isRunning()) {
         this.oneShot.fadeOut(this.fade);
         this.oneShot = null;
         this.busy = false;
@@ -198,15 +208,21 @@ export class AnimationDirector {
         }
       }
     }
+  }
 
-    this.mixer.update(dt);
+  /**
+   * Drop director bookkeeping without stopping the shared mixer.
+   * Use before rebuild on the same AnimationMixer (hydrate / pack swap).
+   */
+  detach(): void {
+    this.actions.clear();
+    this.oneShot = null;
+    this.busy = false;
   }
 
   dispose(): void {
     this.mixer.stopAllAction();
-    this.actions.clear();
-    this.oneShot = null;
-    this.busy = false;
+    this.detach();
   }
 }
 

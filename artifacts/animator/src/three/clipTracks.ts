@@ -135,14 +135,77 @@ export type StabilizeClipOpts = {
    */
   keepRootPosition?: boolean;
   /**
-   * Mutator applied after strip, before sanitize (e.g. lockHorizontalRoot).
-   * Injected to avoid circular imports with Animator.
+   * Mutator applied after strip, before sanitize.
+   * Default {@link lockHorizontalRoot}. Pass `null` to skip.
    */
-  lockHorizontalRoot?: (
-    clip: THREE.AnimationClip,
-    bind: { x: number; y: number; z: number },
-  ) => void;
+  lockHorizontalRoot?:
+    | ((
+        clip: THREE.AnimationClip,
+        bind: { x: number; y: number; z: number },
+      ) => void)
+    | null;
 };
+
+/**
+ * Bind-pose hip local translation for mixer stabilize.
+ * Mixamo explorer + Bip001 Toon kits.
+ */
+export function bindHipFromRoot(root: THREE.Object3D): {
+  x: number;
+  y: number;
+  z: number;
+} {
+  const hips =
+    root.getObjectByName("mixamorigHips") ||
+    root.getObjectByName("Hips") ||
+    root.getObjectByName("mixamorig:Hips") ||
+    root.getObjectByName("Bip001 Pelvis") ||
+    root.getObjectByName("Bip001 Hips") ||
+    root.getObjectByName("Bip001");
+  return hips
+    ? { x: hips.position.x, y: hips.position.y, z: hips.position.z }
+    : { x: 0, y: 0, z: 0 };
+}
+
+/**
+ * True for a clip's root (Hips) translation track under Mixamo, colon form,
+ * bare Hips, and Bip001 pelvis/hips. Exact-string match alone lets un-normalised
+ * packs walk off the pedestal.
+ */
+export function isHipsPositionTrack(name: string): boolean {
+  if (!name.endsWith(".position") && !/\.position\[/.test(name)) return false;
+  const bone = name
+    .replace(/\.position(\[.*)?$/, "")
+    .replace(/^mixamorig:?/i, "")
+    .replace(/^Armature\|/i, "");
+  if (/^Hips\d*$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Hips$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Pelvis$/i.test(bone)) return true;
+  if (/^(root|Root|ROOT)$/.test(bone)) return true;
+  return false;
+}
+
+/**
+ * Pin hip X/Z to bind pose; keep relative Y bob. Never pin to clip frame 0
+ * (off-origin retarget packs plant the body tens of units away).
+ */
+export function lockHorizontalRoot(
+  clip: THREE.AnimationClip,
+  bind: { x: number; y: number; z: number } | number,
+): void {
+  const b = typeof bind === "number" ? { x: 0, y: bind, z: 0 } : bind;
+  for (const track of clip.tracks) {
+    if (!isHipsPositionTrack(track.name)) continue;
+    const v = track.values;
+    if (!v || v.length < 3) continue;
+    const y0 = v[1];
+    for (let i = 0; i < v.length; i += 3) {
+      v[i] = b.x;
+      v[i + 1] = v[i + 1] - y0 + b.y;
+      v[i + 2] = b.z;
+    }
+  }
+}
 
 /** Cap mixer Δt so a hitch doesn't explode gait phase / overlay / IK (Casting Time.maxDelta). */
 export const MIXER_DT_MAX = 1 / 20;
@@ -170,7 +233,11 @@ export function stabilizeClipForMixer(
   c = stripPositionTracks(c, {
     keepRootPosition: opts.keepRootPosition !== false,
   });
-  opts.lockHorizontalRoot?.(c, opts.bindHip);
+  const lock =
+    opts.lockHorizontalRoot === null
+      ? undefined
+      : (opts.lockHorizontalRoot ?? lockHorizontalRoot);
+  lock?.(c, opts.bindHip);
   sanitizeClipTracks(c);
   return c;
 }

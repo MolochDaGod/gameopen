@@ -11,7 +11,14 @@ import {
   liftForClipFootClearance,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
-import { stripPositionTracks, stripScaleTracks, stabilizeClipForMixer, clampMixerDt } from "./clipTracks";
+import {
+  stripPositionTracks,
+  stripScaleTracks,
+  stabilizeClipForMixer,
+  clampMixerDt,
+  bindHipFromRoot,
+  lockHorizontalRoot,
+} from "./clipTracks";
 
 /**
  * Toy hero: Mesh (not incomplete SkinnedMesh) + Bip001 Pelvis bone.
@@ -281,6 +288,36 @@ describe("stripPositionTracks", () => {
     expect(clampMixerDt(0.01)).toBeCloseTo(0.01);
     expect(clampMixerDt(-1)).toBe(0);
     expect(clampMixerDt(Number.NaN)).toBe(0);
+  });
+
+  it("bindHipFromRoot reads Mixamo and Bip001 pelvis", () => {
+    const mix = new THREE.Object3D();
+    const hips = new THREE.Bone();
+    hips.name = "mixamorigHips";
+    hips.position.set(0.1, 0.9, 0);
+    mix.add(hips);
+    expect(bindHipFromRoot(mix)).toEqual({ x: 0.1, y: 0.9, z: 0 });
+
+    const toon = new THREE.Object3D();
+    const pelvis = new THREE.Bone();
+    pelvis.name = "Bip001 Pelvis";
+    pelvis.position.set(0, 1.02, 0);
+    toon.add(pelvis);
+    expect(bindHipFromRoot(toon)).toEqual({ x: 0, y: 1.02, z: 0 });
+  });
+
+  it("lockHorizontalRoot pins hip XZ to bind, keeps relative Y", () => {
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.position", [0, 1], [5, 1, 5, 5, 1.1, 5]),
+    ]);
+    lockHorizontalRoot(clip, { x: 0, y: 0.9, z: 0 });
+    const v = clip.tracks[0]!.values;
+    expect(v[0]).toBe(0);
+    expect(v[2]).toBe(0);
+    expect(v[3]).toBe(0);
+    expect(v[5]).toBe(0);
+    expect(v[1]).toBeCloseTo(0.9);
+    expect(v[4]).toBeCloseTo(1.0);
   });
 
   it("stabilizeClipForMixer keeps hip bob, drops foot position", () => {

@@ -516,17 +516,20 @@ export class Animator {
   registerCatalogClip(id: string, clip: THREE.AnimationClip): void {
     if (!id || !clip) return;
     this.clips.set(id, clip);
-    const stale = this.actionCache.get(id);
-    if (stale) {
+    const drop = (key: string) => {
+      const stale = this.actionCache.get(key);
+      if (!stale) return;
+      if (this.overlay?.action === stale) this.clearOverlay();
       try {
         stale.stop();
         this.mixer.uncacheAction(stale.getClip());
       } catch {
         /* */
       }
-      this.actionCache.delete(id);
-    }
-    this.actionCache.delete(`__additive__/${id}`);
+      this.actionCache.delete(key);
+    };
+    drop(id);
+    drop(`__additive__/${id}`);
   }
 
   /** Whether a catalog clip id is loaded (for fleet hydrate skip logic). */
@@ -944,7 +947,6 @@ export class Animator {
       root: this.character.skeletonRoot,
       bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
       keepRootPosition: true,
-      lockHorizontalRoot,
     });
     const action = this.mixer.clipAction(c);
     this.actionCache.set(id, action);
@@ -968,7 +970,6 @@ export class Animator {
       root: this.character.skeletonRoot,
       bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
       keepRootPosition: false, // upper body only — no hip travel on overlay
-      lockHorizontalRoot,
     });
     c.tracks = c.tracks.filter((t) => isUpperBodyTrack(t.name));
     if (c.tracks.length === 0) return null;
@@ -997,56 +998,7 @@ export class Animator {
   }
 }
 
-/**
- * True for a clip's root (Hips) translation track under ANY bone-naming
- * convention that reaches the rig: native Mixamo (`mixamorigHips`), colon form
- * (`mixamorig:Hips`), bare `Hips`, and Bip001 pelvis/hips. Exact-string match
- * alone silently lets un-normalised packs walk off the pedestal.
- */
-export function isHipsPositionTrack(name: string): boolean {
-  if (!name.endsWith(".position") && !/\.position\[/.test(name)) return false;
-  const bone = name
-    .replace(/\.position(\[.*)?$/, "")
-    .replace(/^mixamorig:?/i, "")
-    .replace(/^Armature\|/i, "");
-  if (/^Hips\d*$/i.test(bone)) return true;
-  if (/^Bip001[\s._-]?Hips$/i.test(bone)) return true;
-  if (/^Bip001[\s._-]?Pelvis$/i.test(bone)) return true;
-  // Whole-character root drifts some GLB packs export as "root" / "Root"
-  if (/^(root|Root|ROOT)$/.test(bone)) return true;
-  return false;
-}
-
-/**
- * Remove horizontal motion from a clip's root (Hips) track while keeping the
- * vertical bob, so the game engine (or the Dressing Room pedestal) owns the
- * character's world translation.
- *
- * Every frame's hip X/Z is set to the rig's BIND-POSE hip position — NOT the
- * clip's first frame. Several "Retargeted Clip" packs author the body tens of
- * units off-origin, so pinning to frame 0 planted the rig that far from centre
- * (the "feet meters away" / flying-around-the-editor bug). Re-baselining to the
- * bind position keeps every clip centred and is a no-op for native in-place clips.
- *
- * Accepts either a full bind `{x,y,z}` or a legacy numeric bind hip Y (X/Z = 0).
- */
-export function lockHorizontalRoot(
-  clip: THREE.AnimationClip,
-  bind: { x: number; y: number; z: number } | number,
-): void {
-  const b =
-    typeof bind === "number"
-      ? { x: 0, y: bind, z: 0 }
-      : bind;
-  for (const track of clip.tracks) {
-    if (!isHipsPositionTrack(track.name)) continue;
-    const v = track.values;
-    if (!v || v.length < 3) continue;
-    const y0 = v[1];
-    for (let i = 0; i < v.length; i += 3) {
-      v[i] = b.x;
-      v[i + 1] = v[i + 1] - y0 + b.y;
-      v[i + 2] = b.z;
-    }
-  }
-}
+export {
+  isHipsPositionTrack,
+  lockHorizontalRoot,
+} from "../clipTracks";
