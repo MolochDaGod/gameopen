@@ -481,21 +481,21 @@ body.ptr-aim-hard .canvas-mount canvas {
 }
 
 /* ── Pointer presence cursors (body.ptr-* from CursorManager) ───────────────
-   File assets under /ui/cursors/ — always preferred over blank / none.
-   Hotspot: arrow tip (2,2) or centre (14,14). */
+   File assets under /ui/cursors/. Hotspot = visual TIP (click point), not
+   image centre — a centre hotspot puts the art above the click. */
 
 /* Combat / play-locked fallback: CSS crosshair (browser may still hide OS
    cursor under real pointer-lock; HUD reticle is the hard guarantee). */
 body.ptr-combat,
 body.ptr-combat * {
-  cursor: url("/ui/cursors/cursor-menu.svg") 2 2,
+  cursor: url("/ui/cursors/cursor-menu.svg") 3 2,
     url("/ui/cursors/cursor-default.svg") 2 2,
     crosshair !important;
 }
 
 /* Safety default for shell (before first presence tick) */
 body {
-  cursor: url("/ui/cursors/cursor-normal.png") 2 2,
+  cursor: url("/ui/cursors/cursor-normal.png") 1 1,
     url("/ui/cursors/cursor-default.svg") 2 2,
     default;
 }
@@ -503,7 +503,7 @@ body {
 /* UI shell / menus / editors — craftpix-style arrow (PNG) + SVG fallback */
 body.ptr-ui,
 body.ptr-ui * {
-  cursor: url("/ui/cursors/cursor-normal.png") 2 2,
+  cursor: url("/ui/cursors/cursor-normal.png") 1 1,
     url("/ui/cursors/cursor-default.svg") 2 2,
     default !important;
 }
@@ -518,8 +518,8 @@ body.ptr-ui summary,
 body.ptr-ui [data-cursor="interact"],
 body.ptr-interact,
 body.ptr-interact * {
-  cursor: url("/ui/cursors/cursor-interact.svg") 6 2,
-    url("/ui/cursors/cursor-cyber-2.png") 6 2,
+  cursor: url("/ui/cursors/cursor-interact.svg") 8 2,
+    url("/ui/cursors/cursor-cyber-2.png") 4 1,
     pointer !important;
 }
 body.ptr-ui input,
@@ -532,21 +532,21 @@ body.ptr-free,
 body.ptr-free *,
 body.ptr-aim-soft,
 body.ptr-aim-soft * {
-  cursor: url("/ui/cursors/cursor-cyber-1.png") 8 2,
+  cursor: url("/ui/cursors/cursor-cyber-1.png") 7 1,
     url("/ui/cursors/cursor-default.svg") 2 2,
     crosshair !important;
 }
 body.ptr-aim-hard,
 body.ptr-aim-hard * {
-  cursor: url("/ui/cursors/cursor-menu.svg") 2 2, crosshair !important;
+  cursor: url("/ui/cursors/cursor-menu.svg") 3 2, crosshair !important;
 }
 body.ptr-harvest,
 body.ptr-harvest * {
-  cursor: url("/ui/cursors/cursor-interact.svg") 6 2, cell !important;
+  cursor: url("/ui/cursors/cursor-interact.svg") 8 2, cell !important;
 }
 body.ptr-tool,
 body.ptr-tool * {
-  cursor: url("/ui/cursors/cursor-menu.svg") 2 2, cell !important;
+  cursor: url("/ui/cursors/cursor-menu.svg") 3 2, cell !important;
 }
 body.ptr-swim,
 body.ptr-swim * {
@@ -554,7 +554,7 @@ body.ptr-swim * {
 }
 body.ptr-climb,
 body.ptr-climb * {
-  cursor: url("/ui/cursors/cursor-menu.svg") 2 2, ns-resize !important;
+  cursor: url("/ui/cursors/cursor-menu.svg") 3 2, ns-resize !important;
 }
 
 /* Smooth hover feedback on primary chrome */
