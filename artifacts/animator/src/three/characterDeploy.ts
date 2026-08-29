@@ -65,7 +65,7 @@ export interface DeployOpts {
   facePlusZ?: boolean | "auto";
   /** Yaw (rad) when facePlusZ applies. Default π/2. */
   faceYaw?: number;
-  /** Re-run height fit when measured height is absurd. Default true. */
+  /** Re-run height fit when measured height is absurd. Default false (ingest-only). */
   refitIfAbsurd?: boolean;
   /** Author scale multiplier into fitCharacterHeight. */
   authorScale?: number;
@@ -159,7 +159,7 @@ export function deployCharacterModel(
 ): DeployResult {
   const target = opts.targetHeightM ?? DEPLOY_TARGET_HEIGHT_M;
   const groundY = opts.groundY ?? 0;
-  const refit = opts.refitIfAbsurd !== false;
+  const refit = opts.refitIfAbsurd === true;
   let fit: FitResult | null = null;
   let facingApplied = false;
 
@@ -167,9 +167,10 @@ export function deployCharacterModel(
 
   let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
   const already = model.userData.grudgeHeightFit === true;
-  const absurd =
-    h > target * RE_FIT_MAX_RATIO || h < target * RE_FIT_MIN_RATIO || h < 0.05;
-  if (!already || (refit && absurd)) {
+  const deployed = model.userData.characterDeployed === true;
+  // GUARD: NEVER call fitCharacterHeight if grudgeHeightFit=true (ingest-only SI).
+  // If ingest already converted metres, skip even on first deploy. Runtime never re-fits.
+  if (!already && !deployed) {
     fit = fitCharacterHeight(model, target, opts.authorScale ?? 1);
     model.userData.grudgeHeightFit = true;
     h = bodyBox(model).getSize(new THREE.Vector3()).y || target;
@@ -197,7 +198,18 @@ export function deployCharacterModel(
     }
   }
 
-  const { dx, dz, pelvis } = centerXZOnPelvis(model);
+  // GUARD: Skip XZ centering if already deployed (ingest-only hip placement).
+  let dx = 0;
+  let dz = 0;
+  let pelvis: THREE.Bone | null = null;
+  if (!deployed) {
+    const center = centerXZOnPelvis(model);
+    dx = center.dx;
+    dz = center.dz;
+    pelvis = center.pelvis;
+  } else {
+    pelvis = findPelvisBone(model);
+  }
   const groundDeltaY = groundFeetLocal(model, groundY);
 
   model.userData.characterDeployed = true;
@@ -283,6 +295,8 @@ export function findDeployModel(avatarRoot: THREE.Object3D): THREE.Object3D | nu
  *
  * Re-grounds the **skinned model** (not the holder wrapper). Grounding
  * `avatarRoot.children[0]` (holder) double-offset Y and pushed feet under the floor.
+ *
+ * GUARD: Ingest-only SI fit. If already fitted or deployed, only re-ground Y.
  */
 export function ensureHumanScale(
   avatarRoot: THREE.Object3D,
@@ -293,6 +307,14 @@ export function ensureHumanScale(
   if (!(h > 0.01)) return false;
 
   const model = findDeployModel(avatarRoot) ?? avatarRoot;
+  
+  // GUARD: Skip re-fit if already fitted or deployed (ingest-only SI, Y-only at runtime).
+  const fitted = model.userData.grudgeHeightFit === true;
+  const deployed = model.userData.characterDeployed === true;
+  if (fitted || deployed) {
+    groundFeetLocal(model, 0);
+    return false;
+  }
 
   if (h <= targetM * RE_FIT_MAX_RATIO && h >= targetM * RE_FIT_MIN_RATIO) {
     // Uniform scale guard: non-uniform axes = "stretched" look.
@@ -342,6 +364,9 @@ export function ensureHumanScale(
 /**
  * After first idle/attack sample, re-sit soles on groundY (position tracks /
  * bind-pose drift). Safe no-op when already grounded.
+ *
+ * GUARD: Only adjusts model.position.y, NEVER XZ or scale.
+ * Clip switch may call this; SI fit and hip XZ centering are ingest-only.
  */
 export function reGroundAfterAnimSample(
   model: THREE.Object3D,

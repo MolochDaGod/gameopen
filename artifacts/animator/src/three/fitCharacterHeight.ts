@@ -94,6 +94,10 @@ export interface FitResult {
 /**
  * Normalize `model` in place: height ≈ targetM, feet on y=0, horizontal center
  * on hips (or bbox center). Caller parents the model.
+ *
+ * INGEST-ONLY: Convert Unity/FBX centimetres to SI metres ONCE at load/import.
+ * NEVER call at runtime during clip switch — animation poses change bodyBox temporarily.
+ * Runtime may only re-ground feet Y via groundFeetLocal, never re-fit scale or hip XZ.
  */
 export function fitCharacterHeight(
   model: THREE.Object3D,
