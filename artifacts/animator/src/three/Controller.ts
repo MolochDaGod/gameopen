@@ -56,7 +56,7 @@ export class Controller {
   /** Transient move-speed multiplier (e.g. the Kiter's Smoke Phantom sprint). */
   private speedMult = 1;
   private bound = 15;
-  private readonly roomBound = 15;
+  private roomBound = 15;
   /** Pluggable world collision (dungeon KCC). Null = flat Danger Room floor. */
   private collision: CollisionProvider | null = null;
   /** Live interior obstacle circles (XZ) for Danger Room push-out collision —
@@ -69,6 +69,11 @@ export class Controller {
    *  their vertical arcs to it instead of a hardcoded floor 0, so they don't
    *  teleport the body off an elevated prop top. */
   private supportY = 0;
+  /**
+   * Outdoor / map height sampler (same field as foot IK).
+   * Null = flat y=0 Danger Room. KCC path still owns collision when set.
+   */
+  private groundHeightAt: ((x: number, z: number) => number | null) | null = null;
   /** Max ledge drop (m) the body walks down smoothly while grounded; anything
    *  deeper transitions to the airborne fall state instead of gluing the feet. */
   private readonly STEP_DOWN = 0.3;
@@ -364,6 +369,22 @@ export class Controller {
    * flat Danger Room floor + room bounds — Danger Room feel is untouched while
    * no provider is set.
    */
+  /**
+   * Flat-floor XZ half-extent (Danger / brawler). When a Rapier collision
+   * provider is set, this is ignored — the KCC owns the world.
+   */
+  setRoomBound(half: number) {
+    const h = Number.isFinite(half) && half > 1 ? half : 15;
+    this.roomBound = h;
+    if (!this.collision) this.bound = h;
+  }
+
+  /** Feet position (avatar root). Used by VFX / damage — never `controller.position`. */
+  get position(): THREE.Vector3 {
+    return this.character.root.position;
+  }
+
+  setCollision(p: CollisionProvider | null, spawn?: THREE.Vector3) {
   setCollision(
     p: CollisionProvider | null,
     spawn?: THREE.Vector3,
@@ -446,13 +467,27 @@ export class Controller {
   }
 
   /**
+   * Bind the map height field (ForestWorld / Brawler terrain sampler).
+   * Pass null to restore the flat Danger Room floor. Same player session:
+   * Studio.wirePlayerSessionOnMap calls this without rebuilding Controller.
+   */
+  setGroundHeightAt(fn: ((x: number, z: number) => number | null) | null) {
+    this.groundHeightAt = fn;
+  }
+
+  /**
    * Highest walkable support under (x, z) for feet that were at height `fromY`
-   * (room floor or a landable obstacle top). Danger Room (null-collision) path
-   * only — the dungeon KCC owns its floors. Pure math lives in ./support.
+   * (terrain sampler, room floor, or a landable obstacle top). Danger Room
+   * (null-collision) path only — the dungeon KCC owns its floors.
    */
   private supportHeightAt(x: number, z: number, fromY: number): number {
-    if (!this.obstacles) return 0;
-    return supportHeightAt(this.obstacles(), x, z, fromY);
+    let base = 0;
+    if (this.groundHeightAt) {
+      const y = this.groundHeightAt(x, z);
+      if (y != null && Number.isFinite(y)) base = y;
+    }
+    if (!this.obstacles) return base;
+    return Math.max(base, supportHeightAt(this.obstacles(), x, z, fromY));
   }
 
   /** True while a dungeon collision backend is active. */

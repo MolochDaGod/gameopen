@@ -68,6 +68,30 @@ if (fs.existsSync(indexPath)) {
   console.log("[vercel-build] index.html polished");
 }
 
+function purgeAnimFbx(dir, label) {
+  if (!fs.existsSync(dir)) return 0;
+  let n = 0;
+  const walk = (d) => {
+    for (const ent of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, ent.name);
+      if (ent.isDirectory()) walk(p);
+      else if (ent.name.toLowerCase().endsWith(".fbx")) {
+        fs.unlinkSync(p);
+        n++;
+      }
+    }
+  };
+  walk(dir);
+  if (n) console.log(`[vercel-build] purged ${n} Mixamo FBX from ${label}`);
+  return n;
+}
+
+// On Vercel only: strip Mixamo FBX before Vite copies public → dist.
+// Never delete local author FBX on a developer machine.
+if (process.env.VERCEL) {
+  purgeAnimFbx(path.join(anim, "public", "anim"), "public/anim");
+}
+
 // 4. Vite production build at domain root
 run("npm", ["run", "build"], {
   cwd: anim,
@@ -101,5 +125,7 @@ for (const rel of purge) {
     console.log("[vercel-build] purged public:", rel);
   }
 }
+
+purgeAnimFbx(path.join(anim, "dist", "public", "anim"), "dist/public/anim");
 
 console.log("\n[vercel-build] OK →", out);

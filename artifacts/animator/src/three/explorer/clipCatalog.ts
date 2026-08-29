@@ -278,21 +278,24 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       runR: "animations/sword/sword-and-shield-strafe-2",
     },
     actions: {
-      // Documents One Hand Sword Combo.fbx — primary LMB / skill combo
-      attack1: "animations/sword/one-hand-sword-combo",
-      attack2: "animations/sword/sword-and-shield-attack",
-      // Documents Standing Melee Attack Backhand.fbx
-      attack3: "animations/sword/melee-attack-backhand",
-      // Documents St1able Sword Inward Slash.fbx
-      attack4: "animations/sword/inward-slash",
-      attack5: "animations/sword/sword-and-shield-attack-5",
-      attack6: "animations/sword/two-hand-sword-combo",
+      // USER-DIRECTED: Sketchfab AttackCombo01 (melee-combo-1) + Attack Combo 2
+      // (melee-combo-2). Full multi-hit GLB clips ride real duration (like axe).
+      // Sources: anim/combo/melee-combo-1.glb · melee-combo-2.glb
+      attack1: "animations/combo/melee-combo-1",
+      attack2: "animations/combo/melee-combo-2",
+      // Optional sliced thirds of combo-01 for click-step chain
       comboHit1: "animations/combo/melee-combo-1-hit1",
       comboHit2: "animations/combo/melee-combo-1-hit2",
       comboHit3: "animations/combo/melee-combo-1-hit3",
-      skill: "animations/knife/dual-weapon-combo",
+      // Soft single-swing fillers
+      attack3: "animations/sword/melee-attack-backhand",
+      attack4: "animations/sword/inward-slash",
+      attack5: "animations/sword/sword-and-shield-attack-5",
+      attack6: "animations/sword/two-hand-sword-combo",
+      // F skill still dual-weapon flurry; strong 1H finisher = Attack Combo 2
+      skill: "animations/combo/melee-combo-2",
       dualWeaponCombo: "animations/knife/dual-weapon-combo",
-      oneHandSwordCombo: "animations/sword/one-hand-sword-combo",
+      oneHandSwordCombo: "animations/combo/melee-combo-1",
       // Documents Sword And Shield Block.fbx
       blockStart: "animations/sword/sword-and-shield-block",
       blockIdle: "animations/sword/sword-and-shield-block-idle",
@@ -309,8 +312,8 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
       turnL: "animations/sword/sword-and-shield-turn",
       turnR: "animations/sword/sword-and-shield-turn-2",
     },
-    // LMB: One Hand Sword Combo → inward slash finisher; F = Dual Weapon Combo
-    combo: ["attack1", "attack4"],
+    // LMB: AttackCombo01 (quick) → Attack Combo 2 (strong); F = same strong
+    combo: ["attack1", "attack2"],
     strafe: false,
   },
 
@@ -425,36 +428,50 @@ export const WEAPON_SETS: Record<WeaponClass, WeaponClipSet> = {
   },
 
   // -------------------------------------------------------------- axe (1h)
-  // Brutal hooking chops on the one-handed stance. Recombines the unused heavy
-  // overhead swing + outward hook + a finisher, with the GLB melee combo as a
-  // wild spinning special. Distinct from the sword's clean fencing rhythm.
+  // Pro Melee Axe Pack (Mixamo → Bip001 bake). Every pack clip has a role;
+  // SSOT: proMeleeAxeInjuredSsot.ts + docs/PRO_MELEE_AXE_INJURED_SSOT.md
+  // Paths below are bake-relative (anims/baked/...) when loadBaked is used;
+  // Explorer FBX catalog may resolve via pro-melee-axe/ or baked JSON loader.
   axe: {
-    loco: { ...ONE_HAND_MELEE_LOCO },
-    actions: {
-      // USER-DIRECTED: the Battle Axe's attack combo IS the retargeted Mixamo
-      // multi-swing combo (meleeComboB). It's one long GLB clip that contains the
-      // whole chain, so the combo array holds a single entry and the combo lock +
-      // recovery ride the clip's REAL duration (see Animator.attack and
-      // Targets.executeStrike) rather than fixed beats — keeping swings, hits and
-      // lock windows in sync across its full length.
-      attack1: "animations/combo/melee-combo-2",
-      // New-batch one-handed horizontal hook — appended as the combo finisher (see
-      // `combo`) so the Battle Axe chain caps with a wide cross-body swing.
-      attack2: "animations/sword/melee-horizontal",
-      // Leaping overhead cleave as the signature special (distinct from the combo).
-      skill: "animations/greatsword/great-sword-jump-attack",
-      dashAttack: "animations/sword/great-sword-slide-attack",
-      // Straight thrust is now a rising upward thrust (new batch) — an uppercutting
-      // axe poke instead of the borrowed knife stab.
-      stab: "animations/spear/rising-thrust",
-      blockStart: "animations/sword/sword-and-shield-block",
-      blockIdle: "animations/sword/sword-and-shield-block-idle",
-      death: "animations/sword/sword-and-shield-death",
-      hit: "animations/greatsword/great-sword-impact",
-      turnL: "animations/sword/sword-and-shield-turn",
-      turnR: "animations/sword/sword-and-shield-turn-2",
+    loco: {
+      idle: "pro_melee_axe/idle",
+      walkF: "pro_melee_axe/walk",
+      walkB: "pro_melee_axe/walk_back",
+      walkL: "pro_melee_axe/walk_left",
+      walkR: "pro_melee_axe/walk_right",
+      runF: "pro_melee_axe/run",
+      runB: "pro_melee_axe/run_back",
+      runL: "pro_melee_axe/walk_left",
+      runR: "pro_melee_axe/walk_right",
     },
-    combo: ["attack1", "attack2"],
+    actions: {
+      // Full LMB chain — all three combo clips + horizontal follow
+      attack1: "pro_melee_axe/combo_1",
+      attack2: "pro_melee_axe/combo_2",
+      attack3: "pro_melee_axe/combo_3",
+      attack4: "pro_melee_axe/attack",
+      attack5: "pro_melee_axe/attack_down",
+      attack6: "pro_melee_axe/attack_backhand",
+      skill: "pro_melee_axe/attack_360_high",
+      skill2: "pro_melee_axe/attack_360_low",
+      dashAttack: "pro_melee_axe/jump_attack",
+      kick: "pro_melee_axe/attack_kick_1",
+      kick2: "pro_melee_axe/attack_kick_2",
+      jumpAttack: "pro_melee_axe/jump_attack",
+      blockStart: "pro_melee_axe/block_idle",
+      blockIdle: "pro_melee_axe/block_idle",
+      hit: "pro_melee_axe/hit_gut",
+      hitL: "pro_melee_axe/hit_left",
+      hitR: "pro_melee_axe/hit_right",
+      draw: "pro_melee_axe/equip_underarm",
+      sheath: "pro_melee_axe/disarm_underarm",
+      turnL: "pro_melee_axe/turn_left",
+      turnR: "pro_melee_axe/turn_right",
+      jump: "pro_melee_axe/jump",
+      // Off-hand warrior: same roles under pro_melee_axe_mirror/
+    },
+    // Use every combo + light finishers
+    combo: ["attack1", "attack2", "attack3", "attack4"],
     strafe: false,
   },
 

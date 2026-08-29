@@ -37,7 +37,7 @@ Browser  open.grudge-studio.com
 | Service | Host | Role |
 |---------|------|------|
 | **grudge-api-production-0d46** | `grudge-api-production-0d46.up.railway.app` | **Postgres SSOT** — characters, account, wallet, island, inventory, professions, auth guest/session |
-| **gameopen-production** | `gameopen-production.up.railway.app` | Open Danger Room WS + co-located rooms (`/api/space|danger|carrier`) |
+| **gameopen-production** | `gameopen-production.up.railway.app` | Open Danger WS + rooms. Root `/` 200; health **`/api/healthz`** (not `/health`). WS `wss://…/api/danger` |
 | **voxgrudge-grudox-room** | `voxgrudge-grudox-room-production.up.railway.app` | GRUDOX / Voxel multiplayer rooms (space, brawl, carrier) |
 | **mine-loader-api** | `mine-loader-api-production.up.railway.app` | Voxel Realms world authority (1 replica) |
 

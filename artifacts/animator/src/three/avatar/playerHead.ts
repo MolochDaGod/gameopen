@@ -109,14 +109,10 @@ export function resolveLobbySeatAvatar(
   const byChar = loadPlayerHeadForCharacter(opts?.characterId);
   if (byChar) return byChar;
   const bySlot = loadPlayerHeadForSlot(i);
-  if (bySlot) return bySlot;
+  if (bySlot && !opts?.characterId) return bySlot;
   const race = raceKeyToAvatarRace(opts?.raceKey) ?? LOBBY_SEAT_RACES[i] ?? "human";
   const builds = loadAvatarRaceBuilds();
   if (builds[race]) return builds[race]!;
-  if (opts?.characterId) {
-    const global = loadPlayerHeadConfig();
-    if (global) return global;
-  }
   return defaultConfig(race);
 }
 

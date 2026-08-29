@@ -1,0 +1,136 @@
+{
+  "pack": "work-roles",
+  "version": "1.0.0",
+  "updated": "2026-08-11",
+  "skeleton": "Bip001",
+  "description": "AI work packs: loco + auto-harvest / farming / cooking / refining (assembled, not re-baked)",
+  "roles": [
+    "auto_harvest_mine",
+    "auto_harvest_chop",
+    "auto_harvest_gather",
+    "auto_harvest_fish",
+    "farming",
+    "cooking",
+    "refining",
+    "carry"
+  ],
+  "report": {
+    "roles": {
+      "auto_harvest_mine": {
+        "idle": "work-roles/auto_harvest_mine/idle",
+        "walk": "work-roles/auto_harvest_mine/walk",
+        "run": "work-roles/auto_harvest_mine/run",
+        "work": "work-roles/auto_harvest_mine/work",
+        "workAlt": "work-roles/auto_harvest_mine/workAlt",
+        "carryWalk": "work-roles/auto_harvest_mine/carryWalk",
+        "carryIdle": "work-roles/auto_harvest_mine/carryIdle"
+      },
+      "auto_harvest_chop": {
+        "idle": "work-roles/auto_harvest_chop/idle",
+        "walk": "work-roles/auto_harvest_chop/walk",
+        "run": "work-roles/auto_harvest_chop/run",
+        "work": "work-roles/auto_harvest_chop/work",
+        "workBegin": "work-roles/auto_harvest_chop/workBegin",
+        "carryWalk": "work-roles/auto_harvest_chop/carryWalk",
+        "carryIdle": "work-roles/auto_harvest_chop/carryIdle"
+      },
+      "auto_harvest_gather": {
+        "idle": "work-roles/auto_harvest_gather/idle",
+        "walk": "work-roles/auto_harvest_gather/walk",
+        "work": "work-roles/auto_harvest_gather/work",
+        "workAlt": "work-roles/auto_harvest_gather/workAlt",
+        "workEnd": "work-roles/auto_harvest_gather/workEnd",
+        "carryWalk": "work-roles/auto_harvest_gather/carryWalk",
+        "carryIdle": "work-roles/auto_harvest_gather/carryIdle"
+      },
+      "auto_harvest_fish": {
+        "idle": "work-roles/auto_harvest_fish/idle",
+        "walk": "work-roles/auto_harvest_fish/walk",
+        "work": "work-roles/auto_harvest_fish/work",
+        "workBegin": "work-roles/auto_harvest_fish/workBegin",
+        "workEnd": "work-roles/auto_harvest_fish/workEnd"
+      },
+      "farming": {
+        "idle": "work-roles/farming/idle",
+        "walk": "work-roles/farming/walk",
+        "till": "work-roles/farming/till",
+        "plant": "work-roles/farming/plant",
+        "water": "work-roles/farming/water",
+        "reap": "work-roles/farming/reap"
+      },
+      "cooking": {
+        "idle": "work-roles/cooking/idle",
+        "walk": "work-roles/cooking/walk",
+        "prep": "work-roles/cooking/prep",
+        "cook": "work-roles/cooking/cook",
+        "serve": "work-roles/cooking/serve"
+      },
+      "refining": {
+        "idle": "work-roles/refining/idle",
+        "walk": "work-roles/refining/walk",
+        "start": "work-roles/refining/start",
+        "loop": "work-roles/refining/loop",
+        "finish": "work-roles/refining/finish",
+        "carryWalk": "work-roles/refining/carryWalk"
+      },
+      "carry": {
+        "idle": "work-roles/carry/idle",
+        "walk": "work-roles/carry/walk",
+        "wheelWalk": "work-roles/carry/wheelWalk",
+        "wheelIdle": "work-roles/carry/wheelIdle",
+        "dump": "work-roles/carry/dump"
+      }
+    },
+    "copied": [
+      "auto_harvest_mine/idle ← locomotion/idle",
+      "auto_harvest_mine/walk ← locomotion/walk_forward",
+      "auto_harvest_mine/run ← locomotion/run_forward",
+      "auto_harvest_mine/work ← harvest/mining",
+      "auto_harvest_mine/workAlt ← harvest/mining-l",
+      "auto_harvest_mine/carryWalk ← harvest/holding-walk",
+      "auto_harvest_mine/carryIdle ← harvest/holding-idle",
+      "auto_harvest_chop/idle ← locomotion/idle",
+      "auto_harvest_chop/walk ← locomotion/walk_forward",
+      "auto_harvest_chop/run ← locomotion/run_forward",
+      "auto_harvest_chop/work ← harvest/chop",
+      "auto_harvest_chop/workBegin ← harvest/hammer-begin",
+      "auto_harvest_chop/carryWalk ← harvest/holding-walk",
+      "auto_harvest_chop/carryIdle ← harvest/holding-idle",
+      "auto_harvest_gather/idle ← locomotion/idle",
+      "auto_harvest_gather/walk ← locomotion/walk_forward",
+      "auto_harvest_gather/work ← harvest/gathering",
+      "auto_harvest_gather/workAlt ← harvest/gathering02",
+      "auto_harvest_gather/workEnd ← harvest/pull-plant",
+      "auto_harvest_gather/carryWalk ← harvest/holding-walk",
+      "auto_harvest_gather/carryIdle ← harvest/holding-idle",
+      "auto_harvest_fish/idle ← locomotion/idle",
+      "auto_harvest_fish/walk ← locomotion/walk_forward",
+      "auto_harvest_fish/work ← harvest/fishing-wait",
+      "auto_harvest_fish/workBegin ← harvest/fishing-cast",
+      "auto_harvest_fish/workEnd ← harvest/fishing-catch",
+      "farming/idle ← locomotion/idle",
+      "farming/walk ← locomotion/walk_forward",
+      "farming/till ← harvest/farm-plow",
+      "farming/plant ← harvest/dig-and-plant-seeds",
+      "farming/water ← harvest/watering",
+      "farming/reap ← harvest/pull-plant",
+      "cooking/idle ← locomotion/idle",
+      "cooking/walk ← locomotion/walk_forward",
+      "cooking/prep ← harvest/kneeling-idle",
+      "cooking/cook ← harvest/cow-milking",
+      "cooking/serve ← harvest/pick-fruit",
+      "refining/idle ← locomotion/idle",
+      "refining/walk ← locomotion/walk_forward",
+      "refining/start ← harvest/hammer-begin",
+      "refining/loop ← harvest/hammer",
+      "refining/finish ← harvest/chop",
+      "refining/carryWalk ← harvest/holding-walk",
+      "carry/idle ← harvest/holding-idle",
+      "carry/walk ← harvest/holding-walk",
+      "carry/wheelWalk ← harvest/wheelbarrow-walk",
+      "carry/wheelIdle ← harvest/wheelbarrow-idle",
+      "carry/dump ← harvest/wheelbarrow-dump"
+    ],
+    "missing": []
+  }
+}

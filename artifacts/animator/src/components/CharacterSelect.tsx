@@ -10,14 +10,14 @@ import "./characterSelect.css";
 const STORAGE_KEY = "grudge:selectedCharacter:v1";
 
 /** Featured roster for the entry scene (order = stage left → right). */
-const FEATURED_IDS = ["ikkaku-madarame", "ikkaku-crimson", "ikkaku-azure", "ikkaku-void"] as const;
+const FEATURED_IDS = ["race-human", "race-high-elf", "race-orc", "race-undead"] as const;
 
 /** Poster art for the entry stage (PNG room/brand art — not GLB). */
 function posterFor(id: string): string {
-  if (id === "ikkaku-madarame") return assetUrl("favicon.png");
-  if (id === "ikkaku-crimson") return assetUrl("rooms/danger-scene.png");
-  if (id === "ikkaku-azure") return assetUrl("rooms/dressing-scene.png");
-  if (id === "ikkaku-void") return assetUrl("rooms/voxgrudge-scene.png");
+  if (id === "race-human") return assetUrl("favicon.png");
+  if (id === "race-high-elf") return assetUrl("rooms/dressing-scene.png");
+  if (id === "race-orc") return assetUrl("rooms/danger-scene.png");
+  if (id === "race-undead") return assetUrl("rooms/voxgrudge-scene.png");
   if (id === "gunslinger") return assetUrl("emblem.png");
   if (id === "explorer") return assetUrl("favicon.png");
   if (id === "karate-boss") return assetUrl("rooms/danger-scene.png");
@@ -74,8 +74,8 @@ export function CharacterSelect({ onSelect, initialId }: Props) {
       <div className="charselect-bg" aria-hidden />
       <header className="charselect-head">
         <p className="charselect-kicker">Grudge Studio</p>
-        <h1 className="charselect-title">Choose your fighter</h1>
-        <p className="charselect-sub">Four heroes. One path into the facility.</p>
+        <h1 className="charselect-title">Choose your Warlord</h1>
+        <p className="charselect-sub">Toon RTS races. One path into Open.</p>
       </header>
 
       <div className="charselect-stage" role="listbox" aria-label="Characters">

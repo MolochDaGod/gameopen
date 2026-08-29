@@ -13,6 +13,7 @@ import {
   DUAL_WIELD_CLIPS,
   CANONICAL_LOCO,
   isBannedLocomotionClip,
+  isUnpublishedBakeRel,
 } from "./grudge/anims";
 import { rematchClipToSkeleton } from "./grudge/skeleton";
 import type { AnimRole } from "./types";
@@ -141,6 +142,10 @@ export async function hydrateFleetAvatarRoles(opts: {
     if (!opts.force && !allowOverwrite && opts.hasRole(role)) return true;
     const isLoco = role === "walk" || role === "run" || role === "sprint";
     for (const path of paths) {
+      if (isUnpublishedBakeRel(path)) {
+        failed.push(`${role}:${path}:unpublished`);
+        continue;
+      }
       // Hard skip banned loco (sword_shield run, tip walk, run-to-roll)
       if (isLoco && isBannedLocomotionClip(path)) {
         failed.push(`${role}:${path}:banned`);

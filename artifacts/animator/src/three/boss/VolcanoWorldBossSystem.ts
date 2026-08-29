@@ -59,6 +59,16 @@ export class VolcanoWorldBossSystem {
    * Default pin: Hellmaw Depths sector `s`.
    */
   async spawnIfAllowed(ctx: VolcanoBossContext): Promise<boolean> {
+    try {
+      return await this.spawnIfAllowedInner(ctx);
+    } catch (e) {
+      console.warn("[VolcanoWorldBoss] spawnIfAllowed failed", e);
+      this.clear();
+      return false;
+    }
+  }
+
+  private async spawnIfAllowedInner(ctx: VolcanoBossContext): Promise<boolean> {
     this.clear();
     if (!VolcanoWorldBossSystem.allowed(ctx)) return false;
 

@@ -1,0 +1,26 @@
+{
+  "id": "elv-retro-inventory-3x",
+  "name": "ElvGames Retro Inventory (Scaled 3x)",
+  "license": "ElvGames — personal/commercial; do not resell pack",
+  "source": "Documents/_dev_island_packs/Retr3o-Inventory/Retro Inventory/Scaled 3x",
+  "use": "Claim-flag camp storage, AFK harvest HUD, RTS unit HP hearts",
+  "roles": {
+    "inventoryFrame": "Inventory.png",
+    "inventory9slice": "Inventory_9Slices.png",
+    "slots": [
+      "Inventory_Slot_1.png",
+      "Inventory_Slot_2.png",
+      "Inventory_Slot_3.png",
+      "Inventory_Slot_4.png",
+      "Inventory_Slot_5.png",
+      "Inventory_Slot_6.png",
+      "Inventory_Slot_7.png",
+      "Inventory_Slot_8.png",
+      "Inventory_Slot_9.png",
+      "Inventory_Slot_10.png"
+    ],
+    "hpTrack": "Health_01.png",
+    "hpFill": "Health_01_Bar01.png",
+    "settings": "Settings.png"
+  }
+}

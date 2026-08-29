@@ -6,6 +6,7 @@
  * v4 (2026-08): drop historical shell caches; NEVER cache 3D binaries
  *     (glb/fbx/bin/hdr/ktx2/draco) or /models|/textures|/anims|/audio.
  *     Stale mesh shells caused SI stretch / wrong kits after fleet CDN fixes.
+ * v5 (2026-08-19): drop pinned index-BYDtnCzP.js / grudge-open-shell-v4.
  *
  * Strategy:
  *  - Navigations: network-only (no stale index.html pinning old Vite hashes)
@@ -13,8 +14,8 @@
  *  - Icons: stale-while-revalidate with guaranteed Response fallback
  *  - Never intercept API/auth; never cache production meshes (CDN SSOT)
  */
-const CACHE = "grudge-open-shell-v4";
-const CACHE_VERSION = 4;
+const CACHE = "grudge-open-shell-v5";
+const CACHE_VERSION = 5;
 const PRECACHE = [
   "/manifest.webmanifest",
   "/favicon.svg",

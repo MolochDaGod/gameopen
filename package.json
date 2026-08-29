@@ -31,6 +31,7 @@
     "anims:verify": "node scripts/verify-anim-integrity.mjs",
     "anims:verify:write": "node scripts/verify-anim-integrity.mjs --write",
     "anims:verify:strict": "node scripts/verify-anim-integrity.mjs --strict",
+    "anims:skills:verify": "node scripts/verify-skill-animation-bindings.mjs",
     "anims:bake:mobility": "npm --prefix artifacts/animator run bake:mobility",
     "anims:bake:dual-wield": "npm --prefix artifacts/animator run bake:dual-wield",
     "deploy:gate": "node scripts/open-deploy-gate.mjs",

@@ -15,6 +15,9 @@ describe("fleetAnimSsot", () => {
     expect(resolveFleetAnimLane("open-play")).toBe("bip001-baked");
     expect(resolveFleetAnimLane("controller")).toBe("bip001-baked");
     expect(resolveFleetAnimLane("explorer")).toBe("mixamo-explorer");
+    expect(resolveFleetAnimLane("danger", null, "voxel")).toBe("mixamo-explorer");
+    expect(resolveFleetAnimLane("danger", null, "warlords")).toBe("bip001-baked");
+    expect(resolveFleetAnimLane("grudox-handoff")).toBe("mixamo-explorer");
   });
 
   it("race GLB is Toon RTS pack not arena/FBX/races bake", () => {
@@ -37,6 +40,8 @@ describe("fleetAnimSsot", () => {
     const c = bip001BakedUrlCandidates("sword_shield/idle");
     expect(c.some((u) => u.includes("/anims/baked/sword_shield/idle.json"))).toBe(true);
     expect(c.some((u) => u.includes("open.grudge-studio.com/anims/baked"))).toBe(true);
+    expect(c.some((u) => /prod\/anims\/.+\.glb/i.test(u))).toBe(false);
+    expect(c.some((u) => u.includes("assets.grudge-studio.com/anims/baked"))).toBe(true);
     expect(c.some((u) => u.includes("prod/anims"))).toBe(false);
     expect(c.every((u) => u.endsWith(".json"))).toBe(true);
   });

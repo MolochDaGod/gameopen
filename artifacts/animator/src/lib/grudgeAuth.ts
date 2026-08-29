@@ -4,7 +4,7 @@
  * Priority:
  *  1. Grudge ID SSO token (id.grudge-studio.com / ?sso_token= / #sso_token / session)
  *  2. Clerk session (optional, when VITE_CLERK_PUBLISHABLE_KEY is set)
- *  3. Guest play (local roster only)
+ *  3. Unsigned play (no guest JWT — product login is Grudge ID only)
  *
  * Characters SSOT: GrudgeBuilder Railway via same-origin /api/characters
  * (Vercel rewrite → grudge-api-production).
@@ -522,11 +522,19 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   });
 }
 
+function isFleetCookieHost(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "grudge-studio.com" || h.endsWith(".grudge-studio.com");
+}
+
 /**
  * Silent fleet re-entry via id hub cookie (Domain=.grudge-studio.com).
- * When local JWT is missing but user already signed in on id.*, claim a fresh session.
+ * Skip on localhost — that cookie is never sent, and a 401 probe is noise.
+ * On 401/403 stop (FLEET_AUTH_WIRING — no host storms).
  */
 export async function claimFleetSession(): Promise<string | null> {
+  if (!isFleetCookieHost()) return null;
   const urls = [
     apiUrl("/api/auth/session/claim"),
     `${FLEET.auth.replace(/\/$/, "")}/api/auth/session/claim`,
@@ -540,7 +548,7 @@ export async function claimFleetSession(): Promise<string | null> {
         body: "{}",
         signal: AbortSignal.timeout(8000),
       });
-      if (r.status === 401) return null;
+      if (r.status === 401 || r.status === 403) return null;
       if (!r.ok) continue;
       const data = (await r.json()) as Record<string, unknown>;
       const t = String(
@@ -586,7 +594,7 @@ export async function claimFleetSession(): Promise<string | null> {
  * Resolve account from the fleet API.
  *
  * TOKEN-FIRST: cached token+account → return immediately, background-revalidate.
- * No token: try silent claim on id hub (cookie SSO), then guest.
+ * No token: try silent claim on id hub (cookie SSO) on fleet hosts only.
  * Falls through to bridge launch tokens and multi-endpoint probing when needed.
  */
 export async function fetchFleetAccount(
@@ -596,7 +604,7 @@ export async function fetchFleetAccount(
   if (!token) {
     // One silent claim — restores session after tab reopen on *.grudge-studio.com
     token = (await claimFleetSession()) || null;
-    if (!token) return getStoredAccount(); // guest
+    if (!token) return getStoredAccount();
   }
 
   // Fast path: token + cached account → return instantly, revalidate in background.
@@ -803,71 +811,10 @@ export async function fetchCharacters(opts?: {
 }
 
 /**
- * Silent guest session via Railway `POST /api/auth/guest`.
- * Stores JWT so `/api/characters?era=warlords` can succeed for temp accounts.
- * Prefer real SSO when a token already exists.
+ * Guest JWT mint is closed (Railway 403). Product login is Grudge ID only.
+ * Kept as a named export so callers compile; does not hit the network.
  */
 export async function ensureGuestSession(): Promise<GrudgeAccount | null> {
-  const existing = getStoredToken();
-  if (existing && !isTokenExpired(existing)) {
-    const acc = await fetchFleetAccount(true);
-    if (acc) return acc;
-    // Token looks valid but /me rejects — drop it and mint a real guest
-    setStoredToken(null);
-    setStoredAccount(null);
-  } else if (existing && isTokenExpired(existing)) {
-    setStoredToken(null);
-  }
-
-  const urls = [
-    apiUrl("/api/auth/guest"),
-    `${FLEET.auth}/api/auth/guest`,
-    `${FLEET.gameData}/api/auth/guest`,
-  ];
-
-  for (const url of urls) {
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: "{}",
-        credentials: "include",
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!r.ok) continue;
-      const data = (await r.json()) as Record<string, unknown>;
-      const token = String(
-        data.token || data.sessionToken || data.access_token || data.sso_token || "",
-      );
-      if (!token) continue;
-      setStoredToken(token, true);
-      const user = (data.user as Record<string, unknown> | undefined) || data;
-      const grudgeId = String(
-        data.grudgeId || data.grudge_id || user.grudgeId || user.id || "",
-      );
-      const displayName = String(
-        data.displayName || data.username || user.displayName || user.username || "Guest",
-      );
-      if (grudgeId) {
-        try {
-          localStorage.setItem("grudge_id", grudgeId);
-          localStorage.setItem("grudge_account_id", grudgeId);
-          localStorage.setItem("grudge_username", displayName);
-        } catch {
-          /* */
-        }
-        const account: GrudgeAccount = {
-          grudgeId,
-          displayName,
-          source: "guest",
-        };
-        setStoredAccount(account);
-        return account;
-      }
-    } catch {
-      /* try next */
-    }
-  }
   return null;
 }
 
@@ -908,9 +855,8 @@ export async function initFleetAuth(): Promise<{
     account = await fetchFleetAccount(true);
   }
 
-  // Dead JWT left in storage (401 on /me, failed exchange) → clear so guest can mint.
+  // Dead JWT left in storage (401 on /me, failed exchange) → clear. Do not mint guest.
   if (!account && getStoredToken()) {
-    // Force verify once more; if still null, token is unusable
     const again = await fetchFleetAccount(true);
     if (!again) {
       setStoredToken(null);
@@ -920,29 +866,20 @@ export async function initFleetAuth(): Promise<{
     }
   }
 
-  // No SSO / no token → silent Railway guest so character APIs work for play.
-  // Skip auto-guest when URL forced full login (?force_login=1).
-  const forceLogin =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("force_login") === "1";
-  if (!account && !getStoredToken() && !forceLogin) {
-    account = await ensureGuestSession();
-  }
-
-  // Always try characters when we have any token (guest or full).
   let characters: GrudgeCharacter[] = [];
   if (account || getStoredToken()) {
-    characters = await fetchCharacters({ eras: ["warlords"] });
-    // Token rejected mid-list → recover guest and retry once
-    if (!characters.length && !getStoredToken() && !forceLogin) {
-      account = (await ensureGuestSession()) || account;
-      if (getStoredToken()) characters = await fetchCharacters({ eras: ["warlords"] });
-    } else if (!characters.length && getStoredToken()) {
-      account = (await fetchFleetAccount(true)) || account;
-      characters = await fetchCharacters({ eras: ["warlords"] });
-    }
-    // Auto-create first Warlords hero so choose-survivor / rooms aren't empty.
+    characters = await fetchCharacters();
     if (!characters.length && getStoredToken()) {
+      account = (await fetchFleetAccount(true)) || account;
+      characters = await fetchCharacters();
+    }
+    // Auto-create a Warlords shelf hero only when that era is empty
+    // (voxel/nexus/armada heroes must not look like “no roster”).
+    const hasWarlords = characters.some((c) => {
+      const e = String(c.gameEra || c.config?.gameEra || c.config?.era || "").toLowerCase();
+      return !e || e === "warlords";
+    });
+    if (!hasWarlords && getStoredToken()) {
       try {
         const { createFleetCharacter } = await import("./accountShared");
         const name = account?.displayName || "Guest Adventurer";
@@ -954,7 +891,7 @@ export async function initFleetAuth(): Promise<{
           gameEra: "warlords",
         });
         if (created.ok) {
-          characters = await fetchCharacters({ eras: ["warlords"] });
+          characters = await fetchCharacters();
           if (!characters.length) {
             characters = [
               {

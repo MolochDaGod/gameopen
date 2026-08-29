@@ -1,0 +1,13 @@
+{
+  "role": "carry",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": {
+    "idle": "work-roles/carry/idle",
+    "walk": "work-roles/carry/walk",
+    "wheelWalk": "work-roles/carry/wheelWalk",
+    "wheelIdle": "work-roles/carry/wheelIdle",
+    "dump": "work-roles/carry/dump"
+  },
+  "source": "locomotion/* + harvest/* (Human Crafting FREE + farming Mixamo)"
+}

@@ -62,6 +62,8 @@ export const FLEET = {
   forge: "https://forge.grudge-studio.com",
   /** Game UI / HUD kits + studio (chrome for Open, Forge, GRUDOX, all games) */
   ui: "https://ui.grudge-studio.com",
+  /** Trait Store — Unity paperdoll + mesh UUID SSOT (edge → ui Main Panel) */
+  traits: "https://traits.grudge.studio",
   foundry: "https://character.grudge-studio.com",
   client: "https://client.grudge-studio.com",
   coder: "https://coder.grudge-studio.com",

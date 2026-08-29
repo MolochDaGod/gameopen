@@ -54,13 +54,14 @@ artifacts/animator/public/models/**/*.fbx
 **/artifacts/animator/public/models/nature/**
 **/artifacts/animator/public/models/characters/**
 
-# EXCEPTION: Explorer Mixamo + Layer-A base pack under public/anim MUST ship.
-# Without these, open.grudge-studio.com/dressing loads a procedural skeleton with
-# zero mixer clips → permanent T-pose (probed: /anim/** 404 on production).
+# EXCEPTION: Explorer Layer-A base GLB only. Mixamo .fbx is author interchange
+# (~179 MB, 808 files) — arcade play uses baked /anims/baked JSON + procedural Mixamo.
+# FBX stays on disk for Dressing Room locally; **/*.fbx ban keeps it off Vercel.
 !artifacts/animator/public/anim/
 !artifacts/animator/public/anim/**
 !artifacts/animator/public/anim/**/*.glb
-!artifacts/animator/public/anim/**/*.fbx
+# Re-ban Mixamo FBX after the anim/** un-ignore (gitignore last-match).
+artifacts/animator/public/anim/**/*.fbx
 
 # EXCEPTION: Danger Room practice dummy + boss tester (~0.5 MB total).
 # Served same-origin under /ui/training-targets (not /models/props → R2 rewrite).

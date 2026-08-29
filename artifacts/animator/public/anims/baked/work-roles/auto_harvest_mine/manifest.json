@@ -1,0 +1,15 @@
+{
+  "role": "auto_harvest_mine",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": {
+    "idle": "work-roles/auto_harvest_mine/idle",
+    "walk": "work-roles/auto_harvest_mine/walk",
+    "run": "work-roles/auto_harvest_mine/run",
+    "work": "work-roles/auto_harvest_mine/work",
+    "workAlt": "work-roles/auto_harvest_mine/workAlt",
+    "carryWalk": "work-roles/auto_harvest_mine/carryWalk",
+    "carryIdle": "work-roles/auto_harvest_mine/carryIdle"
+  },
+  "source": "locomotion/* + harvest/* (Human Crafting FREE + farming Mixamo)"
+}

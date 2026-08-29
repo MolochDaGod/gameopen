@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "pack": "poly-pizza-ultimate-guns",
+  "source": "Ultimate Guns Pack-glb.zip",
+  "preview": "https://static.poly.pizza/listimg/CkWIv7GwRfo6uopKE33h.webp",
+  "license": "Poly Pizza asset pack — check poly.pizza license for commercial",
+  "pathRoot": "models/weapons/ultimate-guns",
+  "note": "Low-poly game-ready guns for fleet GUN class + TPS (Arc Raiders-like). Wire via gunClass + gunCombat + gunLoot.",
+  "ammoTypes": {
+    "light": { "id": "ammo_light", "label": "Light Rounds", "stackMax": 120, "iconHint": "pistol" },
+    "medium": { "id": "ammo_medium", "label": "Medium Rounds", "stackMax": 90, "iconHint": "rifle" },
+    "heavy": { "id": "ammo_heavy", "label": "Heavy Rounds", "stackMax": 40, "iconHint": "sniper" },
+    "shell": { "id": "ammo_shell", "label": "Shells", "stackMax": 36, "iconHint": "shotgun" }
+  },
+  "attachments": {
+    "scope": { "file": "scope.glb", "slot": "optic" },
+    "bipod": { "file": "bipod.glb", "slot": "underbarrel" },
+    "bayonet": { "file": "bayonet.glb", "slot": "muzzle" },
+    "tripod": { "file": "tripod.glb", "slot": "deploy" }
+  },
+  "weapons": [
+    {
+      "id": "ug_pistol",
+      "file": "pistol.glb",
+      "family": "pistol",
+      "weaponId": "pistol",
+      "label": "Pistol",
+      "ammo": "light",
+      "dropWeight": 1.2,
+      "reserveDefault": 45,
+      "adsFovMul": 0.92,
+      "hipSpread": 0.04,
+      "adsSpread": 0.012
+    },
+    {
+      "id": "ug_revolver",
+      "file": "revolver.glb",
+      "family": "pistol",
+      "weaponId": "pistol",
+      "label": "Revolver",
+      "ammo": "light",
+      "dropWeight": 1.0,
+      "reserveDefault": 30,
+      "adsFovMul": 0.9,
+      "hipSpread": 0.05,
+      "adsSpread": 0.01,
+      "canonicalPistolMesh": true
+    },
+    {
+      "id": "ug_smg",
+      "file": "submachine-gun.glb",
+      "family": "rifle",
+      "weaponId": "rifle",
+      "label": "SMG",
+      "ammo": "light",
+      "dropWeight": 1.1,
+      "reserveDefault": 90,
+      "adsFovMul": 0.94,
+      "hipSpread": 0.055,
+      "adsSpread": 0.022,
+      "loadoutOverride": { "clip": 30, "burst": 1, "fireLock": 0.09, "damage": 8 }
+    },
+    {
+      "id": "ug_assault",
+      "file": "assault-rifle.glb",
+      "family": "rifle",
+      "weaponId": "rifle",
+      "label": "Assault Rifle",
+      "ammo": "medium",
+      "dropWeight": 1.0,
+      "reserveDefault": 72,
+      "adsFovMul": 0.88,
+      "hipSpread": 0.035,
+      "adsSpread": 0.01,
+      "canonicalRifleMesh": true
+    },
+    {
+      "id": "ug_bullpup",
+      "file": "bullpup.glb",
+      "family": "rifle",
+      "weaponId": "rifle",
+      "label": "Bullpup",
+      "ammo": "medium",
+      "dropWeight": 0.85,
+      "reserveDefault": 72,
+      "adsFovMul": 0.87,
+      "hipSpread": 0.032,
+      "adsSpread": 0.009
+    },
+    {
+      "id": "ug_sniper",
+      "file": "sniper-rifle.glb",
+      "family": "sniper",
+      "weaponId": "hunter-rifle",
+      "label": "Sniper Rifle",
+      "ammo": "heavy",
+      "dropWeight": 0.55,
+      "reserveDefault": 24,
+      "adsFovMul": 0.62,
+      "hipSpread": 0.08,
+      "adsSpread": 0.004,
+      "canonicalSniperMesh": true
+    },
+    {
+      "id": "ug_shotgun",
+      "file": "shotgun.glb",
+      "family": "shotgun",
+      "weaponId": "shotgun",
+      "label": "Shotgun",
+      "ammo": "shell",
+      "dropWeight": 0.9,
+      "reserveDefault": 24,
+      "adsFovMul": 0.9,
+      "hipSpread": 0.12,
+      "adsSpread": 0.06,
+      "canonicalShotgunMesh": true
+    },
+    {
+      "id": "ug_shotgun_sawed",
+      "file": "shotgun-sawed-off.glb",
+      "family": "shotgun",
+      "weaponId": "shotgun",
+      "label": "Sawed-Off",
+      "ammo": "shell",
+      "dropWeight": 0.7,
+      "reserveDefault": 18,
+      "adsFovMul": 0.95,
+      "hipSpread": 0.18,
+      "adsSpread": 0.1,
+      "loadoutOverride": { "clip": 2, "fireLock": 0.7, "damage": 9 }
+    },
+    {
+      "id": "ug_shotgun_short",
+      "file": "shotgun-short-stock.glb",
+      "family": "shotgun",
+      "weaponId": "shotgun",
+      "label": "Short Stock Shotgun",
+      "ammo": "shell",
+      "dropWeight": 0.75,
+      "reserveDefault": 20,
+      "adsFovMul": 0.92,
+      "hipSpread": 0.14,
+      "adsSpread": 0.07
+    }
+  ],
+  "lootTables": {
+    "world_common": {
+      "rolls": 1,
+      "entries": [
+        { "kind": "ammo", "ammo": "light", "min": 12, "max": 30, "weight": 3 },
+        { "kind": "ammo", "ammo": "medium", "min": 12, "max": 24, "weight": 2.5 },
+        { "kind": "ammo", "ammo": "shell", "min": 4, "max": 10, "weight": 1.5 },
+        { "kind": "ammo", "ammo": "heavy", "min": 4, "max": 8, "weight": 1 },
+        { "kind": "weapon", "weapon": "ug_pistol", "weight": 0.8 },
+        { "kind": "weapon", "weapon": "ug_smg", "weight": 0.5 },
+        { "kind": "weapon", "weapon": "ug_assault", "weight": 0.4 }
+      ]
+    },
+    "raid_cache": {
+      "rolls": 2,
+      "entries": [
+        { "kind": "weapon", "weapon": "ug_assault", "weight": 1 },
+        { "kind": "weapon", "weapon": "ug_sniper", "weight": 0.6 },
+        { "kind": "weapon", "weapon": "ug_shotgun", "weight": 0.7 },
+        { "kind": "weapon", "weapon": "ug_bullpup", "weight": 0.5 },
+        { "kind": "ammo", "ammo": "medium", "min": 30, "max": 60, "weight": 2 },
+        { "kind": "ammo", "ammo": "heavy", "min": 8, "max": 16, "weight": 1.2 },
+        { "kind": "ammo", "ammo": "shell", "min": 8, "max": 16, "weight": 1.2 }
+      ]
+    }
+  },
+  "tpsArcRaiders": {
+    "blurb": "Third-person over-shoulder, hip + ADS, reserve ammo, world drops",
+    "focusFov": 52,
+    "hipFov": 68,
+    "adsBlendSec": 0.18,
+    "softLockInFocus": true,
+    "crosshairWhileFocused": true,
+    "sprintHipFirePenalty": 1.6,
+    "moveAdsSpreadMul": 1.35,
+    "reloadTapKey": "F",
+    "primaryFire": "LMB",
+    "adsHold": "RMB"
+  }
+}

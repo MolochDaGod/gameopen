@@ -1,0 +1,14 @@
+{
+  "role": "refining",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": {
+    "idle": "work-roles/refining/idle",
+    "walk": "work-roles/refining/walk",
+    "start": "work-roles/refining/start",
+    "loop": "work-roles/refining/loop",
+    "finish": "work-roles/refining/finish",
+    "carryWalk": "work-roles/refining/carryWalk"
+  },
+  "source": "locomotion/* + harvest/* (Human Crafting FREE + farming Mixamo)"
+}

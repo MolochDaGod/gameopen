@@ -8,6 +8,10 @@ import { useEffect, useState } from "react";
 import "./dangerStartScreen.css";
 import type { RoomPresetId } from "../three/RoomPresets";
 import type { TestWorldId, TestWorldKind } from "../three/testWorlds";
+import {
+  DANGER_ERA_OPTIONS,
+  type DangerEraId,
+} from "../lib/dangerPlayableCharacter";
 
 export interface DangerRoomOption {
   id: RoomPresetId;
@@ -39,6 +43,9 @@ export interface DangerStartScreenProps {
   onTestWorld?: (id: TestWorldId) => void;
   onEnter: () => void;
   onOpenAccount?: () => void;
+  /** Open /danger is all-era. GRUDOX voxel Danger is a separate host. */
+  era?: DangerEraId;
+  onEra?: (id: DangerEraId) => void;
 }
 
 const KIND_LABEL: Record<TestWorldKind, string> = {
@@ -76,6 +83,8 @@ export function DangerStartScreen({
   onTestWorld,
   onEnter,
   onOpenAccount,
+  era = "warlords",
+  onEra,
 }: DangerStartScreenProps) {
   // Never hard-block ENTER forever: warmup may hang on dead API — allow enter
   // once character/canvas is ready OR after a short grace period.
@@ -98,7 +107,7 @@ export function DangerStartScreen({
       onContextMenu={(e) => e.preventDefault()}
     >
       <div className="danger-start-card danger-start-card--wide">
-        <div className="danger-start-kicker">GRUDGE OPEN · COMBAT + MAP SANDBOX</div>
+        <div className="danger-start-kicker">GRUDGE OPEN · ALL-ERA COMBAT LAB</div>
         <h1 className="danger-start-title">
           DANGER<span className="accent">ROOM</span>
         </h1>
@@ -119,6 +128,31 @@ export function DangerStartScreen({
             </>
           ) : null}
         </p>
+
+        {onEra ? (
+          <div className="danger-start-presets" role="group" aria-label="Character era">
+            <div className="danger-start-maps-head">
+              <span className="danger-start-maps-title">Era</span>
+              <span className="danger-start-maps-hint">
+                Voxel Mixamo · Warlords Toon · same room. GRUDOX voxel Danger is separate.
+              </span>
+            </div>
+            <div className="danger-start-presets-row">
+              {DANGER_ERA_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={"danger-start-preset" + (era === opt.id ? " is-active" : "")}
+                  title={opt.blurb}
+                  onClick={() => onEra(opt.id)}
+                >
+                  <span className="danger-start-preset-name">{opt.label}</span>
+                  <span className="danger-start-preset-blurb">{opt.blurb}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {mapOptions && mapOptions.length > 0 && onTestWorld ? (
           <div className="danger-start-maps" role="group" aria-label="Playable test maps">
@@ -214,7 +248,8 @@ export function DangerStartScreen({
           ) : null}
         </div>
         <p className="danger-start-hint">
-          Maps also in Admin → Test Maps · F8 free mouse · practice dummy left side · Hold Q mode
+          One mixer · strip position tracks · feet on the same height field. Maps also in Admin →
+          Test Maps · F8 free mouse · Hold Q mode
         </p>
       </div>
     </div>

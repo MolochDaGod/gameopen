@@ -131,16 +131,19 @@ export interface FleetAnimContext {
 }
 
 /**
- * Resolve lane from surface + optional explicit override.
- * Danger / open-play / foundry / controller heroes → bip001.
- * Explorer only → mixamo.
+ * Resolve lane from surface + optional explicit override / era.
+ * Open Danger is all-era: voxel|nexus|armada → mixamo-explorer; warlords → bip001.
+ * GRUDOX voxel Danger (tvs-showcase) is mixamo-explorer only.
  */
 export function resolveFleetAnimLane(
   surface: FleetAnimSurface,
   override?: FleetAnimRigLane | null,
+  era?: string | null,
 ): FleetAnimRigLane {
   if (override) return override;
-  if (surface === "explorer") return "mixamo-explorer";
+  const e = (era || "").toLowerCase();
+  if (e === "voxel" || e === "nexus" || e === "armada") return "mixamo-explorer";
+  if (surface === "explorer" || surface === "grudox-handoff") return "mixamo-explorer";
   return "bip001-baked";
 }
 
@@ -178,12 +181,10 @@ export function grudge6RaceMeshCandidates(
   const toonFile = /_Characters\.glb$/i.test(file)
     ? GRUDGE6_RACE_GLB[raceId as Grudge6RaceKey] ?? "human.glb"
     : file;
-  const rel = `asset-packs/toon-rts-characters/glb/characters/${toonFile}`;
-  return [
-    `${FLEET_ANIM_HOSTS.assets}/${rel}`,
-    `/${rel}`,
-    `${FLEET_ANIM_HOSTS.grudge6Toon}/${toonFile}`,
-  ];
+  // CDN only. Same-origin `/${rel}` 404s on Open and the CF worker then
+  // proxies to gameopen.vercel.app (no CORS, no pack) — that is the repeating
+  // wrong. Play kits live on assets.grudge-studio.com.
+  return [`${FLEET_ANIM_HOSTS.grudge6Toon}/${toonFile}`];
 }
 
 /** Baked clip relative path → production URL candidates (JSON only). */
@@ -194,6 +195,13 @@ export function bip001BakedUrlCandidates(bakeRel: string): string[] {
     .replace(/\.json$/i, "")
     .replace(/\.glb$/i, "");
   const bakedJson = `anims/baked/${clean}.json`;
+  const out = [`/${bakedJson}`];
+  if (typeof window === "undefined" || !/\.vercel\.app$/i.test(window.location.hostname)) {
+    out.push(`${FLEET_ANIM_HOSTS.openBaked}/${clean}.json`);
+  }
+  // CORS CDN JSON (same files as Open baked). Not prod/anims GLB.
+  out.push(`${FLEET_ANIM_HOSTS.assets}/anims/baked/${clean}.json`);
+  return [...new Set(out)];
   return [...new Set([`/${bakedJson}`, `${FLEET_ANIM_HOSTS.openBaked}/${clean}.json`])];
 }
 

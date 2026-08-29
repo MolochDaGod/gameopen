@@ -84,7 +84,7 @@ export async function createScenePhysics(
   if (opts.player) {
     const spawn =
       typeof opts.player === "object" ? opts.player : { x: 0, y: 0, z: 0 };
-    playerKcc = physics.createPlayerKcc(spawn);
+    playerKcc = physics.createPlayerKcc(spawn, { stepOnMove: false });
   }
 
   return { physics, playerKcc, kind };

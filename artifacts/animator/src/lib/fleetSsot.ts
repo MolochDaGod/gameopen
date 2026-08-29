@@ -69,6 +69,15 @@ export function definitionBaseCandidates(): string[] {
     origin ? `${origin}/api/v1` : "",
     FLEET.definitions,
     "https://assets.grudge-studio.com/content",
+    // Live ObjectStore Worker (multi-upstream serveStaticJson)
+    FLEET.objectStore,
+    // Same-origin → ObjectStore Worker root
+    origin ? `${origin}/api/os/api/v1` : "",
+    env || "",
+    // info Pages last (often 404 in 2026-08). GitHub Pages is CSP-blocked
+    // (connect-src has no molochdagod.github.io) — never probe it from the browser.
+    FLEET.objectStoreInfo,
+    "https://info.grudge-studio.com/content",
     "https://molochdagod.github.io/ObjectStore/api/v1",
     origin ? `${origin}/api/os/api/v1` : "",
     env || "",
@@ -103,7 +112,12 @@ export async function fetchCatalogJson<T = unknown>(
   for (const url of contentCandidates(path)) {
     if (_deadCatalogUrls.has(url)) continue;
     try {
-      const r = await fetch(url, { mode: "cors", ...init });
+      const r = await fetch(url, {
+        ...init,
+        mode: "cors",
+        // Public catalogs. credentials:include + ACAO:* on info/assets is a CORS fail.
+        credentials: "omit",
+      });
       if (!r.ok) {
         if (r.status === 404 || r.status === 410) _deadCatalogUrls.add(url);
         continue;
@@ -128,6 +142,7 @@ export const BINARY_CDN = () => FLEET.assets.replace(/\/$/, "");
 /** Player-state API paths (same-origin first). */
 export const PLAYER_API = {
   characters: () => apiUrl("/api/characters?era=warlords"),
+  charactersVoxel: () => apiUrl("/api/characters?era=voxel"),
   charactersAll: () => apiUrl("/api/characters"),
   account: () => apiUrl("/api/account"),
   health: () => apiUrl("/api/health"),

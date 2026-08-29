@@ -183,15 +183,16 @@ export function deployCharacterModel(
     // FBX modular kits: always art-forward +Z (export is +X).
     // glb-baked grudge6 Characters.glb: apply when not proven +Z (convert must set
     // userData.artForwardProven=true after orient bake; otherwise need yaw).
+    const url = String(model.userData.importUrl || model.name || "");
+    const toonPlayGlb = /toon-rts-characters\/glb\/characters\//i.test(url);
     const needForward =
       !model.userData.artForwardSet &&
+      !toonPlayGlb &&
+      model.userData.artForwardProven !== true &&
       (pipeline === "fbx-atlas" ||
         model.userData.needsArtForward === true ||
         (pipeline === "glb-baked" &&
-          model.userData.artForwardProven !== true &&
-          /Characters\.glb|_Characters|grudge6/i.test(
-            String(model.userData.importUrl || model.name || ""),
-          )));
+          /Characters\.glb|_Characters/i.test(url)));
     if (needForward) {
       facingApplied = applyArtForwardPlusZ(model, opts.faceYaw ?? Math.PI / 2);
     }

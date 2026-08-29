@@ -12,7 +12,6 @@ import type { WeaponId } from "../types";
 import { WEAPONS, getT0Kit, t0SignatureSkills, mmToMeters } from "../arsenal";
 import { getWeapon } from "../assets";
 import { resolveSlotIconUrl } from "../skillIcons";
-import { contentUrl } from "../../lib/fleet";
 import { loadoutFromCharacter } from "../../lib/characterLoadout";
 import { resolveRaceModel } from "../../lib/raceModel";
 import {
@@ -46,6 +45,10 @@ export interface ResolvedBrawlerLoadout {
   /** Catalog fallback `grudge-{race}-{class}` if GLB pack is preferred later. */
   catalogCharacterId: string;
   weaponId: WeaponId;
+  /** UUID-backed Warlords equip identity, preserved for mounting and telemetry. */
+  equippedWeaponUuid?: string;
+  weaponPrefabId?: string;
+  weaponItemId?: string;
   offHand: WeaponId | null;
   displayName: string;
   characterClass: string;
@@ -105,6 +108,9 @@ export function resolveBrawlerLoadout(
     avatarId,
     catalogCharacterId: fleet.characterId,
     weaponId,
+    equippedWeaponUuid: open.equippedWeaponUuid,
+    weaponPrefabId: open.weaponPrefabId,
+    weaponItemId: open.weaponItemId,
     offHand,
     displayName: fleet.displayName || ch?.name || "Open Player",
     characterClass: fleet.classSlug || ch?.classId || race.presetId || "warrior",
@@ -198,8 +204,10 @@ export async function softLoadContentCatalog(): Promise<ContentCatalogOverlay> {
 
     const tryJson = async (url: string): Promise<unknown | null> => {
       try {
-        const r = await fetch(url, { credentials: "include" });
+        const r = await fetch(url, { mode: "cors", credentials: "omit" });
         if (!r.ok) return null;
+        const ct = (r.headers.get("content-type") || "").toLowerCase();
+        if (ct.includes("text/html")) return null;
         return await r.json();
       } catch {
         return null;
@@ -210,7 +218,8 @@ export async function softLoadContentCatalog(): Promise<ContentCatalogOverlay> {
       tryJson("/api/content/weapons"),
       tryJson("/api/content/skills"),
       tryJson("/api/content/items"),
-      tryJson(contentUrl("master-weaponSkills.json")),
+      // Same-origin first — assets/info ACAO:* rejects credentials include.
+      tryJson("/api/v1/master-weaponSkills.json"),
     ]);
 
     const weapons =

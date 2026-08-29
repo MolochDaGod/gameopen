@@ -70,7 +70,7 @@ export class CharacterCapsuleKcc implements CollisionProvider {
       cap.collider,
       controller,
       centerOff,
-      opts?.stepOnMove ?? true,
+      opts?.stepOnMove ?? false,
     );
   }
 
@@ -83,6 +83,8 @@ export class CharacterCapsuleKcc implements CollisionProvider {
       y: from.y + this.centerOff,
       z: from.z,
     };
+    // Snap query origin to controller feet, then queue kinematic result for
+    // PhysicsWorld.step() (fixed 1/60). Do not world.step() here — host owns tick.
     this.body.setTranslation(center, true);
     this.controller.computeColliderMovement(this.collider, {
       x: delta.x,
@@ -95,7 +97,7 @@ export class CharacterCapsuleKcc implements CollisionProvider {
       y: center.y + mv.y,
       z: center.z + mv.z,
     };
-    this.body.setTranslation(nc, true);
+    this.body.setNextKinematicTranslation(nc);
     const grounded = this.controller.computedGrounded();
     if (this.stepOnMove) this.world.step();
     // Return feet pos — allocate Vector3 via plain object then host clones.
@@ -107,10 +109,11 @@ export class CharacterCapsuleKcc implements CollisionProvider {
 
   /** Teleport capsule to feet position (spawn / respawn). */
   teleportFeet(feet: { x: number; y: number; z: number }): void {
-    this.body.setTranslation(
-      { x: feet.x, y: feet.y + this.centerOff, z: feet.z },
-      true,
-    );
+    this.body.setNextKinematicTranslation({
+      x: feet.x,
+      y: feet.y + this.centerOff,
+      z: feet.z,
+    });
   }
 
   get centerOffset(): number {

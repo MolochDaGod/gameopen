@@ -19,19 +19,33 @@ Users and agents must **not**:
 
 ---
 
+## Era homes (library vs play vs editors)
+
+| Home | Host | Owns |
+|------|------|------|
+| **Open** | `open.grudge-studio.com` | **All games as library tiles**. Danger / Dressing / campfire stay here. |
+| **GRUDOX** | `grudox.grudge-studio.com` | **Voxel-era play**: cabinets, voxgrudge, Mine-Loader, controller kernel. |
+| **Warlords** | `client.grudge-studio.com` · grudgewarlords.com | **era=warlords play**. Scenes: **ThreeFlow**. Maps/deploy: **Forge** (Studio tools). |
+
+Voxel `#/play` never stays on Open `/realms`. Warlords maps never become GRUDOX cabinets.
+
 ## Product start points
 
 | Intent | Start URL |
 |--------|-----------|
 | Open library | `https://open.grudge-studio.com/` |
-| Danger Room | `https://open.grudge-studio.com/danger` |
+| Danger Room (all-era lab) | `https://open.grudge-studio.com/danger` (`?era=voxel\|warlords\|nexus\|armada`) |
+| GRUDOX voxel Danger | `https://grudox.grudge-studio.com/voxgrudge/tvs-showcase.html` |
 | Account / roster handoff | `https://open.grudge-studio.com/account` |
+| Character info / equipment | `https://open.grudge-studio.com/equipment` |
 | Sign-in | `https://open.grudge-studio.com/login` |
 | Create hero | `https://character.grudge-studio.com/foundry` |
 | Foundry 4-slot | `https://character.grudge-studio.com/` |
 | Warlords home island | `https://client.grudge-studio.com/home-island?characterId=` |
 | GRUDOX arcade | `https://grudox.grudge-studio.com/arcade` |
 | Arcade cabinet (racer, …) | `https://grudox.grudge-studio.com/arcade/play/<id>` |
+| ThreeFlow (Warlords scenes) | `https://threeflow.vercel.app/` |
+| Forge (Studio map deploy) | `https://forge.grudge-studio.com/` |
 
 Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 
@@ -42,7 +56,9 @@ Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 | Incoming | Action |
 |----------|--------|
 | `/arcade/play/racer` (etc. GRUDOX-only) on Open | **Hard redirect** → grudox arcade |
-| `/arcade/play/explorer` | Open **danger** (or dressing if `?dressing=1`) |
+| `/realms` `/mine` on Open | **Hard redirect** → mine.grudge-studio.com |
+| `/voxel` on Open | **Hard redirect** → grudox `/studio/` |
+| `/arcade/play/explorer` | GRUDOX **voxel Danger** tvs-showcase (dressing if `?dressing=1` stays Open editor) |
 | `?mode=create` / `/foundry` on Open | **Hard redirect** → character foundry + safe `returnTo` |
 | `/characters`, `/lobby`, `?door=characters\|campfire` | Mode **characters** (CampfireLobby) — **wins over** `from=` |
 | `from=foundry\|gcs\|character-studio` without campfire path | Mode **account** (not combat) |
@@ -74,7 +90,7 @@ Character host as return → **Open account** (not foundry loop).
 ## Agent rules
 
 1. Build deep-links with `startUrlForIntent` or `PRODUCT_STARTS` — not guessed hosts.  
-2. Never map racer/zombie/z-brawl → Danger Room.  
+2. Never map racer/zombie/z-brawl → Open Danger. Voxel explorer play → GRUDOX tvs-showcase.  
 3. Never set login `returnTo` to character.* or id.*.  
 4. After Foundry save: Warlords play with `characterId`, or Open `/account` — not Open `/danger` without user intent.  
 5. If a new loop appears: **extend `entryCatch.ts`**, do not invent a second router.

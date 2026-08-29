@@ -264,6 +264,33 @@ export function humanizeClipId(id: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Dressing Room labels for Warlords Bip001 baked clips (not Mixamo filenames). */
+const WARLORD_CLIP_ROLES: Record<string, string> = {
+  idle: "Idle",
+  fightidle: "Fight Idle",
+  walk: "Walk",
+  run: "Run",
+  sprint: "Sprint",
+  attack: "Attack",
+  attack1: "Attack 1",
+  attack2: "Attack 2",
+  attack3: "Attack 3",
+  cast: "Cast",
+  jump: "Jump",
+  death: "Death",
+  dead: "Death",
+  hit: "Hit",
+  hurt: "Hurt",
+  dodge: "Dodge",
+  roll: "Roll",
+};
+
+export function warlordClipLabel(id: string): string {
+  const tail = (id.split("/").pop() ?? id).replace(/\.json$/i, "");
+  const compact = tail.toLowerCase().replace(/[-_\s]+/g, "");
+  return WARLORD_CLIP_ROLES[compact] ?? humanizeClipId(tail);
+}
+
 /** Human-readable label for a preview {@link VERBS verb} (override first, else humanised). */
 export function verbLabel(verb: string): string {
   return VERB_LABEL_OVERRIDES[verb] ?? humanizeClipId(verb);
@@ -869,6 +896,24 @@ export class ExplorerCharacter implements Avatar {
   }
 
   // ---- per-frame ----
+
+  setGroundSampler(
+    fn: import("./anim/legIk").GroundSampler | null,
+  ): void {
+    this.animator?.setGroundSampler(fn);
+  }
+
+  setFootIk(on: boolean): void {
+    this.animator?.setFootIk(on);
+  }
+
+  rebindFootIk(): void {
+    this.animator?.rebindFootIk();
+  }
+
+  get footIkBound(): boolean {
+    return this.animator?.footIkBound ?? false;
+  }
 
   update(dt: number): void {
     if (!this.animator) return;

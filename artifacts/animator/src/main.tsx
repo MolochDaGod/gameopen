@@ -35,7 +35,7 @@ void import("./three/content/masterWeaponSkills")
 // PWA: capture install prompt + register offline shell worker (prod).
 bindInstallPrompt();
 // Drop historical SW shells (v2/v3) that could pin wrong asset paths / kits
-void purgeHistoricalShellIfNeeded(5).then(() => registerServiceWorker());
+void purgeHistoricalShellIfNeeded(6).then(() => registerServiceWorker());
 
 // Expose for Studio host / debug HUD (no React re-render requirement).
 if (typeof window !== "undefined") {

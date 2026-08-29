@@ -54,9 +54,12 @@ describe("grudge6 locomotion pack SSOT", () => {
     expect(ANIM_PACK_CLIPS.samurai.extras).toContain("ghost_rider/quakesmash");
   });
 
-  it("1H sword_shield uses samurai sword clips not thin arena run", () => {
+  it("1H sword_shield uses AttackCombo01/2 + samurai loco (not thin arena run)", () => {
     expect(ANIM_PACK_CLIPS.sword_shield.idle).toContain("gs_samurai_idle_sword");
-    expect(ANIM_PACK_CLIPS.sword_shield.attack).toContain("gs_samurai_combo");
+    // Sketchfab Kassimkot combos (Bip001 bake under sword_shield/)
+    expect(ANIM_PACK_CLIPS.sword_shield.attack).toBe("sword_shield/attack-combo-01-trimmed");
+    expect(ANIM_PACK_CLIPS.sword_shield.extras).toContain("sword_shield/attack-combo-02");
+    expect(ANIM_PACK_CLIPS.sword_shield.extras).toContain("sword_shield/attack-combo-01");
     expect(ANIM_PACK_CLIPS.sword_shield.run).not.toBe("sword_shield/sword and shield run");
     expect(isBannedLocomotionClip("sword_shield/sword and shield run")).toBe(true);
     expect(ANIM_PACK_CLIPS.sword_shield.extras).toContain("dual_wield/sword_dash_attack");
@@ -120,6 +123,15 @@ describe("grudge6 locomotion pack SSOT", () => {
       expect(m.mixamoRel.startsWith("anim/")).toBe(true);
       expect(m.bakeRel.length).toBeGreaterThan(3);
     }
+  });
+
+  it("aliases missing bow/getup bake names to live Open JSON", async () => {
+    const { resolveBakeRel, bakedClipCandidates } = await import("./anims");
+    expect(resolveBakeRel("longbow/fall-a-land")).toBe("locomotion/land_roll");
+    expect(resolveBakeRel("polearm/getup")).toBe("locomotion/land_roll");
+    const c = bakedClipCandidates("dual_wield/dodgeF");
+    expect(c.every((u) => u.includes("/anims/baked/") && u.endsWith(".json"))).toBe(true);
+    expect(c.some((u) => u.includes("prod/anims"))).toBe(false);
   });
 
   it("never aliases mobility/defense onto attack", () => {

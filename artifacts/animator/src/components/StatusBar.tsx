@@ -36,9 +36,20 @@ export function StatusBar({ statuses, editBind }: { statuses: StatusView[]; edit
             className={`status-chip status-${s.kind}`}
             style={{ ["--status-color" as string]: s.color }}
           >
-            <span className="status-glyph" style={{ color: s.color }}>
-              {s.glyph}
-            </span>
+            {s.iconUrl ? (
+              <img
+                className="status-glyph status-icon"
+                src={s.iconUrl}
+                alt={s.name}
+                width={22}
+                height={22}
+                draggable={false}
+              />
+            ) : (
+              <span className="status-glyph" style={{ color: s.color }}>
+                {s.glyph}
+              </span>
+            )}
             <div className="status-meta">
               <div className="status-row">
                 <span className="status-name">{s.name}</span>

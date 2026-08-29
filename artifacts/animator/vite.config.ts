@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 
 /**
@@ -20,7 +22,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss({ optimize: false })],
+  plugins: [react(), tailwindcss({ optimize: false }), wasm(), topLevelAwait()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
@@ -68,6 +70,15 @@ export default defineConfig({
       "@workspace/grudge-warlords": path.resolve(
         import.meta.dirname,
         "../../lib/grudge-warlords/src/index.ts",
+      ),
+      // Specific subpath first — `@workspace/vfx` would swallow `/footAuraCatalog`.
+      "@workspace/vfx/footAuraCatalog": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/footAuraCatalog.ts",
+      ),
+      "@workspace/vfx": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/index.ts",
       ),
       // The @workspace/* libs above are aliased to their TS SOURCE, so their
       // bare external imports (e.g. @tanstack/react-query in the generated
