@@ -1,0 +1,930 @@
+{
+  "pack": "dungeon-essential",
+  "source": "dungeon_essential_kit.glb",
+  "isolate": "parent-group",
+  "shipped": false,
+  "pieces": [
+    {
+      "id": "arch-door-l-004",
+      "name": "Arch_Door_L.004",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Arch_Door_L.004",
+      "childMeshes": [
+        "Arch_Door_L.004_Set3_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "arch-door-l",
+      "name": "Arch_Door_L",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Arch_Door_L",
+      "childMeshes": [
+        "Arch_Door_L_Set1_0",
+        "Arch_Door_L_Set3_0"
+      ],
+      "approxXZ_m": 2.165,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "barell-lid",
+      "name": "Barell_Lid",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Barell_Lid",
+      "childMeshes": [
+        "Barell_Lid_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.461,
+      "approxY_m": 0.019,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "barrel",
+      "name": "Barrel",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Barrel",
+      "childMeshes": [
+        "Barrel_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.664,
+      "approxY_m": 0.935,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "bookcase",
+      "name": "BookCase",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "BookCase",
+      "childMeshes": [
+        "BookCase_Set5_0"
+      ],
+      "approxXZ_m": 1.136,
+      "approxY_m": 2.224,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "broken-end-007",
+      "name": "Broken_End.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Broken_End.007",
+      "childMeshes": [
+        "Broken_End.007_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "broken-end",
+      "name": "Broken_End",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Broken_End",
+      "childMeshes": [
+        "Broken_End_Set1_0",
+        "Broken_End_Set2.001_0"
+      ],
+      "approxXZ_m": 2.44,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cage-001",
+      "name": "Cage.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage.001",
+      "childMeshes": [
+        "Cage.001_Set2_0"
+      ],
+      "approxXZ_m": 2.045,
+      "approxY_m": 3.189,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cage-002",
+      "name": "Cage.002",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage.002",
+      "childMeshes": [
+        "Cage.002_Set2_0"
+      ],
+      "approxXZ_m": 18.063,
+      "approxY_m": 18.993,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cage-door-001",
+      "name": "Cage_Door.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage_Door.001",
+      "childMeshes": [
+        "Cage_Door.001_Set2_0"
+      ],
+      "approxXZ_m": 1.085,
+      "approxY_m": 1.958,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cage-door",
+      "name": "Cage_Door",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage_Door",
+      "childMeshes": [
+        "Cage_Door_Set2.001_0"
+      ],
+      "approxXZ_m": 2.21,
+      "approxY_m": 1.17,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cage",
+      "name": "Cage",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cage",
+      "childMeshes": [
+        "Cage_Set2.001_0"
+      ],
+      "approxXZ_m": 3.885,
+      "approxY_m": 2.423,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "chain-001",
+      "name": "Chain.001",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chain.001",
+      "childMeshes": [
+        "Chain.001_Set2_0"
+      ],
+      "approxXZ_m": 0.162,
+      "approxY_m": 2.471,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "chain",
+      "name": "Chain",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chain",
+      "childMeshes": [
+        "Chain_Set2.001_0"
+      ],
+      "approxXZ_m": 4.978,
+      "approxY_m": 2.688,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "chandelier",
+      "name": "Chandelier",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Chandelier",
+      "childMeshes": [
+        "Chandelier_Set5_0",
+        "Chandelier_Set5_0.001"
+      ],
+      "approxXZ_m": 2.042,
+      "approxY_m": 4.685,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "crate",
+      "name": "Crate",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Crate",
+      "childMeshes": [
+        "Crate_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.521,
+      "approxY_m": 0.52,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-042",
+      "name": "Cube.042",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.042",
+      "childMeshes": [
+        "Cube.042_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.847,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-044",
+      "name": "Cube.044",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.044",
+      "childMeshes": [
+        "Cube.044_Set1_0"
+      ],
+      "approxXZ_m": 2.479,
+      "approxY_m": 0.847,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-064",
+      "name": "Cube.064",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.064",
+      "childMeshes": [
+        "Cube.064_Set4_0"
+      ],
+      "approxXZ_m": 0.298,
+      "approxY_m": 0.43,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-077",
+      "name": "Cube.077",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.077",
+      "childMeshes": [
+        "Cube.077_Set4_0"
+      ],
+      "approxXZ_m": 1.078,
+      "approxY_m": 5.301,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-078",
+      "name": "Cube.078",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.078",
+      "childMeshes": [
+        "Cube.078_Set4_0"
+      ],
+      "approxXZ_m": 1.078,
+      "approxY_m": 5.301,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-082",
+      "name": "Cube.082",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.082",
+      "childMeshes": [
+        "Cube.082_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 0.34,
+      "approxY_m": 0.652,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-093",
+      "name": "Cube.093",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.093",
+      "childMeshes": [
+        "Cube.093_Set1_0"
+      ],
+      "approxXZ_m": 0.95,
+      "approxY_m": 0.258,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cube-094",
+      "name": "Cube.094",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cube.094",
+      "childMeshes": [
+        "Cube.094_Dwarf_0"
+      ],
+      "approxXZ_m": 5.363,
+      "approxY_m": 6.155,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cylinder-020",
+      "name": "Cylinder.020",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cylinder.020",
+      "childMeshes": [
+        "Cylinder.020_Set4_0"
+      ],
+      "approxXZ_m": 0.979,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "cylinder-021",
+      "name": "Cylinder.021",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Cylinder.021",
+      "childMeshes": [
+        "Cylinder.021_Set4_0"
+      ],
+      "approxXZ_m": 5.0,
+      "approxY_m": 0.606,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "doorl",
+      "name": "DoorL",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "DoorL",
+      "childMeshes": [
+        "DoorL_Set2.001_0"
+      ],
+      "approxXZ_m": 0.782,
+      "approxY_m": 1.871,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "doorr",
+      "name": "DoorR",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "DoorR",
+      "childMeshes": [
+        "DoorR_Set2.001_0"
+      ],
+      "approxXZ_m": 0.782,
+      "approxY_m": 1.871,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-038",
+      "name": "Floor.038",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.038",
+      "childMeshes": [
+        "Floor.038_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.058,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-162",
+      "name": "Floor.162",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.162",
+      "childMeshes": [
+        "Floor.162_Set2.001_0"
+      ],
+      "approxXZ_m": 26.726,
+      "approxY_m": 12.183,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-195",
+      "name": "Floor.195",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.195",
+      "childMeshes": [
+        "Floor.195_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-196",
+      "name": "Floor.196",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.196",
+      "childMeshes": [
+        "Floor.196_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-197",
+      "name": "Floor.197",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.197",
+      "childMeshes": [
+        "Floor.197_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.251,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-199",
+      "name": "Floor.199",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.199",
+      "childMeshes": [
+        "Floor.199_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor-202",
+      "name": "Floor.202",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor.202",
+      "childMeshes": [
+        "Floor.202_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 1.777,
+      "approxY_m": 0.271,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "floor",
+      "name": "Floor",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Floor",
+      "childMeshes": [
+        "Floor_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 0.1,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "pedestal",
+      "name": "Pedestal",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Pedestal",
+      "childMeshes": [
+        "Pedestal_Set5_0"
+      ],
+      "approxXZ_m": 0.853,
+      "approxY_m": 1.235,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "pillar",
+      "name": "Pillar",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Pillar",
+      "childMeshes": [
+        "Pillar_Set2.001_0"
+      ],
+      "approxXZ_m": 1.251,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Plank",
+      "childMeshes": [
+        "Plank_Dungeon_Props1_0"
+      ],
+      "approxXZ_m": 1.18,
+      "approxY_m": 0.033,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "torus-007",
+      "name": "Torus.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Torus.007",
+      "childMeshes": [
+        "Torus.007_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 8.719,
+      "approxY_m": 3.874,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "torus-008",
+      "name": "Torus.008",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Torus.008",
+      "childMeshes": [
+        "Torus.008_D_Arch_Floor_Set_0"
+      ],
+      "approxXZ_m": 7.537,
+      "approxY_m": 2.611,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-012",
+      "name": "Wall_1.012",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.012",
+      "childMeshes": [
+        "Wall_1.012_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-013",
+      "name": "Wall_1.013",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.013",
+      "childMeshes": [
+        "Wall_1.013_Set1_0",
+        "Wall_1.013_Set2.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.694,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-016",
+      "name": "Wall_1.016",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.016",
+      "childMeshes": [
+        "Wall_1.016_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.694,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-029",
+      "name": "Wall_1.029",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.029",
+      "childMeshes": [
+        "Wall_1.029_Set1_0"
+      ],
+      "approxXZ_m": 0.88,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-055",
+      "name": "Wall_1.055",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.055",
+      "childMeshes": [
+        "Wall_1.055_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-057",
+      "name": "Wall_1.057",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.057",
+      "childMeshes": [
+        "Wall_1.057_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-102",
+      "name": "Wall_1.102",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.102",
+      "childMeshes": [
+        "Wall_1.102_Set1_0"
+      ],
+      "approxXZ_m": 2.475,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-172",
+      "name": "Wall_1.172",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.172",
+      "childMeshes": [
+        "Wall_1.172_Set4_0"
+      ],
+      "approxXZ_m": 2.762,
+      "approxY_m": 5.668,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-181",
+      "name": "Wall_1.181",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.181",
+      "childMeshes": [
+        "Wall_1.181_Set1_0"
+      ],
+      "approxXZ_m": 4.0,
+      "approxY_m": 6.129,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1-204",
+      "name": "Wall_1.204",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1.204",
+      "childMeshes": [
+        "Wall_1.204_Set1.001_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-1",
+      "name": "Wall_1",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_1",
+      "childMeshes": [
+        "Wall_1_Set1_0"
+      ],
+      "approxXZ_m": 2.0,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-corner-007",
+      "name": "Wall_Corner.007",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_Corner.007",
+      "childMeshes": [
+        "Wall_Corner.007_Set1_0"
+      ],
+      "approxXZ_m": 2.44,
+      "approxY_m": 2.952,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    },
+    {
+      "id": "wall-corner",
+      "name": "Wall_Corner",
+      "role": "tile",
+      "file": null,
+      "localSource": "D:/Games/Models/dungeon_essential_kit.glb",
+      "isolateParent": "Wall_Corner",
+      "childMeshes": [
+        "Wall_Corner_Set1_0"
+      ],
+      "approxXZ_m": 2.475,
+      "approxY_m": 3.179,
+      "snap_m": 2.0,
+      "scaleHint": "author often cm \u2014 \u00d70.01 if AABB>40",
+      "shipped": false,
+      "reason": "113MB kit \u2014 isolateParent at bake time; do not copy into SPA"
+    }
+  ]
+}

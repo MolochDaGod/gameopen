@@ -126,6 +126,29 @@ export class PinataHarvestSystem {
     return this.nodes.get(id);
   }
 
+  /** Raycast registered harvest meshes (starting scene + forest pinata). */
+  pick(ray: THREE.Raycaster, maxDist = 28): PinataNode | null {
+    const meshes: THREE.Object3D[] = [];
+    for (const n of this.nodes.values()) {
+      if (!n.broken && n.mesh) meshes.push(n.mesh);
+    }
+    if (!meshes.length) return null;
+    const hits = ray.intersectObjects(meshes, true);
+    for (const h of hits) {
+      if (h.distance > maxDist) continue;
+      let o: THREE.Object3D | null = h.object;
+      while (o) {
+        const id = o.userData.harvestId as string | undefined;
+        if (id) {
+          const node = this.nodes.get(id);
+          if (node && !node.broken) return node;
+        }
+        o = o.parent;
+      }
+    }
+    return null;
+  }
+
   hitForestNode(id: string, tool: HarvestToolNorm, power: number): PinataHitResult {
     const n = this.nodes.get(id);
     if (!n || n.broken) return { hit: false, broken: false, hp: 0, maxHp: 0, reason: "missing" };

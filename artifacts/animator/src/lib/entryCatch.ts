@@ -84,6 +84,10 @@ export const PRODUCT_STARTS = {
   threeFlow: "https://threeflow.vercel.app/",
   /** Grudge Studio map/deploy editor */
   forge: "https://forge.grudge-studio.com/",
+  /** Agentic Three.js editor */
+  grokBuilder: "https://grok-builder.vercel.app/",
+  /** Warlords scene editor (not Forge) */
+  threeFlow: "https://threeflow.vercel.app/",
   /** Open mimic encounter */
   mimic: `${ENTRY_HOSTS.open}/mimic`,
   /** Warlords modular dungeon forge + crawl */
@@ -616,6 +620,9 @@ export function startUrlForIntent(
     | "dungeonBoss"
     | "dungeonMolten"
     | "equipment",
+    | "mimic"
+    | "dungeon"
+    | "dungeonBoss",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {

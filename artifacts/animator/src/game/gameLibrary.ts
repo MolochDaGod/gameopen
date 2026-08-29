@@ -156,7 +156,7 @@ export const ERA_CATEGORIES: readonly {
   {
     id: "nexus",
     label: "Nexus",
-    blurb: "Sci-fi · mech · metaverse · carrier",
+    blurb: "Sci-fi · mech · TCG · carrier",
     tone: "#9d8bff",
   },
   {
@@ -928,6 +928,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     ],
     playerInfo:
       "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat. Magma Core (platforms over lava): ?theme=molten&linear=1",
+      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat.",
     sources: [
       "https://grudge-dungeons.vercel.app/",
       "F:\\GitHub\\threejs-procedural-dungeon",
@@ -1300,22 +1301,34 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
-    id: "nexus-slot",
-    title: "Nexus Import Bay",
-    short: "Era scaffold · sci-fi",
+    id: "nexus-nemesis",
+    title: "Nexus Nemesis TCG",
+    short: "Tribal card combat",
     blurb:
-      "Reserved Nexus-era shelf for production imports (drive, space RTS, cyber packs). Do not dump Warlords or Voxel HTML here — wire a live Vercel URL first.",
+      "Nexus-era trading card game. Open packs, build a 20-card deck, and duel. Four tribes: Iron Will, Tribal War, Fabled, Blood Conquest. Live host: nemesis.grudge-studio.com — catalog tile on Open, TCG SSOT stays on Nemesis.",
     category: "nexus",
-    tags: ["Nexus", "Import", "Scaffold"],
-    tone: "#7a6cff",
-    posterKey: "zones",
-    icon: "explore",
-    engines: ["three"],
+    tags: ["TCG", "Cards", "Packs", "Nexus", "PvE"],
+    tone: "#e86a1a",
+    posterKey: "nexus-carrier",
+    icon: "rally",
+    engines: ["html-static"],
     launch: "external",
-    url: "https://grudox.grudge-studio.com/games",
-    deploy: { client: "vercel" },
-    sources: ["era:nexus"],
-    status: "migrating",
+    url: "https://nemesis.grudge-studio.com/",
+    deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
+    deployNotes: [
+      "Live SSOT: https://nemesis.grudge-studio.com (Vercel client + Railway API)",
+      "Do not invent a second TCG stack on Open — this is a catalog + launch tile",
+      "Friends dock: drop friends-widget.js with data-app=gameopen",
+    ],
+    playerInfo:
+      "PLAY opens the live Nexus Nemesis host. Same Grudge ID. Friends presence reports app=gameopen while on Open.",
+    sources: [
+      "https://nemesis.grudge-studio.com/",
+      "F:\\GitHub\\nexus-nemesis-game",
+    ],
+    featured: true,
+    shelf: "games",
+    status: "live",
   },
   {
     id: "armada-slot",

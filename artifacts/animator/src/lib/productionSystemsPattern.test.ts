@@ -4,6 +4,7 @@ import {
   AI_WIRING,
   CAMPFIRE_SURFACES,
   CAMPFIRE_TVS,
+  campfireTvsTextureUrl,
   campfireTvsUrls,
   ENCAMPMENT_BACKDROP,
   encampmentBackdropUrls,
@@ -67,6 +68,16 @@ describe("productionSystemsPattern", () => {
     expect(CAMPFIRE_TVS.smokeCritical.length).toBeGreaterThanOrEqual(3);
   });
 
+  it("maps palette farm props to live TVS Voxel Farm textures", () => {
+    expect(campfireTvsTextureUrl("haybale.glb")).toBe(
+      `${PROD_HOSTS.assetsCdn}/models/voxels/tvs/voxel-farm/textures/voxel-farm-haybale-texture.png`,
+    );
+    expect(campfireTvsTextureUrl("fencepost.glb")).toContain("voxel-farm-fence-post-texture.png");
+    expect(campfireTvsTextureUrl("appletree.glb")).toContain("voxel-farm-apple-tree-texture.png");
+    expect(campfireTvsTextureUrl("campfire.glb")).toBeNull();
+    expect(campfireTvsTextureUrl("chair.glb")).toBeNull();
+  });
+
   it("Encament backdrop is CDN-first and play starts at Encament", () => {
     const urls = encampmentBackdropUrls();
     expect(urls[0]).toContain(PROD_HOSTS.assetsCdn);
@@ -116,6 +127,16 @@ describe("productionSystemsPattern", () => {
     });
     expect(calls.some((c) => c.includes("/api/characters"))).toBe(false);
     expect(calls.some((c) => c.includes("/api/health"))).toBe(true);
+  });
+
+  it("mesh prefetch keeps absolute CDN URLs intact", async () => {
+    const { meshPrefetchUrls } = await import("./productionSystemsPattern");
+    const abs = "https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/human.glb";
+    expect(meshPrefetchUrls(abs)).toEqual([abs]);
+    expect(meshPrefetchUrls("models/racalvin.glb")).toEqual([
+      "/models/racalvin.glb",
+      "https://assets.grudge-studio.com/models/racalvin.glb",
+    ]);
   });
 
   it("doors critical meshes use live CDN heroes not introgamer", () => {

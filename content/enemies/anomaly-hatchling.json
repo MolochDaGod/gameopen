@@ -1,0 +1,28 @@
+{
+  "id": "anomaly_hatchling",
+  "name": "Anomaly Hatchling",
+  "kind": "enemy",
+  "role": "camp_melee",
+  "prefab": "beast",
+  "sourceGlb": "D:\\Games\\Models\\worm_monster.glb",
+  "meshKeys": ["models/warlords-era/enemies/anomaly_hatchling.glb"],
+  "heightM": 1.6,
+  "nativeHeightM": 3.51,
+  "scaleNote": "Hatchling SI 1.6 m via fitCharacterHeight. Author worm is ~3.5 m tall / ~4.2 m long.",
+  "hp": 75,
+  "damage": 16,
+  "speed": 2.4,
+  "atkReach": 1.8,
+  "aggroRange": 12,
+  "xp": 50,
+  "defaultStrategy": "aggressive-rusher",
+  "skeleton": "armature",
+  "clips": ["Idle", "WALK", "RUN", "ATTACK", "WOUND", "DEATH"],
+  "tags": ["warlords", "beast", "worm", "dungeon", "hatchling", "anomaly", "seed"],
+  "allowOn": ["voxel", "seed", "dungeon", "brawl", "danger", "genesis", "forest", "sailtest"],
+  "bestiary": {
+    "catalog": "warlords-era/enemies",
+    "not": ["animals/land hunt", "animals/flying", "grudge6 EntityPrefab"],
+    "why": "Dungeon/anomaly worm, not hunt wildlife and not a Toon race kit."
+  }
+}

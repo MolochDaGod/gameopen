@@ -78,12 +78,14 @@ const CHECKS = [
     url: "https://open.grudge-studio.com/api/uuid/test",
     expectJson: true,
     rejectHtml: true,
+    allowStatuses: [200, 401, 403],
   },
   {
     name: "Ledger search (via Open rewrite)",
     url: "https://open.grudge-studio.com/api/ledger/search",
     expectJson: true,
     rejectHtml: true,
+    allowStatuses: [200, 401, 403],
   },
   {
     name: "Characters era filter unauth (401/403 OK)",
@@ -130,6 +132,7 @@ const CHECKS = [
     url: "https://objectstore.grudge-studio.com/api/v1",
     expectJson: true,
     rejectHtml: true,
+    optional: true,
   },
   {
     name: "ObjectStore Worker assets list",

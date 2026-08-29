@@ -1,0 +1,795 @@
+{
+  "pack": "dungeon-essential",
+  "source": "dungeon_essential_kit.glb",
+  "bytes": 118774720,
+  "meshCount": 58,
+  "nodeCount": 115,
+  "uniqueStems": [
+    "Arch_Door_L.004_Set3_0",
+    "Arch_Door_L_Set1_0",
+    "Arch_Door_L_Set3_0",
+    "Barell_Lid_Dungeon_Props1_0",
+    "Barrel_Dungeon_Props1_0",
+    "BookCase_Set5_0",
+    "Broken_End.007_Set1_0",
+    "Broken_End_Set1_0",
+    "Broken_End_Set2.001_0",
+    "Cage.001_Set2_0",
+    "Cage.002_Set2_0",
+    "Cage_Door.001_Set2_0",
+    "Cage_Door_Set2.001_0",
+    "Cage_Set2.001_0",
+    "Chain.001_Set2_0",
+    "Chain_Set2.001_0",
+    "Chandelier_Set5_0",
+    "Crate_Dungeon_Props1_0",
+    "Cube.042_Set1_0",
+    "Cube.044_Set1_0",
+    "Cube.064_Set4_0",
+    "Cube.077_Set4_0",
+    "Cube.078_Set4_0",
+    "Cube.082_Dungeon_Props1_0",
+    "Cube.093_Set1_0",
+    "Cube.094",
+    "Cylinder.020_Set4_0",
+    "Cylinder.021_Set4_0",
+    "DoorL_Set2.001_0",
+    "DoorR_Set2.001_0",
+    "Floor.038_Set2.001_0",
+    "Floor.162_Set2.001_0",
+    "Floor.195_D_Arch_Floor",
+    "Floor.196_D_Arch_Floor",
+    "Floor.197_D_Arch_Floor",
+    "Floor.199_D_Arch_Floor",
+    "Floor.202_D_Arch_Floor",
+    "Floor_Set2.001_0",
+    "Pedestal_Set5_0",
+    "Pillar_Set2.001_0",
+    "Plank_Dungeon_Props1_0",
+    "Torus.007_D_Arch_Floor",
+    "Torus.008_D_Arch_Floor",
+    "Wall_1.012_Set1_0",
+    "Wall_1.013_Set1_0",
+    "Wall_1.013_Set2.001_0",
+    "Wall_1.016_Set1_0",
+    "Wall_1.029_Set1_0",
+    "Wall_1.055_Set1_0",
+    "Wall_1.057_Set1_0",
+    "Wall_1.102_Set1_0",
+    "Wall_1.172_Set4_0",
+    "Wall_1.181_Set1_0",
+    "Wall_1.204_Set1.001_0",
+    "Wall_1_Set1_0",
+    "Wall_Corner.007_Set1_0",
+    "Wall_Corner_Set1_0"
+  ],
+  "stemCount": 57,
+  "images": [
+    "Image_0",
+    "Image_1",
+    "Image_10",
+    "Image_11",
+    "Image_12",
+    "Image_13",
+    "Image_14",
+    "Image_15",
+    "Image_16",
+    "Image_17",
+    "Image_18",
+    "Image_19",
+    "Image_2",
+    "Image_20",
+    "Image_21",
+    "Image_22",
+    "Image_23",
+    "Image_24",
+    "Image_25",
+    "Image_3",
+    "Image_4",
+    "Image_5",
+    "Image_6",
+    "Image_7",
+    "Image_8",
+    "Image_9"
+  ],
+  "meshes": [
+    {
+      "name": "Arch_Door_L.004_Set3_0",
+      "parent": "Arch_Door_L.004",
+      "verts": 1993,
+      "polys": 1910,
+      "materials": [
+        "Set3"
+      ],
+      "xz": 295.192,
+      "y": 200.0
+    },
+    {
+      "name": "Arch_Door_L_Set1_0",
+      "parent": "Arch_Door_L",
+      "verts": 156,
+      "polys": 112,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 94.979,
+      "y": 200.0
+    },
+    {
+      "name": "Arch_Door_L_Set3_0",
+      "parent": "Arch_Door_L",
+      "verts": 2625,
+      "polys": 2295,
+      "materials": [
+        "Set3"
+      ],
+      "xz": 295.192,
+      "y": 216.498
+    },
+    {
+      "name": "Barell_Lid_Dungeon_Props1_0",
+      "parent": "Barell_Lid",
+      "verts": 104,
+      "polys": 92,
+      "materials": [
+        "Dungeon_Props1"
+      ],
+      "xz": 46.051,
+      "y": 46.051
+    },
+    {
+      "name": "Barrel_Dungeon_Props1_0",
+      "parent": "Barrel",
+      "verts": 934,
+      "polys": 886,
+      "materials": [
+        "Dungeon_Props1"
+      ],
+      "xz": 93.543,
+      "y": 66.391
+    },
+    {
+      "name": "BookCase_Set5_0",
+      "parent": "BookCase",
+      "verts": 19360,
+      "polys": 14528,
+      "materials": [
+        "Set5"
+      ],
+      "xz": 222.433,
+      "y": 113.634
+    },
+    {
+      "name": "Broken_End.007_Set1_0",
+      "parent": "Broken_End.007",
+      "verts": 45,
+      "polys": 31,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 295.192,
+      "y": 0.0
+    },
+    {
+      "name": "Broken_End_Set1_0",
+      "parent": "Broken_End",
+      "verts": 850,
+      "polys": 600,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 244.009
+    },
+    {
+      "name": "Broken_End_Set2.001_0",
+      "parent": "Broken_End",
+      "verts": 1944,
+      "polys": 972,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 64.869,
+      "y": 130.024
+    },
+    {
+      "name": "Cage.001_Set2_0",
+      "parent": "Cage.001",
+      "verts": 5350,
+      "polys": 3848,
+      "materials": [
+        "Set2"
+      ],
+      "xz": 318.865,
+      "y": 204.503
+    },
+    {
+      "name": "Cage.002_Set2_0",
+      "parent": "Cage.002",
+      "verts": 360,
+      "polys": 200,
+      "materials": [
+        "Set2"
+      ],
+      "xz": 18.993,
+      "y": 18.063
+    },
+    {
+      "name": "Cage_Door.001_Set2_0",
+      "parent": "Cage_Door.001",
+      "verts": 5711,
+      "polys": 4612,
+      "materials": [
+        "Set2"
+      ],
+      "xz": 195.752,
+      "y": 108.522
+    },
+    {
+      "name": "Cage_Door_Set2.001_0",
+      "parent": "Cage_Door",
+      "verts": 8590,
+      "polys": 4612,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 173.921,
+      "y": 221.004
+    },
+    {
+      "name": "Cage_Set2.001_0",
+      "parent": "Cage",
+      "verts": 7162,
+      "polys": 3856,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 347.978,
+      "y": 388.486
+    },
+    {
+      "name": "Chain.001_Set2_0",
+      "parent": "Chain.001",
+      "verts": 5824,
+      "polys": 3200,
+      "materials": [
+        "Set2"
+      ],
+      "xz": 247.111,
+      "y": 16.166
+    },
+    {
+      "name": "Chain_Set2.001_0",
+      "parent": "Chain",
+      "verts": 26800,
+      "polys": 13400,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 490.168,
+      "y": 497.754
+    },
+    {
+      "name": "Chandelier_Set5_0",
+      "parent": "Chandelier",
+      "verts": 65532,
+      "polys": 37830,
+      "materials": [
+        "Set5"
+      ],
+      "xz": 468.492,
+      "y": 204.2
+    },
+    {
+      "name": "Chandelier_Set5_0.001",
+      "parent": "Chandelier",
+      "verts": 33506,
+      "polys": 18806,
+      "materials": [
+        "Set5"
+      ],
+      "xz": 204.2,
+      "y": 193.893
+    },
+    {
+      "name": "Crate_Dungeon_Props1_0",
+      "parent": "Crate",
+      "verts": 972,
+      "polys": 476,
+      "materials": [
+        "Dungeon_Props1"
+      ],
+      "xz": 52.131,
+      "y": 52.128
+    },
+    {
+      "name": "Cube.042_Set1_0",
+      "parent": "Cube.042",
+      "verts": 6893,
+      "polys": 7684,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 94.979,
+      "y": 200.0
+    },
+    {
+      "name": "Cube.044_Set1_0",
+      "parent": "Cube.044",
+      "verts": 12189,
+      "polys": 13476,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 247.489,
+      "y": 247.921
+    },
+    {
+      "name": "Cube.064_Set4_0",
+      "parent": "Cube.064",
+      "verts": 1831,
+      "polys": 1788,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 43.035,
+      "y": 13.941
+    },
+    {
+      "name": "Cube.077_Set4_0",
+      "parent": "Cube.077",
+      "verts": 8688,
+      "polys": 8624,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 530.142,
+      "y": 107.788
+    },
+    {
+      "name": "Cube.078_Set4_0",
+      "parent": "Cube.078",
+      "verts": 8688,
+      "polys": 8624,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 530.142,
+      "y": 107.788
+    },
+    {
+      "name": "Cube.082_Dungeon_Props1_0",
+      "parent": "Cube.082",
+      "verts": 5218,
+      "polys": 2857,
+      "materials": [
+        "Dungeon_Props1"
+      ],
+      "xz": 65.168,
+      "y": 30.156
+    },
+    {
+      "name": "Cube.093_Set1_0",
+      "parent": "Cube.093",
+      "verts": 138,
+      "polys": 76,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 94.979,
+      "y": 12.771
+    },
+    {
+      "name": "Cube.094_Dwarf_0",
+      "parent": "Cube.094",
+      "verts": 31791,
+      "polys": 41366,
+      "materials": [
+        "Dwarf"
+      ],
+      "xz": 615.543,
+      "y": 536.255
+    },
+    {
+      "name": "Cylinder.020_Set4_0",
+      "parent": "Cylinder.020",
+      "verts": 1042,
+      "polys": 1196,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 295.192,
+      "y": 97.949
+    },
+    {
+      "name": "Cylinder.021_Set4_0",
+      "parent": "Cylinder.021",
+      "verts": 358,
+      "polys": 360,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 500.0,
+      "y": 94.832
+    },
+    {
+      "name": "DoorL_Set2.001_0",
+      "parent": "DoorL",
+      "verts": 9992,
+      "polys": 10258,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 187.086,
+      "y": 78.172
+    },
+    {
+      "name": "DoorR_Set2.001_0",
+      "parent": "DoorR",
+      "verts": 10010,
+      "polys": 10260,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 187.086,
+      "y": 78.172
+    },
+    {
+      "name": "Floor.038_Set2.001_0",
+      "parent": "Floor.038",
+      "verts": 408,
+      "polys": 204,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Floor.162_Set2.001_0",
+      "parent": "Floor.162",
+      "verts": 216,
+      "polys": 108,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 12.183,
+      "y": 26.726
+    },
+    {
+      "name": "Floor.195_D_Arch_Floor_Set_0",
+      "parent": "Floor.195",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Floor.196_D_Arch_Floor_Set_0",
+      "parent": "Floor.196",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Floor.197_D_Arch_Floor_Set_0",
+      "parent": "Floor.197",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 200.0,
+      "y": 22.338
+    },
+    {
+      "name": "Floor.199_D_Arch_Floor_Set_0",
+      "parent": "Floor.199",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Floor.202_D_Arch_Floor_Set_0",
+      "parent": "Floor.202",
+      "verts": 24,
+      "polys": 12,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 27.079,
+      "y": 177.662
+    },
+    {
+      "name": "Floor_Set2.001_0",
+      "parent": "Floor",
+      "verts": 40,
+      "polys": 20,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 200.0,
+      "y": 200.0
+    },
+    {
+      "name": "Pedestal_Set5_0",
+      "parent": "Pedestal",
+      "verts": 3414,
+      "polys": 3118,
+      "materials": [
+        "Set5"
+      ],
+      "xz": 123.547,
+      "y": 85.275
+    },
+    {
+      "name": "Pillar_Set2.001_0",
+      "parent": "Pillar",
+      "verts": 962,
+      "polys": 712,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 295.192,
+      "y": 125.081
+    },
+    {
+      "name": "Plank_Dungeon_Props1_0",
+      "parent": "Plank",
+      "verts": 168,
+      "polys": 84,
+      "materials": [
+        "Dungeon_Props1"
+      ],
+      "xz": 117.958,
+      "y": 117.904
+    },
+    {
+      "name": "Torus.007_D_Arch_Floor_Set_0",
+      "parent": "Torus.007",
+      "verts": 912,
+      "polys": 512,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 387.43,
+      "y": 871.903
+    },
+    {
+      "name": "Torus.008_D_Arch_Floor_Set_0",
+      "parent": "Torus.008",
+      "verts": 848,
+      "polys": 440,
+      "materials": [
+        "D_Arch_Floor_Set"
+      ],
+      "xz": 261.101,
+      "y": 753.68
+    },
+    {
+      "name": "Wall_1.012_Set1_0",
+      "parent": "Wall_1.012",
+      "verts": 655,
+      "polys": 440,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_1.013_Set1_0",
+      "parent": "Wall_1.013",
+      "verts": 2636,
+      "polys": 2387,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 269.428,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_1.013_Set2.001_0",
+      "parent": "Wall_1.013",
+      "verts": 3024,
+      "polys": 1512,
+      "materials": [
+        "Set2.001"
+      ],
+      "xz": 91.151,
+      "y": 177.262
+    },
+    {
+      "name": "Wall_1.016_Set1_0",
+      "parent": "Wall_1.016",
+      "verts": 293,
+      "polys": 187,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 269.428,
+      "y": 44.009
+    },
+    {
+      "name": "Wall_1.029_Set1_0",
+      "parent": "Wall_1.029",
+      "verts": 285,
+      "polys": 184,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 295.192,
+      "y": 44.009
+    },
+    {
+      "name": "Wall_1.055_Set1_0",
+      "parent": "Wall_1.055",
+      "verts": 499,
+      "polys": 328,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 295.192,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_1.057_Set1_0",
+      "parent": "Wall_1.057",
+      "verts": 729,
+      "polys": 456,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_1.102_Set1_0",
+      "parent": "Wall_1.102",
+      "verts": 980,
+      "polys": 620,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 247.489
+    },
+    {
+      "name": "Wall_1.172_Set4_0",
+      "parent": "Wall_1.172",
+      "verts": 420,
+      "polys": 384,
+      "materials": [
+        "Set4"
+      ],
+      "xz": 566.806,
+      "y": 276.232
+    },
+    {
+      "name": "Wall_1.181_Set1_0",
+      "parent": "Wall_1.181",
+      "verts": 2230,
+      "polys": 1433,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 612.892,
+      "y": 400.0
+    },
+    {
+      "name": "Wall_1.204_Set1.001_0",
+      "parent": "Wall_1.204",
+      "verts": 784,
+      "polys": 512,
+      "materials": [
+        "Set1.001"
+      ],
+      "xz": 295.192,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_1_Set1_0",
+      "parent": "Wall_1",
+      "verts": 940,
+      "polys": 624,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 200.0
+    },
+    {
+      "name": "Wall_Corner.007_Set1_0",
+      "parent": "Wall_Corner.007",
+      "verts": 1613,
+      "polys": 1020,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 295.192,
+      "y": 244.009
+    },
+    {
+      "name": "Wall_Corner_Set1_0",
+      "parent": "Wall_Corner",
+      "verts": 2053,
+      "polys": 1302,
+      "materials": [
+        "Set1"
+      ],
+      "xz": 317.892,
+      "y": 247.49
+    }
+  ],
+  "meshNames": [
+    "Arch_Door_L.004_Set3_0",
+    "Arch_Door_L_Set1_0",
+    "Arch_Door_L_Set3_0",
+    "Barell_Lid_Dungeon_Props1_0",
+    "Barrel_Dungeon_Props1_0",
+    "BookCase_Set5_0",
+    "Broken_End.007_Set1_0",
+    "Broken_End_Set1_0",
+    "Broken_End_Set2.001_0",
+    "Cage.001_Set2_0",
+    "Cage.002_Set2_0",
+    "Cage_Door.001_Set2_0",
+    "Cage_Door_Set2.001_0",
+    "Cage_Set2.001_0",
+    "Chain.001_Set2_0",
+    "Chain_Set2.001_0",
+    "Chandelier_Set5_0",
+    "Chandelier_Set5_0.001",
+    "Crate_Dungeon_Props1_0",
+    "Cube.042_Set1_0",
+    "Cube.044_Set1_0",
+    "Cube.064_Set4_0",
+    "Cube.077_Set4_0",
+    "Cube.078_Set4_0",
+    "Cube.082_Dungeon_Props1_0",
+    "Cube.093_Set1_0",
+    "Cube.094_Dwarf_0",
+    "Cylinder.020_Set4_0",
+    "Cylinder.021_Set4_0",
+    "DoorL_Set2.001_0",
+    "DoorR_Set2.001_0",
+    "Floor.038_Set2.001_0",
+    "Floor.162_Set2.001_0",
+    "Floor.195_D_Arch_Floor_Set_0",
+    "Floor.196_D_Arch_Floor_Set_0",
+    "Floor.197_D_Arch_Floor_Set_0",
+    "Floor.199_D_Arch_Floor_Set_0",
+    "Floor.202_D_Arch_Floor_Set_0",
+    "Floor_Set2.001_0",
+    "Pedestal_Set5_0",
+    "Pillar_Set2.001_0",
+    "Plank_Dungeon_Props1_0",
+    "Torus.007_D_Arch_Floor_Set_0",
+    "Torus.008_D_Arch_Floor_Set_0",
+    "Wall_1.012_Set1_0",
+    "Wall_1.013_Set1_0",
+    "Wall_1.013_Set2.001_0",
+    "Wall_1.016_Set1_0",
+    "Wall_1.029_Set1_0",
+    "Wall_1.055_Set1_0",
+    "Wall_1.057_Set1_0",
+    "Wall_1.102_Set1_0",
+    "Wall_1.172_Set4_0",
+    "Wall_1.181_Set1_0",
+    "Wall_1.204_Set1.001_0",
+    "Wall_1_Set1_0",
+    "Wall_Corner.007_Set1_0",
+    "Wall_Corner_Set1_0"
+  ]
+}

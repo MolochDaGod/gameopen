@@ -1,0 +1,71 @@
+{
+  "pack": "graves",
+  "source": "grave_stone_collection.glb",
+  "bytes": 20374740,
+  "meshCount": 4,
+  "nodeCount": 11,
+  "uniqueStems": [
+    "Grave1",
+    "Grave2",
+    "Grave3",
+    "Grave4"
+  ],
+  "stemCount": 4,
+  "images": [
+    "Image_0",
+    "Image_1",
+    "Image_2"
+  ],
+  "meshes": [
+    {
+      "name": "Grave1_Graves_0",
+      "parent": "Grave1",
+      "verts": 264,
+      "polys": 180,
+      "materials": [
+        "Graves"
+      ],
+      "xz": 122.237,
+      "y": 243.84
+    },
+    {
+      "name": "Grave2_Graves_0",
+      "parent": "Grave2",
+      "verts": 224,
+      "polys": 268,
+      "materials": [
+        "Graves"
+      ],
+      "xz": 93.657,
+      "y": 64.013
+    },
+    {
+      "name": "Grave3_Graves_0",
+      "parent": "Grave3",
+      "verts": 808,
+      "polys": 640,
+      "materials": [
+        "Graves"
+      ],
+      "xz": 114.3,
+      "y": 60.96
+    },
+    {
+      "name": "Grave4_Graves_0",
+      "parent": "Grave4",
+      "verts": 36,
+      "polys": 28,
+      "materials": [
+        "Graves"
+      ],
+      "xz": 30.48,
+      "y": 60.96
+    }
+  ],
+  "meshNames": [
+    "Grave1_Graves_0",
+    "Grave2_Graves_0",
+    "Grave3_Graves_0",
+    "Grave4_Graves_0"
+  ]
+}

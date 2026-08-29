@@ -46,7 +46,9 @@ Do **not** invent a second roster hub. Extend this wiring only.
 Railway remains **player** SSOT (characters, bag, island claim).  
 CDN/R2 remains **mesh** SSOT. D1 is **asset index** only.
 
-**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` → Explorer `createAnimatedCharacter` sit/idle on chairs. Do **not** put Warlords grudge6 bodies in these seats.
+**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` (length-4, holes stay empty) → Explorer `createAnimatedCharacter` sit/idle on that **slot**. Each seat is that row’s Railway UUID + `saveData.open.voxelLook` (not a shared local draft). Do **not** put Warlords grudge6 bodies in these seats.
+
+Encament bake is surface-sampled onto lobby y=0 (do not lift on AABB min.y — ravines float the village).
 
 ---
 
@@ -58,7 +60,13 @@ CDN first (Vercel bans `.glb` in SPA):
 https://assets.grudge-studio.com/models/campfire-lobby/tvs/{campfire,chair,fence,tree,…}.glb
 ```
 
-Smoke: `npm run smoke:prod:open` · HEAD critical TVS files.
+Palette props (`fence`, `tree`, `barn`, hay, crops…) bind the live TVS Voxel Farm atlases at  
+`assets.grudge-studio.com/models/voxels/tvs/voxel-farm/textures/*-texture.png`  
+(sRGB + nearest). Scene look: `prepObjectMaterials` + RoomEnvironment IBL + IntroScene bloom/`OutputPass`.
+
+Encament backdrop GLB (behind the fire): `assets.grudge-studio.com/models/lobby/chicken_gun_fruzer_encampment.glb`.
+
+Smoke: `npm run smoke:prod:open` · HEAD critical TVS files + farm palettes + Encament bake.
 
 ---
 

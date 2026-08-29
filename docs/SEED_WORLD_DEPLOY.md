@@ -101,6 +101,12 @@ Do **not** invent a second map table. These are the existing catalogs.
 
 Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 
+### Starter harvest (sticks & stones)
+
+On Encament / Starting Lobby Town, `tagStartSceneHarvest` layers town + seed meshes with **GamePlayLayers** + island classify (`classifyIslandMesh`). Trees / pine / oak / bark / canopy → **wood** (axe, `mat_log`). Rocks / boulders / rock materials → **ore** (pick). Small debris → stick / stone (hand). Large slabs + instanced seed columns → terrain. If the GLB has no debris, 8 sticks + 6 stones scatter outside the hub.
+
+**Q harvest** · LMB select · RMB walk+pick. Yields `mat_stick` / `mat_stone` into the character bag. Hand-craft **Campfire** (`rcp_starter_campfire`: 4 sticks + 3 stones) — first fire, no workbench.
+
 ### Explorer start + Minecraft seed
 
 1. Explorer / harvest / DRC launch (no `mapId`) → deployment `mapchunk-animal-company-lobby`.  
@@ -109,7 +115,11 @@ Code: `listPremadeVoxelMaps()` in `seedWorld.ts`.
 4. **Portals** = `placePortalsFromSeed` ring around the town (same seed ⇒ same portals). Beacons snap to generated surface Y.  
 5. Typed custom seeds (`customSeedDeployment`) also stamp this town so a Minecraft-style seed still starts in the hub.  
 6. **No unique map / duplicate `mapChunkId`** → seed prefab **`wolf_street`** (`D:\Games\Models\wolf_street.glb` → R2 `models/voxel/maps/wolf_street.glb`, HEAD 200 `glTF` 92 270 532). `resolveSeedPrefabMapChunk` — never creature-fit (the name is street, not a wolf).  
-7. **Seed enemy** — voxel **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, HEAD 200 `glTF` 47 756, SI 1.8 m). Same session-pack pattern as mage_demon. D1 `asset_registry` + catalog `content/enemies/session-mobs.json` on R2. Stamped on seed scenes (`placeSeedHostilesFromSeed`) and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`).
+7. **Seed enemies** — session pack, stamped by `placeSeedHostilesFromSeed` and spawned in Open via `CampEnemySystem.spawnSeedHostiles` (overworld camp `seed_voodoo`, cave/dungeon `seed_voodoo_dungeon`):
+   - **Voodooist** (`D:\Games\Models\voodooist.glb` → R2 `models/enemies/session/voodooist.glb`, SI 1.8 m).
+   - **Redesigned Zombie** (`D:\Games\Models\zombie_redesigned.glb` → R2 `models/enemies/session/zombie_redesigned.glb`, native Z ≈ 1.82 m). Per-part idle/walk/run/attack/death clips; CampEnemySystem is still slide-only. Not `forest_zombie` (that mesh is `voxel-zombie-1.glb`).
+   - **Galarian Stormbird** (`D:\Games\Models\stormbird_galarian.glb` → R2 `models/warlords-era/animals/flying/stormbird_galarian.glb`, native ≈ 2.26 m). Warlords `animals/flying` (harpy / sky fauna). Encament `seed_voodoo` + forest/voxel camps. Slide XZ; spawn Y hover if tagged `flying`.
+   - **Anomaly Hatchling** (`D:\Games\Models\worm_monster.glb` → R2 `models/warlords-era/enemies/anomaly_hatchling.glb`). Prefab `content/enemies/anomaly-hatchling.json`. Warlords `enemies` (dungeon/anomaly), not hunt wildlife. Native ~3.5 m → play **1.6 m**. Armature + Idle/WALK/RUN/ATTACK/WOUND/DEATH. Seed cave `seed_voodoo_dungeon`. Mixer still unused (slide).
 
 ### Shader.lab `#voxel` cave dungeon
 

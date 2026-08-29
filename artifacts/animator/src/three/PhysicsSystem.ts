@@ -18,6 +18,9 @@ export {
   PHYSICS_DT,
   PHYSICS_HZ,
   PHYSICS_MAX_SUBSTEPS,
+  installMeshBvh,
+  accelerateObject3D,
+  accelerateMesh,
   type CollisionProvider,
   type ScenePhysics,
 } from "@workspace/grudge-physics";

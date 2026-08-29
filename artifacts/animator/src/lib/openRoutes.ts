@@ -172,7 +172,7 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["agama", "agama-survival", "survive", "agama-map"],
     cabinets: ["survival", "agama", "agama-survival"],
     title: "Agama Survival",
-    blurb: "Wave survival on the Agama map — hold the safe zone, clear hostiles.",
+    blurb: "Battleground survival on the Agama farm — harvest, faction wars, extract north.",
     group: "combat",
     poster: "brawl",
     tags: ["Survival", "Waves"],
