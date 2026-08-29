@@ -34,6 +34,7 @@ Pin versions in `artifacts/animator/package.json`. Prefer these roles only.
 | **`@dimforge/rapier3d-compat`** | Browser WASM physics | **^0.19.x** **SSOT for web** · `vite-plugin-wasm` + top-level-await · one `PhysicsWorld.step` / frame (KCC does **not** extra-step) |
 | `@dimforge/rapier3d` | Optional native; prefer **compat** for Vite | Same major as compat if kept |
 | **`three-mesh-bvh`** | Fast mesh ground / ray queries | ^0.8–0.9 | **Required Open**; **Casting lab** (2026-08) for terrain/harvest pick |
+| **`THREE.InstancedMesh`** | Repeat voxels / grass / VFX / hair | **in-engine** (`VoxelArena`, `SmokeFx`, `hairStrands`, `LedMask`) | Do **not** add a second instancing npm |
 | **`three-pathfinding`** | Navmesh paths (AI) | ^1.3 |
 | **`yuka`** | AI steering / GOAP helpers | ^0.7 |
 | **`postprocessing`** | Bloom / cinema grade (not loco) | ^6 |

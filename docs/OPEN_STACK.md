@@ -143,7 +143,7 @@ Primary files:
 | **`library` (default home)** | Steam-style catalog, Mine-Loader banner, deploy metadata |
 | `account` | charactersgrudox races, wallet, credits, treaty, GRUDOX tier |
 | `doors` | Classic poster grid |
-| `danger` | Combat sandbox — **T0 weapon kits + MM + parry/block/dodge** |
+| `danger` | **All-era** combat lab (`?era=voxel\|warlords\|nexus\|armada`). GRUDOX voxel Danger is `tvs-showcase`, not this door. |
 | `voxel` / `editor` | Map + dressing room create path |
 | `brawl` / `genesis` / `voxgrudge-native` / … | Native modes |
 | External | Warlords, RTS, DCQ, Island, Metaverse, Realms |
@@ -205,13 +205,68 @@ railway up
 Smoke:
 ```bash
 curl -sI https://open.grudge-studio.com/ | head -5
-curl -s https://gameopen-production.up.railway.app/api/health
+curl -s https://open.grudge-studio.com/api/health
+curl -s https://gameopen-production.up.railway.app/
+# gameopen-api health is /api/healthz (not /health)
 curl -sI https://objectstore.grudge-studio.com/api/v1/weaponSkills.json | head -5
 ```
 
 ---
 
-## 10. Doc index
+## 10. Live audit (2026-08-29)
+
+Probed from this machine. Do **not** invent a second Open, mixer, physics, or room stack.
+
+| Surface | Probe | Result |
+|---------|-------|--------|
+| Open hub | `GET https://open.grudge-studio.com/` | **200** SPA |
+| Danger lab | `GET /danger` | **200** (live build still Warlords-default until all-era commit is on the **Vercel production branch**) |
+| Same-origin health | `GET /api/health` | **200** `grudge-api` + Postgres `connected` |
+| Open API | `GET gameopen-production.up.railway.app/` | **200** `gameopen-api` 1.1.0-fleet · maps `/api/healthz` |
+| Bare `/health` on Railway | HEAD | **404** — use `/` or `/api/healthz` |
+| Toon play kit | CDN `…/glb/characters/human.glb` | **200** |
+| GRUDOX voxel Danger | `/voxgrudge/tvs-showcase.html` | **200** Mixamo lab |
+| Grudge ID | `id.grudge-studio.com` | **200** |
+
+### Deploy wiring (keep this order)
+
+1. **SPA** — `npm run deploy:prod` → `scripts/deploy-durable.mjs` (tests → gate → `vercel --prod`) on the **intended branch**, not a mixed WIP tree.  
+2. **Edge** — CF Worker `infra/cloudflare/open` (`gameopen-open-proxy`) rewrites `/api/*`.  
+3. **User rooms** — Railway `gameopen-production` WS `wss://…/api/danger` (Vercel cannot upgrade WS). Persistent lobbies `DANGER` + `ARENA` in `lib/danger-net` `PERSISTENT_ROOMS`. Players **create/join** via `Lobby.tsx` + `DangerClient` (list/create/join).  
+4. **Voxel cabinets** — Railway `voxgrudge-grudox-room` (`VITE_ZONE_SERVER_URL`).  
+5. **Player SSOT** — Railway `grudge-api` Postgres. Never D1 bag.
+
+All-era Danger (`?era=`) is committed as `b6f824a` on `feat/explorer-starting-town-seed`. **Do not** `vercel --prod` that branch while it still carries unrelated explorer-town WIP. Cherry-pick onto the production branch, then `deploy:prod`.
+
+### Instanced Three.js (game-building)
+
+| Already instanced | Path |
+|-------------------|------|
+| Voxel blocks | `three/voxel/VoxelArena.ts` `InstancedMesh` |
+| Smoke / particles | `three/SmokeFx.ts` InstancedBufferGeometry |
+| LED mask | `three/LedMask.ts` |
+| Hair strands | `three/avatar/hairStrands.ts` |
+
+**Gap:** outdoor forest/grass still individual meshes (no `InstancedMesh` in `ForestWorld`). Next improvement: batch trees/grass with the existing VoxelArena / SmokeFx pattern — **not** a new npm instancing engine. Skill `three-instanced-lod` is the recipe.
+
+### Multiplayer rooms (users)
+
+| Kind | Code | Server |
+|------|------|--------|
+| Always-on coop | `DANGER` | gameopen-production `/api/danger` |
+| Always-on PvP | `ARENA` | same |
+| User-created | lobby create → room code | same `DangerRoomManager` |
+| GRUDOX space/brawl/carrier | zone WS | voxgrudge-grudox-room |
+
+Client: `DangerClient.relayUrl` prefers `VITE_GAME_SERVER_URL` then Railway `wss://gameopen-production.up.railway.app` (never same-origin `/api/danger` on Vercel).
+
+### Game-building best practices (already law)
+
+`OPEN_PACKAGE_SSOT` + `ANIMATION_FLEET_SSOT` + `DANGER_ROOM_SSOT` §8: one mixer, strip position tracks, feet + Rapier on the **same** height field, Toon `loadRaceKit` for warlords, Mixamo explorer for voxel, SI 1.8 m.
+
+---
+
+## 11. Doc index
 
 | Doc | Topic |
 |-----|--------|
