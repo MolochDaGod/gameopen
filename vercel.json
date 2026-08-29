@@ -125,6 +125,8 @@
     {
       "source": "/api/objectstore/search",
       "destination": "https://objectstore.grudge-studio.com/api/search"
+    },
+    {
       "source": "/api/ssot",
       "destination": "https://info.grudge-studio.com/api/ssot"
     },
