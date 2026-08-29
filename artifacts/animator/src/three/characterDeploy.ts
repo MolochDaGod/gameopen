@@ -65,7 +65,7 @@ export interface DeployOpts {
   facePlusZ?: boolean | "auto";
   /** Yaw (rad) when facePlusZ applies. Default π/2. */
   faceYaw?: number;
-  /** Re-run height fit when measured height is absurd. Default true. */
+  /** Re-run height fit when measured height is absurd. Default false (ingest-only). */
   refitIfAbsurd?: boolean;
   /** Author scale multiplier into fitCharacterHeight. */
   authorScale?: number;
@@ -159,7 +159,7 @@ export function deployCharacterModel(
 ): DeployResult {
   const target = opts.targetHeightM ?? DEPLOY_TARGET_HEIGHT_M;
   const groundY = opts.groundY ?? 0;
-  const refit = opts.refitIfAbsurd !== false;
+  const refit = opts.refitIfAbsurd === true;
   let fit: FitResult | null = null;
   let facingApplied = false;
 
