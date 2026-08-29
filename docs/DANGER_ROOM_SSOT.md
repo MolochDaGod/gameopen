@@ -11,6 +11,8 @@
 
 | Goal | Status | Notes |
 |------|--------|-------|
+| All-era combat lab (`?era=`) | **Live** | Warlords Toon · Voxel Mixamo · nexus/armada Mixamo until dedicated mesh |
+| GRUDOX voxel Danger stays on GRUDOX | **Live** | `grudox…/voxgrudge/tvs-showcase.html` — not Open `/danger` |
 | Third-person combat sandbox (sparring, bosses, skills) | **Live** | Studio + SparringCombat + arsenal |
 | SI world scale (1.8 m human) | **Partial** | Characters convert ~1.7 m; weapons no height-normalize |
 | Hand weapons + shield on Bip001 containers | **Live** | `R_hand_container` / `L_shield_container` |
@@ -77,7 +79,7 @@
 
 **Warmup (`SURFACE_LOAD_PLAN.danger`):**
 
-- REST: health, characters (warlords), account  
+- REST: health, characters (`era` from picker), account  
 - Mesh HEAD: `sword.glb`, `shield.glb`, `bow.glb`, `punching-bag.glb`, `arena-war-zone.glb`
 
 ---
@@ -116,7 +118,30 @@ See also `docs/HAND_ARMOR_BACK_ASSET_REVIEW.md`, `docs/ASSET_PRODUCTION_PIPELINE
 - Characters: `--height 1.7 --cm-to-m`  
 - Weapons: **no** height normalize; length bands 0.2–2.8 m by family  
 - Armor full shell: ~1.65–1.90 m; **no skin**  
-- Back: spine parent, not hand  
+- Back: spine parent, not hand
+
+---
+
+## 8. Animation + best-practice development (HARD)
+
+Same law as [`ANIMATION_FLEET_SSOT.md`](./ANIMATION_FLEET_SSOT.md). Do not invent a second mixer or Mixamo-on-Bip001.
+
+| Lane | When | Body | Clips |
+|------|------|------|-------|
+| `bip001-baked` | `era=warlords` | `loadRaceKit` / GrudgeAvatar Toon GLB | `/anims/baked/{pack}` rotation-only |
+| `mixamo-explorer` | `era=voxel` (and nexus/armada until dedicated) | `ExplorerCharacter` (`id=explorer`) | Mixamo clips through `stabilizeClipForMixer` |
+
+**Every clip before `clipAction`:**
+
+1. Filter unbound tracks  
+2. **Strip `.position` tracks** (hips included)  
+3. Freeze leftover hip XYZ to bind after feet sit  
+4. One mixer on the skinned body  
+5. After `mixer.update`: `groundFeetLocal` + IK on the **same** `heightAt` as Rapier  
+
+Sprint = clone `run` × 1.75 — never bind `locomotion/running` (run-to-roll). Never alias jump/dodge onto attack.
+
+Playtests: `artifacts/animator` `npm test -- src/playtest/` · `src/lib/dangerPlayableCharacter.test.ts` · `src/lib/entryCatch.test.ts`.  
 
 ---
 

@@ -38,8 +38,12 @@ export const ENTRY_HOSTS = {
 export const PRODUCT_STARTS = {
   /** Open library hub */
   openHub: `${ENTRY_HOSTS.open}/`,
-  /** Combat sandbox */
+  /** Open all-era combat sandbox */
   danger: `${ENTRY_HOSTS.open}/danger`,
+  /** Open Danger voxel lane */
+  dangerVoxel: `${ENTRY_HOSTS.open}/danger?era=voxel`,
+  /** GRUDOX voxel Danger (Mixamo explorer) — not Open /danger */
+  grudoxVoxelDanger: `${ENTRY_HOSTS.grudox}/voxgrudge/tvs-showcase.html`,
   /** Account / roster after Foundry equip handoff */
   account: `${ENTRY_HOSTS.open}/account`,
   /** 4-seat TVS campfire hub (charactersgrudox) — not AccountPanel */
@@ -74,10 +78,12 @@ export const PRODUCT_STARTS = {
   traitStore: `${ENTRY_HOSTS.traits}/`,
   /** CDN assets root (binaries — not a SPA mode) */
   assetsCdn: `${ENTRY_HOSTS.assets}`,
-  /** Agentic Three.js editor */
+  /** Agentic Three.js editor (Studio tools) */
   grokBuilder: "https://grok-builder.vercel.app/",
   /** Warlords scene editor (not Forge) */
   threeFlow: "https://threeflow.vercel.app/",
+  /** Grudge Studio map/deploy editor */
+  forge: "https://forge.grudge-studio.com/",
   /** Open mimic encounter */
   mimic: `${ENTRY_HOSTS.open}/mimic`,
   /** Warlords modular dungeon forge + crawl */
@@ -103,6 +109,10 @@ export const GRUDOX_ONLY_CABINETS = new Set([
   "zbrawl",
   "sailing",
   "carrier",
+  "boat",
+  "brawler",
+  "brawl",
+  "arena",
 ]);
 
 /**
@@ -302,14 +312,45 @@ export function catchEntry(input: CatchInput): CatchAction {
         reason: `cabinet ${cabinetId} is GRUDOX-only — not Open Danger`,
       };
     }
-    // explorer on Open is intentional (danger / dressing)
+    // Voxel explorer play is GRUDOX Danger — Open /danger remains the all-era lab.
     if (cabinetId === "explorer") {
+      if (params.get("dressing") === "1") {
+        return {
+          kind: "mode",
+          mode: "editor",
+          reason: "arcade explorer dressing → Open editor",
+        };
+      }
+      const dest = new URL(PRODUCT_STARTS.grudoxVoxelDanger);
+      dest.searchParams.set("era", "voxel");
+      dest.searchParams.set("from", "open-library");
       return {
-        kind: "mode",
-        mode: params.get("dressing") === "1" ? "editor" : "danger",
-        reason: "arcade explorer → Open danger/editor",
+        kind: "hard_redirect",
+        url: dest.toString(),
+        reason: "arcade explorer → GRUDOX voxel Danger (tvs-showcase)",
       };
     }
+  }
+
+  // Voxel play stays on GRUDOX / Mine-Loader — Open is the library only.
+  if (parts[0] === "realms" || parts[0] === "mine" || parts[0] === "mineloader") {
+    const dest = new URL(PRODUCT_STARTS.mineLoader);
+    dest.searchParams.set("from", "open-library");
+    dest.hash = "/play";
+    return {
+      kind: "hard_redirect",
+      url: dest.toString(),
+      reason: "voxel Realms play → mine.grudge-studio.com (GRUDOX era)",
+    };
+  }
+  if (parts[0] === "voxel") {
+    const dest = new URL(`${ENTRY_HOSTS.grudox}/studio/`);
+    dest.searchParams.set("from", "open-library");
+    return {
+      kind: "hard_redirect",
+      url: dest.toString(),
+      reason: "voxel worldbuilder → GRUDOX studio",
+    };
   }
 
   // ── 3. Explicit campfire entry ALWAYS wins (before from= handoffs) ─────
@@ -548,6 +589,7 @@ export function startUrlForIntent(
   intent:
     | "hub"
     | "danger"
+    | "grudoxDanger"
     | "account"
     | "campfire"
     | "characters"
@@ -568,6 +610,7 @@ export function startUrlForIntent(
     | "deployables"
     | "grokBuilder"
     | "threeFlow"
+    | "forge"
     | "mimic"
     | "dungeon"
     | "dungeonBoss"
@@ -580,6 +623,8 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.openHub;
     case "danger":
       return PRODUCT_STARTS.danger;
+    case "grudoxDanger":
+      return PRODUCT_STARTS.grudoxVoxelDanger;
     case "account":
       return PRODUCT_STARTS.account;
     case "equipment": {
@@ -599,7 +644,7 @@ export function startUrlForIntent(
     case "harvest":
       return PRODUCT_STARTS.openHarvest;
     case "deployables":
-      return PRODUCT_STARTS.openVoxel;
+      return `${ENTRY_HOSTS.grudox}/studio/`;
     case "signIn":
       return PRODUCT_STARTS.signIn;
     case "foundryCreate": {
@@ -614,6 +659,8 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.grokBuilder;
     case "threeFlow":
       return PRODUCT_STARTS.threeFlow;
+    case "forge":
+      return PRODUCT_STARTS.forge;
     case "mimic":
       return PRODUCT_STARTS.mimic;
     case "dungeon":
@@ -651,7 +698,7 @@ export function startUrlForIntent(
       return u.toString();
     }
     case "realms":
-      return PRODUCT_STARTS.openRealms;
+      return PRODUCT_STARTS.mineLoader;
     default:
       return PRODUCT_STARTS.openHub;
   }

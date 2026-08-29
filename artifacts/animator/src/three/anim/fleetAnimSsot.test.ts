@@ -15,6 +15,9 @@ describe("fleetAnimSsot", () => {
     expect(resolveFleetAnimLane("open-play")).toBe("bip001-baked");
     expect(resolveFleetAnimLane("controller")).toBe("bip001-baked");
     expect(resolveFleetAnimLane("explorer")).toBe("mixamo-explorer");
+    expect(resolveFleetAnimLane("danger", null, "voxel")).toBe("mixamo-explorer");
+    expect(resolveFleetAnimLane("danger", null, "warlords")).toBe("bip001-baked");
+    expect(resolveFleetAnimLane("grudox-handoff")).toBe("mixamo-explorer");
   });
 
   it("race GLB is Toon RTS pack not arena/FBX/races bake", () => {

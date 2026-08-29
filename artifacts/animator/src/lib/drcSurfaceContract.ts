@@ -50,7 +50,8 @@ export const DRC_SURFACE_MATRIX: readonly DrcSurfaceSpec[] = [
     usesStudioController: true,
     maps: ["danger-room", "shipwreck", "forest_mountains", "arena", "pirate", "climbing"],
     deploy: "open-spa",
-    notes: "SSOT combat binary — resolveDangerPlayable → GrudgeAvatar",
+    notes:
+      "All-era lab. Default warlords = GrudgeAvatar Bip001. ?era=voxel|nexus|armada = Mixamo explorer. GRUDOX voxel Danger is tvs-showcase, not this SPA.",
   },
   {
     mode: "play",
