@@ -97,6 +97,36 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     expect(Math.abs(box.min.y)).toBeLessThan(0.1);
   });
 
+  it("REGRESSION GUARD: ingest-fitted model skips SI fit on first and second deploy", () => {
+    // Model already has grudgeHeightFit=true (ingest converted metres at load time)
+    const { root } = makeBip001Hero({ height: 1.8, offsetY: 0, offsetX: 0.3 });
+    expect(root.userData.grudgeHeightFit).toBe(true); // Set by makeBip001Hero (ingest)
+    
+    const scaleX0 = root.scale.x;
+    const posX0 = root.position.x;
+    const posZ0 = root.position.z;
+    
+    // First deploy: ingest-fitted model must skip fitCharacterHeight (SI fit ingest-only)
+    const r1 = deployCharacterModel(root, { facePlusZ: false });
+    expect(r1.fit).toBeNull(); // No runtime SI fit
+    expect(root.userData.characterDeployed).toBe(true);
+    
+    const scaleX1 = root.scale.x;
+    const posX1 = root.position.x;
+    const posZ1 = root.position.z;
+    
+    // Second deploy (simulates clip switch): must skip fit and XZ centering
+    const r2 = deployCharacterModel(root, { facePlusZ: false });
+    expect(r2.fit).toBeNull(); // No re-fit
+    expect(r2.centerDeltaX).toBe(0); // No XZ re-centering
+    expect(r2.centerDeltaZ).toBe(0);
+    
+    // Scale and XZ must be unchanged (only Y can adjust for grounding)
+    expect(root.scale.x).toBe(scaleX1);
+    expect(root.position.x).toBe(posX1);
+    expect(root.position.z).toBe(posZ1);
+  });
+
   function bindSkin(root: THREE.Object3D, bones: THREE.Bone[], visible = true) {
     const geo = new THREE.BoxGeometry(0.3, 1.8, 0.3);
     const count = geo.attributes.position.count;
@@ -195,6 +225,25 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     const box = bodyBox(model);
     expect(Math.abs(box.min.y)).toBeLessThan(0.12);
     expect(findDeployModel(avatar)).toBe(model);
+  });
+
+  it("REGRESSION GUARD: ensureHumanScale skips re-fit for fitted or deployed character", () => {
+    const avatar = new THREE.Group();
+    const { root: model } = makeBip001Hero({ height: 1.8 });
+    avatar.add(model);
+    
+    // Model has grudgeHeightFit=true from ingest (makeBip001Hero sets it)
+    expect(model.userData.grudgeHeightFit).toBe(true);
+    const scaleX0 = model.scale.x;
+    const posX0 = model.position.x;
+    const posZ0 = model.position.z;
+    
+    // ensureHumanScale must skip re-fit (ingest-only SI)
+    const refitted = ensureHumanScale(avatar, 1.8);
+    expect(refitted).toBe(false);
+    expect(model.scale.x).toBe(scaleX0);
+    expect(model.position.x).toBe(posX0);
+    expect(model.position.z).toBe(posZ0);
   });
 });
 
