@@ -18,9 +18,9 @@ describe("resolveDangerPlayable era gate", () => {
     expect(p.spec.studioAvatarId).toBe("grudge:western-kingdoms:warrior");
   });
 
-  it("does not put a voxel-era hero on the Toon kit — default WK Toon instead", () => {
+  it("does not put a voxel-era hero on the Toon kit — Mixamo explorer instead", () => {
     const p = resolveDangerPlayable({
-      search: "",
+      search: "?era=voxel",
       fleetCharacter: {
         id: "00000000-0000-4000-8000-0000000000bb",
         name: "Block",
@@ -29,7 +29,15 @@ describe("resolveDangerPlayable era gate", () => {
         config: { baseId: "explorer" },
       },
     });
-    expect(p.source).toBe("default");
-    expect(p.spec.studioAvatarId).toBe("grudge:western-kingdoms:warrior");
+    expect(p.era).toBe("voxel");
+    expect(p.lane).toBe("mixamo-explorer");
+    expect(p.spec.studioAvatarId).toBe("explorer");
+    expect(p.displayName).toBe("Block");
+  });
+
+  it("?era=voxel without fleet still boots explorer", () => {
+    const p = resolveDangerPlayable({ search: "?era=voxel" });
+    expect(p.lane).toBe("mixamo-explorer");
+    expect(p.spec.studioAvatarId).toBe("explorer");
   });
 });

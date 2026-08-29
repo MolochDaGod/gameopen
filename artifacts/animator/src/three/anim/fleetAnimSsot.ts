@@ -131,16 +131,19 @@ export interface FleetAnimContext {
 }
 
 /**
- * Resolve lane from surface + optional explicit override.
- * Danger / open-play / foundry / controller heroes → bip001.
- * Explorer only → mixamo.
+ * Resolve lane from surface + optional explicit override / era.
+ * Open Danger is all-era: voxel|nexus|armada → mixamo-explorer; warlords → bip001.
+ * GRUDOX voxel Danger (tvs-showcase) is mixamo-explorer only.
  */
 export function resolveFleetAnimLane(
   surface: FleetAnimSurface,
   override?: FleetAnimRigLane | null,
+  era?: string | null,
 ): FleetAnimRigLane {
   if (override) return override;
-  if (surface === "explorer") return "mixamo-explorer";
+  const e = (era || "").toLowerCase();
+  if (e === "voxel" || e === "nexus" || e === "armada") return "mixamo-explorer";
+  if (surface === "explorer" || surface === "grudox-handoff") return "mixamo-explorer";
   return "bip001-baked";
 }
 

@@ -22,10 +22,29 @@ describe("entryCatch", () => {
     }
   });
 
-  it("maps explorer arcade to Open danger", () => {
+  it("sends lava/molten paths to Magma Core crawl", () => {
+    for (const path of ["/lava", "/molten", "/magma-core"]) {
+      const r = catchEntry({ pathname: path, search: "" });
+      expect(r.kind).toBe("hard_redirect");
+      if (r.kind === "hard_redirect") {
+        expect(r.url).toContain("grudge-dungeons.vercel.app");
+        expect(r.url).toContain("theme=molten");
+        expect(r.url).toContain("linear=1");
+      }
+    }
+  });
+
+  it("maps explorer arcade to GRUDOX voxel Danger", () => {
     const r = catchEntry({ pathname: "/arcade/play/explorer", search: "" });
-    expect(r.kind).toBe("mode");
-    if (r.kind === "mode") expect(r.mode).toBe("danger");
+    expect(r.kind).toBe("hard_redirect");
+    if (r.kind === "hard_redirect") {
+      expect(r.url).toContain("grudox.grudge-studio.com/voxgrudge/tvs-showcase.html");
+      expect(r.url).toContain("era=voxel");
+    }
+  });
+
+  it("startUrlForIntent grudoxDanger is voxel showcase", () => {
+    expect(startUrlForIntent("grudoxDanger")).toContain("/voxgrudge/tvs-showcase.html");
   });
 
   it("sends foundry create intent off Open", () => {
@@ -152,5 +171,17 @@ describe("entryCatch", () => {
       "grudox.grudge-studio.com",
     );
     expect(GRUDOX_ONLY_CABINETS.has("racer")).toBe(true);
+    expect(GRUDOX_ONLY_CABINETS.has("brawler")).toBe(true);
+    expect(startUrlForIntent("realms")).toContain("mine");
+    expect(startUrlForIntent("forge")).toContain("forge.grudge-studio.com");
+    expect(startUrlForIntent("threeFlow")).toContain("threeflow");
+  });
+
+  it("sends Open /realms to Mine-Loader (voxel play)", () => {
+    const r = catchEntry({ pathname: "/realms", search: "" });
+    expect(r.kind).toBe("hard_redirect");
+    if (r.kind === "hard_redirect") {
+      expect(r.url).toMatch(/mine/i);
+    }
   });
 });

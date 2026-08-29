@@ -64,6 +64,9 @@ import { heroFromLocation } from "./lib/annihilateHero";
 import {
   resolveDangerPlayable,
   applyDangerPlayableToStudio,
+  parseDangerEra,
+  persistDangerEra,
+  type DangerEraId,
   type DangerPlayableCharacter,
 } from "./lib/dangerPlayableCharacter";
 import {
@@ -176,6 +179,7 @@ import type { DockPanelDef, DockPanelMeta, ToolMenu } from "./components/dock";
 import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboard, Swords, BookOpen, Flag } from "lucide-react";
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
+
 import { resolveHudVars } from "./hud/hudConfig";
 import {
   type AppMode,
@@ -615,11 +619,31 @@ export default function App() {
       return next;
     });
   }, []);
-  // DRC combat default = grudge6 WK warrior (never Mixamo explorer for /danger boot)
+
+  const onDangerEra = useCallback(
+    (era: DangerEraId) => {
+      setDangerEra(era);
+      persistDangerEra(era);
+      const playable = resolveDangerPlayable({
+        fleetCharacter: gameSession.selectedCharacter(),
+        era,
+      });
+      setCharacterId(
+        playable.lane === "mixamo-explorer" ? "explorer" : playable.spec.studioAvatarId,
+      );
+      const studio = studioRef.current;
+      if (studio) applyDangerPlayableToStudio(studio, playable);
+    },
+    [gameSession],
+  );
+
+  // All-era Danger: warlords default Toon; voxel era boots Mixamo explorer.
+  const [dangerEra, setDangerEra] = useState<DangerEraId>(() => parseDangerEra());
   const [characterId, setCharacterId] = useState(
     () =>
-      // lazy import avoids circular weight at module eval — literal matches DRC_DEFAULT_AVATAR_ID
-      "grudge:western-kingdoms:warrior",
+      parseDangerEra() === "warlords"
+        ? "grudge:western-kingdoms:warrior"
+        : "explorer",
   );
   const activeCharacterId =
     gameSession.snapshot.selectedCharacterId || characterId || "local";
@@ -1242,13 +1266,16 @@ export default function App() {
     try {
       setWebglError(false);
       setWebglErrorDetail("");
-      // Playable hero SSOT: URL (ARE / annihilate) → fleet selected → default grudge6.
-      // Never boot Explorer Mixamo FBX for production danger (Vercel strips FBX).
+      // Playable hero SSOT: era + URL + fleet. Voxel → Mixamo explorer; Warlords → Toon kit.
       const playable: DangerPlayableCharacter = resolveDangerPlayable({
         fleetCharacter: gameSession.selectedCharacter(),
+        era: dangerEra,
       });
       const spec = playable.spec;
-      const bootId = spec.studioAvatarId ?? characterId;
+      const bootId =
+        playable.lane === "mixamo-explorer"
+          ? "explorer"
+          : spec.studioAvatarId ?? characterId;
       const bootWeapon =
         spec.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
 
@@ -3574,6 +3601,8 @@ export default function App() {
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={true}
               warmDetail="Map play · same combat stack"
+              era={dangerEra}
+              onEra={onDangerEra}
               testWorldId={testWorldId}
               mapOptions={dangerMapOptions}
               onTestWorld={onTestWorld}
@@ -3886,15 +3915,19 @@ export default function App() {
               characterLabel={(() => {
                 const p = resolveDangerPlayable({
                   fleetCharacter: gameSession.selectedCharacter(),
+                  era: dangerEra,
                 });
                 return p.displayName || hud?.character || characterId;
               })()}
               raceLabel={(() => {
                 const p = resolveDangerPlayable({
                   fleetCharacter: gameSession.selectedCharacter(),
+                  era: dangerEra,
                 });
-                return `${p.spec.raceId} · ${p.spec.animPack} · ${p.source}`;
+                return `${p.era} · ${p.lane} · ${p.source}`;
               })()}
+              era={dangerEra}
+              onEra={onDangerEra}
               weaponLabel={hud?.weapon ?? weaponId}
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={dangerWarm.ready}
