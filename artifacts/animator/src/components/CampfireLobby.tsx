@@ -1,8 +1,9 @@
 /**
- * Ethereal Falls campfire — accounts character page (charactersgrudox UX).
+ * Floating-island campfire — voxel-era 4-slot character page (charactersgrudox UX).
  *
- * SSOT imagery/menus: Fantasy-Scene-Creator artifacts/charactersgrudox
- * public/ui/menu/*.png wooden-sign rail.
+ * 4 hero seats around a fireplace on floating islands (SI heroes ~1.8 m).
+ * Scene SSOT: three/intro/CampfireLobbyScene.ts (not Ethereal Falls overlook).
+ * Menu art: public/ui/menu/*.png wooden-sign rail.
  *
  * Right menu routes into Open collection surfaces:
  *   PvE  → native Open PvE titles (danger, brawl, survival, mimic, …)
@@ -30,7 +31,10 @@ import {
   type HubLaunchContext,
   type LocalHubMode,
 } from "../auth/characterHubLaunch";
-import { CampfireLobbyScene } from "../three/intro/CampfireLobbyScene";
+import {
+  CampfireLobbyScene,
+  type CampfireHoverInfo,
+} from "../three/intro/CampfireLobbyScene";
 import "./campfireLobby.css";
 
 interface Props {
@@ -265,7 +269,7 @@ function arcadeUrl(path: string): string {
 }
 
 /**
- * Ethereal Falls 4-seat campfire — **sole** WebGL owner for /lobby and /characters.
+ * Floating-island 4-seat campfire — **sole** WebGL owner for /lobby and /characters.
  * Do not wrap this in ProductionCinema / CinemaFlowGate with dungeon shells.
  */
 export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }: Props) {
@@ -280,6 +284,7 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
   const [selected, setSelected] = useState(0);
   const [panel, setPanel] = useState<Panel>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [hoverTip, setHoverTip] = useState<CampfireHoverInfo>(null);
 
   const active = heroes[selected] ?? heroes[0] ?? null;
 
@@ -305,6 +310,7 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
     try {
       scene = new CampfireLobbyScene(canvas, {
         onSelect: (i) => setSelected(i),
+        onHover: (info) => setHoverTip(info),
       });
       sceneRef.current = scene;
       void scene.setHeroes(heroes);
@@ -436,14 +442,31 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       <canvas ref={canvasRef} className="cfl-canvas" />
       <div className="cfl-vignette" aria-hidden />
 
-      {/* Top brand — charactersgrudox helmet + wordmark */}
+      {hoverTip?.hero && (
+        <div
+          className="cfl-tooltip"
+          style={{ left: hoverTip.x + 14, top: Math.max(8, hoverTip.y - 12) }}
+          role="tooltip"
+        >
+          <div className="cfl-tooltip-name">{hoverTip.hero.name}</div>
+          <div className="cfl-tooltip-meta">
+            Seat {hoverTip.index + 1}
+            {hoverTip.hero.raceKey ? ` · ${hoverTip.hero.raceKey}` : ""}
+            {hoverTip.hero.baseId ? ` · ${hoverTip.hero.baseId}` : ""}
+          </div>
+          <div className="cfl-tooltip-hint">Hover · stand + gesture · click to select</div>
+        </div>
+      )}
+
+      {/* Top brand — TVS farm camp · 4 chairs around campfire */}
       <div className="cfl-head">
         <img className="cfl-helmet" src={MENU("grudge-helmet.png")} alt="" />
         <img className="cfl-logo" src={MENU("grudge-logo.png")} alt="GRUDGE" />
+        <p className="cfl-kicker">Grudge Studio · 4 hero seats</p>
         <p className="cfl-sub">
           {active
-            ? "Your heroes — pick a seat, then launch from the wooden signs"
-            : "Gather your band — first hero free · Account to create more"}
+            ? "TVS farm camp — heroes sit by the fire · hover to stand"
+            : "Farm campfire · four chairs · first hero free · Account to create more"}
         </p>
       </div>
 
@@ -451,14 +474,30 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       <header className="cfl-bar">
         <div className="cfl-brand">
           CHARACTERS<span>GRUDOX</span>
-          <em>Ethereal Falls · account character page</em>
+          <em>TVS farm camp · chairs · campfire (no dungeon)</em>
         </div>
         <div className="cfl-actions">
           <button type="button" className="cfl-btn primary" onClick={() => onAvatarEdit?.()}>
             Avatar editor
           </button>
-          <button type="button" className="cfl-btn" onClick={() => onNavigate("account")}>
-            Account
+          <button
+            type="button"
+            className="cfl-btn"
+            onClick={() => {
+              try {
+                const url =
+                  typeof window !== "undefined"
+                    ? `https://character.grudge-studio.com/?era=voxel&from=open&returnTo=${encodeURIComponent(
+                        window.location.origin + "/?door=characters",
+                      )}`
+                    : "https://character.grudge-studio.com/?era=voxel&from=open";
+                window.location.assign(url);
+              } catch {
+                onNavigate("account");
+              }
+            }}
+          >
+            Create hero
           </button>
           <button type="button" className="cfl-btn" onClick={() => onNavigate("doors")}>
             Library

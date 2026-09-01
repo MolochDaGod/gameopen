@@ -1,33 +1,33 @@
 {
   "version": 2,
-  "generatedAt": "2026-07-29T02:43:53.064Z",
+  "generatedAt": "2026-08-05T03:49:57.507Z",
   "game": "gameopen",
-  "count": 1648,
+  "count": 1924,
   "byKind": {
-    "data": 71,
-    "animation": 572,
-    "model": 408,
-    "texture": 498,
+    "data": 251,
+    "animation": 640,
+    "model": 429,
+    "texture": 501,
     "other": 86,
-    "icon": 4,
+    "icon": 8,
     "text": 3,
     "bin": 2,
     "code": 4
   },
   "byPurpose": {
-    "data": 71,
-    "unknown": 394,
+    "data": 251,
+    "unknown": 428,
     "prop": 48,
-    "animation": 286,
-    "weapon": 197,
-    "vfx": 50,
-    "texture": 498,
+    "animation": 320,
+    "weapon": 203,
+    "vfx": 54,
+    "texture": 501,
     "audio": 54,
-    "npc": 16,
-    "map": 26,
+    "npc": 24,
+    "map": 33,
     "character": 8
   },
-  "totalBytes": 4133002803,
+  "totalBytes": 4234934680,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -1298,6 +1298,346 @@
       "ext": "fbx",
       "bytes": 204304,
       "category": "anim/animations/gestures"
+    },
+    {
+      "id": "GO-6e0dfba9a936",
+      "path": "/anim/animations/ghostrider/block-loop.fbx",
+      "rel": "anim/animations/ghostrider/block-loop.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 158669,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-584914f62fe1",
+      "path": "/anim/animations/ghostrider/chain-slam-forward.fbx",
+      "rel": "anim/animations/ghostrider/chain-slam-forward.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 128009,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-aaba1947f7d6",
+      "path": "/anim/animations/ghostrider/chain-slam-quake.fbx",
+      "rel": "anim/animations/ghostrider/chain-slam-quake.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 142461,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-f057e61bec2e",
+      "path": "/anim/animations/ghostrider/chain-spin.fbx",
+      "rel": "anim/animations/ghostrider/chain-spin.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 87259,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-8a1d7839a305",
+      "path": "/anim/animations/ghostrider/chain-stab-hyper.fbx",
+      "rel": "anim/animations/ghostrider/chain-stab-hyper.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 148554,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-2b3ce4daf78c",
+      "path": "/anim/animations/ghostrider/chain-stab.fbx",
+      "rel": "anim/animations/ghostrider/chain-stab.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 96844,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-cbf5a43d7af9",
+      "path": "/anim/animations/ghostrider/chain-swing-360.fbx",
+      "rel": "anim/animations/ghostrider/chain-swing-360.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 76434,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-0e7739175851",
+      "path": "/anim/animations/ghostrider/chain-swing.fbx",
+      "rel": "anim/animations/ghostrider/chain-swing.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 68265,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-4d1c4dadb8da",
+      "path": "/anim/animations/ghostrider/chain-throw.fbx",
+      "rel": "anim/animations/ghostrider/chain-throw.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 92844,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-ec7904c0ecd8",
+      "path": "/anim/animations/ghostrider/chain-uppercut.fbx",
+      "rel": "anim/animations/ghostrider/chain-uppercut.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 117734,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-0f0bd5e6106d",
+      "path": "/anim/animations/ghostrider/charge-punch.fbx",
+      "rel": "anim/animations/ghostrider/charge-punch.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 136392,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-1f440ce1abfa",
+      "path": "/anim/animations/ghostrider/fireball-cast.fbx",
+      "rel": "anim/animations/ghostrider/fireball-cast.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 101062,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-2e9a16f58f49",
+      "path": "/anim/animations/ghostrider/gun-down.fbx",
+      "rel": "anim/animations/ghostrider/gun-down.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 101510,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-b047ad053b08",
+      "path": "/anim/animations/ghostrider/gun-empty.fbx",
+      "rel": "anim/animations/ghostrider/gun-empty.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 101647,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-aad09b66ae27",
+      "path": "/anim/animations/ghostrider/gun-land.fbx",
+      "rel": "anim/animations/ghostrider/gun-land.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 105693,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-d5c1b4d4c13f",
+      "path": "/anim/animations/ghostrider/gun-level.fbx",
+      "rel": "anim/animations/ghostrider/gun-level.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 101572,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-8a7bfc27f0c8",
+      "path": "/anim/animations/ghostrider/gun-up.fbx",
+      "rel": "anim/animations/ghostrider/gun-up.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 101533,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-495a67ab38b3",
+      "path": "/anim/animations/ghostrider/heavy-punch.fbx",
+      "rel": "anim/animations/ghostrider/heavy-punch.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 138157,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-f794d45fbbc4",
+      "path": "/anim/animations/ghostrider/idle.fbx",
+      "rel": "anim/animations/ghostrider/idle.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 159823,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-7325ac5a451d",
+      "path": "/anim/animations/ghostrider/knockdown.fbx",
+      "rel": "anim/animations/ghostrider/knockdown.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 159505,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-4778db33d869",
+      "path": "/anim/animations/ghostrider/lunge-punch.fbx",
+      "rel": "anim/animations/ghostrider/lunge-punch.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 99058,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-6d2e7a477bf0",
+      "path": "/anim/animations/ghostrider/roll-back.fbx",
+      "rel": "anim/animations/ghostrider/roll-back.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 85251,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-38f8b8b3fcdd",
+      "path": "/anim/animations/ghostrider/roll-forward.fbx",
+      "rel": "anim/animations/ghostrider/roll-forward.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 91506,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-6ae3134d30f7",
+      "path": "/anim/animations/ghostrider/roll-left.fbx",
+      "rel": "anim/animations/ghostrider/roll-left.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 84765,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-fc0dc31b50fb",
+      "path": "/anim/animations/ghostrider/roll-right.fbx",
+      "rel": "anim/animations/ghostrider/roll-right.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 84821,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-c1011bab0a1e",
+      "path": "/anim/animations/ghostrider/run.fbx",
+      "rel": "anim/animations/ghostrider/run.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 86752,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-22486de20c15",
+      "path": "/anim/animations/ghostrider/shotgun-down.fbx",
+      "rel": "anim/animations/ghostrider/shotgun-down.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 159455,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-4c1c7ca4a2b6",
+      "path": "/anim/animations/ghostrider/shotgun-empty.fbx",
+      "rel": "anim/animations/ghostrider/shotgun-empty.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 118162,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-9a3c1d79b59b",
+      "path": "/anim/animations/ghostrider/shotgun-hellfire-blast.fbx",
+      "rel": "anim/animations/ghostrider/shotgun-hellfire-blast.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 225777,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-d38fb46810c7",
+      "path": "/anim/animations/ghostrider/shotgun-level.fbx",
+      "rel": "anim/animations/ghostrider/shotgun-level.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 159519,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-f929bb54eefc",
+      "path": "/anim/animations/ghostrider/shotgun-up.fbx",
+      "rel": "anim/animations/ghostrider/shotgun-up.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 159483,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-cbb9b9ecc8f3",
+      "path": "/anim/animations/ghostrider/shoulder-charge.fbx",
+      "rel": "anim/animations/ghostrider/shoulder-charge.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 117505,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-bfd6a55ed437",
+      "path": "/anim/animations/ghostrider/uppercut.fbx",
+      "rel": "anim/animations/ghostrider/uppercut.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 117652,
+      "category": "anim/animations/ghostrider"
+    },
+    {
+      "id": "GO-052c1dd19415",
+      "path": "/anim/animations/ghostrider/walk.fbx",
+      "rel": "anim/animations/ghostrider/walk.fbx",
+      "kind": "animation",
+      "purpose": "animation",
+      "ext": "fbx",
+      "bytes": 110124,
+      "category": "anim/animations/ghostrider"
     },
     {
       "id": "GO-0bc8c4d0f745",
@@ -4130,6 +4470,346 @@
       "category": "anim/gestures"
     },
     {
+      "id": "GO-f06ca7f92199",
+      "path": "/anim/ghostrider/block-loop.fbx",
+      "rel": "anim/ghostrider/block-loop.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 158669,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-3012bb8308ed",
+      "path": "/anim/ghostrider/chain-slam-forward.fbx",
+      "rel": "anim/ghostrider/chain-slam-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 128009,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-8dc34aa2cf7f",
+      "path": "/anim/ghostrider/chain-slam-quake.fbx",
+      "rel": "anim/ghostrider/chain-slam-quake.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 142461,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-4c81d3258dee",
+      "path": "/anim/ghostrider/chain-spin.fbx",
+      "rel": "anim/ghostrider/chain-spin.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 87259,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-7d290104324f",
+      "path": "/anim/ghostrider/chain-stab-hyper.fbx",
+      "rel": "anim/ghostrider/chain-stab-hyper.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 148554,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-9f22199db6f9",
+      "path": "/anim/ghostrider/chain-stab.fbx",
+      "rel": "anim/ghostrider/chain-stab.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 96844,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-d26c3853c552",
+      "path": "/anim/ghostrider/chain-swing-360.fbx",
+      "rel": "anim/ghostrider/chain-swing-360.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 76434,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-a6443e0e0c8b",
+      "path": "/anim/ghostrider/chain-swing.fbx",
+      "rel": "anim/ghostrider/chain-swing.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 68265,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-cdea0785ceaa",
+      "path": "/anim/ghostrider/chain-throw.fbx",
+      "rel": "anim/ghostrider/chain-throw.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 92844,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-bc1ea98fda78",
+      "path": "/anim/ghostrider/chain-uppercut.fbx",
+      "rel": "anim/ghostrider/chain-uppercut.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 117734,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-825f4b9d0a4b",
+      "path": "/anim/ghostrider/charge-punch.fbx",
+      "rel": "anim/ghostrider/charge-punch.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 136392,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-faaf4039a4f3",
+      "path": "/anim/ghostrider/fireball-cast.fbx",
+      "rel": "anim/ghostrider/fireball-cast.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 101062,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-da12c63a2923",
+      "path": "/anim/ghostrider/gun-down.fbx",
+      "rel": "anim/ghostrider/gun-down.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 101510,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-10672a1f22f3",
+      "path": "/anim/ghostrider/gun-empty.fbx",
+      "rel": "anim/ghostrider/gun-empty.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 101647,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-3ca7f843140f",
+      "path": "/anim/ghostrider/gun-land.fbx",
+      "rel": "anim/ghostrider/gun-land.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 105693,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-fbc8d396f338",
+      "path": "/anim/ghostrider/gun-level.fbx",
+      "rel": "anim/ghostrider/gun-level.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 101572,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-716721e10454",
+      "path": "/anim/ghostrider/gun-up.fbx",
+      "rel": "anim/ghostrider/gun-up.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 101533,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-44d172b979c4",
+      "path": "/anim/ghostrider/heavy-punch.fbx",
+      "rel": "anim/ghostrider/heavy-punch.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 138157,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-8ba0b2892374",
+      "path": "/anim/ghostrider/idle.fbx",
+      "rel": "anim/ghostrider/idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 159823,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-e6e16f13f58d",
+      "path": "/anim/ghostrider/knockdown.fbx",
+      "rel": "anim/ghostrider/knockdown.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 159505,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-272362f58479",
+      "path": "/anim/ghostrider/lunge-punch.fbx",
+      "rel": "anim/ghostrider/lunge-punch.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 99058,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-50c4769de4ea",
+      "path": "/anim/ghostrider/roll-back.fbx",
+      "rel": "anim/ghostrider/roll-back.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 85251,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-368d1bbf966e",
+      "path": "/anim/ghostrider/roll-forward.fbx",
+      "rel": "anim/ghostrider/roll-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 91506,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-2052cae77727",
+      "path": "/anim/ghostrider/roll-left.fbx",
+      "rel": "anim/ghostrider/roll-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 84765,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-f3386e3544ad",
+      "path": "/anim/ghostrider/roll-right.fbx",
+      "rel": "anim/ghostrider/roll-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 84821,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-6eaff9310fd1",
+      "path": "/anim/ghostrider/run.fbx",
+      "rel": "anim/ghostrider/run.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 86752,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-593371f999ed",
+      "path": "/anim/ghostrider/shotgun-down.fbx",
+      "rel": "anim/ghostrider/shotgun-down.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 159455,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-720438103c80",
+      "path": "/anim/ghostrider/shotgun-empty.fbx",
+      "rel": "anim/ghostrider/shotgun-empty.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 118162,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-0fe30252a21e",
+      "path": "/anim/ghostrider/shotgun-hellfire-blast.fbx",
+      "rel": "anim/ghostrider/shotgun-hellfire-blast.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 225777,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-07600aa706fc",
+      "path": "/anim/ghostrider/shotgun-level.fbx",
+      "rel": "anim/ghostrider/shotgun-level.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 159519,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-7e2dc71533d7",
+      "path": "/anim/ghostrider/shotgun-up.fbx",
+      "rel": "anim/ghostrider/shotgun-up.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 159483,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-c1d54f13904c",
+      "path": "/anim/ghostrider/shoulder-charge.fbx",
+      "rel": "anim/ghostrider/shoulder-charge.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 117505,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-d0e62df7fa0a",
+      "path": "/anim/ghostrider/uppercut.fbx",
+      "rel": "anim/ghostrider/uppercut.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 117652,
+      "category": "anim/ghostrider"
+    },
+    {
+      "id": "GO-c438889f54c2",
+      "path": "/anim/ghostrider/walk.fbx",
+      "rel": "anim/ghostrider/walk.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 110124,
+      "category": "anim/ghostrider"
+    },
+    {
       "id": "GO-e4407594d891",
       "path": "/anim/greataxe/great-axe-combo.fbx",
       "rel": "anim/greataxe/great-axe-combo.fbx",
@@ -5810,6 +6490,1176 @@
       "category": "anim/sword"
     },
     {
+      "id": "GO-9c53bde39c2c",
+      "path": "/anims/baked/climb/climbing.json",
+      "rel": "anims/baked/climb/climbing.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 229468,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-a78bf6bfc148",
+      "path": "/anims/baked/climb/down.json",
+      "rel": "anims/baked/climb/down.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 120834,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-b7abac367ffa",
+      "path": "/anims/baked/climb/freehang_climb.json",
+      "rel": "anims/baked/climb/freehang_climb.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 173418,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-424761e5effc",
+      "path": "/anims/baked/climb/hang_idle.json",
+      "rel": "anims/baked/climb/hang_idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 105365,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-0489f81ffc72",
+      "path": "/anims/baked/climb/jump_to_hang.json",
+      "rel": "anims/baked/climb/jump_to_hang.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 117460,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-74da954731d9",
+      "path": "/anims/baked/climb/manifest.json",
+      "rel": "anims/baked/climb/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1872,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-830620500d77",
+      "path": "/anims/baked/climb/stand_to_hang.json",
+      "rel": "anims/baked/climb/stand_to_hang.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 80855,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-d3b21d770ca4",
+      "path": "/anims/baked/climb/to_top.json",
+      "rel": "anims/baked/climb/to_top.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 239929,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-8d12df146f8c",
+      "path": "/anims/baked/climb/up.json",
+      "rel": "anims/baked/climb/up.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 120998,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-8ebb40797cf7",
+      "path": "/anims/baked/climb/wall_run.json",
+      "rel": "anims/baked/climb/wall_run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 46680,
+      "category": "anims/baked/climb"
+    },
+    {
+      "id": "GO-e92d0cbe542c",
+      "path": "/anims/baked/dual_wield/airFlinch.json",
+      "rel": "anims/baked/dual_wield/airFlinch.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 47346,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-c6a8fbf0bcb7",
+      "path": "/anims/baked/dual_wield/attack.json",
+      "rel": "anims/baked/dual_wield/attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66617,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-e8c09e6e8036",
+      "path": "/anims/baked/dual_wield/attack2.json",
+      "rel": "anims/baked/dual_wield/attack2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66330,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-e152b472592c",
+      "path": "/anims/baked/dual_wield/attack3.json",
+      "rel": "anims/baked/dual_wield/attack3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 118539,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-1dbb98c0399f",
+      "path": "/anims/baked/dual_wield/attack4.json",
+      "rel": "anims/baked/dual_wield/attack4.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 238157,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-04ebf439d111",
+      "path": "/anims/baked/dual_wield/attack5.json",
+      "rel": "anims/baked/dual_wield/attack5.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66873,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-3e8e38968a70",
+      "path": "/anims/baked/dual_wield/block.json",
+      "rel": "anims/baked/dual_wield/block.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67805,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-445afa83bcfb",
+      "path": "/anims/baked/dual_wield/combo.json",
+      "rel": "anims/baked/dual_wield/combo.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66328,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-0399a23b3e01",
+      "path": "/anims/baked/dual_wield/dash.json",
+      "rel": "anims/baked/dual_wield/dash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131300,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-02a99810d829",
+      "path": "/anims/baked/dual_wield/death.json",
+      "rel": "anims/baked/dual_wield/death.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67426,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-d84b95ac2fcf",
+      "path": "/anims/baked/dual_wield/death2.json",
+      "rel": "anims/baked/dual_wield/death2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 194833,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-847cfd28b51a",
+      "path": "/anims/baked/dual_wield/dodgeB.json",
+      "rel": "anims/baked/dual_wield/dodgeB.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 53739,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-34a06705bcad",
+      "path": "/anims/baked/dual_wield/dodgeF.json",
+      "rel": "anims/baked/dual_wield/dodgeF.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60367,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-1fcfe77530a0",
+      "path": "/anims/baked/dual_wield/dodgeL.json",
+      "rel": "anims/baked/dual_wield/dodgeL.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 53417,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-8d32a23ecd57",
+      "path": "/anims/baked/dual_wield/dodgeR.json",
+      "rel": "anims/baked/dual_wield/dodgeR.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 53982,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-317420c6e5e9",
+      "path": "/anims/baked/dual_wield/flinch.json",
+      "rel": "anims/baked/dual_wield/flinch.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67572,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-2457cb163828",
+      "path": "/anims/baked/dual_wield/flyingKick.json",
+      "rel": "anims/baked/dual_wield/flyingKick.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 21193,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-abb58bc6b238",
+      "path": "/anims/baked/dual_wield/hit.json",
+      "rel": "anims/baked/dual_wield/hit.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67569,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-63f6f9cb5558",
+      "path": "/anims/baked/dual_wield/hitfly.json",
+      "rel": "anims/baked/dual_wield/hitfly.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131464,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-b391c04e1ca5",
+      "path": "/anims/baked/dual_wield/hurt.json",
+      "rel": "anims/baked/dual_wield/hurt.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67570,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-bafd3674ff45",
+      "path": "/anims/baked/dual_wield/idle.json",
+      "rel": "anims/baked/dual_wield/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 130336,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-2cdf3aaacb10",
+      "path": "/anims/baked/dual_wield/jump.json",
+      "rel": "anims/baked/dual_wield/jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 23733,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-c6f1e3fa1f9b",
+      "path": "/anims/baked/dual_wield/kick.json",
+      "rel": "anims/baked/dual_wield/kick.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 119885,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-a2d561eb3a1e",
+      "path": "/anims/baked/dual_wield/kick2.json",
+      "rel": "anims/baked/dual_wield/kick2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 109953,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-5da61f05bd8d",
+      "path": "/anims/baked/dual_wield/manifest.json",
+      "rel": "anims/baked/dual_wield/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 7851,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-58a5b1e5e9af",
+      "path": "/anims/baked/dual_wield/overhead.json",
+      "rel": "anims/baked/dual_wield/overhead.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66874,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-50c88a675edc",
+      "path": "/anims/baked/dual_wield/run.json",
+      "rel": "anims/baked/dual_wield/run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 51722,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-307885fe237a",
+      "path": "/anims/baked/dual_wield/skill1.json",
+      "rel": "anims/baked/dual_wield/skill1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131302,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-7fa26d11aa8f",
+      "path": "/anims/baked/dual_wield/skill2.json",
+      "rel": "anims/baked/dual_wield/skill2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 139313,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-e284e97261c6",
+      "path": "/anims/baked/dual_wield/skill3.json",
+      "rel": "anims/baked/dual_wield/skill3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 133687,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-211ffd68c00b",
+      "path": "/anims/baked/dual_wield/skill4.json",
+      "rel": "anims/baked/dual_wield/skill4.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 130933,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-d317614779d8",
+      "path": "/anims/baked/dual_wield/slash.json",
+      "rel": "anims/baked/dual_wield/slash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66616,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-d3afb490de34",
+      "path": "/anims/baked/dual_wield/special.json",
+      "rel": "anims/baked/dual_wield/special.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 27895,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-99da0b3269e0",
+      "path": "/anims/baked/dual_wield/sword_dash_attack.json",
+      "rel": "anims/baked/dual_wield/sword_dash_attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131313,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-c915b90131a7",
+      "path": "/anims/baked/dual_wield/thrust.json",
+      "rel": "anims/baked/dual_wield/thrust.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131302,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-b6aa3388994f",
+      "path": "/anims/baked/dual_wield/walk.json",
+      "rel": "anims/baked/dual_wield/walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 79897,
+      "category": "anims/baked/dual_wield"
+    },
+    {
+      "id": "GO-333bfe76e555",
+      "path": "/anims/baked/ghost_rider/airgun_down.json",
+      "rel": "anims/baked/ghost_rider/airgun_down.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 70674,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-f49af7f7d76c",
+      "path": "/anims/baked/ghost_rider/airgun_level.json",
+      "rel": "anims/baked/ghost_rider/airgun_level.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 70664,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-ac4764a8c954",
+      "path": "/anims/baked/ghost_rider/airgun_up.json",
+      "rel": "anims/baked/ghost_rider/airgun_up.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 70646,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-fbf22e47aabc",
+      "path": "/anims/baked/ghost_rider/baton_twirl.json",
+      "rel": "anims/baked/ghost_rider/baton_twirl.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 90343,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-693cdb77f68c",
+      "path": "/anims/baked/ghost_rider/block.json",
+      "rel": "anims/baked/ghost_rider/block.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 130732,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-ee071971fe4e",
+      "path": "/anims/baked/ghost_rider/chain_slash.json",
+      "rel": "anims/baked/ghost_rider/chain_slash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 36800,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-7b5f4b255e12",
+      "path": "/anims/baked/ghost_rider/chain_smash.json",
+      "rel": "anims/baked/ghost_rider/chain_smash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 24009,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-975a5884ea67",
+      "path": "/anims/baked/ghost_rider/chain_smash3.json",
+      "rel": "anims/baked/ghost_rider/chain_smash3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 55528,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-829f476a7dc7",
+      "path": "/anims/baked/ghost_rider/chain_spin.json",
+      "rel": "anims/baked/ghost_rider/chain_spin.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 55138,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-86689336c67a",
+      "path": "/anims/baked/ghost_rider/chain_spin_up.json",
+      "rel": "anims/baked/ghost_rider/chain_spin_up.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 55148,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-26866cd53b88",
+      "path": "/anims/baked/ghost_rider/chain_stab.json",
+      "rel": "anims/baked/ghost_rider/chain_stab.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 67451,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-266bae06dd8e",
+      "path": "/anims/baked/ghost_rider/chain_stab_back.json",
+      "rel": "anims/baked/ghost_rider/chain_stab_back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 71716,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-63f904d6f5a8",
+      "path": "/anims/baked/ghost_rider/chain_stab_hyper.json",
+      "rel": "anims/baked/ghost_rider/chain_stab_hyper.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 121577,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-cabda051ea91",
+      "path": "/anims/baked/ghost_rider/chain_swing.json",
+      "rel": "anims/baked/ghost_rider/chain_swing.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 36642,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-23e53e801b4a",
+      "path": "/anims/baked/ghost_rider/chain_swing_360.json",
+      "rel": "anims/baked/ghost_rider/chain_swing_360.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 45362,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-0efb13415085",
+      "path": "/anims/baked/ghost_rider/chain_throw.json",
+      "rel": "anims/baked/ghost_rider/chain_throw.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62943,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-25cae10abb8b",
+      "path": "/anims/baked/ghost_rider/chain_uppercut.json",
+      "rel": "anims/baked/ghost_rider/chain_uppercut.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88639,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-67f9427008a4",
+      "path": "/anims/baked/ghost_rider/charge_punch.json",
+      "rel": "anims/baked/ghost_rider/charge_punch.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 107604,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-9a48d640881b",
+      "path": "/anims/baked/ghost_rider/combo_finisher.json",
+      "rel": "anims/baked/ghost_rider/combo_finisher.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43015,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-973a658232bc",
+      "path": "/anims/baked/ghost_rider/death.json",
+      "rel": "anims/baked/ghost_rider/death.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99553,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-bcecea6fe9f6",
+      "path": "/anims/baked/ghost_rider/dodgeB.json",
+      "rel": "anims/baked/ghost_rider/dodgeB.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54052,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-5d91a14aa50d",
+      "path": "/anims/baked/ghost_rider/dodgeF.json",
+      "rel": "anims/baked/ghost_rider/dodgeF.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60783,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-6af60b5dbca2",
+      "path": "/anims/baked/ghost_rider/dodgeL.json",
+      "rel": "anims/baked/ghost_rider/dodgeL.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54145,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-29b2ce50ddf3",
+      "path": "/anims/baked/ghost_rider/dodgeR.json",
+      "rel": "anims/baked/ghost_rider/dodgeR.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54128,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-ab51f06464f4",
+      "path": "/anims/baked/ghost_rider/double_spin.json",
+      "rel": "anims/baked/ghost_rider/double_spin.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 109645,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-3abcc6726750",
+      "path": "/anims/baked/ghost_rider/final_spin.json",
+      "rel": "anims/baked/ghost_rider/final_spin.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 93282,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-afc93577a9ff",
+      "path": "/anims/baked/ghost_rider/finisher.json",
+      "rel": "anims/baked/ghost_rider/finisher.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43009,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-7120d80c5904",
+      "path": "/anims/baked/ghost_rider/fireball.json",
+      "rel": "anims/baked/ghost_rider/fireball.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 70408,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-68b1bf7e93ce",
+      "path": "/anims/baked/ghost_rider/floor_sweep.json",
+      "rel": "anims/baked/ghost_rider/floor_sweep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88263,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-cec42171a8e2",
+      "path": "/anims/baked/ghost_rider/forward_chain_roll.json",
+      "rel": "anims/baked/ghost_rider/forward_chain_roll.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99240,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-dfc97ce8e864",
+      "path": "/anims/baked/ghost_rider/forward_chain_slam.json",
+      "rel": "anims/baked/ghost_rider/forward_chain_slam.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99990,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-981ca7de6a37",
+      "path": "/anims/baked/ghost_rider/fx/chain_spin_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/chain_spin_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1230,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-3d811b99d9e1",
+      "path": "/anims/baked/ghost_rider/fx/chain_stab_hyper_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/chain_stab_hyper_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1899,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-8f1bfa12d09a",
+      "path": "/anims/baked/ghost_rider/fx/chain_throw_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/chain_throw_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1138,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-f67ce417754c",
+      "path": "/anims/baked/ghost_rider/fx/fireball_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/fireball_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 422,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-3a8eabe7043a",
+      "path": "/anims/baked/ghost_rider/fx/forward_chain_slam_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/forward_chain_slam_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1586,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-e4b3192543c6",
+      "path": "/anims/baked/ghost_rider/fx/megachain_slam_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/megachain_slam_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 1597,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-4d783b7dff4c",
+      "path": "/anims/baked/ghost_rider/fx/quakesmash_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/quakesmash_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 967,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-0f4f77324802",
+      "path": "/anims/baked/ghost_rider/fx/whip_rainbow_chain_path.json",
+      "rel": "anims/baked/ghost_rider/fx/whip_rainbow_chain_path.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 962,
+      "category": "anims/baked/ghost_rider/fx"
+    },
+    {
+      "id": "GO-a3cb1cde00f5",
+      "path": "/anims/baked/ghost_rider/god_spin.json",
+      "rel": "anims/baked/ghost_rider/god_spin.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 73734,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-d9dc8a5b3b02",
+      "path": "/anims/baked/ghost_rider/heavy_punch.json",
+      "rel": "anims/baked/ghost_rider/heavy_punch.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 109094,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-90c52529e8b7",
+      "path": "/anims/baked/ghost_rider/hellfire_shotgun.json",
+      "rel": "anims/baked/ghost_rider/hellfire_shotgun.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 172785,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-4e39fbd1f2b5",
+      "path": "/anims/baked/ghost_rider/hit.json",
+      "rel": "anims/baked/ghost_rider/hit.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99151,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-690bfb0ab411",
+      "path": "/anims/baked/ghost_rider/hurt.json",
+      "rel": "anims/baked/ghost_rider/hurt.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99152,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-e0f58151583d",
+      "path": "/anims/baked/ghost_rider/idle.json",
+      "rel": "anims/baked/ghost_rider/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 124950,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-87b414d97e4f",
+      "path": "/anims/baked/ghost_rider/jump1.json",
+      "rel": "anims/baked/ghost_rider/jump1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 23945,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-867ec91a01da",
+      "path": "/anims/baked/ghost_rider/jump2.json",
+      "rel": "anims/baked/ghost_rider/jump2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 24068,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-080c12e76b24",
+      "path": "/anims/baked/ghost_rider/jump3.json",
+      "rel": "anims/baked/ghost_rider/jump3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 30388,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-f2d244994451",
+      "path": "/anims/baked/ghost_rider/knockdown.json",
+      "rel": "anims/baked/ghost_rider/knockdown.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131615,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-fd4ba31ceaff",
+      "path": "/anims/baked/ghost_rider/land_roll.json",
+      "rel": "anims/baked/ghost_rider/land_roll.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60786,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-9a4cd104a005",
+      "path": "/anims/baked/ghost_rider/manifest.json",
+      "rel": "anims/baked/ghost_rider/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 9511,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-b833a21baada",
+      "path": "/anims/baked/ghost_rider/megachain_firequake.json",
+      "rel": "anims/baked/ghost_rider/megachain_firequake.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114429,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-52655b4d4e19",
+      "path": "/anims/baked/ghost_rider/megachain_slam.json",
+      "rel": "anims/baked/ghost_rider/megachain_slam.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114424,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-a040599f2848",
+      "path": "/anims/baked/ghost_rider/quakesmash.json",
+      "rel": "anims/baked/ghost_rider/quakesmash.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43011,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-c026a27b3c26",
+      "path": "/anims/baked/ghost_rider/quakesmash3.json",
+      "rel": "anims/baked/ghost_rider/quakesmash3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 55527,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-e0bd51c2e191",
+      "path": "/anims/baked/ghost_rider/quakesmash_together.json",
+      "rel": "anims/baked/ghost_rider/quakesmash_together.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43020,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-d0cf1124773e",
+      "path": "/anims/baked/ghost_rider/rage.json",
+      "rel": "anims/baked/ghost_rider/rage.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 288194,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-4a6530f0571a",
+      "path": "/anims/baked/ghost_rider/REVIEW.md.json",
+      "rel": "anims/baked/ghost_rider/REVIEW.md.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 84,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-4256aac93340",
+      "path": "/anims/baked/ghost_rider/roll_back.json",
+      "rel": "anims/baked/ghost_rider/roll_back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54055,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-2f7f2a1602f4",
+      "path": "/anims/baked/ghost_rider/roll_forward.json",
+      "rel": "anims/baked/ghost_rider/roll_forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60789,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-2d274a23d737",
+      "path": "/anims/baked/ghost_rider/roll_left.json",
+      "rel": "anims/baked/ghost_rider/roll_left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54148,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-2f8c0002f4ea",
+      "path": "/anims/baked/ghost_rider/roll_right.json",
+      "rel": "anims/baked/ghost_rider/roll_right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54132,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-6faee02dc16a",
+      "path": "/anims/baked/ghost_rider/run.json",
+      "rel": "anims/baked/ghost_rider/run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 56182,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-d9851a076077",
+      "path": "/anims/baked/ghost_rider/ultimate.json",
+      "rel": "anims/baked/ghost_rider/ultimate.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114418,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-edc414539c5d",
+      "path": "/anims/baked/ghost_rider/uppercut.json",
+      "rel": "anims/baked/ghost_rider/uppercut.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88619,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-e5567c290480",
+      "path": "/anims/baked/ghost_rider/walk.json",
+      "rel": "anims/baked/ghost_rider/walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 80746,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-a0033d70db36",
+      "path": "/anims/baked/ghost_rider/whip_rainbow.json",
+      "rel": "anims/baked/ghost_rider/whip_rainbow.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 70969,
+      "category": "anims/baked/ghost_rider"
+    },
+    {
+      "id": "GO-3230b18522ae",
+      "path": "/anims/baked/locomotion/dodge_back.json",
+      "rel": "anims/baked/locomotion/dodge_back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54137,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-59d564a15e82",
+      "path": "/anims/baked/locomotion/dodge_fwd.json",
+      "rel": "anims/baked/locomotion/dodge_fwd.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60867,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-af6b94cdaa73",
+      "path": "/anims/baked/locomotion/dodge_l.json",
+      "rel": "anims/baked/locomotion/dodge_l.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54227,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-12ee6bcec278",
+      "path": "/anims/baked/locomotion/dodge_r.json",
+      "rel": "anims/baked/locomotion/dodge_r.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54210,
+      "category": "anims/baked/locomotion"
+    },
+    {
       "id": "GO-29981c44682c",
       "path": "/anims/baked/locomotion/dodging.json",
       "rel": "anims/baked/locomotion/dodging.json",
@@ -5827,6 +7677,56 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 111109,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-35f912296fe3",
+      "path": "/anims/baked/locomotion/land_roll.json",
+      "rel": "anims/baked/locomotion/land_roll.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60867,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-cff31a02175a",
+      "path": "/anims/baked/locomotion/roll_back.json",
+      "rel": "anims/baked/locomotion/roll_back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54136,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-265fe82e03e1",
+      "path": "/anims/baked/locomotion/roll_forward.json",
+      "rel": "anims/baked/locomotion/roll_forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 60870,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-5d39c9cd3847",
+      "path": "/anims/baked/locomotion/roll_left.json",
+      "rel": "anims/baked/locomotion/roll_left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54229,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-4dac0c2aaf97",
+      "path": "/anims/baked/locomotion/roll_right.json",
+      "rel": "anims/baked/locomotion/roll_right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 54213,
       "category": "anims/baked/locomotion"
     },
     {
@@ -6260,6 +8160,36 @@
       "category": "anims/baked/polearm"
     },
     {
+      "id": "GO-966c72dbf7d7",
+      "path": "/anims/baked/swim/swimming.json",
+      "rel": "anims/baked/swim/swimming.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 258391,
+      "category": "anims/baked/swim"
+    },
+    {
+      "id": "GO-070bbee8341e",
+      "path": "/anims/baked/swim/to_edge.json",
+      "rel": "anims/baked/swim/to_edge.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 299614,
+      "category": "anims/baked/swim"
+    },
+    {
+      "id": "GO-6bbf8fd81cdd",
+      "path": "/anims/baked/swim/treading.json",
+      "rel": "anims/baked/swim/treading.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 146163,
+      "category": "anims/baked/swim"
+    },
+    {
       "id": "GO-aa0111b559c2",
       "path": "/anims/baked/sword_shield/sword and shield run.json",
       "rel": "anims/baked/sword_shield/sword and shield run.json",
@@ -6268,6 +8198,526 @@
       "ext": "json",
       "bytes": 43224,
       "category": "anims/baked/sword_shield"
+    },
+    {
+      "id": "GO-080e3ea5d1c7",
+      "path": "/anims/baked/twohand_hammer/attack-charge.json",
+      "rel": "anims/baked/twohand_hammer/attack-charge.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 197046,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-283c0e6a60e7",
+      "path": "/anims/baked/twohand_hammer/attack-sweep.json",
+      "rel": "anims/baked/twohand_hammer/attack-sweep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 281181,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-237a0ff59322",
+      "path": "/anims/baked/twohand_hammer/attack.json",
+      "rel": "anims/baked/twohand_hammer/attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 141550,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-b9080a83855f",
+      "path": "/anims/baked/twohand_hammer/attack1.json",
+      "rel": "anims/baked/twohand_hammer/attack1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 141550,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-e67adaee0e46",
+      "path": "/anims/baked/twohand_hammer/attack2.json",
+      "rel": "anims/baked/twohand_hammer/attack2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 197046,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-d8f12b68a527",
+      "path": "/anims/baked/twohand_hammer/attack3.json",
+      "rel": "anims/baked/twohand_hammer/attack3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 281181,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-9294da61c2ee",
+      "path": "/anims/baked/twohand_hammer/backstep.json",
+      "rel": "anims/baked/twohand_hammer/backstep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 59156,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-fe467d455496",
+      "path": "/anims/baked/twohand_hammer/charge.json",
+      "rel": "anims/baked/twohand_hammer/charge.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 197046,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-6b1752248d71",
+      "path": "/anims/baked/twohand_hammer/dodgeB.json",
+      "rel": "anims/baked/twohand_hammer/dodgeB.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 59156,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-c6facb2b0aec",
+      "path": "/anims/baked/twohand_hammer/fall.json",
+      "rel": "anims/baked/twohand_hammer/fall.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 98340,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-9d6a64d65289",
+      "path": "/anims/baked/twohand_hammer/fight_idle.json",
+      "rel": "anims/baked/twohand_hammer/fight_idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 78695,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-ecc7dc7dd20b",
+      "path": "/anims/baked/twohand_hammer/hit.json",
+      "rel": "anims/baked/twohand_hammer/hit.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 131752,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-7336972bba2e",
+      "path": "/anims/baked/twohand_hammer/idle.json",
+      "rel": "anims/baked/twohand_hammer/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 78695,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-b7d7cac126fc",
+      "path": "/anims/baked/twohand_hammer/jab.json",
+      "rel": "anims/baked/twohand_hammer/jab.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 141550,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-c815a83b3325",
+      "path": "/anims/baked/twohand_hammer/jump-quick.json",
+      "rel": "anims/baked/twohand_hammer/jump-quick.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 39341,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-487f38cbec81",
+      "path": "/anims/baked/twohand_hammer/jump.json",
+      "rel": "anims/baked/twohand_hammer/jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88298,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-43409c661b40",
+      "path": "/anims/baked/twohand_hammer/jump_up.json",
+      "rel": "anims/baked/twohand_hammer/jump_up.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88298,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-220ba9a387fc",
+      "path": "/anims/baked/twohand_hammer/land.json",
+      "rel": "anims/baked/twohand_hammer/land.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62977,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-a612c33d54be",
+      "path": "/anims/baked/twohand_hammer/skill-summon.json",
+      "rel": "anims/baked/twohand_hammer/skill-summon.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 176925,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-c6ceeb294440",
+      "path": "/anims/baked/twohand_hammer/skill.json",
+      "rel": "anims/baked/twohand_hammer/skill.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 281181,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-ac611ef031fb",
+      "path": "/anims/baked/twohand_hammer/skill2.json",
+      "rel": "anims/baked/twohand_hammer/skill2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 176925,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-102ffb099a39",
+      "path": "/anims/baked/twohand_hammer/step-forward.json",
+      "rel": "anims/baked/twohand_hammer/step-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 58818,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-29076da9d91c",
+      "path": "/anims/baked/twohand_hammer/step-left.json",
+      "rel": "anims/baked/twohand_hammer/step-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 29248,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-05da568739a6",
+      "path": "/anims/baked/twohand_hammer/step-right.json",
+      "rel": "anims/baked/twohand_hammer/step-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 29377,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-e7c3079ef5a6",
+      "path": "/anims/baked/twohand_hammer/sweep.json",
+      "rel": "anims/baked/twohand_hammer/sweep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 281181,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-0126fe5864a2",
+      "path": "/anims/baked/twohand_hammer/walk.json",
+      "rel": "anims/baked/twohand_hammer/walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 58818,
+      "category": "anims/baked/twohand_hammer"
+    },
+    {
+      "id": "GO-29816ce41b90",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack-charge.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack-charge.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 206817,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-72ffa9702145",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack-sweep.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack-sweep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 295634,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-b8b343aced58",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 148292,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-f24d032c2b3b",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack1.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack1.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 148292,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-a4056105cf0d",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack2.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 206817,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-4cc7351ca6bf",
+      "path": "/anims/baked/twohand_hammer_mixamo/attack3.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/attack3.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 295634,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-b59f1ce7596e",
+      "path": "/anims/baked/twohand_hammer_mixamo/backstep.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/backstep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62056,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-183cf44316cc",
+      "path": "/anims/baked/twohand_hammer_mixamo/charge.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/charge.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 206817,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-851530025a77",
+      "path": "/anims/baked/twohand_hammer_mixamo/dodgeB.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/dodgeB.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62056,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-3e02bed8907f",
+      "path": "/anims/baked/twohand_hammer_mixamo/fall.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/fall.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 103229,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-cbc1a498a0fb",
+      "path": "/anims/baked/twohand_hammer_mixamo/fight_idle.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/fight_idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 82209,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-ccee87eecce6",
+      "path": "/anims/baked/twohand_hammer_mixamo/hit.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/hit.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 138397,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-d3ab741f196f",
+      "path": "/anims/baked/twohand_hammer_mixamo/idle.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 82209,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-97096c5eb159",
+      "path": "/anims/baked/twohand_hammer_mixamo/jab.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/jab.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 148292,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-9c13b1510aec",
+      "path": "/anims/baked/twohand_hammer_mixamo/jump-quick.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/jump-quick.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 41267,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-fb668c791e55",
+      "path": "/anims/baked/twohand_hammer_mixamo/jump.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 93005,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-14e29ecb053a",
+      "path": "/anims/baked/twohand_hammer_mixamo/jump_up.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/jump_up.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 93005,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-a2f39d385a00",
+      "path": "/anims/baked/twohand_hammer_mixamo/land.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/land.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 66130,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-047fde09e7a0",
+      "path": "/anims/baked/twohand_hammer_mixamo/skill-summon.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/skill-summon.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 186572,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-6a48efcd4f35",
+      "path": "/anims/baked/twohand_hammer_mixamo/skill.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/skill.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 295634,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-3578810df47d",
+      "path": "/anims/baked/twohand_hammer_mixamo/skill2.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/skill2.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 186572,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-81bb02028480",
+      "path": "/anims/baked/twohand_hammer_mixamo/step-forward.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/step-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 61783,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-c02e1b0903a1",
+      "path": "/anims/baked/twohand_hammer_mixamo/step-left.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/step-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 30745,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-2fe919275cf6",
+      "path": "/anims/baked/twohand_hammer_mixamo/step-right.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/step-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 30866,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-d85116a8dbb3",
+      "path": "/anims/baked/twohand_hammer_mixamo/sweep.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/sweep.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 295634,
+      "category": "anims/baked/twohand_hammer_mixamo"
+    },
+    {
+      "id": "GO-1d64cba89724",
+      "path": "/anims/baked/twohand_hammer_mixamo/walk.json",
+      "rel": "anims/baked/twohand_hammer_mixamo/walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 61783,
+      "category": "anims/baked/twohand_hammer_mixamo"
     },
     {
       "id": "GO-404630f5e4e4",
@@ -7006,7 +9456,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 21336,
+      "bytes": 25134,
       "category": "content/anims"
     },
     {
@@ -7026,7 +9476,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 13013,
+      "bytes": 15515,
       "category": "content/anims"
     },
     {
@@ -7120,6 +9570,16 @@
       "category": "content/harvest"
     },
     {
+      "id": "GO-a13a747b6c38",
+      "path": "/content/maps/danger-maps.json",
+      "rel": "content/maps/danger-maps.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 8722,
+      "category": "content/maps"
+    },
+    {
       "id": "GO-95edc221d7a0",
       "path": "/content/runtime/example-danger-scripts.json",
       "rel": "content/runtime/example-danger-scripts.json",
@@ -7146,7 +9606,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3703,
+      "bytes": 9210,
       "category": "content/worlds"
     },
     {
@@ -7208,6 +9668,26 @@
       "ext": "fbx",
       "bytes": 28736,
       "category": "root"
+    },
+    {
+      "id": "GO-461d474ee103",
+      "path": "/danger-room/targets/free_dummy_monster.glb",
+      "rel": "danger-room/targets/free_dummy_monster.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 264092,
+      "category": "danger-room/targets"
+    },
+    {
+      "id": "GO-c1bbdcad644d",
+      "path": "/danger-room/targets/the_practice_dummy.glb",
+      "rel": "danger-room/targets/the_practice_dummy.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 208636,
+      "category": "danger-room/targets"
     },
     {
       "id": "GO-7cbd94866ba5",
@@ -8760,6 +11240,16 @@
       "category": "models/destructibles"
     },
     {
+      "id": "GO-e30398168732",
+      "path": "/models/dj/disc_jockey.glb",
+      "rel": "models/dj/disc_jockey.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1264876,
+      "category": "models/dj"
+    },
+    {
       "id": "GO-77ed157bb157",
       "path": "/models/dj-booth.glb",
       "rel": "models/dj-booth.glb",
@@ -8828,6 +11318,16 @@
       "ext": "glb",
       "bytes": 39128,
       "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-39b7b23d4c6e",
+      "path": "/models/equipment/wing_animated.glb",
+      "rel": "models/equipment/wing_animated.glb",
+      "kind": "model",
+      "purpose": "weapon",
+      "ext": "glb",
+      "bytes": 1369884,
+      "category": "models/equipment"
     },
     {
       "id": "GO-ba7e05fb91d0",
@@ -9840,6 +12340,86 @@
       "category": "models/kenney/roads"
     },
     {
+      "id": "GO-39fc5ef28deb",
+      "path": "/models/maps/arena/arena.glb",
+      "rel": "models/maps/arena/arena.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 19374460,
+      "category": "models/maps/arena"
+    },
+    {
+      "id": "GO-00b4ba9230cc",
+      "path": "/models/maps/climbing/climbingwall.glb",
+      "rel": "models/maps/climbing/climbingwall.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 13771588,
+      "category": "models/maps/climbing"
+    },
+    {
+      "id": "GO-865020be3bad",
+      "path": "/models/maps/forest_mountains/forest_mountains.glb",
+      "rel": "models/maps/forest_mountains/forest_mountains.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 11748668,
+      "category": "models/maps/forest_mountains"
+    },
+    {
+      "id": "GO-1352985c0bd0",
+      "path": "/models/maps/forest_mountains/mesh-catalog.json",
+      "rel": "models/maps/forest_mountains/mesh-catalog.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 147253,
+      "category": "models/maps/forest_mountains"
+    },
+    {
+      "id": "GO-d2bc137a76e0",
+      "path": "/models/maps/pirate/date_palm.glb",
+      "rel": "models/maps/pirate/date_palm.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 7300460,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-dbf78b5a68bd",
+      "path": "/models/maps/pirate/palm_trees.glb",
+      "rel": "models/maps/pirate/palm_trees.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 4865968,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-a7b15993d103",
+      "path": "/models/maps/pirate/village.glb",
+      "rel": "models/maps/pirate/village.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 7633528,
+      "category": "models/maps/pirate"
+    },
+    {
+      "id": "GO-41f4ccdeb790",
+      "path": "/models/maps/shipwreck/shipwreck_island.glb",
+      "rel": "models/maps/shipwreck/shipwreck_island.glb",
+      "kind": "model",
+      "purpose": "map",
+      "ext": "glb",
+      "bytes": 1043528,
+      "category": "models/maps/shipwreck"
+    },
+    {
       "id": "GO-d0d8285ae472",
       "path": "/models/maps/ultimate_assasination_grounds.glb",
       "rel": "models/maps/ultimate_assasination_grounds.glb",
@@ -10110,6 +12690,16 @@
       "category": "models/props"
     },
     {
+      "id": "GO-5a2ba419be5a",
+      "path": "/models/props/free_dummy_monster.glb",
+      "rel": "models/props/free_dummy_monster.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 264092,
+      "category": "models/props"
+    },
+    {
       "id": "GO-e7fb5a64ae7e",
       "path": "/models/props/grimoire.glb",
       "rel": "models/props/grimoire.glb",
@@ -10157,6 +12747,16 @@
       "purpose": "prop",
       "ext": "glb",
       "bytes": 3378628,
+      "category": "models/props"
+    },
+    {
+      "id": "GO-c181f31dbcec",
+      "path": "/models/props/the_practice_dummy.glb",
+      "rel": "models/props/the_practice_dummy.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 208636,
       "category": "models/props"
     },
     {
@@ -10498,6 +13098,56 @@
       "ext": "glb",
       "bytes": 1699172,
       "category": "models/vfx"
+    },
+    {
+      "id": "GO-5cf2a29a7334",
+      "path": "/models/vfx/orbs/orb-core.glb",
+      "rel": "models/vfx/orbs/orb-core.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1552420,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-9cb920e45602",
+      "path": "/models/vfx/orbs/orb-ember.glb",
+      "rel": "models/vfx/orbs/orb-ember.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1552656,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-0a0c000e55d9",
+      "path": "/models/vfx/orbs/orb-fire.glb",
+      "rel": "models/vfx/orbs/orb-fire.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1552612,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-ebb55c2acbbe",
+      "path": "/models/vfx/orbs/orb-flare.glb",
+      "rel": "models/vfx/orbs/orb-flare.glb",
+      "kind": "model",
+      "purpose": "vfx",
+      "ext": "glb",
+      "bytes": 1552440,
+      "category": "models/vfx/orbs"
+    },
+    {
+      "id": "GO-afffc8dbec8d",
+      "path": "/models/vfx/orbs/orb-manifest.json",
+      "rel": "models/vfx/orbs/orb-manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 2455,
+      "category": "models/vfx/orbs"
     },
     {
       "id": "GO-459eaab1c5e3",
@@ -12830,6 +15480,26 @@
       "category": "rooms"
     },
     {
+      "id": "GO-034888e6ca96",
+      "path": "/rooms/training-targets/free_dummy_monster.glb",
+      "rel": "rooms/training-targets/free_dummy_monster.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 264092,
+      "category": "rooms/training-targets"
+    },
+    {
+      "id": "GO-c6500c4913dc",
+      "path": "/rooms/training-targets/the_practice_dummy.glb",
+      "rel": "rooms/training-targets/the_practice_dummy.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 208636,
+      "category": "rooms/training-targets"
+    },
+    {
       "id": "GO-00265317154d",
       "path": "/rooms/voxel-poster.png",
       "rel": "rooms/voxel-poster.png",
@@ -12916,7 +15586,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "js",
-      "bytes": 5538,
+      "bytes": 6767,
       "category": "root"
     },
     {
@@ -14078,6 +16748,76 @@
       "ext": "svg",
       "bytes": 655,
       "category": "ui"
+    },
+    {
+      "id": "GO-5be28fffee0b",
+      "path": "/ui/cursors/cursor-cyber-1.png",
+      "rel": "ui/cursors/cursor-cyber-1.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1065,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-5b6530771c75",
+      "path": "/ui/cursors/cursor-cyber-2.png",
+      "rel": "ui/cursors/cursor-cyber-2.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 1083,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-5d3b7dd32c2a",
+      "path": "/ui/cursors/cursor-default.svg",
+      "rel": "ui/cursors/cursor-default.svg",
+      "kind": "icon",
+      "purpose": "unknown",
+      "ext": "svg",
+      "bytes": 393,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-b20a7334caec",
+      "path": "/ui/cursors/cursor-interact.svg",
+      "rel": "ui/cursors/cursor-interact.svg",
+      "kind": "icon",
+      "purpose": "unknown",
+      "ext": "svg",
+      "bytes": 655,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-186821963e4a",
+      "path": "/ui/cursors/cursor-lock.svg",
+      "rel": "ui/cursors/cursor-lock.svg",
+      "kind": "icon",
+      "purpose": "unknown",
+      "ext": "svg",
+      "bytes": 415,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-8307bf173ff1",
+      "path": "/ui/cursors/cursor-menu.svg",
+      "rel": "ui/cursors/cursor-menu.svg",
+      "kind": "icon",
+      "purpose": "unknown",
+      "ext": "svg",
+      "bytes": 464,
+      "category": "ui/cursors"
+    },
+    {
+      "id": "GO-3e70684744e5",
+      "path": "/ui/cursors/cursor-normal.png",
+      "rel": "ui/cursors/cursor-normal.png",
+      "kind": "texture",
+      "purpose": "texture",
+      "ext": "png",
+      "bytes": 16966,
+      "category": "ui/cursors"
     },
     {
       "id": "GO-e070cfd998a5",
@@ -16448,6 +19188,26 @@
       "ext": "png",
       "bytes": 53095,
       "category": "ui"
+    },
+    {
+      "id": "GO-44521993487e",
+      "path": "/ui/training-targets/free_dummy_monster.glb",
+      "rel": "ui/training-targets/free_dummy_monster.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 264092,
+      "category": "ui/training-targets"
+    },
+    {
+      "id": "GO-ac971ff45ce6",
+      "path": "/ui/training-targets/the_practice_dummy.glb",
+      "rel": "ui/training-targets/the_practice_dummy.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 208636,
+      "category": "ui/training-targets"
     },
     {
       "id": "GO-adade27de262",

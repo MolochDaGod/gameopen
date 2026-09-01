@@ -4,7 +4,10 @@
  *
  * Auth contract: docs/GRUDGE_AUTH_CONNECT.md (GrudgeBuilder)
  * Login must dual-write redirect_uri + redirect + return so id-gateway never drops return.
+ * Return URLs sanitized via entryCatch.safeReturnUrl (anti-loop).
  */
+
+import { safeReturnUrl } from "./entryCatch";
 
 export const FLEET = {
   /**
@@ -18,16 +21,19 @@ export const FLEET = {
   assets: "https://assets.grudge-studio.com",
   gameopenPrefix: "gameopen",
   /**
-   * Definitions / catalogs SSOT (probed 2026-07).
-   * Prefer this over objectstore host — public objectstore /api/v1 catalogs 404.
+   * Definitions / catalogs primary — R2 CDN mirror (stable when info.pages is down).
+   * Dual-publish: ObjectStore Worker + assets.grudge-studio.com/api/v1.
    */
-  definitions: "https://info.grudge-studio.com/api/v1",
+  definitions: "https://assets.grudge-studio.com/api/v1",
   /**
-   * @deprecated Alias of {@link definitions} for older callers named objectStore.
-   * Do not point at objectstore.grudge-studio.com for catalogs until that host is fixed.
+   * Live ObjectStore Worker — catalogs under /api/v1/*.json + asset CRUD under /v1/*.
    */
-  objectStore: "https://info.grudge-studio.com/api/v1",
-  /** Legacy definitions hostname (often 404 for catalogs — fallback only). */
+  objectStore: "https://objectstore.grudge-studio.com/api/v1",
+  /** ObjectStore Worker root (discovery + /v1/assets|/v1/models). */
+  objectStoreApi: "https://objectstore.grudge-studio.com",
+  /** Info Pages host (may 404; fleetSsot still probes as fallback). */
+  objectStoreInfo: "https://info.grudge-studio.com/api/v1",
+  /** @deprecated Use {@link objectStore} */
   objectStoreLegacy: "https://objectstore.grudge-studio.com/api/v1",
   /**
    * Player state — Railway Postgres (characters, account bag, island).
@@ -42,8 +48,12 @@ export const FLEET = {
   ai: "https://ai.grudge-studio.com",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
-  /** Mine-Loader SPA edge */
-  mineLoader: "https://mine.grudge-studio.com",
+  /** Canonical play host — multiplayer, maps, harvest, DRC + explorer avatar */
+  mineLoader: "https://mineloader.grudge-studio.com",
+  /** Short alias edge */
+  mineLoaderEdge: "https://mine.grudge-studio.com",
+  /** Vercel origin fallback */
+  mineLoaderVercel: "https://mine-loader.vercel.app",
   arena: "https://grudge-arena.grudge-studio.com",
   /** Production tool surfaces (builders / editors) — full map in productionTools.ts */
   grokBuilder: "https://grok-builder.vercel.app",
@@ -82,8 +92,10 @@ export function authApiUrl(path: string): string {
   return `${FLEET.auth.replace(/\/$/, "")}${p}`;
 }
 
-/** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap). */
+/** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap + Open). */
 export const FLEET_TOKEN_KEYS = [
+  /** Open SPA primary (grudgeAuth.ts) — AI hub must read this first */
+  "grudge.open.token",
   "grudge_auth_token",
   "grudge_session_token",
   "grudge.token",
@@ -164,7 +176,8 @@ export function openReturnUrl(pathAndQuery?: string): string {
  * Always lands on /login; dual-writes every return alias; production return is brand Open.
  */
 export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean; app?: string }): string {
-  const redirect = returnTo || openReturnUrl();
+  // Catch: never return to foundry/id/assets (loops) — see entryCatch.safeReturnUrl
+  const redirect = safeReturnUrl(returnTo || openReturnUrl(), openReturnUrl());
   const origin = OPEN_BRAND;
   const q = new URLSearchParams({
     redirect_uri: redirect,
@@ -179,17 +192,18 @@ export function buildGrudgeLoginUrl(returnTo?: string, opts?: { force?: boolean;
 }
 
 /**
- * Resolve a path under the **definitions** catalog host (info.grudge-studio.com).
+ * Resolve a path under the **definitions** catalog host (info primary).
  * Use for weapon/item/recipe/skill JSON — never for character state.
  * Example: contentUrl("master-items.json") → https://info…/api/v1/master-items.json
  *
  * For multi-host resilience use `contentCandidates` / `fetchCatalogJson` from
- * `./fleetSsot` (preferred).
+ * `./fleetSsot` (preferred). Live ObjectStore Worker dual-publishes the same JSON.
  */
 export function contentUrl(path: string): string {
   const base =
     (import.meta.env.VITE_OBJECTSTORE_URL as string) ||
     FLEET.definitions ||
+    FLEET.objectStoreInfo ||
     FLEET.objectStore;
   return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }

@@ -61,15 +61,13 @@ export function pathAliases(path: string): string[] {
   const clean = cleanPath(path);
   const out: string[] = [clean];
 
-  // Race GLBs — production SSOT is grudge6 modular kit on R2; races/* is lab fallback
+  // Race GLBs — production SSOT is Toon RTS pack on R2 (no FBX play)
   const raceM = clean.match(/^models\/races\/([a-z0-9_-]+)\.glb$/i);
   if (raceM) {
     const n = raceM[1]!.toLowerCase().replace(/_/g, "-");
     const g6 = grudge6RaceGlbForSlug(n);
     if (g6) {
-      // Prefer grudge6 first in candidate list
       out.unshift(g6);
-      out.push(g6.replace(/\.glb$/i, ".fbx"));
     }
     out.push(`models/characters/${n}.glb`);
     if (n === "high-elf" || n === "high_elf") {
@@ -80,13 +78,20 @@ export function pathAliases(path: string): string[] {
       );
     }
   }
-  // Direct grudge6 race GLB — also accept FBX authoring path
+  // Legacy races/*_Characters.glb → Toon RTS pack only (no FBX in play)
   const g6m = clean.match(/^models\/grudge6\/races\/([A-Z]+)_Characters\.glb$/i);
   if (g6m) {
     const pfx = g6m[1]!.toUpperCase();
-    out.push(`models/grudge6/races/${pfx}_Characters.glb`);
-    out.push(`models/grudge6/races/${pfx}_Characters.fbx`);
-    out.push(`models/grudge6/races/${pfx}_Characters_customizable.FBX`);
+    const toon: Record<string, string> = {
+      WK: "human",
+      BRB: "barbarian",
+      ELF: "elf",
+      DWF: "dwarf",
+      ORC: "orc",
+      UD: "undead",
+    };
+    const id = toon[pfx] || "human";
+    out.push(`asset-packs/toon-rts-characters/glb/characters/${id}.glb`);
   }
 
   // Lab heroes — prefer models that exist on R2 / Open public (probed 2026-07)
@@ -130,9 +135,16 @@ export function pathAliases(path: string): string[] {
   if (/scythe/i.test(clean) && !out.some((p) => /war-spear|spear/.test(p))) {
     out.push("models/weapons/war-spear.glb", "models/weapons/spear.glb");
   }
-  // Tome / book offhand stand-in until dedicated mesh
-  if (/models\/weapons\/tome/i.test(clean)) {
-    out.push("models/weapons/shield.glb", "models/weapons/staff.glb");
+  // Tome / grimoire — dedicated mesh (no shield/staff stand-in)
+  if (/models\/weapons\/tome|models\/weapons\/grimoire|models\/props\/grimoire/i.test(clean)) {
+    out.length = 0;
+    out.push(
+      "models/weapons/tome.glb",
+      "models/weapons/grimoire.glb",
+      "models/props/grimoire.glb",
+      "prod/gltf/weapons/tome.glb",
+      "prod/gltf/weapons/grimoire.glb",
+    );
   }
 
   // Racalvin living twin swords (Brothers Keeper)
@@ -206,8 +218,9 @@ export function pathAliases(path: string): string[] {
   }
 
   // grudge6 baked roster — Open same-origin only (not on R2 root yet)
-  if (clean === "models/grudge6/30characters.glb") {
-    out.push("models/grudge6/30characters.glb", "models/characters/30characters.glb");
+  // 30characters.glb PURGED — never alias as grudge6 hero path
+  if (/30characters/i.test(clean)) {
+    return out; // empty aliases — refuse to resolve
   }
 
   // Modular race kit (FBX + textures) — R2 /assets/{race}/... + grudge6 races + texture alt paths
@@ -424,12 +437,10 @@ export function resolveAssetCandidates(path: string): string[] {
       urls.push(abs(FLEET_ASSET_HOSTS.r2, a));
     }
 
-    // Arena for skinned characters / baked anims
+    // Arena: skinned race GLB fallback ONLY — never baked anims (CORS broken from Open).
     if (
-      a.startsWith("cdn/") ||
-      a.startsWith("anims/") ||
-      a.includes("grudge6") ||
-      a.startsWith("assets/")
+      (a.startsWith("cdn/") || a.includes("grudge6") || a.startsWith("assets/")) &&
+      !a.startsWith("anims/")
     ) {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }
@@ -594,8 +605,7 @@ export async function resolveIconUrl(name: string): Promise<string> {
 }
 
 /**
- * Canonical grudge6 race FBX paths (R2-proven) for a RaceId-like slug.
- * Authoring / convert source — prefer {@link GRUDGE6_RACE_GLB} for play.
+ * Author FBX only (convert/bake) — NEVER game play deployment.
  */
 export const GRUDGE6_RACE_FBX: Record<string, string> = {
   human: "models/grudge6/races/WK_Characters.fbx",
@@ -612,22 +622,22 @@ export const GRUDGE6_RACE_FBX: Record<string, string> = {
 };
 
 /**
- * Production grudge6 race GLBs (R2 HEAD 200 2026-07) — textured SI bake, Bip001.
- * Use for play / loadout / combat. charactersgrudox races/*.glb is lab fallback only.
+ * Production grudge6 race GLBs — Toon RTS ★ pack only (Bip001, embedded atlas).
+ * No FBX, no metaverse, no races/*_Characters.glb as play default.
  */
 export const GRUDGE6_RACE_GLB: Record<string, string> = {
-  human: "models/grudge6/races/WK_Characters.glb",
-  "western-kingdoms": "models/grudge6/races/WK_Characters.glb",
-  barbarian: "models/grudge6/races/BRB_Characters.glb",
-  barbarians: "models/grudge6/races/BRB_Characters.glb",
-  dwarf: "models/grudge6/races/DWF_Characters.glb",
-  dwarves: "models/grudge6/races/DWF_Characters.glb",
-  elf: "models/grudge6/races/ELF_Characters.glb",
-  "high-elves": "models/grudge6/races/ELF_Characters.glb",
-  "high-elf": "models/grudge6/races/ELF_Characters.glb",
-  orc: "models/grudge6/races/ORC_Characters.glb",
-  orcs: "models/grudge6/races/ORC_Characters.glb",
-  undead: "models/grudge6/races/UD_Characters.glb",
+  human: "asset-packs/toon-rts-characters/glb/characters/human.glb",
+  "western-kingdoms": "asset-packs/toon-rts-characters/glb/characters/human.glb",
+  barbarian: "asset-packs/toon-rts-characters/glb/characters/barbarian.glb",
+  barbarians: "asset-packs/toon-rts-characters/glb/characters/barbarian.glb",
+  dwarf: "asset-packs/toon-rts-characters/glb/characters/dwarf.glb",
+  dwarves: "asset-packs/toon-rts-characters/glb/characters/dwarf.glb",
+  elf: "asset-packs/toon-rts-characters/glb/characters/elf.glb",
+  "high-elves": "asset-packs/toon-rts-characters/glb/characters/elf.glb",
+  "high-elf": "asset-packs/toon-rts-characters/glb/characters/elf.glb",
+  orc: "asset-packs/toon-rts-characters/glb/characters/orc.glb",
+  orcs: "asset-packs/toon-rts-characters/glb/characters/orc.glb",
+  undead: "asset-packs/toon-rts-characters/glb/characters/undead.glb",
 };
 
 /** Fleet race slug → grudge6 production GLB path (or null). */

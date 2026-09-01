@@ -69,7 +69,10 @@ export async function promptInstall(): Promise<"accepted" | "dismissed" | "unava
   }
 }
 
-/** Hard recovery: unregister all SWs + clear shell caches (fixes broken v2 SW). */
+/**
+ * Hard recovery: unregister all SWs + clear shell caches.
+ * Also strips any accidental mesh/binary entries (stretch / wrong kit history).
+ */
 export async function nukeServiceWorkers(): Promise<void> {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   try {
@@ -80,14 +83,47 @@ export async function nukeServiceWorkers(): Promise<void> {
     }
     if ("caches" in window) {
       const keys = await caches.keys();
+      // Delete ALL grudge-open shells (v2/v3/v4) — not only current prefix
       await Promise.all(
         keys
-          .filter((k) => k.startsWith("grudge-open-shell") || k.includes("grudge-open"))
+          .filter(
+            (k) =>
+              k.startsWith("grudge-open-shell") ||
+              k.includes("grudge-open") ||
+              k.startsWith("workbox-") ||
+              k.includes("precache"),
+          )
           .map((k) => caches.delete(k)),
       );
     }
   } catch (err) {
     console.warn("[pwa] nukeServiceWorkers failed", err);
+  }
+}
+
+/**
+ * One-shot per deploy: if shell version lags, nuke caches once.
+ * Call from boot when ?purge=1 or after fleet asset scale fixes.
+ */
+export async function purgeHistoricalShellIfNeeded(minVersion = 4): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const key = "grudge_open_shell_cache_ver";
+    const cur = Number(localStorage.getItem(key) || "0");
+    const force =
+      new URLSearchParams(window.location.search).has("purge") ||
+      new URLSearchParams(window.location.search).has("purgecache");
+    if (!force && cur >= minVersion) return;
+    await nukeServiceWorkers();
+    localStorage.setItem(key, String(minVersion));
+    if (force) {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("purge");
+      u.searchParams.delete("purgecache");
+      window.location.replace(u.toString());
+    }
+  } catch (err) {
+    console.warn("[pwa] purgeHistoricalShellIfNeeded failed", err);
   }
 }
 

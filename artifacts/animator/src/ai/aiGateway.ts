@@ -18,6 +18,7 @@ import {
   type AiHubHealth,
 } from "../lib/engineStack";
 import { FLEET_TOKEN_KEYS } from "../lib/fleet";
+import { getStoredToken } from "../lib/grudgeAuth";
 
 export type { AiHubHealth };
 export { probeAiHub, aiHealthUrl, aiChatUrl, aiRoleChatUrl, aiImageUrl };
@@ -33,11 +34,22 @@ export type FleetAiRole =
   | "faction"
   | string;
 
+/**
+ * JWT for AI hub. Prefer Open's grudgeAuth store (grudge.open.token + fleet keys).
+ * Previous bug: only scanned FLEET_TOKEN_KEYS without grudge.open.token → signed-in
+ * Open users still got "AI gateway auth failed".
+ */
 function readFleetToken(): string | null {
+  try {
+    const t = getStoredToken();
+    if (t) return t;
+  } catch {
+    /* private mode */
+  }
   if (typeof localStorage === "undefined") return null;
   for (const k of FLEET_TOKEN_KEYS) {
     try {
-      const v = localStorage.getItem(k);
+      const v = localStorage.getItem(k) || sessionStorage.getItem(k);
       if (v) return v;
     } catch {
       /* private mode */
@@ -101,10 +113,13 @@ export async function fleetRoleChat(
         credentials: "omit",
       });
       if (res.status === 401 || res.status === 403) {
+        const hasToken = !!readFleetToken();
         return {
           ok: false,
           status: res.status,
-          error: "AI gateway auth failed — sign in with Grudge ID",
+          error: hasToken
+            ? "AI gateway rejected session — re-sign in with Grudge ID (token expired or wrong issuer)"
+            : "AI gateway auth failed — sign in with Grudge ID (no fleet JWT in browser)",
         };
       }
       if (!res.ok) {

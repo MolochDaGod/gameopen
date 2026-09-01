@@ -5,6 +5,8 @@
 **Deploy:** `npm run deploy:prod` → Vercel project `gameopen`  
 **Edge:** CF Worker `infra/cloudflare/open` → open.grudge-studio.com  
 
+**Fleet-wide env / secrets / AI / accounts (all domains):** [`FLEET_ENV_SECRETS_MATRIX.md`](./FLEET_ENV_SECRETS_MATRIX.md) — public `VITE_*` pack, Railway/Worker secret **names**, domain×project gap audit, apply script.
+
 Do **not** print secret values in chat/logs. Names only below.
 
 ---

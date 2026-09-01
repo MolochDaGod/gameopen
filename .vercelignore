@@ -28,10 +28,31 @@ artifacts/animator/public/models/**/*.glb
 artifacts/animator/public/models/**/*.fbx
 
 # Ban GLB/FBX by default (keeps multi-GB model trees out of the deploy tarball)
+# Historical deploys that bundled local kits caused SI stretch vs CDN SSOT.
 **/*.glb
 **/*.fbx
+**/*.obj
+**/*.blend
+**/*.tga
+**/*.tif
+**/*.tiff
+**/*.psd
 **/*.rar
 **/*.zip
+**/*.7z
+
+# Never ship author/source character kits or cinema stage dumps in SPA
+**/grudge6/**
+**/Toon*/**
+**/tpose-for-mixamo/**
+**/public/models/cinema/**
+**/public/models/grudge6/**
+**/node_modules/**
+**/.git/**
+**/backups/**
+**/reports/**
+**/artifacts/animator/public/models/nature/**
+**/artifacts/animator/public/models/characters/**
 
 # EXCEPTION: Explorer Mixamo + Layer-A base pack under public/anim MUST ship.
 # Without these, open.grudge-studio.com/dressing loads a procedural skeleton with

@@ -1,32 +1,26 @@
 /**
- * Ethereal Falls campfire — GRUDOX 4-slot hero backdrop.
+ * CampfireLobbyScene — Open `/characters` 4-seat farm camp (TVS Voxel Farm props).
  *
- * Cinematic overlook: heightmap terrain, stylized pines, torch, mist, and the
- * EtherealSky cosmic falls. Post stack: pmndrs mystical composer (bloom /
- * vignette / grain / ACES). Voxel seats load Dressing Room–saved avatars.
+ * Product rules:
+ *  - No dungeon / Ethereal Falls overlook
+ *  - TVS farm props: fence, hay, soil, trees, wheat + chair + campfire center
+ *  - Heroes sit idle in chairs; hover → stand, glow, tooltip, gesture
+ *  - SI: human ~1.8 m
  */
 import * as THREE from "three";
-import { createTorch, type TorchHandle } from "../fx/torchFlame";
-import { createMysticalComposer, type MysticalComposer } from "../fx/postfx";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { createAnimatedCharacter } from "../explorer/loader";
 import type { Animator } from "../explorer/Animator";
 import type { CharacterLook } from "../explorer/types";
 import type { VoxelPart } from "../explorer/rig";
 import { CHARACTER_HEIGHT_M } from "../types";
 import { baseIdToRaceKey, type GenesisHeroOption } from "../../lib/grudoxRoster";
-import { EtherealSky } from "../lobby/etherealSky";
 import {
   loadVoxelAvatarForCharacter,
   partOverridesFromSave,
   voxelAvatarToLook,
   VOXEL_AVATAR_EVENT,
 } from "../explorer/voxelAvatarSave";
-import {
-  AVATAR_HEAD_EVENT,
-  LOBBY_SEAT_RACES,
-  resolveLobbySeatAvatar,
-} from "../avatar/playerHead";
-import { skinToneOf } from "../avatar/catalog";
 
 export interface CampfireSlotView {
   index: number;
@@ -34,7 +28,22 @@ export interface CampfireSlotView {
   worldPos: THREE.Vector3;
 }
 
-const SEAT_RADIUS = 2.45;
+export type CampfireHoverInfo = {
+  index: number;
+  hero: GenesisHeroOption | null;
+  /** Screen-space CSS px relative to canvas */
+  x: number;
+  y: number;
+} | null;
+
+const SEAT_RADIUS = 3.55;
+const HERO_H = CHARACTER_HEIGHT_M;
+const CAM_POS = new THREE.Vector3(0.15, 2.55, 7.4);
+const CAM_LOOK = new THREE.Vector3(0, 0.95, 0.1);
+/** Local public path (dev); production GLBs live on R2 and are excluded by vercelignore. */
+const TVS_BASE_LOCAL = "models/campfire-lobby/tvs";
+const TVS_BASE_CDN = "https://assets.grudge-studio.com/models/campfire-lobby/tvs";
+
 const LOOK_RACES: Record<string, Partial<CharacterLook>> = {
   human: { skin: "#c98c5a", shirt: "#3d5a80", pants: "#2e3440", cape: true, capeColor: "#1a2740" },
   orc: { skin: "#5a8f3a", shirt: "#4a3020", pants: "#2a2018", cape: false },
@@ -44,67 +53,78 @@ const LOOK_RACES: Record<string, Partial<CharacterLook>> = {
   elf: { skin: "#e8d0b0", shirt: "#2a6050", pants: "#1a3028", cape: true, capeColor: "#143028" },
 };
 
-/** Cheap value-noise for heightmap / tree placement. */
 function hash2(x: number, z: number): number {
   const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;
   return s - Math.floor(s);
 }
-function smoothNoise(x: number, z: number): number {
-  const x0 = Math.floor(x);
-  const z0 = Math.floor(z);
-  const fx = x - x0;
-  const fz = z - z0;
-  const u = fx * fx * (3 - 2 * fx);
-  const v = fz * fz * (3 - 2 * fz);
-  const a = hash2(x0, z0);
-  const b = hash2(x0 + 1, z0);
-  const c = hash2(x0, z0 + 1);
-  const d = hash2(x0 + 1, z0 + 1);
-  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+
+function assetUrl(rel: string): string {
+  const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
+  const b = base.endsWith("/") ? base : `${base}/`;
+  return `${b}${rel.replace(/^\//, "")}`;
 }
-function fbm2(x: number, z: number): number {
-  let v = 0;
-  let a = 0.5;
-  let f = 1;
-  for (let i = 0; i < 4; i++) {
-    v += a * smoothNoise(x * f, z * f);
-    a *= 0.5;
-    f *= 2.03;
+
+/** Prefer CDN (production), fall back to same-origin public for local dev. */
+function tvsUrl(file: string): string[] {
+  const name = file.replace(/^\//, "");
+  return [`${TVS_BASE_CDN}/${name}`, assetUrl(`${TVS_BASE_LOCAL}/${name}`)];
+}
+
+async function loadGltfFirst(
+  loader: GLTFLoader,
+  urls: string[],
+): Promise<THREE.Group | null> {
+  for (const url of urls) {
+    try {
+      const gltf = await loader.loadAsync(url);
+      return gltf.scene;
+    } catch {
+      /* try next */
+    }
   }
-  return v;
+  return null;
 }
 
 export class CampfireLobbyScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
-  private fx: MysticalComposer;
   private clock = new THREE.Clock();
   private raf = 0;
   private disposed = false;
-  private torch: TorchHandle | null = null;
+  private fireSprites: THREE.Sprite[] = [];
   private mist?: THREE.Points;
-  private ethereal: EtherealSky | null = null;
+  private stars?: THREE.Points;
   private ro?: ResizeObserver;
   private heroes: (Animator | null)[] = [null, null, null, null];
   private seats: THREE.Group[] = [];
   private labels: { mesh: THREE.Sprite; name: string }[] = [];
   private selected = 0;
+  private hover = -1;
   private orbit = 0;
   private onSelect: ((index: number) => void) | null = null;
+  private onHover: ((info: CampfireHoverInfo) => void) | null = null;
   private raycaster = new THREE.Raycaster();
   private pointer = new THREE.Vector2();
   private envRoot = new THREE.Group();
+  private farmRoot = new THREE.Group();
   private lastHeroes: GenesisHeroOption[] = [];
-  private keyLight: THREE.DirectionalLight | null = null;
-  /** Bumps on each setHeroes to cancel stale async loads. */
-  private heroGen = 0;
+  private fireLight: THREE.PointLight | null = null;
+  private fireLight2: THREE.PointLight | null = null;
+  private gltf = new GLTFLoader();
+  private glowMats: Map<number, THREE.MeshStandardMaterial[]> = new Map();
+  private seatMode: ("sit" | "stand")[] = ["sit", "sit", "sit", "sit"];
+  private gestureCd = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
-    opts?: { onSelect?: (index: number) => void },
+    opts?: {
+      onSelect?: (index: number) => void;
+      onHover?: (info: CampfireHoverInfo) => void;
+    },
   ) {
     this.onSelect = opts?.onSelect ?? null;
+    this.onHover = opts?.onHover ?? null;
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
 
@@ -114,55 +134,43 @@ export class CampfireLobbyScene {
       powerPreference: "high-performance",
       alpha: false,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     this.renderer.setSize(w, h, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.12;
 
-    // Deep void — EtherealSky paints the dome; fog softens mid-ground trees.
-    this.scene.background = new THREE.Color(0x02040a);
-    this.scene.fog = new THREE.FogExp2(0x060a14, 0.032);
+    // Warm dusk farm — no purple dungeon sky
+    this.scene.background = new THREE.Color(0x0a1420);
+    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.028);
 
-    this.camera = new THREE.PerspectiveCamera(38, w / h, 0.08, 220);
-    this.camera.position.set(0, 3.1, 8.4);
-    this.camera.lookAt(0, 1.2, -4);
+    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 120);
+    this.camera.position.copy(CAM_POS);
+    this.camera.lookAt(CAM_LOOK);
 
     this.scene.add(this.envRoot);
-    this.buildEnvironment();
+    this.scene.add(this.farmRoot);
+    this.buildLightsAndGround();
     this.buildSeats();
-
-    // Cinematic post: bloom + grade + chroma + vignette + grain + ACES
-    this.fx = createMysticalComposer(this.renderer, this.scene, this.camera, {
-      bloomIntensity: 1.25,
-      bloomThreshold: 0.14,
-      bloomRadius: 0.78,
-      saturation: 0.2,
-      hue: 0.04,
-      vignetteDarkness: 0.68,
-      chromatic: 0.0011,
-      grain: 0.07,
-    });
-    this.fx.setSize(w, h);
+    this.buildCampfireProcedural();
+    this.buildStars();
+    void this.loadTvsFarmProps();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
     canvas.addEventListener("pointerdown", this.onPointerDown);
+    canvas.addEventListener("pointermove", this.onPointerMove);
+    canvas.addEventListener("pointerleave", this.onPointerLeave);
     window.addEventListener(VOXEL_AVATAR_EVENT, this.onAvatarSaved);
-    window.addEventListener(AVATAR_HEAD_EVENT, this.onAvatarSaved);
 
     this.animate = this.animate.bind(this);
     this.raf = requestAnimationFrame(this.animate);
   }
 
-  /**
-   * Always fill **4 seat locations** with voxel Explorer rigs.
-   * Roster heroes bind when present; empty seats still show race mannequins
-   * using Avatar Edit heads (per-slot / race builds / defaults).
-   */
   async setHeroes(heroes: GenesisHeroOption[]): Promise<void> {
     if (this.disposed) return;
-    const gen = ++this.heroGen;
     this.lastHeroes = heroes.slice(0, 4);
     for (let i = 0; i < 4; i++) {
       const prev = this.heroes[i];
@@ -171,53 +179,37 @@ export class CampfireLobbyScene {
         prev.dispose();
         this.heroes[i] = null;
       }
+      this.clearGlow(i);
+      this.seatMode[i] = "sit";
     }
     for (let i = 0; i < 4; i++) {
-      if (this.disposed || gen !== this.heroGen) return;
       const hero = heroes[i] ?? null;
-      const raceKey =
-        (hero ? baseIdToRaceKey(hero.baseId) || hero.raceKey : null) ||
-        LOBBY_SEAT_RACES[i] ||
-        "human";
-      const label = hero?.name ?? `Seat ${i + 1}`;
-      this.updateLabel(i, hero ? label : `Empty · ${i + 1}`);
+      this.updateLabel(i, hero?.name ?? (i === 0 ? "Empty seat" : "—"));
+      if (!hero) continue;
       try {
-        const avatarCfg = resolveLobbySeatAvatar(i, {
-          characterId: hero?.id ?? null,
-          raceKey,
-        });
-        const skinHex = `#${skinToneOf(avatarCfg).toString(16).padStart(6, "0")}`;
-        const saved = hero ? loadVoxelAvatarForCharacter(hero.id || null) : null;
+        const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
+        const saved = loadVoxelAvatarForCharacter(hero.id || null);
         let look: CharacterLook = {
+          skin: "#c98c5a",
           shirt: "#c0392b",
           pants: "#2e3440",
           hat: "none",
           hatColor: "#b03030",
-          ...LOOK_RACES[raceKey],
-          // Avatar Edit head + skin override race kit defaults
-          skin: skinHex,
           avatarHead: true,
-          avatarConfig: avatarCfg,
+          ...LOOK_RACES[raceKey],
         };
         let parts: Partial<Record<VoxelPart, string>> | null = null;
         if (saved) {
-          look = {
-            ...look,
-            ...voxelAvatarToLook(saved),
-            avatarHead: true,
-            avatarConfig: avatarCfg,
-          };
+          look = { ...look, ...voxelAvatarToLook(saved) };
           parts = partOverridesFromSave(saved);
         }
-        // Empty seats: soft idle mannequin; filled: sword pose
-        const weapon = hero ? "sword" : "unarmed";
         const anim = await createAnimatedCharacter({
-          height: CHARACTER_HEIGHT_M * 0.92,
-          weapon,
+          height: HERO_H,
+          weapon: "unarmed",
           look,
-          classes: hero ? ["unarmed", "sword"] : ["unarmed"],
+          classes: ["unarmed", "sword"],
         });
-        if (this.disposed || gen !== this.heroGen) {
+        if (this.disposed) {
           anim.dispose();
           return;
         }
@@ -226,26 +218,27 @@ export class CampfireLobbyScene {
             if (hex) anim.character.setPartColor(part as VoxelPart, hex);
           }
         }
-        anim.setWeapon(weapon, true);
+        anim.setWeapon("unarmed", true);
         anim.root.position.set(0, 0, 0);
-        anim.root.rotation.y = Math.PI;
-        // Dim empty mannequins slightly so filled heroes read as primary
-        if (!hero) {
-          anim.root.traverse((o) => {
-            const m = o as THREE.Mesh;
-            if (!m.isMesh) return;
-            const mat = m.material as THREE.MeshStandardMaterial;
-            if (mat && "opacity" in mat) {
-              mat.transparent = true;
-              mat.opacity = 0.78;
-            }
-          });
+        anim.root.rotation.y = 0;
+        anim.root.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(anim.root);
+        const size = box.getSize(new THREE.Vector3());
+        if (size.y > 0.05) {
+          const s = (HERO_H / size.y) * (anim.root.scale.x || 1);
+          anim.root.scale.setScalar(THREE.MathUtils.clamp(s, 0.9, 1.2));
+          anim.root.updateMatrixWorld(true);
+          const b2 = new THREE.Box3().setFromObject(anim.root);
+          anim.root.position.y -= b2.min.y;
         }
+        // Sit: slight lower + crouch if available
+        this.applySitPose(anim, true);
         const seat = this.seats[i]!;
         seat.add(anim.root);
         this.heroes[i] = anim;
+        this.cacheGlowMats(i, anim.root);
       } catch (err) {
-        console.warn("[CampfireLobby] seat load failed", i, hero?.name ?? "empty", err);
+        console.warn("[CampfireLobby] hero load failed", hero.name, err);
       }
     }
     this.setSelected(this.selected);
@@ -257,8 +250,9 @@ export class CampfireLobbyScene {
       const ring = this.seats[i]?.userData.ring as THREE.Mesh | undefined;
       if (!ring) continue;
       const mat = ring.material as THREE.MeshBasicMaterial;
-      mat.color.setHex(i === this.selected ? 0x5fe0ff : 0x1a3048);
-      mat.opacity = i === this.selected ? 0.85 : 0.35;
+      const on = i === this.selected || i === this.hover;
+      mat.color.setHex(on ? 0x5fe0ff : 0x1a3048);
+      mat.opacity = on ? 0.95 : 0.32;
       this.updateLabel(i, this.labels[i]?.name ?? "—");
     }
   }
@@ -271,319 +265,247 @@ export class CampfireLobbyScene {
     this.disposed = true;
     cancelAnimationFrame(this.raf);
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
+    this.canvas.removeEventListener("pointermove", this.onPointerMove);
+    this.canvas.removeEventListener("pointerleave", this.onPointerLeave);
     window.removeEventListener(VOXEL_AVATAR_EVENT, this.onAvatarSaved);
-    window.removeEventListener(AVATAR_HEAD_EVENT, this.onAvatarSaved);
     this.ro?.disconnect();
     for (const h of this.heroes) h?.dispose();
     this.heroes = [null, null, null, null];
-    this.torch?.dispose();
-    this.ethereal?.dispose();
-    this.ethereal = null;
-    this.fx.dispose();
     this.renderer.dispose();
   }
 
   // ── private ────────────────────────────────────────────────────────────
 
   private onAvatarSaved = (): void => {
-    // Re-paint all 4 seats when Avatar Edit saves (slot or global)
-    void this.setHeroes(this.lastHeroes);
+    if (this.lastHeroes.length) void this.setHeroes(this.lastHeroes);
   };
 
-  private buildEnvironment(): void {
-    this.envRoot.add(this.buildHeightmapTerrain());
-    this.envRoot.add(this.buildTrees());
-    this.envRoot.add(this.buildFallsOverlookRocks());
+  private buildLightsAndGround(): void {
+    this.scene.add(new THREE.AmbientLight(0x4a5a48, 0.42));
+    this.scene.add(new THREE.HemisphereLight(0x9ab8d0, 0x2a2010, 0.55));
+    const sun = new THREE.DirectionalLight(0xffe0b0, 0.85);
+    sun.position.set(6, 12, 4);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    const d = 16;
+    sun.shadow.camera.left = -d;
+    sun.shadow.camera.right = d;
+    sun.shadow.camera.top = d;
+    sun.shadow.camera.bottom = -d;
+    this.scene.add(sun);
 
-    // Soft ethereal pool under fire
-    const pool = new THREE.Mesh(
-      new THREE.CircleGeometry(1.55, 40),
+    // Grass ground disc — farm clearing (no dungeon floor)
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(14, 64),
       new THREE.MeshStandardMaterial({
-        color: 0x142848,
-        emissive: 0x184070,
-        emissiveIntensity: 0.55,
-        roughness: 0.25,
-        metalness: 0.35,
+        color: 0x2d5a32,
+        roughness: 0.95,
+        metalness: 0.02,
       }),
     );
-    pool.rotation.x = -Math.PI / 2;
-    pool.position.y = 0.04;
-    this.envRoot.add(pool);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    this.envRoot.add(ground);
 
-    // Cosmic rim fill from the falls (+ purple key from sky)
-    this.scene.add(new THREE.AmbientLight(0x1a2848, 0.38));
-    this.scene.add(new THREE.HemisphereLight(0x6a8cff, 0x0a0814, 0.55));
-    const moon = new THREE.DirectionalLight(0xb8d4ff, 0.72);
-    moon.position.set(-5, 12, 3);
-    moon.castShadow = true;
-    moon.shadow.mapSize.set(1024, 1024);
-    moon.shadow.camera.near = 1;
-    moon.shadow.camera.far = 40;
-    const d = 14;
-    moon.shadow.camera.left = -d;
-    moon.shadow.camera.right = d;
-    moon.shadow.camera.top = d;
-    moon.shadow.camera.bottom = -d;
-    this.scene.add(moon);
-    this.keyLight = moon;
+    // Dirt ring around fire
+    const dirt = new THREE.Mesh(
+      new THREE.CircleGeometry(2.4, 48),
+      new THREE.MeshStandardMaterial({ color: 0x3a2a18, roughness: 0.98 }),
+    );
+    dirt.rotation.x = -Math.PI / 2;
+    dirt.position.y = 0.02;
+    this.envRoot.add(dirt);
 
-    const fallsRim = new THREE.DirectionalLight(0x8866ff, 0.85);
-    fallsRim.position.set(2, 6, -18);
-    this.scene.add(fallsRim);
-    const cosmicFill = new THREE.PointLight(0x55ffcc, 2.2, 28, 2);
-    cosmicFill.position.set(0, 4, -10);
-    this.scene.add(cosmicFill);
+    // Soft sky dome (flat color already set)
+  }
 
-    createTorch({ targetHeight: 1.45, dying: 0.22, lightIntensity: 16, flameScale: 1.4 })
-      .then((t) => {
-        if (this.disposed) {
-          t.dispose();
+  /** Load TVS Voxel Farm GLBs — soft-fail; keep procedural ground if missing. */
+  private async loadTvsFarmProps(): Promise<void> {
+    const place = async (
+      file: string,
+      x: number,
+      z: number,
+      yaw = 0,
+      scale = 1,
+      y = 0,
+    ) => {
+      try {
+        const root = await loadGltfFirst(this.gltf, tvsUrl(file));
+        if (!root) {
+          console.warn("[CampfireLobby] TVS prop skip (no CDN/local)", file);
           return;
         }
-        this.torch = t;
-        t.group.position.set(0, 0, 0);
-        t.light.castShadow = true;
-        this.scene.add(t.group);
-      })
-      .catch(() => {
-        /* torch optional */
-      });
-
-    this.mist = this.buildMist();
-    this.scene.add(this.mist);
-
-    try {
-      this.ethereal = new EtherealSky(this.scene);
-    } catch (err) {
-      console.warn("[CampfireLobby] EtherealSky init failed", err);
-    }
-  }
-
-  /** Gentle heightmap disc — flat fire ring, rising shoulders, drop toward falls. */
-  private buildHeightmapTerrain(): THREE.Group {
-    const g = new THREE.Group();
-    const segs = 96;
-    const size = 36;
-    const geo = new THREE.PlaneGeometry(size, size, segs, segs);
-    geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    const colors = new Float32Array(pos.count * 3);
-    const cRock = new THREE.Color(0x121a28);
-    const cMoss = new THREE.Color(0x1a2a22);
-    const cCliff = new THREE.Color(0x0c101c);
-    const cTmp = new THREE.Color();
-
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      const r = Math.hypot(x, z);
-      // Plateau under camp
-      let h = 0;
-      if (r > 3.2) {
-        const edge = Math.min(1, (r - 3.2) / 10);
-        h = edge * 0.55 * fbm2(x * 0.18, z * 0.18);
-        h += edge * 0.35 * Math.sin(x * 0.55) * Math.cos(z * 0.48);
-        // Shoulders / mounds
-        h += edge * 0.4 * smoothNoise(x * 0.3 + 2, z * 0.3);
+        root.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+          }
+        });
+        // Normalize height ~1–2 m for props
+        const box = new THREE.Box3().setFromObject(root);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z, 0.01);
+        const target = file.includes("barn") ? 4.5 : file.includes("tree") ? 3.2 : 1.2;
+        const s = (target / maxDim) * scale;
+        root.scale.setScalar(s);
+        root.updateMatrixWorld(true);
+        const b2 = new THREE.Box3().setFromObject(root);
+        root.position.set(x, y - b2.min.y, z);
+        root.rotation.y = yaw;
+        this.farmRoot.add(root);
+      } catch (e) {
+        console.warn("[CampfireLobby] TVS prop skip", file, e);
       }
-      // Drop toward Ethereal Falls (-Z)
-      if (z < -5) {
-        const fall = Math.min(1, (-z - 5) / 14);
-        h -= fall * fall * 2.8;
-        h += fbm2(x * 0.4, z * 0.25) * fall * 0.5;
-      }
-      // Rim cliff beyond ~14
-      if (r > 14) {
-        h -= (r - 14) * 0.35;
-      }
-      pos.setY(i, h);
-
-      const t = THREE.MathUtils.clamp((-h + 0.3) * 0.35 + r * 0.02, 0, 1);
-      cTmp.copy(cMoss).lerp(cRock, fbm2(x * 0.2, z * 0.2));
-      if (z < -7) cTmp.lerp(cCliff, Math.min(1, (-z - 7) / 10));
-      cTmp.lerp(cCliff, t * 0.35);
-      colors[i * 3] = cTmp.r;
-      colors[i * 3 + 1] = cTmp.g;
-      colors[i * 3 + 2] = cTmp.b;
-    }
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    geo.computeVertexNormals();
-
-    const mat = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.92,
-      metalness: 0.04,
-      flatShading: false,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.receiveShadow = true;
-    mesh.castShadow = false;
-    g.add(mesh);
-
-    // Thin dark slab under so the void doesn't show through cliffs
-    const under = new THREE.Mesh(
-      new THREE.CircleGeometry(18, 48),
-      new THREE.MeshBasicMaterial({ color: 0x05070e }),
-    );
-    under.rotation.x = -Math.PI / 2;
-    under.position.y = -3.5;
-    g.add(under);
-    return g;
-  }
-
-  /** Layered pine stands around the clearing — denser toward the falls. */
-  private buildTrees(): THREE.Group {
-    const g = new THREE.Group();
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2a1c14, roughness: 0.95 });
-    const needleMats = [
-      new THREE.MeshStandardMaterial({ color: 0x0e2818, roughness: 0.88, emissive: 0x041208, emissiveIntensity: 0.15 }),
-      new THREE.MeshStandardMaterial({ color: 0x143520, roughness: 0.85, emissive: 0x061a10, emissiveIntensity: 0.12 }),
-      new THREE.MeshStandardMaterial({ color: 0x0a2014, roughness: 0.9, emissive: 0x03100a, emissiveIntensity: 0.1 }),
-    ];
-
-    const makePine = (scale: number, seed: number): THREE.Group => {
-      const tree = new THREE.Group();
-      const trunkH = 1.1 + scale * 0.55;
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06 * scale, 0.1 * scale, trunkH, 6),
-        trunkMat,
-      );
-      trunk.position.y = trunkH * 0.5;
-      trunk.castShadow = true;
-      tree.add(trunk);
-      const layers = 3 + (seed % 2);
-      for (let L = 0; L < layers; L++) {
-        const t = L / (layers - 1 || 1);
-        const r = (0.55 - t * 0.28) * scale;
-        const h = (0.7 - t * 0.12) * scale;
-        const cone = new THREE.Mesh(
-          new THREE.ConeGeometry(r, h, 7),
-          needleMats[(seed + L) % needleMats.length],
-        );
-        cone.position.y = trunkH * 0.55 + L * 0.42 * scale;
-        cone.rotation.y = seed * 0.7 + L * 0.4;
-        cone.castShadow = true;
-        tree.add(cone);
-      }
-      // Subtle violet under-glow on needles nearest the falls
-      const glow = new THREE.PointLight(0x6644aa, 0.15 * scale, 3.5, 2);
-      glow.position.set(0, trunkH * 0.8, 0);
-      tree.add(glow);
-      return tree;
     };
 
-    // Ring + clusters toward -Z (falls)
-    for (let i = 0; i < 42; i++) {
-      const ang = (i / 42) * Math.PI * 2 + hash2(i, 3) * 0.4;
-      const rad = 7.5 + hash2(i, 7) * 5.5 + (Math.sin(ang + 1.2) > 0.2 ? 1.5 : 0);
-      // Keep fire ring clear
-      if (rad < 5.5) continue;
-      const x = Math.cos(ang) * rad;
-      const z = Math.sin(ang) * rad - 1.5;
-      // Extra density on the falls side
-      if (z > 4 && hash2(i, 11) > 0.55) continue;
-      const scale = 0.85 + hash2(i, 13) * 1.1;
-      const pine = makePine(scale, i);
-      const groundY = this.sampleTerrainY(x, z);
-      pine.position.set(x, groundY, z);
-      pine.rotation.y = hash2(i, 17) * Math.PI * 2;
-      pine.rotation.z = (hash2(i, 19) - 0.5) * 0.08;
-      g.add(pine);
-    }
+    // Fence ring / farm edge
+    await place("fence.glb", -5.5, -2.2, 0.2, 1.1);
+    await place("fence.glb", 5.5, -1.8, Math.PI - 0.15, 1.1);
+    await place("fence.glb", -4.2, 4.5, Math.PI * 0.5, 1.0);
+    await place("fencepost.glb", -6.2, 3.8, 0, 1.2);
+    await place("fencepost.glb", 6.0, 3.5, 0, 1.2);
 
-    // Tall sentinel pines framing the falls
-    for (const [x, z, s] of [
-      [-9, -11, 1.8],
-      [8.5, -12, 1.65],
-      [-12, -7, 1.4],
-      [11, -6.5, 1.35],
-      [0, -14, 2.1],
-    ] as const) {
-      const pine = makePine(s, Math.abs(x * 10 + z));
-      pine.position.set(x, this.sampleTerrainY(x, z), z);
-      g.add(pine);
+    // Hay / trough / soil plots
+    await place("haybale.glb", -3.8, 2.4, 0.4, 1.0);
+    await place("haybale.glb", -4.6, 2.9, -0.3, 0.9);
+    await place("watertrough.glb", 4.2, 2.6, -0.6, 1.0);
+    await place("soil.glb", 3.6, -3.5, 0.1, 1.4);
+    await place("wheat.glb", 4.4, -3.2, 0.2, 1.0);
+    await place("wheat.glb", 3.2, -4.0, -0.4, 0.95);
+    await place("pumpkin.glb", 2.6, -3.0, 0.5, 0.7);
+
+    // Trees background
+    await place("tree.glb", -7.5, -5.5, 0.3, 1.0);
+    await place("appletree.glb", 7.2, -4.8, -0.4, 1.0);
+    await place("tree.glb", -2.0, -8.0, 0.1, 1.15);
+
+    // Distant barn silhouette
+    await place("barn.glb", 0.5, -10.5, Math.PI * 0.08, 1.0);
+
+    // Prefer TVS campfire mesh if present (replaces procedural if load ok)
+    try {
+      const root = await loadGltfFirst(this.gltf, tvsUrl("campfire.glb"));
+      if (root) {
+        root.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.receiveShadow = true;
+          }
+        });
+        const box = new THREE.Box3().setFromObject(root);
+        const size = box.getSize(new THREE.Vector3());
+        const s = 1.6 / Math.max(size.x, size.y, size.z, 0.01);
+        root.scale.setScalar(s);
+        root.updateMatrixWorld(true);
+        const b2 = new THREE.Box3().setFromObject(root);
+        root.position.set(0, -b2.min.y + 0.02, 0.1);
+        this.farmRoot.add(root);
+      }
+      // Keep procedural flames on top for glow
+    } catch {
+      /* procedural campfire already built */
     }
-    return g;
   }
 
-  /** Approximate height at xz matching the heightmap formula (for tree bases). */
-  private sampleTerrainY(x: number, z: number): number {
-    const r = Math.hypot(x, z);
-    let h = 0;
-    if (r > 3.2) {
-      const edge = Math.min(1, (r - 3.2) / 10);
-      h = edge * 0.55 * fbm2(x * 0.18, z * 0.18);
-      h += edge * 0.35 * Math.sin(x * 0.55) * Math.cos(z * 0.48);
-      h += edge * 0.4 * smoothNoise(x * 0.3 + 2, z * 0.3);
+  private buildCampfireProcedural(): void {
+    const fire = new THREE.Group();
+    fire.name = "campfire_fx";
+    const logMat = new THREE.MeshStandardMaterial({ color: 0x2e1c10, roughness: 1 });
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.15, 7), logMat);
+      log.position.set(Math.cos(a) * 0.3, 0.4, Math.sin(a) * 0.3);
+      log.rotation.z = Math.cos(a) * 0.7;
+      log.rotation.x = -Math.sin(a) * 0.7;
+      log.castShadow = true;
+      fire.add(log);
     }
-    if (z < -5) {
-      const fall = Math.min(1, (-z - 5) / 14);
-      h -= fall * fall * 2.8;
-      h += fbm2(x * 0.4, z * 0.25) * fall * 0.5;
-    }
-    if (r > 14) h -= (r - 14) * 0.35;
-    return Math.max(h, -0.5);
-  }
-
-  private buildFallsOverlookRocks(): THREE.Group {
-    const g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x1a1528,
-      roughness: 0.9,
-      metalness: 0.08,
-      emissive: 0x120828,
-      emissiveIntensity: 0.25,
-    });
-    for (const [x, z, sx, sy, sz, ry] of [
-      [-4.2, -8.5, 1.4, 0.55, 1.1, 0.4],
-      [3.8, -9.2, 1.2, 0.7, 1.3, -0.3],
-      [0.2, -10.5, 2.2, 0.4, 1.4, 0.1],
-      [-6.5, -5.5, 0.9, 0.45, 0.8, 0.8],
-      [6.2, -5.8, 1.0, 0.5, 0.9, -0.6],
-    ] as const) {
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), mat);
-      rock.position.set(x, this.sampleTerrainY(x, z) + sy * 0.35, z);
-      rock.scale.set(sx, sy, sz);
-      rock.rotation.y = ry;
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x3a3e48, roughness: 0.92 });
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      const s = 0.18 + hash2(i, 7) * 0.1;
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rockMat);
+      rock.position.set(Math.cos(a) * 0.9, s * 0.4, Math.sin(a) * 0.9);
       rock.castShadow = true;
-      rock.receiveShadow = true;
-      g.add(rock);
+      fire.add(rock);
     }
-    return g;
+    const flameTex = makeFlameTexture();
+    for (let i = 0; i < 7; i++) {
+      const mat = new THREE.SpriteMaterial({
+        map: flameTex,
+        color: i % 2 === 0 ? 0xff8a30 : 0xffc868,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const sp = new THREE.Sprite(mat);
+      const w = 0.7 - i * 0.05;
+      sp.scale.set(w, w * 1.7, 1);
+      sp.position.set((hash2(i, 4) - 0.5) * 0.18, 0.4 + i * 0.09, (hash2(i, 5) - 0.5) * 0.18);
+      sp.userData.baseW = w;
+      sp.userData.phase = i * 1.15;
+      this.fireSprites.push(sp);
+      fire.add(sp);
+    }
+    const light = new THREE.PointLight(0xff7a2e, 26, 16, 1.8);
+    light.position.set(0, 1.0, 0);
+    light.castShadow = true;
+    fire.add(light);
+    this.fireLight = light;
+    const fill = new THREE.PointLight(0xffaa55, 9, 11, 2);
+    fill.position.set(0, 0.4, 0.7);
+    fire.add(fill);
+    this.fireLight2 = fill;
+    fire.position.set(0, 0.02, 0.1);
+    this.scene.add(fire);
   }
 
   private buildSeats(): void {
     for (let i = 0; i < 4; i++) {
-      const ang = (i / 4) * Math.PI * 2 + Math.PI / 4;
+      const ang = -Math.PI * 0.55 + (i / 3) * Math.PI * 1.1;
+      const x = Math.sin(ang) * SEAT_RADIUS;
+      const z = -Math.cos(ang) * SEAT_RADIUS * 0.72 + 0.35;
+
       const g = new THREE.Group();
-      const x = Math.cos(ang) * SEAT_RADIUS;
-      const z = Math.sin(ang) * SEAT_RADIUS;
-      g.position.set(x, this.sampleTerrainY(x, z), z);
-      g.rotation.y = ang + Math.PI;
+      g.position.set(x, 0, z);
+      g.rotation.y = Math.atan2(-x, -z + 0.1);
       g.userData.slotIndex = i;
 
+      // Chair from TVS pack (async attach) — placeholder log until loaded
+      const stub = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.45, 0.55),
+        new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 0.95 }),
+      );
+      stub.position.set(0, 0.22, 0.12);
+      stub.castShadow = true;
+      stub.name = "chair_stub";
+      g.add(stub);
+      void this.attachChair(g);
+
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.55, 0.7, 40),
+        new THREE.RingGeometry(0.55, 0.72, 40),
         new THREE.MeshBasicMaterial({
           color: 0x1a3048,
           transparent: true,
-          opacity: 0.35,
+          opacity: 0.32,
           side: THREE.DoubleSide,
+          depthWrite: false,
         }),
       );
       ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.05;
+      ring.position.y = 0.04;
       g.userData.ring = ring;
       g.add(ring);
 
-      const log = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.14, 0.95, 8),
-        new THREE.MeshStandardMaterial({ color: 0x3a2818, roughness: 0.95 }),
+      const proxy = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.55, 0.55, 2.0, 12),
+        new THREE.MeshBasicMaterial({ visible: false }),
       );
-      log.rotation.z = Math.PI / 2;
-      log.position.set(0, 0.12, 0.35);
-      log.castShadow = true;
-      g.add(log);
+      proxy.position.y = 1.0;
+      proxy.userData.slotIndex = i;
+      g.add(proxy);
 
       this.scene.add(g);
       this.seats.push(g);
@@ -595,14 +517,162 @@ export class CampfireLobbyScene {
     }
   }
 
+  private async attachChair(seat: THREE.Group): Promise<void> {
+    try {
+      const chair = await loadGltfFirst(this.gltf, tvsUrl("chair.glb"));
+      if (!chair) return;
+      chair.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.castShadow = true;
+          m.receiveShadow = true;
+        }
+      });
+      const box = new THREE.Box3().setFromObject(chair);
+      const size = box.getSize(new THREE.Vector3());
+      const s = 0.95 / Math.max(size.y, 0.01);
+      chair.scale.setScalar(s);
+      chair.updateMatrixWorld(true);
+      const b2 = new THREE.Box3().setFromObject(chair);
+      chair.position.set(0, -b2.min.y, 0.18);
+      chair.rotation.y = Math.PI;
+      const stub = seat.getObjectByName("chair_stub");
+      if (stub) seat.remove(stub);
+      seat.add(chair);
+    } catch {
+      /* keep stub */
+    }
+  }
+
+  private applySitPose(anim: Animator, sit: boolean): void {
+    // Crouch idle approximates sit in chair; hip drop for seat contact
+    anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
+    anim.setCrouch(sit);
+    if (sit) {
+      anim.root.position.z = 0.06;
+      anim.root.position.y = Math.max(0, 0.02);
+    } else {
+      anim.root.position.z = 0;
+      anim.root.updateMatrixWorld(true);
+      const b = new THREE.Box3().setFromObject(anim.root);
+      anim.root.position.y -= b.min.y;
+    }
+  }
+
+  private cacheGlowMats(i: number, root: THREE.Object3D): void {
+    const mats: THREE.MeshStandardMaterial[] = [];
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const mat = m.material;
+      const list = Array.isArray(mat) ? mat : [mat];
+      for (const mm of list) {
+        if (mm && (mm as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+          const std = mm as THREE.MeshStandardMaterial;
+          if (std.userData.__campGlowBase == null) {
+            std.userData.__campGlowBase = std.emissiveIntensity ?? 0;
+            std.userData.__campGlowColor = std.emissive?.getHex?.() ?? 0;
+          }
+          mats.push(std);
+        }
+      }
+    });
+    this.glowMats.set(i, mats);
+  }
+
+  private setGlow(i: number, on: boolean): void {
+    const mats = this.glowMats.get(i);
+    if (!mats) return;
+    for (const m of mats) {
+      if (on) {
+        m.emissive.setHex(0x44aaff);
+        m.emissiveIntensity = 0.55;
+      } else {
+        m.emissive.setHex(m.userData.__campGlowColor ?? 0);
+        m.emissiveIntensity = m.userData.__campGlowBase ?? 0;
+      }
+      m.needsUpdate = true;
+    }
+  }
+
+  private clearGlow(i: number): void {
+    this.setGlow(i, false);
+    this.glowMats.delete(i);
+  }
+
+  private playGesture(i: number): void {
+    const anim = this.heroes[i];
+    if (!anim || this.gestureCd > 0) return;
+    this.gestureCd = 1.8;
+    // Friendly stand gesture — attack flourish as wave substitute when no wave clip
+    try {
+      const d = anim.attackMoving(0.55);
+      if (!d) anim.enterStance("idle" as never);
+    } catch {
+      /* idle only */
+    }
+  }
+
+  private setHover(index: number, clientX?: number, clientY?: number): void {
+    if (index === this.hover) {
+      if (index >= 0 && this.onHover) {
+        const hero = this.lastHeroes[index] ?? null;
+        const rect = this.canvas.getBoundingClientRect();
+        this.onHover({
+          index,
+          hero,
+          x: (clientX ?? 0) - rect.left,
+          y: (clientY ?? 0) - rect.top,
+        });
+      }
+      return;
+    }
+    // leave previous
+    if (this.hover >= 0) {
+      const prev = this.heroes[this.hover];
+      if (prev) {
+        this.applySitPose(prev, true);
+        this.seatMode[this.hover] = "sit";
+      }
+      this.setGlow(this.hover, false);
+    }
+    this.hover = index;
+    if (index >= 0) {
+      const anim = this.heroes[index];
+      if (anim) {
+        this.applySitPose(anim, false);
+        this.seatMode[index] = "stand";
+        this.playGesture(index);
+      }
+      this.setGlow(index, true);
+      this.setSelected(index);
+      const hero = this.lastHeroes[index] ?? null;
+      const rect = this.canvas.getBoundingClientRect();
+      this.onHover?.({
+        index,
+        hero,
+        x: (clientX ?? rect.width * 0.5) - rect.left,
+        y: (clientY ?? rect.height * 0.4) - rect.top,
+      });
+      this.onSelect?.(index);
+    } else {
+      this.onHover?.(null);
+    }
+    // refresh rings
+    this.setSelected(this.selected);
+  }
+
   private makeLabel(text: string): THREE.Sprite {
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 64;
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, 256, 64);
-    ctx.fillStyle = "rgba(6,12,20,0.72)";
+    ctx.fillStyle = "rgba(6,12,20,0.78)";
     ctx.fillRect(8, 8, 240, 48);
+    ctx.strokeStyle = "rgba(95,224,255,0.35)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(8, 8, 240, 48);
     ctx.fillStyle = "#cfe8ff";
     ctx.font = "bold 22px system-ui,sans-serif";
     ctx.textAlign = "center";
@@ -612,7 +682,7 @@ export class CampfireLobbyScene {
     tex.colorSpace = THREE.SRGBColorSpace;
     const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
     const spr = new THREE.Sprite(mat);
-    spr.scale.set(1.4, 0.35, 1);
+    spr.scale.set(1.65, 0.4, 1);
     spr.userData.canvas = canvas;
     spr.userData.tex = tex;
     return spr;
@@ -626,9 +696,13 @@ export class CampfireLobbyScene {
     const tex = entry.mesh.userData.tex as THREE.CanvasTexture;
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, 256, 64);
-    ctx.fillStyle = "rgba(6,12,20,0.72)";
+    const on = i === this.selected || i === this.hover;
+    ctx.fillStyle = on ? "rgba(8,28,40,0.88)" : "rgba(6,12,20,0.78)";
     ctx.fillRect(8, 8, 240, 48);
-    ctx.fillStyle = i === this.selected ? "#5fe0ff" : "#cfe8ff";
+    ctx.strokeStyle = on ? "rgba(95,224,255,0.75)" : "rgba(95,224,255,0.25)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(8, 8, 240, 48);
+    ctx.fillStyle = on ? "#5fe0ff" : "#cfe8ff";
     ctx.font = "bold 22px system-ui,sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -636,45 +710,64 @@ export class CampfireLobbyScene {
     tex.needsUpdate = true;
   }
 
-  private buildMist(): THREE.Points {
-    const n = 720;
+  private buildStars(): void {
+    const n = 280;
     const pos = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 22;
-      pos[i * 3 + 1] = Math.random() * 7;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 22 - 2;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.45;
+      const r = 70;
+      pos[i * 3] = Math.cos(theta) * Math.sin(phi) * r;
+      pos[i * 3 + 1] = Math.cos(phi) * r * 0.65 + 6;
+      pos[i * 3 + 2] = Math.sin(theta) * Math.sin(phi) * r - 8;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({
-      color: 0xa090ff,
-      size: 0.1,
-      transparent: true,
-      opacity: 0.28,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      fog: false,
-    });
-    return new THREE.Points(geo, mat);
+    this.stars = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: 0xd0e0ff,
+        size: 0.28,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        fog: false,
+      }),
+    );
+    this.scene.add(this.stars);
   }
 
-  private onPointerDown = (e: PointerEvent): void => {
+  private pickSlot(clientX: number, clientY: number): number {
     const rect = this.canvas.getBoundingClientRect();
-    this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    this.pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hits = this.raycaster.intersectObjects(this.seats, true);
     for (const h of hits) {
       let o: THREE.Object3D | null = h.object;
       while (o) {
-        if (typeof o.userData.slotIndex === "number") {
-          this.setSelected(o.userData.slotIndex);
-          this.onSelect?.(o.userData.slotIndex);
-          return;
-        }
+        if (typeof o.userData.slotIndex === "number") return o.userData.slotIndex as number;
         o = o.parent;
       }
     }
+    return -1;
+  }
+
+  private onPointerDown = (e: PointerEvent): void => {
+    const i = this.pickSlot(e.clientX, e.clientY);
+    if (i >= 0) {
+      this.setSelected(i);
+      this.onSelect?.(i);
+    }
+  };
+
+  private onPointerMove = (e: PointerEvent): void => {
+    const i = this.pickSlot(e.clientX, e.clientY);
+    this.setHover(i, e.clientX, e.clientY);
+  };
+
+  private onPointerLeave = (): void => {
+    this.setHover(-1);
   };
 
   private resize(): void {
@@ -683,7 +776,6 @@ export class CampfireLobbyScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
-    this.fx.setSize(w, h);
   }
 
   private animate(): void {
@@ -691,29 +783,32 @@ export class CampfireLobbyScene {
     this.raf = requestAnimationFrame(this.animate);
     const dt = Math.min(0.05, this.clock.getDelta());
     const t = this.clock.elapsedTime;
+    this.gestureCd = Math.max(0, this.gestureCd - dt);
 
-    this.torch?.update(dt);
-    this.ethereal?.update(t);
-
-    // Cinematic slow orbit — face the cosmic falls
-    this.orbit += dt * 0.045;
-    const r = 8.2;
-    this.camera.position.x = Math.sin(this.orbit) * r * 0.38;
-    this.camera.position.z = 8.0 + Math.cos(this.orbit) * 0.55;
-    this.camera.position.y = 3.0 + Math.sin(this.orbit * 0.65) * 0.18;
-    this.camera.lookAt(0, 1.35, -6.5);
-
-    if (this.mist) {
-      this.mist.rotation.y = t * 0.018;
-      const p = this.mist.geometry.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < p.count; i += 3) {
-        p.setY(i, (p.getY(i) + dt * 0.08) % 7);
-      }
-      p.needsUpdate = true;
+    for (let i = 0; i < this.fireSprites.length; i++) {
+      const sp = this.fireSprites[i];
+      const f = Math.sin(t * (9 + i) + (sp.userData.phase as number)) * 0.5 + 0.5;
+      const w = sp.userData.baseW as number;
+      sp.scale.set(w * (0.88 + f * 0.3), w * 1.7 * (0.85 + f * 0.38), 1);
+      (sp.material as THREE.SpriteMaterial).opacity = 0.7 + f * 0.3;
+    }
+    if (this.fireLight) {
+      this.fireLight.intensity = 24 + Math.sin(t * 11) * 3.2 + Math.random() * 2;
+    }
+    if (this.fireLight2) {
+      this.fireLight2.intensity = 8 + Math.sin(t * 13.5) * 1.4;
     }
 
-    if (this.keyLight) {
-      this.keyLight.intensity = 0.65 + Math.sin(t * 0.4) * 0.08;
+    this.orbit += dt * 0.028;
+    this.camera.position.x = CAM_POS.x + Math.sin(this.orbit) * 0.22;
+    this.camera.position.y = CAM_POS.y + Math.sin(this.orbit * 0.65) * 0.08;
+    this.camera.position.z = CAM_POS.z + Math.cos(this.orbit) * 0.12;
+    this.camera.lookAt(CAM_LOOK);
+
+    const sel = this.seats[this.selected];
+    if (sel?.userData.ring) {
+      const ring = sel.userData.ring as THREE.Mesh;
+      ring.scale.setScalar(1 + 0.05 * Math.sin(t * 2.6));
     }
 
     for (const h of this.heroes) {
@@ -722,6 +817,23 @@ export class CampfireLobbyScene {
       h.update(dt);
     }
 
-    this.fx.render(dt);
+    this.renderer.render(this.scene, this.camera);
   }
+}
+
+function makeFlameTexture(): THREE.Texture {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 128;
+  const ctx = canvas.getContext("2d")!;
+  const g = ctx.createRadialGradient(64, 78, 2, 64, 60, 62);
+  g.addColorStop(0, "rgba(255,252,235,1)");
+  g.addColorStop(0.2, "rgba(255,200,90,0.95)");
+  g.addColorStop(0.45, "rgba(255,110,30,0.55)");
+  g.addColorStop(0.75, "rgba(255,50,10,0.18)");
+  g.addColorStop(1, "rgba(255,20,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
 }

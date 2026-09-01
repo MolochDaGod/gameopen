@@ -5,7 +5,8 @@
  *
  * ## Era categories (SSOT for import / deploy — do not invent parallel games)
  *  - **voxel**    — VoxGrudge production, Mine-Loader Realms, DCQ, Z-Brawl, Worldbuilder
- *  - **warlords** — Fantasy / grudge6 / Warlords client, Genesis, islands, combat labs
+ *  - **warlords** — Fantasy flagship **client** (+ Open tools: Danger, Dressing).
+ *    Home islands, sectors, scatter maps live **inside Warlords**, not as Open tiles.
  *  - **nexus**    — Sci-fi / mech / metaverse / space-adjacent fleet
  *  - **armada**   — Naval / Grim Armada / sail maps
  *  - **account**  — Platform hub only (SSO, rooms shell) — not a game era
@@ -17,6 +18,13 @@
  *    single production open world at voxgrudge.vercel.app — not N launchers.
  * 3. No duplicates, no “worse” or legacy stacks beside the production entry.
  * 4. New era content ships under its era category only (import path = era).
+ * 5. **Warlords world content is not a standalone Open game.** Home island, water
+ *    island, sector seas, and in-game maps launch via **Grudge Warlords client**
+ *    (`warlordsInGameOnly`). Open may keep Danger training maps separately.
+ * 6. **Chicken Gun / PolygonPirates `pirate-islands` lobby** is the Warlords
+ *    **opening map and tutorial map** (shipwreck_cove → `/tutorial`, lobby
+ *    → `/island-3d?mode=lobby&map=pirate-islands`). It is **not** a GRUDOX
+ *    cabinet, **not** an Explorer product, and **not** an Open library tile.
  */
 
 import { assetUrl } from "../lib/fleet";
@@ -28,6 +36,52 @@ import {
   dcqWorldUrl,
 } from "../lib/productionRuntime";
 import { FLEET_WORLD_HOSTS, fleetWorldLaunchUrl } from "../lib/fleetWorlds";
+
+/**
+ * Shared account / data scheme for every fleet title launched from Open.
+ * Postgres Railway = player SSOT · D1 = asset index · R2 = binaries.
+ * Do not invent a second bag/character store per game.
+ */
+export const SHARED_ACCOUNT_SCHEME = {
+  version: 1,
+  authHost: "https://id.grudge-studio.com",
+  playerApi: "https://grudge-api-production-0d46.up.railway.app",
+  /** Same-origin on Open (rewrites → Railway). */
+  openApiPrefix: "/api",
+  assetsCdn: "https://assets.grudge-studio.com",
+  assetRegistry: "https://open.grudge-studio.com/api/asset-registry",
+  /** Query params all external launches should accept. */
+  handoffParams: [
+    "sso_token",
+    "grudge_token",
+    "characterId",
+    "characterName",
+    "baseId",
+    "raceId",
+    "open",
+    "from",
+  ] as const,
+  /** Production data law. */
+  dataLaw: {
+    characters: "Railway Postgres",
+    bag: "Railway Postgres",
+    wallet: "Railway Postgres",
+    assetIndex: "Cloudflare D1",
+    binaries: "Cloudflare R2 (assets.grudge-studio.com)",
+    localStorage: "offline cache only — never bag SSOT",
+  },
+} as const;
+
+/**
+ * Production Chicken Gun / PolygonPirates lobby mesh — Warlords only.
+ * Opening + tutorial + era-center lobby. Never GRUDOX / Explorer / Open tile.
+ */
+export const WARLORDS_PIRATE_LOBBY_PATH =
+  "/island-3d?mode=lobby&map=pirate-islands" as const;
+export const WARLORDS_TUTORIAL_PATH = "/tutorial" as const;
+export const WARLORDS_CLIENT_ORIGIN = "https://client.grudge-studio.com";
+export const WARLORDS_PIRATE_LOBBY_URL = `${WARLORDS_CLIENT_ORIGIN}${WARLORDS_PIRATE_LOBBY_PATH}`;
+export const WARLORDS_TUTORIAL_URL = `${WARLORDS_CLIENT_ORIGIN}${WARLORDS_TUTORIAL_PATH}`;
 
 /** How a title launches from the Open launcher. */
 export type LaunchKind =
@@ -63,7 +117,7 @@ export const ERA_CATEGORIES: readonly {
   {
     id: "warlords",
     label: "Warlords",
-    blurb: "Fantasy flagship · Genesis · islands · combat sandbox",
+    blurb: "Flagship client (home/sectors/islands inside) · Open Danger/Dressing",
     tone: "#e86a1a",
   },
   {
@@ -115,7 +169,10 @@ export type GameEntry = {
   category: GameCategory;
   tags: string[];
   tone: string;
-  /** public/rooms/<posterKey>-scene.png or full URL */
+  /**
+   * Poster art under public/rooms/ — prefer **unique per game** `{id}-scene.png|jpg`.
+   * Resolved by {@link posterUrl} (tries .png then .jpg; falls back to library-* keys).
+   */
   posterKey: string;
   /** Optional icon under public/icons/ */
   icon?: string;
@@ -141,21 +198,38 @@ export type GameEntry = {
   /** Absolute URL for external / mine-loader */
   url?: string;
   deploy: DeployStack;
+  /** Operator-facing deploy / go-live notes (shown in library detail). */
+  deployNotes?: string[];
+  /** Short player-facing how-to-play / SSO note. */
+  playerInfo?: string;
   /** Local paths / repos (docs + agent context) */
   sources: string[];
   /** Featured on library home row */
   featured?: boolean;
+  /**
+   * Warlords **in-game** world (home island, sector map, scatter island, etc.).
+   * Must not appear as a standalone Open library tile — use {@link warlordsClientUrl}.
+   */
+  warlordsInGameOnly?: boolean;
   status: "live" | "beta" | "local" | "migrating";
 };
+
+/** Canonical Warlords product entry (home islands / sectors live inside this client). */
+export const WARLORDS_CLIENT_URL = "https://client.grudge-studio.com/home";
+export const WARLORDS_PUBLIC_URL = "https://grudgewarlords.com/";
 
 /** Mine-Loader production Realms — fleet SSOT for voxel worlds (GitHub promote path). */
 export const MINE_LOADER = {
   localPath: "D:\\GitHub\\minegrudge\\Mine-Loader",
   mirrorPath: "F:\\GitHub\\voxgrudge\\Mine-Loader",
   github: MINE_LOADER_FLEET.github,
-  /** Live host (mine-loader.vercel.app — custom DNS may be pending) */
+  /**
+   * Canonical play host — multiplayer, self-hosted maps, harvest + DRC combat,
+   * account explorer avatar characters.
+   */
   clientUrl: MINE_LOADER_FLEET.client,
   edgeUrl: MINE_LOADER_FLEET.edge,
+  vercelUrl: MINE_LOADER_FLEET.vercel,
   /** Live Railway API (world authority + Codex catalog) */
   apiHost: "https://mine-loader-api-production.up.railway.app",
   docs: "docs/FLEET_DEPLOY.md",
@@ -166,10 +240,10 @@ export const MINE_LOADER = {
     "SSOT: github.com/MolochDaGod/mine-loader — promote editor/world/API there",
     "Never deploy production from Replit — GitHub → Vercel + Railway + CF",
     "Exactly one API replica (in-memory world authority → Postgres flush)",
-    "Open /voxel exports interchange → Realms scene; combat labs stay on Open /danger",
-    "Accounts: same Grudge ID + characterId on Open and Realms handoff",
-    "Primary SPA: https://mine-loader.vercel.app/ · edge: https://mine.grudge-studio.com",
-    "Wide fleet map: Mine-Loader docs/FLEET_WIDE_INTEGRATION.md (Builder + pipeline + VoxGrudge + GRUDOX)",
+    "Play host: https://mineloader.grudge-studio.com (alias mine.grudge-studio.com)",
+    "Modes: mode=harvest (Minecraft-like) · mode=drc (combat + explorer avatar)",
+    "Map deploys: self-hosted scenes via #/play?mapId=… + Railway worlds API",
+    "Accounts: Grudge ID + characterId + baseId=explorer on handoff",
     "Blocks/worlds API: mine-loader-api Railway; characters/bag stay on grudge-api-production",
   ],
 } as const;
@@ -210,9 +284,9 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Account Hub",
     short: "Characters · wallet · treaty",
     blurb:
-      "charactersgrudox race kit, credits, custodial wallet, GRUDOX tier, treaty chat. Same Grudge ID everywhere.",
+      "Open account hub — same Railway Postgres as GRUDOX /account, Warlords, Poker, GST. Characters by era · shared bag/wallet/cNFTs · Foundry create. Links to GRUDOX voxel hub for editor/deployer.",
     category: "account",
-    tags: ["SSO", "Characters", "Treaty"],
+    tags: ["SSO", "Characters", "Treaty", "Shared Account"],
     tone: "#4fc3ff",
     posterKey: "library-account",
     icon: "inventory",
@@ -220,7 +294,19 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     launch: "native",
     nativeMode: "account",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
-    sources: ["D:\\GitHub\\gameopen", "charactersgrudox races"],
+    deployNotes: [
+      "Ships with Open SPA (gameopen Vercel) — no separate deploy",
+      "SSO: id.grudge-studio.com · player SSOT: grudge-api Railway",
+      "Parity with GRUDOX loadSharedAccountBundle (/api/account · resources · nfts · island)",
+      "Cross-links: grudox.grudge-studio.com/account · poker · client Warlords",
+    ],
+    playerInfo:
+      "Sign in with Grudge ID · same heroes/bag on Open, GRUDOX, Warlords, Poker. Use GRUDOX for voxel editor/cabinets.",
+    sources: [
+      "D:\\GitHub\\gameopen",
+      "https://grudox.grudge-studio.com/account",
+      "charactersgrudox races",
+    ],
     featured: true,
     status: "live",
   },
@@ -246,11 +332,11 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   {
     id: "mine-loader-realms",
     title: "Mine-Loader Realms",
-    short: "Authoritative voxel worlds",
+    short: "Play · harvest · DRC · maps",
     blurb:
-      "Networked Minecraft-like Realms — build, combat, parties. World server = Mine-Loader (Railway Postgres, 1 replica). Launcher deploys & opens this stack.",
+      "mineloader.grudge-studio.com — multiplayer Realms, self-hosted map deploys, harvest (Minecraft-like) + DRC combat with your account explorer avatar. World API = Mine-Loader Railway (1 replica); characters = grudge-api.",
     category: "voxel",
-    tags: ["Worlds", "Multiplayer", "Deploy"],
+    tags: ["Worlds", "Multiplayer", "Harvest", "DRC", "Explorer", "Deploy"],
     tone: "#7ee0a0",
     posterKey: "library-mine",
     icon: "world-editor",
@@ -265,6 +351,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
       edge: "cloudflare-worker",
       singleReplica: true,
     },
+    deployNotes: [
+      "Client: Vercel SPA · World API: Railway (exactly 1 replica)",
+      "Edge: mineloader.grudge-studio.com / mine. CF Worker",
+      "Never Replit production · promote GitHub → Vercel + Railway",
+      "SSO: grudge_token + characterId on lobby handoff",
+    ],
+    playerInfo:
+      "Sign in → choose explorer character → Play opens Realms (harvest or DRC mode).",
     sources: [MINE_LOADER.localPath, MINE_LOADER.mirrorPath],
     featured: true,
     status: "live",
@@ -283,7 +377,45 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: [
+      "Native Open mode — ships with open.grudge-studio.com SPA",
+      "Packages: three + rapier + epicfight fleet combat SSOT",
+      "Smoke: open.grudge-studio.com/?door=danger",
+    ],
+    playerInfo: "Open combat lab — weapons 1–4, skills, maps. Same Controller across map loads.",
     sources: ["D:\\GitHub\\gameopen\\artifacts\\animator"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "gst-islands",
+    title: "Grudge Islands RTS",
+    short: "Airship cinema · nature staff · conquest",
+    blurb:
+      "GST browser RTS at grudge-studio.com/gst — logo boot → airship pathfind cinema → setup → island sim / combat showcase. Nature staff skills, training dummies, Grudge ID. Not GRUDOX.",
+    category: "warlords",
+    tags: ["RTS", "Cinema", "Nature", "GST", "Three.js"],
+    tone: "#d4a400",
+    posterKey: "gst-islands",
+    icon: "rally",
+    engines: ["three", "r3f", "rapier"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.gstIslands,
+    deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: [
+      "Vercel project grudge-studio-tool · BASE_PATH=/gst/",
+      "Build: artifacts/grudge-islands · node scripts/go-live.mjs",
+      "CDN pirates + airship_port · assets.grudge-studio.com",
+      "API rewrites /gst/api/* → Grudge ID + Railway",
+      "Shared account: SHARED_ACCOUNT_SCHEME (Railway characters/bag)",
+      "Do not ship splash MP4 intro — logo + Three cinema",
+    ],
+    playerInfo:
+      "Hard refresh /gst/ · logo → pirate pathfind board → setup · Sign in with Grudge ID · Begin Conquest or Combat.",
+    sources: [
+      "C:\\Users\\nugye\\Documents\\Game-Studio-Tool\\Game-Studio-Tool\\artifacts\\grudge-islands",
+      FLEET_WORLD_HOSTS.gstIslands,
+    ],
     featured: true,
     status: "live",
   },
@@ -296,12 +428,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "voxel",
     tags: ["BR", "Bots", "Map:Hunger", "Singles", "Duos"],
     tone: "#f0c14b",
-    posterKey: "library-danger",
+    posterKey: "voxgrudge-battle",
     icon: "pvp",
     engines: ["three"],
     launch: "native",
     nativeMode: "vox-battle",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Native Open mode · ships with gameopen SPA"],
+    playerInfo: "Pick singles/duos · pre-select weapons · last standing.",
     sources: [
       "D:\\Games\\Models\\the_hunger_games_arena.glb",
       "D:\\Games\\Models\\practice__15_arenas.glb",
@@ -315,86 +449,94 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Forest Map",
     short: "Harvest forest",
     blurb:
-      "Dark forest harvest test — Warlords trees/rocks/leaves + flowers, ore, animals. LMB select · RMB harvest. Seed forest-map-harvest-01.",
+      "Danger Room harvest lab (chicken_gun_fruzer dark forest base + Warlords nature scatter). NOT the Warlords Chicken Gun pirate-islands opening/tutorial lobby — that is in-client only (map=pirate-islands).",
     category: "warlords",
-    tags: ["Harvest", "Production", "Map:Forest"],
+    tags: ["Harvest", "DangerLab", "Map:Forest"],
     tone: "#3d7a4a",
-    posterKey: "library-mine",
+    posterKey: "forest-map",
     icon: "harvest",
     engines: ["three"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Danger map path · mesh on CDN/R2 when keyed"],
+    playerInfo: "Open harvest forest lab — not Warlords pirate lobby.",
     sources: ["D:\\Games\\Models\\chicken_gun_fruzer_dark_forest (1).glb"],
     featured: true,
     status: "live",
   },
   {
     id: "island-life",
-    title: "Island Life",
-    short: "Survival RPG island",
+    title: "Survival Coast (sailtest stand-in)",
+    short: "Survival lab · sailtest mesh",
     blurb:
-      "Minecraft-like survival island — build/mine with trailer ores, orc tribes + outlaws at red mushrooms, bandit voxel-boat raids (3–5). Stage island_life.glb to models/worlds/. Voxel/Blockbench wildlife only (no COTW).",
+      "NOT island_life.glb (404 on CDN). Live playable mesh is sailtest.glb until island_life is uploaded to R2. Harvest/build/sail lab on dual islands.",
     category: "voxel",
-    tags: ["Survival", "RPG", "Raids", "Map:IslandLife", "Orcs", "Bandits"],
+    tags: ["Survival", "RPG", "Map:SailtestStandIn", "Awaiting:island_life"],
     tone: "#5ec8a0",
-    posterKey: "library-mine",
+    posterKey: "island-life",
     icon: "world-editor",
     engines: ["three", "rapier"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Upload island_life.glb to R2 before status=live full mesh"],
+    playerInfo: "Sailtest stand-in until island_life CDN is live.",
     sources: [
       "D:\\Games\\Models\\island_life.glb",
-      "D:\\Games\\Models\\Orc_Free.zip",
-      "D:\\Games\\Models\\Bandits_Free.zip",
-      "D:\\Games\\Models\\minecrafts_trailer_style_ores.glb",
+      "models/worlds/sailtest.glb",
     ],
-    featured: true,
+    featured: false,
     status: "beta",
   },
   {
     id: "fabled-main-town",
-    title: "Fabled Main Town",
-    short: "Fabled capital + sky cities",
+    title: "Town Stand-in (pirate pack)",
+    short: "Fabled capital pending mesh",
     blurb:
-      "fabledzone.glb great tree island + floating dwarf main city & elf sky town (Three.js), portals between ground and sky. Stage fabled-zone.glb; sky assets under models/worlds/sky/.",
+      "NOT fabled-zone.glb (404 on CDN). Live mesh: pirate_island_pack + medieval camp. Great-tree capital + sky towns need R2 upload.",
     category: "warlords",
-    tags: ["Fabled", "Town", "Sky", "Portals", "Dwarf", "Elf", "Map:FabledZone"],
+    tags: ["Town", "StandIn", "Map:PiratePack", "Awaiting:fabled-zone"],
     tone: "#b48cff",
-    posterKey: "library-mine",
+    posterKey: "fabled-main-town",
     icon: "world-editor",
     engines: ["three"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Upload fabled-zone.glb → models/worlds/ before promoting"],
+    playerInfo: "Pirate pack stand-in for fabled capital.",
     sources: [
+      "models/warlords-era/worlds/pirate_island_pack.glb",
       "C:\\Users\\nugye\\Desktop\\fabledzone.glb",
-      "D:\\Games\\Models\\low_poly_winter_medieval_castle_and_town_pack.glb",
-      "D:\\Games\\Models\\elf_lord_temple_-_low_poly_handpainted_stylized.glb",
-      "D:\\Games\\Models\\floating_island_with_roots_and_rocks.glb",
     ],
-    featured: true,
+    featured: false,
     status: "beta",
   },
   {
     id: "bridge-town-docks",
-    title: "Bridge Town Docks",
-    short: "NPC dock seed kit",
+    title: "Harbor Stand-in",
+    short: "Dock kit pending · pirate+sail",
     blurb:
-      "bridge_town.glb modular kit — seed fisher/merchant/guard docks on island shores (stilts, piers, lamps, barrels).",
+      "NOT bridge_town.glb (404 on CDN/SPA). Live mesh: pirate_island_pack + sailtest. Modular dock kit pending R2 upload.",
     category: "warlords",
-    tags: ["Docks", "NPCs", "Islands", "BridgeTown"],
+    tags: ["Docks", "StandIn", "Awaiting:bridge-town-kit"],
     tone: "#5a9ec8",
-    posterKey: "library-mine",
+    posterKey: "bridge-town-docks",
     icon: "world-editor",
     engines: ["three"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
-    sources: ["D:\\Games\\Models\\bridge_town.glb"],
-    featured: true,
-    status: "live",
+    deployNotes: ["Upload bridge_town kit to R2 · modular docks"],
+    playerInfo: "Harbor stand-in mesh until dock kit is on CDN.",
+    sources: [
+      "models/warlords-era/worlds/pirate_island_pack.glb",
+      "models/worlds/sailtest.glb",
+      "D:\\Games\\Models\\bridge_town.glb",
+    ],
+    featured: false,
+    status: "beta",
   },
   {
     id: "dwarf-main-city",
@@ -405,12 +547,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "warlords",
     tags: ["Dwarf", "Town", "uMMORPG", "grudge6"],
     tone: "#c4a574",
-    posterKey: "library-mine",
+    posterKey: "dwarf-main-city",
     icon: "world-editor",
     engines: ["three"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Convert modularcitybuilder offline → GLB → R2 · no Unity in browser"],
+    playerInfo: "Dwarf capital lab — NPCs grudge6 ready; mesh convert pending.",
     sources: ["C:\\Users\\nugye\\Documents\\ummorpgdev", "C:\\Users\\nugye\\Documents\\modularcitybuilder"],
     featured: false,
     status: "beta",
@@ -424,12 +568,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "armada",
     tags: ["Camp", "Sail", "Build", "Map:Sailtest"],
     tone: "#5a9ec8",
-    posterKey: "library-mine",
+    posterKey: "sailtest-map",
     icon: "world-editor",
     engines: ["three"],
     launch: "native",
     nativeMode: "danger",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Mesh models/worlds/sailtest.glb on CDN"],
+    playerInfo: "Dual-island sail lab — camp, harvest, water.",
     sources: ["C:\\Users\\nugye\\Desktop\\SAILTEST.glb", "models/worlds/sailtest.glb"],
     featured: true,
     status: "live",
@@ -491,22 +637,28 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "warlord-genesis",
-    title: "Warlord Genesis",
-    short: "3-lane RTS · 9-sector seas",
+    title: "Warstrat · Warlord Genesis",
+    short: "3-lane RTS · warcamp MOBA",
     blurb:
-      "Warlords-era: your 4 campfire heroes + grudge6 units (explorers are units). Three lanes, buildings, turrets, sailing sectors (3×3). In-app canvas with SSO + characterId; product SPA warlord-genesis.vercel.app.",
+      "Canonical play host warstrat.grudge-studio.com — choose warlord, arm loadout, march three lanes. Shared Grudge ID + Railway account characters/GBUX with Builder. Toon RTS grudge6 kits. Twin: warlord-genesis.vercel.app.",
     category: "warlords",
-    tags: ["MOBA", "RTS", "Fleet", "Sectors", "In-app"],
+    tags: ["MOBA", "RTS", "Warstrat", "Fleet", "Warcamp", "Grudge ID"],
     tone: "#ffd24d",
     posterKey: "library-genesis",
     icon: "skill-vfx-lab",
     engines: ["three", "r3f"],
-    // Native Open mode opens GenesisExternalLaunch → InAppGameCanvas (not a new browser tab).
+    // Native Open mode opens Genesis picker; product SPA is Warstrat.
     launch: "native",
     nativeMode: "genesis",
     url: "https://warstrat.grudge-studio.com/lobby",
     deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
-    sources: ["F:\\GitHub\\warlord-genesis", "F:\\GitHub\\gameopen"],
+    sources: [
+      "https://warstrat.grudge-studio.com/",
+      "F:\\GitHub\\warlord-genesis",
+      "C:\\Users\\nugye\\Documents\\warlord-genesis",
+      "F:\\GitHub\\gameopen",
+    ],
+    featured: true,
     status: "live",
   },
   {
@@ -547,20 +699,46 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "grudox-island",
-    title: "GRUDOX Island",
-    short: "Persistent play shell island",
-    blurb: "Harvest, craft, build, PvP as your Warlords character. Account bag on Railway.",
+    title: "Warlords Island (in-game)",
+    short: "Inside Warlords only",
+    blurb:
+      "NOT a standalone Open game. Home / lobby island is entered from Grudge Warlords after character select.",
     category: "warlords",
-    tags: ["Island", "PvP"],
+    tags: ["Island", "In-game", "Warlords"],
     tone: "#5fd48a",
     posterKey: "lobby",
     icon: "loot",
     engines: ["r3f", "rapier"],
     launch: "external",
-    url: `${PLAY_SHELL_HOST}/?door=lobbyWorld`,
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", server: "railway" },
-    sources: ["play shell threejs-rapier"],
-    featured: true,
+    sources: ["Warlords client — not Open library"],
+    featured: false,
+    warlordsInGameOnly: true,
+    status: "live",
+  },
+  {
+    id: "pirate-islands",
+    title: "Warlords Pirate Lobby (in-game)",
+    short: "Opening + tutorial · Warlords only",
+    blurb:
+      "Chicken Gun / PolygonPirates lobby mesh (CDN models/lobby/pirate-islands). Warlords opening map AND tutorial map (shipwreck_cove → /tutorial). NOT GRUDOX, NOT Explorer, NOT an Open standalone game — enter via Grudge Warlords client only.",
+    category: "warlords",
+    tags: ["Lobby", "Opening", "Tutorial", "In-game", "Warlords", "Pirate"],
+    tone: "#4a9ec8",
+    posterKey: "lobby",
+    icon: "explore",
+    engines: ["three", "r3f", "rapier"],
+    launch: "external",
+    url: WARLORDS_PIRATE_LOBBY_URL,
+    deploy: { client: "vercel", server: "railway" },
+    sources: [
+      "https://assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb",
+      "F:\\GitHub\\GrudgeBuilder\\client\\public\\production\\manifest.json",
+      "F:\\GitHub\\GrudgeBuilder\\shared\\fleet\\gameDeployments.ts",
+    ],
+    featured: false,
+    warlordsInGameOnly: true,
     status: "live",
   },
   {
@@ -568,37 +746,66 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "Grudge Warlords",
     short: "Main Warlords client",
     blurb:
-      "Canonical Warlords hub — home, islands, crafting, hero fleet. SSO via id.grudge-studio.com; characters on Railway era=warlords.",
+      "Play Warlords here: pirate lobby, home island, sectors, crafting, hero fleet. Same Grudge ID + era=warlords heroes as Mine-Loader Realms (mineloader). SI 1.8 m · SSO + Railway characters.",
     category: "warlords",
-    tags: ["Flagship", "Client", "Crafting"],
+    tags: ["Flagship", "Client", "Home", "Sectors", "Crafting", "Fleet Heroes", "era:warlords"],
     tone: "#e86a1a",
     posterKey: "zones",
     icon: "rally",
     engines: ["three", "colyseus"],
     launch: "external",
-    url: "https://client.grudge-studio.com/home",
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", server: "railway" },
     sources: ["F:\\GitHub\\warlords-crafting-suite", "F:\\GitHub\\GrudgeBuilder"],
     featured: true,
     status: "live",
   },
   {
-    id: "rts-grudge",
-    title: "Voxel RTS / Command",
-    short: "Toon RTS + home island",
+    id: "hero-command",
+    title: "Hero Command RTS",
+    short: "Toon RTS · grudge6 · Rapier",
     blurb:
-      "R3F + Rapier RTS / Hero Command with id.grudge-studio.com auth. Forge map editor at forge.grudge-studio.com.",
+      "Hero Command (play.grudge-studio.com) — R3F + Rapier heightfield terrain, grudge6 race kits from assets.grudge-studio.com, fleet SSO. Monorepo artifact hero-rts.",
     category: "warlords",
-    tags: ["RTS", "Forge", "Island"],
+    tags: ["RTS", "Hero", "grudge6", "Rapier"],
     tone: "#9d8bff",
     posterKey: "library-rts",
     icon: "siege",
+    engines: ["r3f", "rapier", "three"],
+    launch: "external",
+    url: FLEET_WORLD_HOSTS.playRts,
+    deploy: { client: "vercel" },
+    deployNotes: [
+      "play.grudge-studio.com · twin hero-rts.vercel.app",
+      "Assets: assets.grudge-studio.com grudge6 · SSO Grudge ID",
+    ],
+    playerInfo: "Toon RTS hero command — fleet SSO + Rapier terrain.",
+    sources: [
+      "https://play.grudge-studio.com/",
+      "https://hero-rts.vercel.app/",
+      "C:\\Users\\nugye\\Documents\\grudge-studio\\artifacts\\hero-rts",
+    ],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "rts-grudge",
+    title: "Warlords Forge Client",
+    short: "RTS-Grudge forge shell",
+    blurb:
+      "RTS-Grudge / Warlords forge client (rts-grudge.vercel.app). Map tooling pairs with forge.grudge-studio.com. For Toon Hero Command use Hero Command RTS.",
+    category: "warlords",
+    tags: ["RTS", "Forge"],
+    tone: "#7c6bb0",
+    posterKey: "library-rts",
+    icon: "world-editor",
     engines: ["r3f", "rapier"],
     launch: "external",
     url: "https://rts-grudge.vercel.app/",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: ["Pair with forge.grudge-studio.com for maps"],
+    playerInfo: "Forge shell — use Hero Command for Toon RTS play.",
     sources: ["F:\\GitHub\\RTS-Grudge", "F:\\GitHub\\grudge-warlords-rts"],
-    featured: true,
     status: "live",
   },
   {
@@ -610,12 +817,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "warlords",
     tags: ["PvP", "Arena", "grudge6"],
     tone: "#f43f5e",
-    posterKey: "library-danger",
+    posterKey: "grudge-arena",
     icon: "siege",
     engines: ["three"],
     launch: "external",
     url: "https://grudge-arena.grudge-studio.com/",
     deploy: { client: "vercel" },
+    deployNotes: ["grudge-arena.grudge-studio.com · Vercel"],
+    playerInfo: "Equip grudge6 → enter arena combat.",
     sources: ["F:\\GitHub\\grudge-arena"],
     status: "live",
   },
@@ -640,20 +849,50 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island (Water)",
-    short: "Production island",
+    title: "Warlords Home Island (in-game)",
+    short: "Inside Warlords only",
     blurb:
-      "water.grudge-studio.com/island — fleet Warlords water SPA (grudge6, harvest, nature). Not tactical-infinity.vercel.app.",
+      "Home / water island is a Warlords world destination — open Grudge Warlords, not a separate Open title. (water.grudge-studio.com serves the client world stack.)",
     category: "warlords",
-    tags: ["Island", "Warlords", "Water"],
+    tags: ["Island", "Home", "In-game", "Warlords"],
     tone: "#4fc3c8",
     posterKey: "lobby",
     icon: "loot",
     engines: ["three", "r3f"],
     launch: "external",
-    url: FLEET_WORLD_HOSTS.waterIsland,
+    url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", edge: "cloudflare-worker" },
-    sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
+    sources: ["Warlords client home · water SPA is world mesh host not Open game"],
+    featured: false,
+    warlordsInGameOnly: true,
+    status: "live",
+  },
+  {
+    id: "grudge-multiverse",
+    title: "Grudge Multiverse",
+    short: "Bermuda · grudge6 · multiplayer",
+    blurb:
+      "RTS Toon race→class, Bermuda Free Fire island (CDN map), harvest, bosses, Main Panel equipment & skills. Dedicated Railway rooms (wss …/api/mv) — not Carrier. Play #room1.",
+    category: "warlords",
+    tags: ["Multiverse", "grudge6", "Multiplayer", "Island", "Bermuda"],
+    tone: "#c8a84b",
+    posterKey: "grudge-multiverse",
+    icon: "explore",
+    engines: ["three", "rapier"],
+    launch: "external",
+    /** Primary play URL — room hash selects Multiverse Railway room */
+    url: "https://grudge-multiverse.vercel.app/#room1",
+    deploy: { client: "vercel", server: "railway" },
+    deployNotes: [
+      "Client Vercel · Rooms Railway grudge-multiverse-room (not Carrier)",
+      "SSO Grudge ID · era warlords heroes",
+    ],
+    playerInfo: "Race→class · Bermuda island · #room1 multiplayer.",
+    sources: [
+      "F:\\GitHub\\grudge-multiverse",
+      "https://grudge-multiverse.vercel.app",
+      "https://grudge-multiverse-room-production.up.railway.app",
+    ],
     featured: true,
     status: "live",
   },
@@ -665,30 +904,48 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "voxel",
     tags: ["Island", "Voxel"],
     tone: "#e8c06a",
-    posterKey: "lobby",
+    posterKey: "angel-island",
     icon: "explore",
     engines: ["three"],
     launch: "external",
     url: FLEET_WORLD_HOSTS.angelIsland,
     deploy: { client: "vercel" },
+    deployNotes: ["angel-island.vercel.app"],
+    playerInfo: "Voxel island sandbox demo.",
     sources: ["D:\\Games\\angel_island"],
     status: "live",
   },
   {
     id: "grudox-games",
-    title: "GRUDOX Games Hub",
-    short: "Arcade + cabinets",
-    blurb: "Racer, zombie, z-brawl, waters, voxgrudge path — grudox.grudge-studio.com/games",
+    title: "GRUDOX · Voxel Hub",
+    short: "Editor · deployer · account · cabinets",
+    blurb:
+      "GRUDOX (grudox.grudge-studio.com · grudox.vercel.app) — voxel systems app: arcade cabinets, Carrier, VoxGrudge path, studio tools, and fleet account at /account. Same Grudge ID + Railway bag/wallet/characters as Open and Warlords. Not a second player DB. Cabinets stay on GRUDOX, not Open Danger.",
     category: "voxel",
-    tags: ["Arcade", "Hub"],
-    tone: "#7a9cff",
+    tags: ["Arcade", "Hub", "Voxel", "Editor", "Account", "Deployer"],
+    tone: "#d4af37",
     posterKey: "zones",
     icon: "rally",
     engines: ["three", "html-static"],
     launch: "external",
-    url: FLEET_WORLD_HOSTS.grudoxGames,
-    deploy: { client: "vercel" },
-    sources: ["D:\\GitHub\\grudox"],
+    url: FLEET_WORLD_HOSTS.grudox,
+    deploy: { client: "vercel", edge: "cloudflare-worker" },
+    deployNotes: [
+      "Vercel project grudox · alias grudox.grudge-studio.com + grudox.vercel.app",
+      "Account: /account · loadSharedAccountBundle → Railway /api/*",
+      "Same token keys: grudge_auth_token · grudge_session_token · sso_token",
+      "Shared bag/wallet; characters filter by era (voxel | warlords)",
+      "Cabinets: racer, zombie, z-brawl → GRUDOX only (never Open Danger)",
+      "Open library = launcher; GRUDOX = voxel product hub",
+    ],
+    playerInfo:
+      "Sign in on /account for the same heroes & bag as Open. Play cabinets from GRUDOX hub; open Open for Steam-style library.",
+    sources: [
+      "C:\\Users\\nugye\\Documents\\grudox",
+      "D:\\GitHub\\grudox",
+      "https://grudox.grudge-studio.com/account",
+      "https://grudox.vercel.app/account",
+    ],
     featured: true,
     status: "live",
   },
@@ -780,18 +1037,24 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   {
     id: "mech-forge",
     title: "Mech Forge",
-    short: "Mech builder PvP",
-    blurb: "R3F mech playground — pair with Railway pvp-server.",
+    short: "TPS mech · Rapier · builder",
+    blurb:
+      "mech-playground — Danger-style third-person camera, soft/hard focus crosshair, capsule Rapier colliders, physics-driven mech anim. Builder shell redirects here. Optional Railway pvp-server.",
     category: "nexus",
-    tags: ["Mech", "PvP"],
+    tags: ["Mech", "TPS", "Rapier", "PvP"],
     tone: "#ff8844",
     posterKey: "danger",
     icon: "siege",
-    engines: ["r3f", "socketio"],
+    engines: ["r3f", "rapier", "three", "socketio"],
     launch: "external",
-    url: "https://mech-playground.vercel.app/",
+    url: FLEET_WORLD_HOSTS.mech,
     deploy: { client: "vercel", server: "railway" },
-    sources: ["F:\\GitHub\\grudge-mech-forge"],
+    sources: [
+      "https://mech-playground.vercel.app/",
+      "C:\\Users\\nugye\\Documents\\grudge-mech-forge",
+      "MolochDaGod/grudge-mech-forge",
+    ],
+    featured: true,
     status: "live",
   },
   {
@@ -864,12 +1127,14 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "armada",
     tags: ["Naval", "Armada", "Fleet"],
     tone: "#4fc3c8",
-    posterKey: "lobby",
+    posterKey: "grim-armada",
     icon: "rally",
     engines: ["three"],
     launch: "external",
     url: "https://grim-armada-web.vercel.app/",
     deploy: { client: "vercel" },
+    deployNotes: ["grim-armada-web.vercel.app · Armada era only"],
+    playerInfo: "Naval armada fleet combat — Armada era import shelf.",
     sources: ["F:\\GitHub\\grim-armada-web", "GrimArmada"],
     featured: true,
     status: "live",
@@ -883,12 +1148,17 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     category: "nexus",
     tags: ["Nexus", "Multiplayer", "WS"],
     tone: "#9d8bff",
-    posterKey: "zones",
+    posterKey: "nexus-carrier",
     icon: "rally",
     engines: ["socketio"],
     launch: "external",
     url: "https://carrier.grudge-studio.com/",
     deploy: { client: "vercel", server: "railway", edge: "cloudflare-worker" },
+    deployNotes: [
+      "WS relay · not a full open world",
+      "Do not confuse with Multiverse Railway rooms",
+    ],
+    playerInfo: "Presence / room relay for Nexus multiplayer handoff.",
     sources: ["gameopen carrier", "voxgrudge-grudox-room"],
     featured: true,
     status: "live",
@@ -931,17 +1201,32 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
   },
 ] as const;
 
+/**
+ * Resolve library poster. Prefer unique per-game art:
+ *   rooms/{posterKey}-scene.jpg (screenshot-style covers, 2026-08)
+ *   legacy .png still on disk for some doors but jpg wins when present.
+ * Keys may be game id (gst-islands) or legacy library-* / door names.
+ */
 export function posterUrl(posterKey: string): string {
-  return assetUrl(`rooms/${posterKey}-scene.png`);
+  // Generated library covers ship as .jpg (smaller, screenshot look).
+  // Fall through path is still rooms/{key}-scene.jpg for all keys so
+  // new uploads do not get masked by older huge .png posters.
+  return assetUrl(`rooms/${posterKey}-scene.jpg`);
 }
 
 export function iconUrl(name: string): string {
   return assetUrl(`icons/${name}.png`);
 }
 
+/** Library UI never lists Warlords in-game worlds as standalone titles. */
+export function isLibraryVisible(g: GameEntry): boolean {
+  return !g.warlordsInGameOnly;
+}
+
 export function libraryByCategory(cat: GameCategory | "all"): GameEntry[] {
-  if (cat === "all") return [...GAME_LIBRARY];
-  return GAME_LIBRARY.filter((g) => g.category === cat);
+  const base =
+    cat === "all" ? [...GAME_LIBRARY] : GAME_LIBRARY.filter((g) => g.category === cat);
+  return base.filter(isLibraryVisible);
 }
 
 /** Eras are the library categories (voxel / warlords / nexus / armada). */
@@ -956,12 +1241,18 @@ export function productionVoxelGames(): GameEntry[] {
       g.category === "voxel" &&
       g.status === "live" &&
       g.id !== "voxgrudge-lab" &&
-      !g.id.endsWith("-slot"),
+      !g.id.endsWith("-slot") &&
+      isLibraryVisible(g),
   );
 }
 
 export function featuredGames(): GameEntry[] {
-  return GAME_LIBRARY.filter((g) => g.featured);
+  return GAME_LIBRARY.filter((g) => g.featured && isLibraryVisible(g));
+}
+
+/** Warlords sector / home-island catalog (docs + agents) — not Open launch tiles. */
+export function warlordsInGameWorlds(): GameEntry[] {
+  return GAME_LIBRARY.filter((g) => g.warlordsInGameOnly);
 }
 
 export function mineLoaderGames(): GameEntry[] {
@@ -986,6 +1277,38 @@ export function gameLaunchUrl(
   } = {},
 ): string | null {
   if (game.launch === "native" || game.launch === "editor") return null;
+
+  // Warlords home/sector/map content → always the Warlords client, never a fake standalone
+  if (
+    game.warlordsInGameOnly ||
+    game.id === "water-island" ||
+    game.id === "grudox-island" ||
+    game.id === "pirate-islands"
+  ) {
+    try {
+      // Chicken Gun pirate lobby = production opening + tutorial mesh (not /home generic)
+      const base =
+        game.id === "pirate-islands" ? WARLORDS_PIRATE_LOBBY_URL : WARLORDS_CLIENT_URL;
+      const u = new URL(base);
+      u.searchParams.set("open", "1");
+      u.searchParams.set("from", "gameopen");
+      u.searchParams.set("warlordsWorld", game.id);
+      if (game.id === "pirate-islands") {
+        // Preserve mode/map from WARLORDS_PIRATE_LOBBY_PATH; reinforce SSOT
+        if (!u.searchParams.get("mode")) u.searchParams.set("mode", "lobby");
+        if (!u.searchParams.get("map")) u.searchParams.set("map", "pirate-islands");
+      }
+      if (params.token) {
+        u.searchParams.set("sso_token", params.token);
+        u.searchParams.set("grudge_token", params.token);
+      }
+      if (params.characterId) u.searchParams.set("characterId", params.characterId);
+      if (params.characterName) u.searchParams.set("characterName", params.characterName);
+      return u.toString();
+    } catch {
+      return game.id === "pirate-islands" ? WARLORDS_PIRATE_LOBBY_URL : WARLORDS_CLIENT_URL;
+    }
+  }
 
   // Specialized builders (hash routes / dual hosts)
   if (game.id === "mine-loader-realms" || game.launch === "mine-loader") {
@@ -1019,6 +1342,47 @@ export function gameLaunchUrl(
       from: "open",
     });
   }
+  if (game.id === "gst-islands") {
+    return fleetWorldLaunchUrl(FLEET_WORLD_HOSTS.gstIslands, {
+      token: params.token,
+      characterId: params.characterId,
+      baseId: params.baseId,
+      characterName: params.characterName,
+      raceId: params.raceId,
+      from: "gameopen",
+    });
+  }
+  if (game.id === "grudge-multiverse") {
+    return fleetWorldLaunchUrl(FLEET_WORLD_HOSTS.multiverse, {
+      token: params.token,
+      characterId: params.characterId,
+      baseId: params.baseId,
+      characterName: params.characterName,
+      raceId: params.raceId,
+      from: "gameopen",
+      hash: "#room1",
+    });
+  }
+  if (game.id === "hero-command") {
+    return fleetWorldLaunchUrl("rts", {
+      token: params.token,
+      characterId: params.characterId,
+      baseId: params.baseId,
+      characterName: params.characterName,
+      raceId: params.raceId,
+      from: "gameopen",
+    });
+  }
+  if (game.id === "grudge-arena") {
+    return fleetWorldLaunchUrl(FLEET_WORLD_HOSTS.grudgeArena, {
+      token: params.token,
+      characterId: params.characterId,
+      baseId: params.baseId,
+      characterName: params.characterName,
+      raceId: params.raceId,
+      from: "gameopen",
+    });
+  }
 
   const base = game.url || MINE_LOADER.clientUrl;
   return fleetWorldLaunchUrl(base, {
@@ -1029,6 +1393,35 @@ export function gameLaunchUrl(
     raceId: params.raceId,
     from: "gameopen",
   });
+}
+
+/** Stack health: live external games must declare client + (if multiplayer) server. */
+export function validateGameStack(g: GameEntry): string[] {
+  const errs: string[] = [];
+  if (!g.posterKey) errs.push("missing posterKey");
+  if (g.launch === "external" && !g.url && !g.warlordsInGameOnly) {
+    errs.push("external launch without url");
+  }
+  if (g.status === "live" && g.launch === "external" && !g.url && !g.warlordsInGameOnly) {
+    errs.push("live external needs url");
+  }
+  if (
+    g.engines.includes("mine-loader") &&
+    g.deploy.server !== "railway" &&
+    g.id === "mine-loader-realms"
+  ) {
+    errs.push("mine-loader-realms must use railway server");
+  }
+  if (g.featured && g.status === "migrating") {
+    errs.push("scaffold must not be featured");
+  }
+  return errs;
+}
+
+export function auditAllGameStacks(): { id: string; errs: string[] }[] {
+  return GAME_LIBRARY.map((g) => ({ id: g.id, errs: validateGameStack(g) })).filter(
+    (r) => r.errs.length > 0,
+  );
 }
 
 export type LibraryFilter = "all" | "featured" | GameCategory;

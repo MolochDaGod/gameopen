@@ -20,7 +20,15 @@ import {
 } from "./three/types";
 import { loadFireFx, saveFireFx, type FireFxParams } from "./three/fxSettings";
 import { loadControls } from "./three/controlsSettings";
-import { ROOM_PRESETS, ROOM_PRESET_LIST, asRoomPresetId, loadRoomPreset, saveRoomPreset, type RoomPresetId } from "./three/RoomPresets";
+import {
+  ROOM_PRESETS,
+  ROOM_PRESET_LIST,
+  asRoomPresetId,
+  loadRoomPreset,
+  saveRoomPreset,
+  loadBackdrop,
+  type RoomPresetId,
+} from "./three/RoomPresets";
 import {
   loadTestWorldId,
   TEST_WORLD_LIST,
@@ -66,6 +74,7 @@ import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
 import { ClassSkillBar } from "./components/ClassSkillBar";
+import { LockpickPanel } from "./components/minigames/LockpickPanel";
 import {
   loadCharacterBag,
   saveCharacterBag,
@@ -75,10 +84,13 @@ import {
   applyDeathBagDrop,
   DEFAULT_BAG_SLOTS,
   useConsumableHotkey,
-  equipBagToKept,
+  equipFromBagWithLedger,
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
+  markLockBusted,
+  loadLocationStorage,
+  type LockpickChallenge,
 } from "./game/inventory";
 import { AdminPanel } from "./components/AdminPanel";
 import { EnvThumb } from "./components/EnvThumb";
@@ -113,7 +125,7 @@ import {
   buildGenesisHeroOptions,
   type GenesisHeroOption,
 } from "./lib/grudoxRoster";
-import { resolveRaceModel } from "./lib/raceModel";
+import { normalizeToGrudgeAvatarId, resolveRaceModel } from "./lib/raceModel";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
@@ -501,15 +513,23 @@ export default function App() {
    * Sticky free-mouse (F8 / \): OS cursor in world, no auto pointer-lock.
    * F9 / ' re-locks aim. Panels force free mouse until closed.
    */
-  const [freeMouse, setFreeMouse] = useState(false);
-  const freeMouseRef = useRef(false);
+  // Default FREE mouse so open.* always shows a cursor image; user can aim-lock (F8)
+  // which uses HUD crosshair (browser hides OS cursor under pointer-lock — reticle stays).
+  const [freeMouse, setFreeMouse] = useState(true);
+  const freeMouseRef = useRef(true);
   freeMouseRef.current = freeMouse;
+  // Sticky free-mouse from first paint so presence SSOT never defaults to locked void
+  useEffect(() => {
+    setFreeMouseSticky(true);
+  }, []);
   const [depositCtx, setDepositCtx] = useState<DepositContext>({
     zone: "none",
     canDeposit: false,
-    label: "Deposit (need claim / camp / boat)",
+    label: "Deposit (need camp · boat · home island)",
   });
   const [bagOccupied, setBagOccupied] = useState(0);
+  const [lockpickChallenge, setLockpickChallenge] =
+    useState<LockpickChallenge | null>(null);
   // Never carry the loadout overlay across surfaces (doors/editor/play/danger).
   useEffect(() => {
     setEquipOpen(false);
@@ -576,7 +596,12 @@ export default function App() {
       return next;
     });
   }, []);
-  const [characterId, setCharacterId] = useState("explorer");
+  // DRC combat default = grudge6 WK warrior (never Mixamo explorer for /danger boot)
+  const [characterId, setCharacterId] = useState(
+    () =>
+      // lazy import avoids circular weight at module eval — literal matches DRC_DEFAULT_AVATAR_ID
+      "grudge:western-kingdoms:warrior",
+  );
   const activeCharacterId =
     gameSession.snapshot.selectedCharacterId || characterId || "local";
 
@@ -630,11 +655,14 @@ export default function App() {
           (s) => s.item?.templateId === res.used!.templateId,
         );
         if (bagIdx >= 0) {
-          const equipped = equipBagToKept(res.bag, bagIdx, res.summonSlot);
-          if (equipped.ok) {
-            saveCharacterBag(equipped.bag);
-            refreshBagMeta();
-          }
+          // Phase 1: equip path logs EQUIPPED via /api/ledger when instance is ledgered
+          void equipFromBagWithLedger({
+            characterId: activeCharacterId,
+            bagIndex: bagIdx,
+            slot: res.summonSlot,
+          }).then((equipped) => {
+            if (equipped.ok) refreshBagMeta();
+          });
         }
         studioRef.current?.flashMessage?.(`Summon ${name}`, 1.2);
         return true;
@@ -644,13 +672,21 @@ export default function App() {
     [activeCharacterId, refreshBagMeta],
   );
 
+  // Vault id = grudgeId when signed in (shared home island bag). Not character uuid.
+  const accountIdForBag =
+    gameSession.snapshot.account?.grudgeId ||
+    (gameSession.snapshot.account?.source === "guest" ? "guest" : null) ||
+    "guest";
+
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {
       insideClaim: false,
       nearCamp: false,
       onBoat: false,
+      nearStorage: false,
+      onHomeIsland: false,
+      claimKey: "default",
     };
-    // DepositProbeInput requires feet x/y/z; zone flags drive illumination.
     setDepositCtx(
       resolveDepositContext({
         x: 0,
@@ -659,9 +695,65 @@ export default function App() {
         insideClaim: !!probe.insideClaim,
         nearCamp: !!probe.nearCamp,
         onBoat: !!probe.onBoat,
+        nearStorage: !!probe.nearStorage,
+        onHomeIsland: !!probe.onHomeIsland,
+        claimKey: probe.claimKey || "default",
+        boatId: probe.boatId,
+        accountId: accountIdForBag,
       }),
     );
-  }, []);
+  }, [accountIdForBag]);
+
+  // ScriptRunner open-ui lockpick + grant-item bus
+  useEffect(() => {
+    const onOpenUi = (ev: Event) => {
+      const d = (ev as CustomEvent).detail || {};
+      if (d.ui === "lockpick" || d.ui === "lock_pick") {
+        const targetId = String(d.targetId || d.locationId || "unknown");
+        // Home islands are SAFE — never open lockpick UI
+        if (
+          targetId.startsWith("home:") ||
+          d.kind === "home_island" ||
+          d.zone === "home_island"
+        ) {
+          studioRef.current?.flashMessage?.(
+            "Home island is safe — no lockpicking",
+            2.2,
+          );
+          return;
+        }
+        setLockpickChallenge({
+          targetId,
+          kind: (d.kind as LockpickChallenge["kind"]) || "container",
+          difficulty: Number(d.difficulty ?? 30),
+          label: String(d.label || "Locked container"),
+          ownerAccountId: d.ownerAccountId ?? null,
+        });
+        document.exitPointerLock?.();
+        studioRef.current?.setFreeMouseMode?.(true);
+      }
+    };
+    const onGrant = (ev: Event) => {
+      const d = (ev as CustomEvent).detail || {};
+      const tid = String(d.templateId || "");
+      const qty = Math.max(1, Number(d.qty ?? 1));
+      if (!tid) return;
+      const res = harvestIntoBag(activeCharacterId, tid, qty);
+      refreshBagMeta();
+      studioRef.current?.flashMessage?.(
+        res.full
+          ? `Bag full · ${tid}`
+          : `+${qty - res.leftover} ${tid}`,
+        1.6,
+      );
+    };
+    window.addEventListener("grudge-open-ui", onOpenUi);
+    window.addEventListener("grudge-grant-item", onGrant);
+    return () => {
+      window.removeEventListener("grudge-open-ui", onOpenUi);
+      window.removeEventListener("grudge-grant-item", onGrant);
+    };
+  }, [activeCharacterId, refreshBagMeta]);
 
   useEffect(() => {
     try {
@@ -796,6 +888,7 @@ export default function App() {
   const [clips, setClips] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotBinding[]>([]);
   const [webglError, setWebglError] = useState(false);
+  const [webglErrorDetail, setWebglErrorDetail] = useState<string>("");
   /** helpers.glb intro orbit while Danger Room / arena boots. */
   const [helpersLoad, setHelpersLoad] = useState<{
     visible: boolean;
@@ -809,6 +902,7 @@ export default function App() {
   /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
   const [roomPreset, setRoomPreset] = useState<RoomPresetId>(() => loadRoomPreset());
+  const [backdropId, setBackdropId] = useState<string | null>(() => loadBackdrop());
   const [testWorldId, setTestWorldId] = useState<TestWorldId>(() => loadTestWorldId());
   const [hudEditing, setHudEditing] = useState(false);
   const hudEditor = useHudEditor();
@@ -917,10 +1011,44 @@ export default function App() {
       setPointerLayer("play-free");
     } else {
       setPointerLayer("play-locked");
-      const canvas = mountRef.current?.querySelector("canvas");
-      canvas?.requestPointerLock?.();
+      const canvas = mountRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+      try {
+        const p = canvas?.requestPointerLock?.();
+        // Promise-based API: if rejected, stay free-mouse with visible cursor
+        if (p && typeof (p as Promise<void>).then === "function") {
+          void (p as Promise<void>).catch(() => {
+            setFreeMouse(true);
+            freeMouseRef.current = true;
+            setFreeMouseSticky(true);
+            setPointerLayer("play-free");
+            studioRef.current?.setFreeMouseMode(true);
+            studioRef.current?.flashMessage?.("Pointer lock blocked — free mouse on (F8)", 2);
+          });
+        }
+      } catch {
+        setFreeMouse(true);
+        freeMouseRef.current = true;
+        setPointerLayer("play-free");
+      }
     }
   }, []);
+
+  // ESC unlock / lock fail → free mouse + restore cursor image
+  useEffect(() => {
+    const onLockEvt = (e: Event) => {
+      const locked = !!(e as CustomEvent<{ locked?: boolean }>).detail?.locked;
+      if (!locked && (mode === "danger" || mode === "play") && !freeMouseRef.current) {
+        // User released lock (ESC) — don't leave aim-lock UI with invisible mouse
+        setFreeMouse(true);
+        freeMouseRef.current = true;
+        setFreeMouseSticky(true);
+        setPointerLayer("play-free");
+        studioRef.current?.setFreeMouseMode(true);
+      }
+    };
+    window.addEventListener("grudge:pointerlock", onLockEvt);
+    return () => window.removeEventListener("grudge:pointerlock", onLockEvt);
+  }, [mode]);
 
   // Helpers.glb cinematic load screen when entering Danger Room or Worldbuilder Play.
   useEffect(() => {
@@ -988,6 +1116,8 @@ export default function App() {
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
     try {
+      setWebglError(false);
+      setWebglErrorDetail("");
       // Playable hero SSOT: URL (ARE / annihilate) → fleet selected → default grudge6.
       // Never boot Explorer Mixamo FBX for production danger (Vercel strips FBX).
       const playable: DangerPlayableCharacter = resolveDangerPlayable({
@@ -1075,6 +1205,7 @@ export default function App() {
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start renderer", err);
+      setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
     return () => {
@@ -1132,6 +1263,7 @@ export default function App() {
       refreshAnim();
     } catch (err) {
       console.error("[Animator] failed to start play session", err);
+      setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
     return () => {
@@ -1742,6 +1874,11 @@ export default function App() {
     [onCharacter, onWeapon, onDifficulty, onSpawn, onSpawnBoss, onClearNpcs, onParam, onTimeScale, weaponId, onTestWorld],
   );
 
+  const onBackdrop = useCallback((id: string | null) => {
+    setBackdropId(id);
+    studioRef.current?.setBackdrop(id);
+  }, []);
+
   const onRoomPreset = useCallback((id: RoomPresetId) => {
     setRoomPreset(id);
     saveRoomPreset(id);
@@ -2023,14 +2160,19 @@ export default function App() {
           navigate(action.mode as Mode);
           break;
         }
-        case "danger-panel":
+        case "danger-panel": {
           navigate("danger");
           // Open after mode mounts (dock layout is danger-local).
+          // animdbg is not a separate dock on Open — map to anim panel.
+          const panelId =
+            action.id === "animdbg" ? "anim" : action.id === "admin" || action.id === "editor" || action.id === "anim"
+              ? action.id
+              : "admin";
           queueMicrotask(() => {
-            const id = action.id === "animdbg" ? "anim" : action.id;
-            dangerDock.showPanel(id);
+            dangerDock.showPanel(panelId);
           });
           break;
+        }
         case "danger-equip":
           navigate("danger");
           void Promise.resolve().then(() => setEquipOpen(true));
@@ -2127,6 +2269,28 @@ export default function App() {
         placeholder: "Set stone walls, assign NPC patrol AI, list props…",
       };
     }
+    if (mode === "editor") {
+      // Fallback until EditorMode registers live engine tools via context.
+      // Keeps the FAB visible the moment /dressing mounts (Cloudflare hub path).
+      return {
+        surface: "editor",
+        title: "Dressing Room Admin",
+        tools: [],
+        getSystemPrompt: () =>
+          "You are the Dressing Room page admin on open.grudge-studio.com. Help create animations, ground feet, strip root motion, and operate panels. Live engine tools register when the scene is ready.",
+        placeholder: "Create an attack anim, play walk, ground feet…",
+      };
+    }
+    if (mode === "anim" || mode === "anim-ai") {
+      return {
+        surface: "anim",
+        title: "Anim AI Admin",
+        tools: [],
+        getSystemPrompt: () =>
+          "You are the Animation Editor admin. Guide clip authoring, IK, and chat-to-create motion. Prefer concrete clip verbs and grounding advice.",
+        placeholder: "Confident sword idle, IK aim, optimize clip…",
+      };
+    }
     if (
       mode === "doors" ||
       mode === "lobby" ||
@@ -2209,15 +2373,23 @@ export default function App() {
     } else {
       setPointerLayer("play-locked");
       studioRef.current?.setFreeMouseMode(false);
-      // After closing panels, restore aim lock if user wasn't free-mouse sticky
+      // After closing panels, try re-lock — if it fails, free-mouse keeps cursor visible
       if (
         !dangerStartOpen &&
         (mode === "danger" || mode === "play") &&
         !document.pointerLockElement
       ) {
-        const canvas = mountRef.current?.querySelector("canvas");
-        // Defer one frame so overlay unmount doesn't steal the gesture
-        requestAnimationFrame(() => canvas?.requestPointerLock?.());
+        const canvas = mountRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+        requestAnimationFrame(() => {
+          try {
+            const p = canvas?.requestPointerLock?.();
+            if (p && typeof (p as Promise<void>).then === "function") {
+              void (p as Promise<void>).catch(() => applyFreeMouse(true));
+            }
+          } catch {
+            applyFreeMouse(true);
+          }
+        });
       }
     }
     // Play context from HUD (activity + loco + soft/hard focus)
@@ -2231,6 +2403,8 @@ export default function App() {
     mode,
     uiOverlayOpen,
     freeMouse,
+    dangerStartOpen,
+    applyFreeMouse,
     hud?.activityMode,
     hud?.focusLocked,
     hud?.locoCam,
@@ -2432,7 +2606,7 @@ export default function App() {
   }
 
   if (mode === "characters") {
-    // ONE scene only: Ethereal Falls CampfireLobbyScene (no ProductionCinema dungeon).
+    // ONE scene: TVS farm campfire + chairs (no dungeon / Ethereal Falls).
     // Optional storm-ship intro is allowed once, then campfire — never stacked.
     let introOnce: string | null = null;
     try {
@@ -2456,16 +2630,14 @@ export default function App() {
         onAvatarEdit={() => navigate("avatar")}
         onPlayDanger={(hero) => {
           gameSession.selectCharacter(hero.id);
-          const animId =
-            hero.baseId === "explorer" || !hero.baseId
+          // PRACTICE: always grudge:race:preset — never race-human / explorer fallback for races
+          const seed = hero.baseId || hero.raceKey || "western-kingdoms";
+          const avatarId =
+            seed === "explorer"
               ? "explorer"
-              : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                ? hero.baseId
-                : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-          setCharacterId(animId === "human" ? "race-human" : animId);
-          studioRef.current?.setCharacter(
-            animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-          );
+              : normalizeToGrudgeAvatarId(seed, "warrior");
+          setCharacterId(avatarId);
+          studioRef.current?.setCharacter(avatarId);
           navigate("danger");
         }}
       />
@@ -2504,7 +2676,7 @@ export default function App() {
   }
 
   if (mode === "lobby") {
-    // Product SSOT: ONE WebGL scene = Ethereal Falls CampfireLobbyScene.
+    // Product SSOT: ONE WebGL scene = floating-island CampfireLobbyScene.
     // Never wrap in CinemaFlowGate(lobby_establish) — that loaded dungeon.glb
     // as a second full render over the campfire (double-scene conflict).
     return shell(
@@ -2528,16 +2700,13 @@ export default function App() {
           }}
           onPlayDanger={(hero) => {
             gameSession.selectCharacter(hero.id);
-            const animId =
-              hero.baseId === "explorer" || !hero.baseId
+            const seed = hero.baseId || hero.raceKey || "western-kingdoms";
+            const avatarId =
+              seed === "explorer"
                 ? "explorer"
-                : hero.baseId.startsWith("race-") || hero.baseId.startsWith("grudge-")
-                  ? hero.baseId
-                  : `race-${hero.raceKey === "elf" ? "high-elf" : hero.raceKey}`;
-            setCharacterId(animId === "human" ? "race-human" : animId);
-            studioRef.current?.setCharacter(
-              animId === "explorer" ? "explorer" : animId.startsWith("race-") ? animId : "explorer",
-            );
+                : normalizeToGrudgeAvatarId(seed, "warrior");
+            setCharacterId(avatarId);
+            studioRef.current?.setCharacter(avatarId);
             navigate("danger");
           }}
         />,
@@ -2669,6 +2838,8 @@ export default function App() {
             onStopDuel={onStopDuel}
             onStartArenaMatch={onStartArenaMatch}
             roomPreset={roomPreset}
+            backdropId={backdropId}
+            onBackdrop={onBackdrop}
             testWorldId={testWorldId}
             onTestWorld={onTestWorld}
             ale={hud?.ale ?? null}
@@ -2862,7 +3033,43 @@ export default function App() {
       {webglError && (
         <div className="webgl-error">
           <h2>WebGL unavailable</h2>
-          <p>This device or browser couldn't create a 3D context. Try a hardware-accelerated browser.</p>
+          <p>
+            Could not create a 3D context (lost GPU / too many contexts / software block). Close other 3D
+            tabs, hard-refresh this page, then retry.
+          </p>
+          {webglErrorDetail ? (
+            <p style={{ marginTop: 10, fontSize: 12, opacity: 0.75, wordBreak: "break-word" }}>
+              {webglErrorDetail}
+            </p>
+          ) : null}
+          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="danger-start-btn"
+              onClick={() => {
+                setWebglError(false);
+                setWebglErrorDetail("");
+                // Remount danger by bouncing mode (gives GPU a frame to free contexts)
+                const m = mode;
+                setMode("doors");
+                window.setTimeout(() => setMode(m === "play" ? "danger" : m), 200);
+              }}
+            >
+              Retry 3D
+            </button>
+            <button
+              type="button"
+              className="danger-start-btn"
+              style={{ opacity: 0.85 }}
+              onClick={() => {
+                setWebglError(false);
+                setWebglErrorDetail("");
+                setMode("doors");
+              }}
+            >
+              Back to Library
+            </button>
+          </div>
         </div>
       )}
 
@@ -2938,7 +3145,7 @@ export default function App() {
         <>
           {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen && !freeMouse}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -2982,6 +3189,7 @@ export default function App() {
           <CharacterBagPanel
             open={bagOpen}
             characterId={activeCharacterId}
+            accountId={accountIdForBag}
             deposit={depositCtx}
             onClose={() => setBagOpen(false)}
             onBagChange={() => refreshBagMeta()}
@@ -2992,6 +3200,33 @@ export default function App() {
             onDeployPlaceable={(placeableId) => {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
+            }}
+          />
+          <LockpickPanel
+            open={!!lockpickChallenge}
+            challenge={lockpickChallenge}
+            onClose={() => setLockpickChallenge(null)}
+            onResult={(result) => {
+              setLockpickChallenge(null);
+              studioRef.current?.flashMessage?.(result.message, 2);
+              if (!result.ok) return;
+              try {
+                const st = loadLocationStorage(result.targetId);
+                for (const [tid, qty] of Object.entries(st.resources)) {
+                  if (qty > 0) harvestIntoBag(activeCharacterId, tid, qty);
+                }
+                for (const it of st.items) {
+                  harvestIntoBag(activeCharacterId, it.templateId, it.qty);
+                }
+                markLockBusted({
+                  ...st,
+                  resources: {},
+                  items: [],
+                });
+                refreshBagMeta();
+              } catch {
+                /* offline ok */
+              }
             }}
           />
           <ClassSkillBar
@@ -3099,25 +3334,30 @@ export default function App() {
               onTestWorld={onTestWorld}
               onEnter={() => {
                 setDangerStartOpen(false);
-                // Ensure selected outdoor / loco map is applied
-                void studioRef.current?.setTestWorld(testWorldId);
+                setWebglError(false);
+                const mapId = testWorldId;
+                void (async () => {
+                  const studio = studioRef.current;
+                  if (!studio) {
+                    setWebglError(true);
+                    return;
+                  }
+                  const ok = await studio.setTestWorld(mapId);
+                  if (!ok && mapId !== "danger-room") {
+                    studio.flashMessage?.(
+                      `Map "${mapId}" failed — chamber fallback. Check CDN mesh.`,
+                      2.5,
+                    );
+                  }
+                })();
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
-                  studioRef.current?.flashMessage?.(
-                    "MAP PLAY · FREE MOUSE · F9 lock aim",
-                    2.0,
-                  );
+                  studioRef.current?.flashMessage?.("MAP PLAY · FREE MOUSE · F8 lock aim", 2.0);
                   return;
                 }
                 applyFreeMouse(false);
-                const canvas = mountRef.current?.querySelector("canvas");
-                if (canvas) {
-                  canvas.requestPointerLock?.();
-                } else {
-                  document.body.requestPointerLock?.();
-                }
                 studioRef.current?.flashMessage?.(
-                  "MAP PLAY · F8 free mouse · same combat stack · no admin",
+                  "MAP PLAY · F8 free mouse · same combat stack",
                   2.0,
                 );
               }}
@@ -3224,7 +3464,7 @@ export default function App() {
         <>
           {/* Free-mouse: OS cursor is the aim — hide reticle to avoid double-cursor arts. */}
           <Crosshair
-            visible={!uiOverlayOpen && !freeMouse}
+            visible={!uiOverlayOpen}
             firstPerson={hud?.firstPerson ?? false}
             spread={hud?.aimSpread ?? 0}
             hitMarker={hud?.hitMarker ?? 0}
@@ -3268,6 +3508,7 @@ export default function App() {
           <CharacterBagPanel
             open={bagOpen}
             characterId={activeCharacterId}
+            accountId={accountIdForBag}
             deposit={depositCtx}
             onClose={() => setBagOpen(false)}
             onBagChange={() => refreshBagMeta()}
@@ -3398,24 +3639,34 @@ export default function App() {
               onOpenAccount={() => navigate("account")}
               onEnter={() => {
                 setDangerStartOpen(false);
-                // Chamber skin + selected outdoor/loco map
+                setWebglError(false);
+                // Chamber skin + selected outdoor/loco map (await fail → stay in chamber)
                 studioRef.current?.setRoomPreset(roomPreset);
-                void studioRef.current?.setTestWorld(testWorldId);
+                const mapId = testWorldId;
+                void (async () => {
+                  const studio = studioRef.current;
+                  if (!studio) {
+                    setWebglError(true);
+                    return;
+                  }
+                  const ok = await studio.setTestWorld(mapId);
+                  if (!ok && mapId !== "danger-room") {
+                    studio.flashMessage?.(
+                      `Map "${mapId}" failed to load — Danger Room chamber. Pick another map.`,
+                      2.5,
+                    );
+                  }
+                })();
+                // Prefer free mouse if sticky; else try lock with safe fallback
                 if (freeMouseRef.current) {
                   applyFreeMouse(true);
                   studioRef.current?.flashMessage?.(
-                    "FREE MOUSE · F9 lock aim · RMB focus",
+                    "FREE MOUSE · F8 / F9 lock aim · RMB focus",
                     1.8,
                   );
                   return;
                 }
                 applyFreeMouse(false);
-                const canvas = mountRef.current?.querySelector("canvas");
-                if (canvas) {
-                  canvas.requestPointerLock?.();
-                } else {
-                  document.body.requestPointerLock?.();
-                }
                 studioRef.current?.flashMessage?.(
                   "DANGER · F8 free mouse · maps in Admin · Hold Q mode",
                   1.8,
