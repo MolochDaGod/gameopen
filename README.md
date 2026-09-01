@@ -2,7 +2,12 @@
 
 **Canonical live origin:** [open.grudge-studio.com](https://open.grudge-studio.com)
 
-**Product:** Steam-like collection shell — **library**, **in-app canvas**, **arcade**, **accounts**, **saves**, **characters**, **editors**, **Mine-Loader Realms**, **Warlord Genesis**, GRUDOX arcade. One origin; fleet SSO; Railway characters / `saveData.open`.
+**Product:** Steam-like collection shell — **library**, **in-app canvas**, **arcade**, **accounts**, **saves**, **characters**, **editors**, **Mine-Loader Realms**, **Warlord Genesis**, GRUDOX arcade, and the all-era **Danger Room** combat lab. One origin; fleet SSO; Railway characters / `saveData.open`.
+
+The default procedural **Explorer** supports weapon-specific locomotion and
+multi-hit combos for sword, knife, axe, greatsword, mace, spear, greataxe,
+two-handed hammer, bow, rifle, pistol, and magic. It also ships guarded-hit,
+knockback, knockdown, recovery, and casting animation variants.
 
 **Production tools:** in-app **Toolbox** (Tools / Three.js / Rapier / R3F / Create / Music) + [Grok Builder](https://grok-builder.vercel.app/?panel=modes). Guide: [`docs/PRODUCTION_TOOLS.md`](docs/PRODUCTION_TOOLS.md) / code: `artifacts/animator/src/lib/productionTools.ts`.
 
@@ -113,6 +118,7 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/characters` | **TVS farm campfire** roster hub (CDN props) |
 | `/realms` | Mine-Loader / GRUDOX Realms |
 | `/lobby` | Same campfire roster (not dungeon cinema) |
+| Game library → Nexus | Nexus Nemesis TCG (external SSOT: `nemesis.grudge-studio.com`) |
 | `/api/ai/*` | AI hub rewrite (`ai.grudge-studio.com`; JWT for chat) |
 | `/zones` | GRUDOX zone launcher |
 | `/ledmask` | LED Mask + voxel avatar design |
@@ -224,11 +230,12 @@ Block types, scene interchange, and the 250-block Codex come from **Voxel Realms
 
 The Open Voxel Editor places **type ids** (`stone`, `grass`, `cat:alloy-frame`, …) and exports dual-format interchange so maps work in GRUDOX zone games and Voxel Realms.
 
-## Asset pack (all used)
+## Animation and asset packs
 
 | Category | Count | Path |
 |----------|------:|------|
-| Animations (FBX packs) | 168 | `/anim/animations/{ambient,bow,climb,extra,farming,knife,magic,magic-loco,pistol,reactions,rifle,striker,swim,sword}/` |
+| Explorer animation clips | 686 | `/anim/animations/` (663 FBX + 23 GLB) |
+| Explorer combat categories | 22 | `ambient`, `block`, `bow`, `climb`, `combo`, `extra`, `farming`, `gestures`, `greataxe`, `greatsword`, `knife`, `mace`, `magic`, `magic-loco`, `pistol`, `reactions`, `rifle`, `spear`, `striker`, `swim`, `sword`, `ghostrider` |
 | Models (GLB/GLTF) | 80+ | `/models/{races,weapons,vfx,props,enemies,destructibles,heroes,pirate}/` + arena/dungeon maps |
 | HUD icons | 50 | `/icons/*.png` |
 | Menu UI | 7 | `/ui/menu/*.png` |
@@ -239,6 +246,12 @@ Path aliases are generated on install/build so the minified client also finds:
 - `/anim/striker/flip_kick.fbx` → `animations/striker/Flip_Kick.fbx`
 - Bare `voxel-zombie-*.glb` / `barrel-*.glb` next to canonical folders
 - Flat pirate FBX names at site root
+
+Explorer animation is data-driven: `src/three/explorer/clipCatalog.ts` maps
+locomotion, combos, guard states, casts, and reactions to each weapon class.
+`loader.ts` loads FBX files and retargets GLB combo clips, splitting authored
+multi-hit combos into timed runtime subclips. Stage new assets under
+`public/anim/` and register them in the catalog before use.
 
 ## Content SSOT (weapons / skills / items)
 
