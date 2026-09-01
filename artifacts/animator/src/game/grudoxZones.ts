@@ -22,12 +22,12 @@ export const GRUDOX_HOST = "https://grudox.grudge-studio.com";
 
 /**
  * Play shell hosting GRUDOX Island (Lobby World). Override with VITE_PLAY_SHELL_URL.
- * Default: production threejs-rapier GRUDOX play deploy.
+ * SSOT: Open (same fleet SPA) — never pin legacy threejs-rapier demo host.
  */
 export const PLAY_SHELL_HOST =
   (typeof import.meta !== "undefined" &&
     (import.meta.env?.VITE_PLAY_SHELL_URL as string | undefined)?.replace(/\/+$/, "")) ||
-  "https://threejs-rapier-react-three-controll.vercel.app";
+  "https://open.grudge-studio.com";
 
 export interface GrudoxZone {
   /** Cabinet id — `/arcade/play/:id` on GRUDOX. */
@@ -65,13 +65,13 @@ export interface GrudoxZone {
 export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   {
     id: "characters",
-    title: "Characters",
+    title: "Characters · Campfire",
     blurb:
-      "Account hub: charactersgrudox race kit, create/equip heroes, credits, wallet, treaty — native Open surface.",
+      "4-seat TVS campfire roster (charactersgrudox) · launch PvE/PvP · Account for bag/wallet.",
     tone: "#4fc3ff",
     native: true,
-    // Fallback embed if host navigates via deep-link only
-    externalPath: "https://open.grudge-studio.com/?door=account",
+    // Campfire hub — never AccountPanel (door=characters SSOT)
+    externalPath: "https://open.grudge-studio.com/characters",
   },
   {
     id: "minegrudge",
@@ -101,11 +101,25 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "lobby-island",
-    title: "GRUDOX Island",
+    title: "Warlords Island (in-game)",
     blurb:
-      "Persistent open island — harvest, craft, build, vendors, day/night, PvP as your real Warlords character. Account bag saves to Railway.",
+      "Home / lobby island is inside Grudge Warlords — not a standalone Open zone. Launches Warlords client.",
     tone: "#5fd48a",
-    externalPath: `${PLAY_SHELL_HOST}/?door=lobbyWorld`,
+    // Never PLAY_SHELL lobbyWorld as a fake Open game — Warlords owns the world
+    externalPath: "https://client.grudge-studio.com/home",
+  },
+  /**
+   * Chicken Gun / PolygonPirates mesh — Warlords opening + tutorial only.
+   * Never a GRUDOX arcade cabinet; never Explorer. Deep-link into client lobby.
+   */
+  {
+    id: "pirate-islands",
+    title: "Warlords Pirate Lobby (in-game)",
+    blurb:
+      "Chicken Gun pirate map = Warlords opening + tutorial only — not GRUDOX, not Explorer. Launches Warlords client lobby.",
+    tone: "#4a9ec8",
+    externalPath:
+      "https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands",
   },
   {
     id: "brawler",
@@ -133,12 +147,12 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "genesis",
-    title: "Warlord Genesis",
-    blurb: "3-lane MOBA/RTS — native Open surface or warlord-genesis canvas.",
+    title: "Warstrat · Warlord Genesis",
+    blurb: "3-lane MOBA/RTS — warstrat.grudge-studio.com (canonical) or Open genesis picker.",
     tone: "#ffd24d",
     native: true,
     nativeMode: "genesis",
-    productionUrl: "https://warlord-genesis.vercel.app/",
+    productionUrl: "https://warstrat.grudge-studio.com/lobby",
   },
   {
     id: "racer",
@@ -175,10 +189,11 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island",
-    blurb: "water.grudge-studio.com/island — harvest, grudge6, nature packs (in-app canvas).",
+    title: "Warlords Home Island (in-game)",
+    blurb:
+      "Water home island is a Warlords world destination — open the Warlords client, not a separate Open game.",
     tone: "#4fc3c8",
-    externalPath: "https://water.grudge-studio.com/island",
+    externalPath: "https://client.grudge-studio.com/home",
   },
 ] as const;
 

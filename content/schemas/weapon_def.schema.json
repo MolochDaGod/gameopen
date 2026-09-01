@@ -19,12 +19,18 @@
     "family": {
       "enum": [
         "sword",
+        "greatsword",
         "axe",
+        "greataxe",
         "hammer",
         "mace",
         "spear",
+        "scythe",
         "staff",
+        "wand",
+        "tome",
         "bow",
+        "crossbow",
         "dagger",
         "gun",
         "shield"
@@ -65,7 +71,48 @@
             "scale": { "type": "number" }
           }
         },
+        "spine": { "$ref": "#/$defs/weaponSpine" },
         "status": { "enum": ["ready", "placeholder", "missing"] }
+      }
+    },
+    "spine": {
+      "$ref": "#/$defs/weaponSpine",
+      "description": "Local sockets: cast, barrel, blade, blunt, tip, special, physics, effect (SSOT WEAPON_PREFAB.md §3)"
+    },
+    "physics": {
+      "type": "object",
+      "description": "Held-weapon collider / sensor defaults (SI metres)",
+      "properties": {
+        "kind": { "enum": ["capsule", "box", "sphere", "none"] },
+        "attach": {
+          "enum": [
+            "grip",
+            "blade",
+            "tip",
+            "blunt",
+            "barrel",
+            "cast",
+            "special",
+            "physics",
+            "effect"
+          ]
+        },
+        "radius": { "type": "number", "minimum": 0 },
+        "halfHeight": { "type": "number", "minimum": 0 },
+        "sensor": { "type": "boolean" },
+        "mass": { "type": "number", "minimum": 0 }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "description": "Default VFX/audio anchors when skill omits them",
+      "properties": {
+        "trail": { "type": "object", "additionalProperties": true },
+        "muzzle": { "type": "object", "additionalProperties": true },
+        "cast": { "type": "object", "additionalProperties": true },
+        "impact": { "type": "object", "additionalProperties": true },
+        "residual": { "type": "object", "additionalProperties": true },
+        "audio": { "type": "object", "additionalProperties": true }
       }
     },
     "tags": { "type": "array", "items": { "type": "string" } },
@@ -77,7 +124,55 @@
         "data": { "enum": ["ready", "placeholder", "missing"] },
         "mesh": { "enum": ["ready", "placeholder", "missing"] },
         "combat": { "enum": ["ready", "placeholder", "missing"] },
-        "present": { "enum": ["ready", "placeholder", "missing"] }
+        "present": { "enum": ["ready", "placeholder", "missing"] },
+        "spine": {
+          "enum": ["ready", "placeholder", "missing"],
+          "description": "Optional; missing uses family defaults at runtime"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "spinePoint": {
+      "type": "object",
+      "required": ["pos"],
+      "properties": {
+        "pos": { "$ref": "#/$defs/vec3" },
+        "rot": { "$ref": "#/$defs/vec3" },
+        "radius": { "type": "number" },
+        "halfHeight": { "type": "number" },
+        "size": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "weaponSpine": {
+      "type": "object",
+      "properties": {
+        "forward": {
+          "enum": ["x+", "x-", "y+", "y-", "z+", "z-"]
+        },
+        "align": { "enum": ["y", "z"] },
+        "status": { "enum": ["ready", "placeholder", "missing"] },
+        "points": {
+          "type": "object",
+          "properties": {
+            "grip": { "$ref": "#/$defs/spinePoint" },
+            "blade": { "$ref": "#/$defs/spinePoint" },
+            "tip": { "$ref": "#/$defs/spinePoint" },
+            "blunt": { "$ref": "#/$defs/spinePoint" },
+            "barrel": { "$ref": "#/$defs/spinePoint" },
+            "cast": { "$ref": "#/$defs/spinePoint" },
+            "special": { "$ref": "#/$defs/spinePoint" },
+            "physics": { "$ref": "#/$defs/spinePoint" },
+            "effect": { "$ref": "#/$defs/spinePoint" }
+          },
+          "additionalProperties": false
+        }
       }
     }
   }

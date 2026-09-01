@@ -1,0 +1,43 @@
+{
+  "id": "bck_invisibility",
+  "itemId": "itm_back_invisibility",
+  "runtimeId": "back_invisibility",
+  "equipId": "equip:back:invisibility",
+  "slot": "back",
+  "family": "pack",
+  "label": "Cloak Pack",
+  "effect": "Stealth windows",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Planned — Space stealth pulse (not a new combat key)",
+  "domains": [
+    "stealth",
+    "combat"
+  ],
+  "status": "planned",
+  "assets": {},
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "pack",
+    "hotkey",
+    "planned"
+  ],
+  "ship": false,
+  "readiness": {
+    "data": "ready",
+    "mesh": "placeholder",
+    "combat": "placeholder",
+    "present": "placeholder",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_invisibility"
+}

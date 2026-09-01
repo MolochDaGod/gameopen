@@ -1,0 +1,49 @@
+{
+  "id": "bck_shark_fin",
+  "itemId": "itm_back_shark_fin",
+  "runtimeId": "back_shark_fin",
+  "equipId": "equip:back:shark_fin",
+  "slot": "back",
+  "family": "stow",
+  "label": "Shark Fin",
+  "effect": "2× swim · no shark aggro · breathe underwater",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Always on in water",
+  "domains": [
+    "ocean",
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "stow": "models/ride/shark_fin.glb",
+    "stowLengthM": 0.55
+  },
+  "passive": {
+    "aura": "absorb",
+    "bonuses": {
+      "swimSpeed": 100
+    }
+  },
+  "tags": [
+    "back",
+    "stow",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_shark_fin"
+}

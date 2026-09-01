@@ -10,9 +10,14 @@ export type HarvestToolNorm = "axe" | "pick" | "gather" | "any" | string;
 
 export function normalizeHarvestTool(id?: string): HarvestToolNorm {
   const s = String(id || "any").toLowerCase();
-  if (/axe|hatchet|log/.test(s)) return "axe";
+  if (/axe|hatchet|log|chop|wood/.test(s)) return "axe";
   if (/pick|mine|ore/.test(s)) return "pick";
-  if (/gather|hand|sickle|forage/.test(s)) return "gather";
+  if (/knife|skin/.test(s)) return "knife";
+  if (/hoe|farm/.test(s)) return "hoe";
+  if (/shovel|dig|terrain/.test(s)) return "shovel";
+  if (/bucket|water/.test(s)) return "bucket";
+  if (/fish|rod|pole/.test(s)) return "fish";
+  if (/gather|hand|sickle|forage|herb|flower/.test(s)) return "gather";
   return s || "any";
 }
 
@@ -76,9 +81,30 @@ export class PinataHarvestSystem {
     this.groundSampler = fn;
   }
 
+  /**
+   * Drop all registered harvest nodes (map switch / restore Danger Room).
+   * Does not dispose meshes owned by ForestWorld — only unregisters pinata state.
+   * Studio calls this from activateDangerRoomInstance / setTestWorld.
+   */
+  clear(): void {
+    for (const n of this.nodes.values()) {
+      if (n.mesh?.userData) delete n.mesh.userData.harvestId;
+      // Leave mesh visibility to map instance (chamber restore / outdoor clear)
+    }
+    this.nodes.clear();
+    this.respawnTimers.clear();
+  }
+
   registerMesh(
     mesh: THREE.Object3D,
-    meta: { id: string; kind?: string; tool?: string; hp?: number },
+    meta: {
+      id: string;
+      kind?: string;
+      tool?: string;
+      hp?: number;
+      /** Optional material id for bag yield (ignored if unknown). */
+      materialId?: string;
+    },
   ) {
     const maxHp = meta.hp ?? 40;
     const node: PinataNode = {
@@ -91,12 +117,36 @@ export class PinataHarvestSystem {
       broken: false,
     };
     mesh.userData.harvestId = meta.id;
+    if (meta.materialId) mesh.userData.harvestMaterialId = meta.materialId;
     mesh.visible = true;
     this.nodes.set(meta.id, node);
   }
 
   getNode(id: string): PinataNode | undefined {
     return this.nodes.get(id);
+  }
+
+  /** Raycast registered harvest meshes (starting scene + forest pinata). */
+  pick(ray: THREE.Raycaster, maxDist = 28): PinataNode | null {
+    const meshes: THREE.Object3D[] = [];
+    for (const n of this.nodes.values()) {
+      if (!n.broken && n.mesh) meshes.push(n.mesh);
+    }
+    if (!meshes.length) return null;
+    const hits = ray.intersectObjects(meshes, true);
+    for (const h of hits) {
+      if (h.distance > maxDist) continue;
+      let o: THREE.Object3D | null = h.object;
+      while (o) {
+        const id = o.userData.harvestId as string | undefined;
+        if (id) {
+          const node = this.nodes.get(id);
+          if (node && !node.broken) return node;
+        }
+        o = o.parent;
+      }
+    }
+    return null;
   }
 
   hitForestNode(id: string, tool: HarvestToolNorm, power: number): PinataHitResult {

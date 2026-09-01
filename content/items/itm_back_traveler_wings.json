@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_traveler_wings",
+  "kind": "back",
+  "name": "Traveler's Wings I",
+  "description": "T1 fire-wing wardrobe · double-jump · two flaps · glide",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "hotkey",
+    "wings"
+  ],
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_traveler_wings"
+}

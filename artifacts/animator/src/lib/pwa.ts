@@ -105,7 +105,7 @@ export async function nukeServiceWorkers(): Promise<void> {
  * One-shot per deploy: if shell version lags, nuke caches once.
  * Call from boot when ?purge=1 or after fleet asset scale fixes.
  */
-export async function purgeHistoricalShellIfNeeded(minVersion = 4): Promise<void> {
+export async function purgeHistoricalShellIfNeeded(minVersion = 5): Promise<void> {
   if (typeof window === "undefined") return;
   try {
     const key = "grudge_open_shell_cache_ver";

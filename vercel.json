@@ -55,6 +55,22 @@
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/inventory/:path*"
     },
     {
+      "source": "/api/ledger",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/ledger"
+    },
+    {
+      "source": "/api/ledger/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/ledger/:path*"
+    },
+    {
+      "source": "/api/uuid",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/uuid"
+    },
+    {
+      "source": "/api/uuid/:path*",
+      "destination": "https://grudge-api-production-0d46.up.railway.app/api/uuid/:path*"
+    },
+    {
       "source": "/api/professions",
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/professions"
     },
@@ -87,8 +103,20 @@
       "destination": "https://grudge-api-production-0d46.up.railway.app/api/nfts/:path*"
     },
     {
+      "source": "/api/ssot",
+      "destination": "https://info.grudge-studio.com/api/ssot"
+    },
+    {
+      "source": "/api/ssot.json",
+      "destination": "https://info.grudge-studio.com/api/v1/ssot.json"
+    },
+    {
+      "source": "/api/objectstore/v1/:path*",
+      "destination": "https://objectstore.grudge-studio.com/api/v1/:path*"
+    },
+    {
       "source": "/api/objectstore/:path*",
-      "destination": "https://info.grudge-studio.com/api/:path*"
+      "destination": "https://assets.grudge-studio.com/api/:path*"
     },
     {
       "source": "/api/v1/:path*",
@@ -97,6 +125,14 @@
     {
       "source": "/content/:path*",
       "destination": "https://info.grudge-studio.com/api/v1/:path*"
+    },
+    {
+      "source": "/api/os/health",
+      "destination": "https://objectstore.grudge-studio.com/health"
+    },
+    {
+      "source": "/api/os/:path*",
+      "destination": "https://objectstore.grudge-studio.com/:path*"
     },
     {
       "source": "/api/ai/health",

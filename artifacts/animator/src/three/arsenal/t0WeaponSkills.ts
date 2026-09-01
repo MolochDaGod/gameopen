@@ -26,6 +26,7 @@ import {
   mmToMeters as mmToM,
 } from "../math/worldMath";
 import { DEFENSE_WINDOWS } from "../math/defenseMath";
+import { familyFromWeaponId, skillPackForWeaponId } from "../grudge/weaponSkillPacks";
 
 /** Skill role within a 4-slot T0 kit. */
 export type T0SkillRole = "combo" | "special" | "ranged" | "power";
@@ -284,6 +285,20 @@ export function getT0Skill(weaponId: WeaponId | string, slotIndex: number): T0Sk
  * Prefer ObjectStore master-weaponSkills names/icons when catalog is loaded,
  * else local T0 sheet kits.
  */
+/** staffFire|staffIce|staffNature|staffStorm|staff|wand|tome — Casting element trees. */
+function isCastingStaffWeaponId(weaponId: string): boolean {
+  const w = String(weaponId || "").toLowerCase();
+  return w.startsWith("staff") || w === "wand" || w === "tome";
+}
+
+function fleetKindFromPack(effectKind?: string, projectile?: string): SkillKind {
+  if (projectile === "bolt" || projectile === "arrow") return "bolt";
+  if (effectKind === "slam") return "slam";
+  if (effectKind === "slash" || effectKind === "slashWave" || effectKind === "getsuga") return "slash";
+  if (effectKind === "chain") return "bolt";
+  return "nova";
+}
+
 export function t0SignatureSkills(weaponId: WeaponId | string): {
   label: string;
   clip: string;
@@ -297,7 +312,59 @@ export function t0SignatureSkills(weaponId: WeaponId | string): {
   castTime?: number;
   dashM?: number;
   dashDur?: number;
+  /** Fleet SkillPack reach (m) — damage/range via CC, not Casting path volumes. */
+  reach?: number;
+  castEffectId?: string;
+  impactEffectId?: string;
 }[] {
+  // Elemental staffs / wand / tome: skillPackForWeaponId drives real hotbar labels.
+  // Prefer this over ObjectStore master catalog so Casting trees always show.
+  if (isCastingStaffWeaponId(String(weaponId))) {
+    const pack = skillPackForWeaponId(String(weaponId));
+    return pack.map((s, i) => {
+      const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+      return {
+        label: s.label,
+        clip: s.bakedRole === "cast" || s.animRole === "cast" ? "cast" : "attack",
+        kind: fleetKindFromPack(s.effectKind, s.projectile),
+        mode: "default" as const,
+        mm: -70 - i * 8,
+        cooldown: s.cooldown > 0 ? s.cooldown : 1.2,
+        damage: s.damage,
+        reach: s.reach,
+        castEffectId: s.castEffectId,
+        impactEffectId: s.impactEffectId,
+        skillId: s.animKey,
+        iconUrl: resolveSlotIconUrl(role, weaponId as WeaponId),
+      };
+    });
+  }
+  // Sword / gun / bow / mace: SkillPack rows = live baked clips + labels.
+  {
+    const family = familyFromWeaponId(String(weaponId));
+    if (family === "sword" || family === "gun" || family === "longbow" || family === "mace") {
+      const pack = skillPackForWeaponId(String(weaponId));
+      if (pack.length) {
+        return pack.map((s, i) => {
+          const role = (`sig${i + 1}` as "sig1" | "sig2" | "sig3" | "sig4");
+          return {
+            label: s.label,
+            clip: s.bakedRole || s.animRole || "attack",
+            kind: fleetKindFromPack(s.effectKind, s.projectile),
+            mode: s.useDash ? ("dash" as const) : ("default" as const),
+            mm: family === "sword" || family === "mace" ? 70 + i * 8 : -70 - i * 8,
+            cooldown: s.cooldown > 0 ? s.cooldown : 1.2,
+            damage: s.damage,
+            reach: s.reach,
+            castEffectId: s.castEffectId,
+            impactEffectId: s.impactEffectId,
+            skillId: s.animKey,
+            iconUrl: resolveSlotIconUrl(role, weaponId as WeaponId),
+          };
+        });
+      }
+    }
+  }
   // Heavy 2H: Madarame + annihilate GS (variable MM / intensity)
   if (isHeavy2hWeapon(weaponId)) {
     return heavySignatureRows(weaponId);

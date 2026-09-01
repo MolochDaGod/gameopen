@@ -10,7 +10,7 @@ import {
   canEquipInKeptSlot,
 } from "./characterBag";
 import { resolveDepositContext } from "./depositZones";
-import { MATERIAL_STACK_MAX } from "./types";
+import { MATERIAL_STACK_MAX, newItemInstance } from "./types";
 
 describe("character bag 3x3 + 2x2 kept loadout", () => {
   it("starts with 9 carry slots, starter claim flag, empty kept loadout", () => {
@@ -95,9 +95,11 @@ describe("death drop + loadout", () => {
     expect(b.kept.mainHand?.templateId).toBe("wpn_sword_01");
     expect(countWood(b)).toBe(40);
 
+    b.wornBack = newItemInstance("itm_back_holy_wings", 1);
     const { bag: after, dropped } = dropCarryOnDeath(b);
     expect(after.slots.every((s) => s.item === null)).toBe(true);
     expect(after.kept.mainHand?.templateId).toBe("wpn_sword_01");
+    expect(after.wornBack).toBeNull();
     expect(dropped.some((d) => d.templateId === "wood")).toBe(true);
   });
 
@@ -108,6 +110,10 @@ describe("death drop + loadout", () => {
     expect(canEquipInKeptSlot("mount", "itm_mount_horse_01")).toBe(true);
     expect(canEquipInKeptSlot("boat", "itm_boat_skiff_01")).toBe(true);
     expect(canEquipInKeptSlot("mainHand", "wood")).toBe(false);
+    expect(canEquipInKeptSlot("mainHand", "itm_back_holy_wings")).toBe(false);
+    expect(canEquipInKeptSlot("sideArm", "itm_back_holy_wings")).toBe(false);
+    expect(canEquipInKeptSlot("mount", "itm_back_holy_wings")).toBe(false);
+    expect(canEquipInKeptSlot("boat", "itm_back_holy_wings")).toBe(false);
   });
 });
 

@@ -5,14 +5,17 @@
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
+    "prodAnimsRoot": "prod/anims",
+    "prodAnimsCdn": "https://assets.grudge-studio.com/prod/anims",
     "mixamoRoot": "anim",
     "integrity": "sha256",
     "stripPositionTracks": true,
     "skeleton": "Bip001",
     "notes": [
-      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal.",
-      "If pack missing/incomplete, use fallbackPack (still Bip001 baked).",
-      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Verify SHA on bake input; ship baked JSON.",
+      "Danger heroes: preset mesh_ids only (gear preset weapons) — load baked anims for that weapon family, never equip extra weapon meshes at runtime.",
+      "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal (climb/swim/dodge/roll/harvest/block).",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked) then prod/anims CDN.",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON or prod/anims GLB libraries.",
       "Never load locomotion/running (banned run-to-roll)."
     ]
   },
@@ -20,17 +23,43 @@
     "pack": "traversal",
     "roles": {
       "jump": "locomotion/jump",
-      "dodge": "locomotion/dodging",
-      "dodgeF": "longbow/standing dodge forward",
-      "dodgeL": "longbow/standing dodge left",
-      "dodgeR": "longbow/standing dodge right"
+      "dodge": "locomotion/dodge_back",
+      "dodgeF": "locomotion/dodge_fwd",
+      "dodgeL": "locomotion/dodge_l",
+      "dodgeR": "locomotion/dodge_r",
+      "roll": "roll_dodge/dodging-back",
+      "crawl": "locomotion/crawl",
+      "swim": "locomotion/swim",
+      "swimFast": "locomotion/swim_fast",
+      "tread": "swim/treading",
+      "climb": "locomotion/climbup_1m",
+      "climbUp": "climb/up",
+      "mantle": "climb/to_top",
+      "hang": "climb/hang_idle",
+      "wallRun": "climb/wall_run",
+      "harvest": "locomotion/plant_seed",
+      "block": "block/standing-block-idle",
+      "parry": "block/parry"
     },
-    "alwaysLoadWithWeapon": true
+    "alwaysLoadWithWeapon": true,
+    "notes": [
+      "Sprint is NOT a bake path — clone pack.run + SPRINT_LOCO_MULT. locomotion/running is BANNED run-to-roll.",
+      "crawl/climb/swim Mixamo under public/anim/* → bake to anims/baked/* before production."
+    ]
   },
   "roleContract": {
     "required": ["idle", "walk", "run", "attack"],
     "recommended": ["sprint", "jump", "dodge", "skill1", "skill2", "skill3", "skill4"],
-    "optional": ["hurt", "death", "block", "parry", "cast"]
+    "optional": ["hurt", "death", "block", "parry", "cast", "crawl", "swim", "climb", "mantle", "hang"],
+    "neverAliasToAttack": ["jump", "dodge", "roll", "sprint", "crawl", "swim", "climb", "hurt", "death", "block", "parry"]
+  },
+  "namingCorrections": {
+    "locomotion/running": "BANNED — run-to-roll transition, not sprint",
+    "sprint": "Runtime role only: clone of verified run cycle × 1.75 timeScale",
+    "polearm/run": "Do not use as gait — Madarame full take ~5s; use locomotion/run_forward",
+    "locomotion/walking": "BANNED tip/fall on Arena GLB kits — use Standing Walk Forward",
+    "sword_shield/sword and shield run": "BANNED thin arena gait — use samurai run_sword or locomotion/run_forward",
+    "2h_melee/*": "Incomplete pack purged — dual_wield / samurai are production soft fallbacks"
   },
   "weapons": {
     "none": {
@@ -40,15 +69,15 @@
       "liveRoles": {
         "idle": "unarmed/fight_idle",
         "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
+        "run": "locomotion/run_forward",
         "attack": "unarmed/punching"
       },
       "liveWhenIncomplete": {
-        "note": "unarmed attack bake missing → polearm attack until punch bake",
+        "note": "unarmed attack bake missing → dual_wield / polearm; run always CANONICAL",
         "idle": "unarmed/fight_idle",
         "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
-        "attack": "polearm/attack"
+        "run": "locomotion/run_forward",
+        "attack": "dual_wield/attack"
       },
       "mixamoSources": [
         "anim/striker/fight-idle.fbx",
@@ -60,19 +89,25 @@
     "sword": {
       "label": "1H Sword",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "dual_wield/sword_dash_attack",
+        "skill4": "ghost_rider/quakesmash",
+        "dodge": "locomotion/dodge_back",
+        "roll": "locomotion/roll_forward"
       },
       "liveWhenIncomplete": {
-        "note": "sword_shield idle/attack not baked yet → polearm + shared loco",
-        "idle": "polearm/idle",
+        "note": "Samurai sword stance SSOT; dual_wield/locomotion soft fallbacks",
+        "idle": "dual_wield/idle",
         "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "polearm/attack"
+        "run": "locomotion/run_forward",
+        "attack": "dual_wield/attack"
       },
       "mixamoSources": [
         "anim/sword/sword-and-shield-idle.fbx",
@@ -81,36 +116,27 @@
         "anim/sword/one-hand-sword-combo.fbx",
         "anim/sword/slash-advance.fbx"
       ],
-      "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"]
+      "skillSlots": ["sword_slash", "sword_two_hit", "sword_spin_high", "sword_dash"],
+      "notes": [
+        "2026-08: purged thin sword_shield run/attack as primary — samurai + dual_wield + GR finishers"
+      ]
     },
     "shield": {
       "label": "Shield (offhand / 1H stance)",
       "animPack": "sword_shield",
-      "fallbackPack": "magic",
-      "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
-      },
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword"
     },
     "axe": {
       "label": "1H Axe",
       "animPack": "sword_shield",
-      "fallbackPack": "magic",
-      "liveRoles": {
-        "idle": "sword_shield/sword and shield idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "sword_shield/sword and shield run",
-        "attack": "sword_shield/sword and shield attack"
-      },
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword"
     },
     "dagger": {
       "label": "Daggers",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword",
       "mixamoSources": ["anim/knife/knife-idle.fbx", "anim/knife/stabbing.fbx"],
       "skillSlots": ["dagger_stab", "dagger_flurry", "dagger_backstab", "dagger_smoke"]
@@ -118,7 +144,7 @@
     "mace": {
       "label": "1H Mace",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
+      "fallbackPack": "samurai",
       "inheritsFrom": "sword",
       "mixamoSources": ["anim/mace/hell-slammer-a.fbx"],
       "skillSlots": ["mace_crush", "mace_slam", "mace_whirl", "mace_ground"]
@@ -126,18 +152,18 @@
     "hammer": {
       "label": "1H Hammer",
       "animPack": "sword_shield",
-      "fallbackPack": "polearm",
-      "inheritsFrom": "mace",
+      "fallbackPack": "samurai",
+      "inheritsFrom": "sword",
       "skillSlots": ["hammer_pound", "hammer_quake", "hammer_spin", "hammer_meteor"]
     },
     "spear": {
-      "label": "Spear / Lance",
+      "label": "Spear / Lance (Ikkaku Madarame bake)",
       "animPack": "polearm",
       "fallbackPack": null,
       "liveRoles": {
         "idle": "polearm/idle",
-        "walk": "polearm/walk",
-        "run": "polearm/run",
+        "walk": "magic/Standing Walk Forward",
+        "run": "locomotion/run_forward",
         "attack": "polearm/attack",
         "skill1": "polearm/skill1",
         "skill2": "polearm/skill2",
@@ -145,7 +171,8 @@
         "skill4": "polearm/skill4",
         "special": "polearm/special",
         "thrust": "polearm/thrust",
-        "overhead": "polearm/overhead"
+        "overhead": "polearm/overhead",
+        "roll": "locomotion/roll_forward"
       },
       "mixamoSources": ["anim/spear/spear1.fbx", "anim/spear/lance-spartan.fbx"],
       "skillSlots": ["spear_thrust", "spear_lunge", "spear_impale", "spear_rush"]
@@ -172,15 +199,16 @@
         "jump": "greatsword_samurai/gs_samurai_jump"
       },
       "liveWhenIncomplete": {
-        "note": "samurai bake missing → 2h_melee GLB then polearm",
-        "idle": "2h_melee/great-sword-idle",
-        "walk": "2h_melee/great-sword-walk",
-        "run": "2h_melee/great-sword-run",
-        "attack": "2h_melee/great-sword-slash",
-        "skill1": "2h_melee/great-sword-combo",
-        "skill2": "2h_melee/great-sword-overhead",
-        "skill3": "2h_melee/great-sword-jump-attack",
-        "skill4": "2h_melee/quick-slash"
+        "note": "samurai bake missing → dual_wield production bakes (2h_melee incomplete pack purged)",
+        "idle": "dual_wield/idle",
+        "walk": "magic/Standing Walk Forward",
+        "run": "locomotion/run_forward",
+        "attack": "dual_wield/slash",
+        "skill1": "dual_wield/combo",
+        "skill2": "dual_wield/overhead",
+        "skill3": "dual_wield/dash",
+        "skill4": "dual_wield/sword_dash_attack",
+        "jump": "locomotion/jump"
       },
       "effects": {
         "attack": { "kind": "getsuga", "variant": "slashred" },
@@ -305,57 +333,66 @@
     "rifle": {
       "label": "Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "liveRoles": {
-        "idle": "rifle/idle",
-        "walk": "rifle/walk",
-        "run": "rifle/run",
-        "attack": "rifle/fire"
+        "idle": "rifle/rifle-aiming-idle",
+        "walk": "rifle/walking",
+        "run": "rifle/rifle-run",
+        "attack": "rifle/firing-rifle",
+        "skill1": "rifle/firing-rifle",
+        "skill2": "rifle/reloading",
+        "jump": "rifle/rifle-jump",
+        "hurt": "rifle/hit-reaction"
       },
       "liveWhenIncomplete": {
-        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack (unarmed punch not baked)",
-        "idle": "unarmed/fight_idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
-        "attack": "polearm/attack"
+        "note": "rifle Bip001 bake from gun/shooter packs — longbow soft fallback",
+        "idle": "rifle/rifle-aiming-idle",
+        "walk": "rifle/walking",
+        "run": "rifle/rifle-run",
+        "attack": "rifle/firing-rifle"
       },
       "mixamoSources": [
-        "anim/rifle/idle.fbx",
-        "anim/rifle/idle-aiming.fbx",
-        "anim/rifle/run-forward.fbx"
+        "anim/rifle/rifle-aiming-idle.fbx",
+        "anim/rifle/walking.fbx",
+        "anim/rifle/rifle-run.fbx",
+        "anim/rifle/firing-rifle.fbx",
+        "anim/rifle/reloading.fbx"
       ],
       "skillSlots": ["rifle_shot", "rifle_burst", "rifle_reload_bash", "rifle_snipe"]
     },
     "hunter-rifle": {
       "label": "Sniper Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "inheritsFrom": "rifle",
       "skillSlots": ["sniper_shot", "sniper_hold", "sniper_mark", "sniper_kill"]
     },
     "shotgun": {
       "label": "Shotgun",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "inheritsFrom": "rifle",
       "skillSlots": ["shotgun_blast", "shotgun_pump", "shotgun_slug", "shotgun_knockback"]
     },
     "pistol": {
       "label": "Pistol",
-      "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "animPack": "pistol",
+      "fallbackPack": "rifle",
       "liveRoles": {
-        "idle": "rifle/idle",
-        "walk": "rifle/walk",
-        "run": "rifle/run",
-        "attack": "rifle/fire"
+        "idle": "pistol/idle",
+        "walk": "pistol/walk-forward",
+        "run": "pistol/run-forward",
+        "attack": "pistol/gunplay",
+        "skill1": "pistol/charged-pistol",
+        "skill2": "pistol/pistol-whip",
+        "jump": "pistol/pistol-jump"
       },
       "liveWhenIncomplete": {
-        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack",
-        "idle": "unarmed/fight_idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
-        "attack": "polearm/attack"
+        "note": "pistol Bip001 bake from handgun loco pack",
+        "idle": "pistol/idle",
+        "walk": "pistol/walk-forward",
+        "run": "pistol/run-forward",
+        "attack": "pistol/gunplay"
       },
       "mixamoSources": [
         "anim/pistol/idle.fbx",

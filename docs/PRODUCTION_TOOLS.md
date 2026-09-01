@@ -42,7 +42,7 @@ URL helper: `grokBuilderUrl()` from `productionTools.ts`
 | Grok Builder | `?panel=modes` |
 | New Arena | `?mode=arena&panel=agent` |
 | New Parkour | `?mode=parkour&panel=agent` |
-| Pirate Lobby | `?mode=pirate-lobby&panel=agent` |
+| Pirate Lobby | Warlords client only — `/island-3d?mode=lobby&map=pirate-islands` (Chicken Gun opening + tutorial; not GRUDOX/Explorer) |
 | Physics Lab | `?mode=physics-lab&physDebug=1` |
 | Survival | `?mode=survival&panel=agent` |
 | RTS Skirmish | `?mode=rts-skirmish&panel=agent` |

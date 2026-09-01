@@ -3,15 +3,16 @@
  *
  * Layers (do not invert):
  *  1. Player state     → Railway Postgres (characters, account, wallet, island)
- *  2. Definitions      → info.grudge-studio.com/api/v1  (catalog JSON)
+ *  2. Definitions      → info + objectstore /api/v1  (catalog JSON, dual-publish)
  *  3. Binaries         → assets.grudge-studio.com       (R2 CDN)
  *  4. Asset index only → D1 registries (optional lookup; never player bag)
  *  5. Worlds           → Mine-Loader Railway (seed + block edits)
  *
- * Probed 2026-07-16:
- *  - objectstore.grudge-studio.com/api/v1/* catalogs → 404
- *  - info.grudge-studio.com/api/v1/* catalogs        → 200
- *  - assets.grudge-studio.com meshes/textures        → 200
+ * Probed 2026-08-06:
+ *  - objectstore.grudge-studio.com/api/v1/*.json → 200 (Worker; bare /api/v1 = discovery)
+ *  - objectstore.grudge-studio.com/v1/assets     → 200 (D1 list)
+ *  - info.grudge-studio.com/api/v1/*             → 200
+ *  - assets.grudge-studio.com meshes/textures    → 200
  *
  * Prefer {@link contentUrl} / {@link contentCandidates} over hard-coded hosts.
  */
@@ -58,27 +59,27 @@ export function definitionBaseCandidates(): string[] {
   );
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const list = [
-    // Same-origin first (vercel /content rewrite + any SPA-shipped catalogs)
-    origin ? `${origin}/content` : "",
-    // info content mount (gear presets live here — not under /api/v1)
-    "https://info.grudge-studio.com/content",
-    // R2 content mirror
-    "https://assets.grudge-studio.com/content",
-    // Classic definitions API (materials, weapons, master-*)
-    FLEET.definitions,
-    origin ? `${origin}/api/v1` : "",
+    // Same-origin ObjectStore rewrite is the live catalog mount.
     origin ? `${origin}/api/objectstore/v1` : "",
+    FLEET.objectStoreInfo,
+    FLEET.objectStore,
+    "https://info.grudge-studio.com/content",
+    // Same-origin /content + /api/v1 (Open worker + vercel.json → info)
+    origin ? `${origin}/content` : "",
+    origin ? `${origin}/api/v1` : "",
+    FLEET.definitions,
+    "https://assets.grudge-studio.com/content",
+    "https://molochdagod.github.io/ObjectStore/api/v1",
+    origin ? `${origin}/api/os/api/v1` : "",
     env || "",
-    // Legacy public name (often 404 — last)
-    FLEET.objectStoreLegacy,
   ];
   return [...new Set(list.filter(Boolean))];
 }
 
 /** Absolute URL for a catalog file under the primary definitions host. */
 export function contentUrl(path: string): string {
-  // Prefer content mount — gear presets and most lobby catalogs resolve here.
-  return `https://info.grudge-studio.com/content/${path.replace(/^\//, "")}`;
+  // Prefer R2 CDN definitions mount (stable dual-publish).
+  return `https://assets.grudge-studio.com/api/v1/${path.replace(/^\//, "")}`;
 }
 
 /** All candidate URLs for a catalog path (for resilient fetch). */
@@ -147,9 +148,9 @@ export const SSOT_LAYERS = [
   },
   {
     layer: "definitions",
-    authority: "info.grudge-studio.com/api/v1",
+    authority: "info + objectstore /api/v1 (dual-publish catalogs)",
     examples: ["weapons", "skills", "gear presets", "races"],
-    openAccess: "contentUrl() / fetchCatalogJson() / /api/objectstore/v1/*",
+    openAccess: "contentUrl() / fetchCatalogJson() / /api/objectstore/v1/* / /api/os/*",
   },
   {
     layer: "binaries",

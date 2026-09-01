@@ -1,7 +1,9 @@
+/* Bottom-LEFT — never share the AI FAB corner (bottom-right). */
 .mouse-presence-badge {
   position: fixed;
-  right: 12px;
-  bottom: 12px;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  right: auto;
   z-index: 80;
   display: inline-flex;
   align-items: center;
@@ -41,10 +43,11 @@
   color: #c8ffd8;
 }
 
-/* Phone: tuck under safe area, smaller */
+/* Phone: left safe area, smaller — still clear of AI FAB on the right */
 @media (max-width: 640px) {
   .mouse-presence-badge {
-    right: max(8px, env(safe-area-inset-right));
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
     bottom: max(8px, env(safe-area-inset-bottom));
     font-size: 10px;
     padding: 4px 8px 4px 6px;

@@ -8,7 +8,8 @@
  *         wave (1-3 normal) → bosswave (wave 4, grudge6 orc knight) → victory | defeat
  */
 import * as THREE from "three";
-import { bakedIndexFor, getBakedCharacter } from "../grudge/bakedRoster";
+import { loadGrudge6CombatRig } from "../grudge/grudge6Runtime";
+import type { RaceId } from "../grudge/raceAssets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "../fitCharacterHeight";
 import { Vfx } from "../Vfx";
 
@@ -136,6 +137,12 @@ const JUNGLE_CAMP_SPAWNS: Array<{
   { modelKey: "forest_zombie", hp: 50, speed: 2.2, atkDamage: 11, atkReach: 1.5, x: 11.2, z: 7 },
   { modelKey: "forest_bear", hp: 120, speed: 2.4, atkDamage: 18, atkReach: 1.9, x: 0, z: -12 },
   { modelKey: "jungle_ogre", hp: 220, speed: 1.9, atkDamage: 28, atkReach: 2.2, x: 12, z: -10 },
+  // Session pack mobs
+  { modelKey: "hollow_knight_vengefly", hp: 35, speed: 3.4, atkDamage: 9, atkReach: 1.2, x: -8, z: -6 },
+  { modelKey: "violet_4_hn_creature", hp: 110, speed: 2.6, atkDamage: 16, atkReach: 1.7, x: 8, z: -6 },
+  { modelKey: "lowpoly_rhino", hp: 140, speed: 3.0, atkDamage: 24, atkReach: 1.8, x: -6, z: 12 },
+  { modelKey: "mage_demon", hp: 130, speed: 2.4, atkDamage: 20, atkReach: 8.0, x: 6, z: 12 },
+  { modelKey: "blocker_broker", hp: 160, speed: 2.2, atkDamage: 22, atkReach: 2.0, x: 0, z: 14 },
 ];
 
 const ENEMY_MODEL_PATHS: Record<string, string> = {
@@ -151,6 +158,12 @@ const ENEMY_MODEL_PATHS: Record<string, string> = {
   forest_zombie: "models/enemies/voxel-zombies/voxel-zombie-1.glb",
   jungle_orc: "models/orc.glb",
   jungle_ogre: "models/ogre.glb",
+  // Session pack → R2 models/enemies/session
+  blocker_broker: "models/enemies/session/blocker_broker.glb",
+  hollow_knight_vengefly: "models/enemies/session/hollow_knight_vengefly.glb",
+  mage_demon: "models/enemies/session/mage_demon.glb",
+  lowpoly_rhino: "models/enemies/session/lowpoly_rhino.glb",
+  violet_4_hn_creature: "models/enemies/session/violet_4_hn_creature.glb",
 };
 
 const ENEMY_HEIGHT: Record<string, number> = {
@@ -164,6 +177,11 @@ const ENEMY_HEIGHT: Record<string, number> = {
   forest_zombie: 1.7,
   jungle_orc: 1.95,
   jungle_ogre: 2.4,
+  blocker_broker: 2.0,
+  hollow_knight_vengefly: 0.95,
+  mage_demon: 2.0,
+  lowpoly_rhino: 1.65,
+  violet_4_hn_creature: 1.8,
 };
 
 /** XP awarded on kill (jungle/camp creeps). */
@@ -449,18 +467,19 @@ export class WarlordGenesisScene {
       this.carouselGroup.add(model);
     }
 
-    // 3. Boss template — grudge6 orc knight (cool armour), never karate-boss GLB
+    // 3. Boss template — grudge6 orc knight via loadGrudge6CombatRig only
     try {
-      const bossIdx = bakedIndexFor("orcs", "knight");
-      const bossGlb = await getBakedCharacter(bossIdx);
-      if (this.disposed) return;
-      if (bossGlb) {
-        this.normalizeChar(bossGlb, 2.2);
-        this.bossTemplate = bossGlb;
-        this.ownedObjects.push(bossGlb);
+      const rig = await loadGrudge6CombatRig("orcs", "knight");
+      if (this.disposed) {
+        rig.mixer.stopAllAction();
+        return;
       }
+      rig.mixer.stopAllAction();
+      this.normalizeChar(rig.root, 2.2);
+      this.bossTemplate = rig.root;
+      this.ownedObjects.push(rig.root);
     } catch (err) {
-      console.warn("[WarlordGenesis] grudge6 boss kit failed — capsule fallback", err);
+      console.warn("[WarlordGenesis] grudge6 boss kit failed — no capsule hero", err);
     }
 
     // 4. Enemy templates (per-key target height; skeleton fixed to 2.0 m)
@@ -558,24 +577,39 @@ export class WarlordGenesisScene {
   }
 
   private async loadPlayerModel(raceId: string) {
-    const idx = RACE_BAKED_INDEX[raceId as RaceKey] ?? 0;
+    // Map genesis race key → grudge6 RaceId (SSOT modular kit)
+    const raceMap: Record<string, RaceId> = {
+      human: "western-kingdoms",
+      orc: "orcs",
+      elf: "high-elves",
+      dwarf: "dwarves",
+      undead: "undead",
+      barbarian: "barbarians",
+    };
+    const rid: RaceId = raceMap[raceId] ?? "western-kingdoms";
     try {
-      // Clear previous race mesh
       if (this.playerModel) {
         this.player.remove(this.playerModel);
         this.playerModel = null;
       }
-      const model = await getBakedCharacter(idx);
-      if (this.disposed) return;
-      // bakedRoster already fitCharacterHeight + hip ground
-      this.playerModel = model;
-      this.player.add(model);
+      const rig = await loadGrudge6CombatRig(rid, "warrior");
+      if (this.disposed) {
+        rig.mixer.stopAllAction();
+        return;
+      }
+      // Keep idle playing so player is never T-pose
+      const idle = rig.clips.get("idle");
+      if (idle) {
+        const a = rig.mixer.clipAction(idle);
+        a.setLoop(THREE.LoopRepeat, Infinity);
+        a.play();
+      }
+      (rig.root as THREE.Object3D).userData.grudge6Mixer = rig.mixer;
+      this.playerModel = rig.root;
+      this.player.add(rig.root);
       this.playerHp = PLAYER_MAX_HP;
     } catch (err) {
-      console.error("[WarlordGenesis] player model load failed", err);
-      const fb = this.buildFallbackChar(0x4f9bff);
-      this.playerModel = fb;
-      this.player.add(fb);
+      console.error("[WarlordGenesis] loadGrudge6CombatRig failed — no capsule fake", err);
     }
   }
 

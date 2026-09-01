@@ -94,7 +94,18 @@ export interface MineLoaderLaunchOpts {
   surface?: MineLoaderSurface;
   characterId?: string | null;
   characterName?: string | null;
+  /**
+   * Body form for Realms. Always explorer / avatar race — never grudge6 race-*.
+   * Default `explorer` (box_hero mesh + avatarbaseraces look).
+   */
   baseId?: string | null;
+  /**
+   * Paper race for Avatar Explorer assist (human|orc|elf|dwarf|undead|barbarian).
+   * Mine-Loader uses this with public/assets/models/avatarbaseraces.
+   */
+  raceId?: string | null;
+  /** Avatar Edit avatar id e.g. avatar-human */
+  avatarId?: string | null;
   token?: string | null;
   joinCode?: string | null;
   /** Minecraft-like world seed (numeric or label). */
@@ -107,6 +118,8 @@ export interface MineLoaderLaunchOpts {
   chunkIdx?: number | null;
   /** play mode: seed-overworld | dungeon | default */
   worldMode?: "seed-overworld" | "dungeon" | string | null;
+  /** Premade explorer starting town (MAP_CHUNKS id). */
+  startingTown?: string | null;
   /**
    * Absolute API origin for the SPA. Defaults to Railway authority.
    * Prefer Railway so /api never depends on Replit or a broken rewrite.
@@ -146,6 +159,8 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   if (opts.characterId) url.searchParams.set("characterId", opts.characterId);
   if (opts.characterName) url.searchParams.set("characterName", opts.characterName);
   if (opts.baseId) url.searchParams.set("baseId", opts.baseId);
+  if (opts.raceId) url.searchParams.set("raceId", opts.raceId);
+  if (opts.avatarId) url.searchParams.set("avatarId", opts.avatarId);
   if (opts.joinCode) url.searchParams.set("join", opts.joinCode);
   if (opts.seed != null && opts.seed !== "") {
     url.searchParams.set("seed", String(opts.seed));
@@ -156,6 +171,10 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
     url.searchParams.set("chunkIdx", String(Math.trunc(Number(opts.chunkIdx))));
   }
   if (opts.worldMode) url.searchParams.set("mode", opts.worldMode);
+  if (opts.startingTown) url.searchParams.set("startingTown", opts.startingTown);
+
+  // Always pin body form for Realms: explorer / box_hero path (never grudge6 race-*).
+  if (!opts.baseId) url.searchParams.set("baseId", "explorer");
 
   // Always pin body form for Realms: explorer / box_hero path (never grudge6 race-*).
   if (!opts.baseId) url.searchParams.set("baseId", "explorer");

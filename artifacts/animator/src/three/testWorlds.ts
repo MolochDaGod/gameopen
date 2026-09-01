@@ -118,7 +118,7 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
     id: "island-life",
     name: "Island Life",
     blurb:
-      "Survival coast — prefers island_life.glb when on R2; else proven sailtest / small / breeze chain (island_life currently 404 on CDN).",
+      "Survival coast — island_life.glb on R2 when under size gate; else sailtest/small/breeze fallback chain.",
     kind: "survival_island",
     uuid: "d4e5f6a7-b8c9-4d03-be24-islandlife0004",
     seed: "island-life-survival-01",
@@ -133,7 +133,7 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
     id: "fabled-zone",
     name: "Fabled Main Town",
     blurb:
-      "Faction capital — fabled-zone.glb when uploaded; until then pirate_island_pack + medieval camp + sailtest (CDN proven).",
+      "Faction capital — fabled-zone.glb on R2 (CDN). Pirate pack only if primary fails.",
     kind: "faction_town",
     uuid: "e5f6a7b8-c9d0-4e14-af35-fabledzone0005",
     seed: "fabled-main-town-01",
@@ -148,25 +148,25 @@ export const TEST_WORLDS: Record<TestWorldId, TestWorldDef> = {
     id: "bridge-town-docks",
     name: "Bridge Town Dock Kit",
     blurb:
-      "Modular Bridge Town kit (bridge_town.glb) — seed NPC docks on islands (stilts, piers, lamps, barrels) + fisher/merchant/guard slots.",
+      "Modular Bridge Town kit on R2 (bridge_town.glb / bridge-town-kit.glb) — dock seeds, piers, NPC slots.",
     kind: "dock_kit",
     uuid: "f6a7b8c9-d0e1-4f25-b046-bridgetown0006",
     seed: "bridge-town-docks-01",
-    meshKeys: ["models/towns/bridge-town-kit.glb", "models/worlds/bridge_town.glb"],
+    meshKeys: meshKeysForBiome("docks"),
     campSandbox: true,
     sailing: true,
     defaultMode: "build",
     fog: { color: 0x7eb8d0, near: 20, far: 120, background: 0x5a9ab8 },
   },
   /**
-   * Local public GLB (not CDN): tropical island dry + generative harvest scatter.
-   * Loco / pathfinding / harvest Q&A for 2 m orc agent. Water + skybox excluded.
+   * Tropical harvest QA — production uses Warlords tropical_island_small (CDN 200).
+   * SPA tropical_island_dry is not deployed (404 both hosts).
    */
   "tropical-harvest": {
     id: "tropical-harvest",
-    name: "Tropical Harvest",
+    name: "Tropical Harvest (small island)",
     blurb:
-      "Tropical beach harvest — SPA dry island when present; else Warlords tropical_island_small + low_poly_island on R2. Geometric ore + palms.",
+      "Live mesh: tropical_island_small.glb (CDN). SPA tropical_island_dry is not on prod — harvest scatter + palms on small tropical.",
     kind: "loco_qa",
     uuid: "a7b8c9d0-e1f2-4060-c157-tropicalharv07",
     seed: "tropical-harvest-qa-01",

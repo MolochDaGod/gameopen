@@ -12,7 +12,7 @@ import {
 import { LocomotionBlend } from "./LocomotionBlend";
 import type { VoxelCharacter } from "./rig";
 import { mountWeapons, unmountWeapons, type MountedWeapons } from "./weapons";
-import { filterBindableTracks } from "../clipTracks";
+import { filterBindableTracks, stabilizeClipForMixer } from "../clipTracks";
 import { isUpperBodyTrack } from "../upperBody";
 
 /** Horizontal speed below which the character is considered standing still. */
@@ -30,6 +30,9 @@ const OVERLAY_RATE_MAX = 1.35;
 /**
  * Drives one {@link VoxelCharacter} with a single-active-clip state machine.
  *
+ * **Fleet lane: mixamo-explorer only** (docs/ANIMATION_FLEET_SSOT.md).
+ * Do not bind Bip001 `/anims/baked/*` packs here — that is grudge6Runtime.
+ *
  * Design: exactly one clip is dominant at a time and the mixer crossfades
  * between them. Locomotion, blocking/aim holds, and one-shot actions (attacks,
  * rolls, dashes, hits, death) all resolve to a clip and flow through the same
@@ -43,6 +46,9 @@ const OVERLAY_RATE_MAX = 1.35;
 export class Animator {
   readonly character: VoxelCharacter;
   readonly root: THREE.Group;
+
+  /** Always mixamo-explorer for this class. */
+  readonly fleetAnimLane = "mixamo-explorer" as const;
 
   private readonly mixer: THREE.AnimationMixer;
   private readonly clips: Map<string, THREE.AnimationClip>;
@@ -92,17 +98,27 @@ export class Animator {
   private comboIndex = 0;
   private comboUntil = 0;
   private skillUntil = 0;
-  /** Bind-pose local Y of the Hips bone; clips re-baseline their hip height to
-   *  this so packs authored at a different export height don't float/sink. */
+  /**
+   * Bind-pose local hips position. Clips re-baseline hip X/Z to this (not the
+   * clip's first frame — off-origin "Retargeted Clip" packs otherwise plant the
+   * body tens of units away). Y keeps relative bob only.
+   */
+  private readonly bindHipX: number;
   private readonly bindHipY: number;
+  private readonly bindHipZ: number;
 
   constructor(character: VoxelCharacter, clips: Map<string, THREE.AnimationClip>) {
     this.character = character;
     this.root = character.root;
     this.clips = clips;
     this.mixer = new THREE.AnimationMixer(character.skeletonRoot);
-    const hips = character.skeletonRoot.getObjectByName("mixamorigHips");
+    const hips =
+      character.skeletonRoot.getObjectByName("mixamorigHips") ||
+      character.skeletonRoot.getObjectByName("Hips") ||
+      character.skeletonRoot.getObjectByName("mixamorig:Hips");
+    this.bindHipX = hips ? hips.position.x : 0;
     this.bindHipY = hips ? hips.position.y : 0;
+    this.bindHipZ = hips ? hips.position.z : 0;
     this.locoBlend = new LocomotionBlend((id) => this.action(id));
   }
 
@@ -162,8 +178,18 @@ export class Animator {
     this.currentId = null; // force loco re-eval against the new set
     this.clearOverlay(); // a half-played swing for the old weapon must not linger
     if (sameClass) return; // class unchanged: keep pose, just (un)swapped the mesh
-    const intro = this.resolve("equip") ?? this.resolve("draw");
-    if (intro) this.playOnce(intro);
+    // Class swap: fade to idle only. Equip/draw flourishes often carry residual
+    // root / hip keys that spin or tip the body into the ground on pedestal/play.
+    // Actions stay on ONE mixer; cached actions from old class remain valid.
+    const idle = this.resolve("idle");
+    if (idle) {
+      this.setActive(idle, { loop: true, fade: 0.18 });
+      this.once = null;
+    } else {
+      // Last resort — still avoid long equip takes; prefer short draw if any
+      const intro = this.resolve("draw") ?? this.resolve("equip");
+      if (intro) this.playOnce(intro);
+    }
   }
 
   /** Hide/show the off-hand prop (e.g. while its thrown knife is in flight). No-op if none. */
@@ -470,6 +496,21 @@ export class Animator {
     const id = `__ext__/${clip.uuid}`;
     if (!this.clips.has(id)) this.clips.set(id, clip);
     return this.playOnce(id, holdLast);
+  }
+
+  /**
+   * Register a fleet/baked clip under a catalog id (e.g. animations/sword/…).
+   * Used when Mixamo FBX is absent so Explorer resolves the same packs as grudge6.
+   */
+  registerCatalogClip(id: string, clip: THREE.AnimationClip): void {
+    if (!id || !clip) return;
+    this.clips.set(id, clip);
+    this.actionCache.delete(id);
+  }
+
+  /** Whether a catalog clip id is loaded (for fleet hydrate skip logic). */
+  hasCatalogClip(id: string): boolean {
+    return this.clips.has(id);
   }
 
   /**
@@ -847,14 +888,22 @@ export class Animator {
     return a;
   }
 
-  /** Get/create a cached action for a clip id (clone + lock horizontal root). */
+  /**
+   * Get/create a cached action for a clip id.
+   * Stable bind: filter → strip limb/scale pos → hip X/Z lock → sanitize NaN.
+   * One mixer only — never create a second AnimationMixer for weapon packs.
+   */
   private action(id: string): THREE.AnimationAction | null {
     const cached = this.actionCache.get(id);
     if (cached) return cached;
     const clip = this.clips.get(id);
     if (!clip) return null;
-    const c = filterBindableTracks(this.character.skeletonRoot, clip.clone());
-    lockHorizontalRoot(c, this.bindHipY);
+    const c = stabilizeClipForMixer(clip, {
+      root: this.character.skeletonRoot,
+      bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
+      keepRootPosition: true,
+      lockHorizontalRoot,
+    });
     const action = this.mixer.clipAction(c);
     this.actionCache.set(id, action);
     return action;
@@ -862,7 +911,7 @@ export class Animator {
 
   /**
    * Get/create a cached UPPER-BODY ADDITIVE action for a clip id. The clip is
-   * cloned, stripped to its upper-body tracks (legs stay on the locomotion
+   * stabilized, stripped to upper-body tracks (legs stay on the locomotion
    * blend), made additive relative to its own first frame, and registered with
    * the additive blend mode. Cached under a separate key so it never collides
    * with the full-body action of the same id.
@@ -873,7 +922,12 @@ export class Animator {
     if (cached) return cached;
     const clip = this.clips.get(id);
     if (!clip) return null;
-    const c = filterBindableTracks(this.character.skeletonRoot, clip.clone());
+    const c = stabilizeClipForMixer(clip, {
+      root: this.character.skeletonRoot,
+      bindHip: { x: this.bindHipX, y: this.bindHipY, z: this.bindHipZ },
+      keepRootPosition: false, // upper body only — no hip travel on overlay
+      lockHorizontalRoot,
+    });
     c.tracks = c.tracks.filter((t) => isUpperBodyTrack(t.name));
     if (c.tracks.length === 0) return null;
     THREE.AnimationUtils.makeClipAdditive(c);
@@ -881,31 +935,76 @@ export class Animator {
     this.actionCache.set(key, action);
     return action;
   }
+
+  /**
+   * Clear action cache when clips are hot-replaced (weapon pack rebind).
+   * Keeps the same AnimationMixer instance — best practice for stack.
+   */
+  invalidateActionCache(): void {
+    for (const a of this.actionCache.values()) {
+      try {
+        a.stop();
+        this.mixer.uncacheAction(a.getClip());
+      } catch {
+        /* ignore */
+      }
+    }
+    this.actionCache.clear();
+    this.current = null;
+    this.currentId = null;
+  }
 }
 
 /**
- * Remove horizontal drift from a clip's root (Hips) track while keeping the
- * vertical bob. Mixamo "in place" clips have little horizontal hip motion, but
- * locking X/Z to the first frame guarantees no foot-sliding-independent drift
- * since the game engine owns the character's world translation.
- *
- * The vertical channel is re-baselined so the clip's first frame sits at the
- * rig's bind-pose hip height (`bindHipY`) and only the relative bob is kept.
- * Packs already authored at the rig height are unchanged (y0 ≈ bindHipY → no-op);
- * a pack exported higher (e.g. the dedicated pistol set) would otherwise float
- * the whole body a fixed amount off the ground.
+ * True for a clip's root (Hips) translation track under ANY bone-naming
+ * convention that reaches the rig: native Mixamo (`mixamorigHips`), colon form
+ * (`mixamorig:Hips`), bare `Hips`, and Bip001 pelvis/hips. Exact-string match
+ * alone silently lets un-normalised packs walk off the pedestal.
  */
-function lockHorizontalRoot(clip: THREE.AnimationClip, bindHipY: number): void {
+export function isHipsPositionTrack(name: string): boolean {
+  if (!name.endsWith(".position") && !/\.position\[/.test(name)) return false;
+  const bone = name
+    .replace(/\.position(\[.*)?$/, "")
+    .replace(/^mixamorig:?/i, "")
+    .replace(/^Armature\|/i, "");
+  if (/^Hips\d*$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Hips$/i.test(bone)) return true;
+  if (/^Bip001[\s._-]?Pelvis$/i.test(bone)) return true;
+  // Whole-character root drifts some GLB packs export as "root" / "Root"
+  if (/^(root|Root|ROOT)$/.test(bone)) return true;
+  return false;
+}
+
+/**
+ * Remove horizontal motion from a clip's root (Hips) track while keeping the
+ * vertical bob, so the game engine (or the Dressing Room pedestal) owns the
+ * character's world translation.
+ *
+ * Every frame's hip X/Z is set to the rig's BIND-POSE hip position — NOT the
+ * clip's first frame. Several "Retargeted Clip" packs author the body tens of
+ * units off-origin, so pinning to frame 0 planted the rig that far from centre
+ * (the "feet meters away" / flying-around-the-editor bug). Re-baselining to the
+ * bind position keeps every clip centred and is a no-op for native in-place clips.
+ *
+ * Accepts either a full bind `{x,y,z}` or a legacy numeric bind hip Y (X/Z = 0).
+ */
+export function lockHorizontalRoot(
+  clip: THREE.AnimationClip,
+  bind: { x: number; y: number; z: number } | number,
+): void {
+  const b =
+    typeof bind === "number"
+      ? { x: 0, y: bind, z: 0 }
+      : bind;
   for (const track of clip.tracks) {
-    if (track.name !== "mixamorigHips.position") continue;
+    if (!isHipsPositionTrack(track.name)) continue;
     const v = track.values;
-    const x0 = v[0];
+    if (!v || v.length < 3) continue;
     const y0 = v[1];
-    const z0 = v[2];
     for (let i = 0; i < v.length; i += 3) {
-      v[i] = x0;
-      v[i + 1] = v[i + 1] - y0 + bindHipY;
-      v[i + 2] = z0;
+      v[i] = b.x;
+      v[i + 1] = v[i + 1] - y0 + b.y;
+      v[i + 2] = b.z;
     }
   }
 }

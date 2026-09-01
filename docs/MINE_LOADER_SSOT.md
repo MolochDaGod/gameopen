@@ -4,12 +4,14 @@
 https://github.com/MolochDaGod/mine-loader  
 
 **Local clone:** `D:\GitHub\minegrudge\Mine-Loader`  
-**Live Realms:** https://mineloader.grudge-studio.com (edge: `mine.grudge-studio.com` when CF live)  
+**Live play host (canonical):** https://mineloader.grudge-studio.com  
+**Alias:** https://mine.grudge-studio.com · **Origin SPA:** https://mine-loader.vercel.app  
+**World API:** https://mine-loader-api-production.up.railway.app (1 replica)
 
 **Open hub:** https://open.grudge-studio.com — library / account / Danger Room / **voxel editor**  
 **Open voxel maps:** https://open.grudge-studio.com/voxel (premade Danger Room templates → playtest)
 
-This doc is the fleet contract for **world authoring → lobby hosting → PvP danger rooms**, wired through **Grudge accounts**.
+This doc is the fleet contract for **world authoring → map deploy → multiplayer → harvest / DRC combat**, wired through **Grudge accounts + explorer avatar**.
 
 ---
 
@@ -27,6 +29,8 @@ This doc is the fleet contract for **world authoring → lobby hosting → PvP d
 | Fleet identity / characters | GrudgeBuilder Postgres | Both via `/api/characters` (Vercel satellite rewrites) |
 | Definition JSON (weapons master) | ObjectStore D1 | Both via `/api/objectstore` |
 | Realms world authority | Mine-Loader Railway Postgres | 1 replica; `players` = Grudge user membership cache only |
+| **Location bag / camp / lockpick (MMO)** | **gameopen** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) | Open MMO; Mine-Loader harvest/chests separate leaf |
+| **Voxel auto-harvest + world chests** | **mine-loader** `docs/HARVEST_SYSTEM.md` | `setPlayerAutoHarvest` · `registerChest` · skill `mine-loader-harvest-chests` |
 
 **Rule:** Promote world/editor/deploy features **into mine-loader first**, then consume from Open. Do not fork a second world server in gameopen.  
 **Rule:** Do not invent a second character DB on Realms — heroes stay Builder Postgres; Open `saveData.open` and Realms `saveData.realms` are namespaced. Auth: [mine-loader `docs/AUTH_GRUDGE.md`](https://github.com/MolochDaGod/mine-loader/blob/main/docs/AUTH_GRUDGE.md).
@@ -45,26 +49,39 @@ lib/voxel-canonical  convertOpenToScene / exportInterchange
 Mine-Loader API  (POST scene / world room — fleet)
   │  DATABASE_URL Postgres · single replica
   ▼
-mineloader.grudge-studio.com  /#/play  or lobby room
-  │  SSO: sso_token + characterId + open=1 + from=gameopen
+mineloader.grudge-studio.com  /#/play  or /#/lobby
+  │  SSO: sso_token + characterId + baseId=explorer + open=1 + from=gameopen
+  │  Modes: mode=harvest | mode=drc | mode=free  ·  mapId=… · room=…
   ▼
-Account-bound character appears in world
+Account explorer avatar appears in world (characters from grudge-api)
 ```
 
-### Account wiring
+### Play modes (map deployments)
+
+| Mode | Query | Gameplay |
+|------|-------|----------|
+| **harvest** | `mode=harvest` | Minecraft-like gather / place / craft on map or seed world |
+| **drc** (combat) | `mode=drc` or `mode=combat` | DRC combat with **account explorer avatar** character + skills |
+| **free** | `mode=free` | Default play on promoted / self-hosted map |
+| **lobby** | `#/lobby` | Multiplayer rooms, parties, join codes |
+
+Helpers (Open): `mineLoaderPlayUrl`, `mineLoaderHarvestUrl`, `mineLoaderDrcUrl`, `mineLoaderLobbyUrl` in `productionRuntime.ts`.
+
+### Account + explorer avatar wiring
 1. Player signs in on Open or Realms with **same Grudge ID**.  
 2. Character UUID from Builder Postgres travels as `characterId`.  
-3. Realms peer transform may carry `eq` equipment blob (world-protocol).  
-4. Danger Room / map playtest uses same character race → avatar resolve.
+3. `baseId=explorer` (default) selects the voxel explorer body when race kit is absent.  
+4. Realms peer transform may carry `eq` equipment blob (world-protocol).  
+5. DRC combat uses the same account character — not a guest capsule.
 
-### Deploy checklist (host a world)
+### Deploy checklist (host a world / map)
 1. Mine-Loader: Railway API + Postgres, **replicas = 1**.  
 2. Vercel SPA + `/api/*` rewrite to Railway host.  
-3. CF edge optional (`mine.grudge-studio.com`).  
-4. Open library card → Realms URL with SSO params (`gameLibrary.ts`).  
-5. Smoke: `/api/healthz`, `/api/blocks?limit=1`, join lobby as authenticated user.
+3. CF edge: **`mineloader.grudge-studio.com`** (Worker `mineloader-edge-proxy`) · alias `mine.grudge-studio.com`.  
+4. Open library card → play host with SSO + mode params (`gameLibrary.ts` / `productionRuntime.ts`).  
+5. Smoke: `https://mineloader.grudge-studio.com/api/healthz`, `/api/blocks?limit=1`, join lobby authenticated.
 
-See mine-loader `docs/FLEET_DEPLOY.md`.
+See mine-loader `docs/FLEET_DEPLOY.md` · Open `docs/MINELOADER_MAP_DEPLOY.md`.
 
 ---
 

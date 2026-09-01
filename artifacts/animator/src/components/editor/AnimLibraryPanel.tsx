@@ -351,22 +351,37 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
           ))}
         </datalist>
 
-        {/* Procedural rig library */}
+        {/* Explorer = Mixamo 25-bone live library (public/anim/* weapon packs) */}
         {!loaded ? (
           <>
-            <div className="ed-empty">Load a rig to browse and preview the animation library.</div>
+            <div className="ed-empty">
+              No Explorer Mixamo rig loaded.
+              <br />
+              <span style={{ opacity: 0.75, fontSize: 11 }}>
+                Explorer uses the 25-bone <code>mixamorig*</code> skeleton. Grudge6 races use Bip001 +{" "}
+                <code>anims/baked</code> packs (see section below after Load race in Wardrobe).
+              </span>
+            </div>
             <button className="ed-btn" style={{ width: "100%" }} onClick={() => void engine.loadRig("sword")}>
-              Load rig
+              Load Explorer (Mixamo 25-bone)
             </button>
           </>
         ) : (
           <>
             <div className="ed-field">
-              <label className="ed-label">Weapon set</label>
+              <label className="ed-label">Weapon set (Mixamo class)</label>
               <select
                 className="ed-select"
                 value={WEAPONS.find((w) => w.animSet === snap.rigWeapon)?.id ?? "sword"}
-                onChange={(e) => engine.setRigWeapon(e.target.value)}
+                onChange={(e) => {
+                  engine.setRigWeapon(e.target.value);
+                  // Poll until clips re-resolve for the new class
+                  let n = 0;
+                  const t = window.setInterval(() => {
+                    engine.refresh();
+                    if (++n > 20) window.clearInterval(t);
+                  }, 200);
+                }}
               >
                 {WEAPONS.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -374,11 +389,18 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
                   </option>
                 ))}
               </select>
+              <div className="ed-empty" style={{ padding: "4px 0 0", fontSize: 10, opacity: 0.7 }}>
+                Switches live Mixamo packs under <code>anim/&#123;class&#125;/*</code> on the 25-bone Explorer
+                rig. Not the grudge6 Style pack.
+              </div>
             </div>
 
-            <div className="ed-label">Rig clips — {snap.rigClips.length}</div>
+            <div className="ed-label">Explorer clips — {snap.rigClips.length}</div>
             {snap.rigClips.length === 0 ? (
-              <div className="ed-empty">Loading clips…</div>
+              <div className="ed-empty">
+                Loading clips… If this stays empty, Mixamo pack probe failed (check{" "}
+                <code>/anim/bow/unarmed-idle-01.fbx</code>).
+              </div>
             ) : (
               <ClipList items={rigItems} labels={labels} binding playVfx={(id) => engine.playVfx(id)} />
             )}
@@ -434,16 +456,20 @@ export function AnimLibraryPanel({ engine, snap }: Props) {
           </div>
         )}
 
-        {/* Catalog GLB + grudge6 Bip001 packs (Danger SSOT — XZ/feet/rotation-only) */}
+        {/* Catalog GLB + grudge6 Bip001 packs (Danger SSOT — Mixamo sources baked offline) */}
         {hasImported && (
           <div className="ed-imported-clips">
             <div className="ed-label" style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Character clips (Bip001 / retargeted)</span>
+              <span>Grudge6 / catalog clips (Bip001 bakes)</span>
               {snap.importedPlaying && (
                 <button className="ed-tw" title="Stop" onClick={() => engine.stopImportedClip()}>
                   ◼
                 </button>
               )}
+            </div>
+            <div className="ed-empty" style={{ padding: "0 0 8px", fontSize: 10, opacity: 0.72 }}>
+              These are the retargeted animations from Mixamo (and other) sources, baked to Bip001 under{" "}
+              <code>anims/baked/&#123;sword_shield|magic|longbow|…&#125;</code>. Wardrobe → Style swaps the pack.
             </div>
             {snap.importedClips.map((g) => {
               const items: ClipItem[] = g.clips.map((c) => {

@@ -1,10 +1,14 @@
-# Codex & Voxel Asset Generation Guide
+# Voxel Codex & asset generation guide
 
-**Live Codex UI:** https://mine-loader.vercel.app/#/defs  
-**Open entry:** Realms / Mine-Loader → Codex · `open.grudge-studio.com` → library  
+**This leaf = Voxel Codex only** (era=`voxel`).  
+Sister products: **Warlords Codex** · **Nexus Codex** — see fleet umbrella  
+[FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md) §3.
+
+**Live Voxel Codex UI:** https://mine-loader.vercel.app/#/defs  
+**Open entry:** Realms / Mine-Loader → Codex · Open Production **P** → Codex tab  
 **Repo SSOT:** `Mine-Loader` (`artifacts/voxelcraft` + `lib/asset-catalog` + `lib/db`)
 
-This document maps the **Codex**, **simple block face art**, and the **offline generators** you use to produce:
+This document maps the **Voxel Codex**, **simple block face art**, and the **offline generators** you use to produce:
 
 | Want | Layer | Format | Generator / SSOT |
 |------|--------|--------|------------------|
@@ -21,9 +25,10 @@ This document maps the **Codex**, **simple block face art**, and the **offline g
 
 ---
 
-## 1. What the Codex is
+## 1. What the Voxel Codex is
 
-In-game page: `artifacts/voxelcraft/src/pages\Defs.tsx` (`#/defs`).
+In-game page: `artifacts/voxelcraft/src/pages/Defs.tsx` (`#/defs`).  
+Not the Warlords Arsenal codex and not the Nexus/Grudox codex.
 
 Three tabs:
 
@@ -244,6 +249,12 @@ To **ship a new craft bench end-to-end**:
 2. Or use `rpg_weapons/*.obj` + palette.  
 3. Held item state / equipment keys.  
 4. Optional: item-catalog fantasy/tactical pack icon for inventory UI.
+
+### D2. Craft-stage **resource** props (ores / ingots)
+
+Onboarded: **Free Low Poly Resources Pack** → `assets/resources/lp/*.glb` · catalog keys `lp_*`.  
+Stages: coal/fuel → ore → ingot (see Mine-Loader `docs/LP_RESOURCES_STAGES.md`).  
+Static meshes only — **no** skeleton; do not retarget onto voxel avatar.
 
 ### E. New armour look
 

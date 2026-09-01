@@ -11,7 +11,7 @@
  * Materials stack to 100 in the bag before deposit. Equipment is unique instances.
  */
 
-import { newGrudgeId, newUuid } from "@workspace/grudge-runtime";
+import { newUuid } from "@workspace/grudge-runtime";
 
 /** Default bag grid for characters without a larger bag item. */
 export const DEFAULT_BAG_COLS = 3;
@@ -57,7 +57,8 @@ export type ItemKind =
   | "tool"
   | "relic"
   | "mount"
-  | "boat";
+  | "boat"
+  | "back";
 
 export type EquipSlot =
   | "mainHand"
@@ -70,7 +71,8 @@ export type EquipSlot =
   | "legs"
   | "feet"
   | "accessory"
-  | "tool";
+  | "tool"
+  | "back";
 
 export type ItemRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 
@@ -97,8 +99,21 @@ export interface ItemTemplate {
 
 /** Runtime stack or unique item in bag / account. */
 export interface ItemInstance {
-  /** Unique instance id (ent_ / uuid). */
+  /**
+   * Runtime id. Production unique gear: equals `grudgeUuid` (ledger).
+   * Stackables: `stack_<templateId>`. Guest-only provisional: `prov_…`.
+   */
   instanceId: string;
+  /**
+   * Railway structured item UUID (slot-tier-itemId-ts-counter) when ledgered.
+   * Required for equip/craft/trade of unique items when signed in.
+   */
+  grudgeUuid?: string;
+  /**
+   * True when minted client-side without ledger (guest / offline only).
+   * Never treat provisional as production bag SSOT.
+   */
+  provisional?: boolean;
   /** Template id (itm_ / resource slug like wood). */
   templateId: string;
   qty: number;
@@ -108,6 +123,51 @@ export interface ItemInstance {
   bound?: boolean;
   /** Optional tier override for weapon tree. */
   tier?: number;
+}
+
+/**
+ * Unique gear must go through /api/uuid + /api/ledger when signed in.
+ * Prefix heuristics only here (avoid catalog import cycle). Prefer
+ * `isLedgerUniqueItem` from catalog.ts at call sites that already load catalog.
+ */
+export function isLedgerUniqueTemplate(templateId: string): boolean {
+  if (!templateId) return false;
+  if (
+    templateId.startsWith("wpn_") ||
+    templateId.startsWith("arm_") ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_") ||
+    templateId.startsWith("EQIP-") ||
+    templateId.startsWith("ITEM-")
+  ) {
+    return true;
+  }
+  if (
+    templateId.startsWith("itm_mount") ||
+    templateId.startsWith("itm_boat") ||
+    templateId.startsWith("tool_") ||
+    templateId.includes("_tool_")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Stackable materials / consumables — definition id + qty, not ledger uuid. */
+export function isStackableTemplate(templateId: string): boolean {
+  return !isLedgerUniqueTemplate(templateId);
+}
+
+/** True when instance is production-valid for equip/craft/trade. */
+export function isLedgeredInstance(item: ItemInstance | null | undefined): boolean {
+  if (!item) return false;
+  if (item.provisional) return false;
+  const id = item.grudgeUuid || item.instanceId;
+  if (!id || id.startsWith("prov_") || id.startsWith("stack_") || id.startsWith("ent_")) {
+    return false;
+  }
+  // Structured grudge UUID: slot-tier-itemId-ts-counter (has dashes, length)
+  return id.includes("-") && id.length >= 20;
 }
 
 export type CharacterKeptLoadout = Record<KeptLoadoutSlotId, ItemInstance | null>;
@@ -134,6 +194,11 @@ export interface CharacterBagState {
    * Length always 3. Legacy name `consumableHotkeys` kept for save migration.
    */
   consumableHotkeys: (ItemInstance | null)[];
+  /**
+   * Body Back pointer (not a 5th kept 2×2 slot). Instance still lives in 3×3.
+   * Used for ledger UNEQUIP on swap/drop/death.
+   */
+  wornBack?: ItemInstance | null;
   updatedAt: number;
 }
 
@@ -155,11 +220,22 @@ export interface AccountInventoryState {
 
 export type DepositZoneKind = "claim" | "camp" | "boat" | "storage" | "none";
 
+/** Albion destination for bag deposit (see locationInventory + depositZones). */
+export interface DepositDestinationInfo {
+  kind: string;
+  locationId?: string;
+  label: string;
+}
+
 export interface DepositContext {
   zone: DepositZoneKind;
   /** True when quick-deposit button should illuminate. */
   canDeposit: boolean;
   label: string;
+  /** Where goods land (camp storage vs home island bag). */
+  destination?: DepositDestinationInfo;
+  /** Show “Send camp → home island” affordance when at own camp. */
+  canSendToHome?: boolean;
 }
 
 /** RMB context actions on a bag item. */
@@ -177,18 +253,47 @@ export function emptyBagSlots(n = DEFAULT_BAG_SLOTS): BagSlot[] {
   return Array.from({ length: n }, (_, index) => ({ index, item: null }));
 }
 
+/**
+ * Build a bag row **without** Railway mint.
+ *
+ * - Stackables → stable `stack_<templateId>` (OK for production qty bags)
+ * - Unique gear → **provisional** only (guest/offline/tests)
+ *
+ * Production unique gear: use `mintUniqueItemInstance` from `ledgerClient.ts`.
+ * Do not treat provisional uniques as bag SSOT when signed in.
+ */
 export function newItemInstance(
   templateId: string,
   qty = 1,
   extra?: Partial<ItemInstance>,
 ): ItemInstance {
+  const unique = isLedgerUniqueTemplate(templateId);
+  if (unique) {
+    const grudgeUuid = extra?.grudgeUuid;
+    const id =
+      grudgeUuid ||
+      extra?.instanceId ||
+      `prov_${newUuid().replace(/-/g, "").slice(0, 16)}`;
+    return {
+      templateId,
+      qty: Math.max(1, Math.floor(qty)),
+      ...extra,
+      instanceId: id,
+      grudgeUuid: grudgeUuid || extra?.grudgeUuid,
+      provisional: !grudgeUuid,
+    };
+  }
   return {
-    instanceId: newGrudgeId("entity"),
     templateId,
     qty: Math.max(1, Math.floor(qty)),
+    provisional: false,
     ...extra,
+    instanceId: extra?.instanceId || `stack_${templateId}`,
   };
 }
+
+/** @deprecated Use mintUniqueItemInstance when signed in. Alias for tests/guest. */
+export const newProvisionalItemInstance = newItemInstance;
 
 export function emptyKeptLoadout(): CharacterKeptLoadout {
   return {
@@ -213,6 +318,7 @@ export function newCharacterBag(characterId: string): CharacterBagState {
     slots,
     kept: emptyKeptLoadout(),
     consumableHotkeys: [null, null, null],
+    wornBack: null,
     updatedAt: Date.now(),
   };
 }

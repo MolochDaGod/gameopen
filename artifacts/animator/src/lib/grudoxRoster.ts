@@ -10,6 +10,7 @@
  */
 
 import type { GrudgeCharacter } from "./grudgeAuth";
+import { normalizeToGrudgeAvatarId } from "./raceModel";
 
 export const GRUDOX_MAX_SLOTS = 4;
 
@@ -61,20 +62,11 @@ export function raceKeyToLabel(raceKey: string): string {
   return labels[raceKey] || "Hero";
 }
 
-/** Map baseId → Animator character catalog id (for Danger Room / Studio). */
+/** Map baseId → Studio grudge6 id (`grudge:race:preset`) for Danger / Open play. */
 export function baseIdToAnimatorId(baseId: string | null | undefined): string {
   const b = (baseId || "").toLowerCase();
-  if (!b) return "explorer";
-  if (b.startsWith("grudge-")) return b;
-  if (b.startsWith("race-")) return b;
-  if (b === "human") return "race-human";
-  if (b === "orc") return "race-orc";
-  if (b === "dwarf") return "race-dwarf";
-  if (b.includes("elf")) return "race-high-elf";
-  if (b.includes("barb")) return "race-barbarian";
-  if (b.includes("undead")) return "race-undead";
-  if (b === "explorer" || b === "grudge") return "explorer";
-  return b;
+  if (b === "explorer" || b === "led-monk") return "explorer";
+  return normalizeToGrudgeAvatarId(baseId || "western-kingdoms", "warrior");
 }
 
 function readRosterFromKey(key: string): GrudoxSavedCharacter[] {
@@ -166,6 +158,104 @@ export function loadGrudoxCharacters(): GrudgeCharacter[] {
   return loadGrudoxRosterSlots().map(grudoxSlotToGrudgeCharacter);
 }
 
+/** Voxel-era Avatar Explorer (campfire / Encament) — not Warlords grudge6. */
+export function isVoxelExplorerHero(c: GrudgeCharacter): boolean {
+  const era = String(c.gameEra || c.config?.gameEra || c.config?.era || "").toLowerCase();
+  const base = String(c.config?.baseId || "").toLowerCase();
+  const pipe = String(c.config?.renderPipeline || c.config?.pipeline || "").toLowerCase();
+  if (era === "voxel") return true;
+  if (base === "explorer" || base.includes("explorer")) return true;
+  if (pipe === "voxel" || pipe === "box_hero") return true;
+  return false;
+}
+
+/** Fleet `saveData.open.voxelLook` — per UUID body, not a shared local draft. */
+function voxelLookFromCharacter(c: GrudgeCharacter): Record<string, unknown> | undefined {
+  const save = (c.saveData || {}) as Record<string, unknown>;
+  const cfg = (c.config || {}) as Record<string, unknown>;
+  for (const blob of [save.open, cfg.open, save, cfg]) {
+    if (!blob || typeof blob !== "object") continue;
+    const look = (blob as Record<string, unknown>).voxelLook;
+    if (look && typeof look === "object") return look as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+/**
+ * 4-seat campfire roster: account era=voxel explorers only.
+ * Always length 4 (holes stay empty) so seat index === character.slot.
+ * Do not fill seats with Warlords heroes — those belong to the Warlords client.
+ */
+export function buildVoxelCampfireHeroes(
+  fleet: GrudgeCharacter[],
+  preferredId?: string | null,
+): (GenesisHeroOption | null)[] {
+  const voxel = fleet.filter(isVoxelExplorerHero);
+  const localExplorers = loadGrudoxRosterSlots().filter(
+    (s) => /explorer/i.test(s.baseId || "") || s.baseId === "explorer",
+  );
+  const seen = new Set<string>();
+  const bySlot: (GenesisHeroOption | null)[] = [null, null, null, null];
+
+  const toOpt = (c: GrudgeCharacter, slot: number, source: "grudox" | "fleet"): GenesisHeroOption => {
+    const baseId =
+      (typeof c.config?.baseId === "string" && c.config.baseId) || "explorer";
+    const raceKey = baseIdToRaceKey(baseId) || baseIdToRaceKey(c.raceId);
+    return {
+      id: c.id,
+      name: c.name,
+      baseId,
+      raceKey,
+      raceLabel: RACE_LABEL[raceKey] || c.raceId || "Explorer",
+      slot,
+      source,
+      voxelLook: voxelLookFromCharacter(c),
+    };
+  };
+
+  for (const c of voxel) {
+    if (seen.has(c.id)) continue;
+    const slot =
+      typeof c.slotIndex === "number"
+        ? c.slotIndex
+        : typeof c.config?.slot === "number"
+          ? (c.config.slot as number)
+          : bySlot.findIndex((x) => !x);
+    const s = Math.max(0, Math.min(3, slot));
+    if (bySlot[s]) continue;
+    const opt = toOpt(c, s, "fleet");
+    bySlot[s] = opt;
+    seen.add(c.id);
+  }
+  for (const c of voxel) {
+    if (seen.has(c.id)) continue;
+    const empty = bySlot.findIndex((x) => !x);
+    if (empty < 0) break;
+    bySlot[empty] = toOpt(c, empty, "fleet");
+    seen.add(c.id);
+  }
+
+  for (const loc of localExplorers) {
+    if (seen.has(loc.uuid)) continue;
+    const sl = Math.max(0, Math.min(3, loc.slot));
+    if (bySlot[sl]) continue;
+    const raceKey = baseIdToRaceKey(loc.baseId);
+    bySlot[sl] = {
+      id: loc.uuid,
+      name: loc.name,
+      baseId: loc.baseId || "explorer",
+      raceKey,
+      raceLabel: RACE_LABEL[raceKey] || "Explorer",
+      slot: sl,
+      source: "grudox",
+    };
+    seen.add(loc.uuid);
+  }
+
+  void preferredId;
+  return bySlot;
+}
+
 /** Display meta for Genesis picker cards. */
 export type GenesisHeroOption = {
   id: string;
@@ -175,6 +265,8 @@ export type GenesisHeroOption = {
   raceLabel: string;
   slot: number;
   source: "grudox" | "fleet";
+  /** Railway `saveData.open.voxelLook` for this UUID — not a shared wardrobe. */
+  voxelLook?: Record<string, unknown>;
 };
 
 const RACE_LABEL: Record<string, string> = {

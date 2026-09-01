@@ -59,6 +59,28 @@ export class CampEnemySystem {
     this.enemies = [];
   }
 
+  /**
+   * Seed overworld / cave dungeon — session hostiles (voodooist + redesigned zombie).
+   * campId: seed_voodoo | seed_voodoo_dungeon
+   */
+  async spawnSeedHostiles(
+    center: THREE.Vector3,
+    campId: "seed_voodoo" | "seed_voodoo_dungeon" = "seed_voodoo",
+  ): Promise<number> {
+    this.cat = await loadForestCreepCatalog();
+    const spawns = expandCampSpawns(this.cat, campId, {
+      x: center.x,
+      z: center.z,
+    });
+    let n = 0;
+    for (const s of spawns) {
+      const ok = await this.spawnOne(s.unit, s.x, center.y, s.z);
+      if (ok) n++;
+    }
+    if (n) this.cbs.flash?.(`SEED HOSTILES · ${n}`, 1.2);
+    return n;
+  }
+
   async spawnVoxelCamp(center: THREE.Vector3): Promise<number> {
     this.clear();
     this.cat = await loadForestCreepCatalog();
@@ -165,7 +187,8 @@ export class CampEnemySystem {
         tpl = scene;
       }
       const root = tpl.clone(true);
-      root.position.set(x, y, z);
+      const fly = unit.tags?.includes("flying") ? unit.heightM * 0.45 : 0;
+      root.position.set(x, y + fly, z);
       root.name = `camp-enemy:${unit.id}`;
       root.userData.campEnemy = true;
       root.userData.unitId = unit.id;

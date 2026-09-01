@@ -19,6 +19,7 @@ import {
 import { MAP_TEMPLATES } from "../three/voxel/templates";
 import { listMapChunks } from "../three/voxel/mapChunks";
 import { gameSession } from "./GameSession";
+import { isLedgerUniqueTemplate } from "./inventory/types";
 
 export type HarvestTabId =
   | "ops"
@@ -221,6 +222,19 @@ const FALLBACK_RECIPES: CraftRecipe[] = [
     tier: 0,
   },
   {
+    id: "rcp_starter_campfire",
+    name: "Campfire",
+    station: "hand",
+    output: { id: "campfire", name: "Campfire", qty: 1 },
+    inputs: [
+      { id: "mat_stick", name: "Stick", qty: 4 },
+      { id: "mat_stone", name: "Stone", qty: 3 },
+    ],
+    timeSec: 2,
+    skill: "crafting",
+    tier: 0,
+  },
+  {
     id: "rcp_wood_plank",
     name: "Wood planks",
     station: "workbench",
@@ -229,6 +243,33 @@ const FALLBACK_RECIPES: CraftRecipe[] = [
     timeSec: 1.5,
     skill: "crafting",
     tier: 0,
+  },
+  {
+    id: "rcp_back_cape",
+    name: "Cape",
+    station: "loom",
+    output: { id: "itm_back_cape", name: "Cape", qty: 1 },
+    inputs: [
+      { id: "mat_cloth", name: "Cloth", qty: 4 },
+      { id: "mat_leather_strap", name: "Leather strap", qty: 2 },
+    ],
+    timeSec: 6,
+    skill: "crafting",
+    tier: 0,
+  },
+  {
+    id: "rcp_back_holy_wings",
+    name: "Holy Wings",
+    station: "alchemy",
+    output: { id: "itm_back_holy_wings", name: "Holy Wings", qty: 1 },
+    inputs: [
+      { id: "mat_cloth", name: "Cloth", qty: 4 },
+      { id: "mat_crystal", name: "Crystal", qty: 2 },
+      { id: "mat_leather", name: "Leather", qty: 2 },
+    ],
+    timeSec: 14,
+    skill: "alchemy",
+    tier: 2,
   },
 ];
 
@@ -336,7 +377,8 @@ const FALLBACK_SYSTEMS: SystemsDoc = {
   ],
   controls: [
     { key: "Hold Q", action: "Mode radial · ↑ combat · ↓ harvest (tap toggles)" },
-    { key: "Hold R", action: "Harvest tool radial (equip tool)" },
+    { key: "F", action: "Harvest nearest node of tool in hand" },
+    { key: "Hold R", action: "Tool radial · professions · farm · shovel · back (effects)" },
     { key: "J/H/V", action: "Bag utility · consumable / deploy / mount" },
     { key: "Hold Tab", action: "Radial tool wheel" },
     { key: "P", action: "Toggle production UI" },
@@ -501,6 +543,17 @@ export const MAP_LIBRARY: MapAsset[] = [
     category: "voxel_map",
     codexBlocks: ["sandstone", "sand", "stone", "cactus"],
     codexDefs: ["canyon", "desert_biome"],
+  },
+  {
+    id: "wolf_street",
+    name: "Wolf Street",
+    path: "models/voxel/maps/wolf_street.glb",
+    kind: "map_chunk",
+    blurb: "Seed prefab for worlds with no map or a duplicate mapChunkId.",
+    r2Key: "models/voxel/maps/wolf_street.glb",
+    category: "voxel_map",
+    codexBlocks: ["stone", "brickRed", "woodPlanks", "dirt"],
+    codexDefs: ["street", "seed_prefab"],
   },
   {
     id: "animal_company_lobby",
@@ -1407,7 +1460,12 @@ export function openMineLoaderEditor(): string {
   });
 }
 
-/** Bag mat counts (local stub inventory until Railway bag is bound). */
+/**
+ * Harvest production mat bag (qty map).
+ * - Always mirrored in localStorage for UI snappiness
+ * - When signed in: also dual-write stackable mats to Railway account resources
+ * Unique gear outputs use grantUniqueToBag / ledger — not this map as SSOT.
+ */
 const BAG_KEY = "harvest:bag:v1";
 
 export function loadBag(): Record<string, number> {
@@ -1426,20 +1484,108 @@ export function saveBag(bag: Record<string, number>) {
   }
 }
 
+/** Push positive mat deltas to Railway account bag when JWT present. */
+async function pushMatsToRailway(delta: Record<string, number>): Promise<void> {
+  try {
+    const { getStoredToken } = await import("../lib/grudgeAuth");
+    if (!getStoredToken()) return;
+    const items = Object.entries(delta)
+      .filter(([, n]) => n > 0)
+      .map(([resourceId, amount]) => ({ resourceId, amount: Math.floor(amount) }));
+    if (!items.length) return;
+    const { batchAddAccountResources } = await import("../auth/accountBag");
+    await batchAddAccountResources(items);
+  } catch {
+    /* offline / no account bridge */
+  }
+}
+
 export function canCraft(recipe: CraftRecipe, bag: Record<string, number>): boolean {
   return recipe.inputs.every((i) => (bag[i.id] ?? 0) >= i.qty);
 }
 
+/** Unique outputs must go through grantUniqueToBag — never the harvest qty map. */
+function isUniqueCraftOutput(id: string): boolean {
+  return isLedgerUniqueTemplate(id);
+}
+
+/**
+ * Synchronous craft for UI timers (stackable mats only).
+ * Unique gear must use craftRecipeAsync → grantUniqueToBag.
+ */
 export function craftRecipe(
   recipe: CraftRecipe,
   bag: Record<string, number>,
 ): { ok: boolean; bag: Record<string, number>; reason?: string } {
   if (!canCraft(recipe, bag)) return { ok: false, bag, reason: "missing materials" };
+  if (isUniqueCraftOutput(recipe.output.id)) {
+    return { ok: false, bag, reason: "unique gear requires craftRecipeAsync" };
+  }
   const next = { ...bag };
   for (const i of recipe.inputs) next[i.id] = (next[i.id] ?? 0) - i.qty;
   next[recipe.output.id] = (next[recipe.output.id] ?? 0) + recipe.output.qty;
   saveBag(next);
   return { ok: true, bag: next };
+}
+
+/**
+ * Production craft: deduct mats, dual-write Railway for stackables,
+ * mint unique outputs via ledger when signed in.
+ */
+export async function craftRecipeAsync(
+  recipe: CraftRecipe,
+  bag: Record<string, number>,
+  opts?: { characterId?: string | null; accountId?: string | null },
+): Promise<{
+  ok: boolean;
+  bag: Record<string, number>;
+  reason?: string;
+  uniqueGranted?: boolean;
+  uniqueOutput?: boolean;
+}> {
+  if (!canCraft(recipe, bag)) {
+    return { ok: false, bag, reason: "missing materials" };
+  }
+  const next = { ...bag };
+  for (const i of recipe.inputs) {
+    next[i.id] = (next[i.id] ?? 0) - i.qty;
+  }
+
+  const { isLedgerUniqueItem } = await import("./inventory/catalog");
+  const outId = recipe.output.id;
+  let uniqueGranted = false;
+  const uniqueOutput = isLedgerUniqueItem(outId);
+
+  if (uniqueOutput) {
+    const { grantUniqueToBag } = await import("./inventory/store");
+    const characterId = opts?.characterId || "local";
+    for (let n = 0; n < recipe.output.qty; n++) {
+      const g = await grantUniqueToBag({
+        characterId,
+        templateId: outId,
+        accountId: opts?.accountId,
+        sourceType: "open_craft",
+        sourceRef: recipe.id,
+      });
+      if (!g.item) {
+        // roll back mats in memory only if mint fails mid-loop
+        return {
+          ok: false,
+          bag,
+          reason: g.message || "Unique craft mint failed",
+          uniqueOutput: true,
+        };
+      }
+      uniqueGranted = g.ledgered;
+    }
+    // Unique gear lives on character bag (ledger or guest provisional), not mat map
+  } else {
+    next[outId] = (next[outId] ?? 0) + recipe.output.qty;
+    await pushMatsToRailway({ [outId]: recipe.output.qty });
+  }
+
+  saveBag(next);
+  return { ok: true, bag: next, uniqueGranted, uniqueOutput };
 }
 
 /** Seed starter mats for first-run UX. */
@@ -1605,9 +1751,22 @@ export function applyHarvestYield(
   if (characterId) {
     try {
       // Dynamic to avoid circular import at module load
-      void import("./inventory/store").then(({ harvestIntoBag }) => {
+      void import("./inventory/store").then(async ({ harvestIntoBag, grantUniqueToBag }) => {
+        const { isLedgerUniqueItem } = await import("./inventory/catalog");
         for (const [id, qty] of Object.entries(charAdds)) {
-          harvestIntoBag(characterId, id, qty);
+          if (isLedgerUniqueItem(id)) {
+            // Unique gear: mint via /api/uuid + ledger (not client ent_ ids)
+            for (let i = 0; i < qty; i++) {
+              await grantUniqueToBag({
+                characterId,
+                templateId: id,
+                sourceType: "open_harvest",
+                sourceRef: id,
+              });
+            }
+          } else {
+            harvestIntoBag(characterId, id, qty);
+          }
         }
       });
     } catch {

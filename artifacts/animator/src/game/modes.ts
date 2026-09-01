@@ -171,9 +171,9 @@ export const GAME_MODES: readonly GameModeDef[] = [
   },
   {
     id: "warlord-genesis",
-    title: "Warlord Genesis",
+    title: "Warstrat · Warlord Genesis",
     blurb:
-      "Fleet handoff to warlord-genesis.vercel.app — 3 lanes, production buildings, grudge6 units (not an in-Open wave arena).",
+      "Fleet handoff to warstrat.grudge-studio.com — 3 lanes, warcamp, grudge6 Toon RTS units (not an in-Open wave arena).",
     icon: "/icons/combat-pad.png",
     spawn: { maxEnemies: 10, maxAllies: 0, bosses: 1, waves: 4, introGraceSec: 3 },
     enemyStrategy: "swarm-horde",
@@ -185,9 +185,9 @@ export const GAME_MODES: readonly GameModeDef[] = [
   {
     id: "agama-survival",
     title: "Agama Survival",
-    blurb: "Hold the safe zone on the Agama map — escalating zombie waves.",
+    blurb: "Kilometre Agama battleground — farms, harvest, faction wars, extract north.",
     icon: "/icons/ambush.png",
-    spawn: { maxEnemies: 16, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 3 },
+    spawn: { maxEnemies: 18, maxAllies: 4, bosses: 0, waves: 0, introGraceSec: 3 },
     enemyStrategy: "swarm-horde",
     allyStrategy: "tank-guard",
     bossStrategy: "boss-phased",

@@ -265,3 +265,48 @@ export function saveRoomPreset(id: RoomPresetId): void {
     /* no-op */
   }
 }
+
+/**
+ * Full-scene battle-art backdrops for the Danger Room (ported from
+ * threejs-rapier-react-three-controller). Independent of the room preset:
+ * a backdrop swaps `scene.background` to a painted battle scene.
+ * `null` restores the preset's plain colour background.
+ */
+export interface Backdrop {
+  id: string;
+  name: string;
+  /** Path relative to BASE_URL (no leading slash). */
+  file: string;
+}
+
+export const BACKDROPS: Backdrop[] = [
+  { id: "clash", name: "Clash of Legions", file: "backdrops/battle-1.webp" },
+  { id: "siege", name: "The Siege", file: "backdrops/battle-2.webp" },
+  { id: "warfront", name: "Warfront", file: "backdrops/battle-3.webp" },
+];
+
+const BACKDROP_KEY = "dangerroom:backdrop";
+
+/** Narrow an arbitrary string to a known backdrop id (or null when unknown). */
+export function asBackdropId(v: string | null | undefined): string | null {
+  return BACKDROPS.some((b) => b.id === v) ? (v as string) : null;
+}
+
+/** Read the session-persisted backdrop choice (null = plain preset background). */
+export function loadBackdrop(): string | null {
+  try {
+    return asBackdropId(sessionStorage.getItem(BACKDROP_KEY));
+  } catch {
+    return null;
+  }
+}
+
+/** Persist (or clear, with null) the backdrop choice for this browser session. */
+export function saveBackdrop(id: string | null): void {
+  try {
+    if (id) sessionStorage.setItem(BACKDROP_KEY, id);
+    else sessionStorage.removeItem(BACKDROP_KEY);
+  } catch {
+    /* no-op */
+  }
+}

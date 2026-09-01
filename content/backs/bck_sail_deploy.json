@@ -1,0 +1,46 @@
+{
+  "id": "bck_sail_deploy",
+  "itemId": "itm_back_sail_deploy",
+  "runtimeId": "back_sail_deploy",
+  "equipId": "equip:back:sail_deploy",
+  "slot": "back",
+  "family": "wings",
+  "label": "Deployable Sail",
+  "effect": "Ocean sail / waterboard couple",
+  "useKind": "deploy",
+  "useKey": "Space",
+  "useHint": "Sailtest wind + airborne sail mode",
+  "domains": [
+    "ocean",
+    "mobility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/equipment/wing_animated.glb",
+    "mode": "sail"
+  },
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "wings",
+    "deploy",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_sail_deploy"
+}

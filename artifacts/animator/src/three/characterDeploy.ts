@@ -65,7 +65,7 @@ export interface DeployOpts {
   facePlusZ?: boolean | "auto";
   /** Yaw (rad) when facePlusZ applies. Default π/2. */
   faceYaw?: number;
-  /** Re-run height fit when measured height is absurd. Default true. */
+  /** Re-run height fit when measured height is absurd. Default false (ingest-only). */
   refitIfAbsurd?: boolean;
   /** Author scale multiplier into fitCharacterHeight. */
   authorScale?: number;
@@ -159,7 +159,7 @@ export function deployCharacterModel(
 ): DeployResult {
   const target = opts.targetHeightM ?? DEPLOY_TARGET_HEIGHT_M;
   const groundY = opts.groundY ?? 0;
-  const refit = opts.refitIfAbsurd !== false;
+  const refit = opts.refitIfAbsurd === true;
   let fit: FitResult | null = null;
   let facingApplied = false;
 
@@ -167,9 +167,10 @@ export function deployCharacterModel(
 
   let h = bodyBox(model).getSize(new THREE.Vector3()).y || 0;
   const already = model.userData.grudgeHeightFit === true;
-  const absurd =
-    h > target * RE_FIT_MAX_RATIO || h < target * RE_FIT_MIN_RATIO || h < 0.05;
-  if (!already || (refit && absurd)) {
+  const deployed = model.userData.characterDeployed === true;
+  // GUARD: NEVER call fitCharacterHeight if grudgeHeightFit=true (ingest-only SI).
+  // If ingest already converted metres, skip even on first deploy. Runtime never re-fits.
+  if (!already && !deployed) {
     fit = fitCharacterHeight(model, target, opts.authorScale ?? 1);
     model.userData.grudgeHeightFit = true;
     h = bodyBox(model).getSize(new THREE.Vector3()).y || target;
@@ -197,7 +198,18 @@ export function deployCharacterModel(
     }
   }
 
-  const { dx, dz, pelvis } = centerXZOnPelvis(model);
+  // GUARD: Skip XZ centering if already deployed (ingest-only hip placement).
+  let dx = 0;
+  let dz = 0;
+  let pelvis: THREE.Bone | null = null;
+  if (!deployed) {
+    const center = centerXZOnPelvis(model);
+    dx = center.dx;
+    dz = center.dz;
+    pelvis = center.pelvis;
+  } else {
+    pelvis = findPelvisBone(model);
+  }
   const groundDeltaY = groundFeetLocal(model, groundY);
 
   model.userData.characterDeployed = true;
@@ -283,6 +295,8 @@ export function findDeployModel(avatarRoot: THREE.Object3D): THREE.Object3D | nu
  *
  * Re-grounds the **skinned model** (not the holder wrapper). Grounding
  * `avatarRoot.children[0]` (holder) double-offset Y and pushed feet under the floor.
+ *
+ * GUARD: Ingest-only SI fit. If already fitted or deployed, only re-ground Y.
  */
 export function ensureHumanScale(
   avatarRoot: THREE.Object3D,
@@ -293,6 +307,14 @@ export function ensureHumanScale(
   if (!(h > 0.01)) return false;
 
   const model = findDeployModel(avatarRoot) ?? avatarRoot;
+  
+  // GUARD: Skip re-fit if already fitted or deployed (ingest-only SI, Y-only at runtime).
+  const fitted = model.userData.grudgeHeightFit === true;
+  const deployed = model.userData.characterDeployed === true;
+  if (fitted || deployed) {
+    groundFeetLocal(model, 0);
+    return false;
+  }
 
   if (h <= targetM * RE_FIT_MAX_RATIO && h >= targetM * RE_FIT_MIN_RATIO) {
     // Uniform scale guard: non-uniform axes = "stretched" look.
@@ -342,12 +364,50 @@ export function ensureHumanScale(
 /**
  * After first idle/attack sample, re-sit soles on groundY (position tracks /
  * bind-pose drift). Safe no-op when already grounded.
+ *
+ * GUARD: Only adjusts model.position.y, NEVER XZ or scale.
+ * Clip switch may call this; SI fit and hip XZ centering are ingest-only.
  */
 export function reGroundAfterAnimSample(
   model: THREE.Object3D,
   groundY = 0,
 ): number {
   return groundFeetLocal(model, groundY);
+}
+
+/** Walk a remapped bone up to the scene-graph root Bone (Bip001 / Hips). */
+function rootMostBone(bone: THREE.Bone): THREE.Bone {
+  let last: THREE.Bone = bone;
+  let n: THREE.Object3D | null = bone.parent;
+  while (n) {
+    if ((n as THREE.Bone).isBone) last = n as THREE.Bone;
+    n = n.parent;
+  }
+  return last;
+}
+
+/**
+ * How many disconnected *character* skeletons a kit still has.
+ *
+ * unifySkeletons() allocates a new THREE.Skeleton per SkinnedMesh (inverses
+ * differ) but remaps bones onto the same Bip001 nodes. Helmet / weapon skins
+ * often omit pelvis from their bone array — do not treat bones[0] as a kit.
+ * Count unique root-most Bip001/Hips objects on **visible** skins only.
+ */
+export function countVisibleSkeletonRoots(model: THREE.Object3D): number {
+  const roots = new Set<string>();
+  model.traverse((o) => {
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh || sm.visible === false) return;
+    const bones = sm.skeleton?.bones;
+    if (!bones?.length) return;
+    for (const b of bones) {
+      if (!b?.name) continue;
+      if (!/Bip001|mixamorig|Pelvis|^Hips$|Spine/i.test(b.name)) continue;
+      roots.add(rootMostBone(b).uuid);
+    }
+  });
+  return roots.size;
 }
 
 /** Validate a deployed kit is playable before unlocking input. */
@@ -359,22 +419,16 @@ export function validateCharacterDeploy(model: THREE.Object3D): {
   prepareSkinnedMeasure(model);
   const issues: string[] = [];
   let skinned = 0;
-  let skeletonCount = 0;
-  const skeletonIds = new Set<string>();
   model.traverse((o) => {
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh) {
-      skinned++;
-      const sk = (o as THREE.SkinnedMesh).skeleton;
-      if (sk) {
-        skeletonCount++;
-        skeletonIds.add(String(sk.uuid));
-      }
-    }
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh || sm.visible === false) return;
+    skinned++;
   });
   if (skinned === 0) issues.push("no SkinnedMesh");
-  // Multiple disconnected skeletons → T-pose / partial deform (must unifySkeletons)
-  if (skeletonIds.size > 1) {
-    issues.push(`multiple skeletons (${skeletonIds.size}) — run unifySkeletons`);
+  const skeletonRoots = countVisibleSkeletonRoots(model);
+  // Disconnected kits = more than one Bip001/Hips *object* after unify.
+  if (skeletonRoots > 1) {
+    issues.push(`multiple skeletons (${skeletonRoots}) — run unifySkeletons`);
   }
   const h = bodyBox(model).getSize(new THREE.Vector3()).y;
   if (!(h > 0.5 && h < 4)) issues.push(`height ${h.toFixed(2)}m not human-scale`);
@@ -419,13 +473,7 @@ export function diagnoseCharacterLook(model: THREE.Object3D): {
   const warnings: string[] = [];
   const box = bodyBox(model);
   const pelvis = findPelvisBone(model);
-  let skeletonCount = 0;
-  const ids = new Set<string>();
-  model.traverse((o) => {
-    const sk = (o as THREE.SkinnedMesh).skeleton;
-    if ((o as THREE.SkinnedMesh).isSkinnedMesh && sk) ids.add(sk.uuid);
-  });
-  skeletonCount = ids.size;
+  const skeletonCount = countVisibleSkeletonRoots(model);
 
   const pipeline = (model.userData.importPipeline as string) || null;
   if (pipeline === "fbx-atlas" && !model.userData.artForwardSet) {
@@ -458,6 +506,9 @@ export function diagnoseCharacterLook(model: THREE.Object3D): {
 /**
  * Sample a clip on a temporary mixer, re-ground feet, dispose mixer.
  * Use after loading packs so bind-pose ≠ idle pose doesn't leave floating feet.
+ *
+ * **Final permanent Y must be from idle (or walk), never attack** — attack poses
+ * often raise feet; re-grounding them permanently sinks idle/walk soles under floor.
  */
 export function sampleClipAndReground(
   model: THREE.Object3D,
@@ -476,4 +527,49 @@ export function sampleClipAndReground(
     mixer.stopAllAction();
     mixer.uncacheRoot(model);
   }
+}
+
+/**
+ * Sample a locomotion cycle at several times; if skinned soles dip below
+ * groundY, lift the model so the deepest frame sits on the ground.
+ * Call **after** idle re-ground so walk/run do not tunnel through the floor.
+ * Returns Δy applied (always ≥ 0).
+ */
+export function liftForClipFootClearance(
+  model: THREE.Object3D,
+  clip: THREE.AnimationClip,
+  opts?: { groundY?: number; samples?: number },
+): number {
+  const groundY = opts?.groundY ?? 0;
+  const samples = Math.max(3, opts?.samples ?? 8);
+  if (!clip || clip.duration <= 0) return 0;
+
+  const mixer = new THREE.AnimationMixer(model);
+  let deepest = Infinity;
+  try {
+    const act = mixer.clipAction(clip);
+    act.play();
+    act.setLoop(THREE.LoopOnce, 1);
+    for (let i = 0; i < samples; i++) {
+      const t = (i / (samples - 1)) * Math.max(1e-4, clip.duration * 0.98);
+      act.time = t;
+      mixer.update(0);
+      prepareSkinnedMeasure(model);
+      const minY = bodyBox(model).min.y;
+      if (Number.isFinite(minY) && minY < deepest) deepest = minY;
+    }
+  } finally {
+    mixer.stopAllAction();
+    mixer.uncacheRoot(model);
+  }
+
+  if (!Number.isFinite(deepest)) return 0;
+  const sink = groundY - deepest;
+  // Only lift when soles clearly go under (ignore float noise)
+  if (sink <= 0.015) return 0;
+  // Cap so a bad clip cannot launch the hero
+  const dy = Math.min(sink, 0.35);
+  model.position.y += dy;
+  model.updateWorldMatrix(true, true);
+  return dy;
 }

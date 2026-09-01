@@ -208,6 +208,86 @@
       "contentType": "model/gltf-binary"
     },
     {
+      "id": "enemy_blocker_broker",
+      "r2Key": "models/enemies/session/blocker_broker.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Blocker Broker elite (SI ~2.0 m)"
+    },
+    {
+      "id": "enemy_hollow_knight_vengefly",
+      "r2Key": "models/enemies/session/hollow_knight_vengefly.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Vengefly swarm flyer (SI ~0.95 m)"
+    },
+    {
+      "id": "enemy_mage_demon",
+      "r2Key": "models/enemies/session/mage_demon.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Mage Demon ranged (SI ~2.0 m)"
+    },
+    {
+      "id": "enemy_lowpoly_rhino",
+      "r2Key": "models/enemies/session/lowpoly_rhino.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Rhino beast charge (SI ~1.65 m)"
+    },
+    {
+      "id": "enemy_violet_4_hn_creature",
+      "r2Key": "models/enemies/session/violet_4_hn_creature.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Violet HN creature melee (SI ~1.8 m)"
+    },
+    {
+      "id": "enemy_voodooist",
+      "r2Key": "models/enemies/session/voodooist.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — Voodooist hexer for seed worlds (SI 1.8 m)"
+    },
+    {
+      "id": "enemy_zombie_redesigned",
+      "r2Key": "models/enemies/session/zombie_redesigned.glb",
+      "category": "enemy",
+      "role": "voxel_mob",
+      "contentType": "model/gltf-binary",
+      "notes": "Session pack — redesigned zombie for seed worlds (SI 1.8 m, native Z ≈ 1.82)"
+    },
+    {
+      "id": "build_zhunbei_cell",
+      "r2Key": "models/build/zhunbei.glb",
+      "category": "build",
+      "role": "placement_cell_frame",
+      "contentType": "model/gltf-binary",
+      "notes": "Grid-perfect place cell (inner plate + arrows). Ghost sits inside. Native inner ~3.457 m."
+    },
+    {
+      "id": "animal_stormbird_galarian",
+      "r2Key": "models/warlords-era/animals/flying/stormbird_galarian.glb",
+      "category": "animal",
+      "role": "flying_hostile",
+      "contentType": "model/gltf-binary",
+      "notes": "Warlords animals/flying — aggressive storm bird (native ~2.26 m). Harpy/sky-fauna slot. Encament + forest camps."
+    },
+    {
+      "id": "enemy_anomaly_hatchling",
+      "r2Key": "models/warlords-era/enemies/anomaly_hatchling.glb",
+      "category": "enemy",
+      "role": "dungeon_hatchling",
+      "contentType": "model/gltf-binary",
+      "notes": "Prefab Anomaly Hatchling from worm_monster.glb. Native ~3.5 m, play SI 1.6 m. Warlords enemies / cave camps. Not a grudge6 kit."
+    },
+    {
       "id": "pack_amida_fields",
       "r2Key": "models/packs/fields_near_the_city_of_amida.glb",
       "category": "world_pack",

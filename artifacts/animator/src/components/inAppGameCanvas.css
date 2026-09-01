@@ -1,8 +1,11 @@
-/* In-app game canvas — full-bleed embed inside Open shell */
+/* In-app game canvas — full-bleed embed inside Open shell
+   (clears steam header via appShell.css html.shell-immersive .iagc-root) */
 
 .iagc-root {
   position: absolute;
   inset: 0;
+  /* When not under shell-immersive rule, still prefer clear header */
+  top: var(--shell-header-offset, 48px);
   z-index: 40;
   display: flex;
   flex-direction: column;

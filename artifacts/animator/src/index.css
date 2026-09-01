@@ -403,7 +403,41 @@ html, body, #root {
   background: #05070c;
   color: #dbe7ff;
   font-family: 'Inter', system-ui, sans-serif;
+  /* Immersive 3D default — shell-scroll overrides for library/account hubs */
   overflow: hidden;
+}
+
+/* Hub / account pages: allow real scrolling (AppShell toggles .shell-scroll) */
+html.shell-scroll,
+html.shell-scroll body,
+html.shell-scroll #root {
+  overflow: auto;
+  overflow-x: hidden;
+  height: auto;
+  min-height: 100%;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+/* Immersive game surfaces: lock document scroll (canvas owns wheel) */
+html.shell-immersive,
+html.shell-immersive body,
+html.shell-immersive #root {
+  overflow: hidden;
+  height: 100%;
+  overscroll-behavior: none;
+}
+html.shell-scroll body {
+  /* Space for fixed shell-steam-bar on non-library modes that still use it */
+  padding-top: 0;
+}
+/* Account and other modes under the steam bar need top offset */
+html.shell-scroll[data-shell-mode="account"] body,
+html.shell-scroll[data-shell-mode="zones"] body,
+html.shell-scroll[data-shell-mode="realms"] body,
+html.shell-scroll[data-shell-mode="lobby"] body,
+html.shell-scroll[data-shell-mode="rooms"] body {
+  padding-top: calc(var(--shell-header-h, 48px) + env(safe-area-inset-top, 0px));
+  box-sizing: border-box;
 }
 
 .studio {
@@ -417,25 +451,53 @@ html, body, #root {
   inset: 0;
 }
 .canvas-mount canvas { display: block; cursor: inherit; }
-/* Immersive (Danger Room / Play) + pointer-lock: hide OS cursor — HUD reticle owns aim. */
-.canvas-mount.immersive canvas { cursor: none; }
-/* Unlocked: free-mouse sticky, menus, editors — always show game mouse on canvas. */
+/*
+ * NEVER use cursor:none on Open.
+ * - Unlocked: craftpix / cyber mouse images (body.ptr-*)
+ * - Browser pointer-lock still hides the OS cursor (UA rule); HUD Crosshair
+ *   must always render in play so aim is never a black void.
+ * - When lock drops / fails, body classes restore the custom mouse immediately.
+ */
+.canvas-mount canvas,
+.canvas-mount.immersive canvas,
+html.pointer-locked .canvas-mount.immersive canvas,
+html.pointer-locked body.ptr-combat,
+html.pointer-locked body.ptr-combat * {
+  cursor: inherit !important;
+}
+/* Unlocked + free play — always game mouse on canvas */
 .canvas-mount.immersive.free-mouse canvas,
 .canvas-mount:not(.immersive) canvas,
+html:not(.pointer-locked) .canvas-mount canvas,
 body.ptr-ui .canvas-mount canvas,
 body.ptr-free .canvas-mount canvas,
 body.ptr-interact .canvas-mount canvas,
 body.ptr-harvest .canvas-mount canvas,
-body.ptr-tool .canvas-mount canvas {
+body.ptr-tool .canvas-mount canvas,
+body.ptr-combat .canvas-mount canvas,
+body.ptr-aim-soft .canvas-mount canvas,
+body.ptr-aim-hard .canvas-mount canvas {
   cursor: inherit !important;
 }
 
 /* ── Pointer presence cursors (body.ptr-* from CursorManager) ───────────────
-   File assets under /ui/cursors/ — visible whenever mouse is unlocked.
+   File assets under /ui/cursors/ — always preferred over blank / none.
    Hotspot: arrow tip (2,2) or centre (14,14). */
+
+/* Combat / play-locked fallback: CSS crosshair (browser may still hide OS
+   cursor under real pointer-lock; HUD reticle is the hard guarantee). */
 body.ptr-combat,
 body.ptr-combat * {
-  cursor: none !important;
+  cursor: url("/ui/cursors/cursor-menu.svg") 2 2,
+    url("/ui/cursors/cursor-default.svg") 2 2,
+    crosshair !important;
+}
+
+/* Safety default for shell (before first presence tick) */
+body {
+  cursor: url("/ui/cursors/cursor-normal.png") 2 2,
+    url("/ui/cursors/cursor-default.svg") 2 2,
+    default;
 }
 
 /* UI shell / menus / editors — craftpix-style arrow (PNG) + SVG fallback */
@@ -576,13 +638,16 @@ body.ptr-ui .opt:hover {
 .crosshair-build { --ch-color: #7fb0ff; }
 .crosshair-swim { --ch-color: #70c8ff; }
 .crosshair-climb { --ch-color: #e8c070; }
-.crosshair-free { --ch-color: #c8d8f0; opacity: 0.85; }
-.crosshair-freemouse { opacity: 0.55; }
-.crosshair-freemouse .ch-line { opacity: 0.45; }
+.crosshair-free { --ch-color: #c8d8f0; opacity: 0.95; }
+/* Unlocked (free mouse): reticle STAYS ON + OS/custom mouse also on.
+   Slightly softer than aim-lock so the cursor image stays readable. */
+.crosshair-freemouse { opacity: 0.88; }
+.crosshair-freemouse .ch-line { opacity: 0.8; }
+.crosshair-freemouse .ch-dot { opacity: 0.95; }
 .aim-center-dot-free {
-  opacity: 0.35;
-  width: 3px;
-  height: 3px;
+  opacity: 0.75;
+  width: 4px;
+  height: 4px;
 }
 
 /* ── Weapon reticle shapes ────────────────────────────────────────────────── */
@@ -1573,7 +1638,11 @@ body.ptr-ui .opt:hover {
 .door p { margin: 0; font-size: 13px; color: #8fa8cc; line-height: 1.5; }
 
 /* ---- Opening cinematic (dying torch) behind the door select ---- */
-.doors-cinematic { position: fixed; inset: 0; }
+.doors-cinematic {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
 .intro-cinematic { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .intro-cinematic canvas { width: 100%; height: 100%; display: block; }
 /* Let the torch scene show through: swap the opaque door backdrop for a warm,

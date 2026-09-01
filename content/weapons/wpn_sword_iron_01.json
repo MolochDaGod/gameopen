@@ -33,6 +33,31 @@
                  "status":  "placeholder",
                  "notes":  "Voxel pack slot 00 as stand-in until a dedicated iron longsword GLB is authored."
              },
+    "spine": {
+      "forward": "y+",
+      "align": "y",
+      "status": "ready",
+      "points": {
+        "grip": { "pos": [0, 0, 0] },
+        "blade": { "pos": [0, 0.62, 0] },
+        "tip": { "pos": [0, 1.12, 0] },
+        "blunt": { "pos": [0, 0.35, 0] },
+        "physics": { "pos": [0, 0.55, 0], "radius": 0.05, "halfHeight": 0.45 },
+        "effect": { "pos": [0, 1.12, 0] }
+      }
+    },
+    "physics": {
+      "kind": "capsule",
+      "attach": "physics",
+      "radius": 0.05,
+      "halfHeight": 0.45,
+      "sensor": true
+    },
+    "effects": {
+      "trail": { "from": "grip", "to": "tip", "color": "#e8d9a0" },
+      "impact": { "at": "tip", "color": "#d8c38a" },
+      "residual": { "kind": "slash_wave", "from": "tip" }
+    },
     "tags":  [
                  "gold-standard",
                  "ship"
@@ -43,7 +68,8 @@
                       "mesh":  "placeholder",
                       "combat":  "ready",
                       "present":  "placeholder",
-                      "icon":  "ready"
+                      "icon":  "ready",
+                      "spine": "ready"
                   },
     "icon":  {
                  "path":  "icons/pack/weapons/Sword_01.png",

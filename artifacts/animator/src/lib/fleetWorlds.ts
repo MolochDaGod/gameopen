@@ -1,20 +1,24 @@
 /**
- * Fleet voxel / world / DCQ hosts — verified live (probed 2026-07).
- *
- * Prefer these URLs for library launch + handoff. Do not use DNS names that
- * fail to resolve (e.g. mineloader.grudge-studio.com was NXDOMAIN).
+ * Fleet voxel / world / DCQ hosts — live smoke 2026-08.
  *
  * Ownership:
  *  - Full open world (VoxGrudge) → voxgrudge.vercel.app / GRUDOX /voxgrudge
- *  - Authoritative multiplayer Realms → mine-loader.vercel.app (Mine-Loader)
+ *  - Authoritative multiplayer Realms / harvest / DRC → **mineloader.grudge-studio.com**
  *  - DCQ dungeon RPG → dcq.grudge-studio.com
  *  - Ruins Brawler → gameopen /brawl only (not Genesis)
- *  - Warlord Genesis → warlord-genesis.vercel.app
+ *  - Warlord Genesis / Warstrat → warstrat.grudge-studio.com (canonical)
  */
 
 export const FLEET_WORLD_HOSTS = {
-  /** Authoritative voxel Realms SPA (Mine-Loader monorepo deploy) */
-  mineLoader: "https://mine-loader.vercel.app/",
+  /**
+   * Canonical play host — multiplayer, map deploys, harvest mode, DRC combat,
+   * account explorer avatar characters. CF Worker → mine-loader.vercel.app.
+   */
+  mineLoader: "https://mineloader.grudge-studio.com/",
+  /** Short alias edge */
+  mineLoaderEdge: "https://mine.grudge-studio.com/",
+  /** Vercel origin fallback */
+  mineLoaderVercel: "https://mine-loader.vercel.app/",
   /** Mine-Loader Railway API (world authority + Codex /api/blocks) */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   /** Mine-Loader GitHub SSOT */
@@ -39,12 +43,19 @@ export const FLEET_WORLD_HOSTS = {
   waterIsland: "https://water.grudge-studio.com/island",
   /** Angel island demo */
   angelIsland: "https://angel-island.vercel.app/",
-  /** RTS / command */
+  /** Hero Command RTS (hero-rts artifact) — canonical play host */
   playRts: "https://play.grudge-studio.com/",
+  /** Vercel twin for Hero Command */
+  heroRts: "https://hero-rts.vercel.app/",
   forge: "https://forge.grudge-studio.com/",
   /** Warlords / genesis */
   warlords: "https://grudgewarlords.com/",
-  warlordGenesis: "https://warlord-genesis.vercel.app/lobby",
+  /** Canonical Warstrat production SPA (Warlord Genesis warcamp) */
+  warstrat: "https://warstrat.grudge-studio.com/",
+  warstratLobby: "https://warstrat.grudge-studio.com/lobby",
+  /** Vercel twin for Warstrat / Genesis */
+  warlordGenesis: "https://warstrat.grudge-studio.com/lobby",
+  warlordGenesisVercel: "https://warlord-genesis.vercel.app/lobby",
   /** Social / meta */
   metaverse: "https://metaverse.grudge-studio.com/",
   carrier: "https://carrier.grudge-studio.com/",
@@ -54,7 +65,17 @@ export const FLEET_WORLD_HOSTS = {
   grimArmada: "https://grim-armada-web.vercel.app/",
   /** Open self */
   open: "https://open.grudge-studio.com/",
-  gameopen: "https://gameopen.vercel.app/",
+  /** Alias of open — keep key for older callers; always open.grudge-studio.com */
+  gameopen: "https://open.grudge-studio.com/",
+  /** GST Islands RTS (portal /gst/) */
+  gstIslands: "https://grudge-studio.com/gst/",
+  /** Arena PvP */
+  grudgeArena: "https://grudge-arena.grudge-studio.com/",
+  /** Multiverse */
+  multiverse: "https://grudge-multiverse.vercel.app/",
+  /** Warlords modular dungeon forge + playable crawl (boss arena on linear) */
+  grudgeDungeons: "https://grudge-dungeons.vercel.app/",
+  grudgeDungeonsBoss: "https://grudge-dungeons.vercel.app/?linear=1",
 } as const;
 
 export type FleetWorldId =
@@ -71,7 +92,11 @@ export type FleetWorldId =
   | "metaverse"
   | "carrier"
   | "mech"
-  | "grudox-games";
+  | "grudox-games"
+  | "gst-islands"
+  | "grudge-arena"
+  | "multiverse"
+  | "grudge-dungeons";
 
 export type FleetWorldDef = {
   id: FleetWorldId;
@@ -92,7 +117,9 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "mine-loader",
     title: "Mine-Loader Realms",
     url: FLEET_WORLD_HOSTS.mineLoader,
-    blurb: "Authoritative multiplayer voxel Realms (blocks, lobby, parties).",
+    fallbackUrl: FLEET_WORLD_HOSTS.mineLoaderEdge,
+    blurb:
+      "Play host mineloader.grudge-studio.com — multiplayer Realms, self-hosted maps, harvest (Minecraft-like) + DRC combat with account explorer avatar.",
     kind: "realms",
     sources: ["D:\\GitHub\\minegrudge\\Mine-Loader", "F:\\GitHub\\voxgrudge\\Mine-Loader"],
     featured: true,
@@ -119,14 +146,14 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "water-island",
-    title: "Warlords Home Island (Water)",
-    url: FLEET_WORLD_HOSTS.waterIsland,
-    fallbackUrl: FLEET_WORLD_HOSTS.water,
+    title: "Warlords Home Island (in-game only)",
+    url: FLEET_WORLD_HOSTS.warlords,
+    fallbackUrl: "https://client.grudge-studio.com/home",
     blurb:
-      "water.grudge-studio.com — production Warlords island (grudge6, harvest, nature). Canonical water SPA only.",
+      "Not a standalone fleet game. Home/water island is entered from Grudge Warlords after hero select. water.grudge-studio.com hosts world assets for the client.",
     kind: "island",
-    sources: ["F:\\GitHub\\Tactical-Infinity", "https://water.grudge-studio.com"],
-    featured: true,
+    sources: ["Warlords client", "https://water.grudge-studio.com"],
+    featured: false,
   },
   {
     id: "grudges-survival",
@@ -147,11 +174,27 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
   },
   {
     id: "rts",
-    title: "Voxel RTS / Command",
+    title: "Hero Command RTS",
     url: FLEET_WORLD_HOSTS.playRts,
-    blurb: "Toon RTS + Hero Command (play.grudge-studio.com).",
+    fallbackUrl: FLEET_WORLD_HOSTS.heroRts,
+    blurb:
+      "Hero Command — R3F + Rapier terrain, grudge6 races (CDN). play.grudge-studio.com · hero-rts.",
     kind: "rts",
-    sources: ["F:\\GitHub\\RTS-Grudge", "F:\\GitHub\\grudge-warlords-rts"],
+    sources: [
+      "https://play.grudge-studio.com/",
+      "C:\\Users\\nugye\\Documents\\grudge-studio\\artifacts\\hero-rts",
+      "MolochDaGod/grudge-studio-games",
+    ],
+    featured: true,
+  },
+  {
+    id: "grudge-dungeons",
+    title: "Grudge Dungeons",
+    url: FLEET_WORLD_HOSTS.grudgeDungeons,
+    blurb:
+      "Warlords modular dungeon forge + crawl. Linear = entrance → combat → mini-boss → boss arena. SI cell 2.15 m · wall 3.85 m · human 1.82 m. Toon RTS CDN, Rapier, no 100×.",
+    kind: "dungeon",
+    sources: ["F:\\GitHub\\threejs-procedural-dungeon"],
     featured: true,
   },
   {
@@ -166,18 +209,25 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "warlords",
     title: "Grudge Warlords",
     url: FLEET_WORLD_HOSTS.warlords,
-    blurb: "Flagship Warlords client — characters, islands, lobbies.",
+    blurb:
+      "Flagship client — home island, sectors, maps, crafting, heroes all in-game. Open library does not list islands/sectors as separate titles.",
     kind: "full-world",
-    sources: ["D:\\GitHub\\GrudgeWarlords"],
+    sources: ["D:\\GitHub\\GrudgeWarlords", "https://client.grudge-studio.com/home"],
     featured: true,
   },
   {
     id: "warlord-genesis",
-    title: "Warlord Genesis",
-    url: FLEET_WORLD_HOSTS.warlordGenesis,
-    blurb: "3-lane MOBA/RTS warcamp (not Ruins Brawler).",
+    title: "Warstrat · Warlord Genesis",
+    url: FLEET_WORLD_HOSTS.warstratLobby,
+    fallbackUrl: FLEET_WORLD_HOSTS.warlordGenesisVercel,
+    blurb:
+      "Warstrat (warstrat.grudge-studio.com) — 3-lane MOBA/RTS warcamp, shared Grudge ID + Railway account DB. Not Ruins Brawler.",
     kind: "rts",
-    sources: ["F:\\GitHub\\warlord-genesis"],
+    sources: [
+      "https://warstrat.grudge-studio.com/",
+      "F:\\GitHub\\warlord-genesis",
+      "C:\\Users\\nugye\\Documents\\warlord-genesis",
+    ],
     featured: true,
   },
   {
@@ -200,9 +250,15 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     id: "mech",
     title: "Mech Forge",
     url: FLEET_WORLD_HOSTS.mech,
-    blurb: "Mech builder / playground.",
+    blurb:
+      "Mech playground — TPS Danger cam, Rapier capsule, soft/hard focus crosshair. mech-builder redirects here.",
     kind: "combat",
-    sources: ["F:\\GitHub\\grudge-mech-forge"],
+    sources: [
+      "https://mech-playground.vercel.app/",
+      "C:\\Users\nugye\\Documents\\grudge-mech-forge",
+      "MolochDaGod/grudge-mech-forge",
+    ],
+    featured: true,
   },
   {
     id: "grudox-games",
@@ -211,6 +267,35 @@ export const FLEET_WORLDS: readonly FleetWorldDef[] = [
     blurb: "Arcade + cabinet index (racer, zombie, z-brawl, waters).",
     kind: "hub",
     sources: ["D:\\GitHub\\grudox"],
+    featured: true,
+  },
+  {
+    id: "gst-islands",
+    title: "Grudge Islands RTS",
+    url: FLEET_WORLD_HOSTS.gstIslands,
+    blurb:
+      "GST /gst/ — airship cinema, island sim, combat showcase. Vercel grudge-studio-tool.",
+    kind: "rts",
+    sources: [
+      "C:\\Users\\nugye\\Documents\\Game-Studio-Tool\\Game-Studio-Tool\\artifacts\\grudge-islands",
+    ],
+    featured: true,
+  },
+  {
+    id: "grudge-arena",
+    title: "Grudge Arena",
+    url: FLEET_WORLD_HOSTS.grudgeArena,
+    blurb: "Instanced PvP · grudge6 · dual skill HUD.",
+    kind: "combat",
+    sources: ["F:\\GitHub\\grudge-arena"],
+  },
+  {
+    id: "multiverse",
+    title: "Grudge Multiverse",
+    url: FLEET_WORLD_HOSTS.multiverse,
+    blurb: "Bermuda island multiplayer · dedicated Railway rooms (not Carrier).",
+    kind: "full-world",
+    sources: ["F:\\GitHub\\grudge-multiverse"],
     featured: true,
   },
 ] as const;

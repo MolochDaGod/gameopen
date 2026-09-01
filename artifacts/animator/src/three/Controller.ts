@@ -1,70 +1,24 @@
 import * as THREE from "three";
 import type { InputState } from "./input";
-import type { Avatar, EditorParams } from "./types";
+import type { Avatar, EditorParams, ObstacleCircle } from "./types";
+import { supportHeightAt } from "./support";
 import {
   NO_WATER_BAND,
   isInWaterBand,
   sinkClampVertical,
   type WaterBand,
 } from "./dungeon/water";
-import {
-  PlayerAnimationDirector,
-  type LocomotionSetMap,
-  type PlayAnimationOpts,
-  type RegisterAnimationOpts,
-} from "./PlayerAnimationDirector";
-import {
-  resolveSurfaceLocomotion,
-  modeToLocoCam,
-  gravityScaleForMode,
-  type SurfaceLocomotionState,
-  type VehicleKind,
-} from "@workspace/grudge-physics";
+import { INPUT } from "./inputContract";
+
+/** Default third-person orbit pitch clamp (radians). The floor stays positive
+ *  so the orbit camera never dips under the room floor in normal play. */
+const DEFAULT_PITCH_MIN = 0.06;
+const DEFAULT_PITCH_MAX = 1.3;
 
 export interface ControllerState {
   grounded: boolean;
   jumpsLeft: number;
   speed: number;
-  /** True when an edge/cliff probe blocked forward motion this frame. */
-  edgeBlocked?: boolean;
-  /** Fleet SurfaceLocomotion mode (ground/wade/swim/climb/mount/boat/fly). */
-  surfaceMode?: string;
-  /** HUD locoCam mapping from surface mode. */
-  locoCam?: string;
-}
-
-/**
- * Optional third-person camera + locomotion polish (three-player-controller parity).
- * All fields optional; defaults preserve existing Danger Room / dungeon feel.
- */
-export interface ControllerCameraOpts {
-  /** Over-the-shoulder horizontal view offset ratio (0..0.45). */
-  enableOverShoulderView?: boolean;
-  camOverShoulderOffsetRatio?: number;
-  /** Spring-damped look-at follow (GameCamera-style critically damped spring). */
-  enableSpringCamera?: boolean;
-  springCameraTime?: number;
-  /** Look-at height as ratio of cameraHeight (0 = feet, 1 = params.cameraHeight). */
-  camLookAtHeightRatio?: number;
-  /** When false, ignore mouse wheel distance zoom (default: allow zoom). */
-  enableZoom?: boolean;
-  /** Optional override for orbit distance (Minecraft harvest/build ~closer). */
-  cameraDistance?: number;
-  /** Optional override for look-at height meters. */
-  cameraHeight?: number;
-  /** Optional third-person pitch (radians, higher = more top-down). */
-  pitch?: number;
-}
-
-export interface EdgeProbeOpts {
-  /** Stop walking toward unsupported drops (default true). */
-  enableEdgeStop?: boolean;
-  /** How far ahead (m) to sample ground for edges. */
-  probeDistance?: number;
-  /** Max allowed drop (m) before the edge is treated as a cliff. */
-  maxDrop?: number;
-  /** Optional height sampler; return null when no ground (void). */
-  groundHeightAt?: (x: number, z: number) => number | null;
 }
 
 /**
@@ -102,20 +56,22 @@ export class Controller {
   /** Transient move-speed multiplier (e.g. the Kiter's Smoke Phantom sprint). */
   private speedMult = 1;
   private bound = 15;
-  /** Half-extent of the flat-floor play box (Danger Room analytic walls / clamp). */
-  private roomBound = 15;
-  /**
-   * When a CollisionProvider is set (Rapier KCC), bound is usually huge so mesh
-   * worlds aren't clipped. Danger Room still sets {@link keepRoomBounds} so the
-   * arena box + wall-run probes keep working on top of the shared KCC ground.
-   */
-  private keepRoomBounds = false;
-  /** Pluggable world collision (Rapier KCC SSOT). Null = pure Y=0 fallback. */
+  private readonly roomBound = 15;
+  /** Pluggable world collision (dungeon KCC). Null = flat Danger Room floor. */
   private collision: CollisionProvider | null = null;
   /** Live interior obstacle circles (XZ) for Danger Room push-out collision —
-   *  pillars, training dummies and opponents. Only consulted on the null
-   *  (Danger Room) path; the dungeon/arena KCC owns collision when set. */
-  private obstacles: (() => { x: number; z: number; r: number }[]) | null = null;
+   *  pillars, training dummies and opponents. Circles with a finite `top` are
+   *  landable: the player can stand/walk on that surface. Only consulted on the
+   *  null (Danger Room) path; the dungeon/arena KCC owns collision when set. */
+  private obstacles: (() => ObstacleCircle[]) | null = null;
+  /** World Y of the surface currently supporting the body (0 = room floor).
+   *  Updated on every touchdown; procedural specials (flip/roll/spin) anchor
+   *  their vertical arcs to it instead of a hardcoded floor 0, so they don't
+   *  teleport the body off an elevated prop top. */
+  private supportY = 0;
+  /** Max ledge drop (m) the body walks down smoothly while grounded; anything
+   *  deeper transitions to the airborne fall state instead of gluing the feet. */
+  private readonly STEP_DOWN = 0.3;
   /** Meshes the third-person camera pulls in front of (dungeon walls). */
   private occluders: THREE.Object3D[] = [];
   /** Dungeon water band [bottom, top] (world Y). Outside the band ⇒ no clamp. */
@@ -126,15 +82,20 @@ export class Controller {
   private didDoubleJump = false;
   /** Seconds left of a fast-turn window (set by faceToward) for crosshair lock. */
   private facingBoost = 0;
-  /**
-   * Hard focus lock: camera frames this point and body faces it so A/D is pure
-   * strafe. Soft lock (selected target without RMB) leaves this null so A/D is
-   * camera-relative walk/run. Null = free / soft-lock locomotion.
-   */
+  /** Lock-on stance: when set, the camera frames this world point and the body
+   *  faces it (so A/D reads as a strafe). Null = free-look. */
   private lockTarget: THREE.Vector3 | null = null;
 
   /** Camera framing: orbit "third" person, or eye-anchored "first" person. */
   private viewMode: "third" | "first" = "third";
+  static readonly DEFAULT_PITCH_MIN = DEFAULT_PITCH_MIN;
+  static readonly DEFAULT_PITCH_MAX = DEFAULT_PITCH_MAX;
+  /** Third-person orbit pitch clamp. The default floor stays positive so the
+   *  orbit never dips under the room floor; contexts that need to look UP at a
+   *  tall body (mech piloting) widen it via {@link setPitchRange} and MUST
+   *  restore it with {@link resetPitchRange} on exit. */
+  private pitchMin = DEFAULT_PITCH_MIN;
+  private pitchMax = DEFAULT_PITCH_MAX;
   /** First-person look elevation (radians, + = up). Full range, unlike the
    *  third-person `pitch` which stays positive so the orbit never dips underfloor. */
   private fpPitch = 0;
@@ -151,43 +112,27 @@ export class Controller {
   private shakeTrauma = 0;
   /** Per-Controller phase seed so two sessions don't shake in lock-step. */
   private readonly shakeSeed = Math.random() * 1000;
+  /**
+   * Optional combat claim on mouse-wheel **down** (positive deltaY). When set and
+   * it returns true, that scroll is consumed for combat (universal uppercut) and
+   * does not change camera distance. Wheel **up** always zooms. Unset/false →
+   * both directions zoom as before.
+   */
+  onWheelDownCombat: (() => boolean) | null = null;
+  /** Optional claim on mouse-wheel **up** (e.g. harvest tool previous). */
+  onWheelUpAction: (() => boolean) | null = null;
+  /**
+   * When true, look deltas are still consumed each frame (see {@link lastMouse})
+   * but not applied to yaw/pitch — used while the Q-hold mode radial is open.
+   */
+  suppressLook = false;
+  /** Last frame's consumed mouse/wheel (after consumeMouse). */
+  lastMouse = { dx: 0, dy: 0, wheel: 0 };
   /** The additive shake offset applied last frame, removed before the next base
    *  pose is computed so the (lerped) third-person camera never accumulates it. */
   private readonly shakeOffset = new THREE.Vector3();
   /** Scratch ray reused by aimRay() so screen-centre aim allocates nothing. */
   private aimRayCache = new THREE.Ray();
-
-  // --- three-player-controller parity: events, edge, camera polish, anim API ---
-  /** Animation director (register/play/locomotion sets). Lazy-created on first use. */
-  private animDirector: PlayerAnimationDirector | null = null;
-  /** Fired when grounded flag flips. */
-  onGroundChange?: (onGround: boolean) => void;
-  /** Fired just before first/third person switch. */
-  onBeforeViewChange?: (isFirstPerson: boolean) => void;
-  /** Fired after first/third person switch. */
-  onViewChange?: (isFirstPerson: boolean) => void;
-  /** Fired when look/move intent updates (dx, dy mouse deltas + planar speed). */
-  onTowardChange?: (dx: number, dy: number, speed: number) => void;
-  /** Forwarded from PlayerAnimationDirector when the active clip changes. */
-  onAnimationChange?: (name: string, action: THREE.AnimationAction | null) => void;
-
-  private enableOverShoulderView = false;
-  private camOverShoulderOffsetRatio = 0.2;
-  private enableSpringCamera = false;
-  private springCameraTime = 0.05;
-  private camLookAtHeightRatio = 1;
-  private enableZoom = true;
-  private springLookAt = new THREE.Vector3();
-  private springVel = new THREE.Vector3();
-  private springInited = false;
-  private overShoulderApplied = false;
-
-  private enableEdgeStop = true;
-  private edgeProbeDistance = 0.55;
-  private edgeMaxDrop = 0.9;
-  private groundHeightAt: ((x: number, z: number) => number | null) | null = null;
-  private edgeBlocked = false;
-  private prevGrounded = true;
 
   // Lunge state (signature / kick attacks): an eased "spline" body translation
   // that drives in toward a strike point then springs back, kept in sync with
@@ -229,15 +174,6 @@ export class Controller {
   private hoverHeight = 0;
   private hoverEnd = false;
   private hoverWasActive = false;
-  /**
-   * Skill short-flight (hh-hang three-player-controller fly mode, timed).
-   * Free 3D cam-relative motion for leap/gap-closer skills — not full toggle-fly.
-   */
-  private skillFlightActive = false;
-  private skillFlightElapsed = 0;
-  private skillFlightDuration = 0;
-  private skillFlightSpeed = 9;
-  private skillFlightEnd = false;
   private justRollLanding = false;
   // Aerial spin: rise + spin the body fast, then report the end so the Studio can
   // fire the flame-slash projectile.
@@ -252,41 +188,6 @@ export class Controller {
   private slamActive = false;
   private justSlamLanded = false;
 
-  // ── Wall traversal (once-per-ground air charges) ───────────────────────
-  /** One wall jump allowed between ground contacts. */
-  private airWallJumpUsed = false;
-  /** One double-jump / staff hover allowed between ground contacts. */
-  private airDoubleUsed = false;
-  private wallRunActive = false;
-  private wallRunElapsed = 0;
-  private wallRunMax = 1.35;
-  private wallNormal = new THREE.Vector3(0, 0, 1);
-  private justWallJumped = false;
-  private justWallRunStart = false;
-  private justWallRunEnd = false;
-  /** Climb-hold mode (pegs / freehang) — separate from sprint wall-run. */
-  private climbActive = false;
-  private climbVerticalGrab = false;
-  private climbWantMantle = false;
-  /** Host injects climb-wall proximity (ClimbWallSystem holds). */
-  private climbProbe:
-    | ((pos: THREE.Vector3) => {
-        near: boolean;
-        wallNormal?: THREE.Vector3;
-        atTop?: boolean;
-        canGrab?: boolean;
-      } | null)
-    | null = null;
-  /** Min height (m) above floor before wall-run can start. */
-  private readonly WALL_RUN_MIN_Y = 0.4;
-  /** Probe reach for wall contact (m). */
-  private readonly WALL_PROBE = 0.62;
-  /** Fleet surface locomotion (updated each frame). */
-  private surfaceState: SurfaceLocomotionState | null = null;
-  /** Explicit vehicle override (mount/boat/dragon) from inventory host. */
-  private vehicleKind: VehicleKind = "none";
-  private vehicleId: string | null = null;
-
   constructor(
     private character: Avatar,
     private camera: THREE.PerspectiveCamera,
@@ -298,112 +199,8 @@ export class Controller {
     this.params = p;
   }
 
-  /** Host sets vehicle from inventory (mount/boat/dragon). */
-  setVehicle(kind: VehicleKind = "none", id: string | null = null) {
-    this.vehicleKind = kind;
-    this.vehicleId = id;
-  }
-
-  getSurfaceLocomotion(): SurfaceLocomotionState | null {
-    return this.surfaceState;
-  }
-
   get state(): ControllerState {
-    return {
-      grounded: this.grounded,
-      jumpsLeft: this.jumpsLeft,
-      speed: this.smoothedSpeed,
-      edgeBlocked: this.edgeBlocked,
-      surfaceMode: this.surfaceState?.mode,
-      locoCam: this.surfaceState
-        ? (() => {
-            const c = modeToLocoCam(this.surfaceState!.mode);
-            // HUD historically used "ground"; SSOT uses "walk" for ground mode.
-            return c === "walk" ? "ground" : c;
-          })()
-        : undefined,
-    };
-  }
-
-  /**
-   * Camera polish options (over-shoulder, spring follow, look-at height, zoom).
-   * Safe to call any time; applies on next {@link updateCamera}.
-   */
-  setCameraOpts(opts: ControllerCameraOpts) {
-    if (opts.enableOverShoulderView != null) this.enableOverShoulderView = opts.enableOverShoulderView;
-    if (opts.camOverShoulderOffsetRatio != null) {
-      this.camOverShoulderOffsetRatio = THREE.MathUtils.clamp(opts.camOverShoulderOffsetRatio, 0, 0.45);
-    }
-    if (opts.enableSpringCamera != null) this.enableSpringCamera = opts.enableSpringCamera;
-    if (opts.springCameraTime != null) this.springCameraTime = Math.max(0.0001, opts.springCameraTime);
-    if (opts.camLookAtHeightRatio != null) {
-      this.camLookAtHeightRatio = THREE.MathUtils.clamp(opts.camLookAtHeightRatio, 0, 1.5);
-    }
-    if (opts.enableZoom != null) this.enableZoom = opts.enableZoom;
-    if (opts.cameraDistance != null && Number.isFinite(opts.cameraDistance)) {
-      this.params.cameraDistance = THREE.MathUtils.clamp(opts.cameraDistance, 2.2, 16);
-    }
-    if (opts.cameraHeight != null && Number.isFinite(opts.cameraHeight)) {
-      this.params.cameraHeight = THREE.MathUtils.clamp(opts.cameraHeight, 0.4, 3.5);
-    }
-    if (opts.pitch != null && Number.isFinite(opts.pitch)) {
-      this.pitch = THREE.MathUtils.clamp(opts.pitch, 0.06, 1.35);
-    }
-    this.applyOverShoulder();
-  }
-
-  /** Cliff/ledge edge-stop options + optional ground height sampler for mesh worlds. */
-  setEdgeProbeOpts(opts: EdgeProbeOpts) {
-    if (opts.enableEdgeStop != null) this.enableEdgeStop = opts.enableEdgeStop;
-    if (opts.probeDistance != null) this.edgeProbeDistance = Math.max(0.1, opts.probeDistance);
-    if (opts.maxDrop != null) this.edgeMaxDrop = Math.max(0.05, opts.maxDrop);
-    if (opts.groundHeightAt !== undefined) this.groundHeightAt = opts.groundHeightAt;
-  }
-
-  /** True when this frame's move was cut short by an unsupported edge. */
-  get isEdgeBlocked(): boolean {
-    return this.edgeBlocked;
-  }
-
-  /**
-   * Lazily attach a {@link PlayerAnimationDirector} for register/play/locomotion-set APIs.
-   * Character must already be loaded (clips present) for register calls to succeed.
-   */
-  getAnimationDirector(): PlayerAnimationDirector {
-    if (!this.animDirector) {
-      // Character is the concrete GLB avatar; cast is safe when Studio uses Character.
-      this.animDirector = new PlayerAnimationDirector(
-        this.character as import("./Character").Character,
-      );
-      this.animDirector.onAnimationChange = (name, action) => this.onAnimationChange?.(name, action);
-      this.animDirector.captureBaseline();
-    }
-    return this.animDirector;
-  }
-
-  /** @see PlayerAnimationDirector.playPlayerAnimationByName */
-  playPlayerAnimationByName(name: string, fade?: number): boolean {
-    return this.getAnimationDirector().playPlayerAnimationByName(name, fade);
-  }
-
-  /** @see PlayerAnimationDirector.registerAnimation */
-  registerAnimation(key: string, clipName: string, opts?: RegisterAnimationOpts): boolean {
-    return this.getAnimationDirector().registerAnimation(key, clipName, opts);
-  }
-
-  /** @see PlayerAnimationDirector.playAnimation */
-  playAnimation(key: string, opts?: PlayAnimationOpts): number {
-    return this.getAnimationDirector().playAnimation(key, opts);
-  }
-
-  /** @see PlayerAnimationDirector.registerLocomotionSet */
-  registerLocomotionSet(setName: string, map: LocomotionSetMap): void {
-    this.getAnimationDirector().registerLocomotionSet(setName, map);
-  }
-
-  /** @see PlayerAnimationDirector.switchLocomotionSet */
-  switchLocomotionSet(setName: string, fade?: number): boolean {
-    return this.getAnimationDirector().switchLocomotionSet(setName, fade);
+    return { grounded: this.grounded, jumpsLeft: this.jumpsLeft, speed: this.smoothedSpeed };
   }
 
   /** Returns true if a double jump fired this frame (for VFX hooks). */
@@ -426,6 +223,57 @@ export class Controller {
   }
 
   /**
+   * World-space aim direction INCLUDING the camera pitch (unlike {@link forward},
+   * which is floor-projected). In third person the view direction is the orbit
+   * looking at the body (+pitch = camera above looking DOWN); in first person it
+   * is the eye look (fpPitch + recoil, + = up). Used by aimed abilities (e.g. the
+   * mech's plasma cannon) so shots go where the camera looks.
+   */
+  aimForward(): THREE.Vector3 {
+    if (this.viewMode === "first") {
+      const yaw = this.yaw + this.aimYaw;
+      const p = THREE.MathUtils.clamp(this.fpPitch + this.aimPitch, -1.5, 1.5);
+      const cp = Math.cos(p);
+      return new THREE.Vector3(Math.sin(yaw) * cp, Math.sin(p), Math.cos(yaw) * cp).normalize();
+    }
+    const cp = Math.cos(this.pitch);
+    return new THREE.Vector3(
+      Math.sin(this.yaw) * cp,
+      -Math.sin(this.pitch),
+      Math.cos(this.yaw) * cp,
+    ).normalize();
+  }
+
+  /**
+   * Signed look elevation (radians, + = up) of the current view. Third person
+   * negates the orbit pitch (+pitch = looking down); first person is the eye
+   * pitch directly. Drives cosmetic aim poses (e.g. the mech torso tilt).
+   */
+  aimElevation(): number {
+    if (this.viewMode === "first") {
+      return THREE.MathUtils.clamp(this.fpPitch + this.aimPitch, -1.5, 1.5);
+    }
+    return -this.pitch;
+  }
+
+  /**
+   * Widen/narrow the third-person orbit pitch clamp (radians). A negative `min`
+   * lets the camera drop below the body's head to look UP (mech piloting); the
+   * current pitch is re-clamped immediately so the camera never sits outside the
+   * new range. Callers MUST pair this with {@link resetPitchRange} on exit.
+   */
+  setPitchRange(min: number, max: number): void {
+    this.pitchMin = Math.min(min, max);
+    this.pitchMax = Math.max(min, max);
+    this.pitch = THREE.MathUtils.clamp(this.pitch, this.pitchMin, this.pitchMax);
+  }
+
+  /** Restore the default third-person pitch clamp (and re-clamp the pitch). */
+  resetPitchRange(): void {
+    this.setPitchRange(Controller.DEFAULT_PITCH_MIN, Controller.DEFAULT_PITCH_MAX);
+  }
+
+  /**
    * Add camera-shake trauma (clamped to 1). The visible jitter scales with
    * trauma², so a small value (~0.2, a heavy footstep) is a subtle rattle while a
    * large value (~0.6, a landing slam) really kicks the view. Trauma decays on its
@@ -445,6 +293,15 @@ export class Controller {
     this.lockTarget = p ? new THREE.Vector3(p.x, 0, p.z) : null;
   }
 
+  /** Soft-lock world point: a gentle camera/aim assist toward this enemy (null
+   *  clears it). Unlike the hard lock it never seizes the yaw — it only nudges
+   *  the camera toward a foe already roughly ahead and yields the instant the
+   *  player actively turns the look. */
+  private softTarget: THREE.Vector3 | null = null;
+  setSoftTarget(p: THREE.Vector3 | null) {
+    this.softTarget = p ? new THREE.Vector3(p.x, 0, p.z) : null;
+  }
+
   /** Current camera framing. */
   get view(): "third" | "first" {
     return this.viewMode;
@@ -462,64 +319,9 @@ export class Controller {
    */
   setViewMode(mode: "third" | "first") {
     if (mode === this.viewMode) return;
-    this.onBeforeViewChange?.(this.viewMode === "first");
     this.viewMode = mode;
     this.character.root.visible = mode !== "first";
-    if (mode === "first") {
-      this.fpPitch = 0;
-      this.clearOverShoulder();
-    } else {
-      this.applyOverShoulder();
-    }
-    this.onViewChange?.(mode === "first");
-  }
-
-  private applyOverShoulder() {
-    if (!this.enableOverShoulderView || this.viewMode === "first") {
-      this.clearOverShoulder();
-      return;
-    }
-    const w = typeof window !== "undefined" ? window.innerWidth : 1;
-    const h = typeof window !== "undefined" ? window.innerHeight : 1;
-    if (w < 2 || h < 2) return;
-    this.camera.setViewOffset(w, h, w * this.camOverShoulderOffsetRatio, 0, w, h);
-    this.overShoulderApplied = true;
-  }
-
-  private clearOverShoulder() {
-    if (this.overShoulderApplied) {
-      this.camera.clearViewOffset();
-      this.overShoulderApplied = false;
-    }
-  }
-
-  /**
-   * Sample ground height under (x,z). Custom sampler when set; otherwise flat
-   * y=0 (Danger Room). Return null for void so edge-stop can block the step.
-   */
-  private sampleGroundY(x: number, z: number): number | null {
-    if (this.groundHeightAt) return this.groundHeightAt(x, z);
-    return 0;
-  }
-
-  /**
-   * True when moving in `dir` (XZ unit) would step off an unsupported drop.
-   * three-player-controller relies on capsule+mesh; we add an explicit cliff probe
-   * so open edges do not walk the player into the void. Only active when a
-   * custom groundHeightAt sampler is provided (mesh/heightmap worlds).
-   */
-  private isEdgeInDirection(dirX: number, dirZ: number, from: THREE.Vector3): boolean {
-    if (!this.enableEdgeStop || !this.grounded || !this.groundHeightAt) return false;
-    const len = Math.hypot(dirX, dirZ);
-    if (len < 1e-4) return false;
-    const nx = dirX / len;
-    const nz = dirZ / len;
-    const ax = from.x + nx * this.edgeProbeDistance;
-    const az = from.z + nz * this.edgeProbeDistance;
-    const feetY = from.y;
-    const groundY = this.sampleGroundY(ax, az);
-    if (groundY == null) return true;
-    return feetY - groundY > this.edgeMaxDrop;
+    if (mode === "first") this.fpPitch = 0;
   }
 
   /** Toggle between first- and third-person framing. */
@@ -556,11 +358,11 @@ export class Controller {
   }
 
   /**
-   * Swap the world-collision backend (fleet SSOT: Rapier KCC from
-   * `@workspace/grudge-physics`). When a provider is set, mesh worlds lift the
-   * box clamp; Danger Room passes `keepRoomBounds: true` so arena walls + circle
-   * obstacles still apply on top of the shared ground KCC. Passing null restores
-   * pure Y=0 fallback (prefer re-applying the Danger Room KCC instead).
+   * Swap the world-collision backend. When a provider is set the box bounds are
+   * lifted (the dungeon KCC owns collision) and, if `spawn` is given, the body
+   * teleports there with its fall/jump state reset. Passing null restores the
+   * flat Danger Room floor + room bounds — Danger Room feel is untouched while
+   * no provider is set.
    */
   setCollision(
     p: CollisionProvider | null,
@@ -568,8 +370,7 @@ export class Controller {
     opts?: { keepRoomBounds?: boolean },
   ) {
     this.collision = p;
-    this.keepRoomBounds = !!(p && opts?.keepRoomBounds);
-    this.bound = p && !this.keepRoomBounds ? 1e5 : this.roomBound;
+    this.bound = p && !opts?.keepRoomBounds ? 1e5 : this.roomBound;
     if (!p) this.occluders = [];
     if (spawn) {
       this.character.root.position.copy(spawn);
@@ -577,6 +378,9 @@ export class Controller {
       this.velocity.set(0, 0, 0);
       this.extVel.set(0, 0, 0);
       this.grounded = true;
+      // Refresh the special-move anchor at the spawn point so flip/roll/spin
+      // never ride a stale pre-teleport support height.
+      this.supportY = p ? spawn.y : this.supportHeightAt(spawn.x, spawn.z, spawn.y);
       this.jumpsLeft = 2;
       this.didDoubleJump = false;
     }
@@ -605,6 +409,10 @@ export class Controller {
     this.extVel.set(0, 0, 0);
     this.dashActive = false;
     this.grounded = true;
+    // Re-anchor specials at the blink destination (stale supportY would warp
+    // a follow-up flip/roll back toward the pre-blink surface height).
+    const dst = this.character.root.position;
+    this.supportY = this.collision ? dst.y : this.supportHeightAt(dst.x, dst.z, dst.y);
   }
 
   /**
@@ -621,14 +429,6 @@ export class Controller {
     this.waterBand = NO_WATER_BAND;
   }
 
-  /**
-   * Terrain / mesh height sampler for feet + edge probes (L0 SSOT).
-   * Return metres Y or null when no ground (void).
-   */
-  setGroundHeightAt(fn: ((x: number, z: number) => number | null) | null) {
-    this.groundHeightAt = fn;
-  }
-
   /** True while the body's feet are within the active water band. */
   isInWater(): boolean {
     return isInWaterBand(this.character.root.position.y, this.waterBand);
@@ -641,18 +441,18 @@ export class Controller {
    * collision provider is active (the KCC handles collision there). Pass null
    * to disable.
    */
-  setObstacles(fn: (() => { x: number; z: number; r: number }[]) | null) {
+  setObstacles(fn: (() => ObstacleCircle[]) | null) {
     this.obstacles = fn;
   }
 
   /**
-   * Expand/shrink the flat Danger Room bounds (half-extent metres). Used by
-   * Ruins Brawler and other large arenas that share this controller without a KCC.
-   * No-op while a collision provider owns world bounds.
+   * Highest walkable support under (x, z) for feet that were at height `fromY`
+   * (room floor or a landable obstacle top). Danger Room (null-collision) path
+   * only — the dungeon KCC owns its floors. Pure math lives in ./support.
    */
-  setRoomBound(halfExtent: number) {
-    this.roomBound = Math.max(4, halfExtent);
-    if (!this.collision) this.bound = this.roomBound;
+  private supportHeightAt(x: number, z: number, fromY: number): number {
+    if (!this.obstacles) return 0;
+    return supportHeightAt(this.obstacles(), x, z, fromY);
   }
 
   /** True while a dungeon collision backend is active. */
@@ -661,19 +461,13 @@ export class Controller {
   }
 
   jump() {
-    // Wall jump takes priority when airborne near a wall (Space on wall run /
-    // near wall). Independent of double-jump charge — enables triple jump:
-    // ground → double/hover → wall (or ground → wall → double).
-    if (!this.grounded && this.tryWallJump()) return;
-
     // A hover is cancelled by jumping out of it (kept feeling responsive).
-    // Does NOT grant a free second double — only cancels the float.
     if (this.hoverActive) {
       this.hoverActive = false;
       this.vertical = Math.sqrt(2 * this.params.gravity * this.params.jumpHeight) * 0.95;
       this.jumpsLeft = 0;
       this.didDoubleJump = true;
-      this.airDoubleUsed = true;
+      this.justDoubleJumped = true;
       this.character.playRoleOnce("jump", 0.08);
       return;
     }
@@ -682,399 +476,13 @@ export class Controller {
       this.grounded = false;
       this.jumpsLeft = 1;
       this.didDoubleJump = false;
-      this.airDoubleUsed = false;
-      this.airWallJumpUsed = false;
       this.character.playRoleOnce("jump", 0.1);
-    } else if (this.jumpsLeft > 0 && !this.didDoubleJump && !this.airDoubleUsed) {
-      // One double-jump / staff-hover per ground cycle.
+    } else if (this.jumpsLeft > 0 && !this.didDoubleJump) {
       this.vertical = Math.sqrt(2 * this.params.gravity * this.params.jumpHeight) * 0.95;
       this.jumpsLeft = 0;
       this.didDoubleJump = true;
-      this.airDoubleUsed = true;
       this.justDoubleJumped = true;
       this.character.playRoleOnce("jump", 0.08);
-    }
-  }
-
-  /**
-   * Probe for a nearby vertical surface: room bounds or obstacle pillars.
-   * Returns outward wall normal (points away from the wall into free space).
-   */
-  probeWall(reach = this.WALL_PROBE): { normal: THREE.Vector3; dist: number } | null {
-    const pos = this.character.root.position;
-    const candidates: { n: THREE.Vector3; d: number }[] = [];
-    const b = this.bound;
-    // Room box walls
-    if (pos.x >= b - reach) candidates.push({ n: new THREE.Vector3(-1, 0, 0), d: Math.max(0, b - pos.x) });
-    if (pos.x <= -b + reach) candidates.push({ n: new THREE.Vector3(1, 0, 0), d: Math.max(0, pos.x + b) });
-    if (pos.z >= b - reach) candidates.push({ n: new THREE.Vector3(0, 0, -1), d: Math.max(0, b - pos.z) });
-    if (pos.z <= -b + reach) candidates.push({ n: new THREE.Vector3(0, 0, 1), d: Math.max(0, pos.z + b) });
-    // Pillar / obstacle circles (Danger Room)
-    if (this.obstacles) {
-      for (const o of this.obstacles()) {
-        const dx = pos.x - o.x;
-        const dz = pos.z - o.z;
-        const d = Math.hypot(dx, dz);
-        if (d < 1e-4) continue;
-        const gap = d - o.r;
-        if (gap < reach && gap > -0.25) {
-          candidates.push({
-            n: new THREE.Vector3(dx / d, 0, dz / d),
-            d: Math.max(0, gap),
-          });
-        }
-      }
-    }
-    if (candidates.length === 0) return null;
-    let best = candidates[0]!;
-    for (let i = 1; i < candidates.length; i++) {
-      if (candidates[i]!.d < best.d) best = candidates[i]!;
-    }
-    return { normal: best.n.clone(), dist: best.d };
-  }
-
-  /** True when airborne and close enough to a wall for jump / run. */
-  nearWall(reach = this.WALL_PROBE): boolean {
-    if (this.grounded) return false;
-    return this.probeWall(reach) != null;
-  }
-
-  /**
-   * Kick off a nearby wall: foot-plant → jump away + up (higher than double).
-   * One use between ground contacts. Returns true if the jump fired.
-   */
-  tryWallJump(): boolean {
-    if (this.grounded || this.airWallJumpUsed || this.isBusy) return false;
-    if (this.hoverActive) return false;
-    const wall = this.probeWall(this.WALL_PROBE + 0.15);
-    if (!wall) return false;
-
-    this.airWallJumpUsed = true;
-    this.endWallRun(false);
-    this.hoverActive = false;
-
-    const g = this.params.gravity;
-    const h = this.params.jumpHeight;
-    // Higher than a normal double-jump
-    this.vertical = Math.sqrt(2 * g * h) * 1.22;
-    this.grounded = false;
-    // Push away from wall + slight tangential keep
-    const push = 7.2;
-    this.velocity.set(wall.normal.x * push, 0, wall.normal.z * push);
-    this.extVel.set(wall.normal.x * 3.5, 0, wall.normal.z * 3.5);
-    this.extVelDamp = 5;
-    this.wallNormal.copy(wall.normal);
-    this.wantFacing = Math.atan2(wall.normal.x, wall.normal.z);
-    this.justWallJumped = true;
-
-    // Prefer wall-kick / jump-away / utility kick clips when present
-    const avatar = this.character as Avatar & {
-      hasClip?: (n: string) => boolean;
-      playClipOnce?: (n: string, f?: number) => number;
-      reaction?: (n: string, f?: number) => boolean;
-    };
-    if (avatar.playClipOnce && avatar.hasClip) {
-      if (avatar.hasClip("jumpAway")) avatar.playClipOnce("jumpAway", 0.06);
-      else if (avatar.hasClip("utilityKick")) avatar.playClipOnce("utilityKick", 0.06);
-      else if (avatar.hasClip("mmaKick")) avatar.playClipOnce("mmaKick", 0.06);
-      else if (avatar.hasClip("backJump")) avatar.playClipOnce("backJump", 0.06);
-      else this.character.playRoleOnce("jump", 0.06);
-    } else {
-      this.character.playRoleOnce("jump", 0.06);
-    }
-    return true;
-  }
-
-  /** True while body is stuck to a wall running / climbing. */
-  get isWallRunning(): boolean {
-    return this.wallRunActive;
-  }
-
-  /** True while on climb holds / freehang (not sprint wall-run). */
-  get isClimbing(): boolean {
-    return this.climbActive;
-  }
-
-  /**
-   * Host wires ClimbWallSystem: returns near/top/grab for current feet position.
-   * Call once after climb walls load.
-   */
-  setClimbProbe(
-    fn:
-      | ((pos: THREE.Vector3) => {
-          near: boolean;
-          wallNormal?: THREE.Vector3;
-          atTop?: boolean;
-          canGrab?: boolean;
-        } | null)
-      | null,
-  ): void {
-    this.climbProbe = fn;
-  }
-
-  /** Outward normal of the wall we're on (or last wall). */
-  getWallNormal(out = new THREE.Vector3()): THREE.Vector3 {
-    return out.copy(this.wallNormal);
-  }
-
-  consumeWallJump(): boolean {
-    const v = this.justWallJumped;
-    this.justWallJumped = false;
-    return v;
-  }
-
-  consumeWallRunStart(): boolean {
-    const v = this.justWallRunStart;
-    this.justWallRunStart = false;
-    return v;
-  }
-
-  consumeWallRunEnd(): boolean {
-    const v = this.justWallRunEnd;
-    this.justWallRunEnd = false;
-    return v;
-  }
-
-  /** Air charges remaining (for HUD / debug). */
-  get airCharges(): { double: boolean; wallJump: boolean } {
-    return { double: !this.airDoubleUsed, wallJump: !this.airWallJumpUsed };
-  }
-
-  private endWallRun(notify = true) {
-    if (!this.wallRunActive) return;
-    this.wallRunActive = false;
-    this.wallRunElapsed = 0;
-    if (notify) this.justWallRunEnd = true;
-  }
-
-  /**
-   * Climb-hold intent: F near wall, or auto when probe says near holds.
-   * Space releases. Top-row → mantle flag for one-shot.
-   */
-  private updateClimbIntent(sprinting: boolean): void {
-    const pos = this.character.root.position;
-    const probe = this.climbProbe?.(pos) ?? null;
-    const wall = this.probeWall(this.WALL_PROBE + 0.2);
-    const nearWall = !!(wall && wall.dist < this.WALL_PROBE + 0.15);
-    const nearHolds = !!(probe?.near);
-    const canGrab = !!(probe?.canGrab ?? nearWall);
-    const wantGrab =
-      this.input.down("KeyF") ||
-      this.input.down("KeyE") ||
-      (nearHolds && !this.grounded && this.vertical > 0.2);
-
-    // Release climb (Space while climbing drops off; land on ground clears)
-    if (this.climbActive) {
-      if (this.input.down("Space") && !this.climbWantMantle) {
-        this.climbActive = false;
-        this.climbVerticalGrab = false;
-        this.climbWantMantle = false;
-        this.vertical = 1.2; // small hop off wall
-      } else if (this.grounded && !nearHolds && !wantGrab) {
-        this.climbActive = false;
-        this.climbVerticalGrab = false;
-        this.climbWantMantle = false;
-      }
-    }
-
-    // Enter freehang / climb
-    if (!this.climbActive && !this.wallRunActive && !sprinting && canGrab && wantGrab) {
-      this.climbActive = true;
-      this.climbVerticalGrab = true;
-      this.vertical = 0;
-      if (probe?.wallNormal) this.wallNormal.copy(probe.wallNormal);
-      else if (wall) this.wallNormal.copy(wall.normal);
-    }
-
-    if (this.climbActive) {
-      this.climbWantMantle = !!(probe?.atTop);
-      this.climbVerticalGrab =
-        !this.input.down("KeyW") &&
-        !this.input.down("ArrowUp") &&
-        Math.abs(this.input.moveY) < 0.15;
-      if (probe?.wallNormal) this.wallNormal.copy(probe.wallNormal);
-      else if (wall) this.wallNormal.copy(wall.normal);
-    }
-  }
-
-  /** Peg climb motion: W/S vertical, A/D along wall; gravity off. */
-  private updateClimbMove(dt: number, move: THREE.Vector3, mag: number): void {
-    if (!this.climbActive) return;
-    const pos = this.character.root.position;
-    this.vertical = 0;
-    this.grounded = false;
-
-    const n = this.wallNormal;
-    const climb =
-      this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2
-        ? 2.4
-        : this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2
-          ? -2.0
-          : 0;
-    pos.y += climb * dt;
-    pos.y = Math.max(0.05, pos.y);
-
-    const tangent = new THREE.Vector3(-n.z, 0, n.x);
-    let along = 0;
-    if (mag > 0.06) along = move.x * tangent.x + move.z * tangent.z;
-    const side = along >= 0 ? 1 : -1;
-    if (Math.abs(along) > 0.08) {
-      const lat = this.params.moveSpeed * 0.55 * this.speedMult;
-      pos.x += tangent.x * side * lat * dt * Math.abs(along);
-      pos.z += tangent.z * side * lat * dt * Math.abs(along);
-    }
-    // Stick to wall
-    pos.x -= n.x * 0.04;
-    pos.z -= n.z * 0.04;
-    pos.x = THREE.MathUtils.clamp(pos.x, -this.bound, this.bound);
-    pos.z = THREE.MathUtils.clamp(pos.z, -this.bound, this.bound);
-    this.wantFacing = Math.atan2(-n.x, -n.z);
-    this.smoothedSpeed = climb !== 0 ? 0.55 : 0.1;
-
-    // Mantle one-shot at top
-    if (this.climbWantMantle && climb > 0 && this.character.hasRole("mantle")) {
-      this.character.playRoleOnce("mantle", 0.12);
-      this.climbActive = false;
-      this.climbVerticalGrab = false;
-      this.climbWantMantle = false;
-      this.vertical = 2.2;
-      this.grounded = false;
-    }
-  }
-
-  private applyClimbLocomotionAnim(): void {
-    const c = this.character;
-    if (this.wallRunActive && c.hasRole("wallRun")) {
-      c.playRole("wallRun");
-      c.setLocomotionRate?.(1);
-      c.setTraversalMode?.("climb");
-      return;
-    }
-    if (this.climbWantMantle && c.hasRole("mantle")) {
-      // one-shot handled in updateClimbMove
-      return;
-    }
-    if (this.climbVerticalGrab && c.hasRole("hang")) {
-      c.playRole("hang");
-      c.setLocomotionRate?.(1);
-      c.setTraversalMode?.("climb");
-      return;
-    }
-    const up =
-      this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2;
-    const down =
-      this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2;
-    if (up && c.hasRole("climbUp")) {
-      c.playRole("climbUp");
-      c.setLocomotionRate?.(1);
-    } else if (down && c.hasRole("climbDown")) {
-      c.playRole("climbDown");
-      c.setLocomotionRate?.(1);
-    } else if (c.hasRole("climb")) {
-      c.playRole("climb");
-      c.setLocomotionRate?.(0.85);
-    } else if (c.hasRole("hang")) {
-      c.playRole("hang");
-    }
-    c.setTraversalMode?.("climb");
-  }
-
-  /** Swim / deep wade: tread when still, swim when moving (any avatar with roles). */
-  private applySwimLocomotionAnim(): void {
-    const c = this.character;
-    c.setTraversalMode?.("swim");
-    const moving =
-      this.smoothedSpeed > 0.08 ||
-      this.input.down("KeyW") ||
-      this.input.down("KeyS") ||
-      this.input.down("KeyA") ||
-      this.input.down("KeyD") ||
-      Math.abs(this.input.moveX) > 0.1 ||
-      Math.abs(this.input.moveY) > 0.1;
-    if (moving && c.hasRole("swim")) {
-      c.playRole("swim");
-      c.setLocomotionRate?.(0.9 + this.smoothedSpeed * 0.3);
-    } else if (c.hasRole("tread")) {
-      c.playRole("tread");
-      c.setLocomotionRate?.(1);
-    } else if (c.hasRole("swim")) {
-      c.playRole("swim");
-    }
-  }
-
-  /**
-   * Hold Shift while airborne near a wall (after a run jump) to wall-run.
-   * Space during wall-run = wall jump. Gravity suspended; climb with W.
-   */
-  private updateWallRun(dt: number, sprinting: boolean, move: THREE.Vector3, mag: number) {
-    const pos = this.character.root.position;
-
-    if (this.wallRunActive) {
-      this.wallRunElapsed += dt;
-      const wall = this.probeWall(this.WALL_PROBE + 0.28);
-      if (this.grounded || !sprinting || !wall || this.wallRunElapsed >= this.wallRunMax) {
-        this.endWallRun(true);
-        return;
-      }
-      this.wallNormal.copy(wall.normal);
-
-      this.vertical = 0;
-      this.grounded = false;
-      // Climb up with W; S descends; slight auto-rise for "run up wall"
-      const climb =
-        this.input.down("KeyW") || this.input.down("ArrowUp") || this.input.moveY > 0.2
-          ? 3.6
-          : this.input.down("KeyS") || this.input.down("ArrowDown") || this.input.moveY < -0.2
-            ? -2.2
-            : 0.45;
-      pos.y += climb * dt;
-      pos.y = Math.max(0.05, pos.y);
-
-      const n = this.wallNormal;
-      const tangent = new THREE.Vector3(-n.z, 0, n.x);
-      let along = 0;
-      if (mag > 0.06) {
-        along = move.x * tangent.x + move.z * tangent.z;
-      } else {
-        const f = this.forward();
-        along = f.x * tangent.x + f.z * tangent.z;
-        if (Math.abs(along) < 0.15) along = 1;
-      }
-      const sign = along >= 0 ? 1 : -1;
-      const runSpeed = this.params.moveSpeed * 1.15 * this.speedMult;
-      pos.x += tangent.x * sign * runSpeed * dt;
-      pos.z += tangent.z * sign * runSpeed * dt;
-      // Keep pressed against wall
-      pos.x -= n.x * 0.03;
-      pos.z -= n.z * 0.03;
-      pos.x = THREE.MathUtils.clamp(pos.x, -this.bound, this.bound);
-      pos.z = THREE.MathUtils.clamp(pos.z, -this.bound, this.bound);
-      this.wantFacing = Math.atan2(
-        -n.x * 0.4 + tangent.x * sign,
-        -n.z * 0.4 + tangent.z * sign,
-      );
-      this.smoothedSpeed = runSpeed;
-      return;
-    }
-
-    // Start: airborne + hold Shift + near wall + min height
-    if (
-      !this.grounded &&
-      sprinting &&
-      !this.isBusy &&
-      !this.hoverActive &&
-      !this.spinActive &&
-      pos.y >= this.WALL_RUN_MIN_Y
-    ) {
-      const wall = this.probeWall(this.WALL_PROBE + 0.12);
-      if (wall && wall.dist < this.WALL_PROBE) {
-        this.wallRunActive = true;
-        this.wallRunElapsed = 0;
-        this.wallNormal.copy(wall.normal);
-        this.justWallRunStart = true;
-        this.vertical = 0;
-        this.velocity.set(0, 0, 0);
-      }
     }
   }
 
@@ -1132,6 +540,8 @@ export class Controller {
     const dz = this.dashDir.z;
     let best: number | null = null;
     for (const o of this.obstacles()) {
+      // Lunging across the top of a landable prop: no lateral contact.
+      if (o.top !== undefined && this.dashOrigin.y >= o.top - 0.02) continue;
       const R = o.r + PLAYER_R;
       const cx = o.x - ox;
       const cz = o.z - oz;
@@ -1300,10 +710,8 @@ export class Controller {
     this.hoverHeight = height;
     this.slamActive = false;
     this.grounded = false;
-    // Same once-per-ground rule as startHover (double-jump charge spent).
-    this.jumpsLeft = 0;
-    this.didDoubleJump = true;
-    this.airDoubleUsed = true;
+    this.jumpsLeft = 1;
+    this.didDoubleJump = false;
     this.vertical = 0;
     const back = this.forward().multiplyScalar(-backHop);
     this.velocity.x = back.x;
@@ -1338,13 +746,7 @@ export class Controller {
 
   /** True while any body-owning procedural special is running. */
   get isBusy(): boolean {
-    return (
-      this.dashActive ||
-      this.flipActive ||
-      this.rollActive ||
-      this.spinActive ||
-      this.skillFlightActive
-    );
+    return this.dashActive || this.flipActive || this.rollActive || this.spinActive;
   }
 
   /** True while the aerial spin is active (for per-frame flame trails). */
@@ -1363,7 +765,6 @@ export class Controller {
    * A jump() call during hover exits it (the vertical impulse overrides the lock).
    */
   startHover(height: number, duration: number) {
-    this.skillFlightActive = false;
     this.hoverActive = true;
     this.hoverElapsed = 0;
     this.hoverDuration = Math.max(0.1, duration);
@@ -1372,64 +773,13 @@ export class Controller {
     this.hoverWasActive = true;
     this.vertical = 0;
     this.grounded = false;
-    // Hover is the staff double-jump effect — one per ground cycle.
-    // Keep one mid-hover jump only to *exit* float (not a free second double).
-    this.jumpsLeft = 0;
-    this.didDoubleJump = true;
-    this.airDoubleUsed = true;
+    this.jumpsLeft = 1;
+    this.didDoubleJump = false;
   }
 
   /** Cancel the hover early (e.g. character took damage). */
   endHover() {
     this.hoverActive = false;
-  }
-
-  /**
-   * Skill short-flight — timed free-flight inspired by
-   * [hh-hang/three-player-controller](https://github.com/hh-hang/three-player-controller)
-   * `isFlying` mode, but for combat skills (gap-closers, leap slams), not full fly toggle.
-   *
-   * - Camera-relative 3D move (WASD + Space/Ctrl for up/down while active)
-   * - Gravity off for `duration` seconds
-   * - Ends → normal gravity / land
-   */
-  startSkillFlight(opts?: {
-    duration?: number;
-    speed?: number;
-    /** Optional initial impulse along camera flat forward */
-    launch?: number;
-  }) {
-    this.hoverActive = false;
-    this.skillFlightActive = true;
-    this.skillFlightElapsed = 0;
-    this.skillFlightDuration = Math.max(0.12, opts?.duration ?? 0.42);
-    this.skillFlightSpeed = Math.max(2, opts?.speed ?? 9);
-    this.skillFlightEnd = false;
-    this.grounded = false;
-    this.vertical = 0;
-    this.slamActive = false;
-    const launch = opts?.launch ?? 4;
-    if (launch > 0) {
-      const f = this.forward();
-      this.velocity.set(f.x * launch, 0, f.z * launch);
-    }
-    // Prefer fly / jump roles for visual
-    if (this.character.hasRole("jump")) this.character.playRoleOnce("jump", 0.06);
-  }
-
-  endSkillFlight() {
-    this.skillFlightActive = false;
-  }
-
-  get isSkillFlying(): boolean {
-    return this.skillFlightActive;
-  }
-
-  /** True once when skill short-flight timer expires. */
-  consumeSkillFlightEnd(): boolean {
-    const v = this.skillFlightEnd;
-    this.skillFlightEnd = false;
-    return v;
   }
 
   /** Set a transient horizontal move-speed multiplier (1 = normal). */
@@ -1464,53 +814,53 @@ export class Controller {
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
   }
 
-  /**
-   * Optional splitter: Studio free-aim routes part of mouse to reticle offset
-   * and returns residual deltas for camera look. Null = all mouse → camera.
-   */
-  onAimLook: ((dx: number, dy: number) => { camDx: number; camDy: number }) | null = null;
-
   update(dt: number) {
     const mouse = this.input.consumeMouse();
-    let lookDx = mouse.dx;
-    let lookDy = mouse.dy;
-    if (this.onAimLook && (this.input.locked || this.input.lookActive)) {
-      const split = this.onAimLook(mouse.dx, mouse.dy);
-      lookDx = split.camDx;
-      lookDy = split.camDy;
-    }
+    this.lastMouse = mouse;
     // Apply look from the mouse (pointer lock) OR from a touch look-pad drag.
-    if (this.input.locked || this.input.lookActive) {
+    // suppressLook keeps deltas available (lastMouse) without orbiting the cam.
+    if (!this.suppressLook && (this.input.locked || this.input.lookActive)) {
       const sens = 0.0022 * this.params.mouseSensitivity;
       const invert = this.params.invertY ? -1 : 1;
       // While locked on, the camera yaw is driven by the target, not the mouse.
-      if (!this.lockTarget) this.yaw -= lookDx * sens;
+      if (!this.lockTarget) this.yaw -= mouse.dx * sens;
       if (this.viewMode === "first") {
         // First person: dragging the mouse down looks down. fpPitch is the look
         // elevation (+ up), so drag-down decreases it; invertY flips. Near-±90°
         // clamp avoids gimbal flip at straight up/down.
-        this.fpPitch = THREE.MathUtils.clamp(this.fpPitch - lookDy * sens * invert, -1.45, 1.45);
+        this.fpPitch = THREE.MathUtils.clamp(this.fpPitch - mouse.dy * sens * invert, -1.45, 1.45);
       } else {
         // Pitch up = camera rises and looks DOWN. By default dragging the mouse
         // down looks down (pitch up); invertY flips it. Clamp stays positive so
         // the orbit never drops the camera under the floor.
-        this.pitch = THREE.MathUtils.clamp(this.pitch + lookDy * sens * invert, 0.06, 1.3);
-      }
-      if (lookDx !== 0 || lookDy !== 0) {
-        this.onTowardChange?.(lookDx, lookDy, this.smoothedSpeed);
+        this.pitch = THREE.MathUtils.clamp(
+          this.pitch + mouse.dy * sens * invert,
+          this.pitchMin,
+          this.pitchMax,
+        );
       }
     }
     // Wheel zooms the third-person orbit distance; in first person there is no
     // orbit, so the wheel is ignored (FOV zoom is owned by the consumer).
-    if (this.enableZoom && mouse.wheel !== 0 && this.viewMode !== "first") {
-      this.params.cameraDistance = THREE.MathUtils.clamp(
-        this.params.cameraDistance + mouse.wheel * 0.005,
-        2.5,
-        10,
-      );
+    // Scroll **down** may be claimed by combat (universal uppercut on all weapons).
+    if (mouse.wheel !== 0 && this.viewMode !== "first") {
+      let wheel = mouse.wheel;
+      // Positive deltaY = scroll down. Require a real notch so trackpad noise
+      // doesn't fire combat every frame; unhandled down still zooms out.
+      // (Harvest mode may claim wheel for tool cycle via the same hook.)
+      if (wheel >= 20 && this.onWheelDownCombat?.()) {
+        wheel = 0;
+      } else if (wheel <= -20 && this.onWheelUpAction?.()) {
+        wheel = 0;
+      }
+      if (wheel !== 0) {
+        this.params.cameraDistance = THREE.MathUtils.clamp(
+          this.params.cameraDistance + wheel * 0.005,
+          2.5,
+          10,
+        );
+      }
     }
-    this.edgeBlocked = false;
-    this.prevGrounded = this.grounded;
 
     // Lock-on: drive the camera yaw so the player sits between the camera and the
     // target (enemy framed ahead). lockYaw also forces the body facing below so
@@ -1528,6 +878,23 @@ export class Controller {
         while (d > Math.PI) d -= Math.PI * 2;
         while (d < -Math.PI) d += Math.PI * 2;
         this.yaw += d * Math.min(1, 9 * dt);
+      }
+    } else if (this.softTarget && (this.input.locked || this.input.lookActive)) {
+      // Soft-lock aim assist: when the foe sits within a forward cone and the
+      // player isn't actively turning, nudge the yaw gently toward it. This never
+      // overrides intent — a real flick (mouse.dx) suspends the assist, and a foe
+      // outside the cone is ignored (that's what Tab / hard lock are for).
+      const toS = new THREE.Vector3(
+        this.softTarget.x - this.character.root.position.x,
+        0,
+        this.softTarget.z - this.character.root.position.z,
+      );
+      if (toS.lengthSq() > 1e-4 && Math.abs(mouse.dx) < 2) {
+        const desired = Math.atan2(toS.x, toS.z);
+        let d = desired - this.yaw;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        if (Math.abs(d) < 1.05) this.yaw += d * Math.min(1, 3 * dt) * 0.5;
       }
     }
 
@@ -1556,8 +923,11 @@ export class Controller {
     }
     const mag = Math.min(1, move.length());
 
+    // Sprint keys from inputContract SSOT (matches fleet grudge-control-ssot).
     const sprinting =
-      this.input.down("ShiftLeft") || this.input.down("ShiftRight") || this.input.touchSprint;
+      this.input.down(INPUT.sprint) ||
+      this.input.down(INPUT.sprintAlt) ||
+      this.input.touchSprint;
     const speed =
       this.params.moveSpeed * (sprinting ? this.params.sprintMultiplier : 1) * this.speedMult;
     // Keyboard moves at full speed; the joystick scales by how far it's pushed.
@@ -1594,33 +964,6 @@ export class Controller {
       pos.z = THREE.MathUtils.clamp(pos.z + this.rollDir.z * rollSpeed * dt, -this.bound, this.bound);
       this.velocity.set(0, 0, 0);
       moving = false;
-    } else if (this.skillFlightActive) {
-      // Timed free-flight (skill short hop) — cam-relative 3D like three-player-controller fly.
-      this.skillFlightElapsed += dt;
-      if (this.skillFlightElapsed >= this.skillFlightDuration) {
-        this.skillFlightActive = false;
-        this.skillFlightEnd = true;
-        this.vertical = -2;
-      } else {
-        let up = 0;
-        if (this.input.down("Space")) up += 1;
-        if (this.input.down("ControlLeft") || this.input.down("ControlRight")) {
-          up -= 1;
-        }
-        if (moving) {
-          move.normalize();
-          this.velocity.copy(move).multiplyScalar(this.skillFlightSpeed);
-          this.wantFacing = Math.atan2(move.x, move.z);
-        } else {
-          this.velocity.x *= 0.88;
-          this.velocity.z *= 0.88;
-        }
-        // Vertical integrated in the specials Y branch below
-        this.vertical = up * this.skillFlightSpeed * 0.65;
-        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
-        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
-        moving = true;
-      }
     } else if (this.hoverActive) {
       // Float: keyboard/stick still steer (slower); the back-hop velocity decays.
       if (moving) {
@@ -1635,37 +978,16 @@ export class Controller {
       pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       moving = false;
     } else {
-      // Climb holds (F-grab) then sprint wall-run before free air locomotion
-      if (this.climbActive) {
-        this.updateClimbMove(dt, move, mag);
-        this.velocity.set(0, 0, 0);
-        moving = true;
-      } else {
-        this.updateWallRun(dt, sprinting, move, mag);
-      }
-      if (this.wallRunActive) {
-        this.velocity.set(0, 0, 0);
-        moving = true; // keep loco blend "running"
-      } else if (this.climbActive) {
-        /* climb moved already */
-      } else if (moving) {
+      if (moving) {
         move.normalize();
-        // Edge / cliff probe: cancel planar velocity that would walk off a drop.
-        if (this.isEdgeInDirection(move.x, move.z, pos)) {
-          this.edgeBlocked = true;
-          this.velocity.set(0, 0, 0);
-          moving = false;
-        } else {
-          this.velocity.copy(move).multiplyScalar(speed * intensity);
-          this.wantFacing = Math.atan2(move.x, move.z);
-          pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
-          pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
-        }
+        this.velocity.copy(move).multiplyScalar(speed * intensity);
+        this.wantFacing = Math.atan2(move.x, move.z);
       } else {
         this.velocity.multiplyScalar(0.001);
-        pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
-        pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
       }
+      // Apply horizontal movement with simple room bounds.
+      pos.x = THREE.MathUtils.clamp(pos.x + this.velocity.x * dt, -this.bound, this.bound);
+      pos.z = THREE.MathUtils.clamp(pos.z + this.velocity.z * dt, -this.bound, this.bound);
     }
 
     // External knockback rides on top of every branch and decays smoothly.
@@ -1677,16 +999,19 @@ export class Controller {
       this.extVel.z *= damp;
     }
 
-    // Danger Room / arena living obstacles: XZ circle push-out for pillars and
-    // NPCs. Runs when there is no KCC, OR when keepRoomBounds (shared DR ground
-    // KCC) so bodies still can't walk through dummies. Full mesh dungeons skip
-    // this (keepRoomBounds false) — trimeshes own collision.
-    if ((!this.collision || this.keepRoomBounds) && this.obstacles) {
+    // Danger Room interior collision: push the body out of static props (corner
+    // pillars, training dummies) and live opponents so you can't walk through
+    // them. The dungeon/arena run a Rapier KCC (collision provider) instead, so
+    // this XZ push-out only runs on the null path and leaves that feel intact.
+    if (!this.collision && this.obstacles) {
       const PLAYER_R = 0.35;
       const obs = this.obstacles();
       // Pass 1: radial push out of every overlapping circle (smooth slide when
-      // approaching from open floor).
+      // approaching from open floor). Landable obstacles stop pushing once the
+      // feet are at/above their top surface — standing or walking on the top is
+      // legitimate support, not an overlap to eject from.
       for (const o of obs) {
+        if (o.top !== undefined && pos.y >= o.top - 0.02) continue;
         const dx = pos.x - o.x;
         const dz = pos.z - o.z;
         const minDist = o.r + PLAYER_R;
@@ -1709,6 +1034,7 @@ export class Controller {
       // in-bounds point that clears the circle, so the body stops cleanly
       // against the pillar instead of jittering.
       for (const o of obs) {
+        if (o.top !== undefined && pos.y >= o.top - 0.02) continue;
         const dx = pos.x - o.x;
         const dz = pos.z - o.z;
         const minDist = o.r + PLAYER_R;
@@ -1743,25 +1069,24 @@ export class Controller {
     if (this.flipActive) {
       this.flipElapsed += dt;
       const tau = THREE.MathUtils.clamp(this.flipElapsed / this.flipDuration, 0, 1);
-      pos.y = Math.sin(Math.PI * tau) * this.flipHop;
+      // Anchor the arc to the current support surface (elevated prop tops
+      // included) so the special never teleports the body back to the floor.
+      pos.y = this.supportY + Math.sin(Math.PI * tau) * this.flipHop;
       this.character.root.rotation.x = -Math.PI * 2 * Controller.easeInOut(tau);
       this.vertical = 0;
       if (tau >= 1) {
         this.flipActive = false;
         this.character.root.rotation.x = 0;
-        pos.y = 0;
+        pos.y = this.supportY;
         this.grounded = true;
         this.jumpsLeft = 2;
         this.didDoubleJump = false;
-        this.airDoubleUsed = false;
-        this.airWallJumpUsed = false;
-        this.endWallRun(false);
       }
     } else if (this.rollActive) {
       this.rollElapsed += dt;
       const tau = THREE.MathUtils.clamp(this.rollElapsed / this.rollDuration, 0, 1);
       this.character.root.rotation.x = -Math.PI * 2 * Controller.easeInOut(tau);
-      pos.y = 0;
+      pos.y = this.supportY;
       this.vertical = 0;
       this.grounded = true;
       if (tau >= 1) {
@@ -1771,7 +1096,7 @@ export class Controller {
     } else if (this.spinActive) {
       this.spinElapsed += dt;
       const tau = THREE.MathUtils.clamp(this.spinElapsed / this.spinDuration, 0, 1);
-      pos.y = Math.sin(tau * Math.PI * 0.5) * this.spinHeight;
+      pos.y = this.supportY + Math.sin(tau * Math.PI * 0.5) * this.spinHeight;
       this.vertical = 0;
       if (tau >= 1) {
         this.spinActive = false;
@@ -1786,17 +1111,10 @@ export class Controller {
         this.hoverActive = false;
         this.hoverEnd = true;
       }
-    } else if (this.skillFlightActive) {
-      // Free-flight Y (no gravity) — Space up / Ctrl down already in this.vertical
-      pos.y = Math.max(0.08, pos.y + this.vertical * dt);
-      this.grounded = false;
-    } else if (this.wallRunActive || this.climbActive) {
-      // Gravity suspended while wall-running / hold-climbing.
-      this.vertical = 0;
-      this.grounded = false;
     } else {
       // Gravity + ground.
       const prevVertical = this.vertical;
+      const prevY = pos.y;
       this.vertical -= this.params.gravity * dt;
       // Inside the dungeon water band, buoyancy clamps the descent to a slow,
       // constant sink so the player drifts down through the water rather than
@@ -1815,28 +1133,51 @@ export class Controller {
         const tau = THREE.MathUtils.clamp(this.skyfallRiseElapsed / this.skyfallRiseDur, 0, 1);
         this.character.root.rotation.x = -Math.PI * 2 * Controller.easeInOut(tau);
       }
-      if (!this.collision && pos.y <= 0) {
-        pos.y = 0;
-        if (!this.grounded) {
-          this.justLanded = true;
-          this.landingSpeed = Math.abs(prevVertical);
-          if (this.slamActive) {
-            this.justSlamLanded = true;
-            this.slamActive = false;
+      if (!this.collision) {
+        // Ground is no longer a flat y=0 plane: landable obstacle tops (crates,
+        // barrels, deployed props) count as support, sampled from the height the
+        // feet fell FROM so wall faces never teleport the body upward.
+        const groundY = this.supportHeightAt(pos.x, pos.z, prevY);
+        if (pos.y <= groundY) {
+          pos.y = groundY;
+          if (!this.grounded) {
+            this.justLanded = true;
+            this.landingSpeed = Math.abs(prevVertical);
+            if (this.slamActive) {
+              this.justSlamLanded = true;
+              this.slamActive = false;
+            }
+            this.landedWithDouble = this.didDoubleJump;
+            this.justRollLanding = this.didDoubleJump || this.hoverWasActive;
+            this.hoverWasActive = false;
+            // Ground-truth touchdown for rigs holding a looped airborne pose —
+            // they can't infer elevated landings from root.y alone.
+            this.character.notifyLanded?.();
           }
-          this.landedWithDouble = this.didDoubleJump;
-          this.justRollLanding = this.didDoubleJump || this.hoverWasActive;
-          this.hoverWasActive = false;
+          this.vertical = 0;
+          this.grounded = true;
+          this.supportY = groundY;
+          this.jumpsLeft = 2;
+          this.didDoubleJump = false;
+          this.skyfallArmed = false;
+          this.character.root.rotation.x = 0;
+        } else if (this.grounded) {
+          const drop = pos.y - groundY;
+          if (drop <= this.STEP_DOWN) {
+            // Small ledge: glue the feet to the lower surface and keep walking.
+            pos.y = groundY;
+            this.vertical = 0;
+            this.supportY = groundY;
+          } else {
+            // Support fell away (walked off a prop top): proper airborne state —
+            // fall pose now, landing state/VFX fire on touchdown below.
+            this.grounded = false;
+            this.supportY = 0;
+            if (!this.character.isOneShotActive && !this.isBusy) {
+              this.character.playRoleOnce("jump", 0.15);
+            }
+          }
         }
-        this.vertical = 0;
-        this.grounded = true;
-        this.jumpsLeft = 2;
-        this.didDoubleJump = false;
-        this.airDoubleUsed = false;
-        this.airWallJumpUsed = false;
-        this.endWallRun(false);
-        this.skyfallArmed = false;
-        this.character.root.rotation.x = 0;
       }
     }
 
@@ -1858,14 +1199,15 @@ export class Controller {
           this.landedWithDouble = this.didDoubleJump;
           this.justRollLanding = this.didDoubleJump || this.hoverWasActive;
           this.hoverWasActive = false;
+          // Elevated dungeon floors land well above y=0 — tell the rig directly
+          // so a held airborne pose clears at the real support height.
+          this.character.notifyLanded?.();
         }
         this.vertical = 0;
         this.grounded = true;
+        this.supportY = pos.y;
         this.jumpsLeft = 2;
         this.didDoubleJump = false;
-        this.airDoubleUsed = false;
-        this.airWallJumpUsed = false;
-        this.endWallRun(false);
         this.skyfallArmed = false;
       } else if (!res.grounded) {
         this.grounded = false;
@@ -1908,110 +1250,31 @@ export class Controller {
           : 0.5
       : 0;
     this.smoothedSpeed += (targetSpeed - this.smoothedSpeed) * Math.min(1, 10 * dt);
-    if (
-      !this.character.isOneShotActive &&
-      !this.isBusy &&
-      !this.hoverActive &&
-      !(this.animDirector?.isOverridePlaying)
-    ) {
-      // Climb / hang / wall-run / swim: baked mobility roles for ANY avatar
-      if (this.climbActive || this.wallRunActive) {
-        this.applyClimbLocomotionAnim();
-      } else if (this.surfaceState?.mode === "swim" || this.surfaceState?.mode === "wade") {
-        this.applySwimLocomotionAnim();
-      } else if (this.grounded) {
-        if (this.character.setLocomotion) {
-          // Speed 0..1 + explicit sprint flag so grudge6 uses run-clone @ 1.75×
-          // (never locomotion/running roll). GLB Character ignores sprint flag.
-          this.character.setLocomotion(this.smoothedSpeed, sprinting);
-        } else if (sprinting && this.character.hasRole("sprint")) {
-          this.character.playRole("sprint");
-          this.character.setLocomotionRate(1.75);
-        } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
-          this.character.playRole("run");
-          this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);
-        } else if (this.smoothedSpeed > 0.06) {
-          this.character.playRole("walk");
-          this.character.setLocomotionRate(0.8 + this.smoothedSpeed);
-        } else {
-          this.character.playRole("idle");
-          this.character.setLocomotionRate(1);
-        }
+    if (!this.character.isOneShotActive && this.grounded && !this.isBusy && !this.hoverActive) {
+      if (this.character.setLocomotionDirectional) {
+        // Direction-aware weight-blend (GLB Character): project the world move
+        // dir onto the body facing so A/D under a target lock reads as a strafe
+        // (moveX) and forward as moveZ. Degrades to the forward blend on rigs
+        // without strafe clips, so normal play is unchanged.
+        const yaw = this.character.root.rotation.y;
+        const rel = Math.atan2(move.x, move.z) - yaw;
+        const mv = this.smoothedSpeed;
+        this.character.setLocomotionDirectional(Math.sin(rel) * mv, Math.cos(rel) * mv, mv);
+      } else if (this.character.setLocomotion) {
+        // Weight-blended path (GLB Character): continuous speed + sprint flag so
+        // Heroes of Grudge `sprint` clips engage at top speed (not just rate-hack).
+        this.character.setLocomotion(this.smoothedSpeed, sprinting);
+      } else if (this.smoothedSpeed > 0.65 && this.character.hasRole("run")) {
+        this.character.playRole("run");
+        this.character.setLocomotionRate(1 + (this.smoothedSpeed - 0.65) * 0.6);
+      } else if (this.smoothedSpeed > 0.06) {
+        this.character.playRole("walk");
+        this.character.setLocomotionRate(0.8 + this.smoothedSpeed);
+      } else {
+        this.character.playRole("idle");
+        this.character.setLocomotionRate(1);
       }
     }
-
-    // Ground-state event (three-player-controller onGroundChange parity).
-    if (this.grounded !== this.prevGrounded) {
-      this.onGroundChange?.(this.grounded);
-    }
-
-    // ── SurfaceLocomotion SSOT (fleet: feet/water/climb/vehicle) ──
-    // Non-invasive: publishes mode for HUD/AI; scales gravity on next fall.
-    try {
-      const feet = this.character.root.position;
-      const wall = this.wallRunActive
-        ? { dist: 0.2 }
-        : this.probeWall(this.WALL_PROBE);
-      const sampleH =
-        this.groundHeightAt ||
-        ((_x: number, _z: number) => {
-          // Flat danger-room floor fallback
-          if (!this.collision) return 0;
-          return null;
-        });
-      const hasWater = Number.isFinite(this.waterBand.top);
-      // Climb probe (hold walls) before surface resolve
-      this.updateClimbIntent(sprinting);
-      const climbWall =
-        this.climbActive || this.climbVerticalGrab
-          ? { dist: 0.15 }
-          : wall;
-
-      this.surfaceState = resolveSurfaceLocomotion({
-        feetY: feet.y,
-        x: feet.x,
-        z: feet.z,
-        sampleHeight: sampleH,
-        sampleWaterY: hasWater
-          ? (_x: number, _z: number) => {
-              if (isInWaterBand(feet.y, this.waterBand)) return this.waterBand.top;
-              if (
-                feet.y < this.waterBand.top + 0.5 &&
-                feet.y > this.waterBand.bottom - 0.2
-              ) {
-                return this.waterBand.top;
-              }
-              return null;
-            }
-          : undefined,
-        wallHit: climbWall,
-        wantWallRun: sprinting && !this.grounded && !this.climbActive,
-        wantClimb: this.climbActive || this.climbVerticalGrab,
-        verticalGrab: this.climbVerticalGrab,
-        wantMantle: this.climbWantMantle,
-        airborne: !this.grounded,
-        vehicle: this.vehicleKind,
-        vehicleId: this.vehicleId,
-      });
-      // Soft gravity scale when swimming / flying (don't fight specials)
-      if (
-        !this.flipActive &&
-        !this.skillFlightActive &&
-        !this.wallRunActive &&
-        this.surfaceState
-      ) {
-        const gScale = gravityScaleForMode(this.surfaceState.mode);
-        if (gScale < 1 && this.vertical < 0) {
-          // Reduce fall speed proportionally (already applied gravity this frame;
-          // mild correction for next frame via vertical damp)
-          this.vertical *= 0.85 + 0.15 * gScale;
-        }
-      }
-    } catch {
-      /* physics SSOT optional at boot */
-    }
-
-    this.animDirector?.update(dt);
 
     this.updateCamera(dt);
   }
@@ -2027,25 +1290,11 @@ export class Controller {
       this.applyCameraShake();
       return;
     }
-    const feet = this.character.root.position;
-    const target = new THREE.Vector3(
-      feet.x,
-      feet.y + this.params.cameraHeight * this.camLookAtHeightRatio,
-      feet.z,
-    );
-    // Spring look-at (GameCamera critically-damped style from three-player-controller).
-    let lookAt = target;
-    if (this.enableSpringCamera) {
-      if (!this.springInited) {
-        this.springLookAt.copy(target);
-        this.springVel.set(0, 0, 0);
-        this.springInited = true;
-      }
-      lookAt = this.springToward(this.springLookAt, this.springVel, target, dt, this.springCameraTime);
-      this.springLookAt.copy(lookAt);
-    } else {
-      this.springInited = false;
-    }
+    // Orbit target: character root + cameraHeight, but never sink below feet.
+    // Foot IK can drop the mesh slightly; keep look-at above ground + small pad.
+    const target = this.character.root.position.clone();
+    const footFloor = Math.max(0, target.y) + 0.05;
+    target.y = Math.max(target.y + this.params.cameraHeight, footFloor + this.params.cameraHeight * 0.85);
     const dist = this.params.cameraDistance;
     // Spherical orbit BEHIND the character: the horizontal ring (x/z) sits on
     // -forward via -dist and shrinks with pitch (cos), while the vertical rises
@@ -2057,7 +1306,7 @@ export class Controller {
       Math.sin(this.pitch) * dist,
       Math.cos(this.yaw) * Math.cos(this.pitch) * -dist,
     );
-    const desired = lookAt.clone().add(offset);
+    const desired = target.clone().add(offset);
     if (!this.collision) {
       // Danger Room: hard floor clamp + keep the camera inside the room walls so
       // a wall can never end up between the camera and the character.
@@ -2068,53 +1317,23 @@ export class Controller {
     } else if (this.occluders.length) {
       // Dungeon: pull the camera in front of any wall/prop between it and the
       // player so the view never clips into geometry indoors.
-      const dir = new THREE.Vector3().subVectors(desired, lookAt);
+      const dir = new THREE.Vector3().subVectors(desired, target);
       const len = dir.length();
       if (len > 1e-3) {
         dir.divideScalar(len);
-        this.camRay.set(lookAt, dir);
+        this.camRay.set(target, dir);
         this.camRay.far = len;
         const hits = this.camRay.intersectObjects(this.occluders, false);
         if (hits.length > 0) {
           const d = Math.max(0.5, hits[0].distance - 0.3);
-          desired.copy(lookAt).addScaledVector(dir, d);
+          desired.copy(target).addScaledVector(dir, d);
         }
       }
     }
     this.camera.position.lerp(desired, Math.min(1, 12 * dt));
-    this.camera.lookAt(lookAt);
+    this.camera.lookAt(target);
     this.applyFov();
     this.applyCameraShake();
-  }
-
-  /**
-   * Critically-damped spring (Game Camera / SmoothDamp style) toward `dest`.
-   * Ported from three-player-controller CameraSystem.springTarget.
-   */
-  private springToward(
-    cur: THREE.Vector3,
-    vel: THREE.Vector3,
-    dest: THREE.Vector3,
-    delta: number,
-    smoothTime: number,
-  ): THREE.Vector3 {
-    const out = new THREE.Vector3();
-    const st = Math.max(0.0001, smoothTime);
-    const omega = 2 / st;
-    const x = omega * delta;
-    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
-    for (const a of ["x", "y", "z"] as const) {
-      const change = cur[a] - dest[a];
-      const temp = (vel[a] + omega * change) * delta;
-      vel[a] = (vel[a] - omega * temp) * exp;
-      let o = dest[a] + (change + temp) * exp;
-      if (dest[a] - cur[a] > 0 === o > dest[a]) {
-        o = dest[a];
-        vel[a] = 0;
-      }
-      out[a] = o;
-    }
-    return out;
   }
 
   /**

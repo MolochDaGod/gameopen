@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_cape_long",
+  "kind": "back",
+  "name": "Long Cape",
+  "description": "Unity Long Cape 1",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "cape"
+  ],
+  "icon": {
+    "path": "icons/pack/weapons/Shield_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_cape_long"
+}

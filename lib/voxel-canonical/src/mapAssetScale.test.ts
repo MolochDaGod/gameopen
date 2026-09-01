@@ -57,6 +57,24 @@ describe("mapAssetScale", () => {
     expect(scaleForMapChunkId("castle_eltz")).toBe(1);
   });
 
+  it("classifies wolf_street as a map chunk, never a wolf creature", () => {
+    const r = evaluateAssetRole({
+      name: "wolf_street.glb",
+      fileBytes: 92_270_532,
+      bounds: { x: 80, y: 20, z: 40 },
+    });
+    expect(r.role).toBe("map_chunk");
+    expect(r.forbidPropHeightFit).toBe(true);
+    expect(r.scale).toBe(1);
+    const forced = evaluateAssetRole({
+      name: "wolf_street.glb",
+      fileBytes: 92_270_532,
+      tags: ["map"],
+      forceMap: true,
+    });
+    expect(forced.role).toBe("map_chunk");
+  });
+
   it("scaleForMapChunkId rascals uses pitch", () => {
     expect(scaleForMapChunkId("rascals_retreat")).toBeCloseTo(125);
   });

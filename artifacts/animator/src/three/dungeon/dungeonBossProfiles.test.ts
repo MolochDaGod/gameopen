@@ -37,6 +37,11 @@ describe("dungeonBossProfiles — grudge6 player-like bosses", () => {
     expect(p.weaponTier).toBe(3);
   });
 
+  it("maps modular-crypt and npc-village onto existing bosses", () => {
+    expect(DUNGEON_MAP_BOSS["modular-crypt"]).toBe("crypt-death-knight");
+    expect(DUNGEON_MAP_BOSS["npc-village"]).toBe("elite-ironclad");
+  });
+
   it("builds EntityPrefab with combat + mesh ids from gear preset", () => {
     const p = getDungeonBossProfile("forge-moloch");
     const prefab = bossAsPrefab(p);

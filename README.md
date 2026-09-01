@@ -55,8 +55,11 @@ Canonical login always returns to **this** origin with tokens the app can store.
 2. After login, id handoff attaches **`sso_token`** (full session JWT) and **`grudge_token`** (short launch) in **query and hash**.
 3. On boot, **prefer `sso_token` / `token`** over `grudge_token`. Never use launch JWT alone as Bearer.
 4. If only launch is present → `POST /api/auth/session/exchange` (or grudge-bridge) with `audience=https://gameopen.vercel.app`.
-5. Store under fleet keys: `grudge_auth_token`, `grudge_session_token`, `grudge.token`, `sso_token`, plus `grudge.open.token`.
-6. **No custom identity headers** (e.g. `x-grudge-id`) — CORS preflight fails on Railway; Bearer carries identity.
+5. Store under fleet keys: **`grudge.open.token` first**, then `grudge_auth_token`, `grudge_session_token`, `grudge.token`, `sso_token`, `grudge_token`. Dual-write all on login.
+6. **Read JWT** via `readProductionAuthToken()` (`lib/productionSystemsPattern.ts`) for AI hub + REST — never a third key scanner.
+7. **No custom identity headers** (e.g. `x-grudge-id`) — CORS preflight fails on Railway; Bearer carries identity.
+
+Pattern SSOT: [`docs/PRODUCTION_SYSTEMS_PATTERN.md`](docs/PRODUCTION_SYSTEMS_PATTERN.md) · [`docs/FLEET_AUTH_WIRING.md`](docs/FLEET_AUTH_WIRING.md).
 
 ```bash
 # Probe id dual-write (expect 302 with both redirect_uri and redirect)
@@ -107,9 +110,10 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 | `/world` | VoxGrudge open world |
 | `/dressing` | Dressing Room / Animator (threejs-rapier suite) |
 | `/avatar` | Cube modular Avatar Editor |
-| `/characters` | Characters GRUDOX campfire hub |
+| `/characters` | **TVS farm campfire** roster hub (CDN props) |
 | `/realms` | Mine-Loader / GRUDOX Realms |
-| `/lobby` | Multiplayer lobby |
+| `/lobby` | Same campfire roster (not dungeon cinema) |
+| `/api/ai/*` | AI hub rewrite (`ai.grudge-studio.com`; JWT for chat) |
 | `/zones` | GRUDOX zone launcher |
 | `/ledmask` | LED Mask + voxel avatar design |
 | `/account` | Account hub (races, wallet, treaty) |
@@ -118,6 +122,31 @@ Routing SSOT: [`artifacts/animator/src/lib/openRoutes.ts`](artifacts/animator/sr
 Also: `?door=<mode>` · `?mode=<cabinetId>` (legacy).  
 **Consolidation:** Open replaces the legacy Animator lab — [`docs/OPEN_CONSOLIDATION.md`](docs/OPEN_CONSOLIDATION.md).  
 Ingest: `npm run ingest:rapier`.
+
+## Warlords in-game only (not Open library tiles)
+
+**Flagship client:** [client.grudge-studio.com](https://client.grudge-studio.com/home) · [grudgewarlords.com](https://grudgewarlords.com)
+
+Open may deep-link or catalog-document these worlds, but they are **`warlordsInGameOnly`** — never standalone Open tiles, never GRUDOX cabinets, never Explorer products.
+
+| Id / map | Role | Production path |
+|----------|------|-----------------|
+| **`pirate-islands`** | **Chicken Gun / PolygonPirates lobby** = Warlords **opening map and tutorial map** | `/island-3d?mode=lobby&map=pirate-islands` · tutorial `/tutorial` |
+| `water-island` / home | Home / water island inside Warlords | client home handoff |
+| `grudox-island` | Legacy name for Warlords home lobby island | client home handoff |
+| Sectors (era 9) | Sailing / land zones | in-client ocean + world map |
+
+**Hard rules**
+
+1. Chicken Gun **pirate-islands** is **not** GRUDOX and **not** an Explorer game.
+2. CDN mesh: `assets.grudge-studio.com/models/lobby/pirate-islands/scene.glb`
+3. Open Toolbox **Pirate Lobby** opens the Warlords client path above (not Grok invent mode).
+4. Danger Room maps (`pirate-village`, forest harvest lab, shipwreck SPA) stay Open **training** maps — distinct from the production lobby mesh.
+5. Catalog SSOT: `artifacts/animator/src/game/gameLibrary.ts` · tests: `gameLibrary.warlords.test.ts` · sectors meta: `warlordsSectors.ts`
+
+Library eras: [`docs/ERA_LIBRARY.md`](docs/ERA_LIBRARY.md) · deploy gate: `npm run deploy:gate` / `npm run deploy:prod`.
+
+**DRC + grudge6 on Warlords-era games:** loaders, asset hosts, deploy matrix — [`docs/WARLORDS_ERA_DRC_AUDIT.md`](docs/WARLORDS_ERA_DRC_AUDIT.md) · code `drcSurfaceContract.ts` (`WARLORDS_ERA_FLEET`).
 
 ## Asset production pipeline
 
@@ -174,6 +203,7 @@ Live: [open…/annihilate-demo?hero=elf_worge](https://open.grudge-studio.com/an
 | [DANGER_ROOM_UX_CONSOLIDATION.md](docs/DANGER_ROOM_UX_CONSOLIDATION.md) | One Danger Room, HUD, equip, grudge6 hands |
 | [MINE_LOADER_SSOT.md](docs/MINE_LOADER_SSOT.md) | World editor SSOT, physics, lobby promote |
 | [GAME_LIBRARY_AND_DEPLOY.md](docs/GAME_LIBRARY_AND_DEPLOY.md) | Library + Mine-Loader |
+| [WARLORDS_ERA_DRC_AUDIT.md](docs/WARLORDS_ERA_DRC_AUDIT.md) | Warlords games · grudge6 · DRC loaders/deploy |
 | [OPEN_CONSOLIDATION.md](docs/OPEN_CONSOLIDATION.md) | threejs-rapier → Open |
 | [DANGER_ROOM_T0_COMBAT.md](docs/DANGER_ROOM_T0_COMBAT.md) | T0 skills, MM, parry/block |
 | [ATTACHMENT_EQUIP_CARDS.md](docs/ATTACHMENT_EQUIP_CARDS.md) | Equip container cards |

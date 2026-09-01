@@ -3,7 +3,6 @@ import { Shirt, Upload, UserPlus, Sparkles, X, UserCheck, Check } from "lucide-r
 import type { EditorScene } from "../../three/editor/EditorScene";
 import type { EditorObjectSnapshot, EditorSnapshot } from "../../three/editor/types";
 import type { VoxelPart } from "../../three/explorer/rig";
-import { CHARACTERS } from "../../three/assets";
 import { RACE_ASSETS, RACE_IDS, PRESET_IDS } from "../../three/grudge";
 import type { RaceId, PresetId } from "../../three/grudge";
 import { SHELLS, type ShellId } from "../../three/LedMaskShells";
@@ -94,6 +93,18 @@ function VoxelCharacterSection({
       scheduleCharacterLoadoutSave(charId, ch, { voxelLook: blob as unknown as Record<string, unknown> }, (saveData) => {
         gameSession.patchCharacter(charId, { saveData });
       });
+      void import("../../game/inventory/characterAppearance").then(
+        ({ saveCharacterSlotAppearance }) => {
+          void saveCharacterSlotAppearance({
+            characterId: charId,
+            model3d: {
+              renderPipeline: "voxel",
+              voxelAvatar: blob,
+            },
+            voxelLook: blob as unknown as Record<string, unknown>,
+          });
+        },
+      );
     }
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);
@@ -231,12 +242,11 @@ function VoxelCharacterSection({
 }
 
 /**
- * Character loader — catalog GLB fighters OR grudge6 races.
- * Same deploy rules as Danger: 1.8 m, XZ pelvis, feet Y, Bip001 packs.
+ * Character loader — **grudge6 Toon RTS only** (loadGrudge6CombatRig).
+ * Race + class gear preset + combat style pack. No Explorer Mixamo path.
  */
 function CharacterLoader({ engine }: { engine: EditorScene }) {
-  const [catId, setCatId] = useState<string>(CHARACTERS[0]?.id ?? "explorer");
-  const [race, setRace] = useState<RaceId>(RACE_IDS[0]);
+  const [race, setRace] = useState<RaceId>("western-kingdoms");
   const [preset, setPreset] = useState<PresetId>("warrior");
   const [style, setStyle] = useState<string>(() => {
     try {
@@ -246,35 +256,65 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
     }
   });
   const [skel, setSkel] = useState(false);
+  const [busy, setBusy] = useState(false);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  const persistStyle = (next: string) => {
+    try {
+      localStorage.setItem("grudge.open.combatStyle", next);
+    } catch {
+      /* private mode */
+    }
+  };
+
+  /** Style dropdown must do work — not only local state. */
+  const applyStyle = async (next: string) => {
+    setStyle(next);
+    persistStyle(next);
+    setBusy(true);
+    try {
+      await engine.applyGrudgeCombatStyle(next);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const loadRace = async (r: RaceId, p: PresetId) => {
+    setRace(r);
+    setPreset(p);
+    setBusy(true);
+    try {
+      // GrudgeAvatar → loadGrudge6CombatRig only
+      await engine.loadGrudgeCharacter(r, p);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="ed-field">
-      <label className="ed-label">Load character</label>
-      <div className="ed-row">
-        <select className="ed-select" value={catId} onChange={(e) => setCatId(e.target.value)}>
-          {CHARACTERS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <button
-          className="ed-btn ed-tw"
-          title="Load catalog character (deploy SSOT)"
-          onClick={() => void engine.loadCatalogCharacter(catId)}
-        >
-          <UserPlus size={14} />
-        </button>
-      </div>
+      <label className="ed-label">Load character (grudge6 Toon RTS)</label>
       <div className="ed-row" style={{ marginTop: 6 }}>
-        <select className="ed-select" value={race} onChange={(e) => setRace(e.target.value as RaceId)}>
+        <select
+          className="ed-select"
+          value={race}
+          disabled={busy}
+          title="Grudge6 race — Bip001 + Toon RTS atlas (loadGrudge6CombatRig)"
+          onChange={(e) => void loadRace(e.target.value as RaceId, preset)}
+        >
           {RACE_IDS.map((r) => (
             <option key={r} value={r}>
               {RACE_ASSETS[r].name}
             </option>
           ))}
         </select>
-        <select className="ed-select" value={preset} onChange={(e) => setPreset(e.target.value as PresetId)}>
+        <select
+          className="ed-select"
+          value={preset}
+          disabled={busy}
+          title="Class gear preset (mesh_ids)"
+          onChange={(e) => void loadRace(race, e.target.value as PresetId)}
+        >
           {PRESET_IDS.map((p) => (
             <option key={p} value={p}>
               {cap(p)}
@@ -283,8 +323,9 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         </select>
         <button
           className="ed-btn ed-tw"
-          title="Load grudge6 race (Danger stack)"
-          onClick={() => void engine.loadGrudgeCharacter(race, preset)}
+          disabled={busy}
+          title="Reload via loadGrudge6CombatRig (Danger SSOT)"
+          onClick={() => void loadRace(race, preset)}
         >
           <UserPlus size={14} />
         </button>
@@ -293,8 +334,9 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         <select
           className="ed-select"
           value={style}
-          onChange={(e) => setStyle(e.target.value)}
-          title="Combat style — samurai / knight / spearman (same packs as Danger)"
+          disabled={busy}
+          title="Combat style reloads Mixamo→Bip001 baked pack"
+          onChange={(e) => void applyStyle(e.target.value)}
         >
           <option value="auto">Style · Weapon default</option>
           <option value="samurai">Style · Samurai</option>
@@ -308,15 +350,9 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
         </select>
         <button
           className="ed-btn ed-tw"
-          title="Apply combat style to selected grudge hero"
-          onClick={() => {
-            try {
-              localStorage.setItem("grudge.open.combatStyle", style);
-            } catch {
-              /* */
-            }
-            void engine.applyGrudgeCombatStyle(style);
-          }}
+          disabled={busy}
+          title="Re-apply combat style pack"
+          onClick={() => void applyStyle(style)}
         >
           Apply
         </button>
@@ -330,10 +366,12 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
             engine.setShowSkeleton(e.target.checked);
           }}
         />
-        <span>Show skeleton (Bip001 / bones)</span>
+        <span>Show skeleton (Bip001)</span>
       </label>
       <div className="ed-empty" style={{ padding: "6px 0 0", fontSize: 11, opacity: 0.75 }}>
-        Deploy SSOT: 1.8 m · feet on ground · XZ on pelvis · rotation-only anims · same packs as Danger.
+        <strong>Only path:</strong> <code>loadGrudge6CombatRig</code> — equip → SI fit →
+        atlas → Bip001 baked packs under <code>anims/baked/&#123;pack&#125;</code>.
+        No Explorer / Mixamo catalog on this pedestal.
       </div>
     </div>
   );

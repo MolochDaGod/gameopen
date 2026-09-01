@@ -1,0 +1,114 @@
+.mode-radial {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(6, 12, 22, 0.55) 0%,
+    rgba(6, 12, 22, 0.25) 45%,
+    transparent 70%
+  );
+}
+
+.mode-radial-ring {
+  position: relative;
+  width: 220px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mode-radial-wedge {
+  width: 160px;
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(127, 160, 200, 0.35);
+  background: rgba(12, 20, 34, 0.88);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s, background 0.12s;
+}
+
+.mode-radial-up.hot {
+  border-color: #ff8a6a;
+  background: rgba(80, 28, 18, 0.92);
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 24px rgba(255, 100, 70, 0.35);
+}
+
+.mode-radial-down.hot {
+  border-color: #6fe0a0;
+  background: rgba(12, 48, 28, 0.92);
+  transform: translateY(4px) scale(1.04);
+  box-shadow: 0 0 24px rgba(80, 220, 140, 0.35);
+}
+
+.mode-radial-wedge.active:not(.hot) {
+  border-color: rgba(180, 200, 255, 0.55);
+}
+
+.mode-radial-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mode-radial-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8f0ff;
+}
+
+.mode-radial-hint {
+  font-size: 10px;
+  color: #7f9ab8;
+  text-transform: lowercase;
+}
+
+.mode-radial-core {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px solid rgba(127, 195, 255, 0.45);
+  background: rgba(8, 14, 24, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 0 0 6px rgba(20, 40, 70, 0.35);
+}
+
+.mode-radial-core-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7fc3ff;
+}
+
+.mode-radial-core-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cfe0f5;
+}
+
+.mode-radial-foot {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #8aa4c4;
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.35;
+}

@@ -4,6 +4,9 @@
 **Code SSOT:** `artifacts/animator/src/lib/fleetSsot.ts` + `lib/fleet.ts`  
 **Probed:** 2026-07-16
 
+**Umbrella (eras · separate codexes · definitions · Grudge UUID):**  
+[FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md)
+
 This document **corrects** older docs that pointed catalogs at `objectstore.grudge-studio.com` (many `/api/v1/*` files **404**). Live definitions are on **info.grudge-studio.com**.
 
 ---

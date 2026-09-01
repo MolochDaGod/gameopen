@@ -55,6 +55,84 @@ export class PhysicsWorld {
   }
 
   /**
+   * Static heightfield collider — same contract as three.js
+   * `RapierPhysics.addHeightfield` in physics_rapier_terrain:
+   *   addHeightfield(mesh, width-1, depth-1, heightData, { x: extentsX, y: 1, z: extentsZ })
+   *
+   * Prefer for large islands over full trimesh (production-world TERRAIN_RULES).
+   * Pair with {@link sampleHeightfieldY} / {@link heightAtFromHeightfield} for
+   * Controller feet + FootGrounder (same grid as physics).
+   *
+   * @param nrows — depth cells = vertexDepth − 1
+   * @param ncols — width cells = vertexWidth − 1
+   * @param heights — (nrows+1)*(ncols+1) row-major heights
+   * @param scale — world size { x: fullWidthM, y: heightScale, z: fullDepthM }
+   */
+  addStaticHeightfield(
+    nrows: number,
+    ncols: number,
+    heights: Float32Array | number[],
+    scale: { x: number; y: number; z: number },
+    opts?: {
+      translation?: { x: number; y: number; z: number };
+      /** Unit quaternion { x, y, z, w }; default identity */
+      rotation?: { x: number; y: number; z: number; w: number };
+      friction?: number;
+    },
+  ): RAPIER.Collider | null {
+    const world = this.world;
+    if (!world) return null;
+    if (nrows < 1 || ncols < 1) return null;
+    const expected = (nrows + 1) * (ncols + 1);
+    if (heights.length < expected) {
+      console.warn(
+        `[PhysicsWorld] heightfield heights length ${heights.length} < expected ${expected}`,
+      );
+      return null;
+    }
+    const heightsArr =
+      heights instanceof Float32Array ? heights : Float32Array.from(heights);
+    try {
+      const bodyDesc = RAPIER.RigidBodyDesc.fixed();
+      const t = opts?.translation;
+      if (t) bodyDesc.setTranslation(t.x, t.y, t.z);
+      const r = opts?.rotation;
+      if (r) bodyDesc.setRotation({ x: r.x, y: r.y, z: r.z, w: r.w });
+      const body = world.createRigidBody(bodyDesc);
+      // Rapier API: heightfield(nrows, ncols, heights, scale)
+      let desc = RAPIER.ColliderDesc.heightfield(nrows, ncols, heightsArr, scale);
+      if (!desc) return null;
+      desc = desc.setFriction(opts?.friction ?? 0.9);
+      return world.createCollider(desc, body);
+    } catch (e) {
+      console.warn("[PhysicsWorld] addStaticHeightfield failed", e);
+      return null;
+    }
+  }
+
+  /**
+   * Convenience: heightfield from our {@link HeightfieldGrid} (vertex dims).
+   * Converts width/depth vertices → Rapier nrows/ncols cells.
+   */
+  addHeightfieldGrid(
+    grid: {
+      width: number;
+      depth: number;
+      heights: Float32Array;
+      scale: { x: number; y: number; z: number };
+      origin?: { x: number; y: number; z: number };
+    },
+    opts?: { friction?: number },
+  ): RAPIER.Collider | null {
+    const nrows = Math.max(1, grid.depth - 1);
+    const ncols = Math.max(1, grid.width - 1);
+    return this.addStaticHeightfield(nrows, ncols, grid.heights, grid.scale, {
+      translation: grid.origin ?? { x: 0, y: 0, z: 0 },
+      friction: opts?.friction,
+    });
+  }
+
+  /**
    * Flat ground cuboid whose TOP face sits at `y`.
    * Danger Room / brawler / island fallback floors.
    */
@@ -195,10 +273,82 @@ export class PhysicsWorld {
    */
   createPlayerKcc(
     spawn: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
-    opts?: { radius?: number; halfHeight?: number; offset?: number },
+    opts?: {
+      radius?: number;
+      halfHeight?: number;
+      offset?: number;
+      stepOnMove?: boolean;
+    },
   ): CharacterCapsuleKcc | null {
     if (!this.world) return null;
     return CharacterCapsuleKcc.create(this, spawn, opts);
+  }
+
+  /**
+   * Closest Rapier ray hit. `dir` should be unit-length; hit point is
+   * origin + dir * toi. Prefer this over Three.js Raycaster for world queries
+   * (ground, LOS, harvest) so the same colliders the KCC uses are the SSOT.
+   */
+  castRay(
+    origin: { x: number; y: number; z: number },
+    dir: { x: number; y: number; z: number },
+    maxToi = 200,
+    opts?: { solid?: boolean },
+  ): {
+    toi: number;
+    x: number;
+    y: number;
+    z: number;
+    nx: number;
+    ny: number;
+    nz: number;
+  } | null {
+    const world = this.world;
+    if (!world) return null;
+    const ray = new RAPIER.Ray(origin, dir);
+    const hit = world.castRayAndGetNormal(ray, maxToi, opts?.solid !== false);
+    if (!hit) return null;
+    const p = ray.pointAt(hit.timeOfImpact);
+    const n = hit.normal;
+    return {
+      toi: hit.timeOfImpact,
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      nx: n.x,
+      ny: n.y,
+      nz: n.z,
+    };
+  }
+
+  /** Downward ground sample (metres). Null if nothing under the probe. */
+  heightAt(x: number, z: number, fromY = 400, maxToi = 800): number | null {
+    const hit = this.castRay({ x, y: fromY, z }, { x: 0, y: -1, z: 0 }, maxToi, {
+      solid: true,
+    });
+    return hit ? hit.y : null;
+  }
+
+  /**
+   * True when a chest-height segment from `from` to `to` is unblocked
+   * (or only grazes within `skin` of the destination).
+   */
+  lineOfSight(
+    from: { x: number; y: number; z: number },
+    to: { x: number; y: number; z: number },
+    skin = 0.45,
+  ): boolean {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const dz = to.z - from.z;
+    const len = Math.hypot(dx, dy, dz);
+    if (len < 0.05) return true;
+    const inv = 1 / len;
+    const hit = this.castRay(from, { x: dx * inv, y: dy * inv, z: dz * inv }, len, {
+      solid: true,
+    });
+    if (!hit) return true;
+    return hit.toi >= len - skin;
   }
 
   dispose(): void {
@@ -212,7 +362,7 @@ let initPromise: Promise<void> | null = null;
 
 /** Initialise the Rapier wasm runtime exactly once across all instances. */
 export function ensureRapier(): Promise<void> {
-  if (!initPromise) initPromise = RAPIER.init();
+  if (!initPromise) initPromise = RAPIER.init({});
   return initPromise;
 }
 

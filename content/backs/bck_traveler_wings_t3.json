@@ -1,0 +1,51 @@
+{
+  "id": "bck_traveler_wings_t3",
+  "itemId": "itm_back_traveler_wings_t3",
+  "runtimeId": "back_traveler_wings_t3",
+  "equipId": "equip:back:traveler_wings_t3",
+  "slot": "back",
+  "family": "wings",
+  "label": "Traveler's Wings III",
+  "effect": "T3 fire-wing wardrobe — longest glide / most lift",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Same Space flaps as T1 · best glide",
+  "domains": [
+    "mobility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/ride/wings/traveler_wings_variants.glb",
+    "isolate": "FireWings_Wardrobe Variant.002_8",
+    "author": "D:/Games/Models/gorilla_tag_new_wing_varients.glb",
+    "wingSpanM": 1.75,
+    "flightTier": 3
+  },
+  "passive": {
+    "aura": "haste",
+    "bonuses": {
+      "moveSpeed": 12
+    }
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Slash_07.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_traveler_wings_t3"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gameopen.vercel.app/schemas/back_def.schema.json",
+  "title": "BackSlotPrefab",
+  "type": "object",
+  "required": ["id", "itemId", "runtimeId", "slot", "useKind", "label", "status"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^bck_" },
+    "itemId": { "type": "string", "pattern": "^itm_back_" },
+    "runtimeId": { "type": "string", "pattern": "^back_" },
+    "equipId": { "type": "string" },
+    "slot": { "const": "back" },
+    "family": { "enum": ["wings", "stow", "cape", "toon", "pack"] },
+    "label": { "type": "string" },
+    "effect": { "type": "string" },
+    "useKind": { "enum": ["passive", "hotkey", "deploy"] },
+    "useKey": { "type": ["string", "null"] },
+    "useHint": { "type": "string" },
+    "domains": { "type": "array", "items": { "type": "string" } },
+    "status": { "enum": ["coded", "planned"] },
+    "passive": {
+      "type": "object",
+      "properties": {
+        "aura": { "type": "string" },
+        "bonuses": { "type": "object", "additionalProperties": { "type": "number" } }
+      }
+    },
+    "assets": { "type": "object" },
+    "icon": { "type": "object" },
+    "recipeId": { "type": ["string", "null"] },
+    "readiness": { "type": "object" }
+  }
+}

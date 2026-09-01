@@ -69,13 +69,17 @@ function gb(params?: Record<string, string>): string {
   return grokBuilderUrl(params);
 }
 
-/** All 25 tools in sprite-sheet (row-major) order — live Open launchers. */
+/**
+ * All 25 tools in sprite-sheet (row-major) order — live Open launchers.
+ * HARD RULE: every action must open a real surface that matches the label
+ * (mode / dock panel / HUD / external URL that exists in production).
+ */
 export const TOOLBOX_TOOLS: ToolDef[] = [
   {
     icon: "animator",
     label: "Animator",
-    hint: "Danger anim panel — clip overrides, gait blend, one-shots",
-    action: { kind: "danger-panel", id: "anim" },
+    hint: "Dressing Room Animations — clips, retiming, gait packs",
+    action: { kind: "dressing-panel", id: "anim" },
   },
   {
     icon: "skill-vfx-lab",
@@ -92,7 +96,7 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   {
     icon: "physics",
     label: "Physics",
-    hint: "Danger editor dock — physics feel, fire FX, colliders",
+    hint: "Danger Settings dock — physics feel, fire FX, colliders",
     action: { kind: "danger-panel", id: "editor" },
   },
   {
@@ -104,8 +108,8 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   {
     icon: "anim-test",
     label: "Anim Test",
-    hint: "Live animation debugger — mixer, tracks, retarget",
-    action: { kind: "danger-panel", id: "animdbg" },
+    hint: "Standalone Animation Editor — mixer, tracks, retarget lab",
+    action: { kind: "mode", mode: "anim" },
   },
   {
     icon: "gear-trial",
@@ -121,9 +125,9 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   },
   {
     icon: "ai-worker",
-    label: "AI Worker",
-    hint: "LED Mask AI companion surface",
-    action: { kind: "mode", mode: "ledmask" },
+    label: "AI Animator",
+    hint: "Chat-to-create animations — AI skeleton mover + clip worker",
+    action: { kind: "mode", mode: "anim-ai" },
   },
   {
     icon: "movement-pad",
@@ -158,7 +162,7 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   {
     icon: "animation-editor",
     label: "Animation Editor",
-    hint: "Dressing Room anim — clips, retiming, packs",
+    hint: "Dressing Room anim panel — clips, packs, labels",
     action: { kind: "dressing-panel", id: "anim" },
   },
   {
@@ -169,14 +173,14 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   },
   {
     icon: "draggable-dock",
-    label: "Draggable Dock",
-    hint: "Hierarchy dock — scene tree, select, frame",
+    label: "Hierarchy",
+    hint: "Hierarchy dock — scene tree, select, frame, rename",
     action: { kind: "dressing-panel", id: "hierarchy" },
   },
   {
     icon: "resizable-panel",
     label: "Dressing Room",
-    hint: "Full character dressing workspace",
+    hint: "Full character dressing workspace (/dressing)",
     action: { kind: "mode", mode: "editor" },
   },
   {
@@ -206,14 +210,14 @@ export const TOOLBOX_TOOLS: ToolDef[] = [
   {
     icon: "clip-library",
     label: "Clip Library",
-    hint: "Browse baked Bip001 / Mixamo clip library",
+    hint: "Dressing Room clip library — baked Bip001 / Mixamo clips",
     action: { kind: "dressing-panel", id: "anim" },
   },
   {
     icon: "asset-manager",
     label: "Asset Manager",
-    hint: "Import models & assets (Dressing Room)",
-    action: { kind: "mode", mode: "editor" },
+    hint: "Dressing Hierarchy — import models, props, weapons",
+    action: { kind: "dressing-panel", id: "hierarchy" },
   },
   {
     icon: "scriptable-skills",
@@ -480,9 +484,15 @@ export const CREATE_STACK_TOOLS: ToolDef[] = [
   {
     icon: "building-kit",
     label: "Pirate Lobby",
-    hint: "Fleet pirate-islands lobby mesh + open-world pad",
+    hint:
+      "Warlords opening + tutorial map (Chicken Gun pirate-islands) — client only, not GRUDOX/Explorer",
     stack: "create",
-    action: { kind: "external", url: gb({ mode: "pirate-lobby", panel: "agent" }) },
+    // Production SSOT: GrudgeBuilder WARLORDS_LOBBY_PATH — not Grok Builder invent mode
+    action: {
+      kind: "external",
+      url: "https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands",
+      newTab: true,
+    },
   },
   {
     icon: "physics",

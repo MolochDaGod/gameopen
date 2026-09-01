@@ -97,9 +97,11 @@ const hero = resolveAssetUrl("models/grudge/wk_warrior.glb", { cdnBase: cdn });
 
 ## 3. Grudge UUID / identity (uniform)
 
+**Full table (eras + asset uuid + bag ledger):** [FLEET_ERA_CODEX_UUID_SSOT.md](./FLEET_ERA_CODEX_UUID_SSOT.md) §5.
+
 | Kind | Prefix | Mint |
 |------|--------|------|
-| Character (DB) | `char_` | Postgres / D1 SSOT |
+| Character (DB) | `char_` / Railway uuid | Postgres SSOT |
 | Hero pack | `HERO-` | Fleet character API |
 | Equipment | `EQIP-` | Item system |
 | Item | `ITEM-` | Item system |
@@ -108,6 +110,7 @@ const hero = resolveAssetUrl("models/grudge/wk_warrior.glb", { cdnBase: cdn });
 | Zone | `zone_` | content / GRUDOX id |
 | Portal | `portal_` | seed portals |
 | Script | `scr_` | `newScriptId()` |
+| Asset file (D1) | sha1 of `r2Key` | asset registry — **not** character id |
 
 ```ts
 import {
@@ -182,6 +185,19 @@ Scripts are **JSON documents** + host-registered handlers:
 | quest-flag | grant-item, open-ui |
 
 `ScriptRunner` dispatches only registered `ScriptActionKind`s — **never** `eval`.
+
+### Location inventory · camp · lockpick (fleet bag SSOT)
+
+**One source of truth:** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md)
+
+| Rule | Detail |
+|------|--------|
+| Home island | **Safe** — never lockpick |
+| Camp deposit | Stays at camp for RTS until Send → home island bag |
+| Lockpickable | Dungeons, treasures, contested/enemy/conquered chests, foreign camps |
+| `open-ui` | `{ ui: "lockpick", zone, targetId, difficulty }` — refuse `home:*` |
+
+Code: `artifacts/animator/src/game/inventory/*` · skill `open-camp-location-inventory`.
 
 ---
 

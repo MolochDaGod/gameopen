@@ -1,19 +1,25 @@
 {
   "name": "Grudge Open",
   "short_name": "Grudge Open",
-  "description": "Grudge Studio combat sandbox — Danger Room, editors, multiplayer, and fleet characters.",
+  "description": "Steam-style fleet launcher — library, Danger Room, Mine-Loader Realms, Warlords handoff, installable desktop/mobile app. Shared Grudge ID + Railway characters.",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/?door=library",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-  "background_color": "#171a21",
+  "background_color": "#060a12",
   "theme_color": "#171a21",
   "lang": "en",
   "dir": "ltr",
   "categories": ["games", "entertainment"],
   "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/pwa-192.png",
       "sizes": "192x192",
@@ -33,9 +39,9 @@
       "purpose": "maskable"
     },
     {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon",
       "purpose": "any"
     }
   ],
@@ -45,31 +51,48 @@
       "sizes": "1200x630",
       "type": "image/jpeg",
       "form_factor": "wide",
-      "label": "Grudge Open hub"
+      "label": "Grudge Open library"
+    },
+    {
+      "src": "/rooms/library-danger-scene.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Danger Room combat"
     }
   ],
   "shortcuts": [
     {
+      "name": "Game Library",
+      "short_name": "Library",
+      "description": "Browse fleet games",
+      "url": "/?door=library",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "Danger Room",
       "short_name": "Danger",
-      "description": "Open the combat sandbox",
-      "url": "/danger",
+      "description": "Combat sandbox",
+      "url": "/?door=danger",
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Lobby",
-      "short_name": "Lobby",
-      "description": "Multiplayer rooms & community maps",
-      "url": "/lobby",
+      "name": "Account",
+      "short_name": "Account",
+      "description": "Characters · wallet · treaty",
+      "url": "/?door=account",
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Voxel Editor",
-      "short_name": "Editor",
-      "description": "Build and test maps",
-      "url": "/voxel",
+      "name": "Mine-Loader Realms",
+      "short_name": "Realms",
+      "description": "Multiplayer worlds",
+      "url": "/?door=library",
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192" }]
     }
   ],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
 }

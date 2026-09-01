@@ -17,7 +17,9 @@ export interface LocoBlendInput {
   idleId?: string;
   walkId?: string;
   runId?: string;
-  /** 0..1 locomotion intensity (idle -> walk -> run). */
+  /** Optional dedicated sprint clip (Heroes of Grudge / fleet bake). */
+  sprintId?: string;
+  /** 0..1 locomotion intensity (idle -> walk -> run -> sprint). */
   speed: number;
   /** When crouched, running is suppressed and the stride cadence slows. */
   crouch: boolean;
@@ -26,12 +28,16 @@ export interface LocoBlendInput {
   dt: number;
 }
 
-/** Speeds at which idle / walk / run reach full weight. */
-const IDLE_AT = 0.06;
-const WALK_AT = 0.45;
-const RUN_AT = 0.9;
+/**
+ * Speeds at which idle / walk / run / sprint reach full weight.
+ * Tuned for game feel: quick idle→walk commit, clean run, sprint only near top.
+ */
+const IDLE_AT = 0.04;
+const WALK_AT = 0.38;
+const RUN_AT = 0.72;
+const SPRINT_AT = 0.92;
 /** Weight easing rate (per second-ish, via 1-exp style clamp). */
-const WEIGHT_K = 14;
+const WEIGHT_K = 16;
 /** Below this weight a fading-out clip is considered gone and stopped. */
 const SILENCE_EPS = 0.001;
 
@@ -63,21 +69,29 @@ export class LocomotionBlend {
     let wIdle = 0;
     let wWalk = 0;
     let wRun = 0;
+    let wSprint = 0;
     if (input.active) {
       const s = THREE.MathUtils.clamp(input.speed, 0, 1);
+      const hasSprint = !!(input.sprintId && input.sprintId !== input.runId);
       if (s <= WALK_AT) {
         const t = THREE.MathUtils.clamp((s - IDLE_AT) / (WALK_AT - IDLE_AT), 0, 1);
         wIdle = 1 - t;
         wWalk = t;
-      } else {
+      } else if (!hasSprint || s <= RUN_AT) {
         const t = THREE.MathUtils.clamp((s - WALK_AT) / (RUN_AT - WALK_AT), 0, 1);
         wWalk = 1 - t;
         wRun = t;
+      } else {
+        // Run → sprint band (only when a distinct sprint clip is registered)
+        const t = THREE.MathUtils.clamp((s - RUN_AT) / (SPRINT_AT - RUN_AT), 0, 1);
+        wRun = 1 - t;
+        wSprint = t;
       }
       if (input.crouch) {
-        // No running while crouched: fold the run weight back into walk.
-        wWalk += wRun;
+        // No running/sprint while crouched: fold into walk.
+        wWalk += wRun + wSprint;
         wRun = 0;
+        wSprint = 0;
       }
     }
 
@@ -107,17 +121,22 @@ export class LocomotionBlend {
     request(input.idleId, wIdle, false);
     request(input.walkId, wWalk, true);
     request(input.runId, wRun, true);
+    request(input.sprintId, wSprint, true);
 
     // Advance the shared stride phase from the blended natural cadence of the
-    // active walk/run clips, scaled so steps quicken with speed.
+    // active walk/run/sprint clips, scaled so steps quicken with speed.
     const walkEntry = input.walkId ? this.entries.get(input.walkId) : undefined;
     const runEntry = input.runId ? this.entries.get(input.runId) : undefined;
+    const sprintEntry = input.sprintId ? this.entries.get(input.sprintId) : undefined;
     const walkRate = walkEntry ? 1 / Math.max(0.1, walkEntry.duration) : 0;
     const runRate = runEntry ? 1 / Math.max(0.1, runEntry.duration) : 0;
-    const denom = wWalk + wRun;
+    const sprintRate = sprintEntry ? 1 / Math.max(0.1, sprintEntry.duration) : 0;
+    const denom = wWalk + wRun + wSprint;
     const naturalRate =
-      denom > 0 ? (walkRate * wWalk + runRate * wRun) / denom : walkRate || runRate || 1;
-    const speedScale = (input.crouch ? 0.5 : 0.7) + 0.6 * THREE.MathUtils.clamp(input.speed, 0, 1);
+      denom > 0
+        ? (walkRate * wWalk + runRate * wRun + sprintRate * wSprint) / denom
+        : walkRate || runRate || sprintRate || 1;
+    const speedScale = (input.crouch ? 0.5 : 0.72) + 0.55 * THREE.MathUtils.clamp(input.speed, 0, 1);
     this.phase = (this.phase + naturalRate * speedScale * dt) % 1;
 
     // Ease every entry toward its target weight; drop ones that have faded out.

@@ -9,6 +9,7 @@ import type { FighterBias } from "../three/ai/FighterBrain";
 import type { GrudgeAccount, GrudgeCharacter } from "../lib/grudgeAuth";
 import { fetchCharacters, initFleetAuth } from "../lib/grudgeAuth";
 import { loadGrudoxCharacters } from "../lib/grudoxRoster";
+import { characterGameEra, isVoxelCharacter } from "../lib/characterPortrait";
 
 export type GameSessionSnapshot = {
   mode: GameModeDef;
@@ -55,6 +56,10 @@ function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
     if (!c?.id || seen.has(c.id)) continue;
     // Never treat procedural explorer ids as campfire heroes
     if (c.id === "explorer" || c.id.startsWith("unit-")) continue;
+    // Open play roster is Warlords Toon only — voxel seats stay on GRUDOX / Realms.
+    const era = characterGameEra(c);
+    if (era && era !== "warlords") continue;
+    if (isVoxelCharacter(c)) continue;
     seen.add(c.id);
     out.push(c);
   }
@@ -138,6 +143,10 @@ class GameSession {
   /**
    * Patch a roster character in-memory (e.g. after equipment/save write).
    * Keeps loadout apply + UI in sync without a full roster refetch.
+   *
+   * Note: Railway persist is **not** this method — use
+   * `scheduleCharacterLoadoutSave` / `saveCharacterSlotAppearance` for SSOT writes.
+   * This only updates session cache (plus local draft rows).
    */
   patchCharacter(id: string, patch: Partial<GrudgeCharacter>): void {
     if (!id) return;
@@ -151,6 +160,17 @@ class GameSession {
       saveData: patch.saveData
         ? { ...(prev.saveData || {}), ...patch.saveData }
         : prev.saveData,
+      // model3d / equipment patches merge shallowly for appearance preview
+      model3d:
+        patch.model3d && typeof patch.model3d === "object"
+          ? {
+              ...((prev.model3d as object) || {}),
+              ...(patch.model3d as object),
+            }
+          : prev.model3d,
+      equipment: patch.equipment !== undefined ? patch.equipment : prev.equipment,
+      avatarUrl:
+        patch.avatarUrl !== undefined ? patch.avatarUrl : prev.avatarUrl,
     };
     // Persist local drafts if this is a guest/local character
     if (id.startsWith("local-") || id.startsWith("draft-")) {
@@ -206,7 +226,9 @@ class GameSession {
         raceId: "western-kingdoms",
         classId: "warrior",
         level: 1,
-        config: { source: "open-guest-boot", catalogId: "race-western-kingdoms" },
+        gameEra: "warlords",
+        model3d: { renderPipeline: "rts_toon" },
+        config: { source: "open-guest-boot", catalogId: "race-western-kingdoms", gameEra: "warlords" },
       };
       this.upsertLocalCharacter(draft);
     }
@@ -222,7 +244,7 @@ class GameSession {
    * the Lobby character picker's reload action.
    */
   async refreshCharacters(): Promise<GrudgeCharacter[]> {
-    const characters = await fetchCharacters();
+    const characters = await fetchCharacters({ eras: ["warlords"] });
     this.characters = mergeRoster(characters);
     if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
       this.selectedCharacterId = this.characters[0]?.id ?? null;

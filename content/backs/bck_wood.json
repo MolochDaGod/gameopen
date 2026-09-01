@@ -1,0 +1,47 @@
+{
+  "id": "bck_wood",
+  "itemId": "itm_back_wood",
+  "runtimeId": "back_wood",
+  "equipId": "back:wood",
+  "slot": "back",
+  "family": "toon",
+  "label": "Carry Wood",
+  "effect": "Harvest yield while carrying wood",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Toon Xtra_wood",
+  "domains": [
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "toonMesh": "Xtra_wood"
+  },
+  "passive": {
+    "bonuses": {
+      "harvest": 10,
+      "craftSpeed": 4
+    }
+  },
+  "tags": [
+    "back",
+    "toon",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Slash_07.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_wood"
+}

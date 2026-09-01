@@ -1,6 +1,9 @@
 /**
  * Deploy https://vfxgrudge.puter.site/ sandbox effects into Open combat Vfx.
- * Alt+V/B/F/G/T/C + Alt+Space (Getsuga) — never steals bare combat keys.
+ * Alt+V/B/F/G/T/C only — never steals bare combat keys.
+ *
+ * Slash-wave / Getsuga projectiles are NOT sandbox hotkeys. They spawn only from
+ * melee weapon attack stages (see combat/meleeStrikeFx.ts + Studio.doComboHit).
  */
 
 import * as THREE from "three";
@@ -27,8 +30,9 @@ export type DeploySandboxOpts = {
  * sandbox binding (caller should fall through to normal combat keys).
  */
 export function sandboxEffectForKey(code: string, altHeld: boolean): VfxEffectId | null {
+  // Alt is mandatory for all sandbox combat VFX (Space alone = jump).
   if (!altHeld) return null;
-  const row = VFX_SANDBOX_SHORTCUTS.find((s) => s.code === code && s.alt);
+  const row = VFX_SANDBOX_SHORTCUTS.find((s) => s.code === code && s.alt === true);
   return row?.effectId ?? null;
 }
 
@@ -143,28 +147,12 @@ export function deploySandboxVfx(vfx: Vfx, effectId: VfxEffectId | string, opts:
       break;
     }
     case "getsuga_slash": {
-      // Getsuga (Alt+Space) — production slashblue mesh, crescent faces aim
-      const dir = aim.clone().sub(cast);
-      if (dir.lengthSq() < 1e-4) dir.copy(fwd);
-      dir.normalize();
-      const edge = opts.weaponEdge?.();
-      const muzzle = edge?.tip?.clone() ?? front;
-      const blue = SLASH_VARIANTS.slashblue;
-      vfx.getsugaSlash(muzzle, dir, {
-        variant: "slashblue",
-        color: blue.mid,
-        aim,
-        speed: 16,
-        range: 9,
-        contactRadius: 0.95,
-        followWeapon: opts.weaponEdge ?? undefined,
-        followDuration: 0.12,
-        onPathTick: (p) => hit?.(p),
-        onHit: (p) => {
-          vfx.impact(p, blue.mid, 0.9);
-          hit?.(p);
-        },
-      });
+      // Not a hotkey. Melee combat only — if catalog still references this id,
+      // fire a tiny diagnostic burst so we don't silently pretend it's combat.
+      console.warn(
+        "[vfxSandbox] getsuga_slash is melee-attack only (meleeStrikeFx) — not Alt+Space",
+      );
+      vfx.burst(front, 0x4aa8ff, 8, 1.2);
       break;
     }
     case "inferno": {

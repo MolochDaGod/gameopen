@@ -5,12 +5,24 @@
 | Era | Category id | Meaning |
 |-----|-------------|---------|
 | **Voxel** | `voxel` | VoxGrudge production, Mine-Loader Realms, DCQ, Z-Brawl, Worldbuilder, voxel arenas |
-| **Warlords** | `warlords` | Fantasy flagship, Genesis, islands, Danger Room, dressing, grudge6 |
+| **Warlords** | `warlords` | Fantasy flagship **client** (+ Open Danger/Dressing). Home, sectors, **pirate-islands lobby** live **inside Warlords** |
 | **Nexus** | `nexus` | Sci-fi / mech / metaverse / Carrier |
 | **Armada** | `armada` | Naval, Grim Armada, sail maps |
 | **Account** | `account` | SSO / characters / lobby shell only |
 
 Code SSOT: `artifacts/animator/src/game/gameLibrary.ts` (`ERA_CATEGORIES`, `GAME_LIBRARY`).
+
+### Warlords in-game only (`warlordsInGameOnly`)
+
+These are **cataloged for agents** but **hidden** from the Open library UI. Launch always goes to the Warlords client.
+
+| Id | Meaning |
+|----|---------|
+| `pirate-islands` | **Chicken Gun / PolygonPirates** mesh — Warlords **opening + tutorial** lobby. **Not GRUDOX. Not Explorer.** |
+| `water-island` | Home / water island destination |
+| `grudox-island` | Warlords home lobby island (legacy id) |
+
+Production lobby path: `https://client.grudge-studio.com/island-3d?mode=lobby&map=pirate-islands` · tutorial: `/tutorial`.
 
 ---
 

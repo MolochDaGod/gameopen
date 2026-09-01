@@ -414,7 +414,7 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
     {
       name: "set_test_world",
       description:
-        "Switch Danger live test map: danger-room (combat chamber), sailtest, forest-map, island-life, fabled-zone, bridge-town-docks, tropical-harvest (dry island harvest Q&A), pirate-village (orc loco + water band).",
+        "Switch Danger live test map. Truth: danger-room; sailtest/forest-map (CDN); tropical-harvest (tropical_island_small CDN, not dry SPA); pirate/shipwreck/arena (SPA); island-life/fabled/bridge are STAND-INS (sailtest/pirate pack) until meshes upload.",
       parameters: {
         type: "object",
         properties: {
@@ -447,7 +447,7 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
     {
       name: "equip_back_wing",
       description:
-        "Equip back-slot wing pack modes: back_wing_pack (stowed circle), back_parachute, back_glider, back_flight_rig, back_sail_deploy (ocean sail/waterboard). Pass null/empty to hide.",
+        "Equip the Back slot prefab (one equip = the effect). Coded: wing pack, parachute, glider, flight rig, sail, windsurf, shark fin, holy, traveler T1–T3, capes. Prefabs: content/backs/. Pass null/empty to hide.",
       parameters: {
         type: "object",
         properties: {
@@ -459,6 +459,15 @@ export function buildDangerTools(handlers: DangerHandlers): AiTool[] {
               "back_glider",
               "back_flight_rig",
               "back_sail_deploy",
+              "back_wind_surf",
+              "back_shark_fin",
+              "back_holy_wings",
+              "back_traveler_wings",
+              "back_traveler_wings_t2",
+              "back_traveler_wings_t3",
+              "back_cape",
+              "back_cape_long",
+              "back_cape_wide",
               "none",
             ],
           },

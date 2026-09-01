@@ -111,12 +111,43 @@ function strField(obj: Record<string, unknown>, keys: string[]): string | null {
   return null;
 }
 
+/** Railway `game_era` / `gameEra` on a character row (empty = Open default warlords). */
+export function characterGameEra(ch: GrudgeCharacter | null | undefined): string {
+  if (!ch) return "";
+  const cfg = (ch.config || {}) as Record<string, unknown>;
+  const save = (ch.saveData || {}) as Record<string, unknown>;
+  const raw =
+    ch.gameEra ||
+    (ch as { game_era?: string }).game_era ||
+    cfg.gameEra ||
+    cfg.era ||
+    save.gameEra ||
+    "";
+  return String(raw).toLowerCase().trim();
+}
+
+/**
+ * Open Danger / paperdoll / Back body: Warlords-era grudge6 Toon RTS kit only.
+ * Voxel / nexus / armada rows stay on their own hosts — never this mesh_ids path.
+ */
+export function isWarlordsToonPlayCharacter(
+  ch: GrudgeCharacter | null | undefined,
+): boolean {
+  if (!ch) return false;
+  const era = characterGameEra(ch);
+  if (era === "voxel" || era === "nexus" || era === "armada") return false;
+  if (isVoxelCharacter(ch)) return false;
+  return true;
+}
+
 /**
  * Detect voxel / cube-head / Explorer modular-head characters.
  * These must NOT show grudge6 race GLB portraits as if they were warlords meshes.
  */
 export function isVoxelCharacter(ch: GrudgeCharacter | null | undefined): boolean {
   if (!ch) return false;
+  const era = characterGameEra(ch);
+  if (era === "voxel") return true;
   const m3 = ch.model3d || (ch.config?.model3d as Record<string, unknown>) || {};
   const pipeline = String(
     (m3 as { renderPipeline?: string }).renderPipeline ||
@@ -226,6 +257,18 @@ function racePortraitPaths(paper: PaperRaceKey): string[] {
   return ["races/human.png"];
 }
 
+/**
+ * Mine-Loader Avatar Explorer race portraits (avatarbaseraces pack).
+ * Hosted on mine SPA public — not Open git. Prefer absolute edge URLs.
+ */
+const MINE_AVATAR_RACE_PORTRAIT_BASE =
+  "https://mine.grudge-studio.com/assets/models/avatarbaseraces";
+
+function voxelRacePortraitFile(paper: PaperRaceKey): string {
+  // Six races in Mine-Loader public/assets/models/avatarbaseraces/*-portrait.png
+  return `${paper}-portrait.png`;
+}
+
 function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
   const open = openBlob(ch);
   const out: string[] = [];
@@ -237,7 +280,17 @@ function voxelPortraitPaths(ch: GrudgeCharacter | null | undefined): string[] {
     "headSnapshot",
   ]);
   if (snap) out.push(snap);
-  // Only paths that exist under public/ — avoid console 404 spam
+
+  // Avatar Explorer race PNGs (SSOT: Mine-Loader avatarbaseraces)
+  const paper = fleetRaceToPaper(
+    ch?.raceId ||
+      (typeof open.race === "string" ? open.race : null) ||
+      (typeof ch?.config?.baseId === "string" ? String(ch.config.baseId) : null),
+  );
+  out.push(`${MINE_AVATAR_RACE_PORTRAIT_BASE}/${voxelRacePortraitFile(paper)}`);
+  out.push(`${MINE_AVATAR_RACE_PORTRAIT_BASE}/human-portrait.png`);
+
+  // Only local paths that exist under Open public/ — avoid console 404 spam
   for (const p of [
     "races/portraits/voxel-head.png",
     "races/voxel-head.png",

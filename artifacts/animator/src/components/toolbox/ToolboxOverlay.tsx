@@ -130,7 +130,19 @@ export function ToolboxOverlay({ onLaunch, onClose, music }: Props) {
                 data-stack={tool.stack || "tools"}
                 onClick={() => onLaunch(tool)}
               >
-                <img src={iconUrl(tool.icon)} alt="" draggable={false} loading="lazy" />
+                <img
+                  src={iconUrl(tool.icon)}
+                  alt=""
+                  draggable={false}
+                  loading="lazy"
+                  onError={(e) => {
+                    const el = e.currentTarget;
+                    if (el.dataset.fallback) return;
+                    el.dataset.fallback = "1";
+                    // Gold framed pack — always have animator as last resort
+                    el.src = iconUrl("animator");
+                  }}
+                />
                 <span className="toolbox-tool-label">{tool.label}</span>
               </button>
             ))}

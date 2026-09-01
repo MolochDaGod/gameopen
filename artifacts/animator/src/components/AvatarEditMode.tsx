@@ -293,6 +293,16 @@ export function AvatarEditMode({ onExit }: Props) {
           gameSession.patchCharacter(charId, { saveData });
         });
       });
+      // Dual-write appearance blob via character UUID PATCH (mesh/avatar law)
+      void import("../game/inventory/characterAppearance").then(
+        ({ saveCharacterSlotAppearance }) => {
+          void saveCharacterSlotAppearance({
+            characterId: charId,
+            voxelLook,
+            saveDataPatch: {},
+          });
+        },
+      );
     }
   }, [cfg, notice]);
 

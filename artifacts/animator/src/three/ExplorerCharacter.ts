@@ -405,6 +405,28 @@ export class ExplorerCharacter implements Avatar {
   setWeaponId(weaponId: string): void {
     this.weaponClass = (getWeapon(weaponId).animSet as WeaponClass) ?? "unarmed";
     this.animator?.setWeapon(this.weaponClass, false);
+    // Ensure grudge6 pack clips exist for this class (async; non-blocking)
+    void this.ensureFleetPackForWeapon(this.weaponClass);
+  }
+
+  /**
+   * Load Bip001 baked pack for a weapon class onto Explorer Mixamo bones.
+   * No-op when clips already present (Mixamo FBX or prior hydrate).
+   */
+  private async ensureFleetPackForWeapon(weapon: WeaponClass): Promise<void> {
+    const anim = this.animator;
+    if (!anim) return;
+    try {
+      const { hydrateWeaponClassPack } = await import("./explorer/fleetBakeHydrate");
+      await hydrateWeaponClassPack(
+        anim.character.skeletonRoot,
+        weapon,
+        (id, clip) => anim.registerCatalogClip(id, clip),
+        (id) => anim.hasCatalogClip(id),
+      );
+    } catch {
+      /* optional */
+    }
   }
 
   /**

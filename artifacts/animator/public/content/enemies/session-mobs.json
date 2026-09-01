@@ -1,0 +1,200 @@
+{
+  "version": "1.0.0",
+  "label": "Session enemy pack — R2 models/enemies/session",
+  "cdnBase": "https://assets.grudge-studio.com",
+  "r2Prefix": "models/enemies/session",
+  "humanHeightM": 1.8,
+  "note": "hollow_knight_vengefly (1).glb was identical hash to hollow_knight_vengefly.glb — one key only.",
+  "units": {
+    "blocker_broker": {
+      "id": "blocker_broker",
+      "name": "Blocker Broker",
+      "role": "camp_elite",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/blocker_broker.glb"
+      ],
+      "heightM": 2.0,
+      "hp": 160,
+      "damage": 22,
+      "speed": 2.2,
+      "atkReach": 2.0,
+      "aggroRange": 18,
+      "xp": 90,
+      "defaultStrategy": "tank-guard",
+      "tags": ["voxel", "melee", "elite", "session"],
+      "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "hollow_knight_vengefly": {
+      "id": "hollow_knight_vengefly",
+      "name": "Vengefly",
+      "role": "camp_swarm",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/hollow_knight_vengefly.glb"
+      ],
+      "heightM": 0.95,
+      "hp": 35,
+      "damage": 9,
+      "speed": 3.4,
+      "atkReach": 1.2,
+      "aggroRange": 14,
+      "xp": 18,
+      "defaultStrategy": "swarm-horde",
+      "tags": ["voxel", "flying", "swarm", "session"],
+      "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "mage_demon": {
+      "id": "mage_demon",
+      "name": "Mage Demon",
+      "role": "camp_elite",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/mage_demon.glb"
+      ],
+      "heightM": 2.0,
+      "hp": 130,
+      "damage": 20,
+      "speed": 2.4,
+      "atkReach": 8.0,
+      "aggroRange": 22,
+      "xp": 85,
+      "defaultStrategy": "ranged-skirmisher",
+      "tags": ["voxel", "magic", "ranged", "elite", "session"],
+      "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "lowpoly_rhino": {
+      "id": "lowpoly_rhino",
+      "name": "Rhino",
+      "role": "jungle_camp",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/lowpoly_rhino.glb"
+      ],
+      "heightM": 1.65,
+      "hp": 140,
+      "damage": 24,
+      "speed": 3.0,
+      "atkReach": 1.8,
+      "aggroRange": 16,
+      "xp": 75,
+      "defaultStrategy": "aggressive-rusher",
+      "tags": ["voxel", "beast", "charge", "session"],
+      "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "voodooist": {
+      "id": "voodooist",
+      "name": "Voodooist",
+      "role": "camp_elite",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/voodooist.glb"
+      ],
+      "heightM": 1.8,
+      "hp": 120,
+      "damage": 18,
+      "speed": 2.3,
+      "atkReach": 6.5,
+      "aggroRange": 20,
+      "xp": 80,
+      "defaultStrategy": "ranged-skirmisher",
+      "tags": ["voxel", "magic", "hex", "seed", "session"],
+      "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "zombie_redesigned": {
+      "id": "zombie_redesigned",
+      "name": "Redesigned Zombie",
+      "role": "camp_melee",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/zombie_redesigned.glb"
+      ],
+      "heightM": 1.8,
+      "hp": 90,
+      "damage": 14,
+      "speed": 1.8,
+      "atkReach": 1.6,
+      "aggroRange": 14,
+      "xp": 45,
+      "defaultStrategy": "swarm-horde",
+      "tags": ["voxel", "melee", "undead", "seed", "session"],
+      "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "stormbird_galarian": {
+      "id": "stormbird_galarian",
+      "name": "Galarian Stormbird",
+      "role": "camp_elite",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/warlords-era/animals/flying/stormbird_galarian.glb"
+      ],
+      "heightM": 2.2,
+      "hp": 140,
+      "damage": 22,
+      "speed": 3.6,
+      "atkReach": 2.2,
+      "aggroRange": 22,
+      "xp": 95,
+      "defaultStrategy": "aggressive-rusher",
+      "tags": ["warlords", "flying", "beast", "elite", "seed"],
+      "allowOn": ["voxel", "seed", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "violet_4_hn_creature": {
+      "id": "violet_4_hn_creature",
+      "name": "Violet HN Creature",
+      "role": "camp_melee",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/enemies/session/violet_4_hn_creature.glb"
+      ],
+      "heightM": 1.8,
+      "hp": 110,
+      "damage": 16,
+      "speed": 2.6,
+      "atkReach": 1.7,
+      "aggroRange": 15,
+      "xp": 60,
+      "defaultStrategy": "flanker",
+      "tags": ["voxel", "creature", "melee", "session"],
+      "allowOn": ["voxel", "brawl", "danger", "genesis", "forest", "sailtest"]
+    },
+    "anomaly_hatchling": {
+      "id": "anomaly_hatchling",
+      "name": "Anomaly Hatchling",
+      "role": "camp_melee",
+      "kind": "enemy",
+      "meshKeys": [
+        "models/warlords-era/enemies/anomaly_hatchling.glb"
+      ],
+      "heightM": 1.6,
+      "hp": 75,
+      "damage": 16,
+      "speed": 2.4,
+      "atkReach": 1.8,
+      "aggroRange": 12,
+      "xp": 50,
+      "defaultStrategy": "aggressive-rusher",
+      "tags": ["warlords", "beast", "worm", "dungeon", "hatchling", "anomaly", "seed"],
+      "allowOn": ["voxel", "seed", "dungeon", "brawl", "danger", "genesis", "forest", "sailtest"]
+    }
+  },
+  "camps": {
+    "session_voxel_pack": {
+      "label": "Session voxel mob pack",
+      "use": ["voxel", "brawl", "sailtest", "forest-map", "genesis"],
+      "buffOnClear": "red_rage",
+      "xpBonus": 50,
+      "spawns": [
+        { "unitId": "hollow_knight_vengefly", "count": 4, "radius": 9 },
+        { "unitId": "violet_4_hn_creature", "count": 2, "radius": 8 },
+        { "unitId": "lowpoly_rhino", "count": 1, "radius": 10 },
+        { "unitId": "mage_demon", "count": 1, "radius": 7 },
+        { "unitId": "voodooist", "count": 2, "radius": 12 },
+        { "unitId": "zombie_redesigned", "count": 3, "radius": 11 },
+        { "unitId": "stormbird_galarian", "count": 1, "radius": 16 },
+        { "unitId": "anomaly_hatchling", "count": 2, "radius": 7 },
+        { "unitId": "blocker_broker", "count": 1, "radius": 6 }
+      ]
+    }
+  }
+}

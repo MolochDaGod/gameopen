@@ -22,6 +22,8 @@ Games from the GRUDOX library **play inside Open**:
 
 ## 2D gore / impact assets
 
+### World billboards (hit sparks)
+
 CDN (always available):
 
 - `icons/pack/misc/Slash_07.png`
@@ -29,6 +31,22 @@ CDN (always available):
 - `icons/pack/misc/Flow.png`
 
 Used as camera-facing planes on hit (`goreImpact2d.ts`), tinted crimson for blood, warm white/additive for energy impact.
+
+### 2D Gore UI pack (HUD + popup numbers)
+
+**Source zip:** `ummorpgdev/assets/voxelhandoff/2D Gore UI (1).zip`  
+**Organized:** `public/ui/gore/{frames,buttons,gauges}/`  
+**CDN:** `https://assets.grudge-studio.com/ui/gore/` (manifest + 24 PNGs uploaded)
+
+| Layer | Path | Use |
+|-------|------|-----|
+| Frames | `ui/gore/frames/backbone.png`, `rib.png` | Chrome behind damage crit floats |
+| Buttons | `ui/gore/buttons/{flesh,zombie,backbone}*.png` | Horror HUD buttons |
+| Gauges | `ui/gore/gauges/*` | HP bar empty/full stack (flesh / zombie / gore) |
+
+Code: `lib/goreUiCatalog.ts` · CSS vars on `.gxo-root[data-gore-theme]` · `HtmlOverlaySystem` damage floats + blood.
+
+**Layer stack (bottom → top):** billboard impact → CSS2D blood → damage number → optional frame chrome → unit-frame gauges.
 
 ## Code map
 

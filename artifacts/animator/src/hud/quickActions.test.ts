@@ -25,10 +25,11 @@ describe("quickActions SSOT", () => {
     expect(QUICK_ACTIONS.primary.key).toBe("LMB");
   });
 
-  it("legend mentions focus + roll + parry", () => {
+  it("legend mentions focus + roll + parry + F1 help", () => {
     expect(COMBAT_KEY_LEGEND).toMatch(/focus/i);
     expect(COMBAT_KEY_LEGEND).toMatch(/C parry/i);
     expect(COMBAT_KEY_LEGEND).toMatch(/X roll/i);
+    expect(COMBAT_KEY_LEGEND).toMatch(/F1 help/i);
   });
 
   it("clampQuickSlots pads and sanitizes", () => {

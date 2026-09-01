@@ -13,9 +13,13 @@ import {
   type Difficulty,
   type PieceShape,
   type PropId,
+  type SeedOverworldPlay,
   type VoxelMap,
+  colorForBlockType,
 } from "./types";
 import { loadPropTemplate } from "./props";
+import { placeMapChunk } from "./mapChunks";
+import { townFallbackBlocks } from "./seedOverworldPlay";
 
 /** Half-extent of the editor grid (must match VoxelEditor's GRID). */
 const GRID = 24;
@@ -103,12 +107,32 @@ export class VoxelArena {
     await this.physics.init(0); // gravity 0 — the Controller drives vertical motion
     if (this.disposed || !this.physics.world) return;
 
-    this.buildBlocks(map.blocks ?? []);
-    this.buildFloorCollider();
+    const play = map.play?.kind === "seed-overworld" ? map.play : undefined;
+    if (play) {
+      this.buildSeedTerrain(play);
+      this.buildInstancedBlocks(map.blocks ?? []);
+      this.bakeOverlayCuboids(map.blocks ?? []);
+      this.buildHubFloor(play.hubRadius);
+      this.bounds = Math.max(
+        GRID,
+        Math.ceil(Math.max(Math.abs(play.minX), Math.abs(play.maxX), Math.abs(play.minZ), Math.abs(play.maxZ))) + 8,
+      );
+    } else if ((map.blocks?.length ?? 0) > 400) {
+      this.buildInstancedBlocks(map.blocks ?? []);
+      this.buildFloorCollider();
+      this.bounds = Math.max(GRID, this.extentFromBlocks(map.blocks ?? []));
+    } else {
+      this.buildBlocks(map.blocks ?? []);
+      this.buildFloorCollider();
+    }
+
     const propLoads = this.buildDeployables(map.deployables ?? [], !!map.dungeon);
     this.scene.add(this.group);
     this.buildCharacter();
     await Promise.all(propLoads);
+    if (play?.mapChunkId) {
+      await this.placeTownChunk(play);
+    }
   }
 
   // ── Geometry / material caches ──────────────────────────────────────────────
@@ -181,6 +205,155 @@ export class VoxelArena {
       this.occluders.push(mesh);
       this.bakeCollider(mesh);
     }
+  }
+
+  private extentFromBlocks(blocks: BlockData[]): number {
+    let m = 0;
+    for (const b of blocks) m = Math.max(m, Math.abs(b.x), Math.abs(b.z));
+    return m + 8;
+  }
+
+  /** Instanced cubes — seed / large maps cannot afford one Mesh per cell. */
+  private buildInstancedBlocks(blocks: BlockData[]): void {
+    const byKey = new Map<string, BlockData[]>();
+    for (const b of blocks) {
+      const k = `${b.shape}:${b.color}`;
+      const list = byKey.get(k);
+      if (list) list.push(b);
+      else byKey.set(k, [b]);
+    }
+    const dummy = new THREE.Object3D();
+    for (const [key, list] of byKey) {
+      const sep = key.indexOf(":");
+      const shape = key.slice(0, sep) as PieceShape;
+      const color = Number(key.slice(sep + 1));
+      const mesh = new THREE.InstancedMesh(
+        this.shapeGeo(shape || "block"),
+        this.material(color, shape === "ramp"),
+        list.length,
+      );
+      mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+      for (let i = 0; i < list.length; i++) {
+        const b = list[i]!;
+        dummy.position.set(b.x + 0.5, b.y + 0.5, b.z + 0.5);
+        dummy.rotation.set(0, (b.rotation * Math.PI) / 2, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
+      this.group.add(mesh);
+      this.occluders.push(mesh);
+    }
+  }
+
+  private bakeOverlayCuboids(blocks: BlockData[]): void {
+    for (const b of blocks) {
+      this.physics.addStaticCuboid(
+        { x: b.x + 0.5, y: b.y + 0.5, z: b.z + 0.5 },
+        { x: 0.5, y: 0.5, z: 0.5 },
+      );
+    }
+  }
+
+  /**
+   * Chunked seed wilderness: instanced surface cubes + Rapier heightfield
+   * (same height field the player walks — 1 block = 1 m).
+   */
+  private buildSeedTerrain(play: SeedOverworldPlay): void {
+    const { width, depth, minX, minZ, heights, types } = play;
+    if (width < 2 || depth < 2 || heights.length < width * depth) return;
+
+    const byType = new Map<string, { x: number; y: number; z: number }[]>();
+    for (let iz = 0; iz < depth; iz++) {
+      for (let ix = 0; ix < width; ix++) {
+        const i = iz * width + ix;
+        const h = heights[i] ?? 0;
+        if (h <= 0) continue;
+        const type = types[i] ?? "grass";
+        const list = byType.get(type);
+        const cell = { x: minX + ix, y: h - 1, z: minZ + iz };
+        if (list) list.push(cell);
+        else byType.set(type, [cell]);
+      }
+    }
+
+    const dummy = new THREE.Object3D();
+    const geo = this.shapeGeo("block");
+    for (const [type, list] of byType) {
+      const mesh = new THREE.InstancedMesh(geo, this.material(colorForBlockType(type)), list.length);
+      mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+      for (let i = 0; i < list.length; i++) {
+        const c = list[i]!;
+        dummy.position.set(c.x + 0.5, c.y + 0.5, c.z + 0.5);
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
+      mesh.name = `seedSurface:${type}`;
+      this.group.add(mesh);
+      this.occluders.push(mesh);
+    }
+
+    const hf = Float32Array.from(heights);
+    this.physics.addStaticHeightfield(depth - 1, width - 1, hf, {
+      x: width,
+      y: 1,
+      z: depth,
+    }, {
+      translation: {
+        x: minX + width / 2,
+        y: 0,
+        z: minZ + depth / 2,
+      },
+      friction: 0.9,
+    });
+  }
+
+  private buildHubFloor(hubRadius: number): void {
+    const half = Math.max(8, hubRadius);
+    this.physics.addStaticCuboid({ x: 0, y: -0.25, z: 0 }, { x: half, y: 0.25, z: half });
+  }
+
+  /** Real MAP_CHUNKS town at SI scale. Fallback = Amida farm blocks. */
+  private async placeTownChunk(play: SeedOverworldPlay): Promise<void> {
+    if (!play.mapChunkId) return;
+    const town = await placeMapChunk(play.mapChunkId, 0, 0, this.group);
+    if (this.disposed) return;
+    if (!town) {
+      this.buildInstancedBlocks(townFallbackBlocks());
+      this.bakeOverlayCuboids(townFallbackBlocks());
+      return;
+    }
+    this.occluders.push(town);
+    town.updateMatrixWorld(true);
+    const MAX_VERTS = 2000;
+    town.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const count = mesh.geometry.getAttribute("position")?.count ?? 0;
+      if (count > 0 && count <= MAX_VERTS) {
+        this.bakeCollider(mesh);
+        return;
+      }
+      mesh.updateWorldMatrix(true, false);
+      const box = new THREE.Box3().setFromObject(mesh);
+      if (box.isEmpty()) return;
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      this.physics.addStaticCuboid(
+        { x: center.x, y: center.y, z: center.z },
+        { x: Math.max(0.2, size.x / 2), y: Math.max(0.2, size.y / 2), z: Math.max(0.2, size.z / 2) },
+      );
+    });
   }
 
   /** Bake one mesh's world-space triangles into a static Rapier trimesh. */

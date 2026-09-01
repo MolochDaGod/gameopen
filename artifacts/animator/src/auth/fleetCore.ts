@@ -3,8 +3,10 @@
  * Aligned with gameopen (`artifacts/animator/src/lib/fleet.ts` + grudgeAuth).
  *
  * SSOT: Railway Postgres characters · Grudge ID JWT · same-origin /api rewrites.
- * See docs/GRUDOX_UNIFIED_SCHEME.md
+ * See docs/GRUDOX_UNIFIED_SCHEME.md · entryCatch anti-loop return URLs
  */
+
+import { safeReturnUrl } from "../lib/entryCatch";
 
 export const FLEET = {
   /** Grudge ID hub — login + /api/auth/* (id-gateway → Railway). */
@@ -19,8 +21,9 @@ export const FLEET = {
   /** Character / account SSOT Postgres (never auth endpoints; never api.grudge-studio.com). */
   gameData: "https://grudge-api-production-0d46.up.railway.app",
   characterStudio: "https://character.grudge-studio.com",
-  /** Canonical Open launcher + Animator suite (replaces threejs-rapier hub). */
+  /** Canonical Open launcher + Animator suite (SSOT host). */
   gameopen: "https://open.grudge-studio.com",
+  /** Preview alias only — never use as auth return / primary deep-link. */
   gameopenAlias: "https://gameopen.vercel.app",
   warlords: "https://grudgewarlords.com",
   grudox: "https://grudox.grudge-studio.com",
@@ -96,7 +99,7 @@ export const GRUDOX_GAMES: GrudoxGameDef[] = [
   {
     id: "gameopen",
     name: "Grudge Open",
-    blurb: "Fleet launcher + combat sandbox (gameopen.vercel.app)",
+    blurb: "Fleet launcher + combat sandbox (open.grudge-studio.com)",
     url: FLEET.gameopen,
     multiplayer: true,
   },
@@ -136,12 +139,15 @@ export const GRUDOX_GAMES: GrudoxGameDef[] = [
   },
 ];
 
-/** Prefer same-origin /api so Vercel rewrites skip CORS. */
+/**
+ * Prefer same-origin `/api/*` so Vercel rewrites skip CORS (browser).
+ * SSR / Node: absolute Railway URL — **must keep** the `/api` prefix
+ * (grudge-api 404s on `/health` and `/uuid/*` without it).
+ */
 export function apiUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
   if (typeof window === "undefined") {
-    if (p.startsWith("/api")) return `${FLEET.gameData}${p.replace(/^\/api/, "")}`;
-    return `${FLEET.gameData}${p.startsWith("/") ? p : `/${p}`}`;
+    return gameDataUrl(p);
   }
   if (p.startsWith("/api")) return p;
   return `/api${p}`;
@@ -288,7 +294,8 @@ function fleetBrandReturn(pathAndQuery?: string): string {
  * Always uses /login (sso-check is 404 on id-gateway).
  */
 export function buildFleetLoginUrl(returnTo?: string, opts?: { app?: string; force?: boolean }): string {
-  const redirect = returnTo || fleetBrandReturn();
+  // Anti-loop: sanitize return (never character.* / id.* as destination)
+  const redirect = safeReturnUrl(returnTo || fleetBrandReturn(), fleetBrandReturn());
   const q = new URLSearchParams({
     redirect_uri: redirect,
     redirect,

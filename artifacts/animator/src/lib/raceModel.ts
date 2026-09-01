@@ -141,11 +141,81 @@ export function resolveRaceModel(character: GrudgeCharacter | null | undefined):
 export function parseGrudgeAvatarId(
   id: string,
 ): { raceId: RaceId; presetId: PresetId } | null {
-  if (!id.startsWith("grudge:")) return null;
+  if (!id || !id.startsWith("grudge:")) return null;
   const [, race, preset] = id.split(":");
   if (!race || !(RACE_IDS as string[]).includes(race)) return null;
   const presetId = (PRESET_IDS as string[]).includes(preset)
     ? (preset as PresetId)
     : DEFAULT_PRESET_ID;
   return { raceId: race as RaceId, presetId };
+}
+
+/**
+ * HARD SSOT join for every UI string → Studio spawn id.
+ *
+ * Danger Room / lobby / account still emit legacy ids:
+ *   race-human, race-orc, grudge-western-kingdoms-warrior, human, explorer, …
+ * Studio only boots modular grudge6 for `grudge:<race>:<preset>`.
+ *
+ * Practice: **always** call this before setCharacter / spawnCharacter for
+ * warlords / Danger / dressing race heroes. Explorer/voxel stays "explorer".
+ */
+export function normalizeToGrudgeAvatarId(
+  id: string | null | undefined,
+  classHint?: string,
+): string {
+  const raw = String(id || "").trim();
+  if (!raw) return grudgeAvatarId(DEFAULT_RACE_ID, resolvePresetId(classHint || "warrior"));
+
+  // Voxel / Mine-Loader procedural body only
+  if (raw === "explorer" || raw.startsWith("avatar-") || raw === "led-monk") {
+    return "explorer";
+  }
+
+  // Canonical
+  const colon = parseGrudgeAvatarId(raw);
+  if (colon) return grudgeAvatarId(colon.raceId, colon.presetId);
+
+  // Hyphen form from characterHubLaunch: grudge-western-kingdoms-warrior
+  if (raw.startsWith("grudge-") || raw.startsWith("grudge_")) {
+    const rest = raw.replace(/^grudge[-_]/, "");
+    // Longest race match first (western-kingdoms before western)
+    const races = [...RACE_IDS].sort((a, b) => b.length - a.length);
+    for (const race of races) {
+      if (rest === race || rest.startsWith(`${race}-`) || rest.startsWith(`${race}_`)) {
+        const tail =
+          rest === race ? classHint || "warrior" : rest.slice(race.length + 1);
+        return grudgeAvatarId(race, resolvePresetId(tail || classHint || "warrior"));
+      }
+    }
+  }
+
+  // Catalog race-* (race-human → western-kingdoms warrior)
+  if (raw.startsWith("race-")) {
+    const slug = raw.slice(5);
+    return grudgeAvatarId(
+      resolveRaceId(slug === "high-elf" || slug === "highelf" ? "high-elves" : slug),
+      resolvePresetId(classHint || "warrior"),
+    );
+  }
+
+  // Bare race / class tokens
+  const asRace = resolveRaceId(raw);
+  if (raw && (RACE_ALIASES[norm(raw)] || (RACE_IDS as string[]).includes(norm(raw)))) {
+    return grudgeAvatarId(asRace, resolvePresetId(classHint || "warrior"));
+  }
+
+  // Fleet character-shaped "western-kingdoms" etc.
+  if (norm(raw).includes("kingdom") || norm(raw).includes("human") || norm(raw) === "wk") {
+    return grudgeAvatarId("western-kingdoms", resolvePresetId(classHint || "warrior"));
+  }
+
+  // Default: real grudge6, never silent explorer for unknown warlords ids
+  return grudgeAvatarId(DEFAULT_RACE_ID, resolvePresetId(classHint || "warrior"));
+}
+
+/** True when Studio must spawn GrudgeAvatar (loadGrudge6CombatRig), not Character/Explorer. */
+export function isGrudge6StudioId(id: string): boolean {
+  const n = normalizeToGrudgeAvatarId(id);
+  return n.startsWith("grudge:");
 }

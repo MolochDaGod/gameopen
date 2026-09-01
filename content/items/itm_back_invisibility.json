@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_invisibility",
+  "kind": "back",
+  "name": "Cloak Pack",
+  "description": "Stealth windows",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 0,
+  "tags": [
+    "back",
+    "hotkey",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_invisibility"
+}

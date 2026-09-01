@@ -215,6 +215,7 @@ export class VoxelEditor {
     rotation: 0,
   };
   private dungeon = false;
+  private playSpec: VoxelMap["play"];
 
   private keys = new Set<string>();
 
@@ -426,6 +427,7 @@ export class VoxelEditor {
     }
     this.blocks.clear();
     this.deployables.clear();
+    this.playSpec = undefined;
     this.startId = null;
     // Drop any selection so the gizmo can't dangle on a removed group.
     if (this.selectedId !== null) {
@@ -452,6 +454,7 @@ export class VoxelEditor {
       dungeon: this.dungeon,
       blocks: [...this.blocks.values()].map((b) => ({ ...b.data })),
       deployables: [...this.deployables.values()].map((d) => ({ ...d.data })),
+      play: this.playSpec,
     };
     // Ensure every block carries a canonical Voxel Realms type id.
     return ensureBlockTypes(raw) as VoxelMap;
@@ -461,6 +464,7 @@ export class VoxelEditor {
     this.clearAll();
     const normalized = ensureBlockTypes(map) as VoxelMap;
     this.dungeon = !!normalized.dungeon;
+    this.playSpec = normalized.play;
     for (const b of normalized.blocks ?? []) this.addBlock(b);
     for (const d of normalized.deployables ?? []) this.addDeployable(d);
     this.emitStats();

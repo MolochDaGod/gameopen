@@ -36,6 +36,13 @@ export type GrudgeCharacter = {
   classId?: string;
   level?: number;
   /**
+   * Railway `game_era` / `gameEra` — warlords | voxel | nexus | armada.
+   * Account shares login + bag across eras; roster is **per era** (4 slots each).
+   */
+  gameEra?: string;
+  /** Foundry / 4-slot index 0–3 when present. */
+  slotIndex?: number;
+  /**
    * Railway `characters.avatar_url` — preferred 2D portrait when set
    * (studio / AI / custom). See `characterPortrait.ts`.
    */
@@ -48,6 +55,15 @@ export type GrudgeCharacter = {
   saveData?: Record<string, unknown>;
   equipment?: Record<string, unknown> | null;
 };
+
+/** Production fleet eras on Railway Postgres (4 slots each). */
+export const FLEET_CHARACTER_ERAS = [
+  "warlords",
+  "voxel",
+  "nexus",
+  "armada",
+] as const;
+export type FleetCharacterEra = (typeof FLEET_CHARACTER_ERAS)[number];
 
 function paramFromSearchOrHash(name: string): string | null {
   if (typeof window === "undefined") return null;
@@ -107,12 +123,23 @@ function cleanHandoffParamsFromUrl(): void {
   }
 }
 
+/**
+ * Open session JWT — same key order as productionSystemsPattern.readProductionAuthToken.
+ * Prefer importing that for new AI/REST callers; keep this for auth bootstrap callers.
+ */
 export function getStoredToken(): string | null {
   try {
-    const open = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
-    if (open) return open;
+    // session first (tab-scoped SSO handoff), then local (persist)
+    const openSess = sessionStorage.getItem(TOKEN_KEY);
+    if (openSess) return openSess;
     for (const k of FLEET_TOKEN_KEYS) {
-      const t = localStorage.getItem(k) || sessionStorage.getItem(k);
+      const t = sessionStorage.getItem(k);
+      if (t) return t;
+    }
+    const openLocal = localStorage.getItem(TOKEN_KEY);
+    if (openLocal) return openLocal;
+    for (const k of FLEET_TOKEN_KEYS) {
+      const t = localStorage.getItem(k);
       if (t) return t;
     }
   } catch {
@@ -643,90 +670,136 @@ async function _revalidateAccountBackground(
   return getStoredAccount();
 }
 
-/** List characters for the signed-in Grudge account (Warlords / fleet SSOT). */
-export async function fetchCharacters(): Promise<GrudgeCharacter[]> {
+function mapApiCharacter(
+  c: Record<string, unknown>,
+  eraHint?: string,
+): GrudgeCharacter | null {
+  const id = String(c.id || c.uuid || c.characterId || "");
+  if (!id) return null;
+  const avatarUrl =
+    (typeof c.avatarUrl === "string" && c.avatarUrl) ||
+    (typeof c.avatar_url === "string" && c.avatar_url) ||
+    null;
+  const model3d =
+    (c.model3d as Record<string, unknown>) ||
+    (c.model_3d as Record<string, unknown>) ||
+    null;
+  const rawEra =
+    c.gameEra ||
+    c.game_era ||
+    c.era ||
+    (c.config as { gameEra?: string; era?: string } | undefined)?.gameEra ||
+    (c.config as { era?: string } | undefined)?.era ||
+    eraHint;
+  const gameEra = rawEra ? String(rawEra).toLowerCase() : eraHint;
+  const slotRaw = c.slotIndex ?? c.slot_index ?? c.slot;
+  const slotIndex =
+    typeof slotRaw === "number" && Number.isFinite(slotRaw)
+      ? Math.max(0, Math.min(3, Math.trunc(slotRaw)))
+      : undefined;
+  const config = (c.config as Record<string, unknown>) || undefined;
+  return {
+    id,
+    name: String(c.name || c.displayName || "Hero"),
+    raceId: c.raceId
+      ? String(c.raceId)
+      : c.race
+        ? String(c.race)
+        : c.race_id
+          ? String(c.race_id)
+          : undefined,
+    classId: c.classId
+      ? String(c.classId)
+      : c.class
+        ? String(c.class)
+        : c.class_id
+          ? String(c.class_id)
+          : undefined,
+    level: typeof c.level === "number" ? c.level : undefined,
+    gameEra,
+    slotIndex,
+    avatarUrl,
+    model3d,
+    config: config
+      ? { ...config, gameEra: config.gameEra || gameEra }
+      : gameEra
+        ? { gameEra }
+        : undefined,
+    saveData:
+      (c.saveData as Record<string, unknown>) ||
+      (c.save_data as Record<string, unknown>) ||
+      undefined,
+    equipment: (c.equipment as Record<string, unknown>) || null,
+  };
+}
+
+/**
+ * List characters for the signed-in Grudge account (Railway Postgres SSOT).
+ * Fetches **all production eras** (warlords + voxel + nexus + armada) and merges.
+ * Account bag/wallet are shared; playable roster stays per-era (4 slots each).
+ */
+export async function fetchCharacters(opts?: {
+  eras?: readonly string[];
+}): Promise<GrudgeCharacter[]> {
   // No JWT → skip network (avoids lobby 401/403 red noise for pure guests pre-boot)
   if (!getStoredToken()) return [];
 
-  const paths = [
-    // Warlords era is the fleet character roster used across Open / Realms / Island
-    "/api/characters?era=warlords",
-    // Bare /api/characters often 403 without era — only try after warlords fails non-auth
-  ];
-  for (const path of paths) {
-    try {
-      const r = await apiFetch(path, { method: "GET" });
-      if (r.status === 401 || r.status === 403) {
-        const token = getStoredToken();
-        if (token && !isTokenExpired(token)) {
-          // Try bridge once in case this is still a launch JWT
-          const bridged = await bridgeLaunchToken(token);
-          if (bridged) {
-            // Retry warlords with bridged token only
-            continue;
+  const eras = opts?.eras?.length
+    ? [...opts.eras]
+    : [...FLEET_CHARACTER_ERAS];
+
+  const byId = new Map<string, GrudgeCharacter>();
+  let authDead = false;
+
+  for (const era of eras) {
+    if (authDead) break;
+    const paths = [
+      `/api/characters?era=${encodeURIComponent(era)}`,
+      `/api/characters?gameEra=${encodeURIComponent(era)}`,
+    ];
+    for (const path of paths) {
+      try {
+        const r = await apiFetch(path, { method: "GET" });
+        if (r.status === 401 || r.status === 403) {
+          const token = getStoredToken();
+          if (token && !isTokenExpired(token)) {
+            const bridged = await bridgeLaunchToken(token);
+            if (bridged) {
+              // Retry this path once with bridged session
+              continue;
+            }
           }
+          setStoredToken(null);
+          authDead = true;
+          break;
         }
-        // Dead session — clear so ensureGuestSession can recover on next boot
-        setStoredToken(null);
-        return [];
+        if (!r.ok) continue;
+        const data = await r.json();
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.characters)
+            ? data.characters
+            : Array.isArray(data?.results)
+              ? data.results
+              : [];
+        for (const raw of list) {
+          const mapped = mapApiCharacter(
+            raw as Record<string, unknown>,
+            era,
+          );
+          if (!mapped) continue;
+          // Prefer first era hit; keep era tag
+          if (!byId.has(mapped.id)) byId.set(mapped.id, mapped);
+        }
+        // Successful era fetch — don't need alternate path for same era
+        break;
+      } catch {
+        /* try next path */
       }
-      if (!r.ok) continue;
-      const data = await r.json();
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.characters)
-          ? data.characters
-          : Array.isArray(data?.results)
-            ? data.results
-            : [];
-      const mapped = list
-        .map((c: Record<string, unknown>) => {
-          const avatarUrl =
-            (typeof c.avatarUrl === "string" && c.avatarUrl) ||
-            (typeof c.avatar_url === "string" && c.avatar_url) ||
-            null;
-          const model3d =
-            (c.model3d as Record<string, unknown>) ||
-            (c.model_3d as Record<string, unknown>) ||
-            null;
-          return {
-            id: String(c.id || c.uuid || c.characterId || ""),
-            name: String(c.name || c.displayName || "Hero"),
-            raceId: c.raceId
-              ? String(c.raceId)
-              : c.race
-                ? String(c.race)
-                : c.race_id
-                  ? String(c.race_id)
-                  : undefined,
-            classId: c.classId
-              ? String(c.classId)
-              : c.class
-                ? String(c.class)
-                : c.class_id
-                  ? String(c.class_id)
-                  : undefined,
-            level: typeof c.level === "number" ? c.level : undefined,
-            avatarUrl,
-            model3d,
-            config: (c.config as Record<string, unknown>) || undefined,
-            saveData:
-              (c.saveData as Record<string, unknown>) ||
-              (c.save_data as Record<string, unknown>) ||
-              undefined,
-            equipment:
-              (c.equipment as Record<string, unknown>) ||
-              null,
-          };
-        })
-        .filter((c: GrudgeCharacter) => c.id);
-      // 200 with empty list is valid (new guest / no Warlords slots yet)
-      return mapped;
-    } catch {
-      /* try next path */
     }
   }
-  return [];
+
+  return Array.from(byId.values());
 }
 
 /**
@@ -859,14 +932,14 @@ export async function initFleetAuth(): Promise<{
   // Always try characters when we have any token (guest or full).
   let characters: GrudgeCharacter[] = [];
   if (account || getStoredToken()) {
-    characters = await fetchCharacters();
+    characters = await fetchCharacters({ eras: ["warlords"] });
     // Token rejected mid-list → recover guest and retry once
     if (!characters.length && !getStoredToken() && !forceLogin) {
       account = (await ensureGuestSession()) || account;
-      if (getStoredToken()) characters = await fetchCharacters();
+      if (getStoredToken()) characters = await fetchCharacters({ eras: ["warlords"] });
     } else if (!characters.length && getStoredToken()) {
       account = (await fetchFleetAccount(true)) || account;
-      characters = await fetchCharacters();
+      characters = await fetchCharacters({ eras: ["warlords"] });
     }
     // Auto-create first Warlords hero so choose-survivor / rooms aren't empty.
     if (!characters.length && getStoredToken()) {
@@ -881,7 +954,7 @@ export async function initFleetAuth(): Promise<{
           gameEra: "warlords",
         });
         if (created.ok) {
-          characters = await fetchCharacters();
+          characters = await fetchCharacters({ eras: ["warlords"] });
           if (!characters.length) {
             characters = [
               {

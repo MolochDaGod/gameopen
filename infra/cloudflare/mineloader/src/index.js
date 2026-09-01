@@ -1,30 +1,50 @@
 /**
- * mineloader.grudge-studio.com → self-hosted Mine-Loader SPA (Vercel)
+ * mineloader.grudge-studio.com — Mine-Loader play / map / multiplayer edge
  *
- * Replaces production use of mine-loader.replit.app.
- * Origin hostname is the Vercel project for Voxel Realms / Mine-Loader SPA.
- * Override with env ORIGIN_HOST when binding secrets in wrangler.
+ * Production play host for:
+ *  - Multiplayer Realms (lobby + room worlds, Railway 1-replica authority)
+ *  - Self-hosted / deployed maps (scene + blockEdits promote path)
+ *  - Harvest mode — Minecraft-like gather/build (mode=harvest)
+ *  - DRC combat mode — Danger-Room-style combat with account explorer avatar
+ *    (mode=drc | mode=combat)
  *
- * Also forwards /api/* to the same origin so the SPA's same-origin API
- * (blocks, worlds, lobby, WS upgrade if Vercel+Worker allow) stays under
- * mineloader.grudge-studio.com. Long-lived WS for worlds should terminate
- * on Railway if needed — point SPA env to wss://…railway… when scaling.
+ * Origin: mine-loader.vercel.app (static SPA; vercel.json rewrites /api/*)
+ *   · /api/auth/*        → id.grudge-studio.com
+ *   · /api/characters*   → Railway grudge-api (account explorer avatars)
+ *   · /api/* (worlds…)   → mine-loader-api Railway (1 replica)
+ *
+ * Alias edge (same SPA): mine.grudge-studio.com (separate Worker `mine-loader-edge`)
+ *
+ * Never Replit. Never treat this host as player bag SSOT (bag stays grudge-api).
  */
-const DEFAULT_ORIGIN = "mineloader.vercel.app";
+const DEFAULT_ORIGIN = "mine-loader.vercel.app";
 
 export default {
   /**
    * @param {Request} request
-   * @param {{ ORIGIN_HOST?: string }} env
+   * @param {{ ORIGIN_HOST?: string, MINE_ORIGIN_HOST?: string }} env
    * @returns {Promise<Response>}
    */
   async fetch(request, env) {
-    const originHost = (env && env.ORIGIN_HOST) || DEFAULT_ORIGIN;
+    const originHost =
+      (env && (env.ORIGIN_HOST || env.MINE_ORIGIN_HOST)) || DEFAULT_ORIGIN;
     const url = new URL(request.url);
     url.protocol = "https:";
     url.hostname = originHost;
     url.port = "";
 
-    return fetch(new Request(url, request));
+    // Preserve method/body/headers; CF derives Host/SNI from URL hostname.
+    // WebSocket upgrades for world rooms terminate on Railway via SPA /api proxy.
+    const res = await fetch(new Request(url.toString(), request));
+
+    // Label play edge for debugging (does not affect CORS on Vercel origin).
+    const headers = new Headers(res.headers);
+    headers.set("X-Grudge-Edge", "mineloader.grudge-studio.com");
+    headers.set("X-Grudge-App", "mine-loader");
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers,
+    });
   },
 };

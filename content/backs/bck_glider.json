@@ -1,0 +1,46 @@
+{
+  "id": "bck_glider",
+  "itemId": "itm_back_glider",
+  "runtimeId": "back_glider",
+  "equipId": "equip:back:glider",
+  "slot": "back",
+  "family": "wings",
+  "label": "Glider",
+  "effect": "Horizontal glide from height",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Airborne Space — glide",
+  "domains": [
+    "mobility",
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/equipment/wing_animated.glb",
+    "mode": "glide"
+  },
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_glider"
+}

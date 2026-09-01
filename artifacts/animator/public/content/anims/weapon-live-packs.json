@@ -199,6 +199,18 @@
         "jump": "greatsword_samurai/gs_samurai_jump"
       },
       "liveWhenIncomplete": {
+        "note": "Same-origin open may lag R2; CDN + dual_wield keep skills live",
+        "idle": "greatsword_samurai/gs_samurai_idle_sword",
+        "walk": "greatsword_samurai/gs_samurai_walk_sword",
+        "run": "greatsword_samurai/gs_samurai_run_sword",
+        "attack": "greatsword_samurai/gs_samurai_combo_a",
+        "skill1": "greatsword_samurai/gs_samurai_combo_b",
+        "skill2": "greatsword_samurai/gs_samurai_dash_opener",
+        "skill3": "greatsword_samurai/gs_samurai_teleport_strike",
+        "skill4": "greatsword_samurai/gs_samurai_jump_sword",
+        "jump": "greatsword_samurai/gs_samurai_jump"
+      },
+      "liveWhenIncomplete": {
         "note": "samurai bake missing → 2h_melee GLB then polearm",
         "idle": "2h_melee/great-sword-idle",
         "walk": "2h_melee/great-sword-walk",
@@ -332,57 +344,66 @@
     "rifle": {
       "label": "Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "liveRoles": {
-        "idle": "rifle/idle",
-        "walk": "rifle/walk",
-        "run": "rifle/run",
-        "attack": "rifle/fire"
+        "idle": "rifle/rifle-aiming-idle",
+        "walk": "rifle/walking",
+        "run": "rifle/rifle-run",
+        "attack": "rifle/firing-rifle",
+        "skill1": "rifle/firing-rifle",
+        "skill2": "rifle/reloading",
+        "jump": "rifle/rifle-jump",
+        "hurt": "rifle/hit-reaction"
       },
       "liveWhenIncomplete": {
-        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack (unarmed punch not baked)",
-        "idle": "unarmed/fight_idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
-        "attack": "polearm/attack"
+        "note": "rifle Bip001 bake from gun/shooter packs — longbow soft fallback",
+        "idle": "rifle/rifle-aiming-idle",
+        "walk": "rifle/walking",
+        "run": "rifle/rifle-run",
+        "attack": "rifle/firing-rifle"
       },
       "mixamoSources": [
-        "anim/rifle/idle.fbx",
-        "anim/rifle/idle-aiming.fbx",
-        "anim/rifle/run-forward.fbx"
+        "anim/rifle/rifle-aiming-idle.fbx",
+        "anim/rifle/walking.fbx",
+        "anim/rifle/rifle-run.fbx",
+        "anim/rifle/firing-rifle.fbx",
+        "anim/rifle/reloading.fbx"
       ],
       "skillSlots": ["rifle_shot", "rifle_burst", "rifle_reload_bash", "rifle_snipe"]
     },
     "hunter-rifle": {
       "label": "Sniper Rifle",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "inheritsFrom": "rifle",
       "skillSlots": ["sniper_shot", "sniper_hold", "sniper_mark", "sniper_kill"]
     },
     "shotgun": {
       "label": "Shotgun",
       "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "fallbackPack": "longbow",
       "inheritsFrom": "rifle",
       "skillSlots": ["shotgun_blast", "shotgun_pump", "shotgun_slug", "shotgun_knockback"]
     },
     "pistol": {
       "label": "Pistol",
-      "animPack": "rifle",
-      "fallbackPack": "polearm",
+      "animPack": "pistol",
+      "fallbackPack": "rifle",
       "liveRoles": {
-        "idle": "rifle/idle",
-        "walk": "rifle/walk",
-        "run": "rifle/run",
-        "attack": "rifle/fire"
+        "idle": "pistol/idle",
+        "walk": "pistol/walk-forward",
+        "run": "pistol/run-forward",
+        "attack": "pistol/gunplay",
+        "skill1": "pistol/charged-pistol",
+        "skill2": "pistol/pistol-whip",
+        "jump": "pistol/pistol-jump"
       },
       "liveWhenIncomplete": {
-        "note": "rifle bake missing → unarmed idle + shared loco + polearm attack",
-        "idle": "unarmed/fight_idle",
-        "walk": "magic/Standing Walk Forward",
-        "run": "uploads_2026_06/locomotion/torch run forward",
-        "attack": "polearm/attack"
+        "note": "pistol Bip001 bake from handgun loco pack",
+        "idle": "pistol/idle",
+        "walk": "pistol/walk-forward",
+        "run": "pistol/run-forward",
+        "attack": "pistol/gunplay"
       },
       "mixamoSources": [
         "anim/pistol/idle.fbx",

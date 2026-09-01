@@ -7,7 +7,6 @@ import {
   type PresetId,
   type RaceId,
 } from "./index";
-import { loadBakedGrudgeCharacter } from "./bakedRoster";
 import { loadGrudge6CombatRig } from "./grudge6Runtime";
 import {
   resolveSkeletonSockets,
@@ -19,8 +18,11 @@ import {
   clipsFromRoleMap,
 } from "../ummorpg/animationDirector";
 import { FootGrounder, type GroundSampler } from "../anim/legIk";
+import { FLAT_FOOT_SAMPLER } from "../anim/terrainFootSample";
 import { TwoHandGrip, wantsTwoHandGrip } from "./twoHandGrip";
 import { SPRINT_LOCO_MULT, type AnimPack, asAnimPack } from "./anims";
+import { stripPositionTracks } from "../clipTracks";
+import { reGroundAfterAnimSample, findDeployModel } from "../characterDeploy";
 
 /**
  * An {@link Avatar} backed by the vendored Grudge character-kit: a normalized
@@ -299,9 +301,11 @@ export class GrudgeAvatar implements Avatar {
 
       this.root.userData.physicsLayer = "character";
       this.model.userData.physicsLayer = "character";
+      // Terrain plant: bind Bip001 legs; Studio swaps sampler to heightfield on outdoor maps.
+      this.configureFootIkForGrudge6();
       this.footGrounder.bind(this.model);
       this.footGrounder.setEnabled(true);
-      this.footGrounder.setGroundSampler(() => ({ y: 0, normal: null }));
+      this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
       this.twoHandGrip.bind(this.model, null);
 
       // AnimationDirector (uMMORPG Animator layers: loco + skill override)
@@ -320,20 +324,18 @@ export class GrudgeAvatar implements Avatar {
       );
       return;
     } catch (err) {
-      console.warn("[GrudgeAvatar] grudge6 skinned+baked path failed — static fallback", err);
+      // NEVER fall back to 30characters.glb static roster — that multi-hero bake
+      // is a known failed attempt and produces the debris / wrong-kit look.
+      console.error(
+        "[GrudgeAvatar] grudge6 combat rig FAILED — no 30characters fallback",
+        this.raceId,
+        this.presetId,
+        err,
+      );
+      throw err instanceof Error
+        ? err
+        : new Error(`[GrudgeAvatar] grudge6 load failed for ${this.raceId}/${this.presetId}`);
     }
-
-    // Fallback: textured static roster (visible but NO skeletal animation).
-    const group = await loadBakedGrudgeCharacter(this.raceId, this.presetId);
-    if (this.disposed) return;
-    this.model = group;
-    this.mixer = null;
-    this.holder.add(group);
-    group.updateMatrixWorld(true);
-    this.rightHand = findHandBone(group, "R");
-    this.leftHand = findHandBone(group, "L");
-    this.findArmBones(group);
-    this.holder.rotation.y = this.modelYaw;
   }
 
   clipNames(): string[] {
@@ -527,6 +529,8 @@ export class GrudgeAvatar implements Avatar {
     let clip = this.authoredClips.get(key);
     if (!clip) {
       let c = baseAction.getClip();
+      // Skill Lab slices must never reintroduce root-motion (flying pedestal).
+      c = stripPositionTracks(c);
       if (lo > 0.001 || hi < 0.999) {
         const fps = 30;
         const total = Math.max(1, Math.round(c.duration * fps));
@@ -535,6 +539,7 @@ export class GrudgeAvatar implements Avatar {
         c = THREE.AnimationUtils.subclip(c, `${name}__${s}_${e}`, s, e, fps);
       }
       if (this.mirror) c = this.mirrorClip(c);
+      c = stripPositionTracks(c);
       clip = c;
       this.authoredClips.set(key, c);
       // Bound the cache: slider-driven trims would otherwise accumulate a unique
@@ -563,6 +568,7 @@ export class GrudgeAvatar implements Avatar {
     this.oneShot = action;
     const dur = clip.duration / Math.max(0.1, this.overdrive);
     this.oneShotEnd = dur;
+    this.scheduleReGround(Math.min(0.2, dur * 0.12));
     return dur;
   }
 
@@ -722,6 +728,8 @@ export class GrudgeAvatar implements Avatar {
         this.oneShotEnd = d;
         // Mark local oneShot active so Studio busy checks work even if director owns mixer
         this.oneShot = this.actions.get(key) ?? null;
+        // Re-plant feet after the first sample (hip-float / IK ground SSOT)
+        this.scheduleReGround(Math.min(0.2, d * 0.12));
         return d;
       }
     }
@@ -741,7 +749,23 @@ export class GrudgeAvatar implements Avatar {
     this.oneShot = action;
     const dur = action.getClip().duration / Math.max(0.1, this.overdrive);
     this.oneShotEnd = dur;
+    this.scheduleReGround(Math.min(0.2, dur * 0.12));
     return dur;
+  }
+
+  /**
+   * After a one-shot lands, re-sit soles on model-local y=0 only.
+   * NEVER touch `this.root.position` world XZ/Y — Controller owns world feet
+   * (zeroing XZ was teleporting heroes to origin / through the floor).
+   */
+  private scheduleReGround(delayS: number): void {
+    const model = this.model ?? findDeployModel(this.root);
+    if (!model) return;
+    window.setTimeout(() => {
+      if (this.disposed || !this.model) return;
+      // Model-local ground only (under holder). World root stays with Controller.
+      reGroundAfterAnimSample(this.model, 0);
+    }, Math.max(16, delayS * 1000));
   }
 
   playRoleOnce(role: AnimRole, fade = 0.12): number {
@@ -796,7 +820,95 @@ export class GrudgeAvatar implements Avatar {
   }
 
   setGroundSampler(fn: GroundSampler | null): void {
-    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
+    this.footGrounder.setGroundSampler(fn ?? FLAT_FOOT_SAMPLER);
+  }
+
+  /**
+   * grudge6 foot plant limits — enough for hills/steps, never the old 0.55 m
+   * crouch-slam that made specialty packs look loose. Hosts rebind via
+   * {@link setGroundSampler} with `footSamplerFromHeightAt`.
+   */
+  private configureFootIkForGrudge6(): void {
+    this.footGrounder.maxLift = 0.28;
+    this.footGrounder.maxDrop = 0.22;
+    this.footGrounder.smooth = 16;
+    this.footGrounder.alignFeet = true;
+    this.footGrounder.maxTilt = 0.4;
+  }
+
+  /** Re-locate legs after equip / skeleton unify (Studio map open). */
+  rebindFootIk(): void {
+    if (!this.model) return;
+    this.configureFootIkForGrudge6();
+    this.footGrounder.bind(this.model);
+    this.footGrounder.setEnabled(true);
+  }
+
+  get footIkBound(): boolean {
+    return this.footGrounder.isBound;
+  }
+
+  /**
+   * Re-fill climb/swim/hurt/death/mantle after map switch (same controller session).
+   * Safe to call repeatedly — only loads missing roles.
+   */
+  async ensureFleetRolesReady(): Promise<void> {
+    if (!this.model || !this.mixer) return;
+    try {
+      const { hydrateFleetAvatarRoles, applyRoleAliases, missingFleetRoles } = await import(
+        "../fleetAvatarHydrate"
+      );
+      await hydrateFleetAvatarRoles({
+        model: this.model,
+        mixer: this.mixer,
+        logId: `map-ready:${this.raceId}`,
+        hasRole: (role) =>
+          this.roleClip.has(role as import("../types").AnimRole) || this.actions.has(role),
+        register: (role, clip) => {
+          if (!this.mixer) return;
+          const action = this.mixer.clipAction(clip);
+          this.actions.set(role, action);
+          this.actions.set(clip.name, action);
+          this.roleClip.set(role as import("../types").AnimRole, role);
+        },
+      });
+      applyRoleAliases(
+        (n) => this.actions.has(n),
+        (role, key) => {
+          if (this.roleClip.has(role as import("../types").AnimRole)) return;
+          if (this.actions.has(key)) this.roleClip.set(role as import("../types").AnimRole, key);
+        },
+        (r) => this.roleClip.has(r as import("../types").AnimRole),
+      );
+      // Rebuild director so new roles are playable
+      if (this.mixer) {
+        try {
+          const clipMap = new Map<string, THREE.AnimationClip>();
+          for (const [role, actionKey] of this.roleClip) {
+            const act = this.actions.get(actionKey) || this.actions.get(role);
+            if (act) clipMap.set(role, act.getClip());
+          }
+          for (const [name, act] of this.actions) {
+            if (!clipMap.has(name)) clipMap.set(name, act.getClip());
+          }
+          this.director = new AnimationDirector(
+            this.mixer,
+            clipsFromRoleMap(clipMap),
+            { fade: this.blendTime },
+          );
+        } catch {
+          /* keep existing director */
+        }
+      }
+      const miss = missingFleetRoles(
+        (r) => this.roleClip.has(r as import("../types").AnimRole) || this.actions.has(r),
+      );
+      if (miss.length) {
+        console.warn(`[GrudgeAvatar] map roles still missing: ${miss.join(",")}`);
+      }
+    } catch (e) {
+      console.warn("[GrudgeAvatar] ensureFleetRolesReady", e);
+    }
   }
 
   /**
@@ -812,6 +924,7 @@ export class GrudgeAvatar implements Avatar {
   update(dt: number): void {
     if (!this.mixer) return;
     // beginFrame → mixer → apply (foot plant; matches Character)
+    // Director owns mixer when present — never double-update (explodes bones).
     this.footGrounder.beginFrame();
     if (this.director) {
       this.director.update(dt);
@@ -825,6 +938,8 @@ export class GrudgeAvatar implements Avatar {
       this.twoHandGrip.apply(dt, { strength: this.isOneShotActive ? 0.65 : 0.4 });
     }
     this.updateColliderTransform();
+    // Foot IK plants soles on sampler (flat DR or outdoor heightfield).
+    // Controller owns root world Y — do not write root.position.y here.
     this.footGrounder.apply(dt);
     if (this.oneShot) {
       this.oneShotEnd -= dt;

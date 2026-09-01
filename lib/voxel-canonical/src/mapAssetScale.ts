@@ -60,7 +60,7 @@ export type AssetEvalResult = {
 
 /** Names that almost always mean full map / chunk / scene, not a hand prop. */
 const MAP_NAME_RE =
-  /castle|fortress|citadel|keep|palace|town|city|village|island|overworld|realm|world|map|chunk|level|dungeon|temple|cathedral|smeltery|skycastle|eltz|retreat|biome|landscape|terrain|stronghold|siege|grotto|cavern|canyon|koth|arena|bay|harbor|harbour|mountain|geonosis|dalaran|faction.?spawn|lobby.?spawn|awesome.?realm|dragon.?head|glowstone|pirat/i;
+  /castle|fortress|citadel|keep|palace|town|city|village|island|overworld|realm|world|map|chunk|level|dungeon|temple|cathedral|smeltery|skycastle|eltz|retreat|biome|landscape|terrain|stronghold|siege|grotto|cavern|canyon|koth|arena|bay|harbor|harbour|mountain|geonosis|dalaran|faction.?spawn|lobby.?spawn|awesome.?realm|dragon.?head|glowstone|pirat|wolf_street|street/i;
 
 /** Names that are small props even if large files (textures/atlases). */
 const PROP_NAME_RE =
@@ -76,7 +76,7 @@ const BOSS_NAME_RE =
 
 /** Creatures / AI brain units / jungle creeps. */
 const CREATURE_NAME_RE =
-  /zombie|skeleton|creep|animal|wolf|bear|chicken|cow|pig|horse|spider|slime|goblin|orc.?foe|jungle|unit|mob|enemy|ai.?brain|minion/i;
+  /zombie|skeleton|creep|animal|wolf(?!_street)|bear|chicken|cow|pig|horse|spider|slime|goblin|orc.?foe|jungle|unit|mob|enemy|ai.?brain|minion/i;
 
 /** SI height targets for converted GLB roles (metres). */
 export const VOXEL_ROLE_HEIGHT_M: Record<"character" | "boss" | "creature", number> = {
@@ -559,6 +559,24 @@ export const MAP_CHUNKS: Record<string, MapChunkDef> = {
     fileBytes: 53_900_000,
     tags: ["map", "ship", "pirate", "voxel-last30"],
     blurb: "Flagship structure — treat as map/structure, not prop height-fit.",
+  },
+  grudges_encampment: {
+    id: "grudges_encampment",
+    label: "Grudges Encament",
+    file: "models/lobby/chicken_gun_fruzer_encampment.glb",
+    role: "map_chunk",
+    tags: ["map", "encampment", "lobby", "voxel", "seed"],
+    blurb: "Fruzer Encament village — campfire play start at SI scale (same bake as the lobby backdrop).",
+  },
+  wolf_street: {
+    id: "wolf_street",
+    label: "Wolf Street",
+    file: "models/voxel/maps/wolf_street.glb",
+    role: "map_chunk",
+    fileBytes: 92_270_532,
+    tags: ["map", "street", "seed-prefab", "voxel"],
+    blurb:
+      "Seed prefab for voxel worlds with no unique map, or a duplicate mapChunkId. Never creature-fit (wolf ≠ wolf_street).",
   },
 };
 

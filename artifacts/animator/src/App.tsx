@@ -49,6 +49,13 @@ import type {
   GizmoMode,
   VoxelMap,
 } from "./three/voxel/types";
+import {
+  assembleEncampmentPlayMap,
+  assembleSeedOverworldMap,
+  assembleStartingLobbyPlayMap,
+} from "./three/voxel/seedOverworldPlay";
+import { assemblePortalDungeonMap } from "./three/voxel/portalDungeonPlay";
+import type { SeedWorldDeployment } from "./game/seedWorlds";
 import { colorForBlockType, DEFAULT_BLOCK_TYPE } from "@workspace/voxel-canonical";
 import { Crosshair } from "./components/Crosshair";
 import { CursorManager } from "./components/CursorManager";
@@ -57,6 +64,9 @@ import { heroFromLocation } from "./lib/annihilateHero";
 import {
   resolveDangerPlayable,
   applyDangerPlayableToStudio,
+  parseDangerEra,
+  persistDangerEra,
+  type DangerEraId,
   type DangerPlayableCharacter,
 } from "./lib/dangerPlayableCharacter";
 import {
@@ -65,11 +75,14 @@ import {
   setPointerLayer,
 } from "@workspace/grudge-physics";
 import { Hud } from "./components/Hud";
+import { HotkeyHelpOverlay } from "./components/HotkeyHelpOverlay";
 import { DangerStartScreen } from "./components/DangerStartScreen";
 import { HarvestProductionUI } from "./components/HarvestProductionUI";
 import { MechHud } from "./components/MechHud";
-import { loadoutRaceFromFleet } from "./components/EquipmentScreen";
+import { EquipmentScreen, loadoutRaceFromFleet } from "./components/EquipmentScreen";
 import { ExplorerCharacterPage } from "./components/characterPage";
+import { isWarlordsToonPlayCharacter } from "./lib/characterPortrait";
+
 import { GrudgeSystemsPanel } from "./components/GrudgeSystemsPanel";
 import { CampClaimFlagPanel } from "./components/CampClaimFlagPanel";
 import { CharacterBagPanel } from "./components/hud/CharacterBagPanel";
@@ -85,6 +98,9 @@ import {
   DEFAULT_BAG_SLOTS,
   useConsumableHotkey,
   equipFromBagWithLedger,
+  equipBackFromBagWithLedger,
+  unequipBackWithLedger,
+  saveCharacterSlotAppearance,
   getItemTemplate,
   UTILITY_HOTKEY_CODES,
   type ItemInstance,
@@ -125,7 +141,9 @@ import {
   buildGenesisHeroOptions,
   type GenesisHeroOption,
 } from "./lib/grudoxRoster";
-import { normalizeToGrudgeAvatarId, resolveRaceModel } from "./lib/raceModel";
+import { normalizeToGrudgeAvatarId, resolveRaceId, resolveRaceModel } from "./lib/raceModel";
+import { applyBackTemplateToMeshIds, RACE_ASSETS } from "./three/grudge";
+import { backEquipTagFromAnyId, backItemIdFromEquip } from "./three/equipment/backSlotItems";
 import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
@@ -161,6 +179,7 @@ import type { DockPanelDef, DockPanelMeta, ToolMenu } from "./components/dock";
 import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboard, Swords, BookOpen, Flag } from "lucide-react";
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
+
 import { resolveHudVars } from "./hud/hudConfig";
 import {
   type AppMode,
@@ -477,6 +496,10 @@ export default function App() {
   const [equipOpen, setEquipOpen] = useState(false);
   const equipOpenRef = useRef(false);
   equipOpenRef.current = equipOpen;
+  /** Live Toon kit mesh_ids for the Danger main panel. */
+  const [equipMeshIds, setEquipMeshIds] = useState<string[]>([]);
+  /** Voxel explorer uses ExplorerCharacterPage; Toon uses EquipmentScreen. */
+  const [isVoxelHero, setIsVoxelHero] = useState(false);
   /** Creator mainTabBar skillbook / systems panel (Character · Class · Wpn Skills · …). */
   const [systemsOpen, setSystemsOpen] = useState(false);
   const systemsOpenRef = useRef(false);
@@ -596,11 +619,31 @@ export default function App() {
       return next;
     });
   }, []);
-  // DRC combat default = grudge6 WK warrior (never Mixamo explorer for /danger boot)
+
+  const onDangerEra = useCallback(
+    (era: DangerEraId) => {
+      setDangerEra(era);
+      persistDangerEra(era);
+      const playable = resolveDangerPlayable({
+        fleetCharacter: gameSession.selectedCharacter(),
+        era,
+      });
+      setCharacterId(
+        playable.lane === "mixamo-explorer" ? "explorer" : playable.spec.studioAvatarId,
+      );
+      const studio = studioRef.current;
+      if (studio) applyDangerPlayableToStudio(studio, playable);
+    },
+    [gameSession],
+  );
+
+  // All-era Danger: warlords default Toon; voxel era boots Mixamo explorer.
+  const [dangerEra, setDangerEra] = useState<DangerEraId>(() => parseDangerEra());
   const [characterId, setCharacterId] = useState(
     () =>
-      // lazy import avoids circular weight at module eval — literal matches DRC_DEFAULT_AVATAR_ID
-      "grudge:western-kingdoms:warrior",
+      parseDangerEra() === "warlords"
+        ? "grudge:western-kingdoms:warrior"
+        : "explorer",
   );
   const activeCharacterId =
     gameSession.snapshot.selectedCharacterId || characterId || "local";
@@ -677,6 +720,102 @@ export default function App() {
     gameSession.snapshot.account?.grudgeId ||
     (gameSession.snapshot.account?.source === "guest" ? "guest" : null) ||
     "guest";
+
+  const persistPaperdollMeshes = useCallback(
+    (ids: string[]) => {
+      const ch = gameSession.selectedCharacter();
+      if (ch && !isWarlordsToonPlayCharacter(ch)) return;
+      setEquipMeshIds(ids);
+      studioRef.current?.setEquipmentMeshIds(ids);
+      const bag = loadCharacterBag(activeCharacterId);
+      const tag = ids.find((m) => /^equip:back:/i.test(m)) ?? null;
+      const match = tag
+        ? bag.slots.find(
+            (s) => s.item && backEquipTagFromAnyId(s.item.templateId) === tag,
+          )?.item ?? null
+        : null;
+      if (match) bag.wornBack = match;
+      else if (!tag) bag.wornBack = null;
+      else if (
+        bag.wornBack &&
+        backEquipTagFromAnyId(bag.wornBack.templateId) !== tag
+      ) {
+        bag.wornBack = null;
+      }
+      saveCharacterBag(bag);
+      const back = match
+        ? match
+        : tag
+          ? {
+              templateId: `itm_${backItemIdFromEquip(tag) || "back"}`,
+              instanceId: bag.wornBack?.instanceId || `mesh:${tag}`,
+              qty: 1,
+            }
+          : null;
+      if (activeCharacterId && !activeCharacterId.startsWith("local")) {
+        void saveCharacterSlotAppearance({
+          characterId: activeCharacterId,
+          bag,
+          back,
+          meshIds: ids,
+        });
+      }
+    },
+    [activeCharacterId],
+  );
+
+  const handleEquipBack = useCallback(
+    async (bagIndex: number, item: ItemInstance) => {
+      const ch = gameSession.selectedCharacter();
+      if (ch && !isWarlordsToonPlayCharacter(ch)) {
+        studioRef.current?.flashMessage?.(
+          "Back equips on Warlords Toon RTS kit only",
+          1.8,
+        );
+        return;
+      }
+      const race = resolveRaceId(ch?.raceId);
+      const next = applyBackTemplateToMeshIds(race, equipMeshIds, item.templateId);
+      const res = await equipBackFromBagWithLedger({
+        characterId: activeCharacterId,
+        bagIndex,
+        accountId: accountIdForBag,
+        meshIds: next,
+      });
+      if (!res.ok) {
+        studioRef.current?.flashMessage?.(res.reason || "Cannot equip back", 1.6);
+        return res.bag;
+      }
+      setEquipMeshIds(next);
+      studioRef.current?.setEquipmentMeshIds(next);
+      refreshBagMeta();
+      const name = getItemTemplate(item.templateId).name;
+      studioRef.current?.flashMessage?.(
+        `Equipped ${name}${res.ledgered ? " · ledger Back" : ""}`,
+        1.5,
+      );
+      return res.bag;
+    },
+    [activeCharacterId, accountIdForBag, equipMeshIds, refreshBagMeta],
+  );
+
+  const handleUnequipBack = useCallback(
+    async (item: ItemInstance) => {
+      const race = resolveRaceId(gameSession.selectedCharacter()?.raceId);
+      const next = applyBackTemplateToMeshIds(race, equipMeshIds, null);
+      const res = await unequipBackWithLedger({
+        characterId: activeCharacterId,
+        accountId: accountIdForBag,
+        item,
+        meshIds: next,
+      });
+      setEquipMeshIds(next);
+      studioRef.current?.setEquipmentMeshIds(next);
+      refreshBagMeta();
+      return res.bag;
+    },
+    [activeCharacterId, accountIdForBag, equipMeshIds, refreshBagMeta],
+  );
 
   const refreshDeposit = useCallback(() => {
     const probe = studioRef.current?.getDepositProbe?.() ?? {
@@ -789,18 +928,22 @@ export default function App() {
       void Promise.all([
         import("./lib/characterLoadout"),
         import("./lib/characterEquipmentMesh"),
-        import("./lib/characterPortrait"),
       ]).then(
         ([
           { loadoutFromCharacter },
           { resolveCharacterEquipmentVisual },
-          { isVoxelCharacter },
         ]) => {
           const loadout = loadoutFromCharacter(ch);
           // Explorer cube body ONLY for true voxel/Mine-Loader characters.
           // Stale saveData.open.avatarId:"explorer" from Avatar Edit must NOT
           // override grudge6 / RTS_TOON warlords heroes (mesh+atlas+Bip001 packs).
-          const preferExplorer = isVoxelCharacter(ch);
+          if (!isWarlordsToonPlayCharacter(ch)) {
+            // Voxel / other-era rows do not drive Open Danger Toon body or Back mesh_ids.
+            setIsVoxelHero(false);
+            return;
+          }
+          const preferExplorer = false;
+          setIsVoxelHero(preferExplorer);
           const avatarId = preferExplorer
             ? "explorer"
             : raceAvatar.startsWith("grudge:")
@@ -811,6 +954,8 @@ export default function App() {
           setCharacterId((prev) => (prev === avatarId ? prev : avatarId));
           // Resolve mesh_ids (equipment bag / gear preset / class default) then spawn
           void resolveCharacterEquipmentVisual(ch).then((vis) => {
+            if (!preferExplorer) setEquipMeshIds(vis.meshIds);
+            else setEquipMeshIds([]);
             const studio = studioRef.current;
             if (!studio) {
               // Studio not mounted yet — characterId/weapon state still updated;
@@ -898,6 +1043,8 @@ export default function App() {
   const [dockOpen, setDockOpen] = useState(false);
   /** In-play test map picker (TEST_WORLDS). */
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  /** F1 / ? full keyboard guide */
+  const [hotkeyHelpOpen, setHotkeyHelpOpen] = useState(false);
   const [sound, setSound] = useState<SoundSettings>(() => loadSound());
   /** CPT RAC + radio — boots on mount; first gesture unlocks (controll parity). */
   const { panelProps: djPanelProps } = useAppMusic(sound);
@@ -939,6 +1086,7 @@ export default function App() {
   const [dungeon, setDungeon] = useState(false);
   /** The map handed to the play session, restored into the editor on exit. */
   const playMapRef = useRef<VoxelMap | null>(null);
+  const playReturnModeRef = useRef<"voxel" | "characters">("voxel");
   // A gallery map queued to load when the voxel editor next mounts.
   const pendingMapRef = useRef<VoxelMap | null>(null);
   // A gallery scene queued to load when the Scene Editor next mounts.
@@ -1085,8 +1233,8 @@ export default function App() {
     void import("./lib/productionSystemsPattern").then(({ warmupProductionSurface }) => {
       void warmupProductionSurface("danger", {
         prefetchMeshes: [
-          "models/grudge6/races/WK_Characters.fbx",
-          "models/grudge6/races/ELF_Characters.fbx",
+          RACE_ASSETS["western-kingdoms"].modelUrl,
+          RACE_ASSETS["high-elves"].modelUrl,
         ],
       }).then((r) => {
         if (cancelled) return;
@@ -1118,13 +1266,16 @@ export default function App() {
     try {
       setWebglError(false);
       setWebglErrorDetail("");
-      // Playable hero SSOT: URL (ARE / annihilate) → fleet selected → default grudge6.
-      // Never boot Explorer Mixamo FBX for production danger (Vercel strips FBX).
+      // Playable hero SSOT: era + URL + fleet. Voxel → Mixamo explorer; Warlords → Toon kit.
       const playable: DangerPlayableCharacter = resolveDangerPlayable({
         fleetCharacter: gameSession.selectedCharacter(),
+        era: dangerEra,
       });
       const spec = playable.spec;
-      const bootId = spec.studioAvatarId ?? characterId;
+      const bootId =
+        playable.lane === "mixamo-explorer"
+          ? "explorer"
+          : spec.studioAvatarId ?? characterId;
       const bootWeapon =
         spec.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
 
@@ -1200,6 +1351,9 @@ export default function App() {
         const res = applyDeathBagDrop(charId);
         studio?.flashMessage?.(res.message, 2.2);
         refreshBagMeta();
+        persistPaperdollMeshes(
+          applyBackTemplateToMeshIds(resolveRaceId(gameSession.selectedCharacter()?.raceId), equipMeshIds, null),
+        );
       };
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
       refreshAnim();
@@ -1221,7 +1375,7 @@ export default function App() {
     if (mode !== "play" || !mountRef.current) return;
     const map = playMapRef.current;
     if (!map) {
-      setMode("voxel");
+      setMode(playReturnModeRef.current);
       return;
     }
     // Same ENTER gate + pointer-lock flow as Danger Room.
@@ -1236,7 +1390,11 @@ export default function App() {
       studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
       studio.onCharacterLoaded = () => {
         refreshAnim();
-        void studioRef.current?.enterArena(map);
+        if (map.play?.kind === "seed-overworld") {
+          void studioRef.current?.enterSeedOverworld(map);
+        } else {
+          void studioRef.current?.enterArena(map);
+        }
         setHelpersLoad((s) =>
           s.visible ? { ...s, progress: Math.max(s.progress ?? 0, 0.85), label: "CHARACTER READY" } : s,
         );
@@ -1258,6 +1416,9 @@ export default function App() {
         const res = applyDeathBagDrop(charId);
         studio?.flashMessage?.(res.message, 2.2);
         refreshBagMeta();
+        persistPaperdollMeshes(
+          applyBackTemplateToMeshIds(resolveRaceId(gameSession.selectedCharacter()?.raceId), equipMeshIds, null),
+        );
       };
       applyFleetLoadoutRef.current();
       refreshAnim();
@@ -1349,25 +1510,44 @@ export default function App() {
   useEffect(() => {
     if (mode !== "danger") return;
     const onKey = (e: KeyboardEvent) => {
-      // Esc closes loadout / systems / claim / bag overlays even while inputs are focused.
-      if (
-        e.code === "Escape" &&
-        (equipOpenRef.current ||
+      // Esc closes help first, then loadout / systems / claim / bag overlays.
+      if (e.code === "Escape") {
+        if (hotkeyHelpOpen) {
+          setHotkeyHelpOpen(false);
+          return;
+        }
+        if (
+          equipOpenRef.current ||
           systemsOpenRef.current ||
           claimFlagOpenRef.current ||
           bagOpenRef.current ||
-          harvestUiOpenRef.current)
-      ) {
-        setEquipOpen(false);
-        setSystemsOpen(false);
-        setClaimFlagOpen(false);
-        setBagOpen(false);
-        setHarvestUiOpen(false);
-        return;
+          harvestUiOpenRef.current
+        ) {
+          setEquipOpen(false);
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          setBagOpen(false);
+          setHarvestUiOpen(false);
+          return;
+        }
       }
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
       if (e.repeat) return;
+      // F1 or ? — full controls guide (free mouse for reading)
+      if (e.code === "F1" || (e.key === "?" && !e.ctrlKey && !e.metaKey)) {
+        e.preventDefault();
+        setHotkeyHelpOpen((v) => {
+          const next = !v;
+          if (next) {
+            document.exitPointerLock?.();
+            studioRef.current?.setFreeMouseMode?.(true);
+            studioRef.current?.flashMessage?.("CONTROLS · F1 / Esc close", 1.4);
+          }
+          return next;
+        });
+        return;
+      }
       if (e.code === "KeyI") {
         e.preventDefault();
         // Main Panel (character sheet) — Equipment default; bag via Inventory tab
@@ -1506,30 +1686,48 @@ export default function App() {
     applyFreeMouse,
     dangerDock,
     tryUseUtilityHotkey,
+    hotkeyHelpOpen,
   ]);
 
   // Play/test mode: combat keys + lock-on only (no editor/admin/clips panels).
   useEffect(() => {
     if (mode !== "play") return;
     const onKey = (e: KeyboardEvent) => {
-      if (
-        e.code === "Escape" &&
-        (equipOpenRef.current ||
+      if (e.code === "Escape") {
+        if (hotkeyHelpOpen) {
+          setHotkeyHelpOpen(false);
+          return;
+        }
+        if (
+          equipOpenRef.current ||
           systemsOpenRef.current ||
           claimFlagOpenRef.current ||
           bagOpenRef.current ||
-          harvestUiOpenRef.current)
-      ) {
-        setEquipOpen(false);
-        setSystemsOpen(false);
-        setClaimFlagOpen(false);
-        setBagOpen(false);
-        setHarvestUiOpen(false);
-        return;
+          harvestUiOpenRef.current
+        ) {
+          setEquipOpen(false);
+          setSystemsOpen(false);
+          setClaimFlagOpen(false);
+          setBagOpen(false);
+          setHarvestUiOpen(false);
+          return;
+        }
       }
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
       if (e.repeat) return;
+      if (e.code === "F1" || (e.key === "?" && !e.ctrlKey && !e.metaKey)) {
+        e.preventDefault();
+        setHotkeyHelpOpen((v) => {
+          const next = !v;
+          if (next) {
+            document.exitPointerLock?.();
+            studioRef.current?.setFreeMouseMode?.(true);
+          }
+          return next;
+        });
+        return;
+      }
       if (e.code === "KeyI") {
         e.preventDefault();
         if (systemsOpenRef.current && systemsTab === "tabEquipment") {
@@ -1618,7 +1816,7 @@ export default function App() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse, tryUseUtilityHotkey]);
+  }, [mode, toggleSystems, toggleClaimFlag, applyFreeMouse, tryUseUtilityHotkey, hotkeyHelpOpen]);
 
   // Touch devices: tell the engine to skip pointer-lock-on-tap so the on-screen
   // joystick/look-pad own input. Re-applies whenever the breakpoint flips.
@@ -1636,8 +1834,33 @@ export default function App() {
   }, []);
 
   const onCharacter = useCallback((id: string) => {
-    setCharacterId(id);
-    studioRef.current?.setCharacter(id);
+    // Keep lab specials + Heroes multipacks as-is; normalize race-* / bare
+    // race tokens → grudge:race:preset so modular kits always spawn GrudgeAvatar.
+    const keepRaw =
+      id === "explorer" ||
+      id === "led-monk" ||
+      id === "archmage" ||
+      id === "soulbinder" ||
+      id === "centurion" ||
+      id === "gunslinger" ||
+      id === "karate-boss" ||
+      id === "orc" ||
+      id === "sanji" ||
+      id === "tera-kasi" ||
+      id.startsWith("avatar-") ||
+      id.startsWith("grudge:") ||
+      // Heroes of Grudge multipack GLBs (models/grudge/*) — Character path
+      (id.startsWith("grudge-") && !id.startsWith("grudge:"));
+    if (keepRaw) {
+      setCharacterId(id);
+      studioRef.current?.setCharacter(id);
+      return;
+    }
+    void import("./lib/raceModel").then(({ normalizeToGrudgeAvatarId }) => {
+      const normalized = normalizeToGrudgeAvatarId(id);
+      setCharacterId(normalized);
+      studioRef.current?.setCharacter(normalized);
+    });
   }, []);
 
   const onWeapon = useCallback((id: WeaponId) => {
@@ -2030,15 +2253,28 @@ export default function App() {
     if (!ed) return;
     const map = ed.serialize();
     if (!map.deployables.some((d) => d.kind === "start")) return;
+    playReturnModeRef.current = "voxel";
     playMapRef.current = map;
     setMode("play");
   }, []);
 
   // Leave the play session and return to the editor with the map intact.
   const onExitPlay = useCallback(() => {
-    cameFromPlayRef.current = true;
-    setMode("voxel");
+    cameFromPlayRef.current = playReturnModeRef.current === "voxel";
+    setMode(playReturnModeRef.current);
   }, []);
+
+  const onPlayVoxelStart = useCallback(
+    (hero: { id: string; baseId?: string }, kind: "encampment" | "starting-lobby") => {
+      gameSession.selectCharacter(hero.id);
+      setCharacterId("explorer");
+      playReturnModeRef.current = "characters";
+      playMapRef.current =
+        kind === "encampment" ? assembleEncampmentPlayMap() : assembleStartingLobbyPlayMap();
+      setMode("play");
+    },
+    [],
+  );
 
   // Load a map chosen in the Lobby into the Voxel Editor.
   const onLoadPost = useCallback((map: VoxelMap) => {
@@ -2049,6 +2285,25 @@ export default function App() {
   // Launch a map chosen in the Lobby straight into a play session.
   const onPlayPost = useCallback((map: VoxelMap) => {
     playMapRef.current = map;
+    setMode("play");
+  }, []);
+
+  // Harvest Maps tab: real lobby town + chunked seed in VoxelArena.
+  const onPlaySeedOverworld = useCallback((dep: SeedWorldDeployment) => {
+    playMapRef.current = assembleSeedOverworldMap(dep);
+    setHarvestUiOpen(false);
+    setMode("play");
+  }, []);
+
+  const onPlayPortalDungeon = useCallback((dep: SeedWorldDeployment, portalId: string) => {
+    const portal = dep.portals.find((p) => p.id === portalId);
+    if (!portal) return;
+    playMapRef.current = assemblePortalDungeonMap({
+      seed: portal.dungeon.seed,
+      templateId: portal.dungeon.templateId,
+      theme: portal.dungeon.theme,
+    });
+    setHarvestUiOpen(false);
     setMode("play");
   }, []);
 
@@ -2640,6 +2895,7 @@ export default function App() {
           studioRef.current?.setCharacter(avatarId);
           navigate("danger");
         }}
+        onPlayVoxelStart={onPlayVoxelStart}
       />
     );
     return shell(
@@ -2709,6 +2965,7 @@ export default function App() {
             studioRef.current?.setCharacter(avatarId);
             navigate("danger");
           }}
+          onPlayVoxelStart={onPlayVoxelStart}
         />,
       ),
     );
@@ -3185,6 +3442,17 @@ export default function App() {
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
             utilitySlots={utilitySlots}
+            onOpenHotkeyHelp={() => {
+              setHotkeyHelpOpen(true);
+              document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode?.(true);
+            }}
+          />
+          <HotkeyHelpOverlay
+            open={hotkeyHelpOpen}
+            onClose={() => setHotkeyHelpOpen(false)}
+            surface={mode === "play" ? "play" : "danger"}
+            activityMode={hud?.activityMode === "build" ? "build" : hud?.activityMode === "harvest" ? "harvest" : "combat"}
           />
           <CharacterBagPanel
             open={bagOpen}
@@ -3201,6 +3469,8 @@ export default function App() {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
+            onEquipBack={handleEquipBack}
+            onUnequipBack={handleUnequipBack}
           />
           <LockpickPanel
             open={!!lockpickChallenge}
@@ -3269,6 +3539,8 @@ export default function App() {
               setHarvestUiOpen(false);
               setMode("voxel");
             }}
+            onPlaySeedOverworld={onPlaySeedOverworld}
+            onPlayPortalDungeon={onPlayPortalDungeon}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}
@@ -3329,6 +3601,8 @@ export default function App() {
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={true}
               warmDetail="Map play · same combat stack"
+              era={dangerEra}
+              onEra={onDangerEra}
               testWorldId={testWorldId}
               mapOptions={dangerMapOptions}
               onTestWorld={onTestWorld}
@@ -3372,9 +3646,9 @@ export default function App() {
             !systemsOpen &&
             !claimFlagOpen && (
               <div className="click-hint">
-                <p>Click canvas to re-lock · or F8 free mouse</p>
+                <p>Click canvas to re-lock · F8 free mouse · F1 help</p>
                 <p className="dim">
-                  AA/DD dash · X roll · LMB attack/select · RMB focus · C parry
+                  WASD move · X roll · LMB atk · RMB focus · C parry · E guard · 1–4 skills
                 </p>
               </div>
             )}
@@ -3437,26 +3711,39 @@ export default function App() {
             </>
           )}
 
-          {equipOpen && (
-            <ExplorerCharacterPage
-              characterName={hud?.character ?? characterId}
-              characterId={activeCharacterId}
-              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
-              currentWeapon={hud?.weapon ?? weaponId}
-              currentOffHand={offHand}
-              onEquip={onWeapon}
-              onEquipOff={onOffHand}
-              onClose={() => setEquipOpen(false)}
-              onOpenAvatarEdit={() => {
-                setEquipOpen(false);
-                navigate("avatar");
-              }}
-              onOpenCrafting={() => {
-                setEquipOpen(false);
-                setHarvestUiOpen(true);
-              }}
-            />
-          )}
+          {equipOpen &&
+            (isVoxelHero ? (
+              <ExplorerCharacterPage
+                characterName={hud?.character ?? characterId}
+                characterId={activeCharacterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+                onOpenAvatarEdit={() => {
+                  setEquipOpen(false);
+                  navigate("avatar");
+                }}
+                onOpenCrafting={() => {
+                  setEquipOpen(false);
+                  setHarvestUiOpen(true);
+                }}
+              />
+            ) : (
+              <EquipmentScreen
+                characterName={hud?.character ?? characterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                meshIds={equipMeshIds}
+                onMeshIds={persistPaperdollMeshes}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+              />
+            ))}
         </>
       )}
 
@@ -3504,6 +3791,17 @@ export default function App() {
             bagOccupied={bagOccupied}
             bagCapacity={DEFAULT_BAG_SLOTS}
             utilitySlots={utilitySlots}
+            onOpenHotkeyHelp={() => {
+              setHotkeyHelpOpen(true);
+              document.exitPointerLock?.();
+              studioRef.current?.setFreeMouseMode?.(true);
+            }}
+          />
+          <HotkeyHelpOverlay
+            open={hotkeyHelpOpen}
+            onClose={() => setHotkeyHelpOpen(false)}
+            surface={mode === "play" ? "play" : "danger"}
+            activityMode={hud?.activityMode === "build" ? "build" : hud?.activityMode === "harvest" ? "harvest" : "combat"}
           />
           <CharacterBagPanel
             open={bagOpen}
@@ -3520,6 +3818,8 @@ export default function App() {
               setBagOpen(false);
               studioRef.current?.beginPlacePlaceable(placeableId);
             }}
+            onEquipBack={handleEquipBack}
+            onUnequipBack={handleUnequipBack}
           />
           <ClassSkillBar
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
@@ -3554,6 +3854,8 @@ export default function App() {
               setHarvestUiOpen(false);
               setMode("voxel");
             }}
+            onPlaySeedOverworld={onPlaySeedOverworld}
+            onPlayPortalDungeon={onPlayPortalDungeon}
           />
           <CampClaimFlagPanel
             open={claimFlagOpen}
@@ -3613,15 +3915,19 @@ export default function App() {
               characterLabel={(() => {
                 const p = resolveDangerPlayable({
                   fleetCharacter: gameSession.selectedCharacter(),
+                  era: dangerEra,
                 });
                 return p.displayName || hud?.character || characterId;
               })()}
               raceLabel={(() => {
                 const p = resolveDangerPlayable({
                   fleetCharacter: gameSession.selectedCharacter(),
+                  era: dangerEra,
                 });
-                return `${p.spec.raceId} · ${p.spec.animPack} · ${p.source}`;
+                return `${p.era} · ${p.lane} · ${p.source}`;
               })()}
+              era={dangerEra}
+              onEra={onDangerEra}
               weaponLabel={hud?.weapon ?? weaponId}
               ready={!!hud || helpersLoad.progress >= 0.85}
               warmReady={dangerWarm.ready}
@@ -3749,26 +4055,39 @@ export default function App() {
             </>
           )}
 
-          {equipOpen && (
-            <ExplorerCharacterPage
-              characterName={hud?.character ?? characterId}
-              characterId={activeCharacterId}
-              race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
-              currentWeapon={hud?.weapon ?? weaponId}
-              currentOffHand={offHand}
-              onEquip={onWeapon}
-              onEquipOff={onOffHand}
-              onClose={() => setEquipOpen(false)}
-              onOpenAvatarEdit={() => {
-                setEquipOpen(false);
-                navigate("avatar");
-              }}
-              onOpenCrafting={() => {
-                setEquipOpen(false);
-                setHarvestUiOpen(true);
-              }}
-            />
-          )}
+          {equipOpen &&
+            (isVoxelHero ? (
+              <ExplorerCharacterPage
+                characterName={hud?.character ?? characterId}
+                characterId={activeCharacterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+                onOpenAvatarEdit={() => {
+                  setEquipOpen(false);
+                  navigate("avatar");
+                }}
+                onOpenCrafting={() => {
+                  setEquipOpen(false);
+                  setHarvestUiOpen(true);
+                }}
+              />
+            ) : (
+              <EquipmentScreen
+                characterName={hud?.character ?? characterId}
+                race={loadoutRaceFromFleet(gameSession.selectedCharacter()?.raceId)}
+                currentWeapon={hud?.weapon ?? weaponId}
+                currentOffHand={offHand}
+                meshIds={equipMeshIds}
+                onMeshIds={persistPaperdollMeshes}
+                onEquip={onWeapon}
+                onEquipOff={onOffHand}
+                onClose={() => setEquipOpen(false)}
+              />
+            ))}
           {systemsOpen && (
             <GrudgeSystemsPanel
               key={`sys-${systemsTab}`}

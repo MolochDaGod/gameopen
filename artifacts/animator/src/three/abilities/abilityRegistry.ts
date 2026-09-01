@@ -96,6 +96,11 @@ export function getAbility(id: string): AbilityDef | undefined {
   return ABILITIES[id];
 }
 
+/** Register (or overwrite) a runtime-authored ability in the live library. */
+export function registerAbility(def: AbilityDef): void {
+  ABILITIES[def.id] = def;
+}
+
 /**
  * Build a buff/debuff ability definition for a status id. Buffs target the
  * caster's allies (`aoeAlly` when `aoe`, else `ally`); debuffs target the

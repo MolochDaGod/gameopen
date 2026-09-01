@@ -13,6 +13,14 @@ import type {
   GizmoMode,
 } from "../three/editor/types";
 import type { VoxelPart } from "../three/explorer/rig";
+import {
+  ABILITIES,
+  registerAbility,
+  statusAbility,
+  vfxSkill,
+} from "../three/abilities/abilityRegistry";
+import type { AbilityTargetShape, TravelMotion } from "../three/abilities/abilityTypes";
+import type { SkillKind, StatusId, StatusKind } from "../three/types";
 import type { AiTool } from "./types";
 
 const GIZMO_MODES: GizmoMode[] = ["translate", "rotate", "scale"];
@@ -34,6 +42,65 @@ const VFX_IDS = [
   "stunMark",
   "shieldBreak",
 ];
+
+/** Editable Skill Lab knobs, grouped by value type so one tool can coerce each. */
+const SKILL_LAB_NUM_KEYS = [
+  "overdrive",
+  "armWidth",
+  "clipFrom",
+  "clipTo",
+  "colliderX",
+  "colliderY",
+  "colliderZ",
+  "colliderRadius",
+] as const;
+const SKILL_LAB_BOOL_KEYS = ["mirror", "slashFromCollider", "showCollider"] as const;
+const SKILL_LAB_KEYS = [...SKILL_LAB_NUM_KEYS, ...SKILL_LAB_BOOL_KEYS, "vfxId", "clipName"];
+
+/**
+ * Mirrors of the {@link SkillKind} / {@link StatusId} / {@link StatusKind} /
+ * {@link AbilityTargetShape} / {@link TravelMotion} unions as runtime value
+ * lists for tool-arg validation. The `satisfies` guards make TypeScript fail the
+ * build if a union member is added/removed without updating these lists.
+ */
+const SKILL_KINDS = [
+  "slash",
+  "slam",
+  "bolt",
+  "nova",
+  "muzzle",
+  "thrust",
+  "fireDragon",
+  "meteor",
+  "turret",
+  "darkBlades",
+  "swordVolley",
+  "soul",
+  "laser",
+  "witchArrow",
+  "witchMissile",
+  "witchDisk",
+  "fireTornado",
+] as const satisfies readonly SkillKind[];
+const STATUS_IDS = [
+  "burning",
+  "frozen",
+  "poisoned",
+  "shocked",
+  "regen",
+  "empowered",
+  "shielded",
+  "haste",
+  "blessed",
+  "cursed",
+  "sleep",
+  "absorb",
+  "rage",
+  "rooted",
+] as const satisfies readonly StatusId[];
+const STATUS_KINDS = ["buff", "debuff"] as const satisfies readonly StatusKind[];
+const ABILITY_TARGETS = ["self", "aimed", "aoe"] as const satisfies readonly AbilityTargetShape[];
+const TRAVEL_MOTIONS = ["dragon", "darkBlades"] as const satisfies readonly TravelMotion[];
 
 /** Parse a "#rrggbb" / "rrggbb" / 0x-prefixed / decimal colour into 0xRRGGBB. */
 function parseColor(input: unknown): number | null {
@@ -282,18 +349,248 @@ export function buildEditorTools(
         return `Cleared the ${part} pattern`;
       },
     },
+    {
+      name: "set_skill_lab",
+      description:
+        "Tune one Skill Lab authoring knob on the Playground character (the active Play-mode rig, else the selected grudge character). Numeric knobs: overdrive (0.25–3 speed/intensity), armWidth (-1 tucked … +1 wide), clipFrom/clipTo (sub-clip in/out as a 0–1 fraction), colliderX/colliderY/colliderZ (damaging-collider centre offset), colliderRadius (AOE radius). Boolean knobs: mirror, slashFromCollider, showCollider. clipName: the clip to author (empty string clears it). vfxId: the effect fired on test_skill.",
+      parameters: {
+        type: "object",
+        properties: {
+          key: { type: "string", enum: SKILL_LAB_KEYS },
+          value: {
+            description: "Number for numeric knobs, boolean for toggles, string for clipName / vfxId.",
+          },
+        },
+        required: ["key", "value"],
+      },
+      execute: (args) => {
+        const key = String(args.key);
+        const raw = args.value;
+        if ((SKILL_LAB_NUM_KEYS as readonly string[]).includes(key)) {
+          const n = Number(raw);
+          if (!Number.isFinite(n)) throw new Error(`"${key}" needs a number.`);
+          engine().setSkillLab(key as (typeof SKILL_LAB_NUM_KEYS)[number], n);
+          return `Set ${key} = ${n}`;
+        }
+        if ((SKILL_LAB_BOOL_KEYS as readonly string[]).includes(key)) {
+          const b = raw === true || raw === "true" || raw === 1 || raw === "1";
+          engine().setSkillLab(key as (typeof SKILL_LAB_BOOL_KEYS)[number], b);
+          return `Set ${key} = ${b}`;
+        }
+        if (key === "vfxId") {
+          const id = String(raw);
+          if (!VFX_IDS.includes(id)) throw new Error(`Unknown effect "${id}".`);
+          engine().setSkillLab("vfxId", id);
+          return `Set vfxId = ${id}`;
+        }
+        if (key === "clipName") {
+          const v = raw == null || raw === "" ? null : String(raw);
+          engine().setSkillLab("clipName", v);
+          return `Set clipName = ${v ?? "(none)"}`;
+        }
+        throw new Error(`Unknown Skill Lab knob "${key}".`);
+      },
+    },
+    {
+      name: "test_skill",
+      description:
+        "Preview the currently-authored skill on the Playground character: play the selected clip (sliced to the in/out range, mirrored + overdriven per the lab) and fire the chosen VFX. Use after set_skill_lab to see the result.",
+      parameters: { type: "object", properties: {} },
+      execute: () => {
+        engine().testSkill();
+        return "Previewed the authored skill";
+      },
+    },
+    {
+      name: "load_rig",
+      description:
+        "Load (or reload) the default animation-library character rig so clips can be previewed. Optional weaponId (sword, axe, bow, staff, rifle, …) and charId (explorer or catalog id).",
+      parameters: {
+        type: "object",
+        properties: {
+          weaponId: { type: "string" },
+          charId: { type: "string" },
+        },
+      },
+      execute: async (args) => {
+        const weaponId = args.weaponId != null ? String(args.weaponId) : "sword";
+        const charId = args.charId != null ? String(args.charId) : "explorer";
+        await engine().loadRig(weaponId, charId);
+        return `Loaded rig weapon=${weaponId} char=${charId}`;
+      },
+    },
+    {
+      name: "list_clips",
+      description:
+        "List animation clips available on the loaded rig. Call load_rig first if empty.",
+      parameters: { type: "object", properties: {} },
+      execute: () => {
+        const clips = engine().getRigClipNames();
+        if (clips.length === 0) {
+          return "No clips listed yet — load a rig first (load_rig), then open the Animations panel. Common roles: idle, walk, run, attack, cast, death.";
+        }
+        return `Clips (${clips.length}): ${clips.slice(0, 60).join(", ")}${clips.length > 60 ? "…" : ""}`;
+      },
+    },
+    {
+      name: "preview_clip",
+      description:
+        "Play/preview a named animation clip on the loaded rig (e.g. idle, walk, run, attack, sword slash). Use exact clip names from list_clips when possible.",
+      parameters: {
+        type: "object",
+        properties: { name: { type: "string" } },
+        required: ["name"],
+      },
+      execute: (args) => {
+        const name = String(args.name ?? "").trim();
+        if (!name) throw new Error("Clip name is required.");
+        engine().previewClip(name);
+        return `Previewing clip "${name}"`;
+      },
+    },
+    {
+      name: "start_play",
+      description:
+        "Enter Movement/Play mode — drive the character with WASD + mouse-look and fire skills. Use stop_play to return to Edit.",
+      parameters: { type: "object", properties: {} },
+      execute: () => {
+        engine().startPlay();
+        return "Entered Movement / Play mode";
+      },
+    },
+    {
+      name: "stop_play",
+      description: "Leave Movement/Play mode and return to Edit mode (gizmos, wardrobe, import).",
+      parameters: { type: "object", properties: {} },
+      execute: () => {
+        engine().stopPlay();
+        return "Back in Edit mode";
+      },
+    },
+    {
+      name: "author_skill_from_prompt",
+      description:
+        "One-shot skill authoring: pick a clip name + VFX, set Skill Lab knobs, and preview. Use for chat-to-create animation skills (e.g. overhead slash with impact, fire cast with flame). Prefer real clip names when known.",
+      parameters: {
+        type: "object",
+        properties: {
+          clipName: { type: "string" },
+          vfxId: { type: "string", enum: VFX_IDS },
+          overdrive: { type: "number" },
+          clipFrom: { type: "number" },
+          clipTo: { type: "number" },
+          mirror: { type: "boolean" },
+          preview: { type: "boolean", description: "If true (default), call test_skill after setting knobs." },
+        },
+        required: ["clipName"],
+      },
+      execute: (args) => {
+        const e = engine();
+        const clip = String(args.clipName ?? "").trim();
+        if (!clip) throw new Error("clipName is required.");
+        e.setSkillLab("clipName", clip);
+        if (args.vfxId != null) {
+          const id = String(args.vfxId);
+          if (!VFX_IDS.includes(id)) throw new Error(`Unknown effect "${id}".`);
+          e.setSkillLab("vfxId", id);
+        }
+        if (args.overdrive != null && Number.isFinite(Number(args.overdrive))) {
+          e.setSkillLab("overdrive", Number(args.overdrive));
+        }
+        if (args.clipFrom != null && Number.isFinite(Number(args.clipFrom))) {
+          e.setSkillLab("clipFrom", Number(args.clipFrom));
+        }
+        if (args.clipTo != null && Number.isFinite(Number(args.clipTo))) {
+          e.setSkillLab("clipTo", Number(args.clipTo));
+        }
+        if (args.mirror != null) e.setSkillLab("mirror", Boolean(args.mirror));
+        const doPreview = args.preview !== false;
+        if (doPreview) e.testSkill();
+        return doPreview
+          ? `Authored skill on clip "${clip}" and previewed it`
+          : `Authored skill on clip "${clip}" (preview skipped)`;
+      },
+    },
+    {
+      name: "list_abilities",
+      description:
+        "List every ability currently in the data-driven ability library (id, display name, kind, target shape), including any created this session.",
+      parameters: { type: "object", properties: {} },
+      execute: () => {
+        const ids = Object.keys(ABILITIES);
+        if (ids.length === 0) return "No abilities are registered.";
+        return ids
+          .map((id) => {
+            const a = ABILITIES[id];
+            return `${a.id} — "${a.name}" — kind ${a.kind}, target ${a.target}`;
+          })
+          .join("\n");
+      },
+    },
+    {
+      name: "create_ability",
+      description:
+        "Create a new data-driven ability and add it to the library (resolvable by id afterwards). type 'vfx' builds an effect-driven skill from a kind (slash/slam/bolt/nova/muzzle/thrust/fireDragon/meteor/turret/darkBlades/swordVolley/soul/laser), a hex colour, a target shape (self/aimed/aoe), and an optional travel motion (dragon/darkBlades). type 'status' builds a buff/debuff aura from a statusId (burning/frozen/poisoned/shocked/regen/empowered/shielded/haste), an optional statusKind (buff/debuff), and whether it is AOE.",
+      parameters: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: ["vfx", "status"] },
+          kind: { type: "string", enum: [...SKILL_KINDS] },
+          color: { type: "string", description: "Hex colour like #ff8a3a (vfx only)." },
+          target: { type: "string", enum: [...ABILITY_TARGETS] },
+          travel: { type: "string", enum: [...TRAVEL_MOTIONS] },
+          statusId: { type: "string", enum: [...STATUS_IDS] },
+          statusKind: { type: "string", enum: [...STATUS_KINDS] },
+          aoe: { type: "boolean" },
+        },
+        required: ["type"],
+      },
+      execute: (args) => {
+        const type = String(args.type);
+        if (type === "vfx") {
+          const kind = String(args.kind);
+          if (!(SKILL_KINDS as readonly string[]).includes(kind)) throw new Error(`Unknown skill kind "${kind}".`);
+          const color = parseColor(args.color ?? "#ffffff");
+          if (color === null) throw new Error("Could not parse that colour.");
+          const target = args.target != null ? String(args.target) : "self";
+          if (!(ABILITY_TARGETS as readonly string[]).includes(target)) throw new Error(`Unknown target "${target}".`);
+          const travel = args.travel != null ? String(args.travel) : undefined;
+          if (travel && !(TRAVEL_MOTIONS as readonly string[]).includes(travel)) {
+            throw new Error(`Unknown travel motion "${travel}".`);
+          }
+          const def = vfxSkill(kind as SkillKind, color, {
+            target: target as AbilityTargetShape,
+            travel: travel as TravelMotion | undefined,
+          });
+          registerAbility(def);
+          return `Created ability "${def.id}" (${def.kind}, target ${def.target}).`;
+        }
+        if (type === "status") {
+          const id = String(args.statusId);
+          if (!(STATUS_IDS as readonly string[]).includes(id)) throw new Error(`Unknown status "${id}".`);
+          const k = args.statusKind != null ? String(args.statusKind) : undefined;
+          if (k && !(STATUS_KINDS as readonly string[]).includes(k)) throw new Error(`Unknown status kind "${k}".`);
+          const def = statusAbility(id as StatusId, k as StatusKind | undefined, Boolean(args.aoe));
+          registerAbility(def);
+          return `Created ability "${def.id}" (status ${id}).`;
+        }
+        throw new Error(`Unknown ability type "${type}". Use "vfx" or "status".`);
+      },
+    },
   ];
 }
 
 /** A compact, model-friendly description of the live scene for this turn. */
 export function editorSystemPrompt(snap: EditorSnapshot | null): string {
   const lines: string[] = [
-    "You are the AI assistant embedded in the browser-based Dressing Room — a 3D character studio for loading rigs, dressing them in skins & gear, and previewing animations and effects.",
+    "You are the AI assistant embedded in the browser-based Dressing Room — a 3D character studio for loading rigs, dressing them, and creating / previewing animations & skills from chat.",
+    "PRIMARY JOB: help the user create and preview animations from natural language (e.g. “confident sword idle”, “overhead slash”, “fire cast”). Prefer author_skill_from_prompt, preview_clip, load_rig, set_skill_lab + test_skill.",
     "You can ANSWER questions about the editor and EXECUTE edits by calling the provided tools.",
     "Only act through the tools given to you; never claim to do anything outside them.",
     "When an action targets an object, use an exact id from the scene listing below — never invent ids.",
     "After performing actions, ALWAYS reply with one short, natural sentence confirming what you did.",
     "If a request is unsafe, out of scope, or impossible with the available tools, politely decline and say why in one sentence.",
+    "Workflow for 'create an animation skill': load_rig if needed → list_clips or use a known role name → author_skill_from_prompt (clip + vfx) → start_play if they want to try it in movement.",
     "",
   ];
 
@@ -312,6 +609,27 @@ export function editorSystemPrompt(snap: EditorSnapshot | null): string {
     snap.rigIsVoxel
       ? "A procedural voxel character is loaded. You can recolour its parts (recolor_character_part) and GENERATE & apply pattern textures to its parts (generate_character_pattern) — parts: skin, shirt, pants, boot, hat (use 'hat' for head wraps/hoods). Use clear_character_pattern to remove a pattern."
       : "No procedural voxel character is loaded, so the voxel recolour/pattern tools won't apply until one is.",
+  );
+
+  const sl = snap.skillLab;
+  if (sl.available) {
+    const clips = sl.clips.length ? sl.clips.slice(0, 40).join(", ") : "(none loaded)";
+    lines.push(
+      `Skill Lab: a Playground character is available to author a skill on. Current — clip=${
+        sl.clipName ?? "(none)"
+      }, range=${sl.clipFrom.toFixed(2)}–${sl.clipTo.toFixed(2)}, overdrive=${sl.overdrive}, mirror=${sl.mirror}, armWidth=${sl.armWidth}, vfx=${sl.vfxId}, collider=(${sl.colliderX.toFixed(2)}, ${sl.colliderY.toFixed(2)}, ${sl.colliderZ.toFixed(2)}) r=${sl.colliderRadius.toFixed(2)}, showCollider=${sl.showCollider}.`,
+    );
+    lines.push(`Authorable clips: ${clips}.`);
+    lines.push(
+      "Tune one knob at a time with set_skill_lab, then call test_skill to preview. To clear the authored clip, set clipName to an empty string.",
+    );
+  } else {
+    lines.push(
+      "Skill Lab: no Playground character to author on yet (the Skill Lab tools need one loaded or selected in Play mode).",
+    );
+  }
+  lines.push(
+    "Abilities: list_abilities shows the data-driven ability library; create_ability adds a new 'vfx' (effect-driven skill) or 'status' (buff/debuff aura) entry to it.",
   );
 
   if (snap.objects.length === 0) {

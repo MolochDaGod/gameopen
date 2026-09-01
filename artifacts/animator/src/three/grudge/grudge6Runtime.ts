@@ -19,6 +19,7 @@ import {
   isNonLoopingLocoClip,
   isUnsuitableLocoCycle,
   resolveAnimPackClips,
+  CANONICAL_LOCO,
   type AnimPack,
 } from "./anims";
 // re-export for Studio weapon→pack swaps
@@ -41,11 +42,21 @@ import {
   validateCharacterDeploy,
   diagnoseCharacterLook,
   sampleClipAndReground,
+  liftForClipFootClearance,
 } from "../characterDeploy";
 import { FLEET_ASSET_HOSTS, resolveAssetCandidates } from "../fleetAssetResolver";
 import { PLAYER_HEIGHT_M } from "../../lib/productionRuntime";
+import {
+  grudge6RaceMeshCandidates,
+  isForbiddenPrimaryUrl,
+  tagMixerRoot,
+  type Grudge6RaceKey,
+} from "../anim/fleetAnimSsot";
 
-/** Arena race folder names under /cdn/assets/characters/{race}/ */
+/**
+ * Historical arena path fragments only — NOT mesh SSOT.
+ * @deprecated Prefer R2 models/grudge6/races via fleetAnimSsot.
+ */
 export const ARENA_RACE_DIR: Record<RaceId, string> = {
   "western-kingdoms": "human",
   barbarians: "barbarian",
@@ -55,23 +66,23 @@ export const ARENA_RACE_DIR: Record<RaceId, string> = {
   undead: "undead",
 };
 
-/** Arena GLB filenames (prod-proven on grudge-arena.grudge-studio.com). */
+/** Filenames match Toon RTS pack raceId.glb (not races/*_Characters, not FBX). */
 export const ARENA_RACE_GLB: Record<RaceId, string> = {
-  "western-kingdoms": "WK_Characters.glb",
-  barbarians: "BRB_Characters.glb",
-  "high-elves": "ELF_Characters.glb",
-  dwarves: "DWF_Characters.glb",
-  orcs: "ORC_Characters.glb",
-  undead: "UD_Characters.glb",
+  "western-kingdoms": "human.glb",
+  barbarians: "barbarian.glb",
+  "high-elves": "elf.glb",
+  dwarves: "dwarf.glb",
+  orcs: "orc.glb",
+  undead: "undead.glb",
 };
 
-/** Prefer same-origin proxy (vercel rewrites → arena); fall back to absolute arena. */
+/** @deprecated Arena origin is fallback-only; fleet SSOT is assets.grudge-studio.com */
 export const ARENA_ORIGIN = FLEET_ASSET_HOSTS.arena;
 
+/** Same-origin historical path — last-resort only. */
 export function arenaCharacterGlbUrl(raceId: RaceId): string {
   const dir = ARENA_RACE_DIR[raceId];
   const file = ARENA_RACE_GLB[raceId];
-  // Same-origin first so open.grudge-studio.com can proxy via vercel.json
   return `/cdn/assets/characters/${dir}/${file}`;
 }
 
@@ -86,9 +97,8 @@ const TARGET_HEIGHT = PLAYER_HEIGHT_M || 1.8;
 
 /**
  * How the race mesh was imported — drives material pipeline.
- *  - `glb-baked`: Arena / R2 production GLB with correct UVs + materials. Do NOT
- *    rebind the Toon RTS FBX atlas or skins look scrambled.
- *  - `fbx-atlas`: modular race FBX kit; requires Toon RTS atlas rebind.
+ *  - `glb-baked`: Toon RTS ★ production GLB (embedded atlas). Do NOT force rebind.
+ *  - `fbx-atlas`: author FBX only (not used in game deploy).
  */
 export type RaceImportPipeline = "glb-baked" | "fbx-atlas";
 
@@ -106,27 +116,42 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
   p = (async (): Promise<RaceTemplate> => {
     let lastErr: unknown;
     const file = ARENA_RACE_GLB[raceId];
-    const dir = ARENA_RACE_DIR[raceId];
 
-    // 1) R2 production GLB first (always CORS + 200 for WK/BRB/…_Characters.glb).
-    //    Arena absolute second — CORS from open.grudge-studio.com is flaky.
+    // Fleet SSOT: Toon RTS GLB ★ only — never FBX in game deploy.
+    // NEVER 30characters.glb / metaverse / races bake as primary.
     {
-      const r2Glb = `https://assets.grudge-studio.com/models/grudge6/races/${file}`;
-      const rel = `models/grudge6/races/${file}`;
-      const sameOriginArena = `/cdn/assets/characters/${dir}/${file}`;
-      const urls = [
-        r2Glb,
-        ...resolveAssetCandidates(rel),
-        sameOriginArena,
+      const primary = [
+        ...grudge6RaceMeshCandidates(raceId as Grudge6RaceKey, file),
+        RACE_ASSETS[raceId]?.modelUrl,
+      ].filter(Boolean) as string[];
+      const lastResort = [
+        arenaCharacterGlbUrl(raceId),
         arenaCharacterGlbUrlAbsolute(raceId),
       ];
+      const urls = [...new Set([...primary, ...lastResort])].filter(
+        (u) =>
+          !/30characters/i.test(u) &&
+          !/\.fbx($|\?)/i.test(u) &&
+          !/metaverse\//i.test(u),
+      );
       const loader = sharedGltfLoader();
-      for (const url of [...new Set(urls)]) {
-        // Skip known-bad R2 mirror of arena path
+      for (const url of urls) {
         if (url.includes("assets.grudge-studio.com/cdn/assets/")) continue;
+        if (/30characters/i.test(url)) continue;
         try {
           const gltf = await loader.loadAsync(url);
-          console.info(`[grudge6Runtime] race kit GLB ready ${raceId} ${url}`);
+          if (isForbiddenPrimaryUrl(url)) {
+            console.warn(
+              `[grudge6Runtime] loaded ${raceId} from non-SSOT host (fallback): ${url}`,
+            );
+          } else {
+            console.info(`[grudge6Runtime] Toon RTS GLB ready ${raceId} ${url}`);
+          }
+          tagMixerRoot(gltf.scene, {
+            lane: "bip001-baked",
+            surface: "danger",
+            raceId,
+          });
           return { object: gltf.scene, pipeline: "glb-baked", url };
         } catch (e) {
           lastErr = e;
@@ -134,23 +159,7 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
       }
     }
 
-    // 3) FBX modular kit — only path that should rebind Toon RTS atlas.
-    try {
-      const { loadCharacterModel } = await import("./loadCharacter");
-      const race = RACE_ASSETS[raceId];
-      const loaded = await loadCharacterModel(race.modelUrl);
-      console.info(`[grudge6Runtime] race kit FBX ready ${raceId} ${race.modelUrl}`);
-      return {
-        object: loaded.group,
-        pipeline: "fbx-atlas",
-        url: race.modelUrl,
-      };
-    } catch (e) {
-      lastErr = e;
-      console.warn(`[grudge6Runtime] FBX kit failed ${raceId}`, e);
-    }
-
-    throw lastErr ?? new Error(`Failed to load grudge6 race mesh for ${raceId}`);
+    throw lastErr ?? new Error(`Failed to load Toon RTS grudge6 mesh for ${raceId}`);
   })();
   meshCache.set(raceId, p);
   return p;
@@ -293,34 +302,34 @@ export async function ensureGrudge6Materials(
   });
 
   const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
-  // GLB modular kits often ship with sparse maps on hidden wardrobe meshes;
-  // rebind Toon RTS atlas whenever coverage is poor so heroes aren't yellow/grey.
-  const needsAtlas =
-    allowAtlasRebind &&
-    (pipeline === "fbx-atlas" || mapRatio < 0.55 || mappedMeshes === 0);
-
-  if (needsAtlas) {
+  // HARD: modular Toon RTS / grudge6 always uses the race atlas (sRGB, flipY=false).
+  // Sparse/broken GLB maps still count as "mapped" and used to skip rebind → orange sludge.
+  // One path: rebind whenever allowAtlasRebind (default true from loadGrudge6CombatRig).
+  if (allowAtlasRebind) {
     const mat = await rebindRaceAtlas(model, raceId);
     if (mat) {
       console.info(
         `[grudge6Runtime] atlas bound race=${raceId} pipeline=${pipeline} mapRatio=${mapRatio.toFixed(2)}`,
       );
-    }
-  } else {
-    // Ensure existing albedo maps are sRGB + white tint (second pass after restore)
-    model.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const m of mats) {
-        if (m instanceof THREE.MeshStandardMaterial && m.map) {
-          m.color.setHex(0xffffff);
-          m.metalness = Math.min(m.metalness, 0.08);
-          m.roughness = Math.max(m.roughness, 0.55);
-          m.needsUpdate = true;
+    } else {
+      // Atlas failed — still neutralize so we don't ship yellow plastic
+      model.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of mats) {
+          if (m instanceof THREE.MeshStandardMaterial && m.map) {
+            m.color.setHex(0xffffff);
+            m.metalness = Math.min(m.metalness, 0.08);
+            m.roughness = Math.max(m.roughness, 0.55);
+            m.needsUpdate = true;
+          }
         }
-      }
-    });
+      });
+      console.warn(
+        `[grudge6Runtime] atlas rebind FAILED race=${raceId} mapRatio=${mapRatio.toFixed(2)} — materials neutralized only`,
+      );
+    }
   }
 }
 
@@ -420,14 +429,26 @@ export async function loadGrudge6CombatRig(
   // ── EQUIP BEFORE FIT (sturdy MMO proportions) ────────────────────────────
   // Modular race GLBs ship every armor/weapon variant visible. Fitting while
   // the full wardrobe is on inflates the skinned AABB → wrong scale / "stretch".
-  // SSOT: hide equippable → show mesh_ids only → then SI height fit.
+  // SSOT: hide ALL kit meshes → exclusive mesh_ids only → then SI height fit.
   hideEquippableMeshes(model);
   applyGearVisibility(model, meshIds);
+  // Count visible skinned — wardrobe bomb = wrong loadout, force class preset once
+  let vis = 0;
+  model.traverse((o) => {
+    if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.visible) vis++;
+  });
+  if (vis === 0 || vis > 14) {
+    console.error(
+      `[grudge6Runtime] equip failed visSkinned=${vis} — forcing class preset ${presetId}`,
+    );
+    applyGearVisibility(model, preset.visibleMeshes);
+  }
   model.userData.equipMeshIds = meshIds.slice();
   model.userData.equipSource = opts?.meshIds?.length ? "account" : "class_preset";
   model.userData.physicsLayer = "character";
 
   normalizeSkinned(model, template.pipeline);
+  model.userData.characterDeployed = true;
 
   // Materials / colors:
   //  - FBX modular kits: always rebind Toon RTS atlas (flipY=false MeshStandard).
@@ -445,11 +466,12 @@ export async function loadGrudge6CombatRig(
   const clips = new Map<string, THREE.AnimationClip>();
   const roles = new Map<string, string>();
 
+  /** Last-resort gait — never torch run or banned sword_shield run. */
   const SAFE_LOCO_FALLBACK: Record<string, string> = {
     idle: "magic/standing idle",
-    walk: "magic/Standing Walk Forward",
-    run: "uploads_2026_06/locomotion/torch run forward",
-    sprint: "uploads_2026_06/locomotion/torch run forward",
+    walk: CANONICAL_LOCO.walk,
+    run: CANONICAL_LOCO.run,
+    sprint: CANONICAL_LOCO.run,
     attack: "dual_wield/attack",
   };
 
@@ -489,7 +511,7 @@ export async function loadGrudge6CombatRig(
         roles.set(role, role);
         return clip;
       } catch (e2) {
-        // Last resort: known-good standing walk / torch run (never roll / tip-walk)
+        // Last resort: CANONICAL standing walk / run_forward (never roll / tip-walk / torch)
         const fb = SAFE_LOCO_FALLBACK[role];
         if (fb && fb !== rel) {
           try {
@@ -499,6 +521,22 @@ export async function loadGrudge6CombatRig(
             roles.set(role, role);
             return clip;
           } catch (e3) {
+            // Second soft: samurai run if primary run_forward 404
+            if (role === "run" || role === "sprint") {
+              try {
+                const clip = await tryLoad(CANONICAL_LOCO.runAlt);
+                console.warn(
+                  `[grudge6Runtime] ${role} fell back to ${CANONICAL_LOCO.runAlt} (was ${rel})`,
+                  e3,
+                );
+                clips.set(role, clip);
+                roles.set(role, role);
+                return clip;
+              } catch (e4) {
+                console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2, e3, e4);
+                return null;
+              }
+            }
             console.warn(`[grudge6Runtime] clip failed ${role} ${rel}`, e1, e2, e3);
             return null;
           }
@@ -518,6 +556,14 @@ export async function loadGrudge6CombatRig(
     loadRole("run", pack.run),
     loadRole("attack", pack.attack),
   ]);
+  // Magic / staff fleet trees request bakedRole `cast` (Casting migrate).
+  // Prefer pack.cast Bip001 clip; else alias attack so cast never T-poses.
+  if (pack.cast) {
+    await loadRole("cast", pack.cast);
+  } else if (clips.has("attack") && !clips.has("cast")) {
+    clips.set("cast", clips.get("attack")!);
+    roles.set("cast", "cast");
+  }
 
   // Pack extras (weapon skill one-shots only — never swap mesh weapons)
   if (pack.extras?.length) {
@@ -604,7 +650,7 @@ export async function loadGrudge6CombatRig(
     const runClip = clips.get("run")!;
     if (isUnsuitableLocoCycle(runClip, runClip.name || "run")) {
       console.error(
-        "[grudge6Runtime] RUN CLIP UNSUITABLE (roll/full-take) — stripping; torch run fallback",
+        "[grudge6Runtime] RUN CLIP UNSUITABLE (roll/full-take) — stripping; CANONICAL run_forward fallback",
       );
       clips.delete("run");
       roles.delete("run");
@@ -639,6 +685,11 @@ export async function loadGrudge6CombatRig(
   // Re-ground feet AFTER idle pose so animated bind doesn't sink soles.
   // Position/scale tracks stripped in rematchClipToSkeleton; sample still needed
   // so rotation-only idle sits soles on y=0 (uniform mixer path).
+  //
+  // HARD RULE: permanent model Y = idle plant + walk/run foot clearance only.
+  // Never re-ground on attack — raised slash feet permanently lower the kit so
+  // idle/walk soles tunnel through the floor (classic Danger "walk into ground").
+  // Slight idle float after walk lift is OK — FootGrounder plants soles.
   if (clips.has("idle")) {
     try {
       const dy = sampleClipAndReground(model, clips.get("idle")!);
@@ -647,30 +698,48 @@ export async function loadGrudge6CombatRig(
           `[grudge6Runtime] post-idle re-ground dy=${dy.toFixed(4)} race=${raceId} pack=${animPack}`,
         );
       }
-      if (clips.has("attack")) {
-        sampleClipAndReground(model, clips.get("attack")!);
+      for (const role of ["walk", "run"] as const) {
+        const c = clips.get(role);
+        if (!c) continue;
+        const lift = liftForClipFootClearance(model, c, { groundY: 0, samples: 8 });
+        if (lift > 1e-3) {
+          console.info(
+            `[grudge6Runtime] post-${role} foot lift dy=${lift.toFixed(4)} race=${raceId}`,
+          );
+        }
       }
     } catch (e) {
       console.warn("[grudge6Runtime] post-idle re-ground failed", e);
     }
   }
 
+  // HARD GATE — never ship wrong mesh / scale / T-pose. Fail the load entirely.
   const check = validateCharacterDeploy(model);
   const look = diagnoseCharacterLook(model);
   model.userData.diagnoseCharacterLook = look;
-  if (!check.ok || !look.ok) {
-    console.warn(
-      `[grudge6Runtime] deploy validation race=${raceId}`,
-      check.issues,
-      look.errors,
-      look.warnings,
-      `h=${check.heightM.toFixed(3)} skeletons=${look.skeletonCount}`,
+  const hardErrors: string[] = [];
+  if (!clips.has("idle")) hardErrors.push("missing idle clip");
+  if (!clips.has("walk") && !clips.has("run")) hardErrors.push("missing walk/run loco");
+  if (!clips.has("attack")) hardErrors.push("missing attack clip");
+  if (!(check.heightM >= 1.45 && check.heightM <= 2.25)) {
+    hardErrors.push(`height ${check.heightM.toFixed(3)}m outside SI human band`);
+  }
+  // diagnoseCharacterLook already copies validateCharacterDeploy issues.
+  if (look.errors?.length) hardErrors.push(...look.errors);
+  if (hardErrors.length) {
+    console.error(
+      `[grudge6Runtime] HARD FAIL race=${raceId} preset=${presetId} pack=${animPack}`,
+      hardErrors,
     );
-  } else {
-    model.userData.deployValidated = true;
-    if (look.warnings.length) {
-      console.info(`[grudge6Runtime] deploy ok with warnings race=${raceId}`, look.warnings);
-    }
+    mixer.stopAllAction();
+    throw new Error(
+      `[grudge6Runtime] refuse broken kit ${raceId}/${presetId}: ${hardErrors.join("; ")}`,
+    );
+  }
+  model.userData.deployValidated = true;
+  model.userData.grudge6Ssot = "loadGrudge6CombatRig";
+  if (look.warnings?.length) {
+    console.info(`[grudge6Runtime] deploy ok with warnings race=${raceId}`, look.warnings);
   }
 
   // Role aliases for T0 weapon skills / Studio multiPart names

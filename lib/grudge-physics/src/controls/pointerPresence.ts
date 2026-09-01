@@ -108,14 +108,31 @@ export function pointerBodyClass(p: PointerPresence = state): string {
   }
 }
 
-/** Whether the OS/custom cursor should be visible (not pointer-lock combat). */
+/**
+ * OS/custom cursor should show whenever the browser is NOT holding pointer-lock.
+ * Even in "play-locked" layer intent, if lock failed/dropped, show the mouse.
+ * (Real pointer-lock still hides the system cursor — that's a browser rule;
+ *  HUD Crosshair must cover that case.)
+ */
 export function pointerShowsOsCursor(p: PointerPresence = state): boolean {
-  return p.layer !== "play-locked";
+  if (typeof document !== "undefined" && document.pointerLockElement) {
+    // UA hides system cursor while locked — software reticle only
+    return false;
+  }
+  return true;
 }
 
-/** Whether the centred HUD reticle should render. */
+/**
+ * Centred HUD reticle: always in play layers so aim never disappears.
+ * shell/ui still allow optional reticle off (menus).
+ */
 export function pointerShowsCrosshair(p: PointerPresence = state): boolean {
-  return p.layer === "play-locked" || p.layer === "play-free";
+  return (
+    p.layer === "play-locked" ||
+    p.layer === "play-free" ||
+    // sticky free-mouse while a panel was just closed
+    p.freeMouseSticky
+  );
 }
 
 const BODY_PTR = [
@@ -131,12 +148,40 @@ const BODY_PTR = [
   "ptr-climb",
 ] as const;
 
-/** Apply presence classes on document.body (call from CursorManager). */
+/**
+ * Apply presence classes on document.body (call from CursorManager).
+ *
+ * NEVER leave open.* with cursor:none + no reticle.
+ * - Lock held → body still gets ptr-combat; CSS uses crosshair fallback; HUD reticle on
+ * - Lock dropped / failed → demote to play-free so custom mouse PNGs return immediately
+ */
 export function applyPointerBodyClass(p: PointerPresence = state): void {
   const b = document.body;
+  const root = document.documentElement;
+  const lockHeld =
+    typeof document !== "undefined" && !!document.pointerLockElement;
+
+  // Effective presence: demote play-locked → play-free when lock is not held
+  // so cursor images return the same frame as ESC / lock fail.
+  const effective: PointerPresence =
+    p.layer === "play-locked" && !lockHeld
+      ? { ...p, layer: "play-free" }
+      : p;
+
   for (const c of BODY_PTR) b.classList.remove(c);
-  b.classList.add(pointerBodyClass(p));
-  b.dataset.pointerLayer = p.layer;
-  b.dataset.pointerCtx = p.playCtx;
-  b.dataset.freeMouse = p.freeMouseSticky ? "1" : "0";
+  b.classList.add(pointerBodyClass(effective));
+  b.dataset.pointerLayer = effective.layer;
+  b.dataset.pointerCtx = effective.playCtx;
+  b.dataset.freeMouse = p.freeMouseSticky || !lockHeld ? "1" : "0";
+  b.dataset.cursorVisible = pointerShowsOsCursor(effective) ? "1" : "0";
+  b.dataset.crosshairVisible = pointerShowsCrosshair(effective) || lockHeld ? "1" : "0";
+
+  if (lockHeld) root.classList.add("pointer-locked");
+  else root.classList.remove("pointer-locked");
+
+  // Belt-and-suspenders: never leave blank cursor on document
+  if (!lockHeld && (b.style.cursor === "none" || root.style.cursor === "none")) {
+    b.style.cursor = "";
+    root.style.cursor = "";
+  }
 }

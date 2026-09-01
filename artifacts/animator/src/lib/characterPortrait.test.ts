@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   fleetRaceToPaper,
   isVoxelCharacter,
+  isWarlordsToonPlayCharacter,
   resolveCharacterPortrait,
 } from "./characterPortrait";
 import type { GrudgeCharacter } from "./grudgeAuth";
@@ -35,6 +36,43 @@ describe("characterPortrait", () => {
         name: "Knight",
         raceId: "human",
         classId: "knight",
+      }),
+    ).toBe(false);
+    expect(
+      isVoxelCharacter({
+        id: "4",
+        name: "RealmScout",
+        raceId: "human",
+        gameEra: "voxel",
+      }),
+    ).toBe(true);
+  });
+
+  it("Open play body is Warlords Toon RTS only", () => {
+    expect(
+      isWarlordsToonPlayCharacter({
+        id: "w1",
+        name: "WK",
+        raceId: "western-kingdoms",
+        classId: "warrior",
+        gameEra: "warlords",
+        model3d: { renderPipeline: "rts_toon" },
+      }),
+    ).toBe(true);
+    expect(
+      isWarlordsToonPlayCharacter({
+        id: "w2",
+        name: "Legacy",
+        raceId: "human",
+        classId: "knight",
+      }),
+    ).toBe(true);
+    expect(
+      isWarlordsToonPlayCharacter({
+        id: "v1",
+        name: "Scout",
+        raceId: "human",
+        gameEra: "voxel",
       }),
     ).toBe(false);
   });
@@ -76,8 +114,8 @@ describe("characterPortrait", () => {
       saveData: { open: { kind: "voxel" } },
     });
     expect(p.isVoxel).toBe(true);
-    // No voxel-head.png shipped yet → fall through to race PNG
-    expect(p.url).toMatch(/races\/human\.png/);
+    // Avatar Explorer portraits: Mine-Loader avatarbaseraces pack (not missing voxel-head)
+    expect(p.url).toMatch(/avatarbaseraces\/human-portrait\.png/);
     expect(p.candidates.some((u) => u.includes("voxel-head"))).toBe(false);
   });
 });

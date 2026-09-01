@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_shark_fin",
+  "kind": "back",
+  "name": "Shark Fin",
+  "description": "2× swim · no shark aggro · breathe underwater",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "stow"
+  ],
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_shark_fin"
+}

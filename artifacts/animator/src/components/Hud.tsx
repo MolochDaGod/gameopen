@@ -26,9 +26,11 @@ import {
   rightWingSlots,
   type QuickActionId,
 } from "../hud/quickActions";
+import { HUD_KEY_CHIPS, HARVEST_KEY_CHIPS } from "../hud/hotkeyMap";
 import { getItemTemplate } from "../game/inventory";
 import { ArenaMinimapHud } from "./ArenaMinimapHud";
 import "./hud/tightBar.css";
+import "./hotkeyHelp.css";
 
 interface Props {
   hud: HudSnapshot | null;
@@ -52,6 +54,8 @@ interface Props {
   bagCapacity?: number;
   /** J / H / V bag utility bindings for harvest HUD right wing. */
   utilitySlots?: (import("../game/inventory").ItemInstance | null)[];
+  /** Open F1 hotkey help overlay. */
+  onOpenHotkeyHelp?: () => void;
 }
 
 /** Merge a panel's edit binding onto its base className + inline style. */
@@ -970,7 +974,15 @@ function CombatFlash({ text }: { text: string }) {
  * Uses local pack icons + Craftpix shortcut frame (real UI assets).
  * Re-keys on mode so Q swaps animate cleanly.
  */
-function ModeBanner({ mode, tool }: { mode: PlayerActivityMode; tool: string }) {
+function ModeBanner({
+  mode,
+  tool,
+  onOpenHelp,
+}: {
+  mode: PlayerActivityMode;
+  tool: string;
+  onOpenHelp?: () => void;
+}) {
   const color = MODE_COLOR[mode];
   const label = MODE_LABEL[mode];
   const icon = MODE_ICON[mode];
@@ -1002,7 +1014,18 @@ function ModeBanner({ mode, tool }: { mode: PlayerActivityMode; tool: string }) 
           <span className="mode-banner-label">{label}</span>
           <span className="mode-banner-tool">{(tool || "—").toUpperCase()}</span>
         </div>
-        <span className="mode-banner-hint">Q · cycle</span>
+        <button
+          type="button"
+          className="mode-banner-hint mode-banner-hint-btn"
+          title="Hold Q for mode radial · F1 full controls"
+          data-tip="Hold Q · mode radial · F1 help"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenHelp?.();
+          }}
+        >
+          Q · mode · F1
+        </button>
       </div>
       {/* Sibling modes for context (dimmed) */}
       <div className="mode-banner-rail" aria-hidden>
@@ -1035,6 +1058,7 @@ export function Hud({
   bagOccupied,
   bagCapacity,
   utilitySlots,
+  onOpenHotkeyHelp,
 }: Props) {
   if (!hud) return null;
 
@@ -1048,6 +1072,7 @@ export function Hud({
   const showTightBar = tight && !isHarvestBuild && !hud.mech;
   const showClassicCombat = !isHarvestBuild && (!tight || !!hud.mech);
   const radialKind = hud.radialKind && hud.radialKind !== "none" ? hud.radialKind : "options";
+  const chips = isHarvestBuild ? HARVEST_KEY_CHIPS : HUD_KEY_CHIPS;
 
   return (
     <>
@@ -1055,11 +1080,47 @@ export function Hud({
       {hud.hovering && <div className="hover-vignette" />}
 
       {/* Mode banner — top centre, above class skills / vitals (hold Q) */}
-      <ModeBanner mode={mode} tool={hud.activityTool ?? ""} />
+      <ModeBanner
+        mode={mode}
+        tool={hud.activityTool ?? ""}
+        onOpenHelp={onOpenHotkeyHelp}
+      />
 
-      {/* Combat key legend — hide under tight layout (slots carry keys) */}
+      {/* Compact key chips — always available (tight + classic) */}
+      <div
+        className="hk-chip-row combat-key-legend"
+        style={{
+          position: "absolute",
+          top: isHarvestBuild ? 118 : 108,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 17,
+        }}
+      >
+        {chips.map((c) =>
+          c.key === "F1" ? (
+            <button
+              key={c.key}
+              type="button"
+              className="hk-chip hk-chip-help"
+              data-tip="Open full keyboard guide"
+              onClick={() => onOpenHotkeyHelp?.()}
+            >
+              <kbd className="hk-kbd">{c.key}</kbd>
+              <span className="hk-chip-label">{c.label}</span>
+            </button>
+          ) : (
+            <span key={c.key} className="hk-chip" data-tip={`${c.key}: ${c.label}`}>
+              <kbd className="hk-kbd">{c.key}</kbd>
+              <span className="hk-chip-label">{c.label}</span>
+            </span>
+          ),
+        )}
+      </div>
+
+      {/* Long legend only on classic non-tight combat bar */}
       {!isHarvestBuild && !tight && (
-        <div className="combat-key-legend" aria-hidden>
+        <div className="combat-key-legend combat-key-legend-long" aria-hidden>
           {COMBAT_KEY_LEGEND}
         </div>
       )}
@@ -1337,6 +1398,27 @@ export function Hud({
           color: #5e6688;
           font-weight: 700;
           text-transform: uppercase;
+        }
+        .mode-banner-hint-btn {
+          pointer-events: auto;
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(0, 0, 0, 0.28);
+          color: #9aa4c0;
+          border-radius: 6px;
+          padding: 3px 8px;
+          font: inherit;
+          letter-spacing: inherit;
+          text-transform: inherit;
+        }
+        .mode-banner-hint-btn:hover {
+          border-color: rgba(110, 231, 183, 0.45);
+          color: #a7f3d0;
+        }
+        .combat-key-legend-long {
+          top: 148px !important;
+          opacity: 0.5;
+          font-size: 10px;
         }
         .mode-banner-rail {
           display: flex;

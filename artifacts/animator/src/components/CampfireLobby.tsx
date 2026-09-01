@@ -20,9 +20,10 @@ import {
 } from "react";
 import { gameSession } from "../game/GameSession";
 import {
-  buildGenesisHeroOptions,
+  buildVoxelCampfireHeroes,
   type GenesisHeroOption,
 } from "../lib/grudoxRoster";
+import { fetchCharacters } from "../lib/grudgeAuth";
 import {
   HUB_DESTINATIONS,
   HUB_GROUPS,
@@ -44,6 +45,8 @@ interface Props {
   onAvatarEdit?: () => void;
   /** Enter Danger Room with selected hero. */
   onPlayDanger?: (hero: GenesisHeroOption) => void;
+  /** Encament / starting lobby — Open VoxelArena with campfire explorer. */
+  onPlayVoxelStart?: (hero: GenesisHeroOption, kind: "encampment" | "starting-lobby") => void;
 }
 
 type Panel =
@@ -78,6 +81,22 @@ const MENU = (file: string) => `/ui/menu/${file}`;
 /** PvE titles hosted on open.grudge-studio.com (T0 native + Realms). */
 const PVE_DESTS: MenuDest[] = [
   {
+    id: "grudges-encament",
+    label: "Grudges · Encament",
+    blurb: "Walk the Encament village behind the fire · your campfire explorer",
+    kind: "local",
+    mode: "encampment",
+    needsHero: true,
+  },
+  {
+    id: "starting-lobby",
+    label: "Starting Lobby Town",
+    blurb: "Animal Company lobby + seed wilderness · campfire explorer",
+    kind: "local",
+    mode: "starting-lobby",
+    needsHero: true,
+  },
+  {
     id: "danger",
     label: "Danger Room",
     blurb: "Combat sandbox · weapons · skills · AI spar",
@@ -96,7 +115,7 @@ const PVE_DESTS: MenuDest[] = [
   {
     id: "survival",
     label: "Agama Survival",
-    blurb: "Wave survival on the Agama map",
+    blurb: "Battleground survival — farms, harvest, faction wars, extract",
     kind: "local",
     mode: "survival",
     needsHero: true,
@@ -139,6 +158,38 @@ const PVE_DESTS: MenuDest[] = [
     blurb: "In-Open voxel lab + presence",
     kind: "local",
     mode: "voxgrudge-native",
+    needsHero: false,
+  },
+  {
+    id: "world-map",
+    label: "Aethermoor World Map",
+    blurb: "Warlords sectors · sail · island POIs (client)",
+    kind: "external",
+    url: "https://client.grudge-studio.com/island-3d?mode=lobby",
+    needsHero: true,
+  },
+  {
+    id: "home-island",
+    label: "Home Island",
+    blurb: "Warlords home · Railway island claim · bag",
+    kind: "external",
+    url: "https://client.grudge-studio.com/home-island",
+    needsHero: true,
+  },
+  {
+    id: "harvest",
+    label: "Harvestables",
+    blurb: "Danger harvest activity · tools · nature scatter",
+    kind: "external",
+    url: "https://open.grudge-studio.com/danger?activity=harvest",
+    needsHero: true,
+  },
+  {
+    id: "deployables",
+    label: "Deployables · Build",
+    blurb: "Worldbuilder blocks · placeables · claim kits",
+    kind: "local",
+    mode: "voxel",
     needsHero: false,
   },
   {
@@ -272,11 +323,17 @@ function arcadeUrl(path: string): string {
  * Floating-island 4-seat campfire — **sole** WebGL owner for /lobby and /characters.
  * Do not wrap this in ProductionCinema / CinemaFlowGate with dungeon shells.
  */
-export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }: Props) {
+export function CampfireLobby({
+  onExit,
+  onNavigate,
+  onAvatarEdit,
+  onPlayDanger,
+  onPlayVoxelStart,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);
-  const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
-    buildGenesisHeroOptions(
+  const [heroes, setHeroes] = useState<(GenesisHeroOption | null)[]>(() =>
+    buildVoxelCampfireHeroes(
       gameSession.snapshot.characters,
       gameSession.snapshot.selectedCharacterId,
     ),
@@ -286,20 +343,29 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
   const [toast, setToast] = useState<string | null>(null);
   const [hoverTip, setHoverTip] = useState<CampfireHoverInfo>(null);
 
-  const active = heroes[selected] ?? heroes[0] ?? null;
+  const active = heroes[selected] ?? heroes.find(Boolean) ?? null;
 
   useEffect(() => {
     const unsub = gameSession.subscribe(() => {
-      setHeroes(
-        buildGenesisHeroOptions(
+      setHeroes((prev) => {
+        const next = buildVoxelCampfireHeroes(
           gameSession.snapshot.characters,
           gameSession.snapshot.selectedCharacterId,
-        ),
-      );
+        );
+        return next.some(Boolean) ? next : prev;
+      });
     });
     if (!gameSession.snapshot.ready) {
       void gameSession.boot().catch(() => undefined);
     }
+    void fetchCharacters({ eras: ["voxel"] })
+      .then((voxel) => {
+        if (!voxel.length) return;
+        setHeroes(
+          buildVoxelCampfireHeroes(voxel, gameSession.snapshot.selectedCharacterId),
+        );
+      })
+      .catch(() => undefined);
     return unsub;
   }, []);
 
@@ -382,6 +448,14 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
 
       if (dest.kind === "local" && dest.mode) {
         setPanel(null);
+        if (
+          (dest.mode === "encampment" || dest.mode === "starting-lobby") &&
+          active &&
+          onPlayVoxelStart
+        ) {
+          onPlayVoxelStart(active, dest.mode);
+          return;
+        }
         launchLocal(dest.mode, active);
         return;
       }
@@ -394,10 +468,38 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       }
       if (dest.kind === "external" && dest.url) {
         setPanel(null);
-        window.open(dest.url, "_blank", "noopener,noreferrer");
+        // Handoff hero + token on fleet surfaces (world map, home island, harvest)
+        try {
+          const u = new URL(dest.url, window.location.origin);
+          u.searchParams.set("open", "1");
+          u.searchParams.set("from", "charactersgrudox");
+          if (active?.id) u.searchParams.set("characterId", active.id);
+          if (active?.baseId) u.searchParams.set("baseId", active.baseId);
+          if (active?.name) u.searchParams.set("characterName", active.name);
+          try {
+            const tok =
+              localStorage.getItem("grudge.open.token") ||
+              localStorage.getItem("grudge_auth_token") ||
+              sessionStorage.getItem("grudge.open.token");
+            if (tok) {
+              u.searchParams.set("grudge_token", tok);
+              u.searchParams.set("sso_token", tok);
+            }
+          } catch {
+            /* private mode */
+          }
+          // Same-origin Open surfaces: navigate in-place; foreign hosts: new tab
+          if (u.origin === window.location.origin) {
+            window.location.assign(u.toString());
+          } else {
+            window.open(u.toString(), "_blank", "noopener,noreferrer");
+          }
+        } catch {
+          window.open(dest.url, "_blank", "noopener,noreferrer");
+        }
       }
     },
-    [active, bindHero, flash, launchLocal],
+    [active, bindHero, flash, launchLocal, onPlayVoxelStart],
   );
 
   const launchHub = useCallback(
@@ -411,6 +513,10 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       }
       const ctx = heroCtx(active);
       setPanel(null);
+      if (dest.id === "voxgrudge" && active && onPlayVoxelStart) {
+        onPlayVoxelStart(active, "encampment");
+        return;
+      }
       launchHubDestination(dest, ctx, {
         newTab: !dest.localMode,
         onLocal: (mode: LocalHubMode) => {
@@ -426,7 +532,7 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
         },
       });
     },
-    [active, flash, onNavigate, onPlayDanger],
+    [active, flash, onNavigate, onPlayDanger, onPlayVoxelStart],
   );
 
   const openPanel = (p: Panel) => {
@@ -462,11 +568,11 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
       <div className="cfl-head">
         <img className="cfl-helmet" src={MENU("grudge-helmet.png")} alt="" />
         <img className="cfl-logo" src={MENU("grudge-logo.png")} alt="GRUDGE" />
-        <p className="cfl-kicker">Grudge Studio · 4 hero seats</p>
+        <p className="cfl-kicker">Voxel era · 4 seats · Encament behind the fire</p>
         <p className="cfl-sub">
           {active
-            ? "TVS farm camp — heroes sit by the fire · hover to stand"
-            : "Farm campfire · four chairs · first hero free · Account to create more"}
+            ? "Campfire roster — Encament is the village behind you · Enter Encament to play"
+            : "Four chairs · first hero free · Encament start · Account to create more"}
         </p>
       </div>
 
@@ -488,7 +594,8 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
                 const url =
                   typeof window !== "undefined"
                     ? `https://character.grudge-studio.com/?era=voxel&from=open&returnTo=${encodeURIComponent(
-                        window.location.origin + "/?door=characters",
+                        // Path SSOT: /characters always CampfireLobby (entryCatch)
+                        window.location.origin + "/characters",
                       )}`
                     : "https://character.grudge-studio.com/?era=voxel&from=open";
                 window.location.assign(url);
@@ -498,6 +605,23 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
             }}
           >
             Create hero
+          </button>
+          <button
+            type="button"
+            className="cfl-btn"
+            title="Aethermoor world map · sectors · POIs"
+            onClick={() =>
+              launchDest({
+                id: "world-map",
+                label: "World Map",
+                blurb: "",
+                kind: "external",
+                url: "https://client.grudge-studio.com/island-3d?mode=lobby",
+                needsHero: false,
+              })
+            }
+          >
+            World map
           </button>
           <button type="button" className="cfl-btn" onClick={() => onNavigate("doors")}>
             Library
@@ -602,6 +726,24 @@ export function CampfireLobby({ onExit, onNavigate, onAvatarEdit, onPlayDanger }
             <button
               type="button"
               className="cfl-btn primary"
+              onClick={() =>
+                launchDest({
+                  id: "grudges-encament",
+                  label: "Grudges · Encament",
+                  blurb: "Voxel era play start",
+                  kind: "local",
+                  mode: "encampment",
+                  needsHero: true,
+                })
+              }
+            >
+              Enter Encament
+            </button>
+          )}
+          {active && (
+            <button
+              type="button"
+              className="cfl-btn"
               onClick={() => active && onPlayDanger?.(active)}
             >
               Quick Danger

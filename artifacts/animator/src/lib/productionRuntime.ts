@@ -16,6 +16,12 @@
  * Physics constants — re-export fleet SSOT from `@workspace/grudge-physics`
  * so every Open surface shares one capsule / tick / gravity definition.
  */
+import {
+  EXPLORER_STARTING_TOWN_CHUNK,
+  EXPLORER_STARTING_TOWN_DEPLOYMENT,
+  hashSeed,
+} from "@workspace/voxel-canonical";
+
 export {
   PHYSICS_HZ,
   PHYSICS_DT,
@@ -79,24 +85,33 @@ export const ATTACK_PHASE_RATIO = {
 } as const;
 
 /**
- * Mine-Loader / fleet URLs for world promote + lobby.
+ * Mine-Loader / fleet URLs for world promote + lobby + play modes.
  * Override with VITE_* when staging.
+ *
+ * **Play host (canonical):** https://mineloader.grudge-studio.com
+ *   — multiplayer Realms, self-hosted map deploys, harvest mode, DRC combat
+ * **Alias:** https://mine.grudge-studio.com
+ * **Origin SPA:** https://mine-loader.vercel.app
+ * **World API:** Railway mine-loader-api (1 replica)
+ * **Characters / explorer avatar:** Railway grudge-api via SPA rewrites
  */
 export const MINE_LOADER_FLEET = {
   github: "https://github.com/MolochDaGod/mine-loader",
   /**
-   * Live SPA (probed 200). Custom DNS mineloader.grudge-studio.com was NXDOMAIN —
-   * use Vercel host until CF edge is attached.
+   * Canonical play host — CF Worker `mineloader-edge-proxy` → Vercel SPA.
+   * Use this for library launch, map deploy handoff, multiplayer rooms.
    */
   client:
     (typeof import.meta !== "undefined" &&
       (import.meta.env?.VITE_MINE_LOADER_URL as string | undefined)) ||
-    "https://mine-loader.vercel.app/",
-  /** Optional edge alias when CF live; same as client until then. */
+    "https://mineloader.grudge-studio.com/",
+  /** Short alias edge (Worker `mine-loader-edge`). */
   edge:
     (typeof import.meta !== "undefined" &&
       (import.meta.env?.VITE_MINE_LOADER_EDGE as string | undefined)) ||
-    "https://mine-loader.vercel.app/",
+    "https://mine.grudge-studio.com/",
+  /** Direct Vercel origin (fallback if CF edge cold). */
+  vercel: "https://mine-loader.vercel.app/",
   /**
    * World + Codex API (Railway, 1 replica). Vercel SPA rewrites `/api/*` here.
    * Direct host is a fallback when same-origin / SPA proxy is cold.
@@ -108,8 +123,24 @@ export const MINE_LOADER_FLEET = {
   /** Blocks catalog path (same-origin rewrite preferred when wired). */
   blocksApi: "/api/blocks",
   healthz: "/api/healthz",
+  worldsApi: "/api/worlds",
   /** World WS is on the Realms host, not Open. */
   singleReplica: true,
+  /**
+   * Play modes on mineloader (query `mode=` + hash route).
+   * - harvest: Minecraft-like gather / place / craft
+   * - drc | combat: Danger-Room-style combat with account explorer avatar
+   * - free: default open play / editor-promoted map
+   */
+  modes: {
+    harvest: "harvest",
+    drc: "drc",
+    combat: "combat",
+    free: "free",
+    lobby: "lobby",
+  },
+  /** Default avatar form when character has no race kit yet. */
+  defaultBaseId: "explorer",
 } as const;
 
 /** SSO handoff query keys (Open → Realms / lobby / danger). */
@@ -117,33 +148,162 @@ export const HANDOFF_QUERY = {
   sso: "sso_token",
   launch: "grudge_token",
   characterId: "characterId",
+  /** charactersgrudox / grudge6 form — explorer is default voxel body */
+  baseId: "baseId",
+  raceId: "raceId",
+  /** Play mode: harvest | drc | combat | free */
+  mode: "mode",
+  /** Self-hosted / promoted map id when known */
+  mapId: "mapId",
+  /** World / room code for multiplayer */
+  room: "room",
   open: "open",
   from: "from",
 } as const;
 
-/**
- * Build Realms lobby URL with account handoff.
- */
-export function mineLoaderLobbyUrl(opts: {
-  token?: string | null;
-  characterId?: string | null;
-  room?: string | null;
-  from?: string;
-} = {}): string {
-  const base = MINE_LOADER_FLEET.client.replace(/\/+$/, "");
-  const u = new URL(`${base}/`);
-  // Hash-routed SPA often uses #/play or #/lobby
-  u.hash = opts.room ? `#/play?room=${encodeURIComponent(opts.room)}` : "#/lobby";
+export type MineLoaderPlayMode = "harvest" | "drc" | "combat" | "free" | "lobby";
+
+function applyMineHandoff(
+  u: URL,
+  opts: {
+    token?: string | null;
+    characterId?: string | null;
+    baseId?: string | null;
+    raceId?: string | null;
+    mode?: MineLoaderPlayMode | string | null;
+    mapId?: string | null;
+    room?: string | null;
+    from?: string;
+  },
+): void {
   if (opts.token) {
     u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
     u.searchParams.set(HANDOFF_QUERY.launch, opts.token);
   }
   if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
+  // Always pass explorer-capable avatar form for voxel body resolve
+  u.searchParams.set(
+    HANDOFF_QUERY.baseId,
+    opts.baseId || MINE_LOADER_FLEET.defaultBaseId,
+  );
+  if (opts.raceId) u.searchParams.set(HANDOFF_QUERY.raceId, opts.raceId);
+  if (opts.mode) u.searchParams.set(HANDOFF_QUERY.mode, opts.mode);
+  if (opts.mapId) u.searchParams.set(HANDOFF_QUERY.mapId, opts.mapId);
+  if (opts.room) u.searchParams.set(HANDOFF_QUERY.room, opts.room);
   u.searchParams.set(HANDOFF_QUERY.open, "1");
   u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
+  // Canonical Realms character era (parity with era=warlords on grudgewarlords.com)
+  u.searchParams.set("era", "voxel");
+  u.searchParams.set("gameEra", "voxel");
   if (typeof window !== "undefined") {
     u.searchParams.set("collection", window.location.origin);
   }
+}
+
+/**
+ * Build Realms lobby URL with account handoff (multiplayer rooms / parties).
+ * characterId must be era=voxel when selecting a Realms hero.
+ */
+export function mineLoaderLobbyUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  baseId?: string | null;
+  raceId?: string | null;
+  room?: string | null;
+  from?: string;
+} = {}): string {
+  const base = MINE_LOADER_FLEET.client.replace(/\/+$/, "");
+  const u = new URL(`${base}/`);
+  u.hash = opts.room ? `#/play?room=${encodeURIComponent(opts.room)}` : "#/lobby";
+  applyMineHandoff(u, { ...opts, mode: "lobby" });
+  return u.toString();
+}
+
+/**
+ * Build play URL for a mode + optional self-hosted map deploy.
+ *
+ * Modes:
+ * - **harvest** — Minecraft-like gather/build on map or overworld seed
+ * - **drc** / **combat** — DRC combat with account explorer avatar character
+ * - **free** — default play on promoted map
+ */
+export function mineLoaderPlayUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  baseId?: string | null;
+  raceId?: string | null;
+  mode?: MineLoaderPlayMode | string | null;
+  mapId?: string | null;
+  room?: string | null;
+  from?: string;
+} = {}): string {
+  const base = MINE_LOADER_FLEET.client.replace(/\/+$/, "");
+  const u = new URL(`${base}/`);
+  const mode = opts.mode || "free";
+  const hashQ = new URLSearchParams();
+  if (opts.room) hashQ.set("room", opts.room);
+  if (opts.mapId) hashQ.set("mapId", opts.mapId);
+  hashQ.set("mode", mode);
+  const q = hashQ.toString();
+  u.hash = q ? `#/play?${q}` : "#/play";
+  applyMineHandoff(u, { ...opts, mode });
+  // No authored mapId → explorer starting town + Minecraft-like seed overworld.
+  if (!opts.mapId) {
+    u.searchParams.set("deploymentId", EXPLORER_STARTING_TOWN_DEPLOYMENT);
+    u.searchParams.set("startingTown", EXPLORER_STARTING_TOWN_CHUNK);
+    u.searchParams.set("seed", String(hashSeed("explorer-town")));
+    u.searchParams.set("seedLabel", "explorer-town");
+    u.searchParams.set("worldMode", "seed-overworld");
+  }
+  return u.toString();
+}
+
+/** Harvest-mode shortcut (Minecraft-like). */
+export function mineLoaderHarvestUrl(
+  opts: Omit<Parameters<typeof mineLoaderPlayUrl>[0], "mode"> = {},
+): string {
+  return mineLoaderPlayUrl({ ...opts, mode: "harvest" });
+}
+
+/** DRC combat-mode shortcut (account explorer avatar). */
+export function mineLoaderDrcUrl(
+  opts: Omit<Parameters<typeof mineLoaderPlayUrl>[0], "mode"> = {},
+): string {
+  return mineLoaderPlayUrl({
+    ...opts,
+    mode: "drc",
+    baseId: opts.baseId || MINE_LOADER_FLEET.defaultBaseId,
+  });
+}
+
+/**
+ * Open Warlords play (era=warlords heroes only).
+ * characterId must be a Warlords-era hero — not a Mine-Loader/voxel character.
+ * Voxel Realms is a separate era roster (mineLoader* helpers).
+ */
+export function warlordsPlayUrl(opts: {
+  token?: string | null;
+  characterId?: string | null;
+  baseId?: string | null;
+  raceId?: string | null;
+  host?: "flagship" | "client";
+  from?: string;
+} = {}): string {
+  const origin =
+    opts.host === "client"
+      ? "https://client.grudge-studio.com"
+      : "https://grudgewarlords.com";
+  const u = new URL(origin + "/");
+  if (opts.token) {
+    u.searchParams.set(HANDOFF_QUERY.sso, opts.token);
+    u.searchParams.set(HANDOFF_QUERY.launch, opts.token);
+  }
+  if (opts.characterId) u.searchParams.set(HANDOFF_QUERY.characterId, opts.characterId);
+  if (opts.baseId) u.searchParams.set(HANDOFF_QUERY.baseId, opts.baseId);
+  if (opts.raceId) u.searchParams.set(HANDOFF_QUERY.raceId, opts.raceId);
+  u.searchParams.set("era", "warlords");
+  u.searchParams.set(HANDOFF_QUERY.open, "1");
+  u.searchParams.set(HANDOFF_QUERY.from, opts.from || "gameopen");
   return u.toString();
 }
 

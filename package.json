@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "npm --prefix artifacts/animator run dev",
-    "build": "node scripts/vercel-build.mjs",
+    "build": "node scripts/verify-source-boundaries.mjs && node scripts/vercel-build.mjs",
+    "verify:source-boundaries": "node scripts/verify-source-boundaries.mjs",
     "start:api": "node server/standalone.mjs",
     "ingest:rapier": "node scripts/ingest-threejs-rapier.mjs",
     "assets:merge": "node scripts/merge-gameopen-assets.mjs",
@@ -23,6 +24,8 @@
     "smoke:prod": "node scripts/smoke-prod.mjs",
     "smoke:prod:open": "node scripts/smoke-prod.mjs --base https://open.grudge-studio.com",
     "smoke:prod:portal": "node scripts/smoke-prod.mjs --base https://grudge-studio.com",
+    "smoke:library": "node scripts/library-stack-smoke.mjs",
+    "smoke:library:open": "node scripts/library-stack-smoke.mjs --base=https://open.grudge-studio.com",
     "readiness:anims": "node scripts/readiness-anim-packs.mjs",
     "anims:sync": "node scripts/sync-anim-database.mjs",
     "anims:verify": "node scripts/verify-anim-integrity.mjs",
@@ -30,8 +33,13 @@
     "anims:verify:strict": "node scripts/verify-anim-integrity.mjs --strict",
     "anims:bake:mobility": "npm --prefix artifacts/animator run bake:mobility",
     "anims:bake:dual-wield": "npm --prefix artifacts/animator run bake:dual-wield",
-    "ci:test": "npm --prefix artifacts/animator run test -- src/three/retargetMap.test.ts src/lib/annihilateHero.test.ts src/three/anim/AnimDatabase.test.ts src/three/anim/weaponLivePacks.test.ts src/three/climb/climbHolds.test.ts",
-    "deploy:prod": "node scripts/vercel-build.mjs && npx vercel deploy --prod --yes",
+    "deploy:gate": "node scripts/open-deploy-gate.mjs",
+    "deploy:durable": "node scripts/deploy-durable.mjs",
+    "deploy:durable:dry": "node scripts/deploy-durable.mjs --dry-run",
+    "deploy:durable:assets": "node scripts/deploy-durable.mjs --assets",
+    "loaders:stage": "node scripts/stage-three-loaders.mjs",
+    "deploy:prod": "node scripts/deploy-durable.mjs",
+    "test:inventory": "npm --prefix artifacts/animator run test -- src/game/inventory/characterBag.test.ts src/game/inventory/ledgerClient.test.ts",
     "verify:assets": "node scripts/verify-fleet-assets.mjs",
     "verify:assets:cdn": "node scripts/verify-fleet-assets.mjs --cdn-only",
     "verify:assets:open": "node scripts/verify-fleet-assets.mjs --base https://open.grudge-studio.com",
@@ -60,9 +68,15 @@
     "assets:voxel-last30:upload": "node scripts/upload-local-glbs-wrangler.mjs models/voxel",
     "assets:voxel-last30:pipeline": "node scripts/stage-voxel-last30.mjs && node scripts/upload-local-glbs-wrangler.mjs models/voxel && node scripts/seed-voxel-last30-d1.mjs --apply",
     "assets:voxel-last30:deployments": "node scripts/update-voxel-deployments.mjs",
-    "assets:voxel-last30:deployments:dry": "node scripts/update-voxel-deployments.mjs --dry-run"
+    "assets:voxel-last30:deployments:dry": "node scripts/update-voxel-deployments.mjs --dry-run",
+    "mcp:asset-gen": "mcp-asset-gen",
+    "test:staff-skills": "npm --prefix artifacts/animator run test -- src/three/grudge/weaponSkillPacks.staff.test.ts src/three/assets/generatedFleetCatalog.test.ts",
+    "ci:test": "npm --prefix artifacts/animator run test -- src/three/retargetMap.test.ts src/lib/annihilateHero.test.ts src/three/anim/AnimDatabase.test.ts src/three/anim/weaponLivePacks.test.ts src/three/climb/climbHolds.test.ts src/three/grudge/weaponSkillPacks.staff.test.ts src/three/assets/generatedFleetCatalog.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0"
+  },
+  "devDependencies": {
+    "mcp-game-asset-gen": "^0.1.0"
   }
 }

@@ -1,11 +1,17 @@
 /**
  * Deterministic melee strike VFX + physics feedback profiles.
  *
+ * Slash-wave projectiles (Getsuga-class) are **melee attack extensions only**:
+ *  - Spawn from weapon tip at the anim hit frame (Studio.doComboHit)
+ *  - Orient along weapon grip→tip (same angle as the blade)
+ *  - Travel 1 m … ~10 m per stage (short residual vs long wave)
+ *  - Color + size (contactRadius / arc.scale) differ per stage & family
+ *  - Damage / push colliders ride the wave path
+ *
+ * NOT a free hotkey. NOT Alt+Space.
+ *
  * NO Math.random for arc selection — combo stage + weapon family maps to a
  * stable slash crescent index and authored params (see slashSettings).
- *
- * Covers: slash arc, weapon-collider trail emphasis, optional projectile,
- * ground AoE telegraph, knockback / knock-up on connect.
  */
 
 import type { WeaponId } from "../types";
@@ -42,23 +48,29 @@ export type MeleeStrikeFxProfile = {
   trailWindow: number;
   /** Soft cast aura / ring at swing peak. */
   swingAura: boolean;
-  /** Deploy a short projectile along swing dir on impact. */
+  /**
+   * Optional slash-wave / bolt along **weapon edge** at hit frame.
+   * `range` is metres from muzzle (1 ≈ melee residual, 8–10 ≈ long wave).
+   * `meshScale` multiplies the projectile visual (size variety per stage).
+   */
   projectile?: {
     kind: "slash_wave" | "bolt" | "hellfire_chain" | "none";
     speed: number;
+    /** Travel distance (m) from weapon tip — author 1…10 typically. */
     range: number;
     color: number;
     /**
      * Production slash variant: slashred | slashblue | slashpurple | slashyellow.
-     * Drives ice-bow energy shader palette + pattern (flame-aura class).
-     * Also selects hellfire chain flame kit colors.
+     * Different colors per stage / weapon family.
      */
     variant?: "slashred" | "slashblue" | "slashpurple" | "slashyellow";
     /**
-     * Path hit radius (m) for slash_wave / Getsuga ice-bow colliders.
-     * Extends contact beyond the body capsule along the residual wave.
+     * Path hit radius (m) — damage + push collider along the wave.
+     * Larger = chunkier residual hitbox (melee range improvement).
      */
     contactRadius?: number;
+    /** Visual scale of the slash mesh (0.5 tiny … 2.0 huge). */
+    meshScale?: number;
     /** Seconds the projectile sticks to the weapon edge before free flight. */
     followDuration?: number;
     /** Ghost Rider path role for hellfire_chain extension curve. */
@@ -111,6 +123,17 @@ const ONE_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0xb8e8ff,
     trailWindow: 0.42,
     swingAura: true,
+    // Short residual wave (~1 m) — extends melee collider slightly past the blade
+    projectile: {
+      kind: "slash_wave",
+      speed: 12,
+      range: 1.15,
+      color: 0xb8e8ff,
+      variant: "slashblue",
+      contactRadius: 0.55,
+      meshScale: 0.55,
+      followDuration: 0.06,
+    },
     aoeRadius: 0,
     aoeColor: 0xb8e8ff,
     knockback: 1.2,
@@ -147,11 +170,12 @@ const ONE_HAND: MeleeStrikeFxProfile[] = [
     swingAura: true,
     projectile: {
       kind: "slash_wave",
-      speed: 15,
-      range: 6.5,
+      speed: 14,
+      range: 4.0,
       color: 0x4aa8ff,
       variant: "slashblue",
-      contactRadius: 0.9,
+      contactRadius: 0.85,
+      meshScale: 0.9,
       followDuration: 0.1,
     },
     aoeRadius: 0.6,
@@ -191,10 +215,11 @@ const ONE_HAND: MeleeStrikeFxProfile[] = [
     projectile: {
       kind: "slash_wave",
       speed: 16,
-      range: 8.5,
+      range: 9.0,
       color: 0xffe08a,
       variant: "slashyellow",
-      contactRadius: 1.05,
+      contactRadius: 1.15,
+      meshScale: 1.35,
       followDuration: 0.12,
     },
     aoeRadius: 1.4,
@@ -224,6 +249,16 @@ const TWO_HAND: MeleeStrikeFxProfile[] = [
     trailColor: 0xc8d8ff,
     trailWindow: 0.48,
     swingAura: true,
+    projectile: {
+      kind: "slash_wave",
+      speed: 11,
+      range: 1.4,
+      color: 0xc8d8ff,
+      variant: "slashpurple",
+      contactRadius: 0.7,
+      meshScale: 0.7,
+      followDuration: 0.08,
+    },
     aoeRadius: 0.5,
     aoeColor: 0xc8d8ff,
     knockback: 2.0,
@@ -261,10 +296,11 @@ const TWO_HAND: MeleeStrikeFxProfile[] = [
     projectile: {
       kind: "slash_wave",
       speed: 13,
-      range: 7.5,
+      range: 5.5,
       color: 0xb070ff,
       variant: "slashpurple",
       contactRadius: 1.0,
+      meshScale: 1.15,
       followDuration: 0.12,
     },
     aoeRadius: 1.1,
@@ -303,11 +339,12 @@ const TWO_HAND: MeleeStrikeFxProfile[] = [
     swingAura: true,
     projectile: {
       kind: "slash_wave",
-      speed: 14,
-      range: 9.5,
+      speed: 15,
+      range: 10.0,
       color: 0xff5a20,
       variant: "slashred",
-      contactRadius: 1.2,
+      contactRadius: 1.35,
+      meshScale: 1.6,
       followDuration: 0.14,
     },
     aoeRadius: 2.0,
@@ -368,6 +405,7 @@ const POLEARM: MeleeStrikeFxProfile[] = [
       color: 0x4aa8ff,
       variant: "slashblue",
       contactRadius: 0.95,
+      meshScale: 1.05,
       followDuration: 0.1,
     },
     aoeRadius: 0.8,

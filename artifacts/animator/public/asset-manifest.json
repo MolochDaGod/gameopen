@@ -1,33 +1,33 @@
 {
   "version": 2,
-  "generatedAt": "2026-08-05T03:49:57.507Z",
+  "generatedAt": "2026-08-03T19:17:44.292Z",
   "game": "gameopen",
-  "count": 1924,
+  "count": 1929,
   "byKind": {
-    "data": 251,
-    "animation": 640,
-    "model": 429,
+    "data": 353,
+    "animation": 747,
+    "model": 249,
     "texture": 501,
-    "other": 86,
+    "other": 62,
     "icon": 8,
     "text": 3,
     "bin": 2,
     "code": 4
   },
   "byPurpose": {
-    "data": 251,
-    "unknown": 428,
-    "prop": 48,
+    "data": 353,
+    "unknown": 358,
+    "prop": 37,
     "animation": 320,
-    "weapon": 203,
-    "vfx": 54,
+    "weapon": 223,
+    "vfx": 44,
     "texture": 501,
     "audio": 54,
-    "npc": 24,
-    "map": 33,
+    "npc": 19,
+    "map": 12,
     "character": 8
   },
-  "totalBytes": 4234934680,
+  "totalBytes": 1213146456,
   "assets": [
     {
       "id": "GO-b398190a6e51",
@@ -38,6 +38,126 @@
       "ext": "json",
       "bytes": 60,
       "category": "root"
+    },
+    {
+      "id": "GO-c2b066397709",
+      "path": "/anim/action-adventure/cover-to-stand.fbx",
+      "rel": "anim/action-adventure/cover-to-stand.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 163601,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-ccd1a9914206",
+      "path": "/anim/action-adventure/crouched-sneaking-left.fbx",
+      "rel": "anim/action-adventure/crouched-sneaking-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 158449,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-3fc74afa030d",
+      "path": "/anim/action-adventure/crouched-sneaking-right.fbx",
+      "rel": "anim/action-adventure/crouched-sneaking-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 154849,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-11f3d3b22ab1",
+      "path": "/anim/action-adventure/falling-idle.fbx",
+      "rel": "anim/action-adventure/falling-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 143953,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-f8da5a36dcad",
+      "path": "/anim/action-adventure/falling-to-roll.fbx",
+      "rel": "anim/action-adventure/falling-to-roll.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 179809,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-d6da0a9d788f",
+      "path": "/anim/action-adventure/hard-landing.fbx",
+      "rel": "anim/action-adventure/hard-landing.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 187153,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-e5ebfb3473b5",
+      "path": "/anim/action-adventure/jumping-up.fbx",
+      "rel": "anim/action-adventure/jumping-up.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 142433,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-b0b7bce8b55f",
+      "path": "/anim/action-adventure/left-cover-sneak.fbx",
+      "rel": "anim/action-adventure/left-cover-sneak.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 154065,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-78455f82d40d",
+      "path": "/anim/action-adventure/right-cover-sneak.fbx",
+      "rel": "anim/action-adventure/right-cover-sneak.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 155569,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-471960e0fa77",
+      "path": "/anim/action-adventure/run-to-stop.fbx",
+      "rel": "anim/action-adventure/run-to-stop.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 147505,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-9828d9c20515",
+      "path": "/anim/action-adventure/running-suspect-run-to-roll.fbx",
+      "rel": "anim/action-adventure/running-suspect-run-to-roll.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 143185,
+      "category": "anim/action-adventure"
+    },
+    {
+      "id": "GO-dcc5a423dae8",
+      "path": "/anim/action-adventure/stand-to-cover.fbx",
+      "rel": "anim/action-adventure/stand-to-cover.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 157697,
+      "category": "anim/action-adventure"
     },
     {
       "id": "GO-3293563033fb",
@@ -1306,7 +1426,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 158669,
+      "bytes": 160474,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1316,7 +1436,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 128009,
+      "bytes": 129814,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1326,7 +1446,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 142461,
+      "bytes": 144266,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1336,7 +1456,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 87259,
+      "bytes": 89064,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1346,7 +1466,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 148554,
+      "bytes": 150359,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1356,7 +1476,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 96844,
+      "bytes": 98649,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1366,7 +1486,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 76434,
+      "bytes": 78239,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1376,7 +1496,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 68265,
+      "bytes": 70070,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1386,7 +1506,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 92844,
+      "bytes": 94649,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1396,7 +1516,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 117734,
+      "bytes": 119539,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1406,7 +1526,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 136392,
+      "bytes": 138197,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1416,7 +1536,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 101062,
+      "bytes": 102867,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1426,7 +1546,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 101510,
+      "bytes": 103315,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1436,7 +1556,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 101647,
+      "bytes": 103452,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1446,7 +1566,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 105693,
+      "bytes": 107498,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1456,7 +1576,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 101572,
+      "bytes": 103377,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1466,7 +1586,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 101533,
+      "bytes": 103338,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1476,7 +1596,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 138157,
+      "bytes": 139962,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1486,7 +1606,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 159823,
+      "bytes": 161628,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1496,7 +1616,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 159505,
+      "bytes": 161310,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1506,7 +1626,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 99058,
+      "bytes": 100863,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1516,7 +1636,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 85251,
+      "bytes": 87056,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1526,7 +1646,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 91506,
+      "bytes": 93311,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1536,7 +1656,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 84765,
+      "bytes": 86570,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1546,7 +1666,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 84821,
+      "bytes": 86626,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1556,7 +1676,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 86752,
+      "bytes": 88557,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1566,7 +1686,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 159455,
+      "bytes": 161260,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1576,7 +1696,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 118162,
+      "bytes": 119967,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1586,7 +1706,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 225777,
+      "bytes": 227582,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1596,7 +1716,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 159519,
+      "bytes": 161324,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1606,7 +1726,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 159483,
+      "bytes": 161288,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1616,7 +1736,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 117505,
+      "bytes": 119310,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1626,7 +1746,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 117652,
+      "bytes": 119457,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -1636,7 +1756,7 @@
       "kind": "animation",
       "purpose": "animation",
       "ext": "fbx",
-      "bytes": 110124,
+      "bytes": 111929,
       "category": "anim/animations/ghostrider"
     },
     {
@@ -3850,6 +3970,56 @@
       "category": "anim/combo"
     },
     {
+      "id": "GO-9c4dda5c4e4f",
+      "path": "/anim/creator-glb/anim_attack.glb",
+      "rel": "anim/creator-glb/anim_attack.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 106204,
+      "category": "anim/creator-glb"
+    },
+    {
+      "id": "GO-81ec11d96841",
+      "path": "/anim/creator-glb/anim_attack_heavy.glb",
+      "rel": "anim/creator-glb/anim_attack_heavy.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 100736,
+      "category": "anim/creator-glb"
+    },
+    {
+      "id": "GO-81855babe9d9",
+      "path": "/anim/creator-glb/anim_death.glb",
+      "rel": "anim/creator-glb/anim_death.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 117092,
+      "category": "anim/creator-glb"
+    },
+    {
+      "id": "GO-124761312488",
+      "path": "/anim/creator-glb/anim_idle.glb",
+      "rel": "anim/creator-glb/anim_idle.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 171676,
+      "category": "anim/creator-glb"
+    },
+    {
+      "id": "GO-96b930ea4d56",
+      "path": "/anim/creator-glb/anim_walk.glb",
+      "rel": "anim/creator-glb/anim_walk.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 93852,
+      "category": "anim/creator-glb"
+    },
+    {
       "id": "GO-ab82b7439ae5",
       "path": "/anim/extra/aerial-evade.fbx",
       "rel": "anim/extra/aerial-evade.fbx",
@@ -4250,6 +4420,46 @@
       "category": "anim/extra"
     },
     {
+      "id": "GO-e03b0c35ff82",
+      "path": "/anim/farming/box-idle.fbx",
+      "rel": "anim/farming/box-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 260993,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-7389498e4458",
+      "path": "/anim/farming/box-turn.fbx",
+      "rel": "anim/farming/box-turn.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 153281,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-e30a178f766a",
+      "path": "/anim/farming/box-walk-arc.fbx",
+      "rel": "anim/farming/box-walk-arc.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 159249,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-71f3bb412190",
+      "path": "/anim/farming/cow-milking.fbx",
+      "rel": "anim/farming/cow-milking.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 233985,
+      "category": "anim/farming"
+    },
+    {
       "id": "GO-71fc875d50b7",
       "path": "/anim/farming/dig-and-plant-seeds.fbx",
       "rel": "anim/farming/dig-and-plant-seeds.fbx",
@@ -4260,6 +4470,56 @@
       "category": "anim/farming"
     },
     {
+      "id": "GO-8c1ab545085f",
+      "path": "/anim/farming/holding-idle.fbx",
+      "rel": "anim/farming/holding-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 260673,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-0f127842f5d3",
+      "path": "/anim/farming/holding-turn-left.fbx",
+      "rel": "anim/farming/holding-turn-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 155505,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-07da1901b5c1",
+      "path": "/anim/farming/holding-turn-right.fbx",
+      "rel": "anim/farming/holding-turn-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 156161,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-c3ae9c5b61a3",
+      "path": "/anim/farming/holding-walk.fbx",
+      "rel": "anim/farming/holding-walk.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 166673,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-b64f63dab7dd",
+      "path": "/anim/farming/kneeling-idle.fbx",
+      "rel": "anim/farming/kneeling-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 218353,
+      "category": "anim/farming"
+    },
+    {
       "id": "GO-621a581c911e",
       "path": "/anim/farming/pick-fruit.fbx",
       "rel": "anim/farming/pick-fruit.fbx",
@@ -4267,6 +4527,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 387297,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-0039ce70e75f",
+      "path": "/anim/farming/plant-a-plant.fbx",
+      "rel": "anim/farming/plant-a-plant.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 308801,
       "category": "anim/farming"
     },
     {
@@ -4297,6 +4567,46 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 307105,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-bbf20fbb8d3b",
+      "path": "/anim/farming/wheelbarrow-dump.fbx",
+      "rel": "anim/farming/wheelbarrow-dump.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 287953,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-71b2dc52b82f",
+      "path": "/anim/farming/wheelbarrow-idle.fbx",
+      "rel": "anim/farming/wheelbarrow-idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 157121,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-427b7ba54d88",
+      "path": "/anim/farming/wheelbarrow-walk-turn.fbx",
+      "rel": "anim/farming/wheelbarrow-walk-turn.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 157169,
+      "category": "anim/farming"
+    },
+    {
+      "id": "GO-1483677858c2",
+      "path": "/anim/farming/wheelbarrow-walk.fbx",
+      "rel": "anim/farming/wheelbarrow-walk.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151985,
       "category": "anim/farming"
     },
     {
@@ -4476,7 +4786,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 158669,
+      "bytes": 160474,
       "category": "anim/ghostrider"
     },
     {
@@ -4486,7 +4796,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 128009,
+      "bytes": 129814,
       "category": "anim/ghostrider"
     },
     {
@@ -4496,7 +4806,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 142461,
+      "bytes": 144266,
       "category": "anim/ghostrider"
     },
     {
@@ -4506,7 +4816,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 87259,
+      "bytes": 89064,
       "category": "anim/ghostrider"
     },
     {
@@ -4516,7 +4826,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 148554,
+      "bytes": 150359,
       "category": "anim/ghostrider"
     },
     {
@@ -4526,7 +4836,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 96844,
+      "bytes": 98649,
       "category": "anim/ghostrider"
     },
     {
@@ -4536,7 +4846,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 76434,
+      "bytes": 78239,
       "category": "anim/ghostrider"
     },
     {
@@ -4546,7 +4856,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 68265,
+      "bytes": 70070,
       "category": "anim/ghostrider"
     },
     {
@@ -4556,7 +4866,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 92844,
+      "bytes": 94649,
       "category": "anim/ghostrider"
     },
     {
@@ -4566,7 +4876,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 117734,
+      "bytes": 119539,
       "category": "anim/ghostrider"
     },
     {
@@ -4576,7 +4886,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 136392,
+      "bytes": 138197,
       "category": "anim/ghostrider"
     },
     {
@@ -4586,7 +4896,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 101062,
+      "bytes": 102867,
       "category": "anim/ghostrider"
     },
     {
@@ -4596,7 +4906,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 101510,
+      "bytes": 103315,
       "category": "anim/ghostrider"
     },
     {
@@ -4606,7 +4916,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 101647,
+      "bytes": 103452,
       "category": "anim/ghostrider"
     },
     {
@@ -4616,7 +4926,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 105693,
+      "bytes": 107498,
       "category": "anim/ghostrider"
     },
     {
@@ -4626,7 +4936,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 101572,
+      "bytes": 103377,
       "category": "anim/ghostrider"
     },
     {
@@ -4636,7 +4946,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 101533,
+      "bytes": 103338,
       "category": "anim/ghostrider"
     },
     {
@@ -4646,7 +4956,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 138157,
+      "bytes": 139962,
       "category": "anim/ghostrider"
     },
     {
@@ -4656,7 +4966,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 159823,
+      "bytes": 161628,
       "category": "anim/ghostrider"
     },
     {
@@ -4666,7 +4976,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 159505,
+      "bytes": 161310,
       "category": "anim/ghostrider"
     },
     {
@@ -4676,7 +4986,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 99058,
+      "bytes": 100863,
       "category": "anim/ghostrider"
     },
     {
@@ -4686,7 +4996,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 85251,
+      "bytes": 87056,
       "category": "anim/ghostrider"
     },
     {
@@ -4696,7 +5006,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 91506,
+      "bytes": 93311,
       "category": "anim/ghostrider"
     },
     {
@@ -4706,7 +5016,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 84765,
+      "bytes": 86570,
       "category": "anim/ghostrider"
     },
     {
@@ -4716,7 +5026,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 84821,
+      "bytes": 86626,
       "category": "anim/ghostrider"
     },
     {
@@ -4726,7 +5036,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 86752,
+      "bytes": 88557,
       "category": "anim/ghostrider"
     },
     {
@@ -4736,7 +5046,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 159455,
+      "bytes": 161260,
       "category": "anim/ghostrider"
     },
     {
@@ -4746,7 +5056,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 118162,
+      "bytes": 119967,
       "category": "anim/ghostrider"
     },
     {
@@ -4756,7 +5066,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 225777,
+      "bytes": 227582,
       "category": "anim/ghostrider"
     },
     {
@@ -4766,7 +5076,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 159519,
+      "bytes": 161324,
       "category": "anim/ghostrider"
     },
     {
@@ -4776,7 +5086,7 @@
       "kind": "animation",
       "purpose": "weapon",
       "ext": "fbx",
-      "bytes": 159483,
+      "bytes": 161288,
       "category": "anim/ghostrider"
     },
     {
@@ -4786,7 +5096,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 117505,
+      "bytes": 119310,
       "category": "anim/ghostrider"
     },
     {
@@ -4796,7 +5106,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 117652,
+      "bytes": 119457,
       "category": "anim/ghostrider"
     },
     {
@@ -4806,7 +5116,7 @@
       "kind": "animation",
       "purpose": "unknown",
       "ext": "fbx",
-      "bytes": 110124,
+      "bytes": 111929,
       "category": "anim/ghostrider"
     },
     {
@@ -5140,6 +5450,526 @@
       "category": "anim/knife"
     },
     {
+      "id": "GO-24b5932408e1",
+      "path": "/anim/loco/jump.fbx",
+      "rel": "anim/loco/jump.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 206369,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-76a0684f84ee",
+      "path": "/anim/loco/left-strafe-walking.fbx",
+      "rel": "anim/loco/left-strafe-walking.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 156193,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-43f5a92f09ca",
+      "path": "/anim/loco/left-strafe.fbx",
+      "rel": "anim/loco/left-strafe.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-8c877cd69786",
+      "path": "/anim/loco/left-turn-90.fbx",
+      "rel": "anim/loco/left-turn-90.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-5186b63bb028",
+      "path": "/anim/loco/left-turn.fbx",
+      "rel": "anim/loco/left-turn.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 148881,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-aa3a7fccdcfc",
+      "path": "/anim/loco/right-strafe-walking.fbx",
+      "rel": "anim/loco/right-strafe-walking.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 156193,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-756f4f5929f1",
+      "path": "/anim/loco/right-strafe.fbx",
+      "rel": "anim/loco/right-strafe.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 139953,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-fb9e9d60fcfb",
+      "path": "/anim/loco/right-turn-90.fbx",
+      "rel": "anim/loco/right-turn-90.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151761,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-a7eb0d0b50a4",
+      "path": "/anim/loco/right-turn.fbx",
+      "rel": "anim/loco/right-turn.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 148881,
+      "category": "anim/loco"
+    },
+    {
+      "id": "GO-50d646a844cf",
+      "path": "/anim/loco-8way/crouching-turn-90-left.fbx",
+      "rel": "anim/loco-8way/crouching-turn-90-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 160913,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-d7cdcde66838",
+      "path": "/anim/loco-8way/crouching-turn-90-right.fbx",
+      "rel": "anim/loco-8way/crouching-turn-90-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 160721,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-f7a7cc7ae479",
+      "path": "/anim/loco-8way/idle-aiming.fbx",
+      "rel": "anim/loco-8way/idle-aiming.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177217,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-c123657232b3",
+      "path": "/anim/loco-8way/idle-crouching-aiming.fbx",
+      "rel": "anim/loco-8way/idle-crouching-aiming.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 176177,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-381c663848e8",
+      "path": "/anim/loco-8way/idle-crouching.fbx",
+      "rel": "anim/loco-8way/idle-crouching.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175489,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-456b3e7c4033",
+      "path": "/anim/loco-8way/idle.fbx",
+      "rel": "anim/loco-8way/idle.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177537,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-2ec98c5dc57b",
+      "path": "/anim/loco-8way/jump-down.fbx",
+      "rel": "anim/loco-8way/jump-down.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 140465,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-6c0142a190f7",
+      "path": "/anim/loco-8way/jump-loop.fbx",
+      "rel": "anim/loco-8way/jump-loop.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 146945,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-0f2569af2359",
+      "path": "/anim/loco-8way/jump-up.fbx",
+      "rel": "anim/loco-8way/jump-up.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 143233,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-4ecf15d90521",
+      "path": "/anim/loco-8way/run-backward-left.fbx",
+      "rel": "anim/loco-8way/run-backward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 176993,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-b5b6f1e12369",
+      "path": "/anim/loco-8way/run-backward-right.fbx",
+      "rel": "anim/loco-8way/run-backward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175601,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-f620166dc181",
+      "path": "/anim/loco-8way/run-backward.fbx",
+      "rel": "anim/loco-8way/run-backward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 173393,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-6bbcf0adb43b",
+      "path": "/anim/loco-8way/run-forward-left.fbx",
+      "rel": "anim/loco-8way/run-forward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175601,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-1fdda796e985",
+      "path": "/anim/loco-8way/run-forward-right.fbx",
+      "rel": "anim/loco-8way/run-forward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177137,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-40be7d232231",
+      "path": "/anim/loco-8way/run-forward.fbx",
+      "rel": "anim/loco-8way/run-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175089,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-cb2a34e45595",
+      "path": "/anim/loco-8way/run-left.fbx",
+      "rel": "anim/loco-8way/run-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175601,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-1bbc42ab171c",
+      "path": "/anim/loco-8way/run-right.fbx",
+      "rel": "anim/loco-8way/run-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 176929,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-a391d04c289e",
+      "path": "/anim/loco-8way/sprint-backward-left.fbx",
+      "rel": "anim/loco-8way/sprint-backward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177857,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-b770872bae36",
+      "path": "/anim/loco-8way/sprint-backward-right.fbx",
+      "rel": "anim/loco-8way/sprint-backward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175201,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-da1406d00db8",
+      "path": "/anim/loco-8way/sprint-backward.fbx",
+      "rel": "anim/loco-8way/sprint-backward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177857,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-3727232af7fc",
+      "path": "/anim/loco-8way/sprint-forward-left.fbx",
+      "rel": "anim/loco-8way/sprint-forward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175633,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-38e59237f5b6",
+      "path": "/anim/loco-8way/sprint-forward-right.fbx",
+      "rel": "anim/loco-8way/sprint-forward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177281,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-efa31e97600a",
+      "path": "/anim/loco-8way/sprint-forward.fbx",
+      "rel": "anim/loco-8way/sprint-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 177825,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-3f1000716e1b",
+      "path": "/anim/loco-8way/sprint-left.fbx",
+      "rel": "anim/loco-8way/sprint-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175233,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-9701798b5dbb",
+      "path": "/anim/loco-8way/sprint-right.fbx",
+      "rel": "anim/loco-8way/sprint-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 175777,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-be9649654bb9",
+      "path": "/anim/loco-8way/turn-90-left.fbx",
+      "rel": "anim/loco-8way/turn-90-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 147409,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-328a6f6ed855",
+      "path": "/anim/loco-8way/turn-90-right.fbx",
+      "rel": "anim/loco-8way/turn-90-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 148241,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-a79a11f3ff36",
+      "path": "/anim/loco-8way/walk-backward-left.fbx",
+      "rel": "anim/loco-8way/walk-backward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151185,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-f1a8557d7246",
+      "path": "/anim/loco-8way/walk-backward-right.fbx",
+      "rel": "anim/loco-8way/walk-backward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 152705,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-6208c05d20f0",
+      "path": "/anim/loco-8way/walk-backward.fbx",
+      "rel": "anim/loco-8way/walk-backward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151185,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-8a61a3a79cb3",
+      "path": "/anim/loco-8way/walk-crouching-backward-left.fbx",
+      "rel": "anim/loco-8way/walk-crouching-backward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 149681,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-fbf443d77b4b",
+      "path": "/anim/loco-8way/walk-crouching-backward-right.fbx",
+      "rel": "anim/loco-8way/walk-crouching-backward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151441,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-12e72ebb3baa",
+      "path": "/anim/loco-8way/walk-crouching-backward.fbx",
+      "rel": "anim/loco-8way/walk-crouching-backward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151329,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-7e0cda28b219",
+      "path": "/anim/loco-8way/walk-crouching-forward-left.fbx",
+      "rel": "anim/loco-8way/walk-crouching-forward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 150721,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-51aef9a4bcc3",
+      "path": "/anim/loco-8way/walk-crouching-forward-right.fbx",
+      "rel": "anim/loco-8way/walk-crouching-forward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151185,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-cae05f48c1ff",
+      "path": "/anim/loco-8way/walk-crouching-forward.fbx",
+      "rel": "anim/loco-8way/walk-crouching-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 150641,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-cb4fb3ddeb1d",
+      "path": "/anim/loco-8way/walk-crouching-left.fbx",
+      "rel": "anim/loco-8way/walk-crouching-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 150577,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-b01dd5256559",
+      "path": "/anim/loco-8way/walk-crouching-right.fbx",
+      "rel": "anim/loco-8way/walk-crouching-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 152849,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-a4a02cedfdf7",
+      "path": "/anim/loco-8way/walk-forward-left.fbx",
+      "rel": "anim/loco-8way/walk-forward-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 152705,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-0f4f97c702b4",
+      "path": "/anim/loco-8way/walk-forward-right.fbx",
+      "rel": "anim/loco-8way/walk-forward-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151185,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-ff3734a5c451",
+      "path": "/anim/loco-8way/walk-forward.fbx",
+      "rel": "anim/loco-8way/walk-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 151649,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-fd0c1b46b047",
+      "path": "/anim/loco-8way/walk-left.fbx",
+      "rel": "anim/loco-8way/walk-left.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 150577,
+      "category": "anim/loco-8way"
+    },
+    {
+      "id": "GO-375cb01f4986",
+      "path": "/anim/loco-8way/walk-right.fbx",
+      "rel": "anim/loco-8way/walk-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 152769,
+      "category": "anim/loco-8way"
+    },
+    {
       "id": "GO-e746eb6e67e5",
       "path": "/anim/mace/hell-slammer-a.fbx",
       "rel": "anim/mace/hell-slammer-a.fbx",
@@ -5240,6 +6070,16 @@
       "category": "anim/magic-loco"
     },
     {
+      "id": "GO-9cd8feca3b64",
+      "path": "/anim/magic-loco/standing-jump-running-landing.fbx",
+      "rel": "anim/magic-loco/standing-jump-running-landing.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 173649,
+      "category": "anim/magic-loco"
+    },
+    {
       "id": "GO-b569c9d16117",
       "path": "/anim/magic-loco/standing-jump-running.fbx",
       "rel": "anim/magic-loco/standing-jump-running.fbx",
@@ -5247,6 +6087,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 157665,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-c4298a2628b0",
+      "path": "/anim/magic-loco/standing-jump.fbx",
+      "rel": "anim/magic-loco/standing-jump.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 215233,
       "category": "anim/magic-loco"
     },
     {
@@ -5297,6 +6147,16 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 144385,
+      "category": "anim/magic-loco"
+    },
+    {
+      "id": "GO-dff09c68c5ee",
+      "path": "/anim/magic-loco/standing-sprint-forward.fbx",
+      "rel": "anim/magic-loco/standing-sprint-forward.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 135521,
       "category": "anim/magic-loco"
     },
     {
@@ -5660,6 +6520,16 @@
       "category": "anim/reactions"
     },
     {
+      "id": "GO-0c5a1e24650f",
+      "path": "/anim/reactions/death-crouching-headshot-front.fbx",
+      "rel": "anim/reactions/death-crouching-headshot-front.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 186753,
+      "category": "anim/reactions"
+    },
+    {
       "id": "GO-d0dfa51a66f2",
       "path": "/anim/reactions/death-from-back-headshot.fbx",
       "rel": "anim/reactions/death-from-back-headshot.fbx",
@@ -5667,6 +6537,46 @@
       "purpose": "unknown",
       "ext": "fbx",
       "bytes": 244384,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-791b1d258299",
+      "path": "/anim/reactions/death-from-back.fbx",
+      "rel": "anim/reactions/death-from-back.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 221633,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-c49b619f9b18",
+      "path": "/anim/reactions/death-from-front-headshot.fbx",
+      "rel": "anim/reactions/death-from-front-headshot.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 215841,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-bf6119c7b94c",
+      "path": "/anim/reactions/death-from-front.fbx",
+      "rel": "anim/reactions/death-from-front.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 231969,
+      "category": "anim/reactions"
+    },
+    {
+      "id": "GO-80e0a9bab71f",
+      "path": "/anim/reactions/death-from-right.fbx",
+      "rel": "anim/reactions/death-from-right.fbx",
+      "kind": "animation",
+      "purpose": "unknown",
+      "ext": "fbx",
+      "bytes": 222145,
       "category": "anim/reactions"
     },
     {
@@ -5870,6 +6780,26 @@
       "category": "anim/rifle"
     },
     {
+      "id": "GO-23f755da3587",
+      "path": "/anim/rifle/firing-rifle.fbx",
+      "rel": "anim/rifle/firing-rifle.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 145857,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-09c3c6bf3332",
+      "path": "/anim/rifle/hit-reaction.fbx",
+      "rel": "anim/rifle/hit-reaction.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 166593,
+      "category": "anim/rifle"
+    },
+    {
       "id": "GO-fd6eebc613ce",
       "path": "/anim/rifle/idle-aiming.fbx",
       "rel": "anim/rifle/idle-aiming.fbx",
@@ -5910,6 +6840,56 @@
       "category": "anim/rifle"
     },
     {
+      "id": "GO-28fadac16787",
+      "path": "/anim/rifle/jump-forward.fbx",
+      "rel": "anim/rifle/jump-forward.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 150289,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-583d0a018438",
+      "path": "/anim/rifle/reloading.fbx",
+      "rel": "anim/rifle/reloading.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 256545,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-1dfbb7aa406d",
+      "path": "/anim/rifle/rifle-aiming-idle.fbx",
+      "rel": "anim/rifle/rifle-aiming-idle.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 247697,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-d8b3716b1eb6",
+      "path": "/anim/rifle/rifle-jump.fbx",
+      "rel": "anim/rifle/rifle-jump.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 136993,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-9a097fc947a7",
+      "path": "/anim/rifle/rifle-run.fbx",
+      "rel": "anim/rifle/rifle-run.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 142897,
+      "category": "anim/rifle"
+    },
+    {
       "id": "GO-d81698a489b5",
       "path": "/anim/rifle/run-backward.fbx",
       "rel": "anim/rifle/run-backward.fbx",
@@ -5917,6 +6897,16 @@
       "purpose": "weapon",
       "ext": "fbx",
       "bytes": 174289,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-d6edc0f6c84b",
+      "path": "/anim/rifle/run-backwards.fbx",
+      "rel": "anim/rifle/run-backwards.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 134049,
       "category": "anim/rifle"
     },
     {
@@ -5960,6 +6950,76 @@
       "category": "anim/rifle"
     },
     {
+      "id": "GO-21bf4fcb5b0b",
+      "path": "/anim/rifle/start-walking-backwards.fbx",
+      "rel": "anim/rifle/start-walking-backwards.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 200465,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-164624fc3b3d",
+      "path": "/anim/rifle/start-walking.fbx",
+      "rel": "anim/rifle/start-walking.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 175377,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-2ecea5a1e77a",
+      "path": "/anim/rifle/stop-walking.fbx",
+      "rel": "anim/rifle/stop-walking.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 228513,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-8614bab22434",
+      "path": "/anim/rifle/strafe-left.fbx",
+      "rel": "anim/rifle/strafe-left.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 156177,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-0a81cbab5595",
+      "path": "/anim/rifle/strafe-right.fbx",
+      "rel": "anim/rifle/strafe-right.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 173889,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-0452a252d067",
+      "path": "/anim/rifle/strafe.fbx",
+      "rel": "anim/rifle/strafe.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 134049,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-f17c782a92fe",
+      "path": "/anim/rifle/toss-grenade.fbx",
+      "rel": "anim/rifle/toss-grenade.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 252129,
+      "category": "anim/rifle"
+    },
+    {
       "id": "GO-217dd498a95a",
       "path": "/anim/rifle/turn-90-left.fbx",
       "rel": "anim/rifle/turn-90-left.fbx",
@@ -5977,6 +7037,66 @@
       "purpose": "weapon",
       "ext": "fbx",
       "bytes": 155681,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-ac0ce43cf216",
+      "path": "/anim/rifle/turn-left.fbx",
+      "rel": "anim/rifle/turn-left.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 152545,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-03d56767fb46",
+      "path": "/anim/rifle/turn-right-45.fbx",
+      "rel": "anim/rifle/turn-right-45.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 154705,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-be3abb9c1ba7",
+      "path": "/anim/rifle/walk-backwards-stop.fbx",
+      "rel": "anim/rifle/walk-backwards-stop.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 170945,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-596710f6dd1b",
+      "path": "/anim/rifle/walking-backwards.fbx",
+      "rel": "anim/rifle/walking-backwards.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 172417,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-579c6bd3dc07",
+      "path": "/anim/rifle/walking-to-dying.fbx",
+      "rel": "anim/rifle/walking-to-dying.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 246225,
+      "category": "anim/rifle"
+    },
+    {
+      "id": "GO-d6e498ec6d1a",
+      "path": "/anim/rifle/walking.fbx",
+      "rel": "anim/rifle/walking.fbx",
+      "kind": "animation",
+      "purpose": "weapon",
+      "ext": "fbx",
+      "bytes": 169473,
       "category": "anim/rifle"
     },
     {
@@ -7620,6 +8740,356 @@
       "category": "anims/baked/ghost_rider"
     },
     {
+      "id": "GO-6621781a7466",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_combo_a.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_combo_a.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 102991,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-21e38234712e",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_combo_b.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_combo_b.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 129529,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-f2e341a18d66",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_dash_opener.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_dash_opener.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 122853,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-fb008ed7decb",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_idle.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 143277,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-241cb7232a9e",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_idle_sword.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_idle_sword.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 100664,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-4065172c5d0c",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_jump.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 155827,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-149802c8cce7",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_jump_sword.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_jump_sword.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 159567,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-2f9402773550",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_run.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 85060,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-97c5ae72421f",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_run_sword.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_run_sword.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 85061,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-682fb67a9fcf",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_sword_off.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_sword_off.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 237160,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-53aed93aeeac",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_sword_on.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_sword_on.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 119884,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-b28e387295a0",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_teleport_strike.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_teleport_strike.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 139683,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-3fe21e16e675",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_walk.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 165882,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-d60247ac0cc2",
+      "path": "/anims/baked/greatsword_samurai/gs_samurai_walk_sword.json",
+      "rel": "anims/baked/greatsword_samurai/gs_samurai_walk_sword.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 165777,
+      "category": "anims/baked/greatsword_samurai"
+    },
+    {
+      "id": "GO-70bd45df0a34",
+      "path": "/anims/baked/harvest/box-idle.json",
+      "rel": "anims/baked/harvest/box-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 108343,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-3102b3708f9c",
+      "path": "/anims/baked/harvest/box-turn.json",
+      "rel": "anims/baked/harvest/box-turn.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 40768,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a5a11640729a",
+      "path": "/anims/baked/harvest/box-walk-arc.json",
+      "rel": "anims/baked/harvest/box-walk-arc.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 52795,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-fbab881296dc",
+      "path": "/anims/baked/harvest/cow-milking.json",
+      "rel": "anims/baked/harvest/cow-milking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114032,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-22bf3b2dc196",
+      "path": "/anims/baked/harvest/dig-and-plant-seeds.json",
+      "rel": "anims/baked/harvest/dig-and-plant-seeds.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 328365,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-4700827a6c68",
+      "path": "/anims/baked/harvest/holding-idle.json",
+      "rel": "anims/baked/harvest/holding-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 118479,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-322705d9ff1a",
+      "path": "/anims/baked/harvest/holding-turn-left.json",
+      "rel": "anims/baked/harvest/holding-turn-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 45450,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-434d71438e87",
+      "path": "/anims/baked/harvest/holding-turn-right.json",
+      "rel": "anims/baked/harvest/holding-turn-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 41023,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-8016e6471c22",
+      "path": "/anims/baked/harvest/holding-walk.json",
+      "rel": "anims/baked/harvest/holding-walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 64765,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-bd3c330112bf",
+      "path": "/anims/baked/harvest/kneeling-idle.json",
+      "rel": "anims/baked/harvest/kneeling-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 83992,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a6f5851a5e96",
+      "path": "/anims/baked/harvest/manifest.json",
+      "rel": "anims/baked/harvest/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 754,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-9a0e3f9fe83f",
+      "path": "/anims/baked/harvest/pick-fruit.json",
+      "rel": "anims/baked/harvest/pick-fruit.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 479007,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-d60840122955",
+      "path": "/anims/baked/harvest/plant-a-plant.json",
+      "rel": "anims/baked/harvest/plant-a-plant.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 177487,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-e8accfe7301e",
+      "path": "/anims/baked/harvest/plant-tree.json",
+      "rel": "anims/baked/harvest/plant-tree.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 550307,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-934466acfe43",
+      "path": "/anims/baked/harvest/pull-plant.json",
+      "rel": "anims/baked/harvest/pull-plant.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 280169,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-c05af7cd1cae",
+      "path": "/anims/baked/harvest/watering.json",
+      "rel": "anims/baked/harvest/watering.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 334665,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-a03d5742563f",
+      "path": "/anims/baked/harvest/wheelbarrow-dump.json",
+      "rel": "anims/baked/harvest/wheelbarrow-dump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 181243,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-115d32307437",
+      "path": "/anims/baked/harvest/wheelbarrow-idle.json",
+      "rel": "anims/baked/harvest/wheelbarrow-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31825,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-7e8311db066f",
+      "path": "/anims/baked/harvest/wheelbarrow-walk-turn.json",
+      "rel": "anims/baked/harvest/wheelbarrow-walk-turn.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 57149,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-b224fece287d",
+      "path": "/anims/baked/harvest/wheelbarrow-walk.json",
+      "rel": "anims/baked/harvest/wheelbarrow-walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 49112,
+      "category": "anims/baked/harvest"
+    },
+    {
+      "id": "GO-0a9f7e6b36e2",
+      "path": "/anims/baked/locomotion/crouch_walk.json",
+      "rel": "anims/baked/locomotion/crouch_walk.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43115,
+      "category": "anims/baked/locomotion"
+    },
+    {
       "id": "GO-3230b18522ae",
       "path": "/anims/baked/locomotion/dodge_back.json",
       "rel": "anims/baked/locomotion/dodge_back.json",
@@ -7670,6 +9140,16 @@
       "category": "anims/baked/locomotion"
     },
     {
+      "id": "GO-b889880b79e7",
+      "path": "/anims/baked/locomotion/idle.json",
+      "rel": "anims/baked/locomotion/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 50658,
+      "category": "anims/baked/locomotion"
+    },
+    {
       "id": "GO-2c28ffd52c76",
       "path": "/anims/baked/locomotion/jump.json",
       "rel": "anims/baked/locomotion/jump.json",
@@ -7687,6 +9167,16 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 60867,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-fd5811b3a73e",
+      "path": "/anims/baked/locomotion/plant_seed.json",
+      "rel": "anims/baked/locomotion/plant_seed.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 328359,
       "category": "anims/baked/locomotion"
     },
     {
@@ -7730,6 +9220,36 @@
       "category": "anims/baked/locomotion"
     },
     {
+      "id": "GO-705a42df91c6",
+      "path": "/anims/baked/locomotion/run_forward.json",
+      "rel": "anims/baked/locomotion/run_forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 30063,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-90863ae9ba8e",
+      "path": "/anims/baked/locomotion/walk_forward.json",
+      "rel": "anims/baked/locomotion/walk_forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 45524,
+      "category": "anims/baked/locomotion"
+    },
+    {
+      "id": "GO-893a1e8707a2",
+      "path": "/anims/baked/longbow/standing aim recoil.json",
+      "rel": "anims/baked/longbow/standing aim recoil.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 43487,
+      "category": "anims/baked/longbow"
+    },
+    {
       "id": "GO-038102b19463",
       "path": "/anims/baked/longbow/standing dodge forward.json",
       "rel": "anims/baked/longbow/standing dodge forward.json",
@@ -7760,6 +9280,16 @@
       "category": "anims/baked/longbow"
     },
     {
+      "id": "GO-6a1ac3b98540",
+      "path": "/anims/baked/longbow/standing idle 01.json",
+      "rel": "anims/baked/longbow/standing idle 01.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 304876,
+      "category": "anims/baked/longbow"
+    },
+    {
       "id": "GO-1f9a561f00d2",
       "path": "/anims/baked/longbow/standing run forward.json",
       "rel": "anims/baked/longbow/standing run forward.json",
@@ -7780,13 +9310,33 @@
       "category": "anims/baked/longbow"
     },
     {
+      "id": "GO-14ded8302129",
+      "path": "/anims/baked/magic/standing 1h cast spell 01.json",
+      "rel": "anims/baked/magic/standing 1h cast spell 01.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 136664,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-150af3a5b2c7",
+      "path": "/anims/baked/magic/standing idle.json",
+      "rel": "anims/baked/magic/standing idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 113718,
+      "category": "anims/baked/magic"
+    },
+    {
       "id": "GO-fccbdec5d7ab",
       "path": "/anims/baked/magic/Standing Run Forward.json",
       "rel": "anims/baked/magic/Standing Run Forward.json",
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 45131,
+      "bytes": 46877,
       "category": "anims/baked/magic"
     },
     {
@@ -7796,8 +9346,168 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 69117,
+      "bytes": 70271,
       "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-5c3f554f426b",
+      "path": "/anims/baked/magic/standing-jump-running-landing.json",
+      "rel": "anims/baked/magic/standing-jump-running-landing.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 91296,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-92ca414286d7",
+      "path": "/anims/baked/magic/standing-jump.json",
+      "rel": "anims/baked/magic/standing-jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 142517,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-e0b4c10939ae",
+      "path": "/anims/baked/magic/standing-sprint-forward.json",
+      "rel": "anims/baked/magic/standing-sprint-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 36959,
+      "category": "anims/baked/magic"
+    },
+    {
+      "id": "GO-26f1fbac598c",
+      "path": "/anims/baked/pistol/charged-pistol.json",
+      "rel": "anims/baked/pistol/charged-pistol.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 153268,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-c3227e328a47",
+      "path": "/anims/baked/pistol/drawing-gun.json",
+      "rel": "anims/baked/pistol/drawing-gun.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 121682,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-96808eba3405",
+      "path": "/anims/baked/pistol/gunplay.json",
+      "rel": "anims/baked/pistol/gunplay.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 27606,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-dea1da0a8be0",
+      "path": "/anims/baked/pistol/idle.json",
+      "rel": "anims/baked/pistol/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 74125,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-03bc535e304c",
+      "path": "/anims/baked/pistol/kneeling-idle.json",
+      "rel": "anims/baked/pistol/kneeling-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 216269,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-0f69ccbfc95a",
+      "path": "/anims/baked/pistol/pistol-jump.json",
+      "rel": "anims/baked/pistol/pistol-jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 292182,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-156544a57a99",
+      "path": "/anims/baked/pistol/pistol-whip.json",
+      "rel": "anims/baked/pistol/pistol-whip.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 155016,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-20e7828d4b14",
+      "path": "/anims/baked/pistol/run-backward.json",
+      "rel": "anims/baked/pistol/run-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34967,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-aabc69c194a5",
+      "path": "/anims/baked/pistol/run-forward.json",
+      "rel": "anims/baked/pistol/run-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 33007,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-5c768d7ed49d",
+      "path": "/anims/baked/pistol/strafe-left.json",
+      "rel": "anims/baked/pistol/strafe-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 36882,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-76347cd7d98e",
+      "path": "/anims/baked/pistol/strafe-right.json",
+      "rel": "anims/baked/pistol/strafe-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 38881,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-3747dde3c588",
+      "path": "/anims/baked/pistol/walk-backward.json",
+      "rel": "anims/baked/pistol/walk-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 64436,
+      "category": "anims/baked/pistol"
+    },
+    {
+      "id": "GO-3da94b79a73a",
+      "path": "/anims/baked/pistol/walk-forward.json",
+      "rel": "anims/baked/pistol/walk-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 50919,
+      "category": "anims/baked/pistol"
     },
     {
       "id": "GO-658b914b1a03",
@@ -7966,7 +9676,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1695,
+      "bytes": 1781,
       "category": "anims/baked/polearm"
     },
     {
@@ -8160,6 +9870,396 @@
       "category": "anims/baked/polearm"
     },
     {
+      "id": "GO-d2dc7d3f1928",
+      "path": "/anims/baked/reactions/death-crouching-headshot-front.json",
+      "rel": "anims/baked/reactions/death-crouching-headshot-front.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 86917,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-0b68e8c8ba44",
+      "path": "/anims/baked/reactions/death-from-back.json",
+      "rel": "anims/baked/reactions/death-from-back.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 117067,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-361ae726340c",
+      "path": "/anims/baked/reactions/death-from-front-headshot.json",
+      "rel": "anims/baked/reactions/death-from-front-headshot.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 109412,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-61ef0b09e22e",
+      "path": "/anims/baked/reactions/death-from-front.json",
+      "rel": "anims/baked/reactions/death-from-front.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 117831,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-30004bbdb0c4",
+      "path": "/anims/baked/reactions/death-from-right.json",
+      "rel": "anims/baked/reactions/death-from-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 99521,
+      "category": "anims/baked/reactions"
+    },
+    {
+      "id": "GO-e99e63f1a0df",
+      "path": "/anims/baked/rifle/death-from-front-headshot.json",
+      "rel": "anims/baked/rifle/death-from-front-headshot.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 171683,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-fde7f1f9a15c",
+      "path": "/anims/baked/rifle/firing-rifle.json",
+      "rel": "anims/baked/rifle/firing-rifle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 19359,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-7c0ef44aa35f",
+      "path": "/anims/baked/rifle/hit-reaction.json",
+      "rel": "anims/baked/rifle/hit-reaction.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 28036,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-6244d975aee8",
+      "path": "/anims/baked/rifle/idle-aiming.json",
+      "rel": "anims/baked/rifle/idle-aiming.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 107994,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-d808b902ab60",
+      "path": "/anims/baked/rifle/idle-crouching.json",
+      "rel": "anims/baked/rifle/idle-crouching.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114071,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-ce7e01b6769e",
+      "path": "/anims/baked/rifle/idle.json",
+      "rel": "anims/baked/rifle/idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 114421,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-9072e3df603d",
+      "path": "/anims/baked/rifle/jump-backward.json",
+      "rel": "anims/baked/rifle/jump-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 42343,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-a6e2ec920869",
+      "path": "/anims/baked/rifle/jump-forward.json",
+      "rel": "anims/baked/rifle/jump-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 56926,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-6176936f4bab",
+      "path": "/anims/baked/rifle/manifest.json",
+      "rel": "anims/baked/rifle/manifest.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 710,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e8e75b9733a3",
+      "path": "/anims/baked/rifle/reloading.json",
+      "rel": "anims/baked/rifle/reloading.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 198079,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-ea610dfc7a9f",
+      "path": "/anims/baked/rifle/rifle-aiming-idle.json",
+      "rel": "anims/baked/rifle/rifle-aiming-idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 186635,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-930f40dee81a",
+      "path": "/anims/baked/rifle/rifle-jump.json",
+      "rel": "anims/baked/rifle/rifle-jump.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 38737,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-299c3e688c12",
+      "path": "/anims/baked/rifle/rifle-run.json",
+      "rel": "anims/baked/rifle/rifle-run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 46918,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-b6cea8cdbd7f",
+      "path": "/anims/baked/rifle/run-backward.json",
+      "rel": "anims/baked/rifle/run-backward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 31881,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-8c2a04b22d43",
+      "path": "/anims/baked/rifle/run-backwards.json",
+      "rel": "anims/baked/rifle/run-backwards.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34941,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-fc4a207c585f",
+      "path": "/anims/baked/rifle/run-forward.json",
+      "rel": "anims/baked/rifle/run-forward.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34034,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-d179cb476da4",
+      "path": "/anims/baked/rifle/run-left.json",
+      "rel": "anims/baked/rifle/run-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 32832,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-892895a8bc83",
+      "path": "/anims/baked/rifle/run-right.json",
+      "rel": "anims/baked/rifle/run-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 33098,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-c24101c45b29",
+      "path": "/anims/baked/rifle/start-run.json",
+      "rel": "anims/baked/rifle/start-run.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 78771,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-ebe4a244be57",
+      "path": "/anims/baked/rifle/start-walking-backwards.json",
+      "rel": "anims/baked/rifle/start-walking-backwards.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 123433,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-0a84068f51c5",
+      "path": "/anims/baked/rifle/start-walking.json",
+      "rel": "anims/baked/rifle/start-walking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 90301,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-4a8fc2e21607",
+      "path": "/anims/baked/rifle/stop-walking.json",
+      "rel": "anims/baked/rifle/stop-walking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 160759,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-9073b49bb57e",
+      "path": "/anims/baked/rifle/strafe-left.json",
+      "rel": "anims/baked/rifle/strafe-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 64276,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e3da1a514886",
+      "path": "/anims/baked/rifle/strafe-right.json",
+      "rel": "anims/baked/rifle/strafe-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 88086,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-c7fbf12c076d",
+      "path": "/anims/baked/rifle/strafe.json",
+      "rel": "anims/baked/rifle/strafe.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34952,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-2a115e6c34e8",
+      "path": "/anims/baked/rifle/toss-grenade.json",
+      "rel": "anims/baked/rifle/toss-grenade.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 191862,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e4e1d80120cd",
+      "path": "/anims/baked/rifle/turn-90-left.json",
+      "rel": "anims/baked/rifle/turn-90-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62349,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-3788ed78f493",
+      "path": "/anims/baked/rifle/turn-90-right.json",
+      "rel": "anims/baked/rifle/turn-90-right.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 65153,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-dc370ec40550",
+      "path": "/anims/baked/rifle/turn-left.json",
+      "rel": "anims/baked/rifle/turn-left.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 56330,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-e252401687bf",
+      "path": "/anims/baked/rifle/turn-right-45.json",
+      "rel": "anims/baked/rifle/turn-right-45.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62466,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-09c8215e6266",
+      "path": "/anims/baked/rifle/walk-backwards-stop.json",
+      "rel": "anims/baked/rifle/walk-backwards-stop.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 84363,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-7a11c3889341",
+      "path": "/anims/baked/rifle/walking-backwards.json",
+      "rel": "anims/baked/rifle/walking-backwards.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 86201,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-65100c123aaa",
+      "path": "/anims/baked/rifle/walking-to-dying.json",
+      "rel": "anims/baked/rifle/walking-to-dying.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 184180,
+      "category": "anims/baked/rifle"
+    },
+    {
+      "id": "GO-a3dc7a4fbb33",
+      "path": "/anims/baked/rifle/walking.json",
+      "rel": "anims/baked/rifle/walking.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 80077,
+      "category": "anims/baked/rifle"
+    },
+    {
       "id": "GO-966c72dbf7d7",
       "path": "/anims/baked/swim/swimming.json",
       "rel": "anims/baked/swim/swimming.json",
@@ -8188,6 +10288,36 @@
       "ext": "json",
       "bytes": 146163,
       "category": "anims/baked/swim"
+    },
+    {
+      "id": "GO-c43de4dc6bd9",
+      "path": "/anims/baked/sword_shield/sword and shield attack.json",
+      "rel": "anims/baked/sword_shield/sword and shield attack.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 139945,
+      "category": "anims/baked/sword_shield"
+    },
+    {
+      "id": "GO-966e3537ff11",
+      "path": "/anims/baked/sword_shield/sword and shield block.json",
+      "rel": "anims/baked/sword_shield/sword and shield block.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 34976,
+      "category": "anims/baked/sword_shield"
+    },
+    {
+      "id": "GO-c6a3412f300f",
+      "path": "/anims/baked/sword_shield/sword and shield idle.json",
+      "rel": "anims/baked/sword_shield/sword and shield idle.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 151405,
+      "category": "anims/baked/sword_shield"
     },
     {
       "id": "GO-aa0111b559c2",
@@ -8727,6 +10857,16 @@
       "purpose": "data",
       "ext": "json",
       "bytes": 142578,
+      "category": "anims/baked/unarmed"
+    },
+    {
+      "id": "GO-af06b7cc1698",
+      "path": "/anims/baked/unarmed/punching.json",
+      "rel": "anims/baked/unarmed/punching.json",
+      "kind": "data",
+      "purpose": "data",
+      "ext": "json",
+      "bytes": 62994,
       "category": "anims/baked/unarmed"
     },
     {
@@ -9476,7 +11616,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 15515,
+      "bytes": 16478,
       "category": "content/anims"
     },
     {
@@ -9496,7 +11636,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 22025,
+      "bytes": 22687,
       "category": "content"
     },
     {
@@ -9506,7 +11646,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 25986,
+      "bytes": 27032,
       "category": "content"
     },
     {
@@ -9586,7 +11726,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 962,
+      "bytes": 1005,
       "category": "content/runtime"
     },
     {
@@ -9596,7 +11736,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 3844,
+      "bytes": 3967,
       "category": "content/worlds"
     },
     {
@@ -9616,7 +11756,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 5674,
+      "bytes": 5758,
       "category": "content/worlds"
     },
     {
@@ -9626,7 +11766,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 23292,
+      "bytes": 24165,
       "category": "content/worlds"
     },
     {
@@ -9636,7 +11776,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 19299,
+      "bytes": 19931,
       "category": "content/worlds"
     },
     {
@@ -9646,7 +11786,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 27188,
+      "bytes": 28230,
       "category": "content/worlds"
     },
     {
@@ -11030,56 +13170,6 @@
       "category": "models/armor"
     },
     {
-      "id": "GO-09f84b26d95d",
-      "path": "/models/battle/animals/bear.glb",
-      "rel": "models/battle/animals/bear.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 718744,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-b5ad3baacbc5",
-      "path": "/models/battle/animals/buffalo.glb",
-      "rel": "models/battle/animals/buffalo.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 33132,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-bacf844091b4",
-      "path": "/models/battle/animals/deer.glb",
-      "rel": "models/battle/animals/deer.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 197832,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-301c80087b07",
-      "path": "/models/battle/animals/minecraft-animals.glb",
-      "rel": "models/battle/animals/minecraft-animals.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3254080,
-      "category": "models/battle/animals"
-    },
-    {
-      "id": "GO-47cd90a98c46",
-      "path": "/models/battle/animals/wolf.glb",
-      "rel": "models/battle/animals/wolf.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 240296,
-      "category": "models/battle/animals"
-    },
-    {
       "id": "GO-af9e070f3314",
       "path": "/models/bear.glb",
       "rel": "models/bear.glb",
@@ -11126,7 +13216,7 @@
       "kind": "data",
       "purpose": "data",
       "ext": "json",
-      "bytes": 1057,
+      "bytes": 1101,
       "category": "models/camp"
     },
     {
@@ -11318,6 +13408,16 @@
       "ext": "glb",
       "bytes": 39128,
       "category": "models/enemies/voxel-zombies"
+    },
+    {
+      "id": "GO-d1dc40d5d183",
+      "path": "/models/enemies/werelephant.glb",
+      "rel": "models/enemies/werelephant.glb",
+      "kind": "model",
+      "purpose": "npc",
+      "ext": "glb",
+      "bytes": 43110524,
+      "category": "models/enemies"
     },
     {
       "id": "GO-39b7b23d4c6e",
@@ -11590,13 +13690,13 @@
       "category": "models/grudge"
     },
     {
-      "id": "GO-9b6583593337",
-      "path": "/models/grudge6/30characters.glb",
-      "rel": "models/grudge6/30characters.glb",
-      "kind": "model",
+      "id": "GO-48fe2aa3d094",
+      "path": "/models/grudge6/README-CHARACTERS.md",
+      "rel": "models/grudge6/README-CHARACTERS.md",
+      "kind": "other",
       "purpose": "character",
-      "ext": "glb",
-      "bytes": 7712396,
+      "ext": "md",
+      "bytes": 409,
       "category": "models/grudge6"
     },
     {
@@ -11668,676 +13768,6 @@
       "ext": "glb",
       "bytes": 954560,
       "category": "models"
-    },
-    {
-      "id": "GO-b39c6723531c",
-      "path": "/models/kenney/roads/bridge_pillar.glb",
-      "rel": "models/kenney/roads/bridge_pillar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3b7d51c8ca5d",
-      "path": "/models/kenney/roads/bridge_pillarWide.glb",
-      "rel": "models/kenney/roads/bridge_pillarWide.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5320,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-deee48ec9a04",
-      "path": "/models/kenney/roads/construction_barrier.glb",
-      "rel": "models/kenney/roads/construction_barrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5264,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f0c6068a94a0",
-      "path": "/models/kenney/roads/construction_light.glb",
-      "rel": "models/kenney/roads/construction_light.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7992,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9898967a378a",
-      "path": "/models/kenney/roads/construction_pylon.glb",
-      "rel": "models/kenney/roads/construction_pylon.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10684,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7d0cbece4738",
-      "path": "/models/kenney/roads/light_curved.glb",
-      "rel": "models/kenney/roads/light_curved.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8472,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9100ea91cf8c",
-      "path": "/models/kenney/roads/light_curvedCross.glb",
-      "rel": "models/kenney/roads/light_curvedCross.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19964,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8fa604399889",
-      "path": "/models/kenney/roads/light_curvedDouble.glb",
-      "rel": "models/kenney/roads/light_curvedDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12212,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-70562d78e6ad",
-      "path": "/models/kenney/roads/light_square.glb",
-      "rel": "models/kenney/roads/light_square.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5928,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d40a54ed272e",
-      "path": "/models/kenney/roads/light_squareCross.glb",
-      "rel": "models/kenney/roads/light_squareCross.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10688,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-198f5f069b05",
-      "path": "/models/kenney/roads/light_squareDouble.glb",
-      "rel": "models/kenney/roads/light_squareDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7632,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-623c81ff8d39",
-      "path": "/models/kenney/roads/road_bend.glb",
-      "rel": "models/kenney/roads/road_bend.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15456,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c1b876b69614",
-      "path": "/models/kenney/roads/road_bendBarrier.glb",
-      "rel": "models/kenney/roads/road_bendBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9512,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-39356f172004",
-      "path": "/models/kenney/roads/road_bendSidewalk.glb",
-      "rel": "models/kenney/roads/road_bendSidewalk.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13068,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-022a5700ee16",
-      "path": "/models/kenney/roads/road_bendSquare.glb",
-      "rel": "models/kenney/roads/road_bendSquare.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6012,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-41609c0f99bf",
-      "path": "/models/kenney/roads/road_bendSquareBarrier.glb",
-      "rel": "models/kenney/roads/road_bendSquareBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4720,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-184664397e2c",
-      "path": "/models/kenney/roads/road_bridge.glb",
-      "rel": "models/kenney/roads/road_bridge.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 20884,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-996d96d17939",
-      "path": "/models/kenney/roads/road_crossing.glb",
-      "rel": "models/kenney/roads/road_crossing.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6988,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cb7c01175114",
-      "path": "/models/kenney/roads/road_crossroad.glb",
-      "rel": "models/kenney/roads/road_crossroad.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8612,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-bb9cf2cdf525",
-      "path": "/models/kenney/roads/road_crossroadBarrier.glb",
-      "rel": "models/kenney/roads/road_crossroadBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8948,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-342fabc6aa2a",
-      "path": "/models/kenney/roads/road_crossroadLine.glb",
-      "rel": "models/kenney/roads/road_crossroadLine.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8396,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cd504d0b0f74",
-      "path": "/models/kenney/roads/road_crossroadPath.glb",
-      "rel": "models/kenney/roads/road_crossroadPath.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12848,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-4dea4c350dca",
-      "path": "/models/kenney/roads/road_curve.glb",
-      "rel": "models/kenney/roads/road_curve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 18332,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5b360c74c618",
-      "path": "/models/kenney/roads/road_curveBarrier.glb",
-      "rel": "models/kenney/roads/road_curveBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13828,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-dcd3c6a89912",
-      "path": "/models/kenney/roads/road_curveIntersection.glb",
-      "rel": "models/kenney/roads/road_curveIntersection.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 18768,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d7aeab5ab908",
-      "path": "/models/kenney/roads/road_curveIntersectionBarrier.glb",
-      "rel": "models/kenney/roads/road_curveIntersectionBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11972,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8ba865589b6f",
-      "path": "/models/kenney/roads/road_curvePavement.glb",
-      "rel": "models/kenney/roads/road_curvePavement.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13064,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-89b5db1746b4",
-      "path": "/models/kenney/roads/road_drivewayDouble.glb",
-      "rel": "models/kenney/roads/road_drivewayDouble.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7192,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-90fc09b4cf5f",
-      "path": "/models/kenney/roads/road_drivewayDoubleBarrier.glb",
-      "rel": "models/kenney/roads/road_drivewayDoubleBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5112,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f84fbd1eefa1",
-      "path": "/models/kenney/roads/road_drivewaySingle.glb",
-      "rel": "models/kenney/roads/road_drivewaySingle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6344,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-9cddd1928f43",
-      "path": "/models/kenney/roads/road_drivewaySingleBarrier.glb",
-      "rel": "models/kenney/roads/road_drivewaySingleBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4196,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-bdefd09fd2af",
-      "path": "/models/kenney/roads/road_end.glb",
-      "rel": "models/kenney/roads/road_end.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5164,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5a59db57821b",
-      "path": "/models/kenney/roads/road_endBarrier.glb",
-      "rel": "models/kenney/roads/road_endBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-d08a179a4e0f",
-      "path": "/models/kenney/roads/road_endRound.glb",
-      "rel": "models/kenney/roads/road_endRound.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 14300,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-eb953804aa1a",
-      "path": "/models/kenney/roads/road_endRoundBarrier.glb",
-      "rel": "models/kenney/roads/road_endRoundBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 12468,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c3f6edd8e4b5",
-      "path": "/models/kenney/roads/road_intersection.glb",
-      "rel": "models/kenney/roads/road_intersection.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7080,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-ba6fe5da33f6",
-      "path": "/models/kenney/roads/road_intersectionBarrier.glb",
-      "rel": "models/kenney/roads/road_intersectionBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6120,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3c92310fd408",
-      "path": "/models/kenney/roads/road_intersectionLine.glb",
-      "rel": "models/kenney/roads/road_intersectionLine.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6864,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5849f385fd94",
-      "path": "/models/kenney/roads/road_intersectionPath.glb",
-      "rel": "models/kenney/roads/road_intersectionPath.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 10260,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5774dd9d5be1",
-      "path": "/models/kenney/roads/road_roundabout.glb",
-      "rel": "models/kenney/roads/road_roundabout.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 72764,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f4ca4a2fcf17",
-      "path": "/models/kenney/roads/road_roundaboutBarrier.glb",
-      "rel": "models/kenney/roads/road_roundaboutBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 47448,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-e5be74358134",
-      "path": "/models/kenney/roads/road_side.glb",
-      "rel": "models/kenney/roads/road_side.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5316,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b0086a4958d8",
-      "path": "/models/kenney/roads/road_sideBarrier.glb",
-      "rel": "models/kenney/roads/road_sideBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-e77769200cb2",
-      "path": "/models/kenney/roads/road_sideEntry.glb",
-      "rel": "models/kenney/roads/road_sideEntry.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19140,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7b6d527b3477",
-      "path": "/models/kenney/roads/road_sideEntryBarrier.glb",
-      "rel": "models/kenney/roads/road_sideEntryBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15596,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-fa8dd3b7ec87",
-      "path": "/models/kenney/roads/road_sideExit.glb",
-      "rel": "models/kenney/roads/road_sideExit.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 19140,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-5c7ba918869d",
-      "path": "/models/kenney/roads/road_sideExitBarrier.glb",
-      "rel": "models/kenney/roads/road_sideExitBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15592,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-c665909d8008",
-      "path": "/models/kenney/roads/road_slant.glb",
-      "rel": "models/kenney/roads/road_slant.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b46ae5caf55d",
-      "path": "/models/kenney/roads/road_slantBarrier.glb",
-      "rel": "models/kenney/roads/road_slantBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7ef20d675085",
-      "path": "/models/kenney/roads/road_slantCurve.glb",
-      "rel": "models/kenney/roads/road_slantCurve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 31484,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-aa2afe1cdedc",
-      "path": "/models/kenney/roads/road_slantCurveBarrier.glb",
-      "rel": "models/kenney/roads/road_slantCurveBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 29540,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-f0f2cc131ae1",
-      "path": "/models/kenney/roads/road_slantFlat.glb",
-      "rel": "models/kenney/roads/road_slantFlat.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-873a4f306810",
-      "path": "/models/kenney/roads/road_slantFlatCurve.glb",
-      "rel": "models/kenney/roads/road_slantFlatCurve.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 38120,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-a4fbe19acfbd",
-      "path": "/models/kenney/roads/road_slantFlatHigh.glb",
-      "rel": "models/kenney/roads/road_slantFlatHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5312,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-cab8a86105ae",
-      "path": "/models/kenney/roads/road_slantHigh.glb",
-      "rel": "models/kenney/roads/road_slantHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-2056ad7e70fe",
-      "path": "/models/kenney/roads/road_slantHighBarrier.glb",
-      "rel": "models/kenney/roads/road_slantHighBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3276,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-77721ceb0af6",
-      "path": "/models/kenney/roads/road_split.glb",
-      "rel": "models/kenney/roads/road_split.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 42944,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-7d14b5f5a0ca",
-      "path": "/models/kenney/roads/road_splitBarrier.glb",
-      "rel": "models/kenney/roads/road_splitBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 31980,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-b95a9aa8400c",
-      "path": "/models/kenney/roads/road_square.glb",
-      "rel": "models/kenney/roads/road_square.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4392,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-00c39fafe48b",
-      "path": "/models/kenney/roads/road_squareBarrier.glb",
-      "rel": "models/kenney/roads/road_squareBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3364,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-1bb844e55cb7",
-      "path": "/models/kenney/roads/road_straight.glb",
-      "rel": "models/kenney/roads/road_straight.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 5304,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-3671511478c2",
-      "path": "/models/kenney/roads/road_straightBarrier.glb",
-      "rel": "models/kenney/roads/road_straightBarrier.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 3272,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-256e7d03c801",
-      "path": "/models/kenney/roads/road_straightBarrierEnd.glb",
-      "rel": "models/kenney/roads/road_straightBarrierEnd.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2796,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-8100911bc2d7",
-      "path": "/models/kenney/roads/tile_high.glb",
-      "rel": "models/kenney/roads/tile_high.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2336,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-45fe377de1eb",
-      "path": "/models/kenney/roads/tile_low.glb",
-      "rel": "models/kenney/roads/tile_low.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2332,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-145d9ab4e925",
-      "path": "/models/kenney/roads/tile_slant.glb",
-      "rel": "models/kenney/roads/tile_slant.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2344,
-      "category": "models/kenney/roads"
-    },
-    {
-      "id": "GO-a81f333669dd",
-      "path": "/models/kenney/roads/tile_slantHigh.glb",
-      "rel": "models/kenney/roads/tile_slantHigh.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2344,
-      "category": "models/kenney/roads"
     },
     {
       "id": "GO-39fc5ef28deb",
@@ -12420,16 +13850,6 @@
       "category": "models/maps/shipwreck"
     },
     {
-      "id": "GO-d0d8285ae472",
-      "path": "/models/maps/ultimate_assasination_grounds.glb",
-      "rel": "models/maps/ultimate_assasination_grounds.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 37241248,
-      "category": "models/maps"
-    },
-    {
       "id": "GO-0f71e319e719",
       "path": "/models/mech-00.glb",
       "rel": "models/mech-00.glb",
@@ -12478,46 +13898,6 @@
       "ext": "glb",
       "bytes": 68244,
       "category": "models"
-    },
-    {
-      "id": "GO-7d8c9c72a6f6",
-      "path": "/models/packs/farm_asset_pack_3d.glb",
-      "rel": "models/packs/farm_asset_pack_3d.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 80740900,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-ccf42756dd61",
-      "path": "/models/packs/fields_near_the_city_of_amida.glb",
-      "rel": "models/packs/fields_near_the_city_of_amida.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 59592496,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-0460e9bff196",
-      "path": "/models/packs/low_poly_farm.glb",
-      "rel": "models/packs/low_poly_farm.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17028036,
-      "category": "models/packs"
-    },
-    {
-      "id": "GO-02f461801ecf",
-      "path": "/models/packs/road_pack.glb",
-      "rel": "models/packs/road_pack.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 14765904,
-      "category": "models/packs"
     },
     {
       "id": "GO-987b7bba6b8c",
@@ -12890,6 +14270,16 @@
       "category": "models"
     },
     {
+      "id": "GO-457937610313",
+      "path": "/models/towns/bridge-town-kit.glb",
+      "rel": "models/towns/bridge-town-kit.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 1980992,
+      "category": "models/towns"
+    },
+    {
       "id": "GO-efb64a19cf48",
       "path": "/models/training-dummy.glb",
       "rel": "models/training-dummy.glb",
@@ -12898,16 +14288,6 @@
       "ext": "glb",
       "bytes": 290052,
       "category": "models"
-    },
-    {
-      "id": "GO-5aa777312d4d",
-      "path": "/models/vfx/another_shape_of_data.glb",
-      "rel": "models/vfx/another_shape_of_data.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 1509692,
-      "category": "models/vfx"
     },
     {
       "id": "GO-0e4e742dc566",
@@ -13360,16 +14740,6 @@
       "category": "models/vfx"
     },
     {
-      "id": "GO-e0c1c1f555f0",
-      "path": "/models/vfx/witch_hut_in_a_swamp.glb",
-      "rel": "models/vfx/witch_hut_in_a_swamp.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 11558652,
-      "category": "models/vfx"
-    },
-    {
       "id": "GO-b4c652765af6",
       "path": "/models/vfx/yellow-light.glb",
       "rel": "models/vfx/yellow-light.glb",
@@ -13386,978 +14756,8 @@
       "kind": "model",
       "purpose": "unknown",
       "ext": "glb",
-      "bytes": 5240184,
+      "bytes": 5239944,
       "category": "models"
-    },
-    {
-      "id": "GO-32e974be886f",
-      "path": "/models/voxel/animals/brute_minion_p2.glb",
-      "rel": "models/voxel/animals/brute_minion_p2.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6783376,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-d69cfdfca9f8",
-      "path": "/models/voxel/animals/chaotic_marine_life.glb",
-      "rel": "models/voxel/animals/chaotic_marine_life.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2930884,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-d1f565f7b512",
-      "path": "/models/voxel/animals/crystal_pangolin.glb",
-      "rel": "models/voxel/animals/crystal_pangolin.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1078084,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-cd0361b38e5b",
-      "path": "/models/voxel/animals/dragon_run_loop.glb",
-      "rel": "models/voxel/animals/dragon_run_loop.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17145444,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-3f445fb8a3e2",
-      "path": "/models/voxel/animals/dragon_three_loops.glb",
-      "rel": "models/voxel/animals/dragon_three_loops.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17490324,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-0f1645524a86",
-      "path": "/models/voxel/animals/hanu_animated.glb",
-      "rel": "models/voxel/animals/hanu_animated.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 70347384,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-bae08e645906",
-      "path": "/models/voxel/animals/wing_animated.glb",
-      "rel": "models/voxel/animals/wing_animated.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1369884,
-      "category": "models/voxel/animals"
-    },
-    {
-      "id": "GO-56582c4e2547",
-      "path": "/models/voxel/content/anvil.glb",
-      "rel": "models/voxel/content/anvil.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17024328,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-83fcc8c68674",
-      "path": "/models/voxel/content/balloons.glb",
-      "rel": "models/voxel/content/balloons.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 6136580,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-114b54e3873e",
-      "path": "/models/voxel/content/brick_modular_kit.glb",
-      "rel": "models/voxel/content/brick_modular_kit.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 200380,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-7eda8d83bef5",
-      "path": "/models/voxel/content/desert_portal.glb",
-      "rel": "models/voxel/content/desert_portal.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 705248,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-16749b15f8bb",
-      "path": "/models/voxel/content/phantom_seal_altar.glb",
-      "rel": "models/voxel/content/phantom_seal_altar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 20605032,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-5494711521f2",
-      "path": "/models/voxel/content/queen_annes_revenge.glb",
-      "rel": "models/voxel/content/queen_annes_revenge.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 53902716,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-433266e89bcb",
-      "path": "/models/voxel/content/t0_crossbow.glb",
-      "rel": "models/voxel/content/t0_crossbow.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13452308,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-b7046c6dd4ac",
-      "path": "/models/voxel/content/warning_bell.glb",
-      "rel": "models/voxel/content/warning_bell.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4656872,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-851de98967e9",
-      "path": "/models/voxel/content/xyz_buildings_draft.glb",
-      "rel": "models/voxel/content/xyz_buildings_draft.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2044760,
-      "category": "models/voxel/content"
-    },
-    {
-      "id": "GO-1f3043d4c47e",
-      "path": "/models/voxel/maps/animal_company_lobby.glb",
-      "rel": "models/voxel/maps/animal_company_lobby.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 60448228,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-5432663fd96e",
-      "path": "/models/voxel/maps/awesome_realm_world.glb",
-      "rel": "models/voxel/maps/awesome_realm_world.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 359736068,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-54c0de00bf01",
-      "path": "/models/voxel/maps/dalaran_fantasy_island.glb",
-      "rel": "models/voxel/maps/dalaran_fantasy_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 133863356,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-211f99e94fcf",
-      "path": "/models/voxel/maps/dragon_head_cave.glb",
-      "rel": "models/voxel/maps/dragon_head_cave.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 59992992,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-e707f725c7ca",
-      "path": "/models/voxel/maps/faction_spawn_castle_town.glb",
-      "rel": "models/voxel/maps/faction_spawn_castle_town.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 462669824,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-3ff14e7e7277",
-      "path": "/models/voxel/maps/floating_islands_dwarves_haven.glb",
-      "rel": "models/voxel/maps/floating_islands_dwarves_haven.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 40158248,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-c827dbe7f903",
-      "path": "/models/voxel/maps/geonosis_arena.glb",
-      "rel": "models/voxel/maps/geonosis_arena.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 22881752,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f5ca613f7d97",
-      "path": "/models/voxel/maps/glowstone_mountain.glb",
-      "rel": "models/voxel/maps/glowstone_mountain.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21406036,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-a28142135b45",
-      "path": "/models/voxel/maps/glowstone_mountain_oriental.glb",
-      "rel": "models/voxel/maps/glowstone_mountain_oriental.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21511404,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-893b2375e100",
-      "path": "/models/voxel/maps/grotto_cavern_cave.glb",
-      "rel": "models/voxel/maps/grotto_cavern_cave.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 61162168,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f188dbbcc5f8",
-      "path": "/models/voxel/maps/koth_bundle.glb",
-      "rel": "models/voxel/maps/koth_bundle.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 66309016,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-50518351c245",
-      "path": "/models/voxel/maps/low_poly_canyon.glb",
-      "rel": "models/voxel/maps/low_poly_canyon.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 13239552,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-61deb0d53364",
-      "path": "/models/voxel/maps/pirat_bay.glb",
-      "rel": "models/voxel/maps/pirat_bay.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 26145944,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-4b8a78c5be84",
-      "path": "/models/voxel/maps/tower_koth.glb",
-      "rel": "models/voxel/maps/tower_koth.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 21381320,
-      "category": "models/voxel/maps"
-    },
-    {
-      "id": "GO-f89e363a87a2",
-      "path": "/models/voxel/tools/all_jade_stone_tools.glb",
-      "rel": "models/voxel/tools/all_jade_stone_tools.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 147692,
-      "category": "models/voxel/tools"
-    },
-    {
-      "id": "GO-3e3cc0da8104",
-      "path": "/models/voxel/vfx/energy_particle_stream.glb",
-      "rel": "models/voxel/vfx/energy_particle_stream.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 58584,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-919783c0997e",
-      "path": "/models/voxel/vfx/fire_hurricane.glb",
-      "rel": "models/voxel/vfx/fire_hurricane.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 1009656,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-2674a231eed9",
-      "path": "/models/voxel/vfx/kaens_spike.glb",
-      "rel": "models/voxel/vfx/kaens_spike.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 7247304,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-a94a464920bf",
-      "path": "/models/voxel/vfx/tornado_vortex.glb",
-      "rel": "models/voxel/vfx/tornado_vortex.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 173388,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-6631d45304b7",
-      "path": "/models/voxel/vfx/unstable_antimatter.glb",
-      "rel": "models/voxel/vfx/unstable_antimatter.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 5799344,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-84a909d5768a",
-      "path": "/models/voxel/vfx/wind_rasenshuriken.glb",
-      "rel": "models/voxel/vfx/wind_rasenshuriken.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 4071628,
-      "category": "models/voxel/vfx"
-    },
-    {
-      "id": "GO-2bdb4ca971a9",
-      "path": "/models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
-      "rel": "models/voxel-only/buildings/Medieval_Voxel_Assets.rar",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "rar",
-      "bytes": 28874483,
-      "category": "models/voxel-only/buildings"
-    },
-    {
-      "id": "GO-698729e0b293",
-      "path": "/models/voxel-only/buildings/Voxel_Buildings.zip",
-      "rel": "models/voxel-only/buildings/Voxel_Buildings.zip",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "zip",
-      "bytes": 2387730,
-      "category": "models/voxel-only/buildings"
-    },
-    {
-      "id": "GO-49d77e1aa28e",
-      "path": "/models/warlords-era/animals/flying/crow.glb",
-      "rel": "models/warlords-era/animals/flying/crow.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 249760,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-61305c083f78",
-      "path": "/models/warlords-era/animals/flying/crow_baby.glb",
-      "rel": "models/warlords-era/animals/flying/crow_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 526960,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-0e90efc92f6f",
-      "path": "/models/warlords-era/animals/flying/eagle.glb",
-      "rel": "models/warlords-era/animals/flying/eagle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1467024,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-7562a605a144",
-      "path": "/models/warlords-era/animals/flying/eagle_baby.glb",
-      "rel": "models/warlords-era/animals/flying/eagle_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 399856,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-e2a96cbfde57",
-      "path": "/models/warlords-era/animals/flying/harpia.glb",
-      "rel": "models/warlords-era/animals/flying/harpia.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1728172,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-6202ed91329b",
-      "path": "/models/warlords-era/animals/flying/owl.glb",
-      "rel": "models/warlords-era/animals/flying/owl.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 755852,
-      "category": "models/warlords-era/animals/flying"
-    },
-    {
-      "id": "GO-801f7157b156",
-      "path": "/models/warlords-era/animals/land/bear.glb",
-      "rel": "models/warlords-era/animals/land/bear.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1080844,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-6538dd456375",
-      "path": "/models/warlords-era/animals/land/bear_baby.glb",
-      "rel": "models/warlords-era/animals/land/bear_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 932392,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-c3657d596a0b",
-      "path": "/models/warlords-era/animals/land/boar.glb",
-      "rel": "models/warlords-era/animals/land/boar.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1241448,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-0a1216b66c62",
-      "path": "/models/warlords-era/animals/land/deer.glb",
-      "rel": "models/warlords-era/animals/land/deer.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1974004,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-cc87465ba7c2",
-      "path": "/models/warlords-era/animals/land/deer_baby.glb",
-      "rel": "models/warlords-era/animals/land/deer_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1800592,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-18b243f59b1e",
-      "path": "/models/warlords-era/animals/land/doe.glb",
-      "rel": "models/warlords-era/animals/land/doe.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1946028,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-ef84a3c0c952",
-      "path": "/models/warlords-era/animals/land/fox.glb",
-      "rel": "models/warlords-era/animals/land/fox.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1424568,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-2071e9a1ebb9",
-      "path": "/models/warlords-era/animals/land/fox_baby.glb",
-      "rel": "models/warlords-era/animals/land/fox_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1254200,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-d624b6f30240",
-      "path": "/models/warlords-era/animals/land/horse.glb",
-      "rel": "models/warlords-era/animals/land/horse.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2506128,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-c1842f373bc8",
-      "path": "/models/warlords-era/animals/land/kangaroo_baby.glb",
-      "rel": "models/warlords-era/animals/land/kangaroo_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1287108,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-74fd88b68955",
-      "path": "/models/warlords-era/animals/land/wolf.glb",
-      "rel": "models/warlords-era/animals/land/wolf.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1173688,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-df5c6ebc3b49",
-      "path": "/models/warlords-era/animals/land/wolf_baby.glb",
-      "rel": "models/warlords-era/animals/land/wolf_baby.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1202944,
-      "category": "models/warlords-era/animals/land"
-    },
-    {
-      "id": "GO-8e9a8bd856b3",
-      "path": "/models/warlords-era/animals/water/cavern_turtle.glb",
-      "rel": "models/warlords-era/animals/water/cavern_turtle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2116136,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-8e703b88c6b6",
-      "path": "/models/warlords-era/animals/water/sea_turtle.glb",
-      "rel": "models/warlords-era/animals/water/sea_turtle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 874436,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-5ee3e957be3a",
-      "path": "/models/warlords-era/animals/water/shark.glb",
-      "rel": "models/warlords-era/animals/water/shark.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 311272,
-      "category": "models/warlords-era/animals/water"
-    },
-    {
-      "id": "GO-113e9803d992",
-      "path": "/models/warlords-era/buildings/anglers_house.glb",
-      "rel": "models/warlords-era/buildings/anglers_house.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 36695064,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-4e07d26f73dc",
-      "path": "/models/warlords-era/buildings/archertower_modular.glb",
-      "rel": "models/warlords-era/buildings/archertower_modular.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11340540,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-f14065845f92",
-      "path": "/models/warlords-era/buildings/castle.glb",
-      "rel": "models/warlords-era/buildings/castle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 8149460,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-aedf294f9dc6",
-      "path": "/models/warlords-era/buildings/entrance_to_fort.glb",
-      "rel": "models/warlords-era/buildings/entrance_to_fort.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 36020432,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-9be8c7023090",
-      "path": "/models/warlords-era/buildings/medieval_camp.glb",
-      "rel": "models/warlords-era/buildings/medieval_camp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2916800,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-8b4163ff798d",
-      "path": "/models/warlords-era/buildings/pirate_tavern.glb",
-      "rel": "models/warlords-era/buildings/pirate_tavern.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 7078812,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-4ce83ca69576",
-      "path": "/models/warlords-era/buildings/skycastle.glb",
-      "rel": "models/warlords-era/buildings/skycastle.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 4035320,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-b288e2259542",
-      "path": "/models/warlords-era/buildings/smeltery.glb",
-      "rel": "models/warlords-era/buildings/smeltery.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 230230488,
-      "category": "models/warlords-era/buildings"
-    },
-    {
-      "id": "GO-2fdfa07f8f9e",
-      "path": "/models/warlords-era/enemies/abyss_demon.glb",
-      "rel": "models/warlords-era/enemies/abyss_demon.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 8190616,
-      "category": "models/warlords-era/enemies"
-    },
-    {
-      "id": "GO-5c268a020a78",
-      "path": "/models/warlords-era/enemies/baphomet_ancient.glb",
-      "rel": "models/warlords-era/enemies/baphomet_ancient.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 4733864,
-      "category": "models/warlords-era/enemies"
-    },
-    {
-      "id": "GO-5d4be78cd141",
-      "path": "/models/warlords-era/nature/plants/grass.glb",
-      "rel": "models/warlords-era/nature/plants/grass.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 7747332,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-edb0229de47b",
-      "path": "/models/warlords-era/nature/plants/ivy.glb",
-      "rel": "models/warlords-era/nature/plants/ivy.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 30320996,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-38bb28f9efaa",
-      "path": "/models/warlords-era/nature/plants/plants_asset_set.glb",
-      "rel": "models/warlords-era/nature/plants/plants_asset_set.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 22428552,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-6cd18d0c37eb",
-      "path": "/models/warlords-era/nature/plants/stylized_plants_free.glb",
-      "rel": "models/warlords-era/nature/plants/stylized_plants_free.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 221528,
-      "category": "models/warlords-era/nature/plants"
-    },
-    {
-      "id": "GO-deb47a4a19e5",
-      "path": "/models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
-      "rel": "models/warlords-era/nature/rocks/stylised_rocks_pack.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 104036552,
-      "category": "models/warlords-era/nature/rocks"
-    },
-    {
-      "id": "GO-fec51271a52a",
-      "path": "/models/warlords-era/nature/rocks/stylized_rocks_70.glb",
-      "rel": "models/warlords-era/nature/rocks/stylized_rocks_70.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 69016308,
-      "category": "models/warlords-era/nature/rocks"
-    },
-    {
-      "id": "GO-df09f7ea6f80",
-      "path": "/models/warlords-era/nature/trees/autumn_forest.glb",
-      "rel": "models/warlords-era/nature/trees/autumn_forest.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 10289732,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-16a2d531acb4",
-      "path": "/models/warlords-era/nature/trees/redwood_lod.glb",
-      "rel": "models/warlords-era/nature/trees/redwood_lod.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 2862328,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-1f67e0810966",
-      "path": "/models/warlords-era/nature/trees/stylized_nature_vol1.glb",
-      "rel": "models/warlords-era/nature/trees/stylized_nature_vol1.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 3062908,
-      "category": "models/warlords-era/nature/trees"
-    },
-    {
-      "id": "GO-cfb080e617b3",
-      "path": "/models/warlords-era/nature/vfx/cloud_ring.glb",
-      "rel": "models/warlords-era/nature/vfx/cloud_ring.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 7646052,
-      "category": "models/warlords-era/nature/vfx"
-    },
-    {
-      "id": "GO-4a5ccd4300fb",
-      "path": "/models/warlords-era/nature/vfx/thunderstorm.glb",
-      "rel": "models/warlords-era/nature/vfx/thunderstorm.glb",
-      "kind": "model",
-      "purpose": "vfx",
-      "ext": "glb",
-      "bytes": 12147044,
-      "category": "models/warlords-era/nature/vfx"
-    },
-    {
-      "id": "GO-8069939d9a4a",
-      "path": "/models/warlords-era/props/crates_and_barrels.glb",
-      "rel": "models/warlords-era/props/crates_and_barrels.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 1951268,
-      "category": "models/warlords-era/props"
-    },
-    {
-      "id": "GO-93147fc764f3",
-      "path": "/models/warlords-era/props/magic_ice_scroll.glb",
-      "rel": "models/warlords-era/props/magic_ice_scroll.glb",
-      "kind": "model",
-      "purpose": "prop",
-      "ext": "glb",
-      "bytes": 8829936,
-      "category": "models/warlords-era/props"
-    },
-    {
-      "id": "GO-21d41a6f8d9e",
-      "path": "/models/warlords-era/units/knight_01.glb",
-      "rel": "models/warlords-era/units/knight_01.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 376304,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-d697ac43b4f1",
-      "path": "/models/warlords-era/units/knight_02.glb",
-      "rel": "models/warlords-era/units/knight_02.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 358456,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-9f5c0e5c3531",
-      "path": "/models/warlords-era/units/knight_03.glb",
-      "rel": "models/warlords-era/units/knight_03.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 350924,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-f204c091a848",
-      "path": "/models/warlords-era/units/skeleton.glb",
-      "rel": "models/warlords-era/units/skeleton.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 1002184,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-e541ec6c0688",
-      "path": "/models/warlords-era/units/skeleton_archer.glb",
-      "rel": "models/warlords-era/units/skeleton_archer.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 665112,
-      "category": "models/warlords-era/units"
-    },
-    {
-      "id": "GO-bd70d245c102",
-      "path": "/models/warlords-era/vehicles/minecarts.glb",
-      "rel": "models/warlords-era/vehicles/minecarts.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2008808,
-      "category": "models/warlords-era/vehicles"
-    },
-    {
-      "id": "GO-84108aa8af5d",
-      "path": "/models/warlords-era/vehicles/steampunk_airship.glb",
-      "rel": "models/warlords-era/vehicles/steampunk_airship.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 34795396,
-      "category": "models/warlords-era/vehicles"
-    },
-    {
-      "id": "GO-b5cd8a1edd36",
-      "path": "/models/warlords-era/weapons/harpoon_gun.glb",
-      "rel": "models/warlords-era/weapons/harpoon_gun.glb",
-      "kind": "model",
-      "purpose": "weapon",
-      "ext": "glb",
-      "bytes": 127828,
-      "category": "models/warlords-era/weapons"
-    },
-    {
-      "id": "GO-93f7f7399be6",
-      "path": "/models/warlords-era/worlds/castle_eltz.glb",
-      "rel": "models/warlords-era/worlds/castle_eltz.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 163443404,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-8faaed97fd57",
-      "path": "/models/warlords-era/worlds/ice_world.glb",
-      "rel": "models/warlords-era/worlds/ice_world.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9429824,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-8ab8f16ad27c",
-      "path": "/models/warlords-era/worlds/low_poly_island.glb",
-      "rel": "models/warlords-era/worlds/low_poly_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 9230032,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-90234ce3d091",
-      "path": "/models/warlords-era/worlds/medieval_camp.glb",
-      "rel": "models/warlords-era/worlds/medieval_camp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 2916800,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-1772226bc50b",
-      "path": "/models/warlords-era/worlds/pirate_island_pack.glb",
-      "rel": "models/warlords-era/worlds/pirate_island_pack.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 10657764,
-      "category": "models/warlords-era/worlds"
-    },
-    {
-      "id": "GO-99de872ec2f7",
-      "path": "/models/warlords-era/worlds/tropical_island_small.glb",
-      "rel": "models/warlords-era/worlds/tropical_island_small.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 6696792,
-      "category": "models/warlords-era/worlds"
     },
     {
       "id": "GO-b9426a7a8ea7",
@@ -14960,13 +15360,23 @@
       "category": "models/worlds"
     },
     {
-      "id": "GO-ce1d62c28326",
-      "path": "/models/worlds/forest-map.glb",
-      "rel": "models/worlds/forest-map.glb",
+      "id": "GO-51bfeebfdbb9",
+      "path": "/models/worlds/fabled-zone.glb",
+      "rel": "models/worlds/fabled-zone.glb",
       "kind": "model",
       "purpose": "unknown",
       "ext": "glb",
-      "bytes": 26002032,
+      "bytes": 121703844,
+      "category": "models/worlds"
+    },
+    {
+      "id": "GO-923295610382",
+      "path": "/models/worlds/fabledzone.glb",
+      "rel": "models/worlds/fabledzone.glb",
+      "kind": "model",
+      "purpose": "unknown",
+      "ext": "glb",
+      "bytes": 121703844,
       "category": "models/worlds"
     },
     {
@@ -14976,127 +15386,17 @@
       "kind": "model",
       "purpose": "map",
       "ext": "glb",
-      "bytes": 450735736,
+      "bytes": 73201984,
       "category": "models/worlds"
     },
     {
-      "id": "GO-db979c05988e",
-      "path": "/models/worlds/sailtest.glb",
-      "rel": "models/worlds/sailtest.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 9636856,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-0ad251c60aa0",
-      "path": "/models/worlds/sky/dwarf-main-city.glb",
-      "rel": "models/worlds/sky/dwarf-main-city.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13553816,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-fd0104003292",
-      "path": "/models/worlds/sky/dwarf-winter-castle-town.glb",
-      "rel": "models/worlds/sky/dwarf-winter-castle-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 13553816,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-207aa3450787",
-      "path": "/models/worlds/sky/elf-lord-temple.glb",
-      "rel": "models/worlds/sky/elf-lord-temple.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1141404,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-6ec4afdf07a5",
-      "path": "/models/worlds/sky/elf-sky-town.glb",
-      "rel": "models/worlds/sky/elf-sky-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 1141404,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-c97aacac1864",
-      "path": "/models/worlds/sky/fantasy-floating-island.glb",
-      "rel": "models/worlds/sky/fantasy-floating-island.glb",
+      "id": "GO-842f3de34e74",
+      "path": "/models/worlds/island_life.prod.glb",
+      "rel": "models/worlds/island_life.prod.glb",
       "kind": "model",
       "purpose": "map",
       "ext": "glb",
-      "bytes": 75035600,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-270cbc82ce29",
-      "path": "/models/worlds/sky/floating-island-map.glb",
-      "rel": "models/worlds/sky/floating-island-map.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 8636684,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-5e6e9c814918",
-      "path": "/models/worlds/sky/floating-island-roots.glb",
-      "rel": "models/worlds/sky/floating-island-roots.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 44958132,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-a8fe5deabb92",
-      "path": "/models/worlds/sky/floating-town-hand-painted.glb",
-      "rel": "models/worlds/sky/floating-town-hand-painted.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 17132656,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-324f3420e66e",
-      "path": "/models/worlds/sky/medieval-town.glb",
-      "rel": "models/worlds/sky/medieval-town.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 15686288,
-      "category": "models/worlds/sky"
-    },
-    {
-      "id": "GO-34bc019e022c",
-      "path": "/models/worlds/small_island.glb",
-      "rel": "models/worlds/small_island.glb",
-      "kind": "model",
-      "purpose": "map",
-      "ext": "glb",
-      "bytes": 4925272,
-      "category": "models/worlds"
-    },
-    {
-      "id": "GO-609ade1a6275",
-      "path": "/models/worlds/witch_hut_in_a_swamp.glb",
-      "rel": "models/worlds/witch_hut_in_a_swamp.glb",
-      "kind": "model",
-      "purpose": "unknown",
-      "ext": "glb",
-      "bytes": 11558652,
+      "bytes": 73201984,
       "category": "models/worlds"
     },
     {
@@ -15480,26 +15780,6 @@
       "category": "rooms"
     },
     {
-      "id": "GO-034888e6ca96",
-      "path": "/rooms/training-targets/free_dummy_monster.glb",
-      "rel": "rooms/training-targets/free_dummy_monster.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 264092,
-      "category": "rooms/training-targets"
-    },
-    {
-      "id": "GO-c6500c4913dc",
-      "path": "/rooms/training-targets/the_practice_dummy.glb",
-      "rel": "rooms/training-targets/the_practice_dummy.glb",
-      "kind": "model",
-      "purpose": "npc",
-      "ext": "glb",
-      "bytes": 208636,
-      "category": "rooms/training-targets"
-    },
-    {
       "id": "GO-00265317154d",
       "path": "/rooms/voxel-poster.png",
       "rel": "rooms/voxel-poster.png",
@@ -15586,7 +15866,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "js",
-      "bytes": 6767,
+      "bytes": 5735,
       "category": "root"
     },
     {
@@ -15598,36 +15878,6 @@
       "ext": "fbx",
       "bytes": 28064,
       "category": "root"
-    },
-    {
-      "id": "GO-f25e5abbadcb",
-      "path": "/ui/craftpix/part2/Action_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part2/Action_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 358400,
-      "category": "ui/craftpix/part2/Action_Bar"
-    },
-    {
-      "id": "GO-a840baa9e4d0",
-      "path": "/ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
-      "rel": "ui/craftpix/part2/Battle_Time-Team_Stats/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 99840,
-      "category": "ui/craftpix/part2/Battle_Time-Team_Stats"
-    },
-    {
-      "id": "GO-7f37693741cd",
-      "path": "/ui/craftpix/part2/Loading_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part2/Loading_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 8192,
-      "category": "ui/craftpix/part2/Loading_Bar"
     },
     {
       "id": "GO-184f2a2fbacf",
@@ -15807,16 +16057,6 @@
       "purpose": "unknown",
       "ext": "psd",
       "bytes": 4771705,
-      "category": "ui/craftpix/part3/ab3"
-    },
-    {
-      "id": "GO-402d00732451",
-      "path": "/ui/craftpix/part3/ab3/Thumbs.db",
-      "rel": "ui/craftpix/part3/ab3/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 119296,
       "category": "ui/craftpix/part3/ab3"
     },
     {
@@ -16000,26 +16240,6 @@
       "category": "ui/craftpix/part3/moba"
     },
     {
-      "id": "GO-f636375c7e61",
-      "path": "/ui/craftpix/part3/moba/Thumbs.db",
-      "rel": "ui/craftpix/part3/moba/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 59904,
-      "category": "ui/craftpix/part3/moba"
-    },
-    {
-      "id": "GO-2e69c2718e71",
-      "path": "/ui/craftpix/part3/progress/Thumbs.db",
-      "rel": "ui/craftpix/part3/progress/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 48640,
-      "category": "ui/craftpix/part3/progress"
-    },
-    {
       "id": "GO-a09b6db724a7",
       "path": "/ui/craftpix/part3/resources/coin.png",
       "rel": "ui/craftpix/part3/resources/coin.png",
@@ -16038,126 +16258,6 @@
       "ext": "png",
       "bytes": 39957,
       "category": "ui/craftpix/part3/resources"
-    },
-    {
-      "id": "GO-1949f4581986",
-      "path": "/ui/craftpix/part3/resources/Thumbs.db",
-      "rel": "ui/craftpix/part3/resources/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 236544,
-      "category": "ui/craftpix/part3/resources"
-    },
-    {
-      "id": "GO-8903da5ac015",
-      "path": "/ui/craftpix/part3/Thumbs.db",
-      "rel": "ui/craftpix/part3/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 332800,
-      "category": "ui/craftpix/part3"
-    },
-    {
-      "id": "GO-7f659b40a040",
-      "path": "/ui/craftpix/part4/Actions_Bar/Thumbs.db",
-      "rel": "ui/craftpix/part4/Actions_Bar/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 318976,
-      "category": "ui/craftpix/part4/Actions_Bar"
-    },
-    {
-      "id": "GO-2aa9b93de425",
-      "path": "/ui/craftpix/part4/container/Thumbs.db",
-      "rel": "ui/craftpix/part4/container/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 93696,
-      "category": "ui/craftpix/part4/container"
-    },
-    {
-      "id": "GO-cd3b9c15707b",
-      "path": "/ui/craftpix/part4/Form_Elements/Thumbs.db",
-      "rel": "ui/craftpix/part4/Form_Elements/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 24576,
-      "category": "ui/craftpix/part4/Form_Elements"
-    },
-    {
-      "id": "GO-9537d3b0cc02",
-      "path": "/ui/craftpix/part4/Important_Message/Thumbs.db",
-      "rel": "ui/craftpix/part4/Important_Message/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 22016,
-      "category": "ui/craftpix/part4/Important_Message"
-    },
-    {
-      "id": "GO-3eb0a5f3b9ab",
-      "path": "/ui/craftpix/part4/Scales/Thumbs.db",
-      "rel": "ui/craftpix/part4/Scales/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 27648,
-      "category": "ui/craftpix/part4/Scales"
-    },
-    {
-      "id": "GO-633a26479050",
-      "path": "/ui/craftpix/part4/Side_Menu/Thumbs.db",
-      "rel": "ui/craftpix/part4/Side_Menu/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 36352,
-      "category": "ui/craftpix/part4/Side_Menu"
-    },
-    {
-      "id": "GO-94dd02bb614c",
-      "path": "/ui/craftpix/part4/Text_Container_1/Thumbs.db",
-      "rel": "ui/craftpix/part4/Text_Container_1/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 91136,
-      "category": "ui/craftpix/part4/Text_Container_1"
-    },
-    {
-      "id": "GO-c8eaa8761789",
-      "path": "/ui/craftpix/part4/Text_Indicators/Thumbs.db",
-      "rel": "ui/craftpix/part4/Text_Indicators/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 14336,
-      "category": "ui/craftpix/part4/Text_Indicators"
-    },
-    {
-      "id": "GO-83bfcc00d640",
-      "path": "/ui/craftpix/part4/Thumbs.db",
-      "rel": "ui/craftpix/part4/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 5632,
-      "category": "ui/craftpix/part4"
-    },
-    {
-      "id": "GO-918e20954a93",
-      "path": "/ui/craftpix/part5/scroll/Thumbs.db",
-      "rel": "ui/craftpix/part5/scroll/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 13312,
-      "category": "ui/craftpix/part5/scroll"
     },
     {
       "id": "GO-fd35ec4a955e",
@@ -16400,16 +16500,6 @@
       "category": "ui/craftpix/part5/spells"
     },
     {
-      "id": "GO-8b5c1e953cf8",
-      "path": "/ui/craftpix/part5/spells/Thumbs.db",
-      "rel": "ui/craftpix/part5/spells/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 259072,
-      "category": "ui/craftpix/part5/spells"
-    },
-    {
       "id": "GO-362b0f07d75f",
       "path": "/ui/craftpix/part5/talents/action_bar.png",
       "rel": "ui/craftpix/part5/talents/action_bar.png",
@@ -16600,16 +16690,6 @@
       "category": "ui/craftpix/part5/talents"
     },
     {
-      "id": "GO-cb7b191f5f74",
-      "path": "/ui/craftpix/part5/talents/Thumbs.db",
-      "rel": "ui/craftpix/part5/talents/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 144896,
-      "category": "ui/craftpix/part5/talents"
-    },
-    {
       "id": "GO-d3af2d5b9f11",
       "path": "/ui/craftpix/part5/tooltip_frame_bg.png",
       "rel": "ui/craftpix/part5/tooltip_frame_bg.png",
@@ -16618,26 +16698,6 @@
       "ext": "png",
       "bytes": 21448,
       "category": "ui/craftpix/part5"
-    },
-    {
-      "id": "GO-ece5ab8af24e",
-      "path": "/ui/craftpix/part7/Character_Window/Thumbs.db",
-      "rel": "ui/craftpix/part7/Character_Window/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 339968,
-      "category": "ui/craftpix/part7/Character_Window"
-    },
-    {
-      "id": "GO-a4e3022e4f44",
-      "path": "/ui/craftpix/part7/Notification_Window/Thumbs.db",
-      "rel": "ui/craftpix/part7/Notification_Window/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 187904,
-      "category": "ui/craftpix/part7/Notification_Window"
     },
     {
       "id": "GO-a66d0dedb83e",
@@ -16707,16 +16767,6 @@
       "purpose": "texture",
       "ext": "png",
       "bytes": 22864,
-      "category": "ui/craftpix/windows"
-    },
-    {
-      "id": "GO-ac7129ccfcef",
-      "path": "/ui/craftpix/windows/Thumbs.db",
-      "rel": "ui/craftpix/windows/Thumbs.db",
-      "kind": "other",
-      "purpose": "unknown",
-      "ext": "db",
-      "bytes": 110080,
       "category": "ui/craftpix/windows"
     },
     {
@@ -16796,7 +16846,7 @@
       "kind": "icon",
       "purpose": "unknown",
       "ext": "svg",
-      "bytes": 415,
+      "bytes": 421,
       "category": "ui/cursors"
     },
     {
@@ -16806,7 +16856,7 @@
       "kind": "icon",
       "purpose": "unknown",
       "ext": "svg",
-      "bytes": 464,
+      "bytes": 471,
       "category": "ui/cursors"
     },
     {
@@ -16826,7 +16876,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 2742,
+      "bytes": 2845,
       "category": "ui/grudge-ui"
     },
     {
@@ -16836,7 +16886,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 4695,
+      "bytes": 4927,
       "category": "ui/grudge-ui"
     },
     {
@@ -16846,7 +16896,7 @@
       "kind": "code",
       "purpose": "unknown",
       "ext": "css",
-      "bytes": 139020,
+      "bytes": 139021,
       "category": "ui/grudge-ui"
     },
     {
@@ -19256,7 +19306,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 751,
+      "bytes": 777,
       "category": "root"
     },
     {
@@ -19266,7 +19316,7 @@
       "kind": "other",
       "purpose": "unknown",
       "ext": "",
-      "bytes": 105,
+      "bytes": 107,
       "category": "root"
     }
   ]

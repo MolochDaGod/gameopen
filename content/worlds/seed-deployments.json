@@ -17,7 +17,7 @@
     "blocks": "https://mine-loader-api-production.up.railway.app/api/blocks",
     "worlds": "https://mine-loader-api-production.up.railway.app/api/worlds",
     "healthz": "https://mine-loader-api-production.up.railway.app/api/healthz",
-    "spa": "https://mine.grudge-studio.com",
+    "spa": "https://mineloader.grudge-studio.com",
     "openProxy": "https://open.grudge-studio.com/api/worlds"
   },
   "journey": [
@@ -28,6 +28,28 @@
     "Exit dungeon → return near portal in open world"
   ],
   "deployments": [
+    {
+      "id": "mapchunk-wolf-street",
+      "name": "Wolf Street",
+      "blurb": "Seed prefab street — used when a voxel world has no map, or would duplicate another seed's map. 1 block = 1 m.",
+      "seed": "wolf-street",
+      "chunkIdx": 5,
+      "biome": "plains",
+      "featured": true,
+      "deploy": "both",
+      "mapChunkId": "wolf_street",
+      "mesh": "models/voxel/maps/wolf_street.glb",
+      "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/wolf_street.glb",
+      "codexBlocks": ["stone", "brickRed", "woodPlanks", "dirt"],
+      "codexDefs": ["street", "seed_prefab"],
+      "portalPlan": {
+        "portalCount": 3,
+        "radiusMin": 24,
+        "radiusMax": 80,
+        "surfaceY": 2,
+        "themes": ["ruins", "mine", "crypt"]
+      }
+    },
     {
       "id": "mapchunk-grotto-cavern-cave",
       "name": "Grotto Cavern Cave",
@@ -204,13 +226,18 @@
     {
       "id": "mapchunk-animal-company-lobby",
       "name": "Animal Company Lobby",
-      "blurb": "Animal Company lobby spawn v3 · mapChunk=animal_company_lobby · codex blocks linked",
-      "seed": "mapchunk-animal_company_lobby",
+      "blurb": "Explorer starting town · lobby spawn v3 · seed overworld + portals around the hub",
+      "seed": "explorer-town",
       "chunkIdx": 5,
       "biome": "plains",
       "featured": true,
       "deploy": "both",
       "mapChunkId": "animal_company_lobby",
+      "startingTown": {
+        "mapChunkId": "animal_company_lobby",
+        "templateId": "amidaFarmCamp",
+        "spawn": { "x": 0, "y": 2, "z": 0 }
+      },
       "mesh": "models/voxel/maps/animal_company_lobby.glb",
       "cdnUrl": "https://assets.grudge-studio.com/models/voxel/maps/animal_company_lobby.glb",
       "codexBlocks": [
@@ -314,12 +341,17 @@
     {
       "id": "seed-grudge-plains",
       "name": "Grudge Plains",
-      "blurb": "Starter overworld seed (256²) — four themed portals to dungeons.",
+      "blurb": "Starter overworld seed (256²) — spawn in Animal Company town, four themed dungeon portals.",
       "seed": "grudge-plains",
       "chunkIdx": 5,
       "biome": "plains",
       "featured": true,
       "deploy": "both",
+      "startingTown": {
+        "mapChunkId": "animal_company_lobby",
+        "templateId": "amidaFarmCamp",
+        "spawn": { "x": 0, "y": 2, "z": 0 }
+      },
       "portalPlan": {
         "portalCount": 4,
         "radiusMin": 28,

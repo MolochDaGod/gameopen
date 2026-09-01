@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_protective_shell",
+  "kind": "back",
+  "name": "Protective Shell",
+  "description": "Damage absorb / bubble while active",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 0,
+  "tags": [
+    "back",
+    "passive",
+    "pack"
+  ],
+  "icon": {
+    "path": "icons/pack/weapons/Shield_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Shield_01.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_protective_shell"
+}

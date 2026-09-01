@@ -23,6 +23,7 @@ import {
   HARVEST_TABS,
   canCraft,
   craftRecipe,
+  craftRecipeAsync,
   ensureStarterBag,
   fetchCodexBlocks,
   fetchCodexDefinitions,
@@ -99,6 +100,10 @@ export interface HarvestProductionUIProps {
   onImportCharacter?: (id: string) => void;
   onOpenRealms?: () => void;
   onOpenVoxel?: () => void;
+  /** Play town + chunked seed in Open VoxelArena (not Mine-Loader). */
+  onPlaySeedOverworld?: (dep: SeedWorldDeployment) => void;
+  /** Play a portal dungeon in Open (Shader.lab cave / arena templates). */
+  onPlayPortalDungeon?: (dep: SeedWorldDeployment, portalId: string) => void;
 }
 
 const TAB_ICON: Record<HarvestTabId, ReactNode> = {
@@ -121,6 +126,8 @@ export function HarvestProductionUI({
   onImportCharacter,
   onOpenRealms,
   onOpenVoxel,
+  onPlaySeedOverworld,
+  onPlayPortalDungeon,
 }: HarvestProductionUIProps) {
   const [tab, setTab] = useState<HarvestTabId>("ops");
   const [recipes, setRecipes] = useState<CraftRecipe[]>([]);
@@ -299,14 +306,41 @@ export function HarvestProductionUI({
       setCraftingId(r.id);
       const delay = Math.min(Math.max(r.timeSec * 400, 400), 2800);
       window.setTimeout(() => {
-        const res = craftRecipe(r, bag);
-        setCraftingId(null);
-        if (!res.ok) {
-          showNotice(res.reason ?? "Cannot craft");
-          return;
-        }
-        setBag(res.bag);
-        showNotice(`Crafted ${r.output.name} ×${r.output.qty}`);
+        void (async () => {
+          const charId =
+            gameSession.selectedCharacter()?.id ||
+            (typeof window !== "undefined"
+              ? localStorage.getItem("grudge.activeCharId") ||
+                localStorage.getItem("grudge.open.selectedCharacterId")
+              : null) ||
+            "local";
+          const accountId = gameSession.snapshot.account?.grudgeId || null;
+          // Prefer async craft: unique → character bag (ledger or provisional)
+          const res = await craftRecipeAsync(r, bag, {
+            characterId: charId,
+            accountId,
+          });
+          setCraftingId(null);
+          if (!res.ok) {
+            // Stackables only — unique gear must stay on grantUniqueToBag
+            const sync = craftRecipe(r, bag);
+            if (!sync.ok) {
+              showNotice(res.reason ?? sync.reason ?? "Cannot craft");
+              return;
+            }
+            setBag(sync.bag);
+            showNotice(`Crafted ${r.output.name} ×${r.output.qty} (local)`);
+            return;
+          }
+          setBag(res.bag);
+          showNotice(
+            res.uniqueOutput
+              ? res.uniqueGranted
+                ? `Crafted ${r.output.name} · ledger UUID`
+                : `Crafted ${r.output.name} · character bag`
+              : `Crafted ${r.output.name} ×${r.output.qty}`,
+          );
+        })();
       }, delay);
     },
     [bag, craftingId, showNotice],
@@ -897,6 +931,19 @@ export function HarvestProductionUI({
                             >
                               Jump dungeon (dev)
                             </button>
+                            {onPlayPortalDungeon ? (
+                              <button
+                                type="button"
+                                className="hp-btn primary"
+                                style={{ marginTop: 6, width: "100%" }}
+                                onClick={() => {
+                                  onPlayPortalDungeon(dep, p.id);
+                                  showNotice(`Opening ${p.dungeon.name} in Open…`);
+                                }}
+                              >
+                                Play dungeon in Open
+                              </button>
+                            ) : null}
                           </div>
                         ))}
                       </div>
@@ -916,6 +963,18 @@ export function HarvestProductionUI({
                         >
                           <ExternalLink size={14} /> Deploy / play seed world
                         </button>
+                        {onPlaySeedOverworld ? (
+                          <button
+                            type="button"
+                            className="hp-btn primary"
+                            onClick={() => {
+                              onPlaySeedOverworld(dep);
+                              showNotice("Opening explorer town + seed in Open…");
+                            }}
+                          >
+                            Play in Open (town + seed)
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className="hp-btn ghost"

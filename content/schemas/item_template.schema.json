@@ -6,7 +6,7 @@
   "required": ["id", "kind", "name", "rarity", "icon"],
   "properties": {
     "id": { "type": "string", "pattern": "^itm_" },
-    "kind": { "enum": ["weapon", "armor", "consumable", "material"] },
+    "kind": { "enum": ["weapon", "armor", "back", "consumable", "material"] },
     "name": { "type": "string" },
     "description": { "type": "string" },
     "rarity": { "enum": ["common", "uncommon", "rare", "epic", "legendary"] },
@@ -18,8 +18,12 @@
       "required": ["path", "status"],
       "properties": {
         "path": { "type": "string" },
+        "cdnUrl": { "type": "string" },
+        "source": { "type": "string" },
         "status": { "enum": ["ready", "placeholder", "missing"] }
       }
-    }
+    },
+    "equipSlot": { "type": "string" },
+    "recipeId": { "type": ["string", "null"] }
   }
 }

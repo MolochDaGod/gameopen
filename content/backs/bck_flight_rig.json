@@ -1,0 +1,46 @@
+{
+  "id": "bck_flight_rig",
+  "itemId": "itm_back_flight_rig",
+  "runtimeId": "back_flight_rig",
+  "equipId": "equip:back:flight_rig",
+  "slot": "back",
+  "family": "wings",
+  "label": "Flight Rig",
+  "effect": "Powered lift / flight skill",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Airborne Space — lift",
+  "domains": [
+    "mobility",
+    "combat"
+  ],
+  "status": "coded",
+  "assets": {
+    "mesh": "models/equipment/wing_animated.glb",
+    "mode": "flight"
+  },
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "wings",
+    "hotkey",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Chaos_2.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos_2.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_flight_rig"
+}

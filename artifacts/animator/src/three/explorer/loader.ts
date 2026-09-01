@@ -144,6 +144,8 @@ export function normalizeRetargetedFbxClip(clip: THREE.AnimationClip): THREE.Ani
     const dot = track.name.lastIndexOf(".");
     if (dot < 0) continue;
     const prop = track.name.slice(dot + 1);
+    // Never keep scale — weapon packs with scale keys tip/squash the body
+    if (prop === "scale" || prop.startsWith("scale[")) continue;
     const bone = canonicalRigBone(track.name.slice(0, dot));
     if (!bone) continue;
     if (prop === "quaternion" || (prop === "position" && bone === "mixamorigHips")) {
@@ -153,6 +155,29 @@ export function normalizeRetargetedFbxClip(clip: THREE.AnimationClip): THREE.Ani
     }
   }
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+}
+
+/**
+ * Native Mixamo FBX still carries limb position tracks. On a different bind
+ * skeleton those dislocate joints (spin / dive into ground on weapon equip).
+ * Keep rotations + hips position only — same contract as normalizeRetargetedFbxClip.
+ */
+export function stripLimbPositionTracks(clip: THREE.AnimationClip): THREE.AnimationClip {
+  const tracks: THREE.KeyframeTrack[] = [];
+  for (const track of clip.tracks) {
+    const name = track.name;
+    if (name.endsWith(".scale") || /\.scale\[/.test(name)) continue;
+    if (name.endsWith(".position") || /\.position\[/.test(name)) {
+      const node = name.replace(/\.position(\[.*)?$/, "");
+      const bone = node.replace(/^mixamorig:?/i, "").replace(/^Armature\|/i, "");
+      if (!/^Hips\d*$/i.test(bone) && !/^Bip001[\s._-]?Pelvis$/i.test(bone) && bone !== "root") {
+        continue;
+      }
+    }
+    tracks.push(track);
+  }
+  if (tracks.length === clip.tracks.length) return clip;
+  return new THREE.AnimationClip(clip.name, clip.duration, tracks, clip.blendMode);
 }
 
 /**
@@ -230,7 +255,7 @@ function loadParentGlbClip(id: string): Promise<THREE.AnimationClip | null> {
         const clip = group.animations[0];
         if (!clip) return null;
         const native = clip.tracks.some((t) => t.name.startsWith("mixamorig"));
-        return native ? clip : normalizeRetargetedFbxClip(clip);
+        return native ? stripLimbPositionTracks(clip) : normalizeRetargetedFbxClip(clip);
       }
     })();
     // Evict on failure so a transient fetch/parse error doesn't poison the cache
@@ -434,11 +459,14 @@ export async function loadClips(ids: string[]): Promise<Map<string, THREE.Animat
         const group = await loadFbx(id);
         const clip = group.animations[0];
         if (clip) {
-          // Native Mixamo clips bind to the box rig as-is; clips authored on a
-          // foreign skeleton (no `mixamorig` track) are normalised onto the rig,
-          // otherwise they'd silently fail to bind and never animate.
+          // Native Mixamo clips: strip limb position + scale (proportion mismatch
+          // with procedural skeleton → spin / dive into ground on weapon equip).
+          // Foreign packs: rename bones + same hip-only position contract.
           const native = clip.tracks.some((t) => t.name.startsWith("mixamorig"));
-          map.set(id, native ? clip : normalizeRetargetedFbxClip(clip));
+          map.set(
+            id,
+            native ? stripLimbPositionTracks(clip) : normalizeRetargetedFbxClip(clip),
+          );
         }
       } catch {
         // Unknown id or load failure: leave it out; chains cover the gap.
@@ -558,6 +586,32 @@ export async function createAnimatedCharacter(
   const character = new VoxelCharacter(source, look, opts.height ?? 2);
   const animator = new Animator(character, clips);
   animator.setWeapon(weapon);
+
+  // DRC SSOT: always hydrate Bip001 baked packs onto Mixamo bones (rematch).
+  // - Mixamo FBX present: fleet bakes fill gaps + CANONICAL loco / samurai 1H
+  // - Mixamo missing (Vercel): fleet bakes are the only combat clips
+  // Never skip this — Explorer and grudge6 share weapon-live / CANONICAL gait.
+  try {
+    const { hydrateExplorerFleetBakes, hydrateWeaponClassPack } = await import(
+      "./fleetBakeHydrate"
+    );
+    await hydrateExplorerFleetBakes({
+      skeletonRoot: character.skeletonRoot,
+      inject: (id, clip) => animator.registerCatalogClip(id, clip),
+      has: (id) => animator.hasCatalogClip(id),
+      weapons: classes,
+      log: !mixamoOk,
+    });
+    await hydrateWeaponClassPack(
+      character.skeletonRoot,
+      weapon,
+      (id, clip) => animator.registerCatalogClip(id, clip),
+      (id) => animator.hasCatalogClip(id),
+    );
+  } catch (e) {
+    console.warn("[loader] Explorer fleet bake hydrate failed", e);
+  }
+
   // Kick idle immediately so dressing room is never stuck on bind pose while
   // waiting for the first controller setLocomotion tick.
   animator.setLocomotion({ x: 0, z: 0, speed: 0, running: false });

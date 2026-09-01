@@ -1,0 +1,43 @@
+{
+  "id": "bck_hover",
+  "itemId": "itm_back_hover",
+  "runtimeId": "back_hover",
+  "equipId": "equip:back:hover",
+  "slot": "back",
+  "family": "pack",
+  "label": "Hover Rig",
+  "effect": "Short hover / soft land",
+  "useKind": "hotkey",
+  "useKey": "Space",
+  "useHint": "Planned — Space hover",
+  "domains": [
+    "mobility",
+    "utility"
+  ],
+  "status": "planned",
+  "assets": {},
+  "passive": {
+    "bonuses": {}
+  },
+  "tags": [
+    "back",
+    "pack",
+    "hotkey",
+    "planned"
+  ],
+  "ship": false,
+  "readiness": {
+    "data": "ready",
+    "mesh": "placeholder",
+    "combat": "placeholder",
+    "present": "placeholder",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Flow.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_hover"
+}

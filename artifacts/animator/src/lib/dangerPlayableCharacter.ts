@@ -1,13 +1,14 @@
 /**
- * Danger Room playable character bridge.
+ * Danger Room playable character bridge — Open /danger is **all-era**.
  *
  * Resolves who you fight as in https://open.grudge-studio.com/danger from:
- *  1. URL deep-links from Asset-Rig-Editor / Annihilate (`?hero=` `?race=` `?class=`)
- *  2. Fleet account selected character (Railway / Open session)
- *  3. Safe grudge6 default (WK warrior)
+ *  1. `?era=` (voxel | warlords | nexus | armada)
+ *  2. URL deep-links from Asset-Rig-Editor / Annihilate (`?hero=` `?race=` `?class=`)
+ *  3. Fleet account selected character (Railway / Open session)
+ *  4. Era default: Warlords WK Toon · Voxel Mixamo explorer
  *
- * Always returns a Studio-ready grudge6 kit (avatar id + mesh_ids + weapon + anim pack).
- * Does NOT use Explorer Mixamo FBX for production danger (404 on Vercel).
+ * Lanes (never cross-bind): warlords → Bip001 loadRaceKit · voxel/nexus/armada → Mixamo explorer.
+ * GRUDOX voxel Danger is a separate host (tvs-showcase) — see entryCatch PRODUCT_STARTS.grudoxVoxelDanger.
  */
 
 import {
@@ -23,6 +24,87 @@ import { getPreset, type RaceId, type PresetId } from "../three/grudge";
 import { familyFromAnimPack, type WeaponFamily } from "../three/grudge/weaponSkillPacks";
 import type { AnimPack } from "../three/grudge/anims";
 import { resolveCharacterEquipmentVisualSync } from "./characterEquipmentMesh";
+import { isWarlordsToonPlayCharacter } from "./characterPortrait";
+import type { FleetAnimRigLane } from "../three/anim/fleetAnimSsot";
+
+export type DangerEraId = "voxel" | "warlords" | "nexus" | "armada";
+
+export const DANGER_ERA_OPTIONS: {
+  id: DangerEraId;
+  label: string;
+  blurb: string;
+  lane: FleetAnimRigLane;
+}[] = [
+  {
+    id: "voxel",
+    label: "Voxel",
+    blurb: "Mixamo explorer · Mine / GRUDOX / Blox heroes",
+    lane: "mixamo-explorer",
+  },
+  {
+    id: "warlords",
+    label: "Warlords",
+    blurb: "Toon RTS Bip001 · loadRaceKit play kit",
+    lane: "bip001-baked",
+  },
+  {
+    id: "nexus",
+    label: "Nexus",
+    blurb: "era=nexus roster · Mixamo kit until dedicated mesh",
+    lane: "mixamo-explorer",
+  },
+  {
+    id: "armada",
+    label: "Armada",
+    blurb: "era=armada roster · Mixamo kit until dedicated mesh",
+    lane: "mixamo-explorer",
+  },
+];
+
+const ERA_SET = new Set<string>(DANGER_ERA_OPTIONS.map((e) => e.id));
+const STORAGE_ERA = "grudge_danger_era";
+
+export function dangerLaneForEra(era: DangerEraId): FleetAnimRigLane {
+  return DANGER_ERA_OPTIONS.find((e) => e.id === era)?.lane ?? "bip001-baked";
+}
+
+export function parseDangerEra(
+  search = typeof window !== "undefined" ? window.location.search : "",
+  fleetEra?: string | null,
+): DangerEraId {
+  try {
+    const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
+    const raw = (q.get("era") || "").toLowerCase();
+    if (ERA_SET.has(raw)) return raw as DangerEraId;
+  } catch {
+    /* ignore */
+  }
+  const fe = (fleetEra || "").toLowerCase();
+  if (ERA_SET.has(fe)) return fe as DangerEraId;
+  try {
+    const stored = localStorage.getItem(STORAGE_ERA);
+    if (stored && ERA_SET.has(stored)) return stored as DangerEraId;
+  } catch {
+    /* private */
+  }
+  return "warlords";
+}
+
+export function persistDangerEra(era: DangerEraId) {
+  try {
+    localStorage.setItem(STORAGE_ERA, era);
+  } catch {
+    /* private */
+  }
+  if (typeof window === "undefined") return;
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.set("era", era);
+    window.history.replaceState({}, "", u.toString());
+  } catch {
+    /* ignore */
+  }
+}
 
 export type PlayableSource = "url-hero" | "url-are" | "fleet-character" | "default";
 
@@ -36,6 +118,8 @@ export interface DangerPlayableCharacter {
   fleetCharacterId?: string;
   /** Deep-link that recreates this playable */
   dangerUrl: string;
+  era: DangerEraId;
+  lane: FleetAnimRigLane;
 }
 
 const PRESET_TO_WEAPON: Record<PresetId, string> = {
@@ -146,15 +230,38 @@ export function playableFromFleetCharacter(
 
   const heroToken = `fleet_${ch.id.slice(0, 8)}_${raceId}_${classKey}`;
   const spec = buildSpec(raceId, classKey, presetId, heroToken, meshIds);
+  const era: DangerEraId = "warlords";
   return {
     source: "fleet-character",
     displayName: ch.name || "Hero",
     spec,
     fleetCharacterId: ch.id,
+    era,
+    lane: "bip001-baked",
     dangerUrl: dangerDeepLink({
       hero: `${raceId.split("-")[0]}_${classKey}`,
       name: ch.name,
+      era,
     }),
+  };
+}
+
+function playableVoxelExplorer(
+  ch: GrudgeCharacter | null,
+  era: DangerEraId,
+): DangerPlayableCharacter {
+  const spec = buildSpec("western-kingdoms", "warrior", "warrior", "explorer");
+  spec.studioAvatarId = "explorer";
+  spec.meshIds = [];
+  const name = ch?.name || "Explorer";
+  return {
+    source: ch ? "fleet-character" : "default",
+    displayName: name,
+    spec,
+    fleetCharacterId: ch?.id,
+    era,
+    lane: "mixamo-explorer",
+    dangerUrl: dangerDeepLink({ name, era }),
   };
 }
 
@@ -164,12 +271,14 @@ export function dangerDeepLink(opts: {
   classId?: string;
   name?: string;
   fromAre?: boolean;
+  era?: DangerEraId;
 }): string {
   const base =
     typeof window !== "undefined" && window.location.hostname.includes("localhost")
       ? `${window.location.origin}/danger`
       : "https://open.grudge-studio.com/danger";
   const q = new URLSearchParams();
+  if (opts.era) q.set("era", opts.era);
   if (opts.hero) q.set("hero", opts.hero);
   if (opts.race) q.set("race", opts.race);
   if (opts.classId) q.set("class", opts.classId);
@@ -185,13 +294,28 @@ export function dangerDeepLink(opts: {
 export function resolveDangerPlayable(opts: {
   search?: string;
   fleetCharacter?: GrudgeCharacter | null;
+  era?: DangerEraId;
 }): DangerPlayableCharacter {
   const search = opts.search ?? (typeof window !== "undefined" ? window.location.search : "");
+  const fleetEra =
+    opts.fleetCharacter &&
+    String(
+      (opts.fleetCharacter as { gameEra?: string }).gameEra ||
+        (opts.fleetCharacter as { game_era?: string }).game_era ||
+        "",
+    );
+  const era = opts.era || parseDangerEra(search, fleetEra);
+  const lane = dangerLaneForEra(era);
 
-  // 1) Explicit hero / character token (annihilate)
+  const withEra = (p: DangerPlayableCharacter): DangerPlayableCharacter => ({
+    ...p,
+    era,
+    lane: p.lane || lane,
+  });
+
+  // 1) Explicit hero / character token (annihilate) — Warlords Toon path
   const fromHero = heroFromLocation(search);
-  if (fromHero) {
-    // heroFromLocation also parses bare race= as hero — prefer ARE if are=1
+  if (fromHero && lane === "bip001-baked") {
     let areFlag = false;
     try {
       const q = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
@@ -200,43 +324,59 @@ export function resolveDangerPlayable(opts: {
       /* ignore */
     }
     if (!areFlag || !parseAreQuery(search)) {
-      return {
+      return withEra({
         source: "url-hero",
         displayName: fromHero.hero.replace(/_/g, " "),
         spec: fromHero,
-        dangerUrl: dangerDeepLink({ hero: fromHero.hero }),
-      };
+        era,
+        lane: "bip001-baked",
+        dangerUrl: dangerDeepLink({ hero: fromHero.hero, era }),
+      });
     }
   }
 
-  // 2) Asset-Rig-Editor / bake labels
+  // 2) Asset-Rig-Editor / bake labels — Warlords Toon
   const fromAre = parseAreQuery(search);
-  if (fromAre) {
-    return {
+  if (fromAre && lane === "bip001-baked") {
+    return withEra({
       source: "url-are",
       displayName: fromAre.hero.replace(/^are_/, "").replace(/_/g, " "),
       spec: fromAre,
+      era,
+      lane: "bip001-baked",
       dangerUrl: dangerDeepLink({
         race: fromAre.raceId,
         classId: fromAre.classKey,
         name: fromAre.hero,
         fromAre: true,
+        era,
       }),
-    };
+    });
   }
 
-  // 3) Fleet selected character
-  if (opts.fleetCharacter) {
+  // 3) Mixamo explorer lane (voxel / nexus / armada)
+  if (lane === "mixamo-explorer") {
+    const ch = opts.fleetCharacter ?? null;
+    if (ch && isWarlordsToonPlayCharacter(ch) && era === "warlords") {
+      return playableFromFleetCharacter(ch);
+    }
+    return playableVoxelExplorer(ch, era);
+  }
+
+  // 4) Fleet Warlords Toon
+  if (opts.fleetCharacter && isWarlordsToonPlayCharacter(opts.fleetCharacter)) {
     return playableFromFleetCharacter(opts.fleetCharacter);
   }
 
-  // 4) Default grudge6 WK warrior
+  // 5) Default grudge6 WK warrior
   const def = buildSpec("western-kingdoms", "warrior", "warrior", "wk_warrior");
   return {
     source: "default",
     displayName: "WK Warrior",
     spec: def,
-    dangerUrl: dangerDeepLink({ hero: "wk_warrior" }),
+    era: "warlords",
+    lane: "bip001-baked",
+    dangerUrl: dangerDeepLink({ hero: "wk_warrior", era: "warlords" }),
   };
 }
 
@@ -245,9 +385,25 @@ export function applyDangerPlayableToStudio(
   studio: AnnihilateStudioTarget,
   playable: DangerPlayableCharacter,
 ): void {
+  if (playable.lane === "mixamo-explorer") {
+    studio.setEquipmentMeshIds(null);
+    studio.setCharacter("explorer");
+    if (playable.spec.weaponId && playable.spec.weaponId !== "none") {
+      try {
+        studio.setWeapon(playable.spec.weaponId);
+      } catch {
+        /* explorer may ignore arsenal ids */
+      }
+    }
+    studio.flashMessage?.(
+      `DANGER · ${playable.era.toUpperCase()} · ${playable.displayName.toUpperCase()} · mixamo-explorer · ${playable.source}`,
+      2.8,
+    );
+    return;
+  }
   applyAnnihilateHeroToStudio(studio, playable.spec);
   studio.flashMessage?.(
-    `DANGER · ${playable.displayName.toUpperCase()} · ${playable.spec.animPack} · ${playable.source}`,
+    `DANGER · ${playable.era.toUpperCase()} · ${playable.displayName.toUpperCase()} · ${playable.spec.animPack} · ${playable.source}`,
     2.8,
   );
 }

@@ -19,4 +19,10 @@ describe("islandMapLayers classify", () => {
     expect(classifyIslandMesh("Arène_base_Sand_0", ["Sand"], "arena")).toBe("ground");
     expect(classifyIslandMesh("Escalier bois", [], "arena")).toBe("climb");
   });
+
+  it("generic world trees and rocks are harvest", () => {
+    expect(classifyIslandMesh("Pine_01", ["Bark"], "generic")).toBe("harvest");
+    expect(classifyIslandMesh("OakCanopy", ["Leaves"], "generic")).toBe("harvest");
+    expect(classifyIslandMesh("Boulder_03", ["Rock"], "generic")).toBe("harvest");
+  });
 });

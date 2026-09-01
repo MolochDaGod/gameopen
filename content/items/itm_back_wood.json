@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_wood",
+  "kind": "back",
+  "name": "Carry Wood",
+  "description": "Harvest yield while carrying wood",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "toon"
+  ],
+  "icon": {
+    "path": "icons/pack/misc/Slash_07.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_wood"
+}

@@ -19,6 +19,29 @@
     "status": "ready",
     "notes": "Mapped to existing converted gameopen weapon GLB (uMMORPG port stand-in)"
   },
+  "spine": {
+    "forward": "y+",
+    "align": "y",
+    "status": "ready",
+    "points": {
+      "grip": { "pos": [0, 0, 0] },
+      "cast": { "pos": [0, 1.45, 0] },
+      "tip": { "pos": [0, 1.45, 0] },
+      "physics": { "pos": [0, 0.8, 0], "radius": 0.05, "halfHeight": 0.7 },
+      "effect": { "pos": [0, 1.45, 0] }
+    }
+  },
+  "physics": {
+    "kind": "capsule",
+    "attach": "physics",
+    "radius": 0.05,
+    "halfHeight": 0.7,
+    "sensor": true
+  },
+  "effects": {
+    "cast": { "at": "cast", "color": "#ff7a1a" },
+    "impact": { "at": "cast", "color": "#ff7a1a" }
+  },
   "tags": [
     "master-weaponSkills",
     "ummorpg-port",
@@ -30,7 +53,8 @@
     "mesh": "ready",
     "combat": "ready",
     "present": "ready",
-    "icon": "ready"
+    "icon": "ready",
+    "spine": "ready"
   },
   "icon": {
     "path": "icons/pack/weapons/staff_1.png",

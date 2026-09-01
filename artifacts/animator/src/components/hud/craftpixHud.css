@@ -1171,7 +1171,7 @@
   /* Part_2 main frame as outer chrome behind rows */
   padding: 10px 18px 8px;
   background:
-    url("/ui/craftpix/part2/Action_Bar/ab1_main_frame.png") center bottom / 100% 58% no-repeat;
+    url("/ui/craftpix/part3/ab2_main_frame.png") center bottom / 100% 58% no-repeat;
   border-radius: 4px;
 }
 
@@ -1248,7 +1248,7 @@
   margin: 0;
   cursor: pointer;
   background-color: transparent;
-  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_shortcut_frame.png");
+  background-image: url("/ui/craftpix/part3/ab2_shurtcut_frame.png");
   background-size: var(--cx-slot) var(--cx-slot);
   background-position: center;
   background-repeat: no-repeat;
@@ -1285,7 +1285,7 @@
   max-width: 60px;
   max-height: 60px;
   flex-basis: 60px;
-  background-image: url("/ui/craftpix/part2/Action_Bar/ab1_bonus_slot.png");
+  background-image: url("/ui/craftpix/part3/moba/mab_shortcut.png");
   background-size: 60px 60px;
   --cx-slot-icon-pad: 8px;
   --cx-slot-icon: 44px;
@@ -1382,7 +1382,7 @@
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  background: url("/ui/craftpix/part2/Action_Bar/spell_frame_hover_effect.png") center / contain no-repeat;
+  background: radial-gradient(circle, rgba(232, 201, 106, 0.35), transparent 70%);
   transition: opacity 0.1s ease;
   z-index: 2;
 }
@@ -1398,7 +1398,7 @@
   width: min(340px, 70vw);
   height: 12px;
   margin-top: 2px;
-  background: url("/ui/craftpix/part2/Action_Bar/ab1_xp_bar_empty.png") center / 100% 100% no-repeat;
+  background: url("/ui/craftpix/part3/ab2_xp_empty_frame.png") center / 100% 100% no-repeat;
 }
 .cx-combat-xp-fill {
   position: absolute;
@@ -1407,7 +1407,7 @@
   bottom: 22%;
   max-width: 97%;
   background:
-    url("/ui/craftpix/part2/Action_Bar/ab1_xp_bar_fill_green.png") left center / auto 100% no-repeat,
+    url("/ui/craftpix/part3/ab2_xp_fill.png") left center / auto 100% no-repeat,
     linear-gradient(90deg, #2a8a40, #6ee7a0);
   border-radius: 2px;
 }

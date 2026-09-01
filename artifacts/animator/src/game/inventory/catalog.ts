@@ -10,6 +10,11 @@
 import type { ItemTemplate } from "./types";
 import { MATERIAL_STACK_MAX } from "./types";
 import { materialIconPath, resolveIconUrl } from "../../lib/objectStore";
+import {
+  BACK_SLOT_ITEMS,
+  backItemIconUrl,
+  isBackTemplateId,
+} from "../../three/equipment/backSlotItems";
 
 const mat = (
   id: string,
@@ -160,10 +165,36 @@ export const LOADOUT_TEMPLATES: Record<string, ItemTemplate> = {
   },
 };
 
+/** Back-slot gear — unique instances; craft via rcp_back_* (harvest recipes). */
+export const BACK_TEMPLATES: Record<string, ItemTemplate> = (() => {
+  const out: Record<string, ItemTemplate> = {};
+  const extras = [
+    { id: "back_quiver", label: "Quiver" },
+    { id: "back_bag", label: "Traveler's Bag" },
+    { id: "back_wood", label: "Carry Wood" },
+  ];
+  for (const i of [...BACK_SLOT_ITEMS, ...extras]) {
+    const itemId = `itm_${i.id}`;
+    out[itemId] = {
+      id: itemId,
+      kind: "back",
+      name: i.label,
+      description: "effect" in i ? String((i as { effect?: string }).effect || "") : "",
+      rarity: "status" in i && i.status === "planned" ? "uncommon" : "common",
+      maxStack: 1,
+      icon: backItemIconUrl(i.id),
+      equipSlot: "back",
+      tags: ["back", "equip"],
+    };
+  }
+  return out;
+})();
+
 const CACHE: Record<string, ItemTemplate> = {
   ...MATERIAL_TEMPLATES,
   ...CONSUMABLE_TEMPLATES,
   ...LOADOUT_TEMPLATES,
+  ...BACK_TEMPLATES,
 };
 
 export function getItemTemplate(templateId: string): ItemTemplate {
@@ -175,17 +206,30 @@ export function getItemTemplate(templateId: string): ItemTemplate {
       ? "weapon"
       : templateId.startsWith("arm_")
         ? "equipment"
-        : templateId.startsWith("itm_")
-          ? "consumable"
-          : "material",
+        : templateId.startsWith("itm_back_") || templateId.startsWith("bck_")
+          ? "back"
+          : templateId.startsWith("itm_")
+            ? "consumable"
+            : "material",
     name: templateId.replace(/^itm_|^wpn_|^arm_/, "").replace(/_/g, " "),
     rarity: "common",
     maxStack:
-      templateId.startsWith("wpn_") || templateId.startsWith("arm_")
+      templateId.startsWith("wpn_") ||
+      templateId.startsWith("arm_") ||
+      templateId.startsWith("itm_back_") ||
+      templateId.startsWith("bck_")
         ? 1
         : MATERIAL_STACK_MAX,
     icon: "/icons/pack/misc/Effect.png",
   };
+}
+
+/** Bag / prefab / paperdoll Back family — one predicate for equip + ledger. */
+export function isBackItemTemplate(templateId: string): boolean {
+  if (!templateId) return false;
+  if (isBackTemplateId(templateId)) return true;
+  const t = getItemTemplate(templateId);
+  return t.kind === "back" || t.equipSlot === "back";
 }
 
 export function isStackableMaterial(templateId: string): boolean {
@@ -195,4 +239,39 @@ export function isStackableMaterial(templateId: string): boolean {
 
 export function maxStackFor(templateId: string): number {
   return getItemTemplate(templateId).maxStack;
+}
+
+/**
+ * Unique instances require Railway grudge_uuid + ledger when signed in.
+ * Stackable mats/consumables use definition id + qty only.
+ */
+export function isLedgerUniqueItem(templateId: string): boolean {
+  if (!templateId) return false;
+  if (
+    templateId.startsWith("wpn_") ||
+    templateId.startsWith("arm_") ||
+    templateId.startsWith("itm_back_") ||
+    templateId.startsWith("bck_") ||
+    templateId.startsWith("EQIP-") ||
+    templateId.startsWith("ITEM-")
+  ) {
+    return true;
+  }
+  const t = getItemTemplate(templateId);
+  if (t.maxStack <= 1) {
+    if (
+      t.kind === "weapon" ||
+      t.kind === "equipment" ||
+      t.kind === "mount" ||
+      t.kind === "boat" ||
+      t.kind === "tool" ||
+      t.kind === "relic" ||
+      t.kind === "back"
+    ) {
+      return true;
+    }
+  }
+  // Bound mission tools / one-off placeables that must not stack
+  if (templateId.startsWith("tool_") || /_tool_/.test(templateId)) return true;
+  return false;
 }

@@ -39,6 +39,16 @@
   color: #ff6b5a;
   font-size: 20px;
 }
+/* Optional gore UI chrome (2D Gore pack — rib frame behind number) */
+.gxo-root[data-gore-theme] .gxo-float.kind-damage.is-live,
+.gxo-root[data-gore-theme] .gxo-float.kind-crit.is-live {
+  padding: 4px 10px 6px;
+  background-image: var(--gxo-gore-frame, none);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
 .gxo-float.kind-crit {
   color: #ffd060;
   font-size: 28px;
@@ -83,6 +93,37 @@
   opacity: 0;
   filter: blur(0.5px);
   will-change: transform, opacity;
+}
+/* When gore theme active, splash can use gauge fleck as secondary texture */
+.gxo-root[data-gore-theme] .gxo-blood {
+  background-image:
+    radial-gradient(circle at 40% 40%, rgba(180, 20, 30, 0.9), transparent 55%),
+    var(--gxo-gore-bar-full, none);
+  background-size: cover, 70% 70%;
+  background-position: center, center;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+}
+
+/* HUD gauge layering helper (empty shell + fill clip) */
+.gxo-gore-gauge {
+  position: relative;
+  width: 120px;
+  height: 18px;
+  background-image: var(--gxo-gore-bar-empty);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.gxo-gore-gauge__fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  transform-origin: left center;
+  background-image: var(--gxo-gore-bar-full);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 .gxo-blood.is-live {
   opacity: 0.92;

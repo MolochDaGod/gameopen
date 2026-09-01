@@ -8,6 +8,7 @@ import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
 import { FootGrounder, type GroundSampler } from "./anim/legIk";
+import { FLAT_FOOT_SAMPLER } from "./anim/terrainFootSample";
 import { PHYSICS_DT } from "../lib/productionRuntime";
 
 /** Crossfade (seconds) used to ease the additive combat overlay in and out. */
@@ -116,10 +117,23 @@ export class Character {
 
     this.model.updateMatrixWorld(true);
     this.findHands();
+    this.footGrounder.maxLift = 0.28;
+    this.footGrounder.maxDrop = 0.22;
+    this.footGrounder.smooth = 16;
+    this.footGrounder.alignFeet = true;
     this.footGrounder.bind(this.model);
-    // Flat Danger Room floor at y=0; hosts may swap terrain sampler later.
+    // Flat Danger Room floor at y=0; Studio.wireCharacterFeetOnTerrain swaps outdoor heightfield.
     this.footGrounder.setEnabled(true);
+    this.footGrounder.setGroundSampler(FLAT_FOOT_SAMPLER);
     this.playRole("idle", 0);
+  }
+
+  /**
+   * Public re-entry: ensure climb/swim/hurt/death/loco roles after map open.
+   * Safe to call repeatedly (fills gaps only).
+   */
+  async ensureFleetRolesReady(): Promise<void> {
+    await this.hydrateFleetBakedRoles();
   }
 
   /**
@@ -184,7 +198,18 @@ export class Character {
 
   /** Custom ground height sampler (default flat y=0). */
   setGroundSampler(fn: GroundSampler | null): void {
-    this.footGrounder.setGroundSampler(fn ?? (() => ({ y: 0, normal: null })));
+    this.footGrounder.setGroundSampler(fn ?? FLAT_FOOT_SAMPLER);
+  }
+
+  /** Re-locate legs after mesh/equip changes; Studio calls on map open. */
+  rebindFootIk(): void {
+    if (!this.model) return;
+    this.footGrounder.bind(this.model);
+    this.footGrounder.setEnabled(true);
+  }
+
+  get footIkBound(): boolean {
+    return this.footGrounder.isBound;
   }
 
   /**
@@ -198,11 +223,44 @@ export class Character {
       /roll|dodge|tumble|somersault|cartwheel|run[-_\s]?to[-_\s]?roll|running[-_\s]?roll|roll[-_\s]?run|quick[_\s-]?roll/i.test(
         n,
       );
+    const names = [...this.actions.keys()];
+
+    // 1) Exact library names first (Heroes of Grudge / Mixamo short roles)
+    const exactPrefer: [AnimRole, string[]][] = [
+      ["idle", ["idle", "Idle", "IDLE", "stand", "standing-idle"]],
+      ["walk", ["walk", "Walk", "WALK", "walking"]],
+      ["run", ["run", "Run", "RUN", "running"]],
+      ["sprint", ["sprint", "Sprint", "SPRINT", "sprint_start"]],
+      ["attack", ["attack", "Attack", "ATTACK", "sword_attack_c", "sword_attack_a"]],
+      ["jump", ["jump", "Jump", "JUMP"]],
+      ["block", ["block", "Block", "sword_block", "guard"]],
+      ["hurt", ["hurt", "hit", "Hit", "damage"]],
+      ["death", ["death", "die", "Death"]],
+      ["swim", ["swim", "Swim", "swimming"]],
+    ];
+    for (const [role, aliases] of exactPrefer) {
+      if (this.roleClip.has(role)) continue;
+      for (const a of aliases) {
+        if (this.actions.has(a)) {
+          this.roleClip.set(role, a);
+          break;
+        }
+        // Case-insensitive fallback
+        const hit = names.find((n) => n.toLowerCase() === a.toLowerCase());
+        if (hit) {
+          this.roleClip.set(role, hit);
+          break;
+        }
+      }
+    }
+
+    // 2) Fuzzy keywords for remaining roles
     const roleKeywords: [AnimRole, RegExp][] = [
       ["idle", /idle|idol|breath|stand/i],
       ["walk", /walk|stroll/i],
-      // Prefer exact "run" / "sprint" / "jog" — not bare "running" (often run-to-roll)
-      ["run", /(?:^|[\s_|.-])(run|sprint|jog)(?:$|[\s_|.-])/i],
+      // Prefer exact "run" / "jog" — not bare "running" (often run-to-roll)
+      ["run", /(?:^|[\s_|.-])(run|jog)(?:$|[\s_|.-])/i],
+      ["sprint", /(?:^|[\s_|.-])(sprint)(?:$|[\s_|.-])/i],
       ["attack", /attack|slash|strike|punch|kick|swing|combat|melee|\bhit\b|chop|stab/i],
       ["jump", /jump|leap|vault/i], // drop "flip" — often acrobatic one-shots
       ["death", /death|die|dead|defeat|ko\b/i],
@@ -216,7 +274,6 @@ export class Character {
       ["wallRun", /wall.?run/i],
       ["swim", /swim/i],
     ];
-    const names = [...this.actions.keys()];
     for (const [role, re] of roleKeywords) {
       if (this.roleClip.has(role)) continue;
       const pool =
@@ -237,7 +294,7 @@ export class Character {
     if (!this.roleClip.has("run") && this.roleClip.has("walk")) {
       this.roleClip.set("run", this.roleClip.get("walk")!);
     }
-    // Sprint role: never invent from roll clips — alias run (Controller speeds it)
+    // Sprint role: prefer distinct clip; else alias run (Controller raises intensity)
     if (!this.roleClip.has("sprint") && this.roleClip.has("run")) {
       this.roleClip.set("sprint", this.roleClip.get("run")!);
     }
@@ -377,8 +434,9 @@ export class Character {
    */
   setLocomotion(speed: number, _sprinting = false) {
     this.blendActive = true;
-    // GLB blend tree is idle/walk/run only; sprint raises intensity toward run.
-    // (GrudgeAvatar uses the sprint flag for a dedicated 1.75× run clone.)
+    // GLB blend tree: idle/walk/run (+ optional distinct sprint). Sprint flag
+    // pushes intensity into the sprint band (≥0.95) so LocomotionBlend can
+    // weight the dedicated `sprint` clip when catalog-mapped.
     const s = THREE.MathUtils.clamp(speed, 0, 1);
     this.locoSpeed = _sprinting ? Math.max(s, 0.95) : s;
   }
@@ -508,10 +566,15 @@ export class Character {
     // does NOT suppress it, so the legs keep walking under the swing.
     if (this.blendActive && this.locoBlend) {
       const blendDrives = !this.oneShot;
+      const runId = this.roleClip.get("run") ?? this.roleClip.get("walk") ?? "";
+      const sprintId = this.roleClip.get("sprint") ?? "";
+      // Distinct sprint only when catalog mapped a different clip than run
+      const sprintDistinct = sprintId && sprintId !== runId ? sprintId : undefined;
       this.locoBlend.update({
         idleId: this.roleClip.get("idle") ?? "",
         walkId: this.roleClip.get("walk") ?? this.roleClip.get("idle") ?? "",
-        runId: this.roleClip.get("run") ?? this.roleClip.get("walk") ?? "",
+        runId,
+        sprintId: sprintDistinct,
         speed: this.locoSpeed,
         crouch: false,
         active: blendDrives,

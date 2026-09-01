@@ -2,12 +2,12 @@
 // Production SSOT binaries on R2 CDN (assets.grudge-studio.com).
 // Textures: race atlases (webp). flipY=false + MeshStandard in loadBodyTexture.
 //
-// Delivery contract (see docs/CHARACTER_MESH_DELIVERY.md):
-//   mesh  → models/grudge6/races/*_Characters.fbx (FBX SSOT) + GLB fallback
-//   atlas → textures/grudge6/{race}/*.webp  (also /assets/{race}/textures/)
-//   anims → /anims/baked/* (Open rewrite → arena) then R2
+// Delivery contract (docs/CHARACTER_MESH_DELIVERY.md + docs/ANIMATION_FLEET_SSOT.md):
+//   mesh  → assets…/asset-packs/toon-rts-characters/glb/characters/{raceId}.glb  (Toon RTS ★ only)
+//   atlas → textures/grudge6/{race}/*.webp (embedded-kept preferred; rebind only if stubs)
+//   anims → bip001-baked lane only: /anims/baked/* then assets…/prod/anims (never Mixamo, never FBX play)
 //   equip → child mesh visibility via gear presets / mesh_ids (fuzzy keys)
-// 2D UI portraits are separate: public/races/*.png + character.avatarUrl
+// HARD: no browser FBX; no metaverse/*.glb; no races/*_Characters.glb as play default.
 
 export type RaceId =
   | "barbarians"
@@ -22,7 +22,7 @@ export interface RaceAsset {
   name: string;
   abbr: string;
   color: string;
-  /** Modular race kit (FBX SSOT preferred; loaders also try GLB). */
+  /** Modular race kit — Toon RTS GLB ★ only (never FBX in game). */
   modelUrl: string;
   /** Body atlas — CDN textures/grudge6 first. */
   textureUrl: string;
@@ -38,7 +38,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "Barbarians",
     abbr: "BRB",
     color: "#c2410c",
-    modelUrl: `${CDN}/models/grudge6/races/BRB_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/barbarian.glb`,
     textureUrl: `${CDN}/textures/grudge6/barbarians/BRB_StandardUnits_texture.webp`,
     textureFallbacks: [
       "/textures/grudge6/barbarians/BRB_StandardUnits_texture.webp",
@@ -51,7 +51,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "Dwarves",
     abbr: "DWF",
     color: "#b45309",
-    modelUrl: `${CDN}/models/grudge6/races/DWF_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/dwarf.glb`,
     textureUrl: `${CDN}/textures/grudge6/dwarves/DWF_Standard_Units.webp`,
     textureFallbacks: [
       "/textures/grudge6/dwarves/DWF_Standard_Units.webp",
@@ -63,7 +63,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "High Elves",
     abbr: "ELF",
     color: "#0891b2",
-    modelUrl: `${CDN}/models/grudge6/races/ELF_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/elf.glb`,
     textureUrl: `${CDN}/textures/grudge6/elves/ELF_HighElves_Texture.webp`,
     textureFallbacks: [
       "/textures/grudge6/elves/ELF_HighElves_Texture.webp",
@@ -75,7 +75,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "Orcs",
     abbr: "ORC",
     color: "#15803d",
-    modelUrl: `${CDN}/models/grudge6/races/ORC_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/orc.glb`,
     textureUrl: `${CDN}/textures/grudge6/orcs/ORC_StandardUnits.webp`,
     textureFallbacks: [
       "/textures/grudge6/orcs/ORC_StandardUnits.webp",
@@ -87,7 +87,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "Undead",
     abbr: "UD",
     color: "#7c3aed",
-    modelUrl: `${CDN}/models/grudge6/races/UD_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/undead.glb`,
     textureUrl: `${CDN}/textures/grudge6/undead/UD_Standard_Units.webp`,
     textureFallbacks: [
       "/textures/grudge6/undead/UD_Standard_Units.webp",
@@ -99,7 +99,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
     name: "W. Kingdoms",
     abbr: "WK",
     color: "#1d4ed8",
-    modelUrl: `${CDN}/models/grudge6/races/WK_Characters.fbx`,
+    modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/human.glb`,
     textureUrl: `${CDN}/textures/grudge6/western-kingdoms/WK_Standard_Units.webp`,
     textureFallbacks: [
       "/textures/grudge6/western-kingdoms/WK_Standard_Units.webp",

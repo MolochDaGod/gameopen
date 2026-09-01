@@ -8,7 +8,11 @@
  *  - SI: human ~1.8 m
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createAnimatedCharacter } from "../explorer/loader";
 import type { Animator } from "../explorer/Animator";
 import type { CharacterLook } from "../explorer/types";
@@ -16,11 +20,19 @@ import type { VoxelPart } from "../explorer/rig";
 import { CHARACTER_HEIGHT_M } from "../types";
 import { baseIdToRaceKey, type GenesisHeroOption } from "../../lib/grudoxRoster";
 import {
-  loadVoxelAvatarForCharacter,
   partOverridesFromSave,
+  resolveVoxelAvatar,
   voxelAvatarToLook,
   VOXEL_AVATAR_EVENT,
 } from "../explorer/voxelAvatarSave";
+import {
+  CAMPFIRE_TVS,
+  campfireTvsTextureUrl,
+  campfireTvsUrls,
+  encampmentBackdropUrls,
+} from "../../lib/productionSystemsPattern";
+import { bindKtx2, makeGltfLoader } from "../loaders/gltf";
+import { bindTextureAnisotropy, prepObjectMaterials } from "../texturePrep";
 
 export interface CampfireSlotView {
   index: number;
@@ -40,9 +52,7 @@ const SEAT_RADIUS = 3.55;
 const HERO_H = CHARACTER_HEIGHT_M;
 const CAM_POS = new THREE.Vector3(0.15, 2.55, 7.4);
 const CAM_LOOK = new THREE.Vector3(0, 0.95, 0.1);
-/** Local public path (dev); production GLBs live on R2 and are excluded by vercelignore. */
-const TVS_BASE_LOCAL = "models/campfire-lobby/tvs";
-const TVS_BASE_CDN = "https://assets.grudge-studio.com/models/campfire-lobby/tvs";
+// TVS URL SSOT: productionSystemsPattern.CAMPFIRE_TVS (CDN first — Vercel bans .glb)
 
 const LOOK_RACES: Record<string, Partial<CharacterLook>> = {
   human: { skin: "#c98c5a", shirt: "#3d5a80", pants: "#2e3440", cape: true, capeColor: "#1a2740" },
@@ -58,20 +68,22 @@ function hash2(x: number, z: number): number {
   return s - Math.floor(s);
 }
 
-function assetUrl(rel: string): string {
-  const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
-  const b = base.endsWith("/") ? base : `${base}/`;
-  return `${b}${rel.replace(/^\//, "")}`;
-}
-
-/** Prefer CDN (production), fall back to same-origin public for local dev. */
+/**
+ * Prefer R2 CDN (production), fall back to same-origin public for local dev.
+ * SSOT: campfireTvsUrls — must not invent parallel CDN roots.
+ */
 function tvsUrl(file: string): string[] {
+  const base =
+    (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
+  const b = base.endsWith("/") ? base : `${base}/`;
   const name = file.replace(/^\//, "");
-  return [`${TVS_BASE_CDN}/${name}`, assetUrl(`${TVS_BASE_LOCAL}/${name}`)];
+  // campfireTvsUrls already CDN-first; rewrite local path with Vite BASE_URL
+  const [cdn, local] = campfireTvsUrls(name);
+  return [cdn, `${b}${CAMPFIRE_TVS.localRel}/${name}`, local];
 }
 
 async function loadGltfFirst(
-  loader: GLTFLoader,
+  loader: { loadAsync: (url: string) => Promise<{ scene: THREE.Group }> },
   urls: string[],
 ): Promise<THREE.Group | null> {
   for (const url of urls) {
@@ -85,8 +97,86 @@ async function loadGltfFirst(
   return null;
 }
 
+const tvsTexCache = new Map<string, Promise<THREE.Texture | null>>();
+
+function loadTvsPalette(url: string): Promise<THREE.Texture | null> {
+  const hit = tvsTexCache.get(url);
+  if (hit) return hit;
+  const pending = new Promise<THREE.Texture | null>((resolve) => {
+    new THREE.TextureLoader().load(
+      url,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = false;
+        tex.generateMipmaps = false;
+        tex.minFilter = THREE.NearestFilter;
+        tex.magFilter = THREE.NearestFilter;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.needsUpdate = true;
+        resolve(tex);
+      },
+      undefined,
+      () => resolve(null),
+    );
+  });
+  tvsTexCache.set(url, pending);
+  return pending;
+}
+
+/** TVS Voxel Farm palettes are 1-mesh atlas UVs — nearest, white multiply, low metal. */
+function bindTvsPalette(root: THREE.Object3D, tex: THREE.Texture): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      if (!m) continue;
+      const std = m as THREE.MeshStandardMaterial;
+      if (!std.map) {
+        std.map = tex;
+        if (std.color) std.color.setHex(0xffffff);
+      }
+      if ("metalness" in std) std.metalness = Math.min(std.metalness ?? 0, 0.08);
+      if ("roughness" in std) std.roughness = Math.max(std.roughness ?? 0.88, 0.78);
+      if ("flatShading" in std) std.flatShading = true;
+      std.needsUpdate = true;
+    }
+  });
+}
+
+function applyVoxelFilters(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      const std = m as THREE.MeshStandardMaterial | undefined;
+      if (!std?.map) continue;
+      const name = (std.name || "").toLowerCase();
+      if (!name.startsWith("palette")) continue;
+      std.map.colorSpace = THREE.SRGBColorSpace;
+      std.map.generateMipmaps = false;
+      std.map.minFilter = THREE.NearestFilter;
+      std.map.magFilter = THREE.NearestFilter;
+      std.map.needsUpdate = true;
+    }
+  });
+}
+
+async function finishTvsProp(root: THREE.Object3D, file: string): Promise<void> {
+  prepObjectMaterials(root, { neutralizeMetal: true });
+  const texUrl = campfireTvsTextureUrl(file);
+  if (texUrl) {
+    const tex = await loadTvsPalette(texUrl);
+    if (tex) bindTvsPalette(root, tex);
+  }
+  applyVoxelFilters(root);
+}
+
 export class CampfireLobbyScene {
   private renderer: THREE.WebGLRenderer;
+  private composer: EffectComposer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private clock = new THREE.Clock();
@@ -108,10 +198,10 @@ export class CampfireLobbyScene {
   private pointer = new THREE.Vector2();
   private envRoot = new THREE.Group();
   private farmRoot = new THREE.Group();
-  private lastHeroes: GenesisHeroOption[] = [];
+  private lastHeroes: (GenesisHeroOption | null)[] = [null, null, null, null];
   private fireLight: THREE.PointLight | null = null;
   private fireLight2: THREE.PointLight | null = null;
-  private gltf = new GLTFLoader();
+  private gltf!: ReturnType<typeof makeGltfLoader>;
   private glowMats: Map<number, THREE.MeshStandardMaterial[]> = new Map();
   private seatMode: ("sit" | "stand")[] = ["sit", "sit", "sit", "sit"];
   private gestureCd = 0;
@@ -140,15 +230,30 @@ export class CampfireLobbyScene {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.06;
+    bindKtx2(this.renderer);
+    bindTextureAnisotropy(this.renderer);
+    this.gltf = makeGltfLoader({ renderer: this.renderer });
 
     // Warm dusk farm — no purple dungeon sky
     this.scene.background = new THREE.Color(0x0a1420);
-    this.scene.fog = new THREE.FogExp2(0x0c1824, 0.028);
+    this.scene.fog = new THREE.Fog(0x0c1824, 28, 220);
 
-    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 120);
+    this.camera = new THREE.PerspectiveCamera(42, w / h, 0.08, 280);
     this.camera.position.copy(CAM_POS);
     this.camera.lookAt(CAM_LOOK);
+
+    const room = new RoomEnvironment();
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+    this.scene.environmentIntensity = 0.72;
+    pmrem.dispose();
+
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.42, 0.5, 0.28));
+    this.composer.addPass(new OutputPass());
+    this.composer.setSize(w, h);
 
     this.scene.add(this.envRoot);
     this.scene.add(this.farmRoot);
@@ -157,6 +262,7 @@ export class CampfireLobbyScene {
     this.buildCampfireProcedural();
     this.buildStars();
     void this.loadTvsFarmProps();
+    void this.loadEncampmentBackdrop();
 
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
@@ -169,9 +275,9 @@ export class CampfireLobbyScene {
     this.raf = requestAnimationFrame(this.animate);
   }
 
-  async setHeroes(heroes: GenesisHeroOption[]): Promise<void> {
+  async setHeroes(heroes: (GenesisHeroOption | null)[]): Promise<void> {
     if (this.disposed) return;
-    this.lastHeroes = heroes.slice(0, 4);
+    this.lastHeroes = [0, 1, 2, 3].map((i) => heroes[i] ?? null);
     for (let i = 0; i < 4; i++) {
       const prev = this.heroes[i];
       if (prev) {
@@ -183,12 +289,15 @@ export class CampfireLobbyScene {
       this.seatMode[i] = "sit";
     }
     for (let i = 0; i < 4; i++) {
-      const hero = heroes[i] ?? null;
+      const hero = this.lastHeroes[i] ?? null;
       this.updateLabel(i, hero?.name ?? (i === 0 ? "Empty seat" : "—"));
       if (!hero) continue;
       try {
         const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
-        const saved = loadVoxelAvatarForCharacter(hero.id || null);
+        const saved = resolveVoxelAvatar(
+          hero.id || null,
+          hero.voxelLook ? { voxelLook: hero.voxelLook } : null,
+        );
         let look: CharacterLook = {
           skin: "#c98c5a",
           shirt: "#c0392b",
@@ -207,7 +316,7 @@ export class CampfireLobbyScene {
           height: HERO_H,
           weapon: "unarmed",
           look,
-          classes: ["unarmed", "sword"],
+          classes: ["unarmed"],
         });
         if (this.disposed) {
           anim.dispose();
@@ -219,24 +328,41 @@ export class CampfireLobbyScene {
           }
         }
         anim.setWeapon("unarmed", true);
+        anim.root.name = `seat-hero-${hero.id}`;
+        anim.root.userData.characterId = hero.id;
+        anim.root.userData.slot = hero.slot;
         anim.root.position.set(0, 0, 0);
         anim.root.rotation.y = 0;
+        anim.root.frustumCulled = false;
+        anim.root.traverse((o) => {
+          o.frustumCulled = false;
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true;
+            m.visible = true;
+          }
+        });
         anim.root.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(anim.root);
         const size = box.getSize(new THREE.Vector3());
         if (size.y > 0.05) {
           const s = (HERO_H / size.y) * (anim.root.scale.x || 1);
-          anim.root.scale.setScalar(THREE.MathUtils.clamp(s, 0.9, 1.2));
+          anim.root.scale.setScalar(THREE.MathUtils.clamp(s, 0.85, 1.25));
           anim.root.updateMatrixWorld(true);
           const b2 = new THREE.Box3().setFromObject(anim.root);
           anim.root.position.y -= b2.min.y;
         }
-        // Sit: slight lower + crouch if available
         this.applySitPose(anim, true);
         const seat = this.seats[i]!;
         seat.add(anim.root);
         this.heroes[i] = anim;
         this.cacheGlowMats(i, anim.root);
+        try {
+          anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
+          anim.update(1 / 30);
+        } catch {
+          /* idle tick optional */
+        }
       } catch (err) {
         console.warn("[CampfireLobby] hero load failed", hero.name, err);
       }
@@ -271,6 +397,8 @@ export class CampfireLobbyScene {
     this.ro?.disconnect();
     for (const h of this.heroes) h?.dispose();
     this.heroes = [null, null, null, null];
+    this.composer.dispose();
+    this.scene.environment?.dispose();
     this.renderer.dispose();
   }
 
@@ -281,18 +409,23 @@ export class CampfireLobbyScene {
   };
 
   private buildLightsAndGround(): void {
-    this.scene.add(new THREE.AmbientLight(0x4a5a48, 0.42));
-    this.scene.add(new THREE.HemisphereLight(0x9ab8d0, 0x2a2010, 0.55));
-    const sun = new THREE.DirectionalLight(0xffe0b0, 0.85);
-    sun.position.set(6, 12, 4);
+    this.scene.add(new THREE.AmbientLight(0x2c3328, 0.18));
+    this.scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x3a2814, 0.48));
+    const sun = new THREE.DirectionalLight(0xffe6c8, 1.45);
+    sun.position.set(16, 26, 10);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    const d = 16;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = 0.035;
+    const d = 36;
     sun.shadow.camera.left = -d;
     sun.shadow.camera.right = d;
     sun.shadow.camera.top = d;
     sun.shadow.camera.bottom = -d;
+    sun.shadow.camera.near = 2;
+    sun.shadow.camera.far = 80;
     this.scene.add(sun);
+    this.scene.add(sun.target);
 
     // Grass ground disc — farm clearing (no dungeon floor)
     const ground = new THREE.Mesh(
@@ -303,6 +436,7 @@ export class CampfireLobbyScene {
         metalness: 0.02,
       }),
     );
+    ground.name = "lobby-ground-disc";
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.envRoot.add(ground);
@@ -317,6 +451,86 @@ export class CampfireLobbyScene {
     this.envRoot.add(dirt);
 
     // Soft sky dome (flat color already set)
+  }
+
+  /**
+   * Do not use whole-AABB min.y — ravines lift the village into the sky.
+   * Sample the walkable surface and drop it onto the lobby floor (y = 0).
+   */
+  private levelEncampmentToLobbyFloor(root: THREE.Object3D): void {
+    root.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(root);
+    const meshes: THREE.Object3D[] = [];
+    root.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) meshes.push(o);
+    });
+    const ray = new THREE.Raycaster();
+    const down = new THREE.Vector3(0, -1, 0);
+    const hits: number[] = [];
+    const nx = 7;
+    const nz = 7;
+    for (let ix = 0; ix < nx; ix++) {
+      for (let iz = 0; iz < nz; iz++) {
+        const x = box.min.x + ((ix + 0.5) / nx) * (box.max.x - box.min.x);
+        const z = box.min.z + ((iz + 0.5) / nz) * (box.max.z - box.min.z);
+        ray.set(new THREE.Vector3(x, box.max.y + 8, z), down);
+        const rec = ray.intersectObjects(meshes, false);
+        if (rec[0] && Number.isFinite(rec[0].point.y)) hits.push(rec[0].point.y);
+      }
+    }
+    hits.sort((a, b) => a - b);
+    const surface = hits.length ? hits[Math.floor(hits.length * 0.5)]! : 0;
+    root.position.y -= surface;
+    root.updateMatrixWorld(true);
+  }
+
+  /**
+   * Encament village behind the fire (camera is +Z looking toward origin).
+   * Author scale 1 — decade unit-fix only if bake is cm. Not a second lobby.
+   */
+  private async loadEncampmentBackdrop(): Promise<void> {
+    try {
+      const root = await loadGltfFirst(this.gltf, encampmentBackdropUrls());
+      if (!root || this.disposed) return;
+      root.name = "encampment-backdrop";
+      prepObjectMaterials(root, { neutralizeMetal: true, receiveShadow: true });
+      root.scale.set(1, 1, 1);
+      root.updateMatrixWorld(true);
+      let box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      if (size.y > 80) {
+        root.scale.multiplyScalar(0.01);
+        root.updateMatrixWorld(true);
+        box.setFromObject(root);
+      }
+      const center = box.getCenter(new THREE.Vector3());
+      const depth = Math.max(8, box.max.z - box.min.z);
+      const zBack = -(16 + Math.min(depth * 0.35, 36));
+      root.position.x += -center.x;
+      root.position.z += -center.z + zBack;
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      // Keep the 4-seat ring clear — Encament must stay behind the fire.
+      if (box.max.z > -10) {
+        root.position.z += -10 - box.max.z;
+        root.updateMatrixWorld(true);
+      }
+      this.levelEncampmentToLobbyFloor(root);
+      root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh) return;
+        m.castShadow = true;
+        m.receiveShadow = true;
+      });
+      this.envRoot.add(root);
+      const fill = new THREE.DirectionalLight(0xffd8a0, 0.22);
+      fill.position.set(-8, 18, zBack - 6);
+      fill.target.position.set(0, 1, zBack);
+      this.envRoot.add(fill);
+      this.envRoot.add(fill.target);
+    } catch (e) {
+      console.warn("[CampfireLobby] Encament backdrop skip", e);
+    }
   }
 
   /** Load TVS Voxel Farm GLBs — soft-fail; keep procedural ground if missing. */
@@ -335,6 +549,7 @@ export class CampfireLobbyScene {
           console.warn("[CampfireLobby] TVS prop skip (no CDN/local)", file);
           return;
         }
+        await finishTvsProp(root, file);
         root.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
@@ -387,6 +602,7 @@ export class CampfireLobbyScene {
     try {
       const root = await loadGltfFirst(this.gltf, tvsUrl("campfire.glb"));
       if (root) {
+        await finishTvsProp(root, "campfire.glb");
         root.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
@@ -521,6 +737,7 @@ export class CampfireLobbyScene {
     try {
       const chair = await loadGltfFirst(this.gltf, tvsUrl("chair.glb"));
       if (!chair) return;
+      await finishTvsProp(chair, "chair.glb");
       chair.traverse((o) => {
         const m = o as THREE.Mesh;
         if (m.isMesh) {
@@ -549,8 +766,8 @@ export class CampfireLobbyScene {
     anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
     anim.setCrouch(sit);
     if (sit) {
-      anim.root.position.z = 0.06;
-      anim.root.position.y = Math.max(0, 0.02);
+      anim.root.position.z = 0.08;
+      anim.root.position.y = 0.42;
     } else {
       anim.root.position.z = 0;
       anim.root.updateMatrixWorld(true);
@@ -776,6 +993,7 @@ export class CampfireLobbyScene {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
+    this.composer.setSize(w, h);
   }
 
   private animate(): void {
@@ -817,7 +1035,7 @@ export class CampfireLobbyScene {
       h.update(dt);
     }
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 }
 

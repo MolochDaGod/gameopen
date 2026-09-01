@@ -16,6 +16,7 @@ import * as THREE from "three";
 import { loadGltfFirst } from "../assets";
 import { sharedGltfLoader } from "../loaders/gltf";
 import { ORC_AGENT } from "./pirateVillageMap";
+import { applyMapScaleForOrc } from "./mapOrcScale";
 import { meshKeysForBiome } from "./biomeMeshKeys";
 import {
   extractRockTextureKit,
@@ -342,9 +343,7 @@ export async function loadTropicalHarvestTestMap(opts?: {
   /** Geometric Valheim ore chunk count (default 16). */
   oreCount?: number;
 }): Promise<TropicalHarvestMapResult> {
-  // Beach mesh ~61×5×47: treat as metres (scale 1). Scatter instances self-normalize height.
-  // If the dry island loads huge/tiny, pass scale explicitly (0.01 for cm exports).
-  const scale = opts?.scale ?? 1.0;
+  // Scale for 2 m orc (auto door/storey/footprint unless fixedScale).
   const preferDry = opts?.preferDry !== false;
   const seed = opts?.seed ?? 42;
   const keys = opts?.meshKeys?.length
@@ -380,19 +379,17 @@ export async function loadTropicalHarvestTestMap(opts?: {
 
   let textureKit: RockTextureKit | null = null;
 
+  let scale = opts?.scale ?? 1.0;
   if (terrain) {
-    terrain.scale.setScalar(scale);
     terrain.userData.sourceUrl = sourceUrl;
     stripWaterAndSkybox(terrain);
     // Island style: beach sand, palm double-side, mineral rocks
     // (safe on Warlords tropical_island_small — name heuristics skip unknown mats)
     styleTropicalIslandMaterials(terrain);
     textureKit = extractRockTextureKit(terrain);
-    // re-ground
-    terrain.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(terrain);
-    if (Number.isFinite(box.min.y)) terrain.position.y -= box.min.y;
     root.add(terrain);
+    const report = applyMapScaleForOrc(root, { fixedScale: opts?.scale });
+    scale = report.scale;
     // Strange rocks → pinata ore veins (ObjectStore material ids)
     tagIslandRocksAsOre(terrain, mulberry32(seed + 9));
   }

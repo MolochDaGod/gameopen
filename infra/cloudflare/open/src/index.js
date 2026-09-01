@@ -2,8 +2,13 @@
  * open.grudge-studio.com edge proxy
  *
  * Route ownership:
+ *  - /api/danger (WebSocket upgrade) → gameopen Railway (Danger Room multiplayer)
  *  - /arcade/*  → grudox.grudge-studio.com  (Voxel Arcade: racer, zombie, z-brawl…)
  *  - everything else → gameopen.vercel.app (Open hub / Danger / brawl / zones)
+ *
+ * Why /api/danger is special: Vercel rewrites proxy HTTP but cannot upgrade
+ * WebSockets. Browsers that hit same-origin wss://open…/api/danger would hang
+ * unless the edge Worker upgrades directly to Railway gameopen.
  *
  * Arcade responses strip X-Frame-Options so Open can embed Voxel Arcade
  * in-app (same browser origin open.grudge-studio.com/arcade/…).
@@ -12,10 +17,94 @@
  */
 const GAMEOPEN_HOST = "gameopen.vercel.app";
 const GRUDOX_HOST = "grudox.grudge-studio.com";
+/** Danger Room + Open API process (HTTP + /api/danger WS). */
+const GAMEOPEN_API_ORIGIN = "https://gameopen-production.up.railway.app";
+const INFO_ORIGIN = "https://info.grudge-studio.com";
+const OBJECTSTORE_ORIGIN = "https://objectstore.grudge-studio.com";
+const ASSETS_ORIGIN = "https://assets.grudge-studio.com";
 
 function isGrudoxArcadePath(pathname) {
   const p = pathname || "/";
   return p === "/arcade" || p.startsWith("/arcade/");
+}
+
+function isDangerWsPath(pathname) {
+  return pathname === "/api/danger" || pathname === "/api/danger/";
+}
+
+/**
+ * Open warmup sometimes joins an already-absolute CDN URL onto the current
+ * host (`/https://assets.grudge-studio.com/...` or `/https:/assets...`).
+ */
+function unwrapDoubledAbsolute(pathname) {
+  const m = String(pathname || "").match(/^\/(https?:)\/+([^/]+)(\/.*)?$/i);
+  if (!m) return null;
+  try {
+    const abs = new URL(`${m[1]}//${m[2]}${m[3] || ""}`);
+    if (!/(^|\.)grudge-studio\.com$/i.test(abs.hostname)) return null;
+    return abs.toString();
+  } catch {
+    return null;
+  }
+}
+
+function isCatalogJsonPath(pathname) {
+  if (pathname === "/api/ssot" || pathname === "/api/ssot.json") return true;
+  if (!pathname.endsWith(".json")) return false;
+  return (
+    pathname.startsWith("/content/") ||
+    pathname.startsWith("/api/v1/") ||
+    pathname.startsWith("/api/objectstore/v1/")
+  );
+}
+
+function catalogUpstreams(pathname) {
+  if (pathname === "/api/ssot" || pathname === "/api/ssot.json") {
+    return [
+      `${INFO_ORIGIN}/api/ssot`,
+      `${INFO_ORIGIN}/api/v1/ssot.json`,
+      `${OBJECTSTORE_ORIGIN}/api/ssot`,
+    ];
+  }
+  const file = pathname
+    .replace(/^\/content\//, "")
+    .replace(/^\/api\/v1\//, "")
+    .replace(/^\/api\/objectstore\/v1\//, "");
+  return [
+    `${INFO_ORIGIN}/api/v1/${file}`,
+    `${INFO_ORIGIN}/content/${file}`,
+    `${OBJECTSTORE_ORIGIN}/api/v1/${file}`,
+    `${ASSETS_ORIGIN}/api/v1/${file}`,
+    `${ASSETS_ORIGIN}/content/${file}`,
+  ];
+}
+
+async function serveCatalog(request, pathname) {
+  let last = null;
+  for (const dest of catalogUpstreams(pathname)) {
+    try {
+      const upstream = await fetch(dest, {
+        method: request.method === "HEAD" ? "HEAD" : "GET",
+        headers: { Accept: "application/json" },
+        redirect: "follow",
+      });
+      last = upstream;
+      if (!upstream.ok) continue;
+      const headers = new Headers(upstream.headers);
+      headers.set("X-Open-Catalog", dest);
+      headers.set("Access-Control-Allow-Origin", "*");
+      if (request.method === "HEAD") {
+        return new Response(null, { status: upstream.status, headers });
+      }
+      return new Response(upstream.body, { status: upstream.status, headers });
+    } catch {
+      /* try next host */
+    }
+  }
+  return last || new Response(JSON.stringify({ error: "catalog miss", path: pathname }), {
+    status: 404,
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+  });
 }
 
 /**
@@ -43,6 +132,20 @@ function stripFrameBlockers(headers) {
   return out;
 }
 
+/**
+ * Proxy a WebSocket upgrade to Railway. Cloudflare Workers can forward upgrades
+ * when the request Upgrade header is present; do not re-wrap 101 responses.
+ */
+async function proxyDangerUpgrade(request) {
+  const url = new URL(request.url);
+  const upstream = new URL(GAMEOPEN_API_ORIGIN);
+  upstream.pathname = "/api/danger";
+  upstream.search = url.search;
+
+  // Preserve Upgrade / Connection / Sec-WebSocket-* headers as-is.
+  return fetch(new Request(upstream.toString(), request));
+}
+
 export default {
   /**
    * @param {Request} request
@@ -52,6 +155,32 @@ export default {
     const url = new URL(request.url);
     url.protocol = "https:";
     url.port = "";
+
+    const doubled = unwrapDoubledAbsolute(url.pathname);
+    if (doubled) {
+      return Response.redirect(doubled, 302);
+    }
+
+    if (
+      (request.method === "GET" || request.method === "HEAD") &&
+      isCatalogJsonPath(url.pathname)
+    ) {
+      return serveCatalog(request, url.pathname);
+    }
+
+    // Danger Room multiplayer: upgrade straight to Railway (not Vercel).
+    const upgrade = (request.headers.get("Upgrade") || "").toLowerCase();
+    if (isDangerWsPath(url.pathname) && upgrade === "websocket") {
+      return proxyDangerUpgrade(request);
+    }
+
+    // Optional: HTTP health for the danger path → Railway (diagnostics).
+    if (isDangerWsPath(url.pathname) && request.method === "GET") {
+      return fetch(`${GAMEOPEN_API_ORIGIN}/api/healthz`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+    }
 
     const arcade = isGrudoxArcadePath(url.pathname);
     url.hostname = arcade ? GRUDOX_HOST : GAMEOPEN_HOST;

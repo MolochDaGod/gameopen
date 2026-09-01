@@ -1,0 +1,204 @@
+{
+  "id": "kenney-mobile-controls-1-prefabs",
+  "catalog": "./catalog.json",
+  "cdnBase": "https://assets.grudge-studio.com/ui/kenney/mobile-controls-1",
+  "designSpace": "touch-overlay",
+  "notes": "Skins the existing Open TouchControls + TouchApi. Desktop CraftPix / HYDRA HUD stays. Do not add a second stick library.",
+  "layouts": [
+    {
+      "id": "open-touch-mmo",
+      "name": "Open dual-stick MMO",
+      "host": "https://open.grudge-studio.com",
+      "component": "TouchControls",
+      "usageStates": ["combat", "harvest", "build"],
+      "covers": [
+        "move",
+        "look",
+        "jump",
+        "block",
+        "parry",
+        "dodge",
+        "sprint",
+        "crouch",
+        "harvest-combat",
+        "skills",
+        "attack",
+        "focus",
+        "bag",
+        "systems",
+        "build"
+      ],
+      "widgets": [
+        {
+          "id": "move",
+          "widget": "joystick-circle",
+          "zone": "left-thumb",
+          "api": "touchMoveInput",
+          "art": { "pad": "style-a/joystick_circle_pad_a.png", "nub": "style-a/joystick_circle_nub_a.png" }
+        },
+        {
+          "id": "look",
+          "widget": "lookpad",
+          "zone": "upper-right",
+          "api": ["touchLook", "touchLookEnd"]
+        },
+        {
+          "id": "jump",
+          "widget": "button-circle",
+          "zone": "move-ring-ne",
+          "api": "touchJump",
+          "icon": "icons/icon_jump.png",
+          "label": "Jump"
+        },
+        {
+          "id": "block",
+          "widget": "button-circle",
+          "zone": "move-ring-e",
+          "api": "touchGuard",
+          "hold": true,
+          "icon": "icons/icon_shield.png",
+          "label": "Block"
+        },
+        {
+          "id": "parry",
+          "widget": "button-circle",
+          "zone": "move-ring-se",
+          "api": "touchParry",
+          "icon": "icons/icon_burst.png",
+          "label": "Parry"
+        },
+        {
+          "id": "dodge",
+          "widget": "button-circle",
+          "zone": "move-ring-s",
+          "api": "touchDodge",
+          "icon": "icons/icon_arrow.png",
+          "label": "Dodge"
+        },
+        {
+          "id": "sprint",
+          "widget": "button-bean",
+          "zone": "left-toggles",
+          "api": "setTouchSprint",
+          "toggle": true,
+          "icon": "icons/icon_arrow_curved.png"
+        },
+        {
+          "id": "crouch",
+          "widget": "button-bean",
+          "zone": "left-toggles",
+          "api": "setTouchCrouch",
+          "toggle": true,
+          "icon": "icons/icon_size_smaller.png"
+        },
+        {
+          "id": "mode",
+          "widget": "button-bean",
+          "zone": "left-toggles",
+          "api": "touchSetActivityMode",
+          "icons": { "combat": "icons/icon_sword.png", "harvest": "icons/icon_hand.png" }
+        },
+        {
+          "id": "skill-stick",
+          "widget": "joystick-skill",
+          "zone": "right-thumb",
+          "api": ["touchSkill", "touchSkyfall", "touchActivityTool", "touchFocus"],
+          "art": { "pad": "style-a/joystick_circle_pad_c.png", "nub": "style-a/joystick_circle_nub_b.png" },
+          "cardinals": { "N": 0, "E": 1, "W": 2, "S": "heavy" },
+          "centerTap": "touchFocus"
+        },
+        {
+          "id": "action-bar",
+          "widget": "button-square",
+          "zone": "bottom-center",
+          "hydra": "hotbar-2row",
+          "api": ["touchSkill", "touchAttack", "touchActivityTool"],
+          "iconAttack": "icons/icon_sword.png"
+        },
+        {
+          "id": "bag",
+          "widget": "edge-tab",
+          "zone": "left-edge",
+          "ui": "onOpenBag",
+          "icon": "icons/icon_key.png"
+        },
+        {
+          "id": "systems",
+          "widget": "edge-tab",
+          "zone": "right-edge",
+          "ui": "onOpenSystems",
+          "icon": "icons/icon_cog.png"
+        },
+        {
+          "id": "build",
+          "widget": "button-wide",
+          "zone": "left-drawer",
+          "api": "touchSetActivityMode",
+          "mode": "build",
+          "icon": "icons/icon_wrench.png"
+        }
+      ]
+    },
+    {
+      "id": "warlords-combat",
+      "name": "Warlords combat pad",
+      "host": "https://grudgewarlords.com",
+      "extends": "open-touch-mmo",
+      "usageStates": ["explore", "combat"],
+      "covers": ["move", "look", "skills", "attack", "block", "parry", "dodge", "focus", "bag", "craft"],
+      "overrides": {
+        "skill-stick.cardinals": { "N": "weapon-skill-0", "E": "weapon-skill-1", "W": "weapon-skill-2", "S": "heavy" },
+        "action-bar.hydra": "hotbar-2row"
+      }
+    },
+    {
+      "id": "harvest-gather",
+      "name": "Harvest / gather pad",
+      "extends": "open-touch-mmo",
+      "usageStates": ["harvest"],
+      "covers": ["move", "look", "jump", "tools", "bag"],
+      "overrides": {
+        "skill-stick.api": "touchActivityTool",
+        "mode.default": "harvest"
+      }
+    },
+    {
+      "id": "vehicle-drive",
+      "name": "Drive / boat pad",
+      "usageStates": ["race", "boat"],
+      "covers": ["steer", "throttle", "brake", "pause"],
+      "widgets": [
+        { "id": "steer", "widget": "joystick-circle", "icon": "icons/icon_steering_wheel.png", "zone": "left-thumb" },
+        { "id": "throttle", "widget": "button-circle", "icon": "icons/icon_pedal.png", "zone": "right-thumb" },
+        { "id": "brake", "widget": "button-circle", "icon": "icons/icon_pedal_brake.png", "zone": "right-lower" },
+        { "id": "pause", "widget": "button-square", "icon": "icons/icon_pause.png", "zone": "top-right" }
+      ]
+    },
+    {
+      "id": "menu-systems",
+      "name": "Pause / settings / audio",
+      "usageStates": ["menu", "pause"],
+      "covers": ["pause", "settings", "sound", "music", "save"],
+      "widgets": [
+        { "id": "pause", "widget": "button-square", "icon": "icons/icon_pause.png" },
+        { "id": "settings", "widget": "button-square", "icon": "icons/icon_cog.png" },
+        { "id": "sound", "widget": "button-square", "icon": "icons/icon_sound.png", "off": "icons/icon_sound_disabled.png" },
+        { "id": "music", "widget": "button-square", "icon": "icons/icon_music.png", "off": "icons/icon_music_disabled.png" },
+        { "id": "save", "widget": "button-wide", "icon": "icons/icon_save.png" }
+      ]
+    },
+    {
+      "id": "social-talk",
+      "name": "Talk / voice / confirm",
+      "usageStates": ["dialogue"],
+      "hydra": "dialogue-box",
+      "covers": ["talk", "voice", "confirm", "cancel"],
+      "widgets": [
+        { "id": "talk", "widget": "button-wide", "icon": "icons/icon_talk.png" },
+        { "id": "voice", "widget": "button-circle", "icon": "icons/icon_microphone.png" },
+        { "id": "confirm", "widget": "button-circle", "icon": "icons/icon_checkmark.png" },
+        { "id": "cancel", "widget": "button-circle", "icon": "icons/icon_cross.png" }
+      ]
+    }
+  ]
+}

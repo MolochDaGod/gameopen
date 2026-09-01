@@ -7,6 +7,7 @@
  */
 
 import { FLEET, readFleetToken } from "./fleetCore";
+import { normalizeToGrudgeAvatarId } from "../lib/raceModel";
 
 export const GRUDOX_HOST = FLEET.grudox;
 export const OPEN_HOST = FLEET.gameopen;
@@ -56,7 +57,13 @@ export type HubDestinationId =
   | "warlord-genesis"
   | "character-studio"
   | "dcq"
-  | "mine-loader";
+  | "mine-loader"
+  | "world-map"
+  | "home-island"
+  | "harvest-lab"
+  | "deployables"
+  | "assets-cdn"
+  | "poi-zones";
 
 export interface HubLaunchContext {
   characterId?: string | null;
@@ -99,10 +106,26 @@ function withHandoff(url: string, ctx: HubLaunchContext): string {
 export const HUB_DESTINATIONS: HubDestination[] = [
   {
     id: "island",
-    label: "GRUDOX Island",
-    blurb: "Harvest · craft · build · PvP island",
+    label: "GRUDOX Island / Realms",
+    blurb: "Harvest · craft · build · PvP (Mine-Loader Realms)",
     group: "play",
     localMode: "lobbyWorld",
+  },
+  {
+    id: "world-map",
+    label: "Aethermoor World Map",
+    blurb: "Warlords sector sail · islands · event POIs",
+    group: "play",
+    external: (ctx) =>
+      withHandoff("https://client.grudge-studio.com/island-3d?mode=lobby", ctx),
+  },
+  {
+    id: "home-island",
+    label: "Home Island",
+    blurb: "Warlords home island · bag · claim (Railway SSOT)",
+    group: "play",
+    external: (ctx) =>
+      withHandoff("https://client.grudge-studio.com/home-island", ctx),
   },
   {
     id: "pve-danger",
@@ -110,6 +133,14 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     blurb: "Combat sandbox with your hero",
     group: "play",
     localMode: "danger",
+  },
+  {
+    id: "harvest-lab",
+    label: "Harvestables Lab",
+    blurb: "Danger Room harvest activity · nature scatter · tools",
+    group: "play",
+    external: (ctx) =>
+      withHandoff(`${OPEN_HOST}/danger?activity=harvest`, ctx),
   },
   {
     id: "pve-lobby",
@@ -133,6 +164,20 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     localMode: "minegrudge",
   },
   {
+    id: "poi-zones",
+    label: "Zones · POIs catalog",
+    blurb: "Fleet zone deep-links · world standings",
+    group: "play",
+    localMode: "zones",
+  },
+  {
+    id: "deployables",
+    label: "Deployables · Worldbuilder",
+    blurb: "Blocks · NPC bags · placeables · dungeon pins",
+    group: "edit",
+    localMode: "voxel",
+  },
+  {
     id: "voxel-editor",
     label: "Worldbuilder",
     blurb: "Largest map editor · Play = Danger Room combat UX",
@@ -145,6 +190,13 @@ export const HUB_DESTINATIONS: HubDestination[] = [
     blurb: "Gear · anim · VFX lab",
     group: "edit",
     localMode: "editor",
+  },
+  {
+    id: "assets-cdn",
+    label: "Fleet Assets CDN",
+    blurb: "assets.grudge-studio.com · GLB / textures (index only)",
+    group: "edit",
+    external: () => "https://assets.grudge-studio.com/",
   },
   {
     id: "gameopen",
@@ -183,10 +235,20 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "voxgrudge",
-    label: "VoxGrudge Full World",
-    blurb: "Full open-world voxel survival",
-    group: "arcade",
-    external: (ctx) => withHandoff("https://voxgrudge.vercel.app/", ctx),
+    label: "Grudges · Encament",
+    blurb: "Walk Encament + seed wilderness as your campfire explorer",
+    group: "play",
+    external: (ctx) => {
+      const u = withHandoff("https://open.grudge-studio.com/characters", ctx);
+      try {
+        const parsed = new URL(u);
+        parsed.searchParams.set("era", "voxel");
+        parsed.searchParams.set("play", "encampment");
+        return parsed.toString();
+      } catch {
+        return u;
+      }
+    },
   },
   {
     id: "dcq",
@@ -232,15 +294,14 @@ export const HUB_DESTINATIONS: HubDestination[] = [
   },
   {
     id: "warlord-genesis",
-    label: "Warlord Genesis",
-    blurb: "3-lane MOBA / RTS with fleet character",
+    label: "Warstrat · Warlord Genesis",
+    blurb: "3-lane MOBA / RTS warcamp — warstrat.grudge-studio.com",
     group: "fleet",
-    // Prefer same-origin Genesis picker (4 GRUDOX slots) then handoff to product
+    // Open genesis picker first; product play host is Warstrat
     localMode: "genesis",
     external: (ctx) => {
       try {
-        // Same-origin Open /genesis — shows 4-slot charactersgrudox picker first
-        const u = new URL(`${PLAY_SHELL}/genesis`);
+        const u = new URL("https://warstrat.grudge-studio.com/lobby");
         u.searchParams.set("open", "1");
         u.searchParams.set("from", "charactersgrudox");
         if (ctx.characterId) u.searchParams.set("characterId", ctx.characterId);
@@ -253,7 +314,7 @@ export const HUB_DESTINATIONS: HubDestination[] = [
         }
         return u.toString();
       } catch {
-        return `${PLAY_SHELL}/genesis?open=1&from=charactersgrudox`;
+        return "https://warstrat.grudge-studio.com/lobby?open=1&from=charactersgrudox";
       }
     },
   },
@@ -318,18 +379,11 @@ export function rememberHeroFromContext(ctx: HubLaunchContext) {
   }
 }
 
-/** Map charactersgrudox baseId → play-shell grudge kit id when possible. */
+/** Map charactersgrudox baseId → Studio id (`grudge:race:preset` SSOT). */
 export function mapBaseToAnimatorId(baseId: string): string {
-  const b = baseId.toLowerCase();
-  if (b.startsWith("grudge-")) return b;
-  if (b === "race-human" || b === "human") return "grudge-western-kingdoms-warrior";
-  if (b === "race-orc" || b === "orc") return "grudge-orcs-warrior";
-  if (b === "race-dwarf" || b === "dwarf") return "grudge-dwarves-warrior";
-  if (b === "race-high-elf" || b.includes("elf")) return "grudge-high-elves-ranger";
-  if (b === "race-barbarian" || b.includes("barb")) return "grudge-barbarians-warrior";
-  if (b === "race-undead" || b.includes("undead")) return "grudge-undead-warrior";
-  if (b === "grudge") return "grudge-western-kingdoms-mage";
-  return "explorer";
+  const b = (baseId || "").toLowerCase();
+  if (b === "explorer" || b === "led-monk") return "explorer";
+  return normalizeToGrudgeAvatarId(baseId || "western-kingdoms", "warrior");
 }
 
 export function launchHubDestination(

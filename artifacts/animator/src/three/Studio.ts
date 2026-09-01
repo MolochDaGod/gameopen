@@ -1,6 +1,15 @@
 import * as THREE from "three";
 import { DangerRoom } from "./DangerRoom";
-import { asRoomPresetId, loadRoomPreset, ROOM_PRESETS, type RoomPresetId } from "./RoomPresets";
+import {
+  asRoomPresetId,
+  BACKDROPS,
+  loadBackdrop,
+  loadRoomPreset,
+  ROOM_PRESETS,
+  saveBackdrop,
+  type RoomPresetId,
+} from "./RoomPresets";
+import { assetUrl } from "./assetHost";
 import { DUNGEON_MAPS, loadDungeonMap } from "./DungeonMaps";
 import { addStudioLights, STUDIO_FOG, STUDIO_TONE_MAPPING_EXPOSURE } from "./studioLighting";
 import { DjBooth } from "./DjBooth";
@@ -10,7 +19,9 @@ import { ExplorerCharacter } from "./ExplorerCharacter";
 import { buildAnimationClip, listStoredClips } from "./anim/clipStore";
 import { GrudgeAvatar } from "./grudge/GrudgeAvatar";
 import { findHandBone } from "./grudge/skeleton";
-import { parseGrudgeAvatarId } from "../lib/raceModel";
+import { resolveSlotEffects } from "./grudge/slotEffects";
+import { skillPackForWeaponId } from "./grudge/weaponSkillPacks";
+import { normalizeToGrudgeAvatarId, parseGrudgeAvatarId } from "../lib/raceModel";
 import {
   animPackForCombatStyle,
   getCombatStyle,
@@ -93,6 +104,7 @@ import {
   type ScriptDoc,
   isScriptDoc,
 } from "@workspace/grudge-runtime";
+import { claimKeyForCharacter } from "../game/inventory/locationInventory";
 import { createMysticalComposer, type MysticalComposer } from "./fx/postfx";
 import { getAnimDatabase } from "./anim/AnimDatabase";
 import {
@@ -142,8 +154,18 @@ import {
 } from "./harvest/pinataHarvest";
 import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
+import { tagStartSceneHarvest } from "./voxel/startSceneHarvest";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
+import { innerMFromFootprint } from "./build/zhunbeiFrame";
 import { WingBackRig } from "./equipment/WingBackRig";
+import { CapeBackRig } from "./equipment/CapeBackRig";
+import { BackStowAttach } from "./equipment/BackStowAttach";
+import {
+  backSlotItem,
+  backItemIdFromEquip,
+  nextCodedBackSlotId,
+  backUseLegend,
+} from "./equipment/backSlotItems";
 import { loadCampClaimState, ensureDemoRoster } from "../lib/campClaimPersist";
 import {
   loadTestWorldId,
@@ -161,6 +183,10 @@ import {
 } from "../game/islandLife/catalog";
 import { FabledSkyTowns } from "./fabled/FabledSkyTowns";
 import { meleeStrikeFxFor } from "./combat/meleeStrikeFx";
+import {
+  FLAT_FOOT_SAMPLER,
+  footSamplerFromHeightAt,
+} from "./anim/terrainFootSample";
 import {
   deploySandboxVfx,
   sandboxEffectForKey,
@@ -512,6 +538,43 @@ const COMBO_ADVANCE_MM = 55;
 const FINISHER_IMPACT_FRAC = 0.55;
 
 /**
+ * Create a WebGL renderer with progressive fallbacks so Danger Room still
+ * boots when high-performance contexts are exhausted or blocked.
+ */
+function createStudioWebGLRenderer(): THREE.WebGLRenderer {
+  const attempts: THREE.WebGLRendererParameters[] = [
+    { antialias: true, powerPreference: "high-performance", alpha: false, stencil: false },
+    { antialias: true, powerPreference: "default", alpha: false, stencil: false },
+    { antialias: false, powerPreference: "default", alpha: false, stencil: false },
+    { antialias: false, powerPreference: "low-power", alpha: false, stencil: false },
+  ];
+  let lastErr: unknown;
+  for (const params of attempts) {
+    try {
+      const r = new THREE.WebGLRenderer(params);
+      const gl = r.getContext();
+      if (!gl) {
+        r.dispose();
+        throw new Error("WebGL context null after create");
+      }
+      if (params.powerPreference !== "high-performance" || !params.antialias) {
+        console.warn("[Studio] WebGL created with fallback params", params);
+      }
+      return r;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  const msg =
+    lastErr instanceof Error
+      ? lastErr.message
+      : String(lastErr || "unknown WebGL error");
+  throw new Error(
+    `WebGL unavailable (${msg}). Close other 3D tabs (library cinema, another Danger Room) and retry.`,
+  );
+}
+
+/**
  * Top-level disposable engine. React mounts it onto a container; it owns the
  * renderer, scene, loop and all subsystems, and pushes HUD snapshots out via a
  * callback. All public mutators are safe to call from React handlers.
@@ -579,6 +642,10 @@ export class Studio {
   private baseFogNear = Studio.FOG_BASE_NEAR;
   private baseFogFar = Studio.FOG_BASE_FAR;
   private baseBgColor = new THREE.Color(Studio.FOG_BASE_COLOR);
+  /** Active full-scene battle-art backdrop id (null = plain preset colour bg). */
+  private backdropId: string | null = null;
+  private backdropTex: THREE.Texture | null = null;
+  private backdropToken = 0;
   /** Set while the player stands at the door portal (drives the HUD prompt). */
   private doorPrompt = false;
   /** Standing near planted claim flag — HUD shows E interact. */
@@ -899,6 +966,14 @@ export class Studio {
   private buildGrid: BuildGridOverlay | null = null;
   /** Back-slot wing pack (parachute / glide / flight / ocean sail). */
   private wingRig: WingBackRig | null = null;
+  private capeRig: CapeBackRig | null = null;
+  private backStow: BackStowAttach | null = null;
+  /** Last equipped back-slot item id (same slot as “effects”). */
+  private _lastBackSlotItemId: string | null = "back_wing_pack";
+  /** StatusFx ids applied from Relic / Class item / Back — cleared on unequip. */
+  private slotAuraIds = new Set<StatusId>();
+  /** True while a back-slot water buff owns Controller.setSpeedMultiplier. */
+  private slotSpeedOwned = false;
   private campEnemies: CampEnemySystem | null = null;
   private raiderBoats: RaiderBoatSystem | null = null;
   /** Hellmaw / volcanic / boss-event world boss (Shadow Flame Mantis + Ash Ghasts). */
@@ -1149,12 +1224,10 @@ export class Studio {
       this.weaponId = bootOpts.weaponId as typeof this.weaponId;
     }
 
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: "high-performance",
-      alpha: false,
-      stencil: false,
-    });
+    // Resilient WebGL create — high-perf first, then default, then no AA.
+    // Competing contexts (library cinema, load screens) often cause the first
+    // attempt to throw; fallbacks recover without a dead "WebGL unavailable" wall.
+    this.renderer = createStudioWebGLRenderer();
     // Cap DPR for stable 60 Hz ticks on high-DPI panels; keep ≥1.5 for readability.
     this.renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 1), 2));
     this.renderer.shadowMap.enabled = true;
@@ -1163,7 +1236,28 @@ export class Studio {
     this.renderer.toneMappingExposure = STUDIO_TONE_MAPPING_EXPOSURE;
     // Correct output colour space for sRGB albedo maps (prevents washed / muddy kits).
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Recover if the GPU context is lost mid-session (driver reset / tab freeze).
+    this.renderer.domElement.addEventListener(
+      "webglcontextlost",
+      (e) => {
+        e.preventDefault();
+        console.error("[Studio] WebGL context lost");
+      },
+      false,
+    );
     container.appendChild(this.renderer.domElement);
+
+    this.scene.background = new THREE.Color(Studio.FOG_BASE_COLOR);
+    this.scene.fog = new THREE.Fog(Studio.FOG_BASE_COLOR, Studio.FOG_BASE_NEAR, Studio.FOG_BASE_FAR);
+
+    // Camera MUST exist before HtmlOverlaySystem / Vfx — they call camera.getWorldPosition.
+    this.camera = new THREE.PerspectiveCamera(this.params.fov, 1, 0.1, 200);
+    // Start ~50% closer to the room centre and aimed at the spawn point so the
+    // opening view (before the async character load wires up the follow-cam)
+    // frames the inside of the arena instead of staring at a far, dark wall.
+    this.camera.position.set(0, 2.2, 3.5);
+    this.camera.lookAt(0, 1, 0);
+
     // CSS2D world overlays (damage numbers, interact chips) — sibling of WebGL.
     this.htmlOverlays = new HtmlOverlaySystem(container, this.scene, this.camera);
     // KTX2 + texture anisotropy: bind ASAP so first character/VFX loads decode well.
@@ -1179,22 +1273,15 @@ export class Studio {
       }
     });
 
-    this.scene.background = new THREE.Color(Studio.FOG_BASE_COLOR);
-    this.scene.fog = new THREE.Fog(Studio.FOG_BASE_COLOR, Studio.FOG_BASE_NEAR, Studio.FOG_BASE_FAR);
-
-    this.camera = new THREE.PerspectiveCamera(this.params.fov, 1, 0.1, 200);
-    // Start ~50% closer to the room centre and aimed at the spawn point so the
-    // opening view (before the async character load wires up the follow-cam)
-    // frames the inside of the arena instead of staring at a far, dark wall.
-    this.camera.position.set(0, 2.2, 3.5);
-    this.camera.lookAt(0, 1, 0);
-
     this.room = new DangerRoom({ preset: loadRoomPreset() });
     this.scene.add(this.room.group);
     // Tint the scene fog + background to the active preset's mood (overrides the
     // dark base set just above). The matching ambient bed is applied once the
     // sound system exists, below.
     this.applyRoomAtmosphere(true);
+    // Restore any session-persisted battle-art backdrop over the preset bg
+    // (same quality plate system as threejs-rapier controll lab).
+    this.setBackdrop(loadBackdrop());
     // Resident Racalvin disc_jockey in the enlarged cove above the door (async).
     this.djBooth = new DjBooth(this.room.djBoothAnchor);
     this.scene.add(this.djBooth.group);
@@ -1623,30 +1710,76 @@ export class Studio {
    * Load wing GLB once and parent to spine. Default stowed (back circle only).
    * Call equipBackWing(itemId) for parachute/glide/flight/sail.
    */
-  private async ensureWingRigAttached(): Promise<void> {
+  private async ensureWingRigAttached(opts?: {
+    url?: string;
+    isolate?: string;
+    dedicated?: boolean;
+    spanM?: number;
+    flightTier?: 1 | 2 | 3;
+  }): Promise<void> {
     if (!this.character) return;
-    if (!this.wingRig) {
-      this.wingRig = new WingBackRig();
-      const ok = await this.wingRig.load({ toon: true });
-      if (!ok) {
-        this.wingRig = null;
-        return;
-      }
-    }
-    this.wingRig.attachToCharacter(this.character.root);
-    // Default: visible pack circle on back (stowed)
-    this.wingRig.equipBackItem("back_wing_pack");
-  }
-
-  /** Equip / change back-slot wing mode (parachute, glider, flight, sail deploy). */
-  equipBackWing(itemId: string | null) {
-    if (!this.wingRig?.isReady) {
-      void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
+    if (!this.wingRig) this.wingRig = new WingBackRig();
+    const ok = await this.wingRig.load({
+      toon: true,
+      url: opts?.url,
+      isolate: opts?.isolate,
+      dedicated: opts?.dedicated,
+      targetSpanM: opts?.spanM,
+      flightTier: opts?.flightTier,
+    });
+    if (!ok) {
+      this.wingRig = null;
       return;
     }
-    this.wingRig.equipBackItem(itemId);
+    this.wingRig.attachToCharacter(this.character.root);
+  }
+
+  /** Equip / change back-slot item (effects live on the item — not a second slot). */
+  equipBackWing(itemId: string | null) {
+    if (itemId) this._lastBackSlotItemId = itemId;
+    const def = itemId ? backSlotItem(itemId) : null;
+    const root = this.character?.root;
+    if (def?.capeVariant && root) {
+      this.wingRig?.equipBackItem(null);
+      this.backStow?.hide();
+      if (!this.capeRig) this.capeRig = new CapeBackRig();
+      this.capeRig.attachToCharacter(root);
+      this.capeRig.setVariant(def.capeVariant);
+      this.capeRig.setVisible(true);
+    } else if (def?.stowUrl && root) {
+      this.wingRig?.equipBackItem(null);
+      this.capeRig?.setVisible(false);
+      if (!this.backStow) this.backStow = new BackStowAttach();
+      this.backStow.attachToCharacter(root, {
+        offset: def.stowOffset,
+        eulerDeg: def.stowEulerDeg,
+      });
+      void this.backStow.show(def.stowUrl, def.stowLengthM ?? 0.58);
+    } else if (def?.meshUrl && root) {
+      this.capeRig?.setVisible(false);
+      this.backStow?.hide();
+      void this.ensureWingRigAttached({
+        url: def.meshUrl,
+        isolate: def.isolateName,
+        dedicated: true,
+        spanM: def.wingSpanM,
+        flightTier: def.flightTier,
+      }).then(() => this.wingRig?.equipBackItem(itemId));
+    } else {
+      this.capeRig?.setVisible(false);
+      this.backStow?.hide();
+      if (itemId && !this.wingRig?.isReady) {
+        void this.ensureWingRigAttached().then(() => this.wingRig?.equipBackItem(itemId));
+      } else {
+        this.wingRig?.equipBackItem(itemId);
+      }
+    }
     this.setCombatFlash(
-      itemId ? `BACK · ${itemId.replace(/_/g, " ").toUpperCase()}` : "BACK · cleared",
+      itemId
+        ? `BACK · ${(def?.label || itemId).replace(/_/g, " ").toUpperCase()}${
+            def ? ` · ${backUseLegend(def)}` : ""
+          }`
+        : "BACK · cleared",
       0.8,
     );
   }
@@ -1736,6 +1869,10 @@ export class Studio {
     insideClaim: boolean;
     nearCamp: boolean;
     onBoat: boolean;
+    nearStorage: boolean;
+    onHomeIsland: boolean;
+    claimKey: string;
+    boatId?: string;
   } {
     const pos = this.character?.root.position;
     const insideClaim = !!(
@@ -1744,22 +1881,106 @@ export class Studio {
       this.campBuild.hasClaim &&
       this.campBuild.isInsideClaim(pos)
     );
-    const nearCamp = !!(this.campBuild?.hasClaim || (this.campBuild?.structures.length ?? 0) > 0);
+    const nearCamp = !!(
+      this.campBuild?.hasClaim ||
+      (this.campBuild?.structures.length ?? 0) > 0
+    );
     const roomKind = (this as { room?: { kind?: string } }).room?.kind ?? "";
     const onBoat =
       roomKind === "sail" ||
       roomKind === "sailing" ||
       /sail|boat/i.test(String(roomKind));
-    return { insideClaim, nearCamp, onBoat };
+    // Home island surfaces (water / island play modes)
+    const onHomeIsland =
+      /home.?island|island_home|water_home|haven/i.test(String(roomKind)) ||
+      /home.?island|island_home/i.test(String(this.locationBag?.getLocation?.()?.kind ?? ""));
+    // Near storage chest / warehouse placeable (PlacedStructure uses x/z + placeableId)
+    let nearStorage = false;
+    if (pos && this.campBuild?.structures?.length) {
+      for (const s of this.campBuild.structures) {
+        const k = String(s.placeableId ?? "");
+        if (/storage|chest|warehouse|bank|crate/i.test(k)) {
+          if (Math.hypot(s.x - pos.x, s.z - pos.z) < 4) {
+            nearStorage = true;
+            break;
+          }
+        }
+      }
+    }
+    // Same key as Camp hub Storage + bag deposit (no local_claim/default fork)
+    const claimKey = claimKeyForCharacter(this.characterId);
+    return {
+      insideClaim,
+      nearCamp,
+      onBoat,
+      nearStorage,
+      onHomeIsland,
+      claimKey,
+      boatId: onBoat ? String(roomKind || "boat") : undefined,
+    };
+  }
+
+  /**
+   * Start lockpick UI — only for lockpickable zones.
+   * **Home islands are SAFE (never lockpick).**
+   * Dungeons, treasures, contested, enemy, conquered, foreign camps → pick.
+   * App mounts LockpickPanel; result opens location storage loot.
+   */
+  beginLockpickChallenge(payload: {
+    targetId: string;
+    kind?: string;
+    difficulty?: number;
+    label?: string;
+    ownerAccountId?: string | null;
+    zone?: string | null;
+    viewerAccountId?: string | null;
+  }): void {
+    // Lazy import avoids circular weight at Studio boot
+    void import("../game/inventory/locationInventory").then(
+      ({ isLockpickAllowed, isHomeIslandStorage }) => {
+        if (
+          isHomeIslandStorage(payload.targetId, payload.kind) ||
+          payload.zone === "home_island"
+        ) {
+          this.setCombatFlash("Home island is safe — no lockpicking", 2.2);
+          return;
+        }
+        const gate = isLockpickAllowed({
+          locationId: payload.targetId,
+          kind: payload.kind || "container",
+          ownerAccountId: payload.ownerAccountId,
+          viewerAccountId: payload.viewerAccountId,
+          zone: payload.zone,
+          lockDifficulty: payload.difficulty,
+        });
+        if (!gate.allowed) {
+          this.setCombatFlash(
+            gate.reason === "own_storage"
+              ? "Your storage — open freely (no lockpick)"
+              : gate.reason === "home_island_safe"
+                ? "Home island is safe — no lockpicking"
+                : "Cannot lockpick here",
+            2.2,
+          );
+          return;
+        }
+        const detail = {
+          ui: "lockpick",
+          targetId: payload.targetId,
+          kind: payload.kind || "container",
+          difficulty: payload.difficulty ?? gate.defaultDc,
+          label: payload.label || "Locked container",
+          ownerAccountId: payload.ownerAccountId ?? null,
+          zone: payload.zone ?? null,
+        };
+        window.dispatchEvent(new CustomEvent("grudge-open-ui", { detail }));
+      },
+    );
   }
 
   /** Load content/runtime script pack when present (same shape for all scenes). */
   private async loadRuntimeScripts() {
     try {
-      const res = await fetch("/content/runtime/example-danger-scripts.json");
-      if (!res.ok) return;
-      const pack = (await res.json()) as { scripts?: unknown[] };
-      const docs = (pack.scripts ?? []).filter(isScriptDoc) as ScriptDoc[];
       this.scripts.clear();
       this.scripts.register("message", (a) => {
         const text = String(a.payload?.text ?? "");
@@ -1769,7 +1990,57 @@ export class Studio {
         // Door already owns enterDungeon; portal scripts can share this handler later.
         this.tryEnterDungeonFromScript();
       });
-      this.scripts.load(docs);
+      this.scripts.register("open-ui", (a) => {
+        const ui = String(a.payload?.ui ?? a.payload?.name ?? "");
+        if (ui === "lockpick" || ui === "lock_pick") {
+          this.beginLockpickChallenge({
+            targetId: String(a.payload?.targetId ?? a.payload?.locationId ?? "unknown"),
+            kind: String(a.payload?.kind ?? "container"),
+            difficulty:
+              a.payload?.difficulty != null
+                ? Number(a.payload.difficulty)
+                : undefined,
+            label: String(a.payload?.label ?? "Locked"),
+            ownerAccountId: (a.payload?.ownerAccountId as string) ?? null,
+            zone: (a.payload?.zone as string) ?? null,
+          });
+          return;
+        }
+        window.dispatchEvent(
+          new CustomEvent("grudge-open-ui", {
+            detail: { ui, ...(a.payload || {}) },
+          }),
+        );
+      });
+      this.scripts.register("grant-item", (a) => {
+        const tid = String(a.payload?.templateId ?? a.payload?.itemId ?? "");
+        const qty = Math.max(1, Number(a.payload?.qty ?? 1));
+        if (!tid) return;
+        window.dispatchEvent(
+          new CustomEvent("grudge-grant-item", {
+            detail: { templateId: tid, qty },
+          }),
+        );
+      });
+
+      const packs = [
+        "/content/runtime/example-danger-scripts.json",
+        "/content/runtime/hidden-loot-lockpick-scripts.json",
+      ];
+      const allDocs: ScriptDoc[] = [];
+      for (const url of packs) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const pack = (await res.json()) as { scripts?: unknown[] };
+          for (const s of pack.scripts ?? []) {
+            if (isScriptDoc(s)) allDocs.push(s);
+          }
+        } catch {
+          /* optional pack */
+        }
+      }
+      this.scripts.load(allDocs);
     } catch {
       // Optional content pack — missing file is fine in slim deploys.
     }
@@ -1878,6 +2149,38 @@ export class Studio {
     if (this.character instanceof GrudgeAvatar) {
       this.character.setMeshIds(this.pendingMeshIds);
     }
+    this.syncLoadoutSlotAuras();
+    const backTag = (this.pendingMeshIds || []).find(
+      (m) => /^equip:back:/i.test(m) || /^back_/.test(m),
+    );
+    const backItem = backTag ? backItemIdFromEquip(backTag) : null;
+    this.equipBackWing(backItem);
+  }
+
+  /** Relic/Back/Class passives: apply existing StatusFx auras while equipped. */
+  private syncLoadoutSlotAuras(): void {
+    const wanted = new Set<StatusId>();
+    for (const spec of resolveSlotEffects(this.pendingMeshIds)) {
+      if (spec.aura) wanted.add(spec.aura);
+    }
+    for (const id of this.slotAuraIds) {
+      if (!wanted.has(id)) this.status.clear(id);
+    }
+    for (const id of wanted) {
+      if (!this.slotAuraIds.has(id)) this.applyStatus(id);
+    }
+    this.slotAuraIds = wanted;
+  }
+
+  /** Relic/Back on-hit procs (StatusFx hostile). */
+  private tryLoadoutOnHitProc(center: THREE.Vector3): void {
+    const fx = resolveSlotEffects(this.pendingMeshIds);
+    for (const spec of fx) {
+      if (!spec.onHit) continue;
+      if (Math.random() > spec.onHit.chance) continue;
+      this.applyStatusScoped(spec.onHit.status, "hostile");
+      if (spec.onHit.aoe) this.vfx.aoeBlast(center, 0xb070ff, 1.4);
+    }
   }
 
   /** Body armor tints for Explorer (Mine-Loader equipment visual). */
@@ -1900,8 +2203,15 @@ export class Studio {
 
   private async spawnCharacter(id: string) {
     const token = ++this.loadToken;
-    // A `grudge:<race>:<preset>` id selects a customizable grudge6 race kit
-    // (the active fleet character's race); anything else is a catalog rig.
+    // PRACTICE: every race/lobby/account string → grudge:race:preset before spawn.
+    // Legacy race-human / grudge-western-kingdoms-warrior / bare "orc" used Character
+    // + wrong GLB and looked "totally fucked" on Danger. Only explorer stays Mixamo.
+    const normalized = normalizeToGrudgeAvatarId(id);
+    if (normalized !== id) {
+      console.info(`[Studio] normalize character id ${id} → ${normalized}`);
+      id = normalized;
+      this.characterId = id;
+    }
     const grudge = parseGrudgeAvatarId(id);
     const def = getCharacter(id);
     const stylePack = animPackForCombatStyle(this.combatStyleId);
@@ -1910,9 +2220,18 @@ export class Studio {
           meshIds: this.pendingMeshIds || undefined,
           animPack: stylePack || undefined,
         })
-      : def.procedural
-        ? new ExplorerCharacter(def)
-        : new Character(def);
+      : def.procedural || id === "explorer"
+        ? new ExplorerCharacter(def.procedural ? def : getCharacter("explorer"))
+        : // Refuse Character path for anything that should have been grudge6
+          (() => {
+            console.error(
+              `[Studio] non-grudge6 id after normalize (${id}) — forcing WK warrior SSOT`,
+            );
+            return new GrudgeAvatar("western-kingdoms", "warrior", {
+              meshIds: this.pendingMeshIds || undefined,
+              animPack: stylePack || undefined,
+            });
+          })();
     try {
       await next.load();
     } catch (err) {
@@ -1922,28 +2241,32 @@ export class Studio {
         grudge ? `grudge6 ${grudge.raceId}/${grudge.presetId}` : "catalog",
         err,
       );
-      // Grudge6 race mesh/CDN can fail: try catalog Character (fleet bake hydrate),
-      // then Explorer procedural (always playable).
-      if (!grudge) return;
-      next.dispose();
-      if (this.disposed || token !== this.loadToken) return;
-      const catalogFallback = getCharacter("gunslinger"); // racalvin — skinned + bake hydrate
-      try {
-        next = new Character(catalogFallback);
-        await next.load();
-        id = catalogFallback.id;
-        console.warn("[Studio] grudge6 failed — using catalog Character + fleet bakes", catalogFallback.id);
-      } catch (err2) {
-        console.error("[Studio] catalog Character fallback failed", err2);
-        const exDef = getCharacter("explorer");
-        next = exDef.procedural ? new ExplorerCharacter(exDef) : new Character(exDef);
-        try {
-          await next.load();
-          id = exDef.id;
-        } catch (err3) {
-          console.error("[Studio] Explorer fallback failed", err3);
+      // HARD: never fall back grudge6 → Mixamo explorer / gunslinger / 30characters.
+      // Wrong mesh+scale+no Bip001 anims is worse than a failed load.
+      if (grudge) {
+        next.dispose();
+        // One retry: class preset mesh_ids only (drop broken account mesh set)
+        if (this.pendingMeshIds?.length) {
+          try {
+            const retry = new GrudgeAvatar(grudge.raceId, grudge.presetId, {
+              animPack: stylePack || undefined,
+            });
+            await retry.load();
+            next = retry;
+            console.warn(
+              "[Studio] grudge6 retry OK without account mesh_ids",
+              grudge.raceId,
+              grudge.presetId,
+            );
+          } catch (err2) {
+            console.error("[Studio] grudge6 SSOT retry failed — no fake hero", err2);
+            return;
+          }
+        } else {
           return;
         }
+      } else {
+        return;
       }
     }
     // Discard stale loads — only the most recent selection may commit.
@@ -1978,14 +2301,31 @@ export class Studio {
     } catch {
       /* optional */
     }
-    // Terrain foot IK — Character + GrudgeAvatar (flat y=0 Danger Room floor).
-    if (typeof (next as { setFootIk?: (on: boolean) => void }).setFootIk === "function") {
-      (next as { setFootIk: (on: boolean) => void }).setFootIk(true);
+    // Terrain foot IK — use active map height field when outdoor, else flat DR.
+    {
+      const outdoor =
+        this.testWorldId !== "danger-room" &&
+        this.forestWorld?.isReady?.() &&
+        this.forestWorld?.getGroundHeightAt?.();
+      this.wireCharacterFeetOnTerrain(outdoor || null);
     }
-    // Reliable scene deploy: human-scale + feet grounded (Y-up / XZ ground SSOT).
+    // Scale gate only if deploy did not already lock SI height (avoid double-fit stretch).
     try {
-      const { ensureHumanScale } = await import("./characterDeploy");
-      ensureHumanScale(this.character.root);
+      const {
+        ensureHumanScale,
+        findDeployModel,
+        reGroundAfterAnimSample,
+      } = await import("./characterDeploy");
+      const model = findDeployModel(this.character.root);
+      const already =
+        model?.userData?.grudgeHeightFit === true ||
+        model?.userData?.characterDeployed === true;
+      if (!already) {
+        ensureHumanScale(this.character.root);
+      } else if (model) {
+        // Soft re-ground only — never re-scale a finished grudge6 kit
+        reGroundAfterAnimSample(model, 0);
+      }
     } catch (e) {
       console.warn("[Studio] ensureHumanScale failed", e);
     }
@@ -2789,6 +3129,50 @@ export class Studio {
     return this.room.presetId;
   }
 
+  /** Current full-scene backdrop id (null = plain preset background). */
+  getBackdropId(): string | null {
+    return this.backdropId;
+  }
+
+  /**
+   * Swap the full-scene battle-art backdrop (`scene.background` becomes a painted
+   * texture). `null` restores the room preset's plain colour background.
+   * Fog writes only touch a Color background, so texture backdrops stay intact.
+   */
+  setBackdrop(id: string | null) {
+    this.backdropId = id;
+    saveBackdrop(id);
+    const token = ++this.backdropToken;
+    if (!id) {
+      if (this.backdropTex) {
+        this.backdropTex.dispose();
+        this.backdropTex = null;
+      }
+      this.scene.background = this.baseBgColor.clone();
+      return;
+    }
+    const bd = BACKDROPS.find((b) => b.id === id);
+    if (!bd) return;
+    const url = assetUrl(bd.file);
+    new THREE.TextureLoader().load(
+      url,
+      (tex) => {
+        if (token !== this.backdropToken) {
+          tex.dispose();
+          return;
+        }
+        tex.colorSpace = THREE.SRGBColorSpace;
+        if (this.backdropTex) this.backdropTex.dispose();
+        this.backdropTex = tex;
+        this.scene.background = tex;
+      },
+      undefined,
+      () => {
+        /* backdrop art failed to load — keep the current background. */
+      },
+    );
+  }
+
   /**
    * Set the global simulation time-scale (1 = real time, < 1 = slow-motion). The
    * value is clamped to a sane range; the whole sim — physics, animation, combat
@@ -3428,25 +3812,39 @@ export class Studio {
         );
       }
 
-      // ── Projectile deploy (Getsuga ice-bow slash wave / bolt along swing) ──
+      // ── Melee slash-wave / bolt (NOT a hotkey) — weapon-edge angle at hit frame ──
       if (fx.projectile && fx.projectile.kind !== "none") {
-        // Barrel / tip spawn — sticky aim so waves leave near the edge, not the chest
+        // Muzzle = weapon tip; direction = grip→tip (blade angle), not body forward
         const barrel = barrelSpawn(sample, 0.1);
         const muzzle = tip
-          ? barrel.origin
-          : this.muzzleOrigin?.(dir) ?? slashPos.clone();
-        const projDir = barrel.dir.lengthSq() > 1e-6 ? barrel.dir : dir;
+          ? tip.clone()
+          : barrel.origin.lengthSq() > 1e-6
+            ? barrel.origin
+            : this.muzzleOrigin?.(dir) ?? slashPos.clone();
+        // Prefer live weapon edge direction so projectile matches anim blade angle
+        let projDir = dir.clone();
+        if (tip && grip) {
+          const along = tip.clone().sub(grip);
+          if (along.lengthSq() > 1e-5) {
+            along.normalize();
+            // Blend blade angle with aim (blade dominates so slash leaves the steel)
+            projDir.copy(along).lerp(dir, 0.22).normalize();
+          }
+        } else if (barrel.dir.lengthSq() > 1e-6) {
+          projDir.copy(barrel.dir).lerp(dir, 0.3).normalize();
+        }
         if (fx.projectile.kind === "slash_wave") {
           const contactR = fx.projectile.contactRadius ?? 0.95;
+          const meshScale = fx.projectile.meshScale ?? 1;
           const projDmg = strike.damage * dmgMul * 0.35;
-          // Light residual along the wave; end-hit carries the full residual pack.
+          // Path damage + physical push collider along residual wave
           const applyPathHit = (p: THREE.Vector3, radius: number, scale = 0.22) => {
             const dmg = projDmg * scale;
             this.targets.playerHit(
               p,
               radius,
               {
-                force: 1,
+                force: Math.max(1, fx.knockback * scale * 0.35),
                 damage: dmg,
                 poiseDamage: Math.round(4 * scale * 4),
               },
@@ -3455,44 +3853,49 @@ export class Studio {
             );
             this.campEnemies?.damageInRadius(p, radius, dmg);
             this.raiderBoats?.damageInRadius(p, radius, dmg);
+            // Practice bags / pinata push along the wave
+            this.hitBags(p, radius, fx.knockback * scale * 0.4, dmg * 0.5);
           };
-          // Weapon edge for trail: grip→tip follows mounted collider
+          // Stick to weapon edge for a few frames so angle matches anim
           const followWeapon = () => {
             if (this.mounted?.tip) {
-              const tip = new THREE.Vector3();
-              this.mounted.tip.getWorldPosition(tip);
+              const tipW = new THREE.Vector3();
+              this.mounted.tip.getWorldPosition(tipW);
               const base = new THREE.Vector3();
               if (this.mounted.tip.parent) {
                 this.mounted.tip.parent.getWorldPosition(base);
               } else {
-                base.copy(tip).addScaledVector(dir, -0.6);
+                base.copy(tipW).addScaledVector(projDir, -0.6);
               }
-              return { base, tip };
+              return { base, tip: tipW };
             }
             const pose = this.colliderPose();
             if (pose) {
-              const tip = pose.pos.clone();
-              const base = tip.clone().addScaledVector(dir, -0.55);
-              return { base, tip };
+              const tipW = pose.pos.clone();
+              const base = tipW.clone().addScaledVector(projDir, -0.55);
+              return { base, tip: tipW };
             }
             return null;
           };
-          // Aim point: hard/soft lock, else along swing so crescent faces that way
+          // Aim: lock if any, else continue along **blade** dir (not only body fwd)
           const lockPt = this.targets?.selectedHostilePoint?.();
           const aimPt = lockPt
             ? lockPt.clone().setY(lockPt.y + 0.2)
-            : muzzle.clone().addScaledVector(dir, fx.projectile.range);
+            : muzzle.clone().addScaledVector(projDir, fx.projectile.range);
           this.vfx.getsugaSlash(muzzle, projDir, {
             speed: fx.projectile.speed,
             range: fx.projectile.range,
             color: fx.projectile.color,
-            // Production mesh: slashred | slashblue | slashpurple | slashyellow
             variant: fx.projectile.variant,
             aim: aimPt,
             contactRadius: contactR,
+            meshScale,
             followDuration: fx.projectile.followDuration ?? 0.1,
             followWeapon,
-            tickEvery: 0.14,
+            // Short residual waves: less arc so they read as melee extension
+            arcHeightFrac: fx.projectile.range <= 2 ? 0.04 : 0.12,
+            arcLateral: fx.projectile.range <= 2 ? 0.05 : 0.28,
+            tickEvery: 0.12,
             onPathTick: (p, radius) => applyPathHit(p, radius, 0.22),
             onHit: (p) => {
               this.vfx.impact(p, fx.projectile!.color, contactR);
@@ -3573,6 +3976,7 @@ export class Studio {
         this.setCombatFlash("COUNTER!", 0.6);
       }
       if (landed) {
+        this.tryLoadoutOnHitProc(center);
         this.bumpMusicHeat(finisher || fx.kind === "finisher" ? 0.45 : 0.28);
         if (fx.fireAuraScale > 0) {
           this.vfx.fireAura(center, fx.fireAuraScale, this.fireThemeApplied, {
@@ -4234,6 +4638,22 @@ export class Studio {
     const ray = this.crosshairRay();
     const caster = new THREE.Raycaster(ray.origin, ray.direction, 0.2, 32);
     // Prefer real harvest nodes (ore / flower / wood / skin)
+    const pinata = this.pinataHarvest?.pick(caster, 28) ?? null;
+    if (pinata) {
+      const p = new THREE.Vector3();
+      pinata.mesh.getWorldPosition(p);
+      this.harvestSelectPos = p;
+      this.harvestSelectName = `${pinata.kind}:${pinata.tool}`;
+      this.harvestSelectNodeId = pinata.id;
+      if (pinata.tool) this.activityTool = pinata.tool;
+      this.harvestMoveActive = false;
+      this.vfx.auraRing(new THREE.Vector3(p.x, 0.08, p.z), 0x7ee7a8, 1.2, 0.55);
+      this.setCombatFlash(
+        `HARVEST SELECT · ${String(pinata.kind).toUpperCase()} · ${pinata.tool}`,
+        0.65,
+      );
+      return;
+    }
     const node = this.forestWorld?.pickHarvest(caster, 28) ?? null;
     if (node) {
       this.harvestSelectPos = node.position.clone();
@@ -5069,7 +5489,11 @@ export class Studio {
     };
     // A skill/AoE blast is a heavy offensive beat — swell the combat music.
     this.bumpMusicHeat(0.4);
-    return this.targets.playerHit(center, radius, payload, force, this.sparCtx);
+    const result = this.targets.playerHit(center, radius, payload, force, this.sparCtx);
+    if (!result || result.outcome === "hit" || result.outcome === "crit") {
+      this.tryLoadoutOnHitProc(center);
+    }
+    return result;
   }
 
   /**
@@ -5871,6 +6295,16 @@ export class Studio {
     // Slot 0 multi-part handled above; 1–3 stay bespoke.
     if (isCrossbowWeapon(this.weaponId) && isSig) {
       return this.doCrossbowSig(signatureIndex!);
+    }
+
+    // Casting-element staff trees (skillPackForWeaponId): staffFire…staffStorm
+    // + plain staff when not Soulbinder. Real hotbar labels from fleet pack;
+    // cast/impact via deploySandboxVfx; damage/range via sparringBlast.
+    if (this.isCastingElementStaff() && isSig) {
+      return this.doFleetStaffSkill(signatureIndex!);
+    }
+    if (this.isCastingElementStaff() && !isSig) {
+      return this.doFleetStaffSkill(0);
     }
 
     // Arcane Staff "Soulbinder": four bespoke soul/void signature skills, each
@@ -8721,6 +9155,122 @@ export class Studio {
 
   // ------------------------------------------------------------------ Staff kit
 
+  /**
+   * staffFire / staffIce / staffNature / staffStorm / staff (non-Soulbinder).
+   * Hotbar trees from skillPackForWeaponId (Casting element migrate).
+   */
+  private isCastingElementStaff(): boolean {
+    const id = this.weaponId;
+    if (id === "staffFire" || id === "staffIce" || id === "staffNature" || id === "staffStorm") {
+      return true;
+    }
+    // Plain arcane staff when character is not the Soulbinder bespoke kit.
+    if (id === "staff" || id === "wand" || id === "tome") {
+      const def = getCharacter(this.characterId);
+      return !def.arcane;
+    }
+    return false;
+  }
+
+  /**
+   * Fleet staff signature: castEffectId → travel bolt → impactEffectId.
+   * Damage + blast radius from SkillPack.reach / damage (fleet CC / sparring).
+   * Does not use Casting freehand path volumes.
+   */
+  private doFleetStaffSkill(slotIndex: number): boolean {
+    if (!this.character || !this.controller) return false;
+    if ((this.sigCooldowns[slotIndex] ?? 0) > 0) return false;
+
+    const pack = skillPackForWeaponId(this.weaponId);
+    const skill =
+      pack.find((s) => s.slot === ((slotIndex + 1) as 1 | 2 | 3 | 4)) ?? pack[slotIndex];
+    if (!skill) return false;
+
+    const origin = this.character.root.position.clone();
+    const fwd = this.facing();
+    const reach = Math.max(4, skill.reach);
+    const damage = skill.damage * (0.85 + this.params.skillForce * 0.02);
+    const color = skill.vfxColor;
+    const blastR = Math.max(1.2, skill.reach * 0.12);
+
+    // Magic Bip001 cast / attack roles (CDN + same-origin baked magic pack).
+    const roleRaw = skill.bakedRole || skill.animRole || "cast";
+    const tryRoles = [roleRaw, "cast", "attack"] as const;
+    let played = false;
+    for (const r of tryRoles) {
+      if (this.character.hasRole?.(r as never)) {
+        this.character.playRoleOnce?.(r as never, 0.1);
+        played = true;
+        break;
+      }
+    }
+    if (!played && this.character.hasClip("attack")) {
+      this.character.playClipOnce("attack", 0.12);
+    }
+
+    const picked = this.pickTargetInFront(origin, fwd, reach + 4, -0.2);
+    const aimPoint =
+      picked?.position.clone() ??
+      origin.clone().addScaledVector(fwd, reach).setY(origin.y + 1.1);
+    const faceDir = aimPoint.clone().sub(origin).setY(0);
+    if (faceDir.lengthSq() < 1e-4) faceDir.copy(fwd);
+    else faceDir.normalize();
+    this.controller.faceToward(faceDir, 0.2);
+
+    // Cast tell at hand (catalog effect ids: fire_hand, arcane_swirl, …).
+    if (skill.castEffectId) {
+      deploySandboxVfx(this.vfx, skill.castEffectId, {
+        origin,
+        forward: fwd,
+        aim: aimPoint,
+      });
+    }
+
+    const applyImpact = (p: THREE.Vector3) => {
+      if (this.disposed) return;
+      if (skill.impactEffectId) {
+        deploySandboxVfx(this.vfx, skill.impactEffectId, {
+          origin: p.clone().setY(origin.y),
+          forward: fwd,
+          aim: p,
+        });
+      } else {
+        this.vfx.aoeBlast(p, color, blastR);
+      }
+      // Fleet CC damage/range — not Casting path volumes.
+      this.sparringBlast(p, blastR, damage, this.params.skillForce * 0.9);
+    };
+
+    this.abilities.cast(kitAbility(`fleetStaff:${skill.animKey}`, "bolt", color, 0), {
+      onImpact: () => {
+        if (!this.character || this.disposed) return;
+        const from = this.staffMuzzle();
+        const dir = aimPoint.clone().sub(from);
+        if (dir.lengthSq() < 1e-4) dir.copy(fwd);
+        dir.normalize();
+        const proj = skill.projectile ?? "bolt";
+        if (proj === "bolt" || proj === "slash_wave" || proj === "arrow") {
+          if (
+            skill.castEffectId === "fire_hand" ||
+            skill.impactEffectId === "inferno" ||
+            this.weaponId === "staffFire"
+          ) {
+            this.vfx.castFireball(from, dir, color, applyImpact);
+          } else {
+            this.vfx.bolt(from, dir, color, 18 + slotIndex * 2, reach, applyImpact);
+          }
+        } else {
+          applyImpact(aimPoint);
+        }
+      },
+    });
+
+    const cd = Math.max(0.4, skill.cooldown || 1.2);
+    this.armSigSlot(slotIndex, cd, 10 + skill.damage * 0.12);
+    this.setCombatFlash(skill.label.toUpperCase(), 0.55);
+    return true;
+  }
+
   /** True while the equipped weapon is a staff (the `magic` weapon group). */
   private isStaffEquipped(): boolean {
     return getWeapon(this.weaponId).group === "magic";
@@ -10738,6 +11288,7 @@ export class Studio {
       this.wingRig.update(dt);
       if (this.controller && this.character) {
         const airborne = !this.controller.isGrounded;
+        this.wingRig.syncAirborne(airborne);
         const fwd = this.controller.forward();
         const wind =
           this.testWorldId === "sailtest" && this.forestWorld?.sail
@@ -10754,11 +11305,25 @@ export class Studio {
     if (this.testWorldId === "sailtest" && this.forestWorld?.sail && this.character && this.controller) {
       const y = this.character.root.position.y;
       const wy = this.forestWorld.sail.waterSurfaceY;
-      if (y < wy + 1.2) {
+      const onWater = y < wy + 1.2;
+      if (onWater) {
         const w = this.forestWorld.sail.windVelocity(0.35);
         this.character.root.position.x += w.x * dt;
         this.character.root.position.z += w.z * dt;
       }
+      // Casting back waterBuffs (shark fin / windsurf) — existing Controller speed hook
+      const backDef = this._lastBackSlotItemId ? backSlotItem(this._lastBackSlotItemId) : null;
+      const swimMul = backDef?.waterBuffs?.swimSpeedMul ?? (backDef?.id === "back_wind_surf" && onWater ? 1.2 : 1);
+      if (onWater && swimMul > 1) {
+        this.controller.setSpeedMultiplier(swimMul);
+        this.slotSpeedOwned = true;
+      } else if (this.slotSpeedOwned) {
+        this.controller.setSpeedMultiplier(1);
+        this.slotSpeedOwned = false;
+      }
+    } else if (this.slotSpeedOwned && this.controller) {
+      this.controller.setSpeedMultiplier(1);
+      this.slotSpeedOwned = false;
     }
     // Camp / voxel hostiles (forest creeps + island tribes)
     this.campEnemies?.update(dt, this.character?.root.position ?? null);
@@ -10822,8 +11387,16 @@ export class Studio {
         place.y = 0;
         this.campBuild.updateGhost(place);
       }
+      const fp = this.campBuild.activeFootprint;
+      this.buildGrid?.setSnap(this.campBuild.activeSnap);
+      this.buildGrid?.setInnerM(fp ? innerMFromFootprint(fp) : this.campBuild.activeSnap);
+      this.buildGrid?.setValid(this.campBuild.isGhostValid);
+      const gp = this.campBuild.ghostPosition;
+      if (gp) this.buildGrid?.setCell(gp);
     } else if (this.buildGrid?.isVisible && this.character && this.activityMode === "build") {
-      // Keep grid cursor live even without ghost (planning)
+      // Keep zhunbei selection cell live even without a ghost (planning)
+      this.buildGrid.setInnerM(1);
+      this.buildGrid.setValid(true);
       const origin = this.character.root.position.clone();
       origin.y += 1.2;
       const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
@@ -11323,7 +11896,11 @@ export class Studio {
 
     let dungeon: Dungeon | null = null;
     try {
-      dungeon = new Dungeon(this.scene, { file: DUNGEON_MAPS[loadDungeonMap()].file });
+      const dungeonMap = DUNGEON_MAPS[loadDungeonMap()];
+      dungeon = new Dungeon(this.scene, {
+        file: dungeonMap.file,
+        keepSi: dungeonMap.keepSi,
+      });
       await dungeon.load();
       if (this.disposed) {
         dungeon.dispose();
@@ -11470,6 +12047,14 @@ export class Studio {
    * physics bags react to hits, NPCs spawn armed + difficulty-scaled, and the
    * player spawns at the start marker. Exiting disposes the whole Studio.
    */
+  /**
+   * Explorer / harvest seed overworld — same VoxelArena path as authored maps.
+   * Map must carry {@link VoxelMap.play} (town GLB + chunked heights).
+   */
+  async enterSeedOverworld(map: VoxelMap): Promise<void> {
+    return this.enterArena(map);
+  }
+
   async enterArena(map: VoxelMap): Promise<void> {
     if (this.inArena || this.enteringArena || this.disposed) return;
     this.enteringArena = true;
@@ -11508,6 +12093,40 @@ export class Studio {
       this.defeated = false;
       this.controller?.setCollision(arena.collision, arena.spawn);
       this.controller?.setCameraOccluders(arena.occluders);
+
+      if (this.campEnemies) {
+        const campId =
+          map.play?.kind === "seed-overworld"
+            ? "seed_voodoo"
+            : map.dungeon
+              ? "seed_voodoo_dungeon"
+              : null;
+        if (campId) {
+          void this.campEnemies.spawnSeedHostiles(arena.spawn, campId);
+        }
+      }
+
+      if (map.play?.kind === "seed-overworld") {
+        const tagged = tagStartSceneHarvest(arena.group, {
+          seed: map.play.seed,
+          hubRadius: map.play.hubRadius,
+        });
+        if (this.pinataHarvest) {
+          for (const n of tagged.nodes) {
+            this.pinataHarvest.registerMesh(n.mesh, {
+              id: n.id,
+              kind: n.kind,
+              tool: n.tool,
+              hp: n.hp,
+              materialId: n.materialId,
+            });
+          }
+        }
+        this.setCombatFlash(
+          `START · Q harvest · trees ${tagged.trees} · rocks ${tagged.rocks} · nodes ${tagged.nodes.length}`,
+          2.4,
+        );
+      }
     } catch (err) {
       console.error("[Studio] arena load failed", err);
       arena?.dispose();
@@ -11791,6 +12410,11 @@ export class Studio {
       // Minecraft-like third person: over-shoulder crosshair, mid body look-at
       this.applyActivityCamera(mode);
       this.buildGrid?.setVisible(mode === "build");
+      if (mode === "build") {
+        this.buildGrid?.setSnap(1);
+        this.buildGrid?.setInnerM(1);
+        this.buildGrid?.setValid(true);
+      }
     } else if (mode === "combat") {
       // Leaving build → cancel place ghost
       if (prev === "build") this.campBuild?.cancelGhost?.();
@@ -11887,39 +12511,273 @@ export class Studio {
     null;
 
   /**
-   * Switch test map: Danger Room (combat) · outdoor harvest/build/loco maps.
-   * Persists selection; applies fog + default activity mode.
-   * Emits onMapLoadProgress for loading curtains (best practice).
+   * Same player session across every map:
+   * - keep Controller instance, viewMode, weaponId / T0 skills
+   * - plant feet on terrain (Controller Y + foot IK)
+   * - camera occluders from map meshes when outdoor
+   */
+  private wirePlayerSessionOnMap(kind: "danger-room" | "outdoor"): void {
+    // Never rebuild Controller / weapon / camera here — only rebind surfaces.
+    if (!this.controller) return;
+
+    // Camera framing stays what the player already has
+    this.controller.setViewMode(this.viewMode);
+    this.applyActivityCamera(this.activityMode);
+
+    if (kind === "danger-room") {
+      this.controller.setGroundHeightAt(null);
+      this.controller.setCameraOccluders([]);
+      this.wireCharacterFeetOnTerrain(null);
+      return;
+    }
+
+    const gh = this.forestWorld?.getGroundHeightAt?.() ?? null;
+    this.controller.setGroundHeightAt(gh);
+    const grounds = this.forestWorld?.getGroundMeshes?.() ?? [];
+    // Soft occluders so TPS camera doesn't clip through terrain/props
+    this.controller.setCameraOccluders(grounds.length ? grounds : []);
+    this.wireCharacterFeetOnTerrain(gh);
+
+    // Snap body Y onto terrain without changing XZ / facing / weapon
+    if (gh && this.character) {
+      const p = this.character.root.position.clone();
+      let y = gh(p.x, p.z);
+      if (y == null || !Number.isFinite(y)) y = gh(0, 0);
+      if (y != null && Number.isFinite(y)) {
+        p.y = y;
+        this.controller.blinkTo(p);
+      }
+    }
+  }
+
+  /**
+   * Foot IK plants soles on terrain after mixer (Character + GrudgeAvatar).
+   * Pass null for flat Danger Room y=0.
+   * Same player session: only rebinds sampler + leg chains — not Controller/weapon.
+   */
+  private wireCharacterFeetOnTerrain(
+    heightAt: ((x: number, z: number) => number | null) | null,
+  ): void {
+    const ch = this.character as {
+      setFootIk?: (on: boolean) => void;
+      setGroundSampler?: (
+        fn: ((x: number, z: number) => { y: number; normal: THREE.Vector3 | null }) | null,
+      ) => void;
+      rebindFootIk?: () => void;
+      footIkBound?: boolean;
+    } | null;
+    if (!ch) return;
+    // Re-find Bip001 legs after kit hydrate / equip (shallow bones may change).
+    ch.rebindFootIk?.();
+    ch.setFootIk?.(true);
+    if (heightAt) {
+      ch.setGroundSampler?.(footSamplerFromHeightAt(heightAt, { withNormals: true }));
+      console.info(
+        `[Studio] foot IK ← terrain heightfield (bound=${ch.footIkBound !== false})`,
+      );
+    } else {
+      ch.setGroundSampler?.(FLAT_FOOT_SAMPLER);
+      console.info(`[Studio] foot IK ← flat Danger Room y=0 (bound=${ch.footIkBound !== false})`);
+    }
+  }
+
+  /**
+   * Ensure climb / swim / hurt / death / mantle etc. are registered before play.
+   * Does not swap weapon packs or controller — fills missing fleet roles only.
+   */
+  private async ensureTraversalAnimsReady(): Promise<void> {
+    const ch = this.character as {
+      hasRole?: (r: string) => boolean;
+      ensureFleetRolesReady?: () => Promise<void>;
+    } | null;
+    if (!ch) return;
+    try {
+      if (typeof ch.ensureFleetRolesReady === "function") {
+        await ch.ensureFleetRolesReady();
+      }
+      const { missingFleetRoles } = await import("./fleetAvatarHydrate");
+      const miss = missingFleetRoles((r) => !!ch.hasRole?.(r));
+      if (miss.length) {
+        console.warn(`[Studio] map session missing roles: ${miss.join(",")}`);
+      } else {
+        console.info("[Studio] map session fleet roles OK (loco/climb/swim/hurt/death)");
+      }
+    } catch (e) {
+      console.warn("[Studio] ensureTraversalAnimsReady", e);
+    }
+  }
+
+  /**
+   * Full Danger Room combat instance — walls, DJ, heavy bags, KCC floor.
+   * Exclusive with outdoor map instances (never half-hide into a void).
+   * Same Controller / weapon skills / camera as outdoor (only surfaces change).
+   */
+  private activateDangerRoomInstance(reason = "restore"): void {
+    this.forestWorld?.clear();
+    if (this.room?.group) this.room.group.visible = true;
+    if (this.djBooth?.group) this.djBooth.group.visible = true;
+    if (this.practiceTargets?.group) this.practiceTargets.group.visible = true;
+    this.controller?.setRoomBound(this.room?.half ?? 16);
+    this.controller?.clearWaterBand();
+    if (this.playerKcc) {
+      this.applyDangerRoomCollision(this.character?.root.position.clone());
+    } else {
+      this.controller?.setCollision(null);
+    }
+    this.wirePlayerSessionOnMap("danger-room");
+    this.baseFogColor.set(Studio.FOG_BASE_COLOR);
+    this.baseFogNear = Studio.FOG_BASE_NEAR;
+    this.baseFogFar = Studio.FOG_BASE_FAR;
+    this.baseBgColor.set(Studio.FOG_BASE_COLOR);
+    this.writeBaselineFog();
+    this.applyRoomAtmosphere(true);
+    this.applyRoomAmbience();
+    this.safeClearHarvestSystems();
+    if (this.buildGrid) {
+      this.buildGrid.setGroundMeshes([]);
+      this.buildGrid.setVisible(false);
+    }
+    void this.ensureTraversalAnimsReady();
+    console.info(`[Studio] Danger Room instance ACTIVE (${reason})`);
+  }
+
+  /**
+   * Map swap must never throw — optional chaining does not protect against a
+   * missing `.clear` method (only nullish host). Fail soft so Danger Room restores.
+   */
+  private safeClearHarvestSystems(): void {
+    const callClear = (label: string, sys: { clear?: () => void } | null | undefined) => {
+      try {
+        if (sys && typeof sys.clear === "function") sys.clear();
+      } catch (e) {
+        console.warn(`[Studio] ${label}.clear failed`, e);
+      }
+    };
+    callClear("pinataHarvest", this.pinataHarvest);
+    callClear("harvestPhysicsBake", this.harvestPhysicsBake);
+    callClear("forestHarvestBake", this.forestHarvestBake);
+  }
+
+  /**
+   * Outdoor map as exclusive instance — only after ForestWorld is ready
+   * (terrain + height sampler / water). Hides chamber props so they don't
+   * float in the skybox without colliders.
+   * Same Controller / weapon skills / camera; feet + IK on terrain.
+   */
+  private activateOutdoorMapInstance(def: (typeof TEST_WORLDS)[TestWorldId]): void {
+    // Chamber shell + DR props off — this map owns the stage completely
+    if (this.room?.group) this.room.group.visible = false;
+    if (this.practiceTargets?.group) this.practiceTargets.group.visible = false;
+    if (this.djBooth?.group) this.djBooth.group.visible = false;
+
+    const half = this.forestWorld?.getBoundHalf?.() ?? (def.id === "fabled-zone" ? 500 : 80);
+    this.controller?.setRoomBound(Math.max(24, half));
+    const wb = this.forestWorld?.getWaterBand?.() ?? null;
+    if (wb) this.controller?.setWaterBand(wb.top, wb.bottom);
+    else if (this.forestWorld?.sail) {
+      const wy = this.forestWorld.sail.waterSurfaceY;
+      this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
+    } else {
+      this.controller?.clearWaterBand();
+    }
+    // Outdoor maps: height sampler owns feet; keep KCC with room bounds for walls
+    // but ground Y from terrain (Controller.sampleGroundY).
+    if (this.playerKcc && this.controller) {
+      this.controller.setCollision(this.playerKcc, undefined, {
+        keepRoomBounds: true,
+      });
+    }
+    this.wirePlayerSessionOnMap("outdoor");
+    void this.ensureTraversalAnimsReady();
+    console.info(
+      `[Studio] Outdoor map instance ACTIVE ${def.id} groundMeshes=${this.forestWorld?.getGroundMeshes?.()?.length ?? 0} footIk=terrain controller=same weapon=${this.weaponId} view=${this.viewMode}`,
+    );
+  }
+
+  /**
+   * Switch test map as a **full exclusive instance** (not a hot-load into void).
+   * - danger-room → complete combat chamber (walls, DJ, bags, KCC)
+   * - outdoor → only after ForestWorld.isReady() (terrain + height)
+   * - fail → stay on / restore Danger Room (never hide chamber without a map)
    */
   async setTestWorld(id: TestWorldId): Promise<boolean> {
     const def = TEST_WORLDS[id];
     if (!def) return false;
+
+    const progress = (stage: string, progress: number, detail?: string) => {
+      this.onMapLoadProgress?.({ stage, progress, mapId: id, detail } as {
+        stage: string;
+        progress: number;
+        mapId: string;
+      });
+    };
+
+    // 1) REST descriptor (same-origin catalog) — best practice: know assets before GLB
+    progress("rest_descriptor", 0.1);
+    try {
+      const { fetchMapDescriptor } = await import("../lib/mapInstanceApi");
+      const desc = await fetchMapDescriptor(id);
+      if (desc) {
+        progress("rest_descriptor", 0.18, desc.name);
+        console.info(
+          `[Studio] map REST · ${desc.id} assets=${desc.assets?.length ?? 0} exclusive=${desc.instance?.exclusive !== false}`,
+        );
+      }
+    } catch (e) {
+      console.warn("[Studio] map REST optional fail", e);
+    }
+
+    progress("dispose_prev", 0.2);
+
+    // Pure combat chamber — exclusive full instance (walls, DJ, bags, KCC)
+    if (def.kind === "combat" || id === "danger-room") {
+      progress("danger_room", 0.55);
+      this.testWorldId = "danger-room";
+      saveTestWorldId("danger-room");
+      this.activateDangerRoomInstance("select-danger-room");
+      progress("ready", 1);
+      this.setCombatFlash("MAP · DANGER ROOM (full instance)", 1.2);
+      return true;
+    }
+
+    progress("load_assets", 0.28);
+    // Keep chamber VISIBLE until outdoor is ready (Three.js instance swap, not void)
+    if (this.room?.group) this.room.group.visible = true;
+
+    if (!this.forestWorld) {
+      this.setCombatFlash("MAP FAIL · outdoor loader missing", 2);
+      this.activateDangerRoomInstance("no-forest-world");
+      progress("failed", 1);
+      return false;
+    }
+
+    progress("load_assets", 0.4);
+    const ok = await this.forestWorld.load(def);
+    progress("build_colliders", 0.65);
+    const ready = ok && this.forestWorld.isReady();
+    if (!ready) {
+      // Fail closed — full Danger Room instance, never empty stage
+      this.testWorldId = "danger-room";
+      saveTestWorldId("danger-room");
+      this.activateDangerRoomInstance(`map-fail:${id}`);
+      progress("failed", 1);
+      this.setCombatFlash(
+        `MAP FAIL · ${def.name} incomplete (no terrain/colliders). Danger Room restored.`,
+        2.6,
+      );
+      this.onMapLoadProgress?.({ stage: "failed", progress: 1, mapId: id });
+      return false;
+    }
+
+    // Outdoor instance ready — exclusive activate (dispose-visible swap)
     this.testWorldId = id;
     saveTestWorldId(id);
-
-    const progress = (stage: string, progress: number) => {
-      this.onMapLoadProgress?.({ stage, progress, mapId: id });
-    };
-    progress("start", 0.08);
-    progress("dispose_prev", 0.15);
-
-    // Do NOT load small_island under camp on sailtest — SAILTEST.glb is the dual-island mesh.
-    // Camp placeables still use seedSandboxClaim for build rights.
-
-    if (this.forestWorld) {
-      progress("load_glb", 0.35);
-      const ok = await this.forestWorld.load(def);
-      if (!ok && def.kind !== "combat") {
-        progress("failed", 1);
-        return false;
-      }
-    }
-    progress("classify_bake", 0.72);
+    progress("wire_layers", 0.78);
+    this.activateOutdoorMapInstance(def);
+    progress("activate", 0.85);
 
     // Pinata: clear + re-register harvest meshes for break/absorb + Rapier bake
-    this.pinataHarvest?.clear();
-    this.harvestPhysicsBake?.clear();
-    this.forestHarvestBake?.clear();
+    this.safeClearHarvestSystems();
     if (this.pinataHarvest && def.kind !== "combat") {
       this.pinataHarvest.setGroundSampler(
         this.forestWorld?.getGroundHeightAt?.() ?? null,
@@ -11970,48 +12828,8 @@ export class Studio {
       this.buildGrid.setVisible(false);
     }
 
-    // Outdoor / loco-QA maps: hide combat chamber shell so GLB terrain is the stage.
-    // Combat danger-room keeps walls/floor/DJ. Bounds + water + ground height follow map.
-    const outdoor =
-      def.kind !== "combat" &&
-      (def.meshKeys?.length ||
-        id === "tropical-harvest" ||
-        id === "pirate-village" ||
-        id === "sailtest" ||
-        id === "forest-map" ||
-        id === "island-life" ||
-        id === "fabled-zone" ||
-        id === "bridge-town-docks");
-    if (this.room?.group) {
-      this.room.group.visible = !outdoor;
-    }
-    if (def.kind === "combat") {
-      this.controller?.setRoomBound(this.room?.half ?? 16);
-      this.controller?.clearWaterBand();
-      this.controller?.setGroundHeightAt(null);
-    } else {
-      const half = this.forestWorld?.getBoundHalf?.() ?? (id === "fabled-zone" ? 500 : 80);
-      this.controller?.setRoomBound(Math.max(24, half));
-      const wb = this.forestWorld?.getWaterBand?.() ?? null;
-      if (wb) this.controller?.setWaterBand(wb.top, wb.bottom);
-      else if (this.forestWorld?.sail) {
-        const wy = this.forestWorld.sail.waterSurfaceY;
-        this.controller?.setWaterBand(wy + 0.05, wy - 2.2);
-      } else {
-        this.controller?.clearWaterBand();
-      }
-      const gh = this.forestWorld?.getGroundHeightAt?.() ?? null;
-      this.controller?.setGroundHeightAt(gh);
-      // Seat player feet on terrain if sampler present
-      if (gh && this.character) {
-        const p = this.character.root.position.clone();
-        const y = gh(p.x, p.z);
-        if (y != null && Number.isFinite(y)) {
-          p.y = y;
-          this.controller?.blinkTo(p);
-        }
-      }
-    }
+    // Bounds / water / ground already applied in activateOutdoorMapInstance.
+    // Do NOT re-hide the chamber here or leave a void if systems failed mid-setup.
 
     // Voxel / outdoor camp enemies
     this.campEnemies?.clear();
@@ -12074,10 +12892,12 @@ export class Studio {
       this.applyRoomAtmosphere?.(true);
     }
 
-    if (def.defaultMode) this.setActivityMode(def.defaultMode);
+    // Keep same activity/camera/weapon — do NOT force map defaultMode (would
+    // swap combat TPS ↔ harvest shoulder). Player chooses mode; map only swaps terrain.
+    // if (def.defaultMode) this.setActivityMode(def.defaultMode);
     progress("ready", 1);
     this.setCombatFlash(
-      `MAP · ${def.name} · ${def.uuid.slice(0, 8)}… · seed ${def.seed}`,
+      `MAP · ${def.name} · feet on terrain · same cam/skills`,
       1.5,
     );
     return true;
@@ -12152,6 +12972,21 @@ export class Studio {
       return;
     }
 
+    // Back slot = effect slot (one equip). Items *are* the effects.
+    // Hold-R → Back cycles coded items; full list in backSlotItems.ts.
+    if (id === "back_slot" || id === "effect_slot") {
+      this.activityTool = "back_slot";
+      const nextId = nextCodedBackSlotId(this._lastBackSlotItemId);
+      this._lastBackSlotItemId = nextId;
+      this.equipBackWing(nextId);
+      const def = backSlotItem(nextId);
+      this.setCombatFlash(
+        `BACK · ${(def?.label || nextId).toUpperCase()} · ${def?.effect || "equip"}`,
+        0.7,
+      );
+      return;
+    }
+
     // Harvest tool equip (hold R) or options tool pick
     this.activityTool = id;
     this.setCombatFlash(id.replace(/_/g, " ").toUpperCase(), 0.4);
@@ -12164,6 +12999,47 @@ export class Studio {
       else if (id === "potion") this.healPotion();
       else if (id === "skill") this.useSkill();
       else if (id === "block") this.forceFieldGuard();
+    }
+  }
+
+  /**
+   * Harvest **F**: nearest alive node matching tool in hand → approach + swing.
+   * Not combat weapon skill. Tool equip is Hold-R radial only.
+   */
+  private harvestNearestWithHandTool() {
+    if (this.activityMode !== "harvest" || !this.character) return;
+    const hand = this.activityTool || "gather";
+    if (hand === "back_slot" || hand === "effect_slot") {
+      this.setCombatFlash("BACK SLOT · equip via Hold R · not a harvest tool", 0.5);
+      return;
+    }
+    const origin = this.character.root.position;
+    const node = this.forestWorld?.nearestHarvest?.(origin, hand, 14) ?? null;
+    if (!node) {
+      this.setCombatFlash(`NO NODE · ${String(hand).toUpperCase()}`, 0.5);
+      return;
+    }
+    this.harvestSelectPos = node.position.clone();
+    this.harvestSelectName = `${node.kind}:${node.tool}`;
+    this.harvestSelectNodeId = node.id;
+    this.harvestMoveActive = false;
+    this.vfx.auraRing(
+      new THREE.Vector3(node.position.x, 0.08, node.position.z),
+      0x7ee7a8,
+      1.15,
+      0.45,
+    );
+    const dx = node.position.x - origin.x;
+    const dz = node.position.z - origin.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist <= 2.8) {
+      this.setCombatFlash(
+        `HARVEST · ${node.kind.toUpperCase()} · ${hand}`,
+        0.45,
+      );
+      this.runActivityTool(hand);
+    } else {
+      this.beginHarvestMove();
     }
   }
 
@@ -12277,9 +13153,11 @@ export class Studio {
         if (this.pinataHarvest.getNode(nodeId)) {
           const power = 10 + Math.floor(Math.random() * 6);
           const res = this.pinataHarvest.hitForestNode(nodeId, toolNorm, power);
+          const pin = this.pinataHarvest.getNode(nodeId);
+          const yields = (pin?.mesh.userData.harvestYields as string[] | undefined) ?? undefined;
           // On break, chunks magnetize into bag; partial hits still chip yield
-          if (res.hit && !res.broken) {
-            applyHarvestYield(tool, undefined, undefined, bagChar);
+          if (res.hit) {
+            applyHarvestYield(tool, undefined, yields, bagChar);
           }
           if (res.broken) {
             forestNode = this.forestWorld?.harvestNode(nodeId) ?? forestNode;
@@ -12472,15 +13350,17 @@ export class Studio {
       this.radialHoldT = 0;
       return;
     }
-    // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C + Alt+Space Getsuga) ──
-    // Bare keys stay combat (C parry, G evade, T stomp, V kick, B camera, F skill).
-    // Alt alone (no VFX letter) = combat slide.
+    // ── vfxgrudge.puter.site hotkeys (Alt+V/B/F/G/T/C only) ──
+    // Slash-wave / Getsuga is NOT a hotkey — it spawns from melee attack stages
+    // (meleeStrikeFx projectile on doComboHit). Space = jump only.
     {
       const altHeld = this.input.down("AltLeft") || this.input.down("AltRight");
-      const effectId = sandboxEffectForKey(code, altHeld);
-      if (effectId) {
-        this.deploySandboxHotkeyVfx(effectId);
-        return;
+      if (code !== "Space") {
+        const effectId = sandboxEffectForKey(code, altHeld);
+        if (effectId) {
+          this.deploySandboxHotkeyVfx(effectId);
+          return;
+        }
       }
       if (
         (code === "AltLeft" || code === "AltRight") &&
@@ -12491,12 +13371,15 @@ export class Studio {
       }
     }
     if (code === "Space") {
-      // Smash recovery: Space during tumble/ragdoll = cut backflip, not jump.
-      // Otherwise: wall jump (near wall / wall-run) → double jump → ground jump.
+      // Smash recovery / jump only — never slash projectile.
       if (this.tumbleActive || this.recoverLock > 0.2) this.smashRecover();
       else this.tryJumpWithStamina();
     }
     else if (code === "KeyR") {
+      // Harvest: KeyR arms tool radial on keydown above — do not heavy-attack.
+      if (this.activityMode === "harvest") {
+        return;
+      }
       // Racalvin: R = Keeper Tornados (spin → fire tornado projectiles)
       if (this.characterId === "gunslinger" && this.livingSwords) {
         this.doLivingSwordTornadoSkill();
@@ -12505,6 +13388,11 @@ export class Studio {
       }
     }
     else if (code === "KeyF") {
+      // Harvest: F = nearest node of tool in hand (not combat f-skill).
+      if (this.activityMode === "harvest") {
+        this.harvestNearestWithHandTool();
+        return;
+      }
       // Guns: F starts hold-charge / reload on release (see updateGunInput).
       // Crossbow: F = charged magical bolt.
       // Non-guns: F = f-skill.
@@ -12697,14 +13585,8 @@ export class Studio {
         this.rHoldArmed = false;
         return;
       }
-      // Quick tap R in harvest: re-swing current tool; combat heavy is on keydown.
-      if (
-        this.rHoldArmed &&
-        this.radialHoldT < 0.18 &&
-        this.activityMode === "harvest"
-      ) {
-        this.runActivityTool(this.activityTool);
-      }
+      // Harvest: Hold R = tool radial only. Swing is F (nearest of tool in hand).
+      // Quick tap R does not harvest (avoids double-binding with F).
       this.rHoldArmed = false;
       if (!this.radialOpen) this.radialHoldT = 0;
       return;
@@ -14929,6 +15811,12 @@ export class Studio {
       }
     });
     this.postfx?.dispose();
+    try {
+      const ext = this.renderer.getContext()?.getExtension?.("WEBGL_lose_context");
+      ext?.loseContext();
+    } catch {
+      /* ignore */
+    }
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

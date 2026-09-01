@@ -45,8 +45,21 @@ export function WeaponLibraryPanel({ engine, snap }: Props) {
   };
 
   const equip = (w: WeaponLibEntry) => {
-    if (w.custom) engine.equipCustomWeapon(w.id.slice(7));
-    else void engine.equipWeapon(w.id, 0);
+    // Toggle off if already equipped (clear hand mount without nuking the hero).
+    if (equipped === w.id) {
+      engine.unequipWeapon();
+      return;
+    }
+    if (w.custom) {
+      if (!snap.rigWeapon && snap.grudgeChars.length === 0) {
+        // Need a body first
+        void engine.loadRig("sword").then(() => engine.equipCustomWeapon(w.id.slice(7)));
+        return;
+      }
+      engine.equipCustomWeapon(w.id.slice(7));
+      return;
+    }
+    void engine.equipWeapon(w.id, 0);
   };
 
   const setGrip = (axis: 0 | 1 | 2, kind: "pos" | "rot", value: number) => {

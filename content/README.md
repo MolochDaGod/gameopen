@@ -4,13 +4,18 @@ Authoritative **templates** for weapons, skills, items, and armor.
 
 | Folder | Purpose |
 |--------|---------|
-| `docs/` | Contracts (read before editing) |
+| `docs/` | Contracts (read before editing) — **WEAPON_PREFAB** · **BACK_SLOT_PREFAB** |
 | `schemas/` | JSON Schema for each entity |
 | `items/` | Item templates (`itm_*`) |
-| `weapons/` | Weapon defs (`wpn_*`) |
+| `weapons/` | Weapon defs (`wpn_*`) + optional `spine` / `physics` / `effects` |
+| `backs/` | Back-slot prefabs (`bck_*`) — one equip, item *is* the effect |
 | `skills/` | Skill defs (`family.action`) |
 | `armor/` | Armor defs (`arm_*`) |
 | `manifests/` | Generated indexes + readiness (do not hand-edit) |
+
+**Warlords prefab spine:** cast · barrel · blade · blunt · tip · special · physics · effect  
+Runtime defaults: `artifacts/animator/src/three/arsenal/weaponPrefabSpine.ts`  
+UUID graph: `docs/WEAPON_PREFAB_UUID_SSOT.md`
 
 ## Commands
 
@@ -55,8 +60,10 @@ Docs: `content/docs/FORGE_SCENES.md`
 
 ```
 Contract: content/docs/WEAPON_PREFAB.md
+Spine: cast|barrel|blade|blunt|tip|special|physics|effect (family defaults OK)
+UUID: docs/WEAPON_PREFAB_UUID_SSOT.md
 Gold: wpn_sword_iron_01
-Fill missing readiness for family:sword only.
+Fill missing readiness + spine for family only.
 Run pnpm readiness:weapons && pnpm scenes:build.
-Do not invent combat systems.
+Do not invent combat systems or parallel sockets.
 ```

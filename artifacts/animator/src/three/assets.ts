@@ -1,9 +1,6 @@
 import type { CharacterDef, WeaponCombat, WeaponDef, WeaponId } from "./types";
 import { WEAPONS } from "./arsenal";
 import { resolveCombat } from "./arsenal/holdStyle";
-
-export { WEAPONS };
-
 import {
   FLEET_ASSET_HOSTS,
   resolveAssetCandidates,
@@ -16,6 +13,13 @@ import {
   GRUDGE6_TEX_PATHS,
   grudge6RaceGlbForSlug,
 } from "./fleetAssetResolver";
+import {
+  GRUDGE6_PLAYTEST_ROSTER,
+  type GrudgePlaytestEntry,
+} from "./grudge/playtestRoster";
+import { RACE_ASSETS } from "./grudge/raceAssets";
+
+export { WEAPONS };
 
 /**
  * Legacy Animator lab host (archived). Open ships models/grudge, weapons, anim,
@@ -694,12 +698,28 @@ interface GrudgeKit {
   signatureSkills: CharacterDef["signatureSkills"];
 }
 
+/**
+ * Clip names must match embedded GLB animation names (verified: idle|walk|run|sprint|attack|jump…).
+ * Prefer exact library names so autoMapClips does not steal attack from roll/dash clips.
+ */
+const GRUDGE_LOCO_CLIPS = {
+  idle: "idle",
+  walk: "walk",
+  run: "run",
+  sprint: "sprint",
+  jump: "jump",
+} as const;
+
 const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   knight: {
     label: "Knight",
     loadout: ["sword", "mace"],
     offHand: "shield",
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "sword_attack_c",
+      block: "sword_block",
+    },
     signatureSkills: [
       { label: "Blade Rush", clip: "sword_dash_attack", kind: "slash", mode: "dash" },
       { label: "Combo Finisher", clip: "sword_combo_finisher", kind: "slash" },
@@ -710,7 +730,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   warrior: {
     label: "Warrior",
     loadout: ["greataxe", "spear"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "sword_attack_c", jump: "jump", block: "sword_block" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "sword_attack_c",
+      block: "sword_block",
+    },
     signatureSkills: [
       { label: "War Charge", clip: "sword_dash_attack", kind: "slam", mode: "dash" },
       { label: "Cleave", clip: "sword_combo_finisher", kind: "slash" },
@@ -721,7 +745,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   ranger: {
     label: "Ranger",
     loadout: ["bow", "dagger"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "attack",
+      jump: "jump",
+    },
     signatureSkills: [
       { label: "Aimed Shot", clip: "bow_aim_walk_fwd", kind: "witchArrow" },
       { label: "Piercing Arrow", clip: "attack", kind: "witchArrow" },
@@ -732,7 +760,11 @@ const GRUDGE_KITS: Record<GrudgeClass, GrudgeKit> = {
   mage: {
     label: "Mage",
     loadout: ["staffFire", "staffStorm"],
-    clips: { idle: "idle", walk: "walk", run: "run", attack: "attack", jump: "front_flip" },
+    clips: {
+      ...GRUDGE_LOCO_CLIPS,
+      attack: "attack",
+      jump: "jump",
+    },
     signatureSkills: [
       { label: "Elemental Blast", clip: "attack", kind: "witchMissile" },
       { label: "Cataclysm", clip: "attack", kind: "witchDisk" },
@@ -756,7 +788,10 @@ for (const race of GRUDGE_RACES) {
       offHand: kit.offHand,
       hideNodes: GRUDGE_HIDE,
       handBone: "Hand",
-      modelYaw: Math.PI + Math.PI / 2,
+      // Heroes of Grudge class GLBs are authored art-forward +Z (clips: idle/walk/run/sprint).
+      // Was Math.PI + Math.PI/2 which stacked reverse + 90° → faces camera / moonwalks.
+      // Controller art-forward is +Z when root.yaw = 0 (grudge-character-correctness).
+      modelYaw: 0,
     });
   }
 }
@@ -834,21 +869,74 @@ for (const rc of RACE_CHARACTERS) {
   if (!CHARACTERS.some((c) => c.id === rc.id)) CHARACTERS.push(rc);
 }
 
+/**
+ * Grudge6 modular playtest stubs (6 races × 5 presets).
+ * Ids are `grudge:<race>:<preset>` — Studio spawns {@link GrudgeAvatar}, not GLB Character.
+ * Surfaced in Admin character picker for GRUDOX animator playtesting.
+ */
+export type { GrudgePlaytestEntry };
+export {
+  GRUDGE6_PLAYTEST_ROSTER,
+  GRUDGE6_RACE_DEFAULTS,
+  grudge6PlaytestByRace,
+  isGrudge6PlaytestId,
+} from "./grudge/playtestRoster";
+
+/** CharacterDef stubs so getCharacter / HUD labels work for every playtest id. */
+export const GRUDGE6_PLAYTEST_CHARACTERS: CharacterDef[] = GRUDGE6_PLAYTEST_ROSTER.map(
+  (e) => {
+    const race = RACE_ASSETS[e.raceId];
+    const g6 = grudge6RaceGlbForSlug(e.raceId) || race.modelUrl;
+    return {
+      id: e.id,
+      name: e.name,
+      file: g6,
+      scale: 1,
+      clips: {
+        idle: "idle",
+        walk: "walk",
+        run: "run",
+        sprint: "sprint",
+        attack: "attack",
+        jump: "jump",
+      },
+      signatureSkills: [],
+      handBone: RACE_HAND_BONE,
+      modelYaw: 0,
+    };
+  },
+);
+
+// Register stubs once (Studio still uses GrudgeAvatar for grudge: ids).
+for (const g of GRUDGE6_PLAYTEST_CHARACTERS) {
+  if (!CHARACTERS.some((c) => c.id === g.id)) CHARACTERS.push(g);
+}
+
 export function getCharacter(id: string): CharacterDef {
   const hit = CHARACTERS.find((c) => c.id === id);
   if (hit) return hit;
-  // Fleet grudge6 avatar ids (`grudge:race:preset`) are not catalog rows.
-  // Return a safe stub so modelYaw / tank flags don't inherit explorer defaults.
+  // Fleet grudge6 avatar ids (`grudge:race:preset`) — safe stub if not pre-registered.
   if (id.startsWith("grudge:")) {
     const parts = id.split(":");
-    const racePart = parts[1] || "human";
+    const racePart = parts[1] || "western-kingdoms";
+    const presetPart = parts[2] || "warrior";
     const g6 = grudge6RaceGlbForSlug(racePart) || "";
+    const raceMeta = RACE_ASSETS[racePart as keyof typeof RACE_ASSETS];
     return {
       id,
-      name: id.replace(/^grudge:/, "").replace(/:/g, " "),
-      file: g6,
+      name: raceMeta
+        ? `${raceMeta.abbr} ${presetPart}`
+        : id.replace(/^grudge:/, "").replace(/:/g, " "),
+      file: g6 || raceMeta?.modelUrl || "",
       scale: 1,
-      clips: {},
+      clips: {
+        idle: "idle",
+        walk: "walk",
+        run: "run",
+        sprint: "sprint",
+        attack: "attack",
+        jump: "jump",
+      },
       signatureSkills: [],
       handBone: RACE_HAND_BONE,
       modelYaw: 0,
@@ -857,14 +945,19 @@ export function getCharacter(id: string): CharacterDef {
   return CHARACTERS[0];
 }
 
-/** Map fleet raceId strings → charactersgrudox race character catalog id. */
+/**
+ * Map fleet raceId → playtest spawn id (`grudge:race:defaultPreset`).
+ * Prefer modular GrudgeAvatar over legacy race-* catalog GLB.
+ */
 export function raceCharacterIdForFleetRace(raceId?: string): string {
   const k = (raceId || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-  if (k.includes("orc")) return "race-orc";
-  if (k.includes("elf")) return "race-high-elf";
-  if (k.includes("dwarf") || k.includes("dwf")) return "race-dwarf";
-  if (k.includes("barb")) return "race-barbarian";
-  if (k.includes("undead") || k === "ud") return "race-undead";
-  if (k.includes("human") || k.includes("kingdom") || k === "wk") return "race-human";
-  return "race-human";
+  if (k.includes("orc")) return "grudge:orcs:warrior";
+  if (k.includes("elf")) return "grudge:high-elves:ranger";
+  if (k.includes("dwarf") || k.includes("dwf")) return "grudge:dwarves:warrior";
+  if (k.includes("barb")) return "grudge:barbarians:warrior";
+  if (k.includes("undead") || k === "ud") return "grudge:undead:knight";
+  if (k.includes("human") || k.includes("kingdom") || k === "wk") {
+    return "grudge:western-kingdoms:warrior";
+  }
+  return "grudge:western-kingdoms:warrior";
 }

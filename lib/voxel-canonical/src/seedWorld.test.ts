@@ -5,9 +5,17 @@ import {
   chunkBlocks,
   CHUNK_IDX_MAX,
   DEFAULT_CHUNK_IDX,
+  DEFAULT_EXPLORER_STARTING_TOWN,
+  resolveSeedPrefabMapChunk,
+  SEED_FALLBACK_PREFAB_CHUNK,
   deploymentToScene,
+  EXPLORER_STARTING_TOWN_CHUNK,
   hashSeed,
+  listPremadeVoxelMaps,
   placePortalsFromSeed,
+  placeSeedHostilesFromSeed,
+  SEED_VOODOOIST_UNIT,
+  SEED_ZOMBIE_REDESIGNED_UNIT,
   portalsToTriggers,
 } from "./seedWorld";
 
@@ -62,5 +70,63 @@ describe("seedWorld", () => {
 
     const markers = portalsToTriggers(dep.portals);
     expect(markers[0]!.kind).toBe("portal");
+  });
+
+  it("places the same voodooist and redesigned-zombie hostiles for the same seed", () => {
+    const a = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
+    const b = placeSeedHostilesFromSeed(hashSeed("explorer-town"));
+    expect(a).toEqual(b);
+    expect(a.length).toBe(6);
+    expect(a.filter((n) => n.unitId === SEED_VOODOOIST_UNIT)).toHaveLength(3);
+    expect(a.filter((n) => n.unitId === SEED_ZOMBIE_REDESIGNED_UNIT)).toHaveLength(3);
+    expect(String(a[0]!.model)).toContain(SEED_VOODOOIST_UNIT);
+    expect(a.some((n) => String(n.model).includes(SEED_ZOMBIE_REDESIGNED_UNIT))).toBe(true);
+    const scene = deploymentToScene(
+      buildSeedDeployment({ id: "h", name: "h", seed: "explorer-town" }),
+    );
+    expect(scene.npcs.some((n) => String(n.model).includes("voodooist"))).toBe(true);
+    expect(scene.npcs.some((n) => String(n.model).includes("zombie_redesigned"))).toBe(true);
+  });
+
+  it("reviews premade maps and marks Animal Company lobby as spawn hub", () => {
+    const maps = listPremadeVoxelMaps();
+    expect(maps.some((m) => m.id === "explorerStartingTown" && m.source === "template")).toBe(true);
+    expect(maps.some((m) => m.id === "amidaFarmCamp" && m.source === "template")).toBe(true);
+    const lobby = maps.find((m) => m.id === EXPLORER_STARTING_TOWN_CHUNK);
+    expect(lobby?.source).toBe("map_chunk");
+    expect(lobby?.role).toBe("lobby");
+  });
+
+  it("uses Wolf Street when a seed has no map or would duplicate another", () => {
+    expect(resolveSeedPrefabMapChunk({})).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+    expect(
+      resolveSeedPrefabMapChunk({ mapChunkId: EXPLORER_STARTING_TOWN_CHUNK }),
+    ).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    expect(
+      resolveSeedPrefabMapChunk({
+        mapChunkId: EXPLORER_STARTING_TOWN_CHUNK,
+        usedMapChunkIds: [EXPLORER_STARTING_TOWN_CHUNK],
+      }),
+    ).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+    const empty = buildSeedDeployment({ id: "seed-empty", name: "Empty", seed: "no-map" });
+    expect(empty.world.mapChunkId).toBe(SEED_FALLBACK_PREFAB_CHUNK);
+  });
+
+  it("stamps explorer starting town on the lobby map chunk + seed scene", () => {
+    const dep = buildSeedDeployment({
+      id: "mapchunk-animal-company-lobby",
+      name: "Animal Company Lobby",
+      seed: "explorer-town",
+      mapChunkId: EXPLORER_STARTING_TOWN_CHUNK,
+    });
+    expect(dep.world.startingTown?.mapChunkId).toBe(EXPLORER_STARTING_TOWN_CHUNK);
+    expect(dep.world.startingTown?.templateId).toBe(
+      DEFAULT_EXPLORER_STARTING_TOWN.templateId,
+    );
+    const scene = deploymentToScene(dep);
+    expect((scene.map as { startingTown?: { mapChunkId: string } }).startingTown?.mapChunkId).toBe(
+      EXPLORER_STARTING_TOWN_CHUNK,
+    );
+    expect(scene.spawn).toEqual({ x: 0, y: 2, z: 0 });
   });
 });

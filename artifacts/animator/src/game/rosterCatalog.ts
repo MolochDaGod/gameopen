@@ -36,6 +36,16 @@ export const ENEMIES: readonly CatalogEntity[] = [
   { id: "orc-foe", name: "Orc Raider", kind: "enemy", model: "models/orc.glb", defaultStrategy: "aggressive-rusher", tags: ["melee"] },
   { id: "skeleton", name: "Skeleton Warrior", kind: "enemy", model: "models/skeleton-warrior.glb", defaultStrategy: "cautious-duelist", tags: ["melee", "undead"] },
   { id: "sanji", name: "Rival Fighter", kind: "enemy", model: "models/sanji.glb", defaultStrategy: "flanker", tags: ["elite"] },
+  // Session pack → R2 models/enemies/session (CDN + local public)
+  { id: "blocker_broker", name: "Blocker Broker", kind: "enemy", model: "models/enemies/session/blocker_broker.glb", defaultStrategy: "tank-guard", tags: ["voxel", "melee", "elite", "session"] },
+  { id: "hollow_knight_vengefly", name: "Vengefly", kind: "enemy", model: "models/enemies/session/hollow_knight_vengefly.glb", defaultStrategy: "swarm-horde", tags: ["voxel", "flying", "swarm", "session"] },
+  { id: "mage_demon", name: "Mage Demon", kind: "enemy", model: "models/enemies/session/mage_demon.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "ranged", "session"] },
+  { id: "lowpoly_rhino", name: "Rhino", kind: "enemy", model: "models/enemies/session/lowpoly_rhino.glb", defaultStrategy: "aggressive-rusher", tags: ["voxel", "beast", "session"] },
+  { id: "violet_4_hn_creature", name: "Violet HN Creature", kind: "enemy", model: "models/enemies/session/violet_4_hn_creature.glb", defaultStrategy: "flanker", tags: ["voxel", "creature", "session"] },
+  { id: "voodooist", name: "Voodooist", kind: "enemy", model: "models/enemies/session/voodooist.glb", defaultStrategy: "ranged-skirmisher", tags: ["voxel", "magic", "hex", "seed", "session"] },
+  { id: "zombie_redesigned", name: "Redesigned Zombie", kind: "enemy", model: "models/enemies/session/zombie_redesigned.glb", defaultStrategy: "swarm-horde", tags: ["voxel", "melee", "undead", "seed", "session"] },
+  { id: "stormbird_galarian", name: "Galarian Stormbird", kind: "enemy", model: "models/warlords-era/animals/flying/stormbird_galarian.glb", defaultStrategy: "aggressive-rusher", tags: ["warlords", "flying", "beast", "elite"] },
+  { id: "anomaly_hatchling", name: "Anomaly Hatchling", kind: "enemy", model: "models/warlords-era/enemies/anomaly_hatchling.glb", defaultStrategy: "aggressive-rusher", tags: ["warlords", "beast", "worm", "dungeon", "hatchling"] },
 ] as const;
 
 export const ALLIES: readonly CatalogEntity[] = [

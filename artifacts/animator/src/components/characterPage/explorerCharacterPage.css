@@ -10,8 +10,8 @@
 @import url("/ui/grudge-ui/equipment-tactical.css");
 
 .ecp-root {
-  --ecp-slot: url("/ui/craftpix/part2/Action_Bar/ab1_shortcut_frame.png");
-  --ecp-slot-overlay: url("/ui/craftpix/part2/Action_Bar/spell_frame_icon_OVERLAY.png");
+  --ecp-slot: url("/ui/craftpix/part3/ab2_shurtcut_frame.png");
+  --ecp-slot-overlay: url("/ui/craftpix/part3/moba/mab_shortcut.png");
   --ecp-panel-frame: url("/ui/craftpix/part3/ab2_main_frame.png");
   --ecp-craft-frame: url("/ui/craftpix/part3/ab2_shurtcut_frame.png");
   --ecp-empty-icon: url("/icons/skill-slot.png");

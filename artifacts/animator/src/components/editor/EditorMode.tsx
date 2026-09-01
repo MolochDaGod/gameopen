@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useOptionalAuth } from "../../auth/clerkOptional";
 import type { CreatePostPayload } from "@workspace/api-client-react";
@@ -29,11 +29,11 @@ import {
   BoxSelect,
   CopyPlus,
   ListTree,
-  Play,
   Pencil,
 } from "lucide-react";
 import { EditorScene } from "../../three/editor/EditorScene";
 import { Crosshair as CrosshairHud } from "../Crosshair";
+import { PlayHud } from "./PlayHud";
 import { useRegisterAssistant } from "../../ai/AssistantSurface";
 import { buildEditorTools, editorSystemPrompt } from "../../ai/editorTools";
 import { requestPattern } from "../../ai/imageClient";
@@ -46,6 +46,7 @@ import { PlaygroundPanel } from "./PlaygroundPanel";
 import { WardrobePanel } from "./WardrobePanel";
 import { WeaponLibraryPanel } from "./WeaponLibraryPanel";
 import { HierarchyPanel } from "./HierarchyPanel";
+import { onDressingPanelRequest } from "../toolbox/tools";
 import { DockSurface, ToolMenubar, Tip, TipProvider, useDockLayout } from "../dock";
 import type { DockPanelDef, DockPanelMeta, ToolMenu } from "../dock";
 import "./editor.css";
@@ -121,14 +122,24 @@ export function EditorMode({ onExit, initialScene }: Props) {
 
   const { layout, controls } = useDockLayout("animator.dressing-room.dock.v1", PANEL_METAS);
 
+  // Toolbox launches targeting a Dressing Room panel: surface it. A request
+  // fired before this mode mounted is buffered by the bus and delivered on
+  // subscribe; live requests (already in this mode) arrive immediately.
+  useEffect(
+    () => onDressingPanelRequest((id) => controls.showPanel(id)),
+    [controls],
+  );
+
   useEffect(() => {
     if (!mountRef.current) return;
     const engine = new EditorScene(mountRef.current, setSnap);
     engineRef.current = engine;
     // Reopening a saved scene takes precedence; otherwise drop a default rig in
     // so the Dressing Room opens with a character already on the stand.
+    // Default stand: grudge6 Toon RTS only (loadGrudge6CombatRig via GrudgeAvatar).
+    // Never boot Mixamo Explorer — that path left wireframe sludge on the pedestal.
     if (initialScene) engine.importJSON(initialScene);
-    else void engine.loadRig();
+    else void engine.loadGrudgeCharacter("western-kingdoms", "warrior");
     return () => {
       engine.dispose();
       engineRef.current = null;
@@ -284,10 +295,10 @@ export function EditorMode({ onExit, initialScene }: Props) {
   useRegisterAssistant(
     {
       surface: "editor",
-      title: "Dressing Room Assistant",
+      title: "Dressing Room Admin",
       tools: aiTools,
       getSystemPrompt: () => editorSystemPrompt(snap),
-      placeholder: "Load a rig, recolor it red, play a clip…",
+      placeholder: "Create an attack anim, play walk, load sword rig, ground feet…",
     },
     [aiTools, snap],
   );
@@ -412,6 +423,8 @@ export function EditorMode({ onExit, initialScene }: Props) {
       {/* Play-mode reticle: shown while a character is being driven; B toggles FP. */}
       <CrosshairHud visible={!!snap?.playing} firstPerson={!!snap?.firstPerson} />
 
+      {/* Play-mode game HUD: vitals + the driven character's weapon-skill bar. */}
+      <PlayHud hud={snap?.playing ? snap.playHud : null} />
 
       <TipProvider>
         <div className="ed-root">
@@ -425,17 +438,6 @@ export function EditorMode({ onExit, initialScene }: Props) {
               menus={menus}
               right={
                 <>
-                  {eng && (
-                    <Tip label={snap?.playing ? "Back to Edit mode" : "Play mode — drive the character (WASD, mouse-look)"}>
-                      <button
-                        className={`ed-btn mode-toggle ${snap?.playing ? "playing" : ""}`}
-                        onClick={() => (snap?.playing ? eng.stopPlay() : eng.startPlay())}
-                      >
-                        {snap?.playing ? <Pencil size={14} /> : <Play size={14} />}
-                        {snap?.playing ? "Edit" : "Play"}
-                      </button>
-                    </Tip>
-                  )}
                   <PostToGallery kind="scene" getPayload={getScenePayload} defaultName="My Character" label="⭱ Post" className="ed-btn" />
                   <Tip label="Exit the Dressing Room">
                     <button className="ed-btn icon" onClick={onExit}>
@@ -447,6 +449,78 @@ export function EditorMode({ onExit, initialScene }: Props) {
             />
           </div>
 
+          {eng && snap && (
+            <div className="ed-mode-cluster" role="toolbar" aria-label="Edit and movement">
+              <div className="ed-mode-cluster-row">
+                <button
+                  type="button"
+                  className={`ed-mode-btn edit ${!snap.playing ? "on" : ""}`}
+                  title="Edit — pose, dress, import (exits Play)"
+                  onClick={() => {
+                    if (snap.playing) eng.stopPlay();
+                    eng.setBuildKind(null);
+                    eng.setGizmoMode("translate");
+                  }}
+                >
+                  <Pencil size={15} />
+                  <span>Edit</span>
+                </button>
+                <button
+                  type="button"
+                  className={`ed-mode-btn move ${snap.playing ? "on" : ""}`}
+                  title="Play / Move — WASD, mouse-look, skills"
+                  onClick={() => {
+                    if (snap.playing) eng.stopPlay();
+                    else eng.startPlay();
+                  }}
+                >
+                  <Gamepad2 size={15} />
+                  <span>{snap.playing ? "Stop" : "Play"}</span>
+                </button>
+              </div>
+              <div className="ed-mode-cluster-row">
+                <button
+                  type="button"
+                  className={`ed-mode-btn gizmo ${snap.gizmo === "translate" && !snap.playing ? "on" : ""}`}
+                  disabled={snap.playing}
+                  title="Move gizmo (W)"
+                  onClick={() => {
+                    eng.setBuildKind(null);
+                    eng.setGizmoMode("translate");
+                  }}
+                >
+                  <Move size={14} />
+                  <span>W</span>
+                </button>
+                <button
+                  type="button"
+                  className={`ed-mode-btn gizmo ${snap.gizmo === "rotate" && !snap.playing ? "on" : ""}`}
+                  disabled={snap.playing}
+                  title="Rotate gizmo (E)"
+                  onClick={() => {
+                    eng.setBuildKind(null);
+                    eng.setGizmoMode("rotate");
+                  }}
+                >
+                  <RotateCw size={14} />
+                  <span>E</span>
+                </button>
+                <button
+                  type="button"
+                  className={`ed-mode-btn gizmo ${snap.gizmo === "scale" && !snap.playing ? "on" : ""}`}
+                  disabled={snap.playing}
+                  title="Scale gizmo (R)"
+                  onClick={() => {
+                    eng.setBuildKind(null);
+                    eng.setGizmoMode("scale");
+                  }}
+                >
+                  <Maximize size={14} />
+                  <span>R</span>
+                </button>
+              </div>
+            </div>
+          )}
           {eng && snap && (
             <div className="ed-toolrail">
               <span className="ed-rail-label">Tool</span>

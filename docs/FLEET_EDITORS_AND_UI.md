@@ -62,6 +62,20 @@ Runtime: `https://ui.grudge-studio.com/game-ui-runtime.js`
 Catalog: `https://ui.grudge-studio.com/game-ui-packs/index.json`  
 Textures: `https://ui.grudge-studio.com/assets/craftpix/**` (+ CDN `assets.grudge-studio.com/ui/…`).
 
+### Mobile touch chrome (Kenney)
+
+Do **not** invent a second stick HUD. Open `TouchControls` is the in-game pad. Kenney Mobile Controls 1.0 (CC0) skins it.
+
+| Item | Path |
+|------|------|
+| CDN | `https://assets.grudge-studio.com/ui/kenney/mobile-controls-1/` |
+| Catalog | `…/catalog.json` |
+| Prefabs | `…/prefabs.json` (`open-touch-mmo`, `warlords-combat`, `harvest-gather`, `vehicle-drive`, `menu-systems`, `social-talk`) |
+| Open helper | `artifacts/animator/src/lib/kenneyMobile.ts` |
+| Open pad | `artifacts/animator/src/components/TouchControls.tsx` |
+
+Desktop CraftPix / HYDRA layouts stay. Touch prefabs cover move, look, jump, block, parry, dodge, sprint, crouch, harvest/combat, skills, attack, focus, bag, systems, build, plus menu/talk/drive widgets.
+
 ---
 
 ## Open product map (related create tools)

@@ -16,4 +16,6 @@ export * from "./terrain";
 export * from "./catalog";
 export * from "./convert";
 export * from "./seedWorld";
+export * from "./seedTerrain";
+export * from "./shaderLabCave";
 export * from "./mapAssetScale";

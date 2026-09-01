@@ -89,6 +89,9 @@ export class HtmlOverlaySystem {
   private enabled = true;
 
   constructor(container: HTMLElement, scene: THREE.Scene, camera: THREE.Camera) {
+    if (!camera) {
+      throw new Error("HtmlOverlaySystem requires a THREE.Camera (was undefined — init order bug)");
+    }
     this.container = container;
     this.scene = scene;
     this.camera = camera;
@@ -97,6 +100,15 @@ export class HtmlOverlaySystem {
     this.root = document.createElement("div");
     this.root.className = "gxo-root";
     this.root.setAttribute("aria-hidden", "true");
+    // 2D Gore UI pack — frames/gauges for damage popup chrome + blood layer
+    try {
+      // Lazy import path avoids circular deps in tests
+      void import("../../lib/goreUiCatalog").then(({ applyGoreUiTheme }) => {
+        applyGoreUiTheme(this.root, "gore");
+      });
+    } catch {
+      /* optional theme */
+    }
 
     this.renderer = new CSS2DRenderer({ element: this.root });
     this.renderer.domElement.style.position = "absolute";
@@ -132,13 +144,13 @@ export class HtmlOverlaySystem {
 
   /** Call after WebGL render each frame. */
   render() {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.camera) return;
     this.renderer.render(this.scene, this.camera);
   }
 
   /** Animate floats / blood / distance-cull labels. */
   update(dt: number) {
-    if (!this.enabled) return;
+    if (!this.enabled || !this.camera) return;
     for (const f of this.floats) {
       if (!f.active) continue;
       f.age += dt;

@@ -25,8 +25,15 @@ export const STATE_REPORT_MS = 50;
 /** A player with no traffic for this long is dropped as stale/disconnected. */
 export const PLAYER_TIMEOUT_MS = 15000;
 
-/** Max players per room. */
+/** Default / maximum players for an ad-hoc, player-created room. */
 export const MAX_PLAYERS = 8;
+
+/**
+ * Capacity of the always-on "official" lobbies (see {@link PERSISTENT_ROOMS}).
+ * Kept smaller than the ad-hoc ceiling so a duel/co-op session in one of the
+ * permanent arenas stays tight (4-up).
+ */
+export const PERSISTENT_ROOM_MAX_PLAYERS = 4;
 
 // ── Server-authoritative PvP duel rules ──────────────────────────────────────
 // In PvP rooms the server owns each player's HP and validates every hit (the
@@ -56,6 +63,46 @@ export const PVP_AVOID_COOLDOWN_MS = 450;
 /** Room rules. */
 export type RoomMode = "coop" | "pvp";
 export type RoomVisibility = "public" | "private";
+
+/**
+ * Spec for an always-on "official" lobby that the server seeds at startup and
+ * never reaps when empty (an ad-hoc room is deleted the moment its last player
+ * leaves). These give the lobby a stable set of rooms players can always drop
+ * into. Pure data so both the server (which builds the rooms) and the client
+ * (which can label them) share one source of truth.
+ */
+export interface PersistentRoomSpec {
+  /** Stable, human-stable room code (also the join code). */
+  code: string;
+  /** Display name shown in the lobby. */
+  name: string;
+  mode: RoomMode;
+  /** Training-environment preset id this lobby always renders. */
+  preset: string;
+  /** Capacity for this lobby. */
+  maxPlayers: number;
+}
+
+/**
+ * The official always-on lobbies. The named "Danger Room" (co-op holo training)
+ * and "Colosseum" (PvP stone arena) each cap at {@link PERSISTENT_ROOM_MAX_PLAYERS}.
+ */
+export const PERSISTENT_ROOMS: readonly PersistentRoomSpec[] = [
+  {
+    code: "DANGER",
+    name: "Danger Room",
+    mode: "coop",
+    preset: "holo",
+    maxPlayers: PERSISTENT_ROOM_MAX_PLAYERS,
+  },
+  {
+    code: "ARENA",
+    name: "Colosseum",
+    mode: "pvp",
+    preset: "colosseum",
+    maxPlayers: PERSISTENT_ROOM_MAX_PLAYERS,
+  },
+];
 
 /**
  * Coarse defensive stance a client reports each tick. The server can't re-run
@@ -168,4 +215,6 @@ export interface PublicRoomInfo {
   players: number;
   maxPlayers: number;
   hostName: string;
+  /** True for an always-on official lobby (see {@link PERSISTENT_ROOMS}). */
+  persistent: boolean;
 }

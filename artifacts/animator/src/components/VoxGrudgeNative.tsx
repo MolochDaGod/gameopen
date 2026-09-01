@@ -61,6 +61,14 @@ export function VoxGrudgeNative({ onExit }: Props) {
     try {
       editor = new VoxelEditor(container);
       editorRef.current = editor;
+      // Shell stage is shorter than full viewport — force a resize after layout
+      requestAnimationFrame(() => {
+        try {
+          window.dispatchEvent(new Event("resize"));
+        } catch {
+          /* ignore */
+        }
+      });
       // Default: Amida farm/camp (fields + fence + camp) with codex-mapped terrain
       void editor.applyAmidaFarmLayout({ scatterGlb: true, resolveCodex: true }).then((r) => {
         if (cancelled) return;
@@ -192,11 +200,11 @@ export function VoxGrudgeNative({ onExit }: Props) {
   const inWorldCount = peers.length + 1; // +1 for self
 
   return (
-    <div style={wrap}>
-      {/* Full-screen VoxelEditor container */}
+    <div className="shell-stage" style={wrap} data-surface="voxgrudge-lab">
+      {/* Canvas fills stage BELOW shell steam bar (never under header) */}
       <div ref={containerRef} style={editorContainer} />
 
-      {/* ── top bar ── */}
+      {/* ── surface chrome (Amida / roads / leave) — clears Open header ── */}
       <div style={topBar}>
         <div style={brandBlock}>
           <span style={brandVox}>VOX</span>
@@ -272,8 +280,7 @@ export function VoxGrudgeNative({ onExit }: Props) {
 // ── styles ────────────────────────────────────────────────────────────────────
 
 const wrap: CSSProperties = {
-  position: "fixed",
-  inset: 0,
+  /* position/top/left/right/bottom from .shell-stage — clears Open steam header */
   background: "#040810",
   userSelect: "none",
   fontFamily: "Inter, system-ui, sans-serif",
@@ -285,6 +292,7 @@ const editorContainer: CSSProperties = {
   width: "100%",
   height: "100%",
   overflow: "hidden",
+  zIndex: 0,
 };
 
 const topBar: CSSProperties = {
@@ -292,15 +300,18 @@ const topBar: CSSProperties = {
   top: 10,
   left: 14,
   right: 14,
-  zIndex: 10,
+  /* Above canvas; shell-steam-bar stays higher (720) and sits above this stage */
+  zIndex: 40,
   display: "flex",
   alignItems: "center",
-  gap: 14,
+  gap: 10,
+  flexWrap: "wrap",
   padding: "8px 12px",
   borderRadius: 10,
-  background: "rgba(4,8,16,0.82)",
+  background: "rgba(4,8,16,0.88)",
   border: "1px solid rgba(95,224,255,0.22)",
   pointerEvents: "auto",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
 };
 
 const brandBlock: CSSProperties = {
@@ -402,11 +413,14 @@ const hintBar: CSSProperties = {
   bottom: 12,
   left: "50%",
   transform: "translateX(-50%)",
-  zIndex: 10,
+  zIndex: 40,
   fontSize: 11,
   color: "#9fb8da",
-  opacity: 0.6,
+  opacity: 0.75,
   pointerEvents: "none",
   textAlign: "center",
   whiteSpace: "nowrap",
+  maxWidth: "min(920px, 94vw)",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
 };

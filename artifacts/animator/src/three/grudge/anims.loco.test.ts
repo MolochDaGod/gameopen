@@ -40,26 +40,31 @@ describe("grudge6 locomotion pack SSOT", () => {
     }
   });
 
-  it("polearm uses standing walk + torch run cycles (not 5s full takes)", () => {
+  it("polearm uses standing walk + locomotion/run_forward (not 5s full takes)", () => {
     expect(ANIM_PACK_CLIPS.polearm.walk).toBe("magic/Standing Walk Forward");
-    expect(ANIM_PACK_CLIPS.polearm.run).toBe(
-      "uploads_2026_06/locomotion/torch run forward",
-    );
+    expect(ANIM_PACK_CLIPS.polearm.run).toBe("locomotion/run_forward");
   });
 
-  it("samurai pack is choosable and uses greatsword_samurai production bake", () => {
+  it("samurai pack uses greatsword_samurai sword stance (1H + 2H SSOT)", () => {
     expect(ANIM_PACK_CLIPS.samurai).toBeTruthy();
     expect(ANIM_PACK_CLIPS.samurai.attack).toBe("greatsword_samurai/gs_samurai_combo_a");
     expect(ANIM_PACK_CLIPS.samurai.run).toContain("gs_samurai_run");
     expect(ANIM_PACK_CLIPS.samurai.idle).toContain("gs_samurai_idle");
     expect(ANIM_PACK_CLIPS.samurai.extras?.length).toBeGreaterThan(6);
-    expect(ANIM_PACK_CLIPS.samurai.extras).toContain("polearm/special");
+    expect(ANIM_PACK_CLIPS.samurai.extras).toContain("ghost_rider/quakesmash");
   });
 
-  it("uses torch run forward for unarmed (arena parity)", () => {
-    expect(ANIM_PACK_CLIPS.unarmed.run).toBe(
-      "uploads_2026_06/locomotion/torch run forward",
-    );
+  it("1H sword_shield uses samurai sword clips not thin arena run", () => {
+    expect(ANIM_PACK_CLIPS.sword_shield.idle).toContain("gs_samurai_idle_sword");
+    expect(ANIM_PACK_CLIPS.sword_shield.attack).toContain("gs_samurai_combo");
+    expect(ANIM_PACK_CLIPS.sword_shield.run).not.toBe("sword_shield/sword and shield run");
+    expect(isBannedLocomotionClip("sword_shield/sword and shield run")).toBe(true);
+    expect(ANIM_PACK_CLIPS.sword_shield.extras).toContain("dual_wield/sword_dash_attack");
+    expect(ANIM_PACK_CLIPS.sword_shield.extras).toContain("ghost_rider/quakesmash");
+  });
+
+  it("unarmed uses locomotion/run_forward cycle", () => {
+    expect(ANIM_PACK_CLIPS.unarmed.run).toBe("locomotion/run_forward");
   });
 
   it("includes polearm pack for spear/2H (Madarame bake)", () => {

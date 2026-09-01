@@ -1,0 +1,22 @@
+{
+  "id": "itm_back_quiver",
+  "kind": "back",
+  "name": "Quiver",
+  "description": "Ranged tempo. Hits can proc Haste.",
+  "rarity": "common",
+  "maxStack": 1,
+  "sellValue": 20,
+  "tags": [
+    "back",
+    "passive",
+    "toon"
+  ],
+  "icon": {
+    "path": "icons/pack/weapons/Bow_01.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Bow_01.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "equipSlot": "back",
+  "recipeId": "rcp_back_quiver"
+}

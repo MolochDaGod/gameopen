@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-raw\\lowpoly_rhino.glb",
+  "output": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\lowpoly_rhino.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 29,
+    "materials": 1,
+    "textures": 1,
+    "animations": 5,
+    "nodes": 72,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.6367642283439636,
+      -0.5584041476249695,
+      -0.9204539656639099
+    ],
+    "max": [
+      0.6367642283439636,
+      1.0915958881378174,
+      0.7866933941841125
+    ],
+    "size": [
+      1.2735284566879272,
+      1.6500000357627869,
+      1.7071473598480225
+    ],
+    "bodyOnly": false
+  },
+  "collider": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\lowpoly_rhino.collider.json",
+  "producedAt": "2026-08-04T07:12:30.861Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}

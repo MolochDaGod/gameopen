@@ -1,0 +1,48 @@
+{
+  "id": "bck_bag",
+  "itemId": "itm_back_bag",
+  "runtimeId": "back_bag",
+  "equipId": "back:bag",
+  "slot": "back",
+  "family": "toon",
+  "label": "Traveler's Bag",
+  "effect": "Carry absorb ward",
+  "useKind": "passive",
+  "useKey": null,
+  "useHint": "Toon Xtra_bag",
+  "domains": [
+    "utility"
+  ],
+  "status": "coded",
+  "assets": {
+    "toonMesh": "Xtra_bag"
+  },
+  "passive": {
+    "aura": "absorb",
+    "bonuses": {
+      "extraInventory": 1,
+      "defense": 3
+    }
+  },
+  "tags": [
+    "back",
+    "toon",
+    "passive",
+    "coded"
+  ],
+  "ship": true,
+  "readiness": {
+    "data": "ready",
+    "mesh": "ready",
+    "combat": "ready",
+    "present": "ready",
+    "icon": "ready"
+  },
+  "icon": {
+    "path": "icons/pack/misc/Effect.png",
+    "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
+    "source": "r2-pack",
+    "status": "ready"
+  },
+  "recipeId": "rcp_back_bag"
+}

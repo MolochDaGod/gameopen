@@ -1,8 +1,10 @@
-// Vendored Grudge character-kit — framework-agnostic (three only) helpers and
-// data for spawning the equipment-driven Toon_RTS character inside the Animator.
-// The Animator forbids `@workspace` imports, so this is a local copy of the
-// grudge-game character-kit; keep the DATA (RACE_ASSETS, RACE_GEAR_PRESETS) in
-// lockstep with the source if it ever changes.
+/**
+ * Grudge6 kit — ONE production path only:
+ *   loadGrudge6CombatRig(race, preset, opts)  ← mesh + equip + atlas + SI + anims
+ *   GrudgeAvatar → same
+ *
+ * PURGED: 30characters.glb, bakedRoster static heroes, Mixamo fallback for races.
+ */
 
 export {
   setAssetBase,
@@ -16,7 +18,54 @@ export type { RaceId, RaceAsset } from "./raceAssets";
 export { RACE_ASSETS, RACE_IDS } from "./raceAssets";
 
 export type { GearPreset, PresetId } from "./gearPresets";
-export { RACE_GEAR_PRESETS, PRESET_IDS, getPreset } from "./gearPresets";
+export {
+  RACE_GEAR_PRESETS,
+  PRESET_IDS,
+  getPreset,
+  classItemForPreset,
+  collectKitSlotMeshes,
+  currentKitSlotMesh,
+  cycleKitSlot,
+  applyBackTemplateToMeshIds,
+  isKitBackMesh,
+} from "./gearPresets";
+export type { KitPanelSlot } from "./gearPresets";
+export {
+  TOON_WARDROBE,
+  TOON_RELICS,
+  TOON_CLASS_ITEMS,
+  TOON_RINGS,
+  META_EQUIP_LABEL,
+  UMMORPG_PLAYER_SLOTS,
+  UMMORPG_SLOT_TO_KIT,
+  reconcileKitLimbs,
+  reconcileKitLoadout,
+  bodyLimbCover,
+  kitSlotGate,
+  kitWeaponFamily,
+  arsenalIdFromKitWeapon,
+} from "./toonKitCoverage";
+export {
+  resolveSlotEffects,
+  effectForEquipId,
+  slotEffectLines,
+  classIdFromMeshIds,
+  classTreeIdFromMeshIds,
+  RELIC_SLOT_EFFECTS,
+  CLASS_ITEM_EFFECTS,
+  BACK_SLOT_EFFECTS,
+} from "./slotEffects";
+export type { SlotEffectSpec, SlotEffectKind } from "./slotEffects";
+
+export type { GrudgePlaytestEntry } from "./playtestRoster";
+export {
+  GRUDGE6_PLAYTEST_ROSTER,
+  GRUDGE6_RACE_DEFAULTS,
+  DEFAULT_PLAYTEST_PRESET,
+  buildGrudge6PlaytestRoster,
+  grudge6PlaytestByRace,
+  isGrudge6PlaytestId,
+} from "./playtestRoster";
 
 export type { AnimPack, LoadoutClips } from "./anims";
 export {
@@ -39,6 +88,7 @@ export {
   isBadLocoClipName,
   isUnsuitableLocoCycle,
   bakedClipUrl,
+  resolveBakeRel,
   toRotationOnlyClip,
   loadBakedClip,
 } from "./anims";
@@ -76,14 +126,30 @@ export {
   familyFromWeaponId,
   familyFromAnimPack,
   skillPackForFamily,
+  skillPackForWeaponId,
+  skillBakedRole,
+  MAGIC_SKILLS,
   SAMURAI_2H_SKILLS,
+  GUN_SKILLS,
+  SWORD_SKILLS,
 } from "./weaponSkillPacks";
+export {
+  skillPackForStaffWeaponId,
+  castingElementToFleetRows,
+  CASTING_ELEMENT_PHASE_VFX,
+  STAFF_FIRE_SKILLS,
+  STAFF_WATER_SKILLS,
+  STAFF_EARTH_SKILLS,
+  STAFF_WIND_SKILLS,
+  STAFF_ARCANE_SKILLS,
+} from "./castingElementSkills";
 export {
   powerOfTenScale,
   normalizeBoneKey,
   buildBoneNameLookup,
   rematchClipToSkeleton,
   unifySkeletons,
+  boneTreeRoot,
   findHandBone,
 } from "./skeleton";
 
@@ -130,6 +196,7 @@ export {
   reGroundAfterAnimSample,
   diagnoseCharacterLook,
   sampleClipAndReground,
+  liftForClipFootClearance,
   findDeployModel,
   validateCharacterDeploy,
   findPelvisBone,

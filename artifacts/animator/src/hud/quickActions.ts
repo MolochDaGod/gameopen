@@ -5,11 +5,13 @@
 // Keybind SSOT (Danger Room / Open combat):
 //   Hold Q = mode radial (↑ combat · ↓ harvest) · tap Q toggles combat↔harvest
 //   Shift+Q = swap main ↔ side arm (combat only)
-//   Hold R (harvest) = tool radial · combat R = heavy
+//   Hold R (harvest) = tool radial (professions · farm · shovel · back slot/effects)
+//   combat R = heavy
+//   Harvest F = nearest node of tool in hand · combat F / 1–4 = skills
 //   J / H / V = bag utility (consumable / deployable / mount)
 //   RMB = toggle hard FOCUS (face+lock) / soft lock
 //   LMB = attack/combo in FOCUS · select target in soft lock
-//   C = parry · X = roll · E = forcefield guard · F / 1–4 skills
+//   C = parry · X = roll · E = forcefield guard
 
 import type { IconName } from "../three/icons";
 
@@ -132,14 +134,14 @@ export function clampQuickSlots(raw: unknown): QuickSlots {
 
 /** Short footer legend used by Hud / mode chip (always matches Studio keys). */
 export const COMBAT_KEY_LEGEND =
-  "Hold Q mode · J/H/V bag · RMB focus · LMB atk · X roll · C parry · E guard · F/1–4 · F8 free mouse · P prod";
+  "Q mode · RMB focus · LMB atk · X roll · C parry · E guard · F/1–4 · F8 free mouse · F1 help";
 
 export const COMBAT_KEY_CHIPS: readonly string[] = [
-  "Hold Q: Mode",
-  "J/H/V: Bag use",
+  "Q: Mode",
   "RMB: Focus",
-  "LMB: Atk / Select",
+  "LMB: Atk",
   "X: Roll",
   "C: Parry",
-  "R: Heavy",
+  "E: Guard",
+  "F1: Help",
 ];

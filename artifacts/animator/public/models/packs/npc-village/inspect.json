@@ -1,0 +1,382 @@
+{
+  "pack": "npc-village",
+  "source": "minecraft_world_npc_village.glb",
+  "bytes": 9597104,
+  "meshCount": 28,
+  "nodeCount": 30,
+  "uniqueStems": [
+    "Object_10",
+    "Object_11",
+    "Object_12",
+    "Object_13",
+    "Object_14",
+    "Object_15",
+    "Object_16",
+    "Object_17",
+    "Object_18",
+    "Object_19",
+    "Object_2",
+    "Object_20",
+    "Object_21",
+    "Object_22",
+    "Object_23",
+    "Object_24",
+    "Object_25",
+    "Object_26",
+    "Object_27",
+    "Object_28",
+    "Object_29",
+    "Object_3",
+    "Object_4",
+    "Object_5",
+    "Object_6",
+    "Object_7",
+    "Object_8",
+    "Object_9"
+  ],
+  "stemCount": 28,
+  "images": [
+    "Image_0",
+    "Image_1"
+  ],
+  "meshes": [
+    {
+      "name": "Object_10",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 156,
+      "polys": 78,
+      "materials": [
+        "Farmland"
+      ],
+      "xz": 0.538,
+      "y": 0.385
+    },
+    {
+      "name": "Object_11",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 65532,
+      "polys": 32766,
+      "materials": [
+        "Fence"
+      ],
+      "xz": 8.558,
+      "y": 6.635
+    },
+    {
+      "name": "Object_12",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 1828,
+      "polys": 914,
+      "materials": [
+        "Fence"
+      ],
+      "xz": 0.077,
+      "y": 1.231
+    },
+    {
+      "name": "Object_13",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 32,
+      "polys": 16,
+      "materials": [
+        "Furnace"
+      ],
+      "xz": 4.385,
+      "y": 3.923
+    },
+    {
+      "name": "Object_14",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 2760,
+      "polys": 1380,
+      "materials": [
+        "Glass_Pane"
+      ],
+      "xz": 9.351,
+      "y": 5.933
+    },
+    {
+      "name": "Object_15",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 54955,
+      "polys": 38736,
+      "materials": [
+        "Grass_Block"
+      ],
+      "xz": 10.308,
+      "y": 7.154
+    },
+    {
+      "name": "Object_16",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 9956,
+      "polys": 4978,
+      "materials": [
+        "Gravel"
+      ],
+      "xz": 8.0,
+      "y": 5.231
+    },
+    {
+      "name": "Object_17",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 48,
+      "polys": 24,
+      "materials": [
+        "Iron_Bars"
+      ],
+      "xz": 4.01,
+      "y": 3.813
+    },
+    {
+      "name": "Object_18",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 336,
+      "polys": 168,
+      "materials": [
+        "Ladder"
+      ],
+      "xz": 8.615,
+      "y": 4.24
+    },
+    {
+      "name": "Object_19",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 2256,
+      "polys": 1128,
+      "materials": [
+        "Oak_Door"
+      ],
+      "xz": 8.029,
+      "y": 5.923
+    },
+    {
+      "name": "Object_2",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 168,
+      "polys": 84,
+      "materials": [
+        "Anvil"
+      ],
+      "xz": 4.529,
+      "y": 3.913
+    },
+    {
+      "name": "Object_20",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 6240,
+      "polys": 3120,
+      "materials": [
+        "Oak_Log"
+      ],
+      "xz": 9.154,
+      "y": 5.923
+    },
+    {
+      "name": "Object_21",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 20888,
+      "polys": 10444,
+      "materials": [
+        "Oak_Planks"
+      ],
+      "xz": 9.308,
+      "y": 6.0
+    },
+    {
+      "name": "Object_22",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 504,
+      "polys": 252,
+      "materials": [
+        "Oak_Pressure_Plate"
+      ],
+      "xz": 8.606,
+      "y": 5.683
+    },
+    {
+      "name": "Object_23",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 23939,
+      "polys": 12160,
+      "materials": [
+        "Oak_Stairs"
+      ],
+      "xz": 9.385,
+      "y": 6.077
+    },
+    {
+      "name": "Object_24",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 12,
+      "polys": 6,
+      "materials": [
+        "Sand"
+      ],
+      "xz": 0.077,
+      "y": 0.077
+    },
+    {
+      "name": "Object_25",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 16,
+      "polys": 8,
+      "materials": [
+        "Stationary_Lava"
+      ],
+      "xz": 4.154,
+      "y": 4.0
+    },
+    {
+      "name": "Object_26",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 144,
+      "polys": 72,
+      "materials": [
+        "Stationary_Water"
+      ],
+      "xz": 4.538,
+      "y": 1.615
+    },
+    {
+      "name": "Object_27",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 720,
+      "polys": 360,
+      "materials": [
+        "Stone_Slab"
+      ],
+      "xz": 5.077,
+      "y": 4.615
+    },
+    {
+      "name": "Object_28",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 984,
+      "polys": 492,
+      "materials": [
+        "Torch"
+      ],
+      "xz": 9.038,
+      "y": 5.787
+    },
+    {
+      "name": "Object_29",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 832,
+      "polys": 416,
+      "materials": [
+        "Wheat"
+      ],
+      "xz": 0.538,
+      "y": 0.385
+    },
+    {
+      "name": "Object_3",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 336,
+      "polys": 168,
+      "materials": [
+        "Bookshelf"
+      ],
+      "xz": 8.769,
+      "y": 4.846
+    },
+    {
+      "name": "Object_4",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 96,
+      "polys": 48,
+      "materials": [
+        "Chest"
+      ],
+      "xz": 4.308,
+      "y": 4.144
+    },
+    {
+      "name": "Object_5",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 24580,
+      "polys": 12290,
+      "materials": [
+        "Cobblestone"
+      ],
+      "xz": 9.538,
+      "y": 6.077
+    },
+    {
+      "name": "Object_6",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 1576,
+      "polys": 834,
+      "materials": [
+        "Cobblestone_Stairs"
+      ],
+      "xz": 9.231,
+      "y": 5.0
+    },
+    {
+      "name": "Object_7",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "Crafting_Table"
+      ],
+      "xz": 8.308,
+      "y": 4.846
+    },
+    {
+      "name": "Object_8",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 5965,
+      "polys": 4014,
+      "materials": [
+        "Dirt"
+      ],
+      "xz": 9.538,
+      "y": 6.692
+    },
+    {
+      "name": "Object_9",
+      "parent": "Mineways2Skfb.obj.minecraft.cleaner.materialmerger.gles",
+      "verts": 432,
+      "polys": 216,
+      "materials": [
+        "Double_Stone_Slab"
+      ],
+      "xz": 5.769,
+      "y": 5.615
+    }
+  ],
+  "meshNames": [
+    "Object_10",
+    "Object_11",
+    "Object_12",
+    "Object_13",
+    "Object_14",
+    "Object_15",
+    "Object_16",
+    "Object_17",
+    "Object_18",
+    "Object_19",
+    "Object_2",
+    "Object_20",
+    "Object_21",
+    "Object_22",
+    "Object_23",
+    "Object_24",
+    "Object_25",
+    "Object_26",
+    "Object_27",
+    "Object_28",
+    "Object_29",
+    "Object_3",
+    "Object_4",
+    "Object_5",
+    "Object_6",
+    "Object_7",
+    "Object_8",
+    "Object_9"
+  ]
+}

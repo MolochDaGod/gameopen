@@ -23,7 +23,16 @@ artifacts/animator/public/models/worlds/**/*.glb
 
 
 reports/
-
+tmp/
+**/tmp/
+tmp/**/*
+backups/
+**/backups/
+.playwright-mcp/
+**/.playwright-mcp/
+*.local.json
+.env.deploy
+.env.production.local
 
 # Road pack binary — R2 only
 artifacts/animator/public/models/packs/*.glb
@@ -50,3 +59,18 @@ artifacts/animator/public/models/battle/**/*.glb
 artifacts/animator/public/models/cinema/stylized-pirate-ship.glb
 artifacts/animator/public/models/creatures/ocean/mutant-stingray.glb
 
+.env*
+
+# ── Authoring dumps — never git / never Open production (bake → R2 /anims/baked) ──
+_anim_pack_stage/
+**/_anim_pack_stage/
+artifacts/animator/public/anim/ghostrider/
+artifacts/animator/public/anim/creator-glb/
+artifacts/animator/public/anim/loco-8way/
+artifacts/animator/public/anim/action-adventure/
+artifacts/animator/public/anim/loco/
+# Broken skin / temp
+**/*.broken*
+**/*.broken-skin.bak
+artifacts/animator/public/models/enemies/werelephant.glb
+artifacts/animator/public/models/towns/

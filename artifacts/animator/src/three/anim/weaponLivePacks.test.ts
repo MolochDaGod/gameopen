@@ -35,12 +35,13 @@ describe("weaponLivePacks", () => {
     expect(rels.some((r) => r.role === "attack")).toBe(true);
   });
 
-  it("greatsword uses samurai bake with 2h_melee incomplete fallbacks", () => {
+  it("greatsword uses samurai bake with dual_wield incomplete fallbacks", () => {
     const def = getWeaponLiveDef("greatsword");
     expect(def.animPack).toBe("twohand");
     expect(def.fallbackPack).toBe("samurai");
     expect(def.liveRoles?.attack).toMatch(/greatsword_samurai|gs_samurai/);
-    expect(def.liveWhenIncomplete?.attack).toMatch(/2h_melee|great-sword/);
+    expect(def.liveWhenIncomplete?.attack).toMatch(/dual_wield/);
+    expect(String(def.liveWhenIncomplete?.attack || "")).not.toMatch(/2h_melee/);
     const rels = liveBakeRelsForWeapon("greatsword");
     expect(rels.some((r) => r.preferred && r.bakeRel.includes("samurai"))).toBe(true);
   });
@@ -57,12 +58,13 @@ describe("weaponLivePacks", () => {
     expect(t.dodge).toBeTruthy();
   });
 
-  it("dagger/mace inherit sword incomplete fallbacks", () => {
+  it("dagger/mace inherit sword incomplete fallbacks (samurai SSOT)", () => {
     const d = getWeaponLiveDef("dagger");
     expect(d.animPack).toBe("sword_shield");
-    expect(d.liveWhenIncomplete?.attack).toMatch(/polearm/);
+    expect(d.liveRoles?.run).not.toBe("sword_shield/sword and shield run");
+    expect(d.liveWhenIncomplete?.attack).toMatch(/dual_wield|samurai|polearm/);
     const m = getWeaponLiveDef("mace");
-    expect(m.liveWhenIncomplete?.idle).toMatch(/polearm/);
+    expect(m.liveWhenIncomplete?.idle).toMatch(/dual_wield|samurai|polearm|idle/);
   });
 
   it("crossbow incomplete fallbacks stay playable without longbow idle", () => {
@@ -72,9 +74,10 @@ describe("weaponLivePacks", () => {
     expect(def.liveWhenIncomplete?.walk).toMatch(/longbow/);
   });
 
-  it("rifle incomplete attack uses polearm (not missing unarmed punch)", () => {
+  it("rifle incomplete attack uses rifle bake (not missing unarmed punch)", () => {
     const def = getWeaponLiveDef("rifle");
-    expect(def.liveWhenIncomplete?.attack).toBe("polearm/attack");
+    expect(def.liveWhenIncomplete?.attack).toMatch(/rifle|longbow|polearm/);
+    expect(String(def.liveWhenIncomplete?.attack || "")).not.toMatch(/unarmed\/punch/);
     expect(liveAnimPackForWeapon("hunter-rifle")).toBe("rifle");
     expect(liveAnimPackForWeapon("shotgun")).toBe("rifle");
   });

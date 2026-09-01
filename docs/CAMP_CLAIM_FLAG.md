@@ -9,12 +9,15 @@ Planting the **claim flag** (Pirate Claim Flag / territory marker) grants **buil
 | Page | Role |
 |------|------|
 | **Camp Skills** | Account/camp skills (logistics, fortify, muster, husbandry, drill) |
+| **Storage** | **Camp location inventory** (Albion) — RTS mats stay here; Send → home island bag |
 | **Farming** | Farm plots, wheat, windmill, market (Ultimate Fantasy RTS farm line) |
 | **Taming** | Creature pens / bond stable — profession XP carries to hero convert |
 | **Defensives** | Walls, wall towers, gates, watchtowers |
 | **Units** | RTS units from production buildings |
 | **Buildings** | Claim-gated stations + RTS halls; lists quick-craft as **excluded** |
 | **Upgrades** | Structure levels + `nodeUpgrades.json` tracks |
+
+**Fleet SSOT:** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) · bag detail [INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md) · `game/inventory/locationInventory.ts`.
 
 ## Build rights vs quick-craft
 

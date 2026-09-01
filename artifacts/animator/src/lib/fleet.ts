@@ -46,6 +46,8 @@ export const FLEET = {
    * Override: VITE_AI_URL · client helpers: lib/engineStack.ts · ai/aiGateway.ts
    */
   ai: "https://ai.grudge-studio.com",
+  /** Player account User-Pays FS + puter.site — never bag/roster SSOT */
+  puterSpace: "https://ai.grudge-studio.com/puter-space",
   /** Mine-Loader world API (1 replica). */
   mineLoaderApi: "https://mine-loader-api-production.up.railway.app",
   /** Canonical play host — multiplayer, maps, harvest, DRC + explorer avatar */
@@ -92,7 +94,11 @@ export function authApiUrl(path: string): string {
   return `${FLEET.auth.replace(/\/$/, "")}${p}`;
 }
 
-/** Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap + Open). */
+/**
+ * Fleet JWT storage keys — write all, read any (matches grudge-game-bootstrap + Open).
+ * Must stay equal to PROD_AUTH_TOKEN_KEYS in productionSystemsPattern.ts.
+ * AI / REST: use readProductionAuthToken() — do not invent a third key scanner.
+ */
 export const FLEET_TOKEN_KEYS = [
   /** Open SPA primary (grudgeAuth.ts) — AI hub must read this first */
   "grudge.open.token",

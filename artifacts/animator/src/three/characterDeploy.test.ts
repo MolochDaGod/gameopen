@@ -8,9 +8,10 @@ import {
   groundFeetLocal,
   ensureHumanScale,
   validateCharacterDeploy,
+  liftForClipFootClearance,
 } from "./characterDeploy";
 import { bodyBox } from "./fitCharacterHeight";
-import { stripPositionTracks } from "./clipTracks";
+import { stripPositionTracks, stripScaleTracks, stabilizeClipForMixer } from "./clipTracks";
 
 /**
  * Toy hero: Mesh (not incomplete SkinnedMesh) + Bip001 Pelvis bone.
@@ -96,6 +97,98 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     expect(Math.abs(box.min.y)).toBeLessThan(0.1);
   });
 
+  it("REGRESSION GUARD: ingest-fitted model skips SI fit on first and second deploy", () => {
+    // Model already has grudgeHeightFit=true (ingest converted metres at load time)
+    const { root } = makeBip001Hero({ height: 1.8, offsetY: 0, offsetX: 0.3 });
+    expect(root.userData.grudgeHeightFit).toBe(true); // Set by makeBip001Hero (ingest)
+    
+    const scaleX0 = root.scale.x;
+    const posX0 = root.position.x;
+    const posZ0 = root.position.z;
+    
+    // First deploy: ingest-fitted model must skip fitCharacterHeight (SI fit ingest-only)
+    const r1 = deployCharacterModel(root, { facePlusZ: false });
+    expect(r1.fit).toBeNull(); // No runtime SI fit
+    expect(root.userData.characterDeployed).toBe(true);
+    
+    const scaleX1 = root.scale.x;
+    const posX1 = root.position.x;
+    const posZ1 = root.position.z;
+    
+    // Second deploy (simulates clip switch): must skip fit and XZ centering
+    const r2 = deployCharacterModel(root, { facePlusZ: false });
+    expect(r2.fit).toBeNull(); // No re-fit
+    expect(r2.centerDeltaX).toBe(0); // No XZ re-centering
+    expect(r2.centerDeltaZ).toBe(0);
+    
+    // Scale and XZ must be unchanged (only Y can adjust for grounding)
+    expect(root.scale.x).toBe(scaleX1);
+    expect(root.position.x).toBe(posX1);
+    expect(root.position.z).toBe(posZ1);
+  });
+
+  function bindSkin(root: THREE.Object3D, bones: THREE.Bone[], visible = true) {
+    const geo = new THREE.BoxGeometry(0.3, 1.8, 0.3);
+    const count = geo.attributes.position.count;
+    const skinIndex = new THREE.BufferAttribute(new Uint16Array(count * 4), 4);
+    const skinWeight = new THREE.BufferAttribute(new Float32Array(count * 4), 4);
+    for (let v = 0; v < count; v++) skinWeight.setXYZW(v, 1, 0, 0, 0);
+    geo.setAttribute("skinIndex", skinIndex);
+    geo.setAttribute("skinWeight", skinWeight);
+    const mesh = new THREE.SkinnedMesh(geo, new THREE.MeshBasicMaterial());
+    mesh.visible = visible;
+    mesh.bind(new THREE.Skeleton(bones));
+    root.add(mesh);
+    return mesh;
+  }
+
+  it("validateCharacterDeploy treats remapped bones as one skeleton", () => {
+    const root = new THREE.Group();
+    const hip = new THREE.Bone();
+    hip.name = "Bip001 Pelvis";
+    root.add(hip);
+    for (let i = 0; i < 3; i++) bindSkin(root, [hip]);
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(false);
+  });
+
+  it("validateCharacterDeploy treats helm/weapon child skins as one Bip001 tree", () => {
+    const root = new THREE.Group();
+    const bip = new THREE.Bone();
+    bip.name = "Bip001";
+    const hip = new THREE.Bone();
+    hip.name = "Bip001 Pelvis";
+    const head = new THREE.Bone();
+    head.name = "Bip001 Head";
+    const hand = new THREE.Bone();
+    hand.name = "Bip001 R Hand";
+    bip.add(hip);
+    hip.add(head);
+    hip.add(hand);
+    root.add(bip);
+    bindSkin(root, [bip, hip]);
+    bindSkin(root, [head]);
+    bindSkin(root, [hand]);
+    const hiddenWardrobe = bindSkin(root, [new THREE.Bone()], false);
+    hiddenWardrobe.skeleton.bones[0].name = "Bip001";
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(false);
+  });
+
+  it("validateCharacterDeploy still flags two disconnected Bip001 trees", () => {
+    const root = new THREE.Group();
+    const a = new THREE.Bone();
+    a.name = "Bip001";
+    const b = new THREE.Bone();
+    b.name = "Bip001";
+    root.add(a);
+    root.add(b);
+    bindSkin(root, [a]);
+    bindSkin(root, [b]);
+    const v = validateCharacterDeploy(root);
+    expect(v.issues.some((i) => i.includes("multiple skeletons"))).toBe(true);
+  });
+
   it("validateCharacterDeploy reports height issues on tiny models", () => {
     const root = new THREE.Group();
     const geo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
@@ -133,6 +226,58 @@ describe("characterDeploy (Y-up / XZ ground)", () => {
     expect(Math.abs(box.min.y)).toBeLessThan(0.12);
     expect(findDeployModel(avatar)).toBe(model);
   });
+
+  it("REGRESSION GUARD: ensureHumanScale skips re-fit for fitted or deployed character", () => {
+    const avatar = new THREE.Group();
+    const { root: model } = makeBip001Hero({ height: 1.8 });
+    avatar.add(model);
+    
+    // Model has grudgeHeightFit=true from ingest (makeBip001Hero sets it)
+    expect(model.userData.grudgeHeightFit).toBe(true);
+    const scaleX0 = model.scale.x;
+    const posX0 = model.position.x;
+    const posZ0 = model.position.z;
+    
+    // ensureHumanScale must skip re-fit (ingest-only SI)
+    const refitted = ensureHumanScale(avatar, 1.8);
+    expect(refitted).toBe(false);
+    expect(model.scale.x).toBe(scaleX0);
+    expect(model.position.x).toBe(posX0);
+    expect(model.position.z).toBe(posZ0);
+  });
+});
+
+describe("liftForClipFootClearance", () => {
+  it("raises model when soles sit under groundY", () => {
+    const { root } = makeBip001Hero();
+    groundFeetLocal(root, 0);
+    root.position.y -= 0.22;
+    const clip = new THREE.AnimationClip("walk", 0.5, [
+      new THREE.QuaternionKeyframeTrack(
+        "Bip001 Pelvis.quaternion",
+        [0, 0.5],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+      ),
+    ]);
+    const dy = liftForClipFootClearance(root, clip, { groundY: 0, samples: 4 });
+    expect(dy).toBeGreaterThan(0.1);
+    const box = bodyBox(root);
+    expect(box.min.y).toBeGreaterThan(-0.05);
+  });
+
+  it("no-ops when already planted", () => {
+    const { root } = makeBip001Hero();
+    groundFeetLocal(root, 0);
+    const clip = new THREE.AnimationClip("walk", 0.5, [
+      new THREE.QuaternionKeyframeTrack(
+        "Bip001 Pelvis.quaternion",
+        [0, 0.5],
+        [0, 0, 0, 1, 0, 0, 0, 1],
+      ),
+    ]);
+    const dy = liftForClipFootClearance(root, clip, { groundY: 0, samples: 3 });
+    expect(dy).toBe(0);
+  });
 });
 
 describe("stripPositionTracks", () => {
@@ -157,5 +302,52 @@ describe("stripPositionTracks", () => {
     const out = stripPositionTracks(clip, { keepRootPosition: true });
     expect(out.tracks.some((t) => t.name === "Bip001 Pelvis.position")).toBe(true);
     expect(out.tracks.some((t) => t.name.includes("Foot.position"))).toBe(false);
+  });
+
+  it("stripScaleTracks drops scale keys that squash limbs", () => {
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.scale", [0, 1], [1, 1, 1, 2, 2, 2]),
+      new THREE.QuaternionKeyframeTrack("mixamorigHips.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+    ]);
+    const out = stripScaleTracks(clip);
+    expect(out.tracks.some((t) => t.name.includes(".scale"))).toBe(false);
+    expect(out.tracks.length).toBe(1);
+  });
+
+  it("stabilizeClipForMixer keeps hip bob, drops foot position", () => {
+    const root = new THREE.Object3D();
+    const hips = new THREE.Bone();
+    hips.name = "mixamorigHips";
+    root.add(hips);
+    const foot = new THREE.Bone();
+    foot.name = "mixamorigLeftFoot";
+    root.add(foot);
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.position", [0, 1], [5, 1, 5, 5, 1.05, 5]),
+      new THREE.VectorKeyframeTrack("mixamorigLeftFoot.position", [0, 1], [0, 0, 0, 0, -0.2, 0]),
+      new THREE.QuaternionKeyframeTrack("mixamorigHips.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+      new THREE.VectorKeyframeTrack("mixamorigHips.scale", [0, 1], [1, 1, 1, 1, 1, 1]),
+    ]);
+    const out = stabilizeClipForMixer(clip, {
+      root,
+      bindHip: { x: 0, y: 1, z: 0 },
+      keepRootPosition: true,
+      lockHorizontalRoot: (c, b) => {
+        for (const t of c.tracks) {
+          if (!t.name.endsWith(".position")) continue;
+          for (let i = 0; i < t.values.length; i += 3) {
+            t.values[i] = b.x;
+            t.values[i + 2] = b.z;
+          }
+        }
+      },
+    });
+    expect(out.tracks.some((t) => t.name.includes("Foot.position"))).toBe(false);
+    expect(out.tracks.some((t) => t.name.includes(".scale"))).toBe(false);
+    const hipPos = out.tracks.find((t) => t.name === "mixamorigHips.position");
+    expect(hipPos).toBeTruthy();
+    // X/Z locked to bind (0), Y bob kept relative
+    expect(hipPos!.values[0]).toBe(0);
+    expect(hipPos!.values[2]).toBe(0);
   });
 });

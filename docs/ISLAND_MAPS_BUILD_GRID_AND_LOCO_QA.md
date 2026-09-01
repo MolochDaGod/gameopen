@@ -65,6 +65,7 @@ Bake via `HarvestPhysicsBake` + pinata plans after map load (same as tropical).
 ```
 Build mode (Q → build)
   → BuildGridOverlay visible (1 m SI)
+  → zhunbei.glb cell frame at snapped hit (ghost sits inside)
   → raycast camera/forward → ground meshes
   → snap XZ to snapM
   → CampBuildSystem ghost follows hit

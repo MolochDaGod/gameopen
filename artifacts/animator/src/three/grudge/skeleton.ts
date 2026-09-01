@@ -168,37 +168,98 @@ export function stripPositionAndScaleTracks(clip: THREE.AnimationClip): THREE.An
   return new THREE.AnimationClip(clip.name, clip.duration, keep, clip.blendMode);
 }
 
-// Skeleton unification. The Toon_RTS customizable FBX ships each of its ~27
-// SkinnedMeshes with its OWN skeleton referencing DISCONNECTED duplicate bone
-// instances, so no animation clip can deform the mesh. Fix: collapse every
-// SkinnedMesh onto ONE canonical skeleton — the shallowest bone-node per name
-// (BFS from root) — reusing each mesh's original boneInverses/bindMatrix.
-// Returns the widest resulting skeleton.
+/** Root-most Bone in the scene graph (parent is not a Bone). */
+export function boneTreeRoot(bone: THREE.Bone): THREE.Bone {
+  let last: THREE.Bone = bone;
+  let n: THREE.Object3D | null = bone.parent;
+  while (n) {
+    if ((n as THREE.Bone).isBone) last = n as THREE.Bone;
+    n = n.parent;
+  }
+  return last;
+}
+
+type BoneTree = {
+  root: THREE.Bone;
+  count: number;
+  bones: Map<string, THREE.Bone>;
+};
+
+/**
+ * Toon RTS customizable GLB/FBX ships each wardrobe SkinnedMesh with its own
+ * disconnected Bip001 copy (~23–27 trees). AnimationMixer binds the first name
+ * it finds; skins deform the remapped objects. If those are different nodes
+ * the kit T-poses or the deploy gate counts 23 skeletons.
+ *
+ * Pick the widest Bip001 tree, remap every skin onto those bone *objects*
+ * (keep each mesh's boneInverses / bindMatrix), then prune the leftover trees
+ * so mixer + skins share one armature.
+ */
 export function unifySkeletons(root: THREE.Object3D): THREE.Skeleton | null {
   root.updateMatrixWorld(true);
-  const canon = new Map<string, THREE.Bone>();
-  const queue: THREE.Object3D[] = [...root.children];
-  while (queue.length) {
-    const node = queue.shift()!;
-    if (node instanceof THREE.Bone && !canon.has(node.name)) canon.set(node.name, node);
-    queue.push(...node.children);
-  }
-  if (canon.size === 0) return null;
+
+  const trees = new Map<string, BoneTree>();
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Bone)) return;
+    const r = boneTreeRoot(node);
+    let rec = trees.get(r.uuid);
+    if (!rec) {
+      rec = { root: r, count: 0, bones: new Map() };
+      trees.set(r.uuid, rec);
+    }
+    rec.count++;
+    if (node.name && !rec.bones.has(node.name)) rec.bones.set(node.name, node);
+  });
+  if (trees.size === 0) return null;
+
+  const ranked = [...trees.values()].sort((a, b) => {
+    const score = (t: BoneTree) => {
+      let s = t.count;
+      if (t.bones.has("Bip001") || t.bones.has("Bip001 Pelvis") || t.bones.has("Bip001_Pelvis")) {
+        s += 1000;
+      }
+      return s;
+    };
+    return score(b) - score(a);
+  });
+  const best = ranked[0];
+  const canon = best.bones;
+  const keepRoot = best.root;
 
   let widest: THREE.Skeleton | null = null;
   let unresolved = 0;
   root.traverse((node) => {
     if (node instanceof THREE.SkinnedMesh && node.skeleton) {
-      const newBones = node.skeleton.bones.map((b) => {
-        const c = canon.get(b.name);
+      const src = node.skeleton.bones;
+      const newBones = src.map((b) => {
+        const c = b?.name ? canon.get(b.name) : undefined;
         if (!c) unresolved++;
         return c ?? b;
       });
+      const alreadyCanon = newBones.length === src.length && newBones.every((b, i) => b === src[i]);
+      if (alreadyCanon) {
+        if (!widest || node.skeleton.bones.length > widest.bones.length) widest = node.skeleton;
+        return;
+      }
       const newSkel = new THREE.Skeleton(newBones, node.skeleton.boneInverses);
       node.bind(newSkel, node.bindMatrix);
       if (!widest || newSkel.bones.length > widest.bones.length) widest = newSkel;
     }
   });
+
+  const dropRoots = new Set<THREE.Bone>();
+  root.traverse((node) => {
+    if (node instanceof THREE.Bone && boneTreeRoot(node) !== keepRoot) {
+      dropRoots.add(boneTreeRoot(node));
+    }
+  });
+  for (const extra of dropRoots) extra.removeFromParent();
+
+  root.updateMatrixWorld(true);
+  root.userData.skeletonUnified = true;
+  root.userData.unifiedBoneCount = canon.size;
+  root.userData.prunedBoneTrees = dropRoots.size;
+
   if (unresolved > 0) {
     console.warn(
       `[grudge-kit] unifySkeletons: ${unresolved} bone(s) had no canonical match; ` +

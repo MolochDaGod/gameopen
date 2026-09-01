@@ -11,12 +11,17 @@
 import type { GrudgeCharacter } from "./grudgeAuth";
 import {
   getPreset,
+  isKitBackMesh,
   RACE_GEAR_PRESETS,
   type PresetId,
   type RaceId,
 } from "../three/grudge/index";
 import { resolvePresetId, resolveRaceId } from "./raceModel";
 
+import {
+  backEquipTagFromAnyId,
+  isBackTemplateId,
+} from "../three/equipment/backSlotItems";
 import { FLEET } from "./fleet";
 import { fetchCatalogJson } from "./fleetSsot";
 import {
@@ -104,6 +109,17 @@ function asStringArray(v: unknown): string[] {
 function equipmentBag(ch: GrudgeCharacter | null | undefined): Record<string, unknown> {
   if (!ch) return {};
   const bags: Record<string, unknown>[] = [];
+  const pushModel3d = (m3: unknown) => {
+    if (!m3 || typeof m3 !== "object") return;
+    const m = m3 as Record<string, unknown>;
+    if (m.meshIds || m.mesh_ids) bags.push(m);
+    if (m.equipmentSlots && typeof m.equipmentSlots === "object") {
+      bags.push(m.equipmentSlots as Record<string, unknown>);
+    }
+    if (m.equipment && typeof m.equipment === "object") {
+      bags.push(m.equipment as Record<string, unknown>);
+    }
+  };
   for (const src of [ch.saveData, ch.config, ch as unknown as Record<string, unknown>]) {
     if (!src || typeof src !== "object") continue;
     const s = src as Record<string, unknown>;
@@ -118,7 +134,9 @@ function equipmentBag(ch: GrudgeCharacter | null | undefined): Record<string, un
       }
       if (open.meshIds || open.mesh_ids) bags.push(open);
     }
+    pushModel3d(s.model3d);
   }
+  pushModel3d(ch.model3d);
   return Object.assign({}, ...bags);
 }
 
@@ -224,7 +242,46 @@ const SLOT_MESH_HINTS: Record<string, string[]> = {
   staff: ["staff"],
   quiver: ["quiver", "xtra"],
   bag: ["bag", "xtra"],
+  back: ["equip:back:", "xtra", "quiver"],
 };
+
+function isBackMeshName(name: string): boolean {
+  return isKitBackMesh(name);
+}
+
+function backTagFromEq(eq: Record<string, unknown>): string | null {
+  const raw = eq.back ?? eq.Back;
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    if (/^equip:back:/i.test(raw) || /^(WK_|BRB_|ORC_|ELF_|UD_|DWF_)/i.test(raw)) {
+      return raw;
+    }
+    if (isBackTemplateId(raw) || raw.startsWith("itm_")) {
+      return backEquipTagFromAnyId(raw);
+    }
+    return backEquipTagFromAnyId(raw);
+  }
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    const mid = o.meshId || o.mesh_id || o.mesh;
+    if (typeof mid === "string" && mid) {
+      return /^equip:back:/i.test(mid) ? mid : backEquipTagFromAnyId(mid);
+    }
+    const tid = o.templateId || o.id || o.itemId;
+    if (typeof tid === "string" && tid) return backEquipTagFromAnyId(tid);
+  }
+  return null;
+}
+
+function applyBackFromEquipment(
+  ids: string[],
+  eq: Record<string, unknown>,
+): string[] {
+  const tag = backTagFromEq(eq);
+  if (!tag) return ids;
+  const stripped = ids.filter((m) => !isBackMeshName(m));
+  return stripped.includes(tag) ? stripped : [...stripped, tag];
+}
 
 function meshIdsFromSlots(eq: Record<string, unknown>, raceId: RaceId, presetId: PresetId): string[] {
   // Start from class preset so armor baseline exists
@@ -267,12 +324,12 @@ function meshIdsFromSlots(eq: Record<string, unknown>, raceId: RaceId, presetId:
       }
       out.add(m);
     }
-    return [...out];
+    return applyBackFromEquipment([...out], eq);
   }
 
   // No explicit meshes — keep class preset (true main-panel default)
   void baseKeys;
-  return base;
+  return applyBackFromEquipment(base, eq);
 }
 
 function mapRemoteRace(raw: string | undefined): RaceId | null {
@@ -316,7 +373,7 @@ export function resolveCharacterEquipmentVisualSync(
     return {
       raceId,
       presetId,
-      meshIds: meshDirect,
+      meshIds: applyBackFromEquipment(meshDirect, eq),
       source: "equipment.mesh_ids",
       gearPresetId: typeof eq.gearPresetId === "string" ? eq.gearPresetId : undefined,
       slotIcons,
@@ -337,7 +394,7 @@ export function resolveCharacterEquipmentVisualSync(
       return {
         raceId,
         presetId: resolvePresetId(hit?.classId || presetId),
-        meshIds: ids,
+        meshIds: applyBackFromEquipment(ids, eq),
         source: "gear_preset",
         gearPresetId: gpId,
         slotIcons,
@@ -365,7 +422,7 @@ export function resolveCharacterEquipmentVisualSync(
   return {
     raceId,
     presetId,
-    meshIds: preset.visibleMeshes.slice(),
+    meshIds: applyBackFromEquipment(preset.visibleMeshes.slice(), eq),
     source: "class_preset",
     slotIcons,
     slotLabels,
@@ -391,9 +448,10 @@ export async function resolveCharacterEquipmentVisual(
   });
   const ids = asStringArray(hit?.meshIds || hit?.mesh_ids);
   if (ids.length >= 3) {
+    const eq = equipmentBag(ch);
     return {
       ...sync,
-      meshIds: ids,
+      meshIds: applyBackFromEquipment(ids, eq),
       source: "gear_preset",
       gearPresetId: hit?.id || sync.gearPresetId,
     };

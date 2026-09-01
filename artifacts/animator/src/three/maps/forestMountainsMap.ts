@@ -28,6 +28,7 @@ import { HarvestLayer } from "../harvest/layers";
 import { applyGameLayer, GamePlayLayer } from "../gameplay/GamePlayLayers";
 import { createTerrainHeightSampler } from "../brawler/survivalEnvironment";
 import { ORC_AGENT } from "./pirateVillageMap";
+import { applyMapScaleForOrc } from "./mapOrcScale";
 
 const BASE = import.meta.env.BASE_URL || "/";
 
@@ -292,7 +293,6 @@ export async function loadForestMountainsMap(opts?: {
   /** Max harvest instances to register (perf). */
   maxHarvest?: number;
 }): Promise<ForestMountainsMapResult> {
-  const scale = opts?.scale ?? 1.0;
   const worldSeed = opts?.worldSeed ?? "forest-mountains-harvest-01";
   const maxHarvest = opts?.maxHarvest ?? 220;
   const url = `${BASE}models/maps/forest_mountains/forest_mountains.glb`;
@@ -300,8 +300,10 @@ export async function loadForestMountainsMap(opts?: {
   const scene = await loadGltf(url);
   const root = new THREE.Group();
   root.name = "ForestMountainsHarvestZone";
-  scene.scale.setScalar(scale);
   root.add(scene);
+  // 2 m orc SI fit (door/storey/footprint), then re-ground/center
+  const scaleReport = applyMapScaleForOrc(root, { fixedScale: opts?.scale });
+  const scale = scaleReport.scale;
   reGroundAndCenter(root);
 
   // First pass: measure all meshes

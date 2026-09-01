@@ -89,7 +89,65 @@ async function head(url) {
   }
 }
 
+/** Probe D1 asset INDEX (JSON). Binaries remain R2-only. */
+async function probeRegistry(url) {
+  try {
+    const r = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      signal: AbortSignal.timeout(20000),
+    });
+    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    const text = await r.text();
+    const bodyStart = text.slice(0, 160);
+    const isSpa =
+      bodyStart.includes("<!DOCTYPE html") || bodyStart.includes('<div id="root"');
+    const looksJson =
+      ct.includes("json") ||
+      bodyStart.trim().startsWith("{") ||
+      bodyStart.trim().startsWith("[");
+    if (!r.ok || isSpa || !looksJson) {
+      return {
+        url,
+        ok: false,
+        status: r.status,
+        err: isSpa
+          ? "SPA HTML masquerade"
+          : !looksJson
+            ? "not JSON"
+            : `status ${r.status}`,
+      };
+    }
+    return { url, ok: true, status: r.status, ct };
+  } catch (e) {
+    return { url, ok: false, status: 0, err: String(e?.message || e) };
+  }
+}
+
 async function main() {
+  console.log(
+    "verify-fleet-assets — law: D1=index only · R2=binaries · Postgres=player/bag/ledger",
+  );
+  // Always probe asset INDEX so agents don't ship against a dead D1.
+  const registryUrls = [
+    `${BASE}/api/asset-registry?limit=3`,
+    "https://api.grudge-studio.com/assets?limit=1",
+  ];
+  let regFail = 0;
+  for (const u of registryUrls) {
+    const r = await probeRegistry(u);
+    if (r.ok) console.log(`  OK  D1-index ${r.status} ${u}`);
+    else {
+      const critical = u.includes("/api/asset-registry");
+      if (critical) {
+        regFail++;
+        console.log(`  BAD D1-index ${r.status || ""} ${u} ${r.err || ""}`);
+      } else {
+        console.log(`  WARN D1-edge ${r.status || ""} ${u} ${r.err || ""}`);
+      }
+    }
+  }
+
   const list = [];
   for (const key of CRITICAL) {
     list.push(`${CDN}/${key}`);
@@ -100,7 +158,9 @@ async function main() {
     if (!cdnOnly) list.push(`${BASE}/${key}`);
   }
 
-  console.log(`verify-fleet-assets base=${BASE} cdnOnly=${cdnOnly} n=${list.length}`);
+  console.log(
+    `verify-fleet-assets base=${BASE} cdnOnly=${cdnOnly} n=${list.length} binary keys`,
+  );
   let ok = 0;
   let fail = 0;
   const bad = [];
@@ -118,17 +178,19 @@ async function main() {
       }
     }
   }
-  console.log(`\nSummary ok=${ok} fail=${fail}`);
+  fail += regFail;
+  console.log(`\nSummary ok=${ok} fail=${fail} (incl. D1 index fails ${regFail})`);
   if (fail) {
     console.error(`
-Missing production assets. Fix:
+Missing production assets / index. Fix:
   1. R2 keys under assets.grudge-studio.com (upload via grudge-convert / upload:r2)
-  2. Vercel rewrites for /textures/grudge6 /models/grudge6 /models/voxels → R2
-  3. Re-deploy Open (gameopen) so same-origin proxies work
+  2. D1 asset index via api.grudge-studio.com/assets (seed/register — never player bag)
+  3. Vercel rewrites: /api/asset-registry → D1; /models /textures → R2
+  4. Re-deploy Open (gameopen) so same-origin proxies work
 `);
     process.exit(1);
   }
-  console.log("Fleet textures + models + compressed builds: OK");
+  console.log("Fleet D1 index + R2 textures/models: OK");
 }
 
 main().catch((e) => {

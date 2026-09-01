@@ -1,6 +1,10 @@
 /**
  * Zero-dependency gameopen API for Railway.
  * Native Node http + optional WebSocket upgrade.
+ *
+ * WebSockets:
+ *  - `/api/danger`  → Danger Room multiplayer relay (danger-relay.mjs)
+ *  - `/api/carrier` → simple text-JSON carrier room
  */
 import http from "node:http";
 import { URL } from "node:url";
@@ -8,9 +12,17 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-
+import { attachDangerRelay, WS_PATH as DANGER_WS_PATH } from "./danger-relay.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+/**
+ * Repo root when running from `server/`; Docker copies standalone into `/app`
+ * so content lives next to this file. Never leave `root` undefined — a single
+ * ReferenceError on /api/maps killed production (Railway crash loop).
+ */
+const root = existsSync(join(__dirname, "content"))
+  ? __dirname
+  : join(__dirname, "..");
 const PORT = Number(process.env.PORT || 8080);
 const ASSETS_CDN = process.env.ASSETS_CDN || "https://assets.grudge-studio.com";
 const GAMEOPEN_PREFIX = process.env.GAMEOPEN_ASSET_PREFIX || "gameopen";
@@ -158,13 +170,61 @@ const server = http.createServer(async (req, res) => {
       health: "/api/healthz",
       effects: "/api/effects",
       content: "/api/content",
+      maps: "/api/maps",
+      mapById: "/api/maps/:id",
       characters: "/api/characters",
       modes: "/api/modes",
       fleet: "/api/fleet/config",
       carrier: "ws /api/carrier?room=CODE",
+      danger: `ws ${DANGER_WS_PATH}`,
       hasDatabase: Boolean(process.env.DATABASE_URL),
       hasJwt: Boolean(process.env.JWT_SECRET),
     });
+  }
+
+  // ── Map instance catalog (Danger Room exclusive worlds) ─────────────────
+  if (path === "/api/maps" || path === "/api/maps/") {
+    const mapsFile = join(
+      root,
+      "artifacts/animator/public/content/maps/danger-maps.json",
+    );
+    // Docker image has content/ only — optional local file.
+    const dockerMaps = join(root, "content", "maps", "danger-maps.json");
+    const mapsPath = existsSync(mapsFile) ? mapsFile : dockerMaps;
+    if (existsSync(mapsPath)) {
+      const body = JSON.parse(readFileSync(mapsPath, "utf8"));
+      body.source = "danger-maps.json";
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=30");
+      return json(res, 200, body);
+    }
+    return json(res, 200, { version: 0, maps: [], source: "empty" });
+  }
+  if (path.startsWith("/api/maps/")) {
+    const id = decodeURIComponent(path.slice("/api/maps/".length).replace(/\/$/, ""));
+    const mapsFile = join(
+      root,
+      "artifacts/animator/public/content/maps/danger-maps.json",
+    );
+    const dockerMaps = join(root, "content", "maps", "danger-maps.json");
+    const mapsPath = existsSync(mapsFile) ? mapsFile : dockerMaps;
+    if (!existsSync(mapsPath)) {
+      return json(res, 404, { error: "maps catalog missing", id });
+    }
+    const body = JSON.parse(readFileSync(mapsPath, "utf8"));
+    const hit = (body.maps || []).find(
+      (m) => m.id === id || m.testWorldId === id,
+    );
+    if (!hit) return json(res, 404, { error: "map not found", id });
+    const combat = hit.kind === "combat" || hit.id === "danger-room";
+    hit.instance = hit.instance || {
+      exclusive: true,
+      requiresTerrain: !combat,
+      requiresHeight: !combat,
+      hideDangerRoomShell: !combat,
+    };
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    return json(res, 200, hit);
   }
 
   // ── Weapon / skill / item content catalog (SSOT: content/) ───────────────
@@ -286,6 +346,8 @@ const server = http.createServer(async (req, res) => {
       status: "ok",
       service: "gameopen-api",
       time: new Date().toISOString(),
+      danger: DANGER_WS_PATH,
+      persistentRooms: ["DANGER", "ARENA"],
     });
   }
 
@@ -430,11 +492,16 @@ const server = http.createServer(async (req, res) => {
   json(res, 404, { error: "not_found", path });
 });
 
+// Danger Room multiplayer (full danger-net protocol + persistent DANGER/ARENA).
+// Must register before carrier so both can claim their own paths without
+// the carrier handler destroying /api/danger sockets.
+attachDangerRelay(server, { createAccept, decodeTextFrame, sendText });
+
 // Minimal WebSocket carrier (binary frame not required — text JSON relay)
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url || "/", "http://localhost");
+  // Only claim carrier/realtime — never destroy other upgrades (e.g. /api/danger).
   if (url.pathname !== "/api/carrier" && url.pathname !== "/api/realtime") {
-    socket.destroy();
     return;
   }
 
@@ -445,12 +512,17 @@ server.on("upgrade", (req, socket, head) => {
     return;
   }
   const accept = createAccept(key);
-  socket.write(
-    "HTTP/1.1 101 Switching Protocols\r\n" +
-      "Upgrade: websocket\r\n" +
-      "Connection: Upgrade\r\n" +
-      `Sec-WebSocket-Accept: ${accept}\r\n\r\n`,
-  );
+  try {
+    socket.write(
+      "HTTP/1.1 101 Switching Protocols\r\n" +
+        "Upgrade: websocket\r\n" +
+        "Connection: Upgrade\r\n" +
+        `Sec-WebSocket-Accept: ${accept}\r\n\r\n`,
+    );
+  } catch {
+    socket.destroy();
+    return;
+  }
 
   const roomId = url.searchParams.get("room") || "lobby";
   if (!rooms.has(roomId)) rooms.set(roomId, new Set());

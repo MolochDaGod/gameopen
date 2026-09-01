@@ -126,12 +126,13 @@ export function classifyIslandMesh(
   // Shipwreck World tilemap is the island body
   if (mapKind === "shipwreck" && /^world($|[_])/i.test(name.trim())) return "ground";
 
-  // Harvest
-  if (/palm|tree|rock\d*|rock_|b[uû]che|souche|demi-b[uû]che|bois_0|ore|harvest/i.test(s)) {
-    if (/rock/i.test(s) && !/tore|metal/i.test(s)) return "harvest";
-    if (/palm|tree|b[uû]che|souche/i.test(s)) return "harvest";
+  // Harvest — trees / rocks / ore (world assets, not path cobble)
+  if (/palm|pine|oak|fir|spruce|cedar|canopy|foliage|bark|leaf|leaves|trunk|stump|b[uû]che|souche|demi-b[uû]che|bois_0|tree/i.test(s)) {
+    if (!/street|path|road|tile/i.test(s)) return "harvest";
   }
-  if (/palmtree|tree_|rock$/i.test(name)) return "harvest";
+  if (/boulder|pebble|gravel|rubble|slate|ore|harvest/i.test(s)) return "harvest";
+  if (/rock/i.test(s) && !/tore|metal|bedrock/i.test(s)) return "harvest";
+  if (/palmtree|tree_|_tree|rock$/i.test(name)) return "harvest";
 
   // Interact (benches, chests, barrels, workstations)
   if (

@@ -2,9 +2,12 @@
  * CursorManager — global context-aware cursor system for Open / Danger / fleet.
  *
  * Presence layers (see `pointerPresence.ts`):
- *   play-locked → OS cursor hidden; Crosshair owns aim
- *   play-free   → custom free-aim / soft lock cursor (no pointer lock)
+ *   play-locked → browser may hide OS cursor under pointer-lock; HUD Crosshair always on
+ *   play-free   → custom free-aim / soft lock cursor (no pointer lock) + reticle
  *   ui / shell  → visible game mouse (PNG/SVG) + hover hand on interactables
+ *
+ * HARD RULE (open.*): never leave the user with no mouse and no reticle.
+ * Never set cursor:none in CSS; lock-fail demotes to free-mouse images.
  *
  * Assets: public/ui/cursors/*  (craftpix normal + cyber + SVG fallbacks)
  * Mount once near the app root. Three.js scenes can call setPlayPointerCtx /
@@ -80,16 +83,31 @@ export function CursorManager({ children }: Props) {
     const sync = () => applyPointerBodyClass(getPointerPresence());
     sync();
     const unsub = subscribePointerPresence(sync);
-    // Re-apply after pointer-lock change (browser may reset cursor)
+    // Re-apply after pointer-lock change (browser may reset cursor).
+    // ESC unlock must restore custom mouse immediately — never leave cursor:none.
     const onLock = () => {
       requestAnimationFrame(sync);
+      // Notify app: if lock lost while "play-locked", free-mouse is safer UX
+      try {
+        window.dispatchEvent(
+          new CustomEvent("grudge:pointerlock", {
+            detail: { locked: !!document.pointerLockElement },
+          }),
+        );
+      } catch {
+        /* */
+      }
     };
     document.addEventListener("pointerlockchange", onLock);
+    document.addEventListener("pointerlockerror", onLock);
     window.addEventListener("focus", onLock);
+    window.addEventListener("blur", onLock);
     return () => {
       unsub();
       document.removeEventListener("pointerlockchange", onLock);
+      document.removeEventListener("pointerlockerror", onLock);
       window.removeEventListener("focus", onLock);
+      window.removeEventListener("blur", onLock);
     };
   }, []);
 

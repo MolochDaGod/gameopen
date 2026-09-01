@@ -159,6 +159,13 @@ export const GORE_IMPACT_SPRITES = {
   heavy: ["icons/pack/misc/Flow.png", "icons/pack/misc/Effect.png"],
 } as const;
 
+/**
+ * 2D Gore UI pack (buttons / gauges / frames) — HUD + popup chrome.
+ * CDN: assets.grudge-studio.com/ui/gore/* · local public/ui/gore/*
+ * @see lib/goreUiCatalog.ts
+ */
+export const GORE_UI_CDN_ROOT = "ui/gore";
+
 export function goreSpriteUrl(
   kind: keyof typeof GORE_IMPACT_SPRITES = "slash",
   index = 0,

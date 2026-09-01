@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generator": "@grudge-studio/asset-convert@1.0.0",
+  "source": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-raw\\violet_4_hn_creature.glb",
+  "output": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\violet_4_hn_creature.glb",
+  "intermediateBackend": "copy",
+  "warnings": [],
+  "stats": {
+    "meshes": 86,
+    "materials": 1,
+    "textures": 2,
+    "animations": 6,
+    "nodes": 191,
+    "skins": 0
+  },
+  "aabb": {
+    "min": [
+      -0.12089551985263824,
+      -0.9402984976768494,
+      -0.08867567777633667
+    ],
+    "max": [
+      0.12089551985263824,
+      0.8597015142440796,
+      0.10746268928050995
+    ],
+    "size": [
+      0.2417910397052765,
+      1.800000011920929,
+      0.19613836705684662
+    ],
+    "bodyOnly": false
+  },
+  "collider": "C:\\Users\\nugye\\Documents\\gameopen\\tmp\\enemy-prod\\violet_4_hn_creature.collider.json",
+  "producedAt": "2026-08-04T07:12:28.213Z",
+  "production": {
+    "format": "glb",
+    "yHipGround": true,
+    "textures": "webp",
+    "maxTexture": 1024,
+    "meshCompression": "quantize",
+    "bakeMeshes": true,
+    "bakeAnims": true,
+    "bakeColliders": true
+  }
+}
