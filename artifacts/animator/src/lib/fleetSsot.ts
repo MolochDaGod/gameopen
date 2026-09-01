@@ -69,7 +69,6 @@ export function definitionBaseCandidates(): string[] {
     origin ? `${origin}/api/v1` : "",
     FLEET.definitions,
     "https://assets.grudge-studio.com/content",
-    "https://molochdagod.github.io/ObjectStore/api/v1",
     origin ? `${origin}/api/os/api/v1` : "",
     env || "",
   ];

@@ -23,8 +23,8 @@ export const FLEET_ASSET_HOSTS = {
   gameopenVercel: "https://gameopen.vercel.app",
   /** Skinned grudge6 race GLBs + anim JSON (combat runtime). */
   arena: "https://grudge-arena.grudge-studio.com",
-  /** Static ObjectStore mirror (GitHub pages). */
-  objectStorePages: "https://molochdagod.github.io/ObjectStore",
+  /** ObjectStore Worker — catalogs and static assets. */
+  objectStoreWorker: "https://objectstore.grudge-studio.com",
   /** Definitions SSOT — catalogs JSON (not binaries). */
   infoApi: "https://info.grudge-studio.com/api/v1",
   /** @deprecated Prefer infoApi — public objectstore catalogs often 404. */
@@ -467,7 +467,7 @@ export function resolveAssetCandidates(path: string): string[] {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }
     if (a.startsWith("icons/")) {
-      urls.push(abs(FLEET_ASSET_HOSTS.objectStorePages, a));
+      urls.push(abs(FLEET_ASSET_HOSTS.objectStoreWorker, a));
     }
   }
 

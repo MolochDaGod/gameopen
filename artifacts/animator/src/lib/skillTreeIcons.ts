@@ -16,7 +16,7 @@ const ASSETS_CDN = "https://assets.grudge-studio.com";
  */
 const SKILL_ICON_HOSTS = [
   "https://info.grudge-studio.com",
-  "https://molochdagod.github.io/ObjectStore",
+  "https://objectstore.grudge-studio.com",
 ] as const;
 
 /** Paths known to 404 on assets CDN — remap to live pack art. */
