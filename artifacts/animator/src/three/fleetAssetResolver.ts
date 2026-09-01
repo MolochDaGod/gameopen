@@ -23,11 +23,11 @@ export const FLEET_ASSET_HOSTS = {
   gameopenVercel: "https://gameopen.vercel.app",
   /** Skinned grudge6 race GLBs + anim JSON (combat runtime). */
   arena: "https://grudge-arena.grudge-studio.com",
-  /** ObjectStore Worker — catalogs and static assets. */
+  /** ObjectStore Worker — catalogs and static assets (primary catalog API). */
   objectStoreWorker: "https://objectstore.grudge-studio.com",
-  /** Definitions SSOT — catalogs JSON (not binaries). */
+  /** HTML docs host — last-resort fallback only (not a catalog API). */
   infoApi: "https://info.grudge-studio.com/api/v1",
-  /** @deprecated Prefer infoApi — public objectstore catalogs often 404. */
+  /** @deprecated Use objectStoreWorker instead. */
   objectStoreApi: "https://objectstore.grudge-studio.com/api/v1",
 } as const;
 
@@ -587,7 +587,7 @@ export async function loadInfoAssetRegistry(): Promise<Map<string, string> | nul
         baseUrl?: string;
       };
       const map = new Map<string, string>();
-      const base = (data.baseUrl || FLEET_ASSET_HOSTS.objectStorePages).replace(/\/$/, "");
+      const base = (data.baseUrl || FLEET_ASSET_HOSTS.objectStoreWorker).replace(/\/$/, "");
       if (data.assets) {
         for (const a of Object.values(data.assets)) {
           if (a.filename) {

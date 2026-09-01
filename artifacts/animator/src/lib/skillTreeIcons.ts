@@ -11,12 +11,12 @@ import { iconUrl, type IconName } from "../three/icons";
 /** Binaries (pack weapons/misc) — verified on assets CDN. */
 const ASSETS_CDN = "https://assets.grudge-studio.com";
 /**
- * Skill catalog art (`skill_nobg`, class trees) is served from definitions hosts,
- * NOT assets.grudge-studio.com (probed 404 for skill_nobg on R2, 200 on info).
+ * Skill catalog art (`skill_nobg`, class trees) is served from ObjectStore Worker.
+ * ObjectStore Worker is the primary catalog API; info.grudge-studio.com is HTML docs only.
  */
 const SKILL_ICON_HOSTS = [
-  "https://info.grudge-studio.com",
   "https://objectstore.grudge-studio.com",
+  "https://info.grudge-studio.com",
 ] as const;
 
 /** Paths known to 404 on assets CDN — remap to live pack art. */
