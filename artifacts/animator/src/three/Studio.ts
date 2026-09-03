@@ -154,7 +154,9 @@ import {
 } from "./harvest/pinataHarvest";
 import { HarvestPhysicsBake } from "./harvest/harvestPhysicsBake";
 import { ForestHarvestBake } from "./harvest/forestHarvestBake";
+import { tagStartSceneHarvest } from "./voxel/startSceneHarvest";
 import { BuildGridOverlay } from "./build/BuildGridOverlay";
+import { innerMFromFootprint } from "./build/zhunbeiFrame";
 import { WingBackRig } from "./equipment/WingBackRig";
 import { VoxelHarvestToolRig } from "./equipment/VoxelHarvestToolRig";
 import {
@@ -4707,6 +4709,22 @@ export class Studio {
     const ray = this.crosshairRay();
     const caster = new THREE.Raycaster(ray.origin, ray.direction, 0.2, 32);
     // Prefer real harvest nodes (ore / flower / wood / skin)
+    const pinata = this.pinataHarvest?.pick(caster, 28) ?? null;
+    if (pinata) {
+      const p = new THREE.Vector3();
+      pinata.mesh.getWorldPosition(p);
+      this.harvestSelectPos = p;
+      this.harvestSelectName = `${pinata.kind}:${pinata.tool}`;
+      this.harvestSelectNodeId = pinata.id;
+      if (pinata.tool) this.activityTool = pinata.tool;
+      this.harvestMoveActive = false;
+      this.vfx.auraRing(new THREE.Vector3(p.x, 0.08, p.z), 0x7ee7a8, 1.2, 0.55);
+      this.setCombatFlash(
+        `HARVEST SELECT · ${String(pinata.kind).toUpperCase()} · ${pinata.tool}`,
+        0.65,
+      );
+      return;
+    }
     const node = this.forestWorld?.pickHarvest(caster, 28) ?? null;
     if (node) {
       this.harvestSelectPos = node.position.clone();
@@ -11441,8 +11459,16 @@ export class Studio {
         place.y = 0;
         this.campBuild.updateGhost(place);
       }
+      const fp = this.campBuild.activeFootprint;
+      this.buildGrid?.setSnap(this.campBuild.activeSnap);
+      this.buildGrid?.setInnerM(fp ? innerMFromFootprint(fp) : this.campBuild.activeSnap);
+      this.buildGrid?.setValid(this.campBuild.isGhostValid);
+      const gp = this.campBuild.ghostPosition;
+      if (gp) this.buildGrid?.setCell(gp);
     } else if (this.buildGrid?.isVisible && this.character && this.activityMode === "build") {
-      // Keep grid cursor live even without ghost (planning)
+      // Keep zhunbei selection cell live even without a ghost (planning)
+      this.buildGrid.setInnerM(1);
+      this.buildGrid.setValid(true);
       const origin = this.character.root.position.clone();
       origin.y += 1.2;
       const fwd = this.controller?.forward() ?? new THREE.Vector3(0, 0, 1);
@@ -12161,6 +12187,28 @@ export class Studio {
           void this.campEnemies.spawnSeedHostiles(arena.spawn, campId);
         }
       }
+
+      if (map.play?.kind === "seed-overworld") {
+        const tagged = tagStartSceneHarvest(arena.group, {
+          seed: map.play.seed,
+          hubRadius: map.play.hubRadius,
+        });
+        if (this.pinataHarvest) {
+          for (const n of tagged.nodes) {
+            this.pinataHarvest.registerMesh(n.mesh, {
+              id: n.id,
+              kind: n.kind,
+              tool: n.tool,
+              hp: n.hp,
+              materialId: n.materialId,
+            });
+          }
+        }
+        this.setCombatFlash(
+          `START · Q harvest · trees ${tagged.trees} · rocks ${tagged.rocks} · nodes ${tagged.nodes.length}`,
+          2.4,
+        );
+      }
     } catch (err) {
       console.error("[Studio] arena load failed", err);
       arena?.dispose();
@@ -12446,6 +12494,11 @@ export class Studio {
       // Minecraft-like third person: over-shoulder crosshair, mid body look-at
       this.applyActivityCamera(mode);
       this.buildGrid?.setVisible(mode === "build");
+      if (mode === "build") {
+        this.buildGrid?.setSnap(1);
+        this.buildGrid?.setInnerM(1);
+        this.buildGrid?.setValid(true);
+      }
     } else if (mode === "combat") {
       this.clearVoxelHarvestTool();
       // Leaving build → cancel place ghost
@@ -13206,9 +13259,11 @@ export class Studio {
         if (this.pinataHarvest.getNode(nodeId)) {
           const power = 10 + Math.floor(Math.random() * 6);
           const res = this.pinataHarvest.hitForestNode(nodeId, toolNorm, power);
+          const pin = this.pinataHarvest.getNode(nodeId);
+          const yields = (pin?.mesh.userData.harvestYields as string[] | undefined) ?? undefined;
           // On break, chunks magnetize into bag; partial hits still chip yield
-          if (res.hit && !res.broken) {
-            applyHarvestYield(tool, undefined, undefined, bagChar);
+          if (res.hit) {
+            applyHarvestYield(tool, undefined, yields, bagChar);
           }
           if (res.broken) {
             forestNode = this.forestWorld?.harvestNode(nodeId) ?? forestNode;

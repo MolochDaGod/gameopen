@@ -1,0 +1,1356 @@
+{
+  "pack": "modular-dungeon",
+  "source": "free_modular_low_poly_dungeon_pack (1).glb",
+  "bytes": 4859236,
+  "meshCount": 263,
+  "nodeCount": 464,
+  "uniqueStems": [
+    "Coin.001",
+    "Key.001",
+    "barrel",
+    "barrel.015",
+    "barrel.016",
+    "barrel.017",
+    "barrel.018",
+    "barrel.019",
+    "barrel.020",
+    "barrel.021",
+    "barrel.022",
+    "barrel.023",
+    "barrel.024",
+    "barrel.025",
+    "bars.001",
+    "bars.002",
+    "bars.003",
+    "bars.013",
+    "blade trap",
+    "blade trap base",
+    "bone",
+    "brick",
+    "brick wall",
+    "brick wall with bars",
+    "brick wall with bars.001",
+    "brick wall with door",
+    "brick wall with door.001",
+    "brick wall without door",
+    "brick wall without door.001",
+    "brick wall.001",
+    "brick wall.002",
+    "brick wall.003",
+    "brick wall.004",
+    "brick wall.005",
+    "bricks",
+    "bricks.001",
+    "candle",
+    "candle.001",
+    "candle.002",
+    "candle.003",
+    "chest bottom",
+    "chest top",
+    "chest's gold",
+    "damaged railing left",
+    "damaged railing right",
+    "debris",
+    "door arc",
+    "door arc.037",
+    "door arc.038",
+    "door.001",
+    "door.002",
+    "door.003",
+    "door.013",
+    "floor",
+    "floor.001",
+    "floor.002",
+    "floor.003",
+    "floor.004",
+    "floor.005",
+    "floor.006",
+    "floor.007",
+    "floor.008",
+    "floor.011",
+    "floor.012",
+    "floor.013",
+    "floor.014",
+    "floor.015",
+    "floor.016",
+    "floor.017",
+    "floor.018",
+    "floor.029",
+    "floor.030",
+    "floor.031",
+    "floor.032",
+    "floor.033",
+    "floor.034",
+    "floor.035",
+    "floor.036",
+    "floor.037",
+    "floor.038",
+    "floor.039",
+    "floor.041",
+    "floor.043",
+    "floor.044",
+    "floor.045",
+    "floor.046",
+    "floor.047",
+    "floor.048",
+    "floor.049",
+    "floor.050",
+    "floor.051",
+    "floor.052",
+    "floor.063",
+    "floor.064",
+    "floor.065",
+    "floor.066",
+    "floor.067",
+    "floor.070",
+    "floor.072",
+    "floor.074",
+    "floor.092",
+    "floor.107",
+    "floor.331",
+    "floor.332",
+    "floor.335",
+    "floor.336",
+    "floor.338",
+    "floor.341",
+    "floor.349",
+    "floor.364",
+    "floor.365",
+    "floor.366",
+    "floor.367",
+    "floor.368",
+    "floor.369",
+    "floor.370",
+    "floor.371",
+    "floor.372",
+    "floor.373",
+    "floor.374",
+    "floor.375",
+    "floor.376",
+    "floor.377",
+    "floor.378",
+    "floor.379",
+    "floor.380",
+    "floor.381",
+    "floor.382",
+    "floor.383",
+    "floor.384",
+    "floor.385",
+    "floor.386",
+    "floor.387",
+    "floor.388",
+    "floor.389",
+    "floor.390",
+    "floor.391",
+    "lever",
+    "lever base",
+    "pillar",
+    "railing",
+    "rock",
+    "rock.001",
+    "rock.002",
+    "rock.003",
+    "ruined wall",
+    "saw blade",
+    "saw blade floor",
+    "saw blade floor corner",
+    "skull",
+    "smooth wall",
+    "smooth wall.001",
+    "smooth wall.002",
+    "smooth wall.003",
+    "smooth wall.004",
+    "spikes",
+    "spikes floor",
+    "stairs",
+    "stairs handhail big",
+    "stairs handhail small",
+    "stairs.001",
+    "stairs.002",
+    "stairs.003",
+    "tile",
+    "tile.001",
+    "tile.002",
+    "tile.003",
+    "tile.004",
+    "tile.005",
+    "torch",
+    "torch.001",
+    "window",
+    "window.001",
+    "window.002",
+    "wooden box",
+    "wooden box.001",
+    "wooden box.003",
+    "wooden box.004",
+    "wooden box.005",
+    "wooden box.006",
+    "wooden box.007",
+    "wooden box.008",
+    "wooden box.009",
+    "wooden box.010",
+    "wooden box.011",
+    "wooden box.012",
+    "wooden box.013",
+    "wooden box.014",
+    "wooden box.015",
+    "wooden box.016",
+    "wooden box.017",
+    "wooden box.018",
+    "wooden box.019",
+    "wooden box.020",
+    "wooden box.021",
+    "wooden box.022",
+    "wooden box.023",
+    "wooden box.024"
+  ],
+  "stemCount": 198,
+  "images": [],
+  "meshes": [
+    {
+      "name": "barrel.015_light brown_0",
+      "parent": "barrel.015",
+      "verts": 60,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 0.868,
+      "y": 0.913
+    },
+    {
+      "name": "barrel.016_light grey_0",
+      "parent": "barrel.016",
+      "verts": 160,
+      "polys": 80,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.431,
+      "y": 1.453
+    },
+    {
+      "name": "barrel.017_light grey_0",
+      "parent": "barrel.017",
+      "verts": 160,
+      "polys": 80,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.382,
+      "y": 1.453
+    },
+    {
+      "name": "barrel.018_light brown_0",
+      "parent": "barrel.018",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.525,
+      "y": 0.638
+    },
+    {
+      "name": "barrel.019_light brown_0",
+      "parent": "barrel.019",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.49,
+      "y": 0.523
+    },
+    {
+      "name": "barrel.020_light brown_0",
+      "parent": "barrel.020",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.45,
+      "y": 0.513
+    },
+    {
+      "name": "barrel.021_light brown_0",
+      "parent": "barrel.021",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.497,
+      "y": 0.618
+    },
+    {
+      "name": "barrel.022_light brown_0",
+      "parent": "barrel.022",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.494,
+      "y": 0.646
+    },
+    {
+      "name": "barrel.023_light brown_0",
+      "parent": "barrel.023",
+      "verts": 60,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 0.868,
+      "y": 0.913
+    },
+    {
+      "name": "barrel.024_light brown_0",
+      "parent": "barrel.024",
+      "verts": 72,
+      "polys": 36,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.298,
+      "y": 1.29
+    },
+    {
+      "name": "barrel.025_light brown_0",
+      "parent": "barrel.025",
+      "verts": 110,
+      "polys": 56,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.155,
+      "y": 1.512
+    },
+    {
+      "name": "barrel_light brown_0",
+      "parent": "barrel",
+      "verts": 944,
+      "polys": 480,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.506,
+      "y": 1.423
+    },
+    {
+      "name": "barrel_light grey_0",
+      "parent": "barrel",
+      "verts": 320,
+      "polys": 160,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.382,
+      "y": 1.453
+    },
+    {
+      "name": "bars.001_black_0",
+      "parent": "bars.001",
+      "verts": 216,
+      "polys": 108,
+      "materials": [
+        "black"
+      ],
+      "xz": 3.0,
+      "y": 0.114
+    },
+    {
+      "name": "bars.002_black_0",
+      "parent": "bars.002",
+      "verts": 216,
+      "polys": 108,
+      "materials": [
+        "black"
+      ],
+      "xz": 3.0,
+      "y": 0.114
+    },
+    {
+      "name": "bars.003_black_0",
+      "parent": "bars.003",
+      "verts": 216,
+      "polys": 108,
+      "materials": [
+        "black"
+      ],
+      "xz": 3.0,
+      "y": 0.114
+    },
+    {
+      "name": "bars.013_black_0",
+      "parent": "bars.013",
+      "verts": 216,
+      "polys": 108,
+      "materials": [
+        "black"
+      ],
+      "xz": 3.0,
+      "y": 0.114
+    },
+    {
+      "name": "blade trap base_dark grey_0",
+      "parent": "blade trap base",
+      "verts": 78,
+      "polys": 40,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 0.599,
+      "y": 0.692
+    },
+    {
+      "name": "blade trap_dark brown_0",
+      "parent": "blade trap",
+      "verts": 157,
+      "polys": 79,
+      "materials": [
+        "dark_brown"
+      ],
+      "xz": 1.555,
+      "y": 0.231
+    },
+    {
+      "name": "blade trap_light grey_0",
+      "parent": "blade trap",
+      "verts": 63,
+      "polys": 27,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.477,
+      "y": 1.548
+    },
+    {
+      "name": "bone_beige_0",
+      "parent": "bone",
+      "verts": 104,
+      "polys": 52,
+      "materials": [
+        "beige"
+      ],
+      "xz": 0.602,
+      "y": 0.099
+    },
+    {
+      "name": "brick wall with bars.001_dark grey_0",
+      "parent": "brick wall with bars.001",
+      "verts": 2806,
+      "polys": 1306,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall with bars.001_grey_0",
+      "parent": "brick wall with bars.001",
+      "verts": 5733,
+      "polys": 2644,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.319,
+      "y": 0.407
+    },
+    {
+      "name": "brick wall with bars.001_red_0",
+      "parent": "brick wall with bars.001",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall with bars_dark grey_0",
+      "parent": "brick wall with bars",
+      "verts": 2758,
+      "polys": 1282,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall with bars_grey_0",
+      "parent": "brick wall with bars",
+      "verts": 5619,
+      "polys": 2588,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.319,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall with bars_red_0",
+      "parent": "brick wall with bars",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall with door.001_dark grey_0",
+      "parent": "brick wall with door.001",
+      "verts": 2806,
+      "polys": 1306,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall with door.001_grey_0",
+      "parent": "brick wall with door.001",
+      "verts": 5733,
+      "polys": 2644,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.319,
+      "y": 0.407
+    },
+    {
+      "name": "brick wall with door.001_red_0",
+      "parent": "brick wall with door.001",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall with door_dark grey_0",
+      "parent": "brick wall with door",
+      "verts": 2758,
+      "polys": 1282,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall with door_grey_0",
+      "parent": "brick wall with door",
+      "verts": 5619,
+      "polys": 2588,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.329,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall with door_red_0",
+      "parent": "brick wall with door",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall without door.001_dark grey_0",
+      "parent": "brick wall without door.001",
+      "verts": 2806,
+      "polys": 1306,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall without door.001_grey_0",
+      "parent": "brick wall without door.001",
+      "verts": 5733,
+      "polys": 2644,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.319,
+      "y": 0.407
+    },
+    {
+      "name": "brick wall without door.001_red_0",
+      "parent": "brick wall without door.001",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall without door_dark grey_0",
+      "parent": "brick wall without door",
+      "verts": 2758,
+      "polys": 1282,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 6.319,
+      "y": 0.731
+    },
+    {
+      "name": "brick wall without door_grey_0",
+      "parent": "brick wall without door",
+      "verts": 5619,
+      "polys": 2588,
+      "materials": [
+        "grey"
+      ],
+      "xz": 6.329,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall without door_red_0",
+      "parent": "brick wall without door",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.408,
+      "y": 0.0
+    },
+    {
+      "name": "brick wall.001_dark grey_0",
+      "parent": "brick wall.001",
+      "verts": 1208,
+      "polys": 556,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.407
+    },
+    {
+      "name": "brick wall.001_grey_0",
+      "parent": "brick wall.001",
+      "verts": 2859,
+      "polys": 1318,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.407
+    },
+    {
+      "name": "brick wall.002_dark grey_0",
+      "parent": "brick wall.002",
+      "verts": 1184,
+      "polys": 544,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall.002_grey_0",
+      "parent": "brick wall.002",
+      "verts": 2811,
+      "polys": 1294,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.484
+    },
+    {
+      "name": "brick wall.003_dark grey_0",
+      "parent": "brick wall.003",
+      "verts": 1200,
+      "polys": 552,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.505
+    },
+    {
+      "name": "brick wall.003_grey_0",
+      "parent": "brick wall.003",
+      "verts": 2811,
+      "polys": 1294,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.484
+    },
+    {
+      "name": "brick wall.004_dark grey_0",
+      "parent": "brick wall.004",
+      "verts": 1230,
+      "polys": 572,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall.004_grey_0",
+      "parent": "brick wall.004",
+      "verts": 2715,
+      "polys": 1250,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall.005_dark grey_0",
+      "parent": "brick wall.005",
+      "verts": 1226,
+      "polys": 564,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall.005_grey_0",
+      "parent": "brick wall.005",
+      "verts": 2535,
+      "polys": 1168,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall_dark grey_0",
+      "parent": "brick wall",
+      "verts": 1100,
+      "polys": 506,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick wall_grey_0",
+      "parent": "brick wall",
+      "verts": 2887,
+      "polys": 1328,
+      "materials": [
+        "grey"
+      ],
+      "xz": 3.063,
+      "y": 0.313
+    },
+    {
+      "name": "brick_grey_0",
+      "parent": "brick",
+      "verts": 96,
+      "polys": 44,
+      "materials": [
+        "grey"
+      ],
+      "xz": 0.527,
+      "y": 0.313
+    },
+    {
+      "name": "bricks.001_grey_0",
+      "parent": "bricks.001",
+      "verts": 480,
+      "polys": 220,
+      "materials": [
+        "grey"
+      ],
+      "xz": 1.941,
+      "y": 1.979
+    },
+    {
+      "name": "bricks_grey_0",
+      "parent": "bricks",
+      "verts": 576,
+      "polys": 264,
+      "materials": [
+        "grey"
+      ],
+      "xz": 1.828,
+      "y": 1.867
+    },
+    {
+      "name": "candle.001_beige_0",
+      "parent": "candle.001",
+      "verts": 42,
+      "polys": 28,
+      "materials": [
+        "beige"
+      ],
+      "xz": 0.075,
+      "y": 0.087
+    },
+    {
+      "name": "candle.001_black_0",
+      "parent": "candle.001",
+      "verts": 30,
+      "polys": 16,
+      "materials": [
+        "black"
+      ],
+      "xz": 0.038,
+      "y": 0.005
+    },
+    {
+      "name": "candle.002_beige_0",
+      "parent": "candle.002",
+      "verts": 46,
+      "polys": 28,
+      "materials": [
+        "beige"
+      ],
+      "xz": 0.11,
+      "y": 0.127
+    },
+    {
+      "name": "candle.002_black_0",
+      "parent": "candle.002",
+      "verts": 30,
+      "polys": 16,
+      "materials": [
+        "black"
+      ],
+      "xz": 0.038,
+      "y": 0.005
+    },
+    {
+      "name": "candle.003_beige_0",
+      "parent": "candle.003",
+      "verts": 54,
+      "polys": 28,
+      "materials": [
+        "beige"
+      ],
+      "xz": 0.343,
+      "y": 0.127
+    },
+    {
+      "name": "candle.003_black_0",
+      "parent": "candle.003",
+      "verts": 30,
+      "polys": 16,
+      "materials": [
+        "black"
+      ],
+      "xz": 0.038,
+      "y": 0.005
+    },
+    {
+      "name": "candle_beige_0",
+      "parent": "candle",
+      "verts": 42,
+      "polys": 28,
+      "materials": [
+        "beige"
+      ],
+      "xz": 0.193,
+      "y": 0.087
+    },
+    {
+      "name": "candle_black_0",
+      "parent": "candle",
+      "verts": 30,
+      "polys": 16,
+      "materials": [
+        "black"
+      ],
+      "xz": 0.038,
+      "y": 0.005
+    },
+    {
+      "name": "chest bottom_dark brown_0",
+      "parent": "chest bottom",
+      "verts": 222,
+      "polys": 112,
+      "materials": [
+        "dark_brown"
+      ],
+      "xz": 1.156,
+      "y": 0.852
+    },
+    {
+      "name": "chest bottom_light brown_0",
+      "parent": "chest bottom",
+      "verts": 118,
+      "polys": 68,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.156,
+      "y": 0.852
+    },
+    {
+      "name": "chest bottom_light grey_0",
+      "parent": "chest bottom",
+      "verts": 332,
+      "polys": 182,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.283,
+      "y": 0.932
+    },
+    {
+      "name": "chest top_black_0",
+      "parent": "chest top",
+      "verts": 12,
+      "polys": 6,
+      "materials": [
+        "black"
+      ],
+      "xz": 0.117,
+      "y": 0.109
+    },
+    {
+      "name": "chest top_dark brown_0",
+      "parent": "chest top",
+      "verts": 256,
+      "polys": 128,
+      "materials": [
+        "dark_brown"
+      ],
+      "xz": 1.239,
+      "y": 0.899
+    },
+    {
+      "name": "chest top_light brown_0",
+      "parent": "chest top",
+      "verts": 188,
+      "polys": 96,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 1.239,
+      "y": 0.878
+    },
+    {
+      "name": "chest top_light grey_0",
+      "parent": "chest top",
+      "verts": 532,
+      "polys": 290,
+      "materials": [
+        "light_grey"
+      ],
+      "xz": 1.355,
+      "y": 1.103
+    },
+    {
+      "name": "chest's gold_yellow_0",
+      "parent": "chest's gold",
+      "verts": 828,
+      "polys": 420,
+      "materials": [
+        "yellow"
+      ],
+      "xz": 1.037,
+      "y": 0.781
+    },
+    {
+      "name": "Coin.001_yellow_0",
+      "parent": "Coin.001",
+      "verts": 132,
+      "polys": 68,
+      "materials": [
+        "yellow"
+      ],
+      "xz": 0.296,
+      "y": 0.052
+    },
+    {
+      "name": "damaged railing left_grey_0",
+      "parent": "damaged railing left",
+      "verts": 272,
+      "polys": 144,
+      "materials": [
+        "grey"
+      ],
+      "xz": 2.32,
+      "y": 0.443
+    },
+    {
+      "name": "damaged railing right_grey_0",
+      "parent": "damaged railing right",
+      "verts": 272,
+      "polys": 144,
+      "materials": [
+        "grey"
+      ],
+      "xz": 2.32,
+      "y": 0.443
+    },
+    {
+      "name": "debris_dark grey_0",
+      "parent": "debris",
+      "verts": 344,
+      "polys": 180,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 2.211,
+      "y": 2.106
+    },
+    {
+      "name": "debris_grey_0",
+      "parent": "debris",
+      "verts": 216,
+      "polys": 116,
+      "materials": [
+        "grey"
+      ],
+      "xz": 1.111,
+      "y": 0.84
+    },
+    {
+      "name": "debris_light brown_0",
+      "parent": "debris",
+      "verts": 112,
+      "polys": 52,
+      "materials": [
+        "light_brown"
+      ],
+      "xz": 0.723,
+      "y": 0.744
+    },
+    {
+      "name": "door arc.037_dark grey_0",
+      "parent": "door arc.037",
+      "verts": 406,
+      "polys": 202,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.839,
+      "y": 0.731
+    },
+    {
+      "name": "door arc.037_red_0",
+      "parent": "door arc.037",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.454,
+      "y": 0.0
+    },
+    {
+      "name": "door arc.038_dark grey_0",
+      "parent": "door arc.038",
+      "verts": 406,
+      "polys": 202,
+      "materials": [
+        "dark_grey"
+      ],
+      "xz": 3.839,
+      "y": 0.731
+    },
+    {
+      "name": "door arc.038_red_0",
+      "parent": "door arc.038",
+      "verts": 6,
+      "polys": 2,
+      "materials": [
+        "material"
+      ],
+      "xz": 0.454,
+      "y": 0.0
+    }
+  ],
+  "meshNames": [
+    "barrel.015_light brown_0",
+    "barrel.016_light grey_0",
+    "barrel.017_light grey_0",
+    "barrel.018_light brown_0",
+    "barrel.019_light brown_0",
+    "barrel.020_light brown_0",
+    "barrel.021_light brown_0",
+    "barrel.022_light brown_0",
+    "barrel.023_light brown_0",
+    "barrel.024_light brown_0",
+    "barrel.025_light brown_0",
+    "barrel_light brown_0",
+    "barrel_light grey_0",
+    "bars.001_black_0",
+    "bars.002_black_0",
+    "bars.003_black_0",
+    "bars.013_black_0",
+    "blade trap base_dark grey_0",
+    "blade trap_dark brown_0",
+    "blade trap_light grey_0",
+    "bone_beige_0",
+    "brick wall with bars.001_dark grey_0",
+    "brick wall with bars.001_grey_0",
+    "brick wall with bars.001_red_0",
+    "brick wall with bars_dark grey_0",
+    "brick wall with bars_grey_0",
+    "brick wall with bars_red_0",
+    "brick wall with door.001_dark grey_0",
+    "brick wall with door.001_grey_0",
+    "brick wall with door.001_red_0",
+    "brick wall with door_dark grey_0",
+    "brick wall with door_grey_0",
+    "brick wall with door_red_0",
+    "brick wall without door.001_dark grey_0",
+    "brick wall without door.001_grey_0",
+    "brick wall without door.001_red_0",
+    "brick wall without door_dark grey_0",
+    "brick wall without door_grey_0",
+    "brick wall without door_red_0",
+    "brick wall.001_dark grey_0",
+    "brick wall.001_grey_0",
+    "brick wall.002_dark grey_0",
+    "brick wall.002_grey_0",
+    "brick wall.003_dark grey_0",
+    "brick wall.003_grey_0",
+    "brick wall.004_dark grey_0",
+    "brick wall.004_grey_0",
+    "brick wall.005_dark grey_0",
+    "brick wall.005_grey_0",
+    "brick wall_dark grey_0",
+    "brick wall_grey_0",
+    "brick_grey_0",
+    "bricks.001_grey_0",
+    "bricks_grey_0",
+    "candle.001_beige_0",
+    "candle.001_black_0",
+    "candle.002_beige_0",
+    "candle.002_black_0",
+    "candle.003_beige_0",
+    "candle.003_black_0",
+    "candle_beige_0",
+    "candle_black_0",
+    "chest bottom_dark brown_0",
+    "chest bottom_light brown_0",
+    "chest bottom_light grey_0",
+    "chest top_black_0",
+    "chest top_dark brown_0",
+    "chest top_light brown_0",
+    "chest top_light grey_0",
+    "chest's gold_yellow_0",
+    "Coin.001_yellow_0",
+    "damaged railing left_grey_0",
+    "damaged railing right_grey_0",
+    "debris_dark grey_0",
+    "debris_grey_0",
+    "debris_light brown_0",
+    "door arc.037_dark grey_0",
+    "door arc.037_red_0",
+    "door arc.038_dark grey_0",
+    "door arc.038_red_0",
+    "door arc_dark grey_0",
+    "door arc_red_0",
+    "door.001_brown_0",
+    "door.001_dark brown_0",
+    "door.001_dark grey_0",
+    "door.002_brown_0",
+    "door.002_dark brown_0",
+    "door.002_dark grey_0",
+    "door.003_brown_0",
+    "door.003_dark brown_0",
+    "door.003_dark grey_0",
+    "door.013_brown_0",
+    "door.013_dark brown_0",
+    "door.013_dark grey_0",
+    "floor.001_dark grey_0",
+    "floor.001_grey_0",
+    "floor.002_dark grey_0",
+    "floor.002_grey_0",
+    "floor.003_dark grey_0",
+    "floor.003_grey_0",
+    "floor.004_grey_0",
+    "floor.005_dark grey_0",
+    "floor.005_grey_0",
+    "floor.006_dark grey_0",
+    "floor.006_grey_0",
+    "floor.007_dark grey_0",
+    "floor.007_grey_0",
+    "floor.008_grey_0",
+    "floor.011_grey_0",
+    "floor.012_grey_0",
+    "floor.013_grey_0",
+    "floor.014_grey_0",
+    "floor.015_grey_0",
+    "floor.016_grey_0",
+    "floor.017_grey_0",
+    "floor.018_grey_0",
+    "floor.029_grey_0",
+    "floor.030_grey_0",
+    "floor.031_grey_0",
+    "floor.032_grey_0",
+    "floor.033_grey_0",
+    "floor.034_grey_0",
+    "floor.035_grey_0",
+    "floor.036_grey_0",
+    "floor.037_grey_0",
+    "floor.038_grey_0",
+    "floor.039_grey_0",
+    "floor.041_grey_0",
+    "floor.043_grey_0",
+    "floor.044_grey_0",
+    "floor.045_grey_0",
+    "floor.046_grey_0",
+    "floor.047_grey_0",
+    "floor.048_grey_0",
+    "floor.049_grey_0",
+    "floor.050_grey_0",
+    "floor.051_grey_0",
+    "floor.052_grey_0",
+    "floor.063_grey_0",
+    "floor.064_grey_0",
+    "floor.065_grey_0",
+    "floor.066_grey_0",
+    "floor.067_grey_0",
+    "floor.070_grey_0",
+    "floor.072_grey_0",
+    "floor.074_grey_0",
+    "floor.092_grey_0",
+    "floor.107_grey_0",
+    "floor.331_grey_0",
+    "floor.332_grey_0",
+    "floor.335_grey_0",
+    "floor.336_grey_0",
+    "floor.338_grey_0",
+    "floor.341_grey_0",
+    "floor.349_grey_0",
+    "floor.364_grey_0",
+    "floor.365_grey_0",
+    "floor.366_grey_0",
+    "floor.367_grey_0",
+    "floor.368_grey_0",
+    "floor.369_grey_0",
+    "floor.370_grey_0",
+    "floor.371_grey_0",
+    "floor.372_grey_0",
+    "floor.373_grey_0",
+    "floor.374_grey_0",
+    "floor.375_grey_0",
+    "floor.376_grey_0",
+    "floor.377_grey_0",
+    "floor.378_grey_0",
+    "floor.379_grey_0",
+    "floor.380_grey_0",
+    "floor.381_grey_0",
+    "floor.382_grey_0",
+    "floor.383_grey_0",
+    "floor.384_grey_0",
+    "floor.385_grey_0",
+    "floor.386_grey_0",
+    "floor.387_grey_0",
+    "floor.388_grey_0",
+    "floor.389_grey_0",
+    "floor.390_grey_0",
+    "floor.391_grey_0",
+    "floor_grey_0",
+    "Key.001_yellow_0",
+    "lever base_dark grey_0",
+    "lever_brown_0",
+    "pillar_grey_0",
+    "railing_grey_0",
+    "rock.001_dark grey_0",
+    "rock.002_dark grey_0",
+    "rock.003_dark grey_0",
+    "rock_dark grey_0",
+    "ruined wall_dark grey_0",
+    "ruined wall_grey_0",
+    "saw blade floor corner_dark grey_0",
+    "saw blade floor corner_grey_0",
+    "saw blade floor_dark grey_0",
+    "saw blade floor_grey_0",
+    "saw blade_light grey_0",
+    "skull_beige_0",
+    "smooth wall.001_grey_0",
+    "smooth wall.001_light grey_0",
+    "smooth wall.002_grey_0",
+    "smooth wall.002_light grey_0",
+    "smooth wall.003_grey_0",
+    "smooth wall.003_light grey_0",
+    "smooth wall.004_grey_0",
+    "smooth wall.004_light grey_0",
+    "smooth wall_grey_0",
+    "spikes floor_dark grey_0",
+    "spikes floor_grey_0",
+    "spikes_light grey_0",
+    "stairs handhail big_dark grey_0",
+    "stairs handhail small_dark grey_0",
+    "stairs.001_dark grey_0",
+    "stairs.001_grey_0",
+    "stairs.002_dark grey_0",
+    "stairs.002_grey_0",
+    "stairs.003_dark grey_0",
+    "stairs.003_grey_0",
+    "stairs_dark grey_0",
+    "tile.001_grey_0",
+    "tile.002_grey_0",
+    "tile.003_dark grey_0",
+    "tile.004_grey_0",
+    "tile.005_grey_0",
+    "tile_grey_0",
+    "torch.001_dark grey_0",
+    "torch.001_emissive yellow_0",
+    "torch.001_light brown_0",
+    "torch_dark grey_0",
+    "torch_light brown_0",
+    "window.001_black_0",
+    "window.001_dark grey_0",
+    "window.001_grey_0",
+    "window.002_dark grey_0",
+    "window_dark grey_0",
+    "window_grey_0",
+    "wooden box.001_light brown_0",
+    "wooden box.003_light brown_0",
+    "wooden box.004_light brown_0",
+    "wooden box.005_light brown_0",
+    "wooden box.006_light brown_0",
+    "wooden box.007_light brown_0",
+    "wooden box.008_light brown_0",
+    "wooden box.009_light brown_0",
+    "wooden box.010_light brown_0",
+    "wooden box.011_light brown_0",
+    "wooden box.012_light brown_0",
+    "wooden box.013_light brown_0",
+    "wooden box.014_light brown_0",
+    "wooden box.015_light brown_0",
+    "wooden box.016_light brown_0",
+    "wooden box.017_light brown_0",
+    "wooden box.018_light brown_0",
+    "wooden box.019_light brown_0",
+    "wooden box.020_light brown_0",
+    "wooden box.021_light brown_0",
+    "wooden box.022_light brown_0",
+    "wooden box.023_light brown_0",
+    "wooden box.024_light brown_0",
+    "wooden box_light brown_0"
+  ]
+}

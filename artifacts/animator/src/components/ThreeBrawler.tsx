@@ -1,7 +1,8 @@
 /**
  * ThreeBrawler — React shell for Ruins Brawler / Agama Survival.
  *
- * Full Danger Room combat stack surface:
+ * React canvas host (vanilla Three + Rapier — same contract as R3F Canvas +
+ * @react-three/rapier, without a second renderer). Full Danger Room stack:
  *  • Fleet character → grudge6 avatar + class kit
  *  • Arsenal weapons (mountWeaponModel) + T0 skill kits
  *  • Content API / ObjectStore skill labels + pack icons
@@ -53,12 +54,12 @@ const VARIANT_PRESETS: Record<
     brandAccent: "SURVIVAL",
     mapPath: "models/agama-map.glb",
     sceneOpts: {
-      maxEnemies: 16,
-      spawnInterval: 3.2,
-      initialSpawnCount: 6,
-      // SI map ~80–120 m span after scaleMapToSi — zone + ring track footprint
-      safeZoneRadius: 10,
-      spawnRadius: 42,
+      battleground: true,
+      maxEnemies: 18,
+      spawnInterval: 5.5,
+      initialSpawnCount: 5,
+      safeZoneRadius: 18,
+      spawnRadius: 48,
     },
   },
 };
@@ -101,6 +102,19 @@ const DEFAULT_STATE: BrawlerState = {
   targetMaxHp: 0,
   avatarId: "explorer",
   weaponCycle: [],
+  objective: "Fight north to the Extraction",
+  objectiveDist: 0,
+  zoneName: "Agama Fields",
+  harvestHint: null,
+  extractReady: false,
+  extracted: false,
+  matchTime: 0,
+  wood: 0,
+  fiber: 0,
+  ore: 0,
+  crop: 0,
+  allyCount: 0,
+  enemyCount: 0,
 };
 
 export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
@@ -194,8 +208,20 @@ export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
         </button>
       </div>
 
-      {/* Wave */}
-      <div style={waveBadgeStyle}>WAVE {state.wave}</div>
+      {/* Wave / objective */}
+      <div style={waveBadgeStyle}>
+        {variant === "survival" ? (
+          <>
+            <div>{state.extracted ? "EXTRACTED" : state.zoneName}</div>
+            <div style={{ fontSize: 11, letterSpacing: 1, opacity: 0.9, fontWeight: 600 }}>
+              {state.objective}
+              {state.objectiveDist > 1 ? ` · ${Math.round(state.objectiveDist)}m` : ""}
+            </div>
+          </>
+        ) : (
+          <>WAVE {state.wave}</>
+        )}
+      </div>
 
       {/* Character / equipment panel — top left */}
       {state.phase !== "loading" && (
@@ -247,6 +273,16 @@ export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
             <span>AMMO {state.ammo}</span>
             <span>ATK {kit.atk}</span>
           </div>
+          {variant === "survival" && (
+            <div style={statRowStyle}>
+              <span>WOOD {state.wood}</span>
+              <span>FIBER {state.fiber}</span>
+              <span>ORE {state.ore}</span>
+              <span>CROP {state.crop}</span>
+              <span>ALLY {state.allyCount}</span>
+              <span>HOSTILE {state.enemyCount}</span>
+            </div>
+          )}
           {state.loadError && (
             <div style={{ fontSize: 10, color: "#f0c040", marginTop: 6, opacity: 0.9 }}>
               {state.loadError}
@@ -404,6 +440,27 @@ export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
         </div>
       )}
 
+      {variant === "survival" && state.harvestHint && state.phase === "playing" && (
+        <div style={harvestHintStyle}>{state.harvestHint}</div>
+      )}
+
+      {variant === "survival" && state.extracted && (
+        <div style={deadStyle}>
+          <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2 }}>EXTRACTED</div>
+          <div style={{ opacity: 0.8, marginBottom: 12 }}>
+            {state.kills} kills · {Math.floor(state.matchTime / 60)}m {Math.floor(state.matchTime % 60)}s
+            · wood {state.wood} · ore {state.ore}
+          </div>
+          <button
+            type="button"
+            style={{ ...btnStyle, padding: "10px 20px", fontSize: 14 }}
+            onClick={() => sceneRef.current?.respawn()}
+          >
+            Run again
+          </button>
+        </div>
+      )}
+
       {/* Dead */}
       {state.phase === "dead" && (
         <div style={deadStyle}>
@@ -433,7 +490,11 @@ export function ThreeBrawler({ onExit, variant = "brawl" }: Props) {
 
       {/* Hints */}
       {state.phase === "playing" && !locked && (
-        <div style={hintStyle}>Click to lock · WASD · 1–4 skills · [ ] weapons · RMB focus</div>
+        <div style={hintStyle}>
+          {variant === "survival"
+            ? "Click to lock · WASD · 1–4 skills · E harvest · M map · [ ] weapons · RMB focus"
+            : "Click to lock · WASD · 1–4 skills · [ ] weapons · RMB focus"}
+        </div>
       )}
     </div>
   );
@@ -502,10 +563,28 @@ const waveBadgeStyle: CSSProperties = {
   transform: "translateX(-50%)",
   zIndex: 4,
   fontWeight: 800,
-  letterSpacing: 3,
+  letterSpacing: 2,
   fontSize: 13,
   color: "#ffd24d",
   textShadow: "0 0 12px rgba(255,210,77,0.45)",
+  pointerEvents: "none",
+  textAlign: "center",
+};
+
+const harvestHintStyle: CSSProperties = {
+  position: "absolute",
+  bottom: 108,
+  left: "50%",
+  transform: "translateX(-50%)",
+  zIndex: 5,
+  fontSize: 13,
+  fontWeight: 700,
+  letterSpacing: 0.6,
+  color: "#c8f0a0",
+  background: "rgba(8,18,10,0.72)",
+  border: "1px solid rgba(126,224,160,0.35)",
+  borderRadius: 999,
+  padding: "6px 14px",
   pointerEvents: "none",
 };
 

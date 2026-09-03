@@ -42,6 +42,7 @@ describe("fleetAnimSsot", () => {
     expect(c.some((u) => u.includes("open.grudge-studio.com/anims/baked"))).toBe(true);
     expect(c.some((u) => /prod\/anims\/.+\.glb/i.test(u))).toBe(false);
     expect(c.some((u) => u.includes("assets.grudge-studio.com/anims/baked"))).toBe(true);
+    expect(c.some((u) => u.includes("prod/anims"))).toBe(false);
     expect(c.every((u) => u.endsWith(".json"))).toBe(true);
   });
 

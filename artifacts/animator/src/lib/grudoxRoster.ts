@@ -169,19 +169,31 @@ export function isVoxelExplorerHero(c: GrudgeCharacter): boolean {
   return false;
 }
 
+/** Fleet `saveData.open.voxelLook` — per UUID body, not a shared local draft. */
+function voxelLookFromCharacter(c: GrudgeCharacter): Record<string, unknown> | undefined {
+  const save = (c.saveData || {}) as Record<string, unknown>;
+  const cfg = (c.config || {}) as Record<string, unknown>;
+  for (const blob of [save.open, cfg.open, save, cfg]) {
+    if (!blob || typeof blob !== "object") continue;
+    const look = (blob as Record<string, unknown>).voxelLook;
+    if (look && typeof look === "object") return look as Record<string, unknown>;
+  }
+  return undefined;
+}
+
 /**
  * 4-seat campfire roster: account era=voxel explorers only.
+ * Always length 4 (holes stay empty) so seat index === character.slot.
  * Do not fill seats with Warlords heroes — those belong to the Warlords client.
  */
 export function buildVoxelCampfireHeroes(
   fleet: GrudgeCharacter[],
   preferredId?: string | null,
-): GenesisHeroOption[] {
+): (GenesisHeroOption | null)[] {
   const voxel = fleet.filter(isVoxelExplorerHero);
   const localExplorers = loadGrudoxRosterSlots().filter(
     (s) => /explorer/i.test(s.baseId || "") || s.baseId === "explorer",
   );
-  const options: GenesisHeroOption[] = [];
   const seen = new Set<string>();
   const bySlot: (GenesisHeroOption | null)[] = [null, null, null, null];
 
@@ -203,6 +215,7 @@ export function buildVoxelCampfireHeroes(
       source,
       voxelLook:
         open?.voxelLook && typeof open.voxelLook === "object" ? open.voxelLook : null,
+      voxelLook: voxelLookFromCharacter(c),
     };
   };
 
@@ -213,7 +226,7 @@ export function buildVoxelCampfireHeroes(
         ? c.slotIndex
         : typeof c.config?.slot === "number"
           ? (c.config.slot as number)
-          : options.length;
+          : bySlot.findIndex((x) => !x);
     const s = Math.max(0, Math.min(3, slot));
     if (bySlot[s]) continue;
     const opt = toOpt(c, s, "fleet");
@@ -245,11 +258,8 @@ export function buildVoxelCampfireHeroes(
     seen.add(loc.uuid);
   }
 
-  for (const o of bySlot) {
-    if (o) options.push(o);
-  }
   void preferredId;
-  return options.slice(0, GRUDOX_MAX_SLOTS);
+  return bySlot;
 }
 
 /** Display meta for Genesis picker cards. */
@@ -263,6 +273,8 @@ export type GenesisHeroOption = {
   source: "grudox" | "fleet";
   /** Railway saveData.open.voxelLook — per-character cosmetics. */
   voxelLook?: Record<string, unknown> | null;
+  /** Railway `saveData.open.voxelLook` for this UUID — not a shared wardrobe. */
+  voxelLook?: Record<string, unknown>;
 };
 
 const RACE_LABEL: Record<string, string> = {

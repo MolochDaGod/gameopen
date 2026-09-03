@@ -1017,6 +1017,17 @@ export function resolveBakeRel(rel: string): string {
   return BAKE_REL_ALIASES[clean] || clean;
 }
 
+};
+
+export function resolveBakeRel(rel: string): string {
+  const clean = String(rel || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\.json$/i, "")
+    .replace(/\.glb$/i, "");
+  return BAKE_REL_ALIASES[clean] || clean;
+}
+
 /**
  * Candidate URLs for a clip rel like `sword_shield/sword and shield idle`
  * or `pistol/idle` or `2h_melee/great-sword-idle`.
@@ -1055,6 +1066,13 @@ export function bakedClipCandidates(rel: string, baseOverride?: string): string[
     }
     return true;
   });
+  const filtered = [...new Set(urls)].filter(
+    (u) =>
+      !/grudge-arena\.grudge-studio\.com/i.test(u) &&
+      !/gameopen\.vercel\.app/i.test(u) &&
+      !/\/prod\/anims\//i.test(u) &&
+      !/\.glb(\?|$)/i.test(u),
+  );
   return filtered;
 }
 

@@ -69,6 +69,7 @@ const bare = [
   ["models/enemies/session/lowpoly_rhino.glb", "lowpoly_rhino.glb"],
   ["models/enemies/session/violet_4_hn_creature.glb", "violet_4_hn_creature.glb"],
   ["models/enemies/session/voodooist.glb", "voodooist.glb"],
+  ["models/enemies/session/zombie_redesigned.glb", "zombie_redesigned.glb"],
   ["models/destructibles/barrel-01.glb", "barrel-01.glb"],
   ["models/destructibles/barrel-02.glb", "barrel-02.glb"],
   ["models/destructibles/barrel-04.glb", "barrel-04.glb"],

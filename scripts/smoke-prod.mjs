@@ -262,6 +262,21 @@ await probe("cdn-campfire-tvs-barn", `${CDN}/models/campfire-lobby/tvs/barn.glb`
   expect: "asset",
   critical: false,
 });
+await probe(
+  "cdn-tvs-farm-haybale-tex",
+  `${CDN}/models/voxels/tvs/voxel-farm/textures/voxel-farm-haybale-texture.png`,
+  { expect: "asset", critical: false },
+);
+await probe(
+  "cdn-tvs-farm-fence-tex",
+  `${CDN}/models/voxels/tvs/voxel-farm/textures/voxel-farm-fence-texture.png`,
+  { expect: "asset", critical: false },
+);
+await probe(
+  "cdn-encament-fruzer",
+  `${CDN}/models/lobby/chicken_gun_fruzer_encampment.glb`,
+  { expect: "asset", critical: true },
+);
 
 // AI hub — health public; same-origin rewrite must not SPA-masquerade
 await probe("api-ai-health", `${BASE}/api/ai/health`, {

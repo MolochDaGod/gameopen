@@ -164,6 +164,22 @@ export function loadVoxelAvatarForCharacter(characterId: string | null | undefin
     }
   } catch {
     /* ignore */
+/** Per-character override when present. */
+export function loadVoxelAvatarForCharacter(
+  characterId: string | null | undefined,
+  opts?: { fallbackGlobal?: boolean },
+): VoxelAvatarSave | null {
+  if (characterId) {
+    try {
+      const raw = localStorage.getItem(`${VOXEL_AVATAR_KEY}:${characterId}`);
+      if (raw) {
+        const s = sanitizeVoxelAvatar(JSON.parse(raw));
+        if (s) return s;
+      }
+    } catch {
+      /* ignore */
+    }
+    if (opts?.fallbackGlobal === false) return null;
   }
   return null;
 }
@@ -200,7 +216,7 @@ export function partOverridesFromSave(save: VoxelAvatarSave): Partial<Record<Vox
   };
 }
 
-/** Prefer character saveData.open.voxelLook, else localStorage. */
+/** Prefer character saveData.open.voxelLook, else per-UUID local — never steal another seat's draft. */
 export function resolveVoxelAvatar(
   characterId: string | null | undefined,
   openBlob?: Record<string, unknown> | null,
@@ -209,5 +225,5 @@ export function resolveVoxelAvatar(
     const fromFleet = sanitizeVoxelAvatar(openBlob.voxelLook);
     if (fromFleet) return fromFleet;
   }
-  return loadVoxelAvatarForCharacter(characterId);
+  return loadVoxelAvatarForCharacter(characterId, { fallbackGlobal: !characterId });
 }

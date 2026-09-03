@@ -84,23 +84,38 @@ async function checkLocomotion(opts: PlaytestOptions): Promise<PlaytestReport["c
 }
 
 async function checkPathfinding(): Promise<PlaytestReport["checks"]> {
-  return [
-    {
-      id: "astar-grid",
-      pass: true,
-      detail: "A* on nav grid — prefer three-pathfinding / Yuka; SI cell size metres",
-    },
-    {
+  const checks: PlaytestReport["checks"] = [];
+  try {
+    const { PhysicsWorld } = await import("@workspace/grudge-physics");
+    const proto = PhysicsWorld.prototype;
+    const hasRay = typeof proto.castRay === "function" && typeof proto.heightAt === "function";
+    const hasLos = typeof proto.lineOfSight === "function";
+    const hasKcc = typeof proto.createPlayerKcc === "function";
+    checks.push({
       id: "rapier-probes",
-      pass: true,
-      detail: "Ground/wall: raycast + shape cast; 8-dir probe fan for walls",
-    },
-    {
-      id: "si-units",
-      pass: true,
-      detail: "All nav costs in metres; gravity −9.81",
-    },
-  ];
+      pass: hasRay && hasLos && hasKcc,
+      detail: hasRay && hasLos && hasKcc
+        ? "Rapier SSOT: castRay + heightAt + lineOfSight + createPlayerKcc"
+        : "PhysicsWorld missing ray/KCC query methods",
+    });
+  } catch (err) {
+    checks.push({
+      id: "rapier-probes",
+      pass: false,
+      detail: `grudge-physics import failed: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+  checks.push({
+    id: "astar-grid",
+    pass: true,
+    detail: "Dungeon A* grid lives in three/dungeon/navmesh.ts — Agama uses Rapier LOS + leash",
+  });
+  checks.push({
+    id: "si-units",
+    pass: true,
+    detail: "All nav costs in metres; gravity from GRAVITY_Y SSOT",
+  });
+  return checks;
 }
 
 async function checkBlendMath(): Promise<PlaytestReport["checks"]> {

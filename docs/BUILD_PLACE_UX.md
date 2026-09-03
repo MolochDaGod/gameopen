@@ -19,6 +19,7 @@ Canonical camp build controls for Danger Room / annihilate / claim UI.
 - Prefer **free-aim / crosshair ground plane** hit for ghost XZ.
 - Fallback: body-forward 3.2 m from player feet.
 - Blue = valid (claim rights ok); red = out of claim.
+- **Cell frame:** `models/build/zhunbei.glb` (`BuildGridOverlay`) — grid-perfect inner plate + cardinal arrows. The placeable ghost sits **inside** that snapped frame. Inner plate scales to the placeable footprint (or 1 m when only selecting a cell). Same RTS claim buildings and survival / Q-build placement. No second snap engine.
 
 ## UI entry points
 

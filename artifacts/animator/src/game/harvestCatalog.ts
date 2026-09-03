@@ -222,6 +222,19 @@ const FALLBACK_RECIPES: CraftRecipe[] = [
     tier: 0,
   },
   {
+    id: "rcp_starter_campfire",
+    name: "Campfire",
+    station: "hand",
+    output: { id: "campfire", name: "Campfire", qty: 1 },
+    inputs: [
+      { id: "mat_stick", name: "Stick", qty: 4 },
+      { id: "mat_stone", name: "Stone", qty: 3 },
+    ],
+    timeSec: 2,
+    skill: "crafting",
+    tier: 0,
+  },
+  {
     id: "rcp_wood_plank",
     name: "Wood planks",
     station: "workbench",

@@ -1,0 +1,263 @@
+{
+  "pack": "npc-village",
+  "source": "minecraft_world_npc_village.glb",
+  "isolate": "block-type-layers",
+  "file": "models/packs/npc-village/npc-village.glb",
+  "role": "map",
+  "snap_m": 1,
+  "layers": [
+    {
+      "id": "farmland",
+      "name": "Farmland",
+      "isolateNode": "Object_10",
+      "verts": 156,
+      "xz": 0.538,
+      "y": 0.385,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "fence",
+      "name": "Fence",
+      "isolateNode": "Object_11",
+      "verts": 65532,
+      "xz": 8.558,
+      "y": 6.635,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "fence",
+      "name": "Fence",
+      "isolateNode": "Object_12",
+      "verts": 1828,
+      "xz": 0.077,
+      "y": 1.231,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "furnace",
+      "name": "Furnace",
+      "isolateNode": "Object_13",
+      "verts": 32,
+      "xz": 4.385,
+      "y": 3.923,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "glass-pane",
+      "name": "Glass_Pane",
+      "isolateNode": "Object_14",
+      "verts": 2760,
+      "xz": 9.351,
+      "y": 5.933,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "grass-block",
+      "name": "Grass_Block",
+      "isolateNode": "Object_15",
+      "verts": 54955,
+      "xz": 10.308,
+      "y": 7.154,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "gravel",
+      "name": "Gravel",
+      "isolateNode": "Object_16",
+      "verts": 9956,
+      "xz": 8.0,
+      "y": 5.231,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "iron-bars",
+      "name": "Iron_Bars",
+      "isolateNode": "Object_17",
+      "verts": 48,
+      "xz": 4.01,
+      "y": 3.813,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "ladder",
+      "name": "Ladder",
+      "isolateNode": "Object_18",
+      "verts": 336,
+      "xz": 8.615,
+      "y": 4.24,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "oak-door",
+      "name": "Oak_Door",
+      "isolateNode": "Object_19",
+      "verts": 2256,
+      "xz": 8.029,
+      "y": 5.923,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "anvil",
+      "name": "Anvil",
+      "isolateNode": "Object_2",
+      "verts": 168,
+      "xz": 4.529,
+      "y": 3.913,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "oak-log",
+      "name": "Oak_Log",
+      "isolateNode": "Object_20",
+      "verts": 6240,
+      "xz": 9.154,
+      "y": 5.923,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "oak-planks",
+      "name": "Oak_Planks",
+      "isolateNode": "Object_21",
+      "verts": 20888,
+      "xz": 9.308,
+      "y": 6.0,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "oak-pressure-plate",
+      "name": "Oak_Pressure_Plate",
+      "isolateNode": "Object_22",
+      "verts": 504,
+      "xz": 8.606,
+      "y": 5.683,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "oak-stairs",
+      "name": "Oak_Stairs",
+      "isolateNode": "Object_23",
+      "verts": 23939,
+      "xz": 9.385,
+      "y": 6.077,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "sand",
+      "name": "Sand",
+      "isolateNode": "Object_24",
+      "verts": 12,
+      "xz": 0.077,
+      "y": 0.077,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "stationary-lava",
+      "name": "Stationary_Lava",
+      "isolateNode": "Object_25",
+      "verts": 16,
+      "xz": 4.154,
+      "y": 4.0,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "stationary-water",
+      "name": "Stationary_Water",
+      "isolateNode": "Object_26",
+      "verts": 144,
+      "xz": 4.538,
+      "y": 1.615,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "stone-slab",
+      "name": "Stone_Slab",
+      "isolateNode": "Object_27",
+      "verts": 720,
+      "xz": 5.077,
+      "y": 4.615,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "torch",
+      "name": "Torch",
+      "isolateNode": "Object_28",
+      "verts": 984,
+      "xz": 9.038,
+      "y": 5.787,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "wheat",
+      "name": "Wheat",
+      "isolateNode": "Object_29",
+      "verts": 832,
+      "xz": 0.538,
+      "y": 0.385,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "bookshelf",
+      "name": "Bookshelf",
+      "isolateNode": "Object_3",
+      "verts": 336,
+      "xz": 8.769,
+      "y": 4.846,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "chest",
+      "name": "Chest",
+      "isolateNode": "Object_4",
+      "verts": 96,
+      "xz": 4.308,
+      "y": 4.144,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "cobblestone",
+      "name": "Cobblestone",
+      "isolateNode": "Object_5",
+      "verts": 24580,
+      "xz": 9.538,
+      "y": 6.077,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "cobblestone-stairs",
+      "name": "Cobblestone_Stairs",
+      "isolateNode": "Object_6",
+      "verts": 1576,
+      "xz": 9.231,
+      "y": 5.0,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "crafting-table",
+      "name": "Crafting_Table",
+      "isolateNode": "Object_7",
+      "verts": 72,
+      "xz": 8.308,
+      "y": 4.846,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "dirt",
+      "name": "Dirt",
+      "isolateNode": "Object_8",
+      "verts": 5965,
+      "xz": 9.538,
+      "y": 6.692,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    },
+    {
+      "id": "double-stone-slab",
+      "name": "Double_Stone_Slab",
+      "isolateNode": "Object_9",
+      "verts": 432,
+      "xz": 5.769,
+      "y": 5.615,
+      "note": "Mineways fused WORLD layer, not a 1m block"
+    }
+  ],
+  "note": "Not houses. 28 material layers (Oak_Planks = every oak plank in the village)."
+}

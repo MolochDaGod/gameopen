@@ -127,6 +127,14 @@
       "destination": "https://objectstore.grudge-studio.com/api/search"
     },
     {
+      "source": "/api/ssot",
+      "destination": "https://info.grudge-studio.com/api/ssot"
+    },
+    {
+      "source": "/api/ssot.json",
+      "destination": "https://info.grudge-studio.com/api/v1/ssot.json"
+    },
+    {
       "source": "/api/objectstore/v1/:path*",
       "destination": "https://objectstore.grudge-studio.com/api/v1/:path*"
     },
@@ -136,11 +144,11 @@
     },
     {
       "source": "/api/v1/:path*",
-      "destination": "https://assets.grudge-studio.com/api/v1/:path*"
+      "destination": "https://info.grudge-studio.com/api/v1/:path*"
     },
     {
       "source": "/content/:path*",
-      "destination": "https://assets.grudge-studio.com/api/v1/:path*"
+      "destination": "https://info.grudge-studio.com/api/v1/:path*"
     },
     {
       "source": "/api/os/health",

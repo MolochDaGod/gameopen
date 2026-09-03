@@ -385,8 +385,13 @@ export class Controller {
   }
 
   setCollision(p: CollisionProvider | null, spawn?: THREE.Vector3) {
+  setCollision(
+    p: CollisionProvider | null,
+    spawn?: THREE.Vector3,
+    opts?: { keepRoomBounds?: boolean },
+  ) {
     this.collision = p;
-    this.bound = p ? 1e5 : this.roomBound;
+    this.bound = p && !opts?.keepRoomBounds ? 1e5 : this.roomBound;
     if (!p) this.occluders = [];
     if (spawn) {
       this.character.root.position.copy(spawn);

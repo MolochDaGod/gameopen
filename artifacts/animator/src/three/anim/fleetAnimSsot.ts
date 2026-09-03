@@ -202,6 +202,7 @@ export function bip001BakedUrlCandidates(bakeRel: string): string[] {
   // CORS CDN JSON (same files as Open baked). Not prod/anims GLB.
   out.push(`${FLEET_ANIM_HOSTS.assets}/anims/baked/${clean}.json`);
   return [...new Set(out)];
+  return [...new Set([`/${bakedJson}`, `${FLEET_ANIM_HOSTS.openBaked}/${clean}.json`])];
 }
 
 /** Explorer Mixamo clip id → URL under /anim/animations. */

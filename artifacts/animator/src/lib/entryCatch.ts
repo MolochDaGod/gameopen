@@ -499,7 +499,6 @@ export function catchEntry(input: CatchInput): CatchAction {
     "play",
     "racing",
     "street-racing",
-    "street",
     "raver",
     "raver-racing",
     "genesis",

@@ -186,9 +186,9 @@ export const GAME_MODES: readonly GameModeDef[] = [
   {
     id: "agama-survival",
     title: "Agama Survival",
-    blurb: "Hold the safe zone on the Agama map — escalating zombie waves.",
+    blurb: "Kilometre Agama battleground — farms, harvest, faction wars, extract north.",
     icon: "/icons/ambush.png",
-    spawn: { maxEnemies: 16, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 3 },
+    spawn: { maxEnemies: 18, maxAllies: 4, bosses: 0, waves: 0, introGraceSec: 3 },
     enemyStrategy: "swarm-horde",
     allyStrategy: "tank-guard",
     bossStrategy: "boss-phased",

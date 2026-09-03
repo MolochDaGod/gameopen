@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "npm --prefix artifacts/animator run dev",
-    "build": "node scripts/vercel-build.mjs",
+    "build": "node scripts/verify-source-boundaries.mjs && node scripts/vercel-build.mjs",
+    "verify:source-boundaries": "node scripts/verify-source-boundaries.mjs",
     "start:api": "node server/standalone.mjs",
     "ingest:rapier": "node scripts/ingest-threejs-rapier.mjs",
     "assets:merge": "node scripts/merge-gameopen-assets.mjs",
@@ -37,6 +38,7 @@
     "deploy:durable": "node scripts/deploy-durable.mjs",
     "deploy:durable:dry": "node scripts/deploy-durable.mjs --dry-run",
     "deploy:durable:assets": "node scripts/deploy-durable.mjs --assets",
+    "loaders:stage": "node scripts/stage-three-loaders.mjs",
     "deploy:prod": "node scripts/deploy-durable.mjs",
     "test:inventory": "npm --prefix artifacts/animator run test -- src/game/inventory/characterBag.test.ts src/game/inventory/ledgerClient.test.ts",
     "verify:assets": "node scripts/verify-fleet-assets.mjs",

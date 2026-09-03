@@ -116,7 +116,7 @@ const PVE_DESTS: MenuDest[] = [
   {
     id: "survival",
     label: "Agama Survival",
-    blurb: "Wave survival on the Agama map",
+    blurb: "Battleground survival — farms, harvest, faction wars, extract",
     kind: "local",
     mode: "survival",
     needsHero: true,
@@ -341,7 +341,7 @@ export function CampfireLobby({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<CampfireLobbyScene | null>(null);
-  const [heroes, setHeroes] = useState<GenesisHeroOption[]>(() =>
+  const [heroes, setHeroes] = useState<(GenesisHeroOption | null)[]>(() =>
     buildVoxelCampfireHeroes(
       gameSession.snapshot.characters,
       gameSession.snapshot.selectedCharacterId,
@@ -352,7 +352,7 @@ export function CampfireLobby({
   const [toast, setToast] = useState<string | null>(null);
   const [hoverTip, setHoverTip] = useState<CampfireHoverInfo>(null);
 
-  const active = heroes[selected] ?? heroes[0] ?? null;
+  const active = heroes[selected] ?? heroes.find(Boolean) ?? null;
 
   useEffect(() => {
     const unsub = gameSession.subscribe(() => {
@@ -361,7 +361,7 @@ export function CampfireLobby({
           gameSession.snapshot.characters,
           gameSession.snapshot.selectedCharacterId,
         );
-        return next.length ? next : prev;
+        return next.some(Boolean) ? next : prev;
       });
     });
     if (!gameSession.snapshot.ready) {

@@ -273,10 +273,82 @@ export class PhysicsWorld {
    */
   createPlayerKcc(
     spawn: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
-    opts?: { radius?: number; halfHeight?: number; offset?: number },
+    opts?: {
+      radius?: number;
+      halfHeight?: number;
+      offset?: number;
+      stepOnMove?: boolean;
+    },
   ): CharacterCapsuleKcc | null {
     if (!this.world) return null;
     return CharacterCapsuleKcc.create(this, spawn, opts);
+  }
+
+  /**
+   * Closest Rapier ray hit. `dir` should be unit-length; hit point is
+   * origin + dir * toi. Prefer this over Three.js Raycaster for world queries
+   * (ground, LOS, harvest) so the same colliders the KCC uses are the SSOT.
+   */
+  castRay(
+    origin: { x: number; y: number; z: number },
+    dir: { x: number; y: number; z: number },
+    maxToi = 200,
+    opts?: { solid?: boolean },
+  ): {
+    toi: number;
+    x: number;
+    y: number;
+    z: number;
+    nx: number;
+    ny: number;
+    nz: number;
+  } | null {
+    const world = this.world;
+    if (!world) return null;
+    const ray = new RAPIER.Ray(origin, dir);
+    const hit = world.castRayAndGetNormal(ray, maxToi, opts?.solid !== false);
+    if (!hit) return null;
+    const p = ray.pointAt(hit.timeOfImpact);
+    const n = hit.normal;
+    return {
+      toi: hit.timeOfImpact,
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      nx: n.x,
+      ny: n.y,
+      nz: n.z,
+    };
+  }
+
+  /** Downward ground sample (metres). Null if nothing under the probe. */
+  heightAt(x: number, z: number, fromY = 400, maxToi = 800): number | null {
+    const hit = this.castRay({ x, y: fromY, z }, { x: 0, y: -1, z: 0 }, maxToi, {
+      solid: true,
+    });
+    return hit ? hit.y : null;
+  }
+
+  /**
+   * True when a chest-height segment from `from` to `to` is unblocked
+   * (or only grazes within `skin` of the destination).
+   */
+  lineOfSight(
+    from: { x: number; y: number; z: number },
+    to: { x: number; y: number; z: number },
+    skin = 0.45,
+  ): boolean {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const dz = to.z - from.z;
+    const len = Math.hypot(dx, dy, dz);
+    if (len < 0.05) return true;
+    const inv = 1 / len;
+    const hit = this.castRay(from, { x: dx * inv, y: dy * inv, z: dz * inv }, len, {
+      solid: true,
+    });
+    if (!hit) return true;
+    return hit.toi >= len - skin;
   }
 
   dispose(): void {
