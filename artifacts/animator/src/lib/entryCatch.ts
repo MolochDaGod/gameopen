@@ -78,6 +78,18 @@ export const PRODUCT_STARTS = {
   traitStore: `${ENTRY_HOSTS.traits}/`,
   /** CDN assets root (binaries — not a SPA mode) */
   assetsCdn: `${ENTRY_HOSTS.assets}`,
+  /** Grudge Studio portal / The ENGINE (marketing + product index, not a second roster) */
+  studioPortal: "https://grudge-studio.com/",
+  /** Legion AI hub — chat / image / agents (JWT from Grudge ID) */
+  aiHub: "https://ai.grudge-studio.com/",
+  /** Vibe IDE */
+  coder: "https://coder.grudge-studio.com/",
+  /** Wallet product UI (same Railway account row) */
+  wallet: "https://wallet.grudge-studio.com/",
+  /** HUD / main-panel UI studio */
+  uiStudio: `${ENTRY_HOSTS.ui}/`,
+  uiHotkeys: `${ENTRY_HOSTS.ui}/hotkeys`,
+  uiAssets: `${ENTRY_HOSTS.ui}/assets`,
   /** Agentic Three.js editor (Studio tools) */
   grokBuilder: "https://grok-builder.vercel.app/",
   /** Warlords scene editor (not Forge) */
@@ -485,6 +497,11 @@ export function catchEntry(input: CatchInput): CatchAction {
     "annihilate-demo",
     "annihilate",
     "play",
+    "racing",
+    "street-racing",
+    "street",
+    "raver",
+    "raver-racing",
     "genesis",
     "brawl",
     "survival",
@@ -615,7 +632,14 @@ export function startUrlForIntent(
     | "dungeon"
     | "dungeonBoss"
     | "dungeonMolten"
-    | "equipment",
+    | "equipment"
+    | "studio"
+    | "ai"
+    | "coder"
+    | "wallet"
+    | "uiStudio"
+    | "uiHotkeys"
+    | "uiAssets",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -699,6 +723,20 @@ export function startUrlForIntent(
     }
     case "realms":
       return PRODUCT_STARTS.mineLoader;
+    case "studio":
+      return PRODUCT_STARTS.studioPortal;
+    case "ai":
+      return PRODUCT_STARTS.aiHub;
+    case "coder":
+      return PRODUCT_STARTS.coder;
+    case "wallet":
+      return PRODUCT_STARTS.wallet;
+    case "uiStudio":
+      return PRODUCT_STARTS.uiStudio;
+    case "uiHotkeys":
+      return PRODUCT_STARTS.uiHotkeys;
+    case "uiAssets":
+      return PRODUCT_STARTS.uiAssets;
     default:
       return PRODUCT_STARTS.openHub;
   }

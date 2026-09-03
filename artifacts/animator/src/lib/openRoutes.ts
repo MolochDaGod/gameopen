@@ -25,6 +25,7 @@ export type AppMode =
   | "danger"
   | "voxel"
   | "play"
+  | "racing"
   | "editor"
   | "lobby"
   /** Multiplayer rooms + community gallery (not the 4-seat character scene). */
@@ -140,6 +141,19 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     group: "combat",
     tags: ["Playtest", "Map"],
     accent: "#ff9a6a",
+  },
+  {
+    mode: "racing",
+    slug: "racing",
+    aliases: ["street-racing", "street", "raver", "raver-racing"],
+    cabinets: ["racing", "street-racing", "raver"],
+    title: "Street Racing",
+    blurb:
+      "Original neon district circuit — tune the car, hit checkpoints, and chase a clean time.",
+    group: "combat",
+    poster: "racing",
+    tags: ["Racing", "Garage"],
+    accent: "#ff5d8f",
   },
   {
     mode: "genesis",

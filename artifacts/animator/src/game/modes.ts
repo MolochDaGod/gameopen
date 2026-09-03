@@ -17,7 +17,8 @@ export type GameModeId =
   | "agama-survival"
   | "voxgrudge-battle-singles"
   | "voxgrudge-battle-duos"
-  | "island-life";
+  | "island-life"
+  | "street-racing";
 
 export type FactionRole = "player" | "ally" | "enemy" | "boss" | "neutral";
 
@@ -231,6 +232,19 @@ export const GAME_MODES: readonly GameModeDef[] = [
     allyStrategy: "tank-guard",
     bossStrategy: "boss-phased",
     mapKey: "island-life",
+    multiplayer: false,
+  },
+  {
+    id: "street-racing",
+    title: "Street Racing",
+    blurb:
+      "Neon district circuit — tune a build, thread traffic, bank nitro, and chase a clean lap time.",
+    icon: "/icons/racing.png",
+    spawn: { maxEnemies: 8, maxAllies: 0, bosses: 0, waves: 0, introGraceSec: 0 },
+    enemyStrategy: "cautious-duelist",
+    allyStrategy: "tank-guard",
+    bossStrategy: "boss-phased",
+    mapKey: "street-racing-district",
     multiplayer: false,
   },
 ] as const;
