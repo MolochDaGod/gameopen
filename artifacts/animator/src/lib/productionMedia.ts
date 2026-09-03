@@ -15,7 +15,7 @@ import { FLEET, publicUrl } from "./fleet";
 import { fetchCatalogJson } from "./fleetSsot";
 
 const CDN = FLEET.assets.replace(/\/$/, "");
-const OBJECTSTORE_PAGES = "https://molochdagod.github.io/ObjectStore";
+const OBJECTSTORE_WORKER = FLEET.objectStoreApi.replace(/\/$/, "");
 
 export type ProductionItem = {
   id: string;
@@ -217,11 +217,11 @@ export function resolveProductionIconUrl(raw: string | null | undefined): string
   if (s.startsWith("http://") || s.startsWith("https://")) return s;
   if (s.startsWith("//")) return `https:${s}`;
   if (s.startsWith("/")) {
-    // Prefer ObjectStore Pages for /icons/* historical paths, CDN for models
-    if (s.startsWith("/icons/")) return `${OBJECTSTORE_PAGES}${s}`;
+    // Prefer ObjectStore Worker for /icons/* historical paths, CDN for models
+    if (s.startsWith("/icons/")) return `${OBJECTSTORE_WORKER}${s}`;
     return `${CDN}${s}`;
   }
-  if (s.startsWith("icons/")) return `${OBJECTSTORE_PAGES}/${s}`;
+  if (s.startsWith("icons/")) return `${OBJECTSTORE_WORKER}/${s}`;
   // Relative R2 key
   return `${CDN}/${s.replace(/^\//, "")}`;
 }
