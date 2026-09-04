@@ -47,6 +47,18 @@ describe("entryCatch", () => {
     expect(startUrlForIntent("grudoxDanger")).toContain("/voxgrudge/tvs-showcase.html");
   });
 
+  it("startUrlForIntent studio products stay on fleet hosts", () => {
+    expect(startUrlForIntent("studio")).toBe(PRODUCT_STARTS.studioPortal);
+    expect(startUrlForIntent("ai")).toBe(PRODUCT_STARTS.aiHub);
+    expect(startUrlForIntent("coder")).toBe(PRODUCT_STARTS.coder);
+    expect(startUrlForIntent("wallet")).toBe(PRODUCT_STARTS.wallet);
+    expect(startUrlForIntent("uiStudio")).toContain("ui.grudge-studio.com");
+    expect(startUrlForIntent("uiHotkeys")).toContain("/hotkeys");
+    expect(startUrlForIntent("uiAssets")).toContain("/assets");
+    expect(startUrlForIntent("account")).toContain("open.grudge-studio.com");
+    expect(startUrlForIntent("account")).toMatch(/account/);
+  });
+
   it("sends foundry create intent off Open", () => {
     const r = catchEntry({ pathname: "/", search: "?mode=create" });
     expect(r.kind).toBe("hard_redirect");

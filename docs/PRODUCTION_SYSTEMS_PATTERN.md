@@ -73,6 +73,8 @@ Rewrites live in root `vercel.json`. Edge Worker only forwards to Vercel origin.
 | BootGate hard | **30 s** / step | `BOOT_STALL_TIMEOUT_MS` |
 | Cinema skip | catalog `skippableAfterSec` | ProductionCinema |
 
+**Library first paint (2026-08-31):** `/` (doors) must paint `DoorSelect` without Rapier WASM, MediaPipe, or `new Studio()`. Cinema is lazy; physics pointer helpers import `@workspace/grudge-physics/pointer` (not the Rapier barrel). Service worker v6 must not `cache: no-store` hashed `/assets/*` wasm.
+
 **Rule:** During cinema or HelpersLoadScreen, **start REST + mesh prefetch in parallel**. Never:
 
 ```

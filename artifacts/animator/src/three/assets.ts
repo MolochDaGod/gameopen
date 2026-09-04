@@ -365,6 +365,21 @@ export const CHARACTERS: CharacterDef[] = [
     modelYaw: Math.PI,
   },
   {
+    id: "skeleton-warrior",
+    name: "Skeleton",
+    file: "models/skeleton-warrior.glb",
+    scale: 1,
+    clips: {
+      idle: "idle",
+      walk: "walk",
+      run: "run",
+      attack: "attack",
+    },
+    signatureSkills: [],
+    handBone: "hand",
+    modelYaw: 0,
+  },
+  {
     id: "orc",
     name: "Brute",
     file: "models/orc.glb",

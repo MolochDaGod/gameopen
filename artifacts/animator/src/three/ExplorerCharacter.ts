@@ -350,6 +350,9 @@ export class ExplorerCharacter implements Avatar {
 
   /** 0..1 locomotion intensity requested by the controller's playRole calls. */
   private locoSpeed = 0;
+  /** Body-local wish (+x right, +z forward) for 8-way clips under lock-on. */
+  private locoX = 0;
+  private locoZ = 0;
   /** True while a jump's held airborne pose is active (cleared on landing). */
   private airborne = false;
   private modelYaw = 0;
@@ -528,6 +531,16 @@ export class ExplorerCharacter implements Avatar {
 
   setLocomotionRate(_rate: number): void {
     // The weight-blended locomotion layer owns stride cadence; nothing to do.
+  }
+
+  setLocomotionDirectional(localX: number, localZ: number, speed: number): void {
+    this.locoX = localX;
+    this.locoZ = localZ;
+    this.locoSpeed = THREE.MathUtils.clamp(speed, 0, 1);
+  }
+
+  setStrafe(on: boolean): void {
+    this.animator?.setStrafe(on);
   }
 
   // ---- one-shots ----
@@ -924,8 +937,8 @@ export class ExplorerCharacter implements Avatar {
       this.airborne = false;
     }
     this.animator.setLocomotion({
-      x: 0,
-      z: this.locoSpeed > 0.06 ? 1 : 0,
+      x: this.locoX,
+      z: this.locoZ,
       speed: this.locoSpeed,
       running: this.locoSpeed > 0.65,
     });

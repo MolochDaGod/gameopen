@@ -158,7 +158,10 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   }
   if (opts.characterId) url.searchParams.set("characterId", opts.characterId);
   if (opts.characterName) url.searchParams.set("characterName", opts.characterName);
-  if (opts.baseId) url.searchParams.set("baseId", opts.baseId);
+  if (opts.baseId) {
+    url.searchParams.set("baseId", opts.baseId);
+    url.searchParams.set("kit", opts.baseId);
+  }
   if (opts.raceId) url.searchParams.set("raceId", opts.raceId);
   if (opts.avatarId) url.searchParams.set("avatarId", opts.avatarId);
   if (opts.joinCode) url.searchParams.set("join", opts.joinCode);

@@ -1,4 +1,4 @@
-import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
+import type { FaceLandmarker } from "@mediapipe/tasks-vision";
 import type { FaceType } from "../LedMask";
 
 /**
@@ -96,6 +96,9 @@ export class FaceTracker {
         return false;
       }
 
+      const { FaceLandmarker, FilesetResolver } = await import(
+        "@mediapipe/tasks-vision"
+      );
       const fileset = await FilesetResolver.forVisionTasks(WASM_BASE);
       if (stale()) {
         video.srcObject = null;

@@ -102,28 +102,40 @@ export async function nukeServiceWorkers(): Promise<void> {
 }
 
 /**
- * One-shot per deploy: if shell version lags, nuke caches once.
- * Call from boot when ?purge=1 or after fleet asset scale fixes.
+ * One-shot per deploy: if shell version lags, nuke caches once then reload.
+ * Never continue the current module graph after unregistering a controlling SW —
+ * that aborts hashed /assets/* fetches and freezes the boot splash.
  */
-export async function purgeHistoricalShellIfNeeded(minVersion = 6): Promise<void> {
-  if (typeof window === "undefined") return;
+export async function purgeHistoricalShellIfNeeded(minVersion = 6): Promise<boolean> {
+  if (typeof window === "undefined") return false;
   try {
     const key = "grudge_open_shell_cache_ver";
     const cur = Number(localStorage.getItem(key) || "0");
-    const force =
-      new URLSearchParams(window.location.search).has("purge") ||
-      new URLSearchParams(window.location.search).has("purgecache");
-    if (!force && cur >= minVersion) return;
+    const params = new URLSearchParams(window.location.search);
+    const force = params.has("purge") || params.has("purgecache");
+    if (!force && cur >= minVersion) return false;
     await nukeServiceWorkers();
-    localStorage.setItem(key, String(minVersion));
-    if (force) {
-      const u = new URL(window.location.href);
-      u.searchParams.delete("purge");
-      u.searchParams.delete("purgecache");
-      window.location.replace(u.toString());
+    try {
+      localStorage.setItem(key, String(minVersion));
+    } catch {
+      /* private mode */
     }
+    const guardKey = "grudge_open_purged";
+    const guardVal = String(minVersion);
+    try {
+      if (sessionStorage.getItem(guardKey) === guardVal) return false;
+      sessionStorage.setItem(guardKey, guardVal);
+    } catch {
+      /* private mode */
+    }
+    const u = new URL(window.location.href);
+    u.searchParams.delete("purge");
+    u.searchParams.delete("purgecache");
+    window.location.replace(u.toString());
+    return true;
   } catch (err) {
     console.warn("[pwa] purgeHistoricalShellIfNeeded failed", err);
+    return false;
   }
 }
 
@@ -145,8 +157,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       return null;
     }
 
-    // When a new SW takes control, reload once so we leave stale hashed bundles
-    // (e.g. index-C8VhAvKm.js with broken R2 /gameopen asset paths).
+    // When a new SW takes control, reload once so we leave stale hashed bundles.
+    // Do NOT also reload on SW_ACTIVATED messages — that double-fires with
+    // controllerchange and can loop the boot splash.
     let reloading = false;
     const reloadOnce = () => {
       if (reloading) return;
@@ -155,9 +168,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       window.location.reload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
-    navigator.serviceWorker.addEventListener("message", (ev) => {
-      if (ev.data?.type === "SW_ACTIVATED" || ev.data?.type === "SW_NUKED") reloadOnce();
-    });
 
     const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
     // Force-check for updates every load (bust CDN / long-lived SW)

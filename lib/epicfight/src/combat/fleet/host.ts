@@ -9,6 +9,7 @@ import type { AttackPayload, DefensiveResult, DodgeDir } from "../types.js";
 import type { CombatController } from "../CombatController.js";
 import type { FleetWeaponSkill } from "./weaponSkill.js";
 import type { ParrySide } from "./rules.js";
+import { FLEET_DODGE } from "./constants.js";
 
 /** Minimal 3-vector so hosts don't need to import Three in this package. */
 export type FleetVec3 = { x: number; y: number; z: number };
@@ -116,11 +117,11 @@ export function fleetPlayerCombatPatch(): {
     maxStamina: 120,
     staminaRegenPerSec: 22,
     dodge: {
-      duration: 0.72,
-      iframeStart: 0.06,
-      iframeEnd: 0.56,
+      duration: FLEET_DODGE.duration,
+      iframeStart: FLEET_DODGE.iframeStart,
+      iframeEnd: FLEET_DODGE.iframeEnd,
       staminaCost: 48,
-      distance: 4.9,
+      distance: FLEET_DODGE.maxDistance,
     },
     block: { staminaCostOnRaise: 8, staminaDrainPerSec: 10, force: 2 },
     parry: {

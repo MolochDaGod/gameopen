@@ -705,7 +705,16 @@ function mapApiCharacter(
     typeof slotRaw === "number" && Number.isFinite(slotRaw)
       ? Math.max(0, Math.min(3, Math.trunc(slotRaw)))
       : undefined;
-  const config = (c.config as Record<string, unknown>) || undefined;
+  const config = {
+    ...((c.config as Record<string, unknown>) || {}),
+    gameEra: ((c.config as { gameEra?: string } | undefined)?.gameEra || gameEra) as string | undefined,
+    baseId:
+      (c.config as { baseId?: string } | undefined)?.baseId ||
+      (model3d && typeof model3d.baseModelId === "string" ? model3d.baseModelId : undefined),
+    renderPipeline:
+      (c.config as { renderPipeline?: string } | undefined)?.renderPipeline ||
+      (model3d && typeof model3d.renderPipeline === "string" ? model3d.renderPipeline : undefined),
+  };
   return {
     id,
     name: String(c.name || c.displayName || "Hero"),

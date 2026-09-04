@@ -8,3 +8,4 @@ export * from "./reticleProfiles";
 export * from "./rangedPrimary";
 export * from "./cameraProfiles";
 export * from "./controlsStorage";
+export * from "./tpsMove";

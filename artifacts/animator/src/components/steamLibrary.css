@@ -121,12 +121,22 @@
   max-width: 280px;
 }
 .steam-user-name {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
   font-size: 12px;
   font-weight: 600;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  text-align: left;
+}
+.steam-user-name:hover {
+  color: var(--st-accent, #66c0f4);
 }
 .steam-user-meta {
   font-size: 11px;
@@ -495,6 +505,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--st-muted);
+}
+.steam-shelf-blurb {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: var(--st-muted);
+  max-width: 52rem;
 }
 
 .steam-grid {

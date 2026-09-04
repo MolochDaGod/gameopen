@@ -160,6 +160,8 @@ function applyBind(
   if (!b) return { className: baseClass, style: baseStyle };
   return {
     "data-hud-panel": b["data-hud-panel"],
+    "data-hydra": b["data-hydra"],
+    "data-view": b["data-view"],
     className: `${baseClass} ${b.className}`.trim(),
     style: { ...baseStyle, ...b.style },
     onPointerDown: b.onPointerDown,

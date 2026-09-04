@@ -31,7 +31,8 @@ const STORAGE_KEY = "animator.lobby.roster.v1";
  */
 export function baseIdToRaceKey(baseId: string | null | undefined): string {
   const b = (baseId || "").toLowerCase().replace(/_/g, "-");
-  if (!b || b === "explorer" || b === "led-monk" || b === "archmage") return "human";
+  if (!b || b === "explorer" || b === "led-monk" || b === "archmage" || b === "sanji" || b === "striker") return "human";
+  if (b.includes("skeleton")) return "undead";
   if (b.includes("orc")) return "orc";
   if (b.includes("undead") || b === "ud") return "undead";
   if (b.includes("barb")) return "barbarian";
@@ -165,6 +166,7 @@ export function isVoxelExplorerHero(c: GrudgeCharacter): boolean {
   const pipe = String(c.config?.renderPipeline || c.config?.pipeline || "").toLowerCase();
   if (era === "voxel") return true;
   if (base === "explorer" || base.includes("explorer")) return true;
+  if (base === "orc" || base === "sanji" || base === "skeleton-warrior" || base === "striker") return true;
   if (pipe === "voxel" || pipe === "box_hero") return true;
   return false;
 }
@@ -199,7 +201,8 @@ export function buildVoxelCampfireHeroes(
 
   const toOpt = (c: GrudgeCharacter, slot: number, source: "grudox" | "fleet"): GenesisHeroOption => {
     const baseId =
-      (typeof c.config?.baseId === "string" && c.config.baseId) || "explorer";
+      (typeof c.config?.baseId === "string" && c.config.baseId) ||
+      (typeof c.raceId === "string" && /orc|sanji|skeleton/i.test(c.raceId) ? c.raceId : "explorer");
     const raceKey = baseIdToRaceKey(baseId) || baseIdToRaceKey(c.raceId);
     const open =
       c.saveData && typeof c.saveData === "object"

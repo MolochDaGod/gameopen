@@ -9,6 +9,8 @@
 | **Warlords** | client.grudge-studio.com · grudgewarlords.com | Flagship fantasy **play** |
 | **Poker** | poker.grudge-studio.com | Card game · **/account** |
 | **GST** | grudge-studio.com/gst | Islands RTS |
+| **Studio portal** | grudge-studio.com | ENGINE product index (not a roster) |
+| **Legion AI** | ai.grudge-studio.com | Chat / image / agents · same JWT |
 | **Foundry** | character.grudge-studio.com | Create / 4-slot only |
 | **Mine-Loader** | mineloader.grudge-studio.com | Voxel multiplayer worlds |
 

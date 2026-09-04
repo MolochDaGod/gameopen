@@ -29,7 +29,7 @@ Do **not** re-implement dodge math, parry windows, slide trip rules, or weapon-s
 | Export | Meaning |
 |--------|---------|
 | `FLEET_COMBAT_INPUT` | KeyC parry, KeyX dodge, Alt slide, KeyE block, … |
-| `FLEET_DODGE` | 40% stam cost, 0.5 m min / 4.9 m max |
+| `FLEET_DODGE` | 40% stam, 0.5–4.9 m, **phased i-frames** (startup 0.06s → invuln to 0.34s → recovery) |
 | `FLEET_SLIDE` | trip / block-stop / parry-break |
 | `FLEET_PARRY` | perfect / fail debt / uppercut package |
 | `FLEET_STAMINA_COST` | jump, stab, throw, uppercut, … |

@@ -39,6 +39,8 @@ export const PRODUCTION_SURFACES = {
   uiStudio: "https://ui.grudge-studio.com/studio",
   uiGames: "https://ui.grudge-studio.com/games",
   uiAssets: "https://ui.grudge-studio.com/assets",
+  uiHotkeys: "https://ui.grudge-studio.com/hotkeys",
+  uiPacks: "https://ui.grudge-studio.com/game-ui-packs/index.json",
   foundry: "https://character.grudge-studio.com",
   client: "https://client.grudge-studio.com",
   coder: "https://coder.grudge-studio.com",

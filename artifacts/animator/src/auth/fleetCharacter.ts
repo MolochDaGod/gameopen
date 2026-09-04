@@ -391,12 +391,18 @@ export async function listFleetCharacters(opts?: {
 
   // Prefer same-origin proxy (Vercel rewrite → Railway), then absolute SSOT.
   const urls = [
+    apiUrl("/api/characters?era=voxel"),
     apiUrl("/api/characters?era=warlords"),
     apiUrl("/api/characters"),
     opts?.apiBase
+      ? `${opts.apiBase.replace(/\/+$/, "")}/api/characters?era=voxel`
+      : "",
+    opts?.apiBase
       ? `${opts.apiBase.replace(/\/+$/, "")}/api/characters?era=warlords`
       : "",
+    gameDataUrl("/api/characters?era=voxel"),
     gameDataUrl("/api/characters?era=warlords"),
+    `${GAME_API.replace(/\/+$/, "")}/api/characters?era=voxel`,
     `${GAME_API.replace(/\/+$/, "")}/api/characters?era=warlords`,
   ].filter(Boolean);
 

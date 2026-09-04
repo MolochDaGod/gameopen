@@ -7,7 +7,12 @@
  */
 
 import type { DepositContext, DepositZoneKind } from "./types";
-import type { StorageLocationKind } from "./locationInventory";
+import {
+  canConvertBoatStashToInventory,
+  resolveStashUnloadDock,
+  type StorageLocationKind,
+  type StashUnloadDock,
+} from "./locationInventory";
 
 export interface DepositProbeInput {
   /** Player feet position. */
@@ -30,6 +35,10 @@ export interface DepositProbeInput {
   boatId?: string;
   /** Account id for home island bag. */
   accountId?: string;
+  /** Tied up at a safe / town dock (not contested). */
+  atSafeDock?: boolean;
+  /** Tied at a friendly (own/ally) island dock. */
+  atFriendlyDock?: boolean;
 }
 
 export type DepositDestination = {
@@ -61,10 +70,16 @@ export function resolveDepositDestination(
   }
   if (p.onBoat) {
     const boat = p.boatId || "default";
+    const dock = resolveStashUnloadDock({
+      onHomeIsland: p.onHomeIsland,
+      atSafeDock: p.atSafeDock,
+      atFriendlyDock: p.atFriendlyDock,
+    });
+    const canInv = canConvertBoatStashToInventory(dock);
     return {
       kind: "boat",
       locationId: `boat:${boat}`,
-      label: "Boat hold",
+      label: canInv ? "Boat stash → inventory (docked)" : "Boat stash (vehicle)",
     };
   }
   if (p.nearStorage) {
@@ -97,6 +112,11 @@ export function resolveDepositContext(p: DepositProbeInput): DepositContext {
         : dest.kind === "home_island"
           ? "storage"
           : "none";
+  const stashDock = resolveStashUnloadDock({
+    onHomeIsland: p.onHomeIsland,
+    atSafeDock: p.atSafeDock,
+    atFriendlyDock: p.atFriendlyDock,
+  });
   return {
     zone,
     canDeposit: true,
@@ -104,6 +124,9 @@ export function resolveDepositContext(p: DepositProbeInput): DepositContext {
     destination: dest,
     /** Owner can also send camp → home from camp hub. */
     canSendToHome: dest.kind === "camp",
+    canConvertStashToInventory:
+      dest.kind === "boat" && canConvertBoatStashToInventory(stashDock),
+    stashUnloadDock: dest.kind === "boat" ? stashDock : "none",
   };
 }
 

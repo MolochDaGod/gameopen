@@ -187,7 +187,20 @@ export default {
 
     const upstream = await fetch(new Request(url.toString(), request));
 
-    if (!arcade) return upstream;
+    if (!arcade) {
+      const ct = (upstream.headers.get("content-type") || "").toLowerCase();
+      if (ct.includes("text/html")) {
+        const headers = new Headers(upstream.headers);
+        headers.set("Cache-Control", "no-store, must-revalidate");
+        headers.delete("Age");
+        return new Response(upstream.body, {
+          status: upstream.status,
+          statusText: upstream.statusText,
+          headers,
+        });
+      }
+      return upstream;
+    }
 
     // Re-wrap so Open can iframe /arcade/* on the same origin.
     return new Response(upstream.body, {

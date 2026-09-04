@@ -15,8 +15,11 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import type { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { createAnimatedCharacter } from "../explorer/loader";
-import type { Animator } from "../explorer/Animator";
+import { voxelEraKitById, voxelEraKitUrls } from "../../lib/voxelEraFour";
+import { fitCharacterHeight } from "../fitCharacterHeight";
+import { groundFeetLocal } from "../characterDeploy";
 import type { CharacterLook } from "../explorer/types";
 import type { VoxelPart } from "../explorer/rig";
 import { CHARACTER_HEIGHT_M } from "../types";
@@ -93,10 +96,18 @@ async function loadGltfFirst(
   loader: { loadAsync: (url: string) => Promise<{ scene: THREE.Group }> },
   urls: string[],
 ): Promise<THREE.Group | null> {
+  const hit = await loadGltfBundle(loader, urls);
+  return hit?.scene ?? null;
+}
+
+async function loadGltfBundle(
+  loader: GLTFLoader,
+  urls: string[],
+): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] } | null> {
   for (const url of urls) {
     try {
       const gltf = await loader.loadAsync(url);
-      return gltf.scene;
+      return { scene: gltf.scene, animations: gltf.animations ?? [] };
     } catch {
       /* try next */
     }
@@ -181,6 +192,49 @@ async function finishTvsProp(root: THREE.Object3D, file: string): Promise<void> 
   applyVoxelFilters(root);
 }
 
+type SeatActor = {
+  root: THREE.Object3D;
+  dispose: () => void;
+  update: (dt: number) => void;
+  setLocomotion: (s: { x: number; z: number; speed: number; running: boolean }) => void;
+  setCrouch?: (sit: boolean) => void;
+};
+
+function seatActorFromGltf(
+  scene: THREE.Object3D,
+  clips: THREE.AnimationClip[],
+  yaw: number,
+  idleHint?: string,
+): SeatActor {
+  const root = new THREE.Group();
+  root.add(scene);
+  scene.rotation.y = yaw;
+  fitCharacterHeight(scene, HERO_H, 1);
+  groundFeetLocal(scene, 0);
+  const mixer = new THREE.AnimationMixer(scene);
+  const idle =
+    (idleHint && clips.find((c) => c.name === idleHint)) ||
+    clips.find((c) => /idle|idol/i.test(c.name)) ||
+    clips[0];
+  if (idle) mixer.clipAction(idle).play();
+  return {
+    root,
+    dispose() {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(scene);
+    },
+    update(dt) {
+      mixer.update(dt);
+    },
+    setLocomotion() {
+      /* idle loop owns pose */
+    },
+    setCrouch() {
+      /* pack kits stand/sit via seat Y only */
+    },
+  };
+}
+
 export class CampfireLobbyScene {
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer;
@@ -193,7 +247,7 @@ export class CampfireLobbyScene {
   private mist?: THREE.Points;
   private stars?: THREE.Points;
   private ro?: ResizeObserver;
-  private heroes: (Animator | null)[] = [null, null, null, null];
+  private heroes: (SeatActor | null)[] = [null, null, null, null];
   private seats: THREE.Group[] = [];
   private labels: { mesh: THREE.Sprite; name: string }[] = [];
   private selected = 0;
@@ -310,47 +364,56 @@ export class CampfireLobbyScene {
       this.updateLabel(i, hero?.name ?? (i === 0 ? "Empty seat" : "—"));
       if (!hero) continue;
       try {
-        const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
-        const saved = resolveVoxelAvatar(hero.id || null, hero.voxelLook ?? null);
-        const headCfg = resolveLobbySeatAvatar(i, {
-          characterId: hero.id,
-          raceKey,
-        });
-        const saved = resolveVoxelAvatar(
-          hero.id || null,
-          hero.voxelLook ? { voxelLook: hero.voxelLook } : null,
-        );
-        let look: CharacterLook = {
-          skin: "#c98c5a",
-          shirt: "#c0392b",
-          pants: "#2e3440",
-          hat: "none",
-          hatColor: "#b03030",
-          avatarHead: true,
-          avatarConfig: headCfg,
-          ...LOOK_RACES[raceKey],
-        };
-        let parts: Partial<Record<VoxelPart, string>> | null = null;
-        if (saved) {
-          look = { ...look, ...voxelAvatarToLook(saved), avatarConfig: headCfg };
-          parts = partOverridesFromSave(saved);
+        const kit = voxelEraKitById(hero.baseId);
+        const base =
+          (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
+        const packed = await loadGltfBundle(this.gltf, voxelEraKitUrls(kit, base));
+        let anim: SeatActor;
+        if (packed) {
+          anim = seatActorFromGltf(packed.scene, packed.animations, kit.modelYaw, kit.idleClip);
+        } else {
+          const raceKey = baseIdToRaceKey(hero.baseId) || hero.raceKey;
+          const saved = resolveVoxelAvatar(
+            hero.id || null,
+            hero.voxelLook ? { voxelLook: hero.voxelLook } : null,
+          );
+          const headCfg = resolveLobbySeatAvatar(i, {
+            characterId: hero.id,
+            raceKey,
+          });
+          let look: CharacterLook = {
+            skin: "#c98c5a",
+            shirt: "#c0392b",
+            pants: "#2e3440",
+            hat: "none",
+            hatColor: "#b03030",
+            avatarHead: true,
+            avatarConfig: headCfg,
+            ...LOOK_RACES[raceKey],
+          };
+          let parts: Partial<Record<VoxelPart, string>> | null = null;
+          if (saved) {
+            look = { ...look, ...voxelAvatarToLook(saved), avatarConfig: headCfg };
+            parts = partOverridesFromSave(saved);
+          }
+          const procedural = await createAnimatedCharacter({
+            height: HERO_H,
+            weapon: "unarmed",
+            look,
+            classes: ["unarmed"],
+          });
+          if (parts) {
+            for (const [part, hex] of Object.entries(parts)) {
+              if (hex) procedural.character.setPartColor(part as VoxelPart, hex);
+            }
+          }
+          procedural.setWeapon("unarmed", true);
+          anim = procedural;
         }
-        const anim = await createAnimatedCharacter({
-          height: HERO_H,
-          weapon: "unarmed",
-          look,
-          classes: ["unarmed"],
-        });
         if (this.disposed) {
           anim.dispose();
           return;
         }
-        if (parts) {
-          for (const [part, hex] of Object.entries(parts)) {
-            if (hex) anim.character.setPartColor(part as VoxelPart, hex);
-          }
-        }
-        anim.setWeapon("unarmed", true);
         anim.root.name = `seat-hero-${hero.id}`;
         anim.root.userData.characterId = hero.id;
         anim.root.userData.slot = hero.slot;
@@ -366,10 +429,7 @@ export class CampfireLobbyScene {
             m.visible = true;
           }
         });
-        dressAvatarMaterials(anim.root);
-            m.visible = true;
-          }
-        });
+        if (!packed) dressAvatarMaterials(anim.root);
         anim.root.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(anim.root);
         const size = box.getSize(new THREE.Vector3());
@@ -437,14 +497,6 @@ export class CampfireLobbyScene {
   };
 
   private buildLightsAndGround(): void {
-    this.scene.add(new THREE.AmbientLight(0x3a4450, 0.18));
-    this.scene.add(new THREE.HemisphereLight(0x6e8498, 0x1c1810, 0.26));
-    const sun = new THREE.DirectionalLight(0xd8c4a0, 0.38);
-    sun.position.set(10, 18, 14);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.bias = -0.00035;
-    const d = 28;
     this.scene.add(new THREE.AmbientLight(0x2c3328, 0.18));
     this.scene.add(new THREE.HemisphereLight(0xc5d6ea, 0x3a2814, 0.48));
     const sun = new THREE.DirectionalLight(0xffe6c8, 1.45);
@@ -666,12 +718,18 @@ export class CampfireLobbyScene {
             dressEnvMaterial(m);
           }
         });
-        // Normalize height ~1–2 m for props
+        // SI: scale by authored height (Y), not max axis (wide fences were shrinking).
         const box = new THREE.Box3().setFromObject(root);
         const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z, 0.01);
-        const target = file.includes("barn") ? 4.5 : file.includes("tree") ? 3.2 : 1.2;
-        const s = (target / maxDim) * scale;
+        const height = Math.max(size.y, 0.01);
+        const target = file.includes("barn")
+          ? 4.5
+          : file.includes("tree")
+            ? 3.2
+            : file.includes("fence")
+              ? 1.15
+              : 1.2;
+        const s = (target / height) * scale;
         root.scale.setScalar(s);
         root.updateMatrixWorld(true);
         const b2 = new THREE.Box3().setFromObject(root);
@@ -712,7 +770,7 @@ export class CampfireLobbyScene {
         });
         const box = new THREE.Box3().setFromObject(root);
         const size = box.getSize(new THREE.Vector3());
-        const s = 1.6 / Math.max(size.x, size.y, size.z, 0.01);
+        const s = 0.85 / Math.max(size.y, 0.01);
         root.scale.setScalar(s);
         root.updateMatrixWorld(true);
         const b2 = new THREE.Box3().setFromObject(root);
@@ -858,10 +916,10 @@ export class CampfireLobbyScene {
     }
   }
 
-  private applySitPose(anim: Animator, sit: boolean): void {
+  private applySitPose(anim: SeatActor, sit: boolean): void {
     // Crouch idle approximates sit in chair; hip drop for seat contact
     anim.setLocomotion({ x: 0, z: 0, speed: 0, running: false });
-    anim.setCrouch(sit);
+    anim.setCrouch?.(sit);
     if (sit) {
       // Chair seat is ~0.4 m; sit on the plank, not inside the log stub / Encament dirt.
       anim.root.position.z = 0.08;
@@ -921,8 +979,12 @@ export class CampfireLobbyScene {
     this.gestureCd = 1.8;
     // Friendly stand gesture — attack flourish as wave substitute when no wave clip
     try {
-      const d = anim.attackMoving(0.55);
-      if (!d) anim.enterStance("idle" as never);
+      const anyAnim = anim as SeatActor & {
+        attackMoving?: (t: number) => unknown;
+        enterStance?: (s: never) => void;
+      };
+      const d = anyAnim.attackMoving?.(0.55);
+      if (!d) anyAnim.enterStance?.("idle" as never);
     } catch {
       /* idle only */
     }
@@ -1078,10 +1140,12 @@ export class CampfireLobbyScene {
 
   private onPointerMove = (e: PointerEvent): void => {
     const i = this.pickSlot(e.clientX, e.clientY);
+    this.canvas.style.cursor = i >= 0 ? "pointer" : "";
     this.setHover(i, e.clientX, e.clientY);
   };
 
   private onPointerLeave = (): void => {
+    this.canvas.style.cursor = "";
     this.setHover(-1);
   };
 

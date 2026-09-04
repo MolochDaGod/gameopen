@@ -49,6 +49,8 @@ interface Props {
   /** Optional HUD-editor binding (layout vars + drag/select when editing). */
   editBind?: {
     "data-hud-panel": string;
+    "data-hydra"?: string;
+    "data-view"?: string;
     className: string;
     style: React.CSSProperties;
     onPointerDown?: (e: React.PointerEvent) => void;
@@ -121,6 +123,8 @@ export function Crosshair({
       <>
         <div
           data-hud-panel={editBind?.["data-hud-panel"]}
+          data-hydra={editBind?.["data-hydra"]}
+          data-view={editBind?.["data-view"]}
           className={[
             "aim-center-dot",
             "aim-center-dot-melee",
@@ -164,6 +168,8 @@ export function Crosshair({
       )}
       <div
         data-hud-panel={editBind?.["data-hud-panel"]}
+        data-hydra={editBind?.["data-hydra"]}
+        data-view={editBind?.["data-view"]}
         className={[
           "crosshair",
           shapeClass,

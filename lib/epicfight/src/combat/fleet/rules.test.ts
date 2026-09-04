@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   planDodge,
+  dodgeInvincible,
   resolveSlideContact,
   slideAttackPayload,
   planFailedParryStamina,
@@ -28,6 +29,23 @@ describe("planDodge", () => {
     const p = planDodge(60, 120); // 50%
     expect(p.distance).toBeGreaterThan(FLEET_DODGE.minDistance);
     expect(p.distance).toBeLessThan(FLEET_DODGE.maxDistance);
+  });
+});
+
+describe("dodgeInvincible", () => {
+  it("is false in startup, true in the window, false in recovery", () => {
+    expect(dodgeInvincible(0.03, FLEET_DODGE)).toBe(false);
+    expect(dodgeInvincible(0.1, FLEET_DODGE)).toBe(true);
+    expect(dodgeInvincible(FLEET_DODGE.iframeEnd, FLEET_DODGE)).toBe(false);
+    expect(dodgeInvincible(0.4, FLEET_DODGE)).toBe(false);
+  });
+
+  it("never covers the whole clip", () => {
+    expect(FLEET_DODGE.iframeEnd).toBeLessThan(FLEET_DODGE.duration);
+    expect(FLEET_DODGE.invuln).toBeCloseTo(
+      FLEET_DODGE.iframeEnd - FLEET_DODGE.iframeStart,
+      5,
+    );
   });
 });
 

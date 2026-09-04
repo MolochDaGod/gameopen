@@ -81,20 +81,19 @@ export const GRUDOX_ZONES: readonly GrudoxZone[] = [
     id: "minegrudge",
     title: "GRUDOX Realms",
     blurb:
-      "Networked Minecraft-like survival — open.grudge-studio.com/realms (in-app) · Mine-Loader authority.",
+      "Networked Minecraft-like survival — mine.grudge-studio.com (GRUDOX voxel era). Open lists it; play is not in-app /realms.",
     tone: "#7ee0a0",
-    native: true,
-    nativeMode: "minegrudge", // resolved to AppMode "realms" via nativeModeForZone
-    externalPath: "https://mine-loader.vercel.app/",
+    native: false,
+    externalPath: "https://mine.grudge-studio.com/#/play",
   },
   {
     id: "mine-loader-live",
     title: "Mine-Loader Live",
     blurb:
-      "Authoritative voxel Realms — collection path /realms · 1× Railway API + Vercel SPA.",
+      "Authoritative voxel Realms — GRUDOX era host mine.grudge-studio.com · 1× Railway API + Vercel SPA.",
     tone: "#5fd48a",
-    native: true,
-    externalPath: "https://mine-loader.vercel.app/",
+    native: false,
+    externalPath: "https://mineloader.grudge-studio.com/",
   },
   {
     id: "dcq",

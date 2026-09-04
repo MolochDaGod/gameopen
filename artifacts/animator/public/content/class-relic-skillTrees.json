@@ -504,6 +504,8 @@
       "summary": "Worge identity is the Nature Grimoire: animal forms, nature spells (heals, buffs), Root Portal (sprout a travel tree to the Worge's camp for party and self), and farming assist.",
       "defaultUnlockedForms": ["bear"],
       "plannedClassTreeForms": ["raptor", "flight", "bird"],
+      "clawWeaponRef": "api/v1/_meta/claw-weapon-ssot.json",
+      "clawSlot4": "Claws have no default form. A Worge who knows the form binds it to slot 4 at the Enchanting Bench (enchant-claw-form-*). Any class may equip unenchanted claws.",
       "futureForms": [
         "cheetah",
         "wolf",

@@ -166,10 +166,10 @@ export const WEAPON_SKILL_KITS: Partial<Record<WeaponId, WeaponSkillSlot[]>> = {
     { label: "Skyfall", clip: "magicChannel", kind: "meteor", behavior: "bolt", damage: 55 },
   ],
   staffNature: [
-    { label: "Thorn Bolt", clip: "magicAttack", kind: "bolt", behavior: "bolt", damage: 30 },
-    { label: "Seed Barrage", clip: "castSpell", kind: "bolt", behavior: "volley", projectiles: 5, damage: 13 },
-    { label: "Bloom Nova", clip: "magicArea", kind: "nova", behavior: "nova", radius: 3.8, damage: 36 },
-    { label: "Root Storm", clip: "magicChannel", kind: "soul", behavior: "bolt", damage: 46 },
+    { label: "Nordin Trap Totem", clip: "magicAttack", kind: "totem", behavior: "nova", radius: 3.2, damage: 12 },
+    { label: "Freya Heal Totem", clip: "castSpell", kind: "totem", behavior: "nova", radius: 4.0, damage: 0 },
+    { label: "Thor Ward Totem", clip: "magicArea", kind: "totem", behavior: "nova", radius: 4.2, damage: 14 },
+    { label: "Odin Taunt Totem", clip: "magicChannel", kind: "totem", behavior: "nova", radius: 10, damage: 8 },
   ],
   staffHoly: [
     { label: "Holy Bolt", clip: "magicAttack", kind: "bolt", behavior: "bolt", damage: 32 },

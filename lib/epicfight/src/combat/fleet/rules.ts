@@ -52,6 +52,20 @@ export function planDodge(currentStamina: number, maxStamina: number): DodgePlan
   return { distance, cost, ratio, short };
 }
 
+/**
+ * True while dodge age is inside the half-open i-frame window.
+ * Startup and recovery are hittable. `iframeEnd` is clamped to duration.
+ */
+export function dodgeInvincible(
+  ageSec: number,
+  dodge: { iframeStart: number; iframeEnd: number; duration: number } = FLEET_DODGE,
+): boolean {
+  if (!(ageSec >= 0) || dodge.duration <= 0) return false;
+  const start = Math.max(0, dodge.iframeStart);
+  const end = Math.min(dodge.iframeEnd, dodge.duration);
+  return ageSec >= start && ageSec < end;
+}
+
 // ---------------------------------------------------------------------------
 // Slide contact resolution
 // ---------------------------------------------------------------------------

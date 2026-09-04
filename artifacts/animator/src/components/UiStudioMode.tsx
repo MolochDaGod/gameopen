@@ -19,6 +19,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { FLEET } from "../lib/fleet";
+import { applyHydraPackToHud, fetchUiPack } from "../hud/uiPackApply";
+import { parseUiHotkeysExport, saveUiHotkeys } from "../hud/uiHotkeysApply";
+import { UI_ASSET_ROOTS } from "../lib/uiAssets";
 import { toast } from "sonner";
 import "./uiStudioMode.css";
 
@@ -73,6 +76,55 @@ export function UiStudioMode({ onExit, initialPack = "open" }: Props) {
   const [aiOut, setAiOut] = useState<string | null>(null);
 
   const src = useMemo(() => studioUrl({ pack, page }), [pack, page]);
+
+  const applyPackToOpen = useCallback(async () => {
+    try {
+      const json = await fetchUiPack(pack);
+      const hud = applyHydraPackToHud(json);
+      const keys = parseUiHotkeysExport(json);
+      if (keys.bindings.length) saveUiHotkeys({ ...keys, packId: pack });
+      toast.success(
+        hud.ok
+          ? `Applied ${hud.packId} → Open HUD (${hud.moved.join(", ") || "theme"})`
+          : `Loaded ${hud.packId} — no HUD panels mapped (see notes)`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Apply failed");
+    }
+  }, [pack]);
+
+  useEffect(() => {
+    const onMsg = (ev: MessageEvent) => {
+      if (ev.origin !== UI_ORIGIN) return;
+      const data = ev.data;
+      if (!data || typeof data !== "object") return;
+      const srcName = (data as { source?: string }).source;
+      if (srcName && srcName !== "grudge-ui") return;
+      const type = (data as { type?: string }).type;
+      const payload = (data as { payload?: unknown }).payload ?? data;
+      if (type === "export" || type === "apply") {
+        try {
+          const hud = applyHydraPackToHud(payload as Parameters<typeof applyHydraPackToHud>[0]);
+          const keys = parseUiHotkeysExport(payload);
+          if (keys.bindings.length) saveUiHotkeys({ ...keys, packId: pack });
+          toast.success(`UI Studio ${type}: ${hud.packId}`);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "UI apply failed");
+        }
+      }
+      if (type === "hotkeys") {
+        const keys = parseUiHotkeysExport(payload);
+        saveUiHotkeys({ ...keys, packId: pack });
+        toast.success(
+          keys.bindings.length
+            ? `Imported ${keys.bindings.length} UI hotkeys (F1 help)`
+            : "Hotkeys message had no bindings",
+        );
+      }
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [pack]);
 
   useEffect(() => {
     void (async () => {
@@ -282,9 +334,16 @@ export function UiStudioMode({ onExit, initialPack = "open" }: Props) {
             <strong>Open</strong> = GRUDOX voxel launcher · <strong>Forge</strong> = 3D
             deploy · <strong>UI</strong> = chrome for all
           </p>
+          <button type="button" className="ui-studio-btn primary block" onClick={() => void applyPackToOpen()}>
+            <LayoutDashboard size={14} /> Apply pack to Open HUD
+          </button>
           <button type="button" className="ui-studio-btn block" onClick={() => void copyBindings()}>
             <Link2 size={14} /> Copy pack JSON
           </button>
+          <p className="ui-studio-muted">
+            Assets: CraftPix CSS + icons from {UI_ASSET_ROOTS.craftpixCss.replace("https://", "")}. Input tab
+            exports land in F1 help when the iframe posts <code>grudge-ui</code> hotkeys.
+          </p>
           <label className="ui-studio-label">Wiring notes</label>
           <textarea
             className="ui-studio-notes"

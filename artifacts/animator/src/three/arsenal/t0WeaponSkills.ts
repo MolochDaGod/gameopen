@@ -185,10 +185,10 @@ export const T0_WEAPON_KITS: Record<string, T0WeaponKit> = {
     ["power", "Tempest", "nova", -95],
   ]),
   staffNature: kit("staffNature", "Arcane Staff", [
-    ["combo", "Thorn", "bolt", -70],
-    ["special", "Bloom", "nova", -85],
-    ["ranged", "Vine Lash", "bolt", -100],
-    ["power", "Wild Growth", "nova", -95],
+    ["combo", "Nordin Trap Totem", "totem", -50],
+    ["special", "Freya Heal Totem", "totem", -40],
+    ["ranged", "Thor Ward Totem", "totem", -40],
+    ["power", "Odin Taunt Totem", "totem", -30],
   ]),
   staffHoly: kit("staffHoly", "Arcane Staff", [
     ["combo", "Smite", "bolt", -70],

@@ -3,6 +3,8 @@ import type { StatusView } from "../three/types";
 /** Optional HUD-editor binding (layout vars + drag/select when editing). */
 interface StatusEditBind {
   "data-hud-panel": string;
+  "data-hydra"?: string;
+  "data-view"?: string;
   className: string;
   style: React.CSSProperties;
   onPointerDown?: (e: React.PointerEvent) => void;
@@ -22,6 +24,8 @@ export function StatusBar({ statuses, editBind }: { statuses: StatusView[]; edit
   return (
     <div
       data-hud-panel={editBind?.["data-hud-panel"]}
+      data-hydra={editBind?.["data-hydra"]}
+      data-view={editBind?.["data-view"]}
       className={`status-bar${editBind ? ` ${editBind.className}` : ""}`}
       style={editBind?.style}
       onPointerDown={editBind?.onPointerDown}

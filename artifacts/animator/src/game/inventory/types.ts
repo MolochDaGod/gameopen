@@ -236,6 +236,9 @@ export interface DepositContext {
   destination?: DepositDestinationInfo;
   /** Show “Send camp → home island” affordance when at own camp. */
   canSendToHome?: boolean;
+  /** Boat stash may merge into bag/account only at home / safe / friendly dock. */
+  canConvertStashToInventory?: boolean;
+  stashUnloadDock?: "home_island" | "safe_dock" | "friendly_dock" | "none";
 }
 
 /** RMB context actions on a bag item. */

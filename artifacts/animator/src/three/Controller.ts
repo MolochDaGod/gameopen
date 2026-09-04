@@ -9,6 +9,12 @@ import {
   type WaterBand,
 } from "./dungeon/water";
 import { INPUT } from "./inputContract";
+import {
+  bodyLocalMove,
+  tpsMoveBasis,
+  tpsMoveBasisFromYaw,
+  wishFromWasd,
+} from "@workspace/grudge-physics";
 
 /** Default third-person orbit pitch clamp (radians). The floor stays positive
  *  so the orbit camera never dips under the room floor in normal play. */
@@ -84,6 +90,9 @@ export class Controller {
   /** Slow constant sink speed (u/s) while inside the water band. */
   private readonly SINK_SPEED = 4;
   private camRay = new THREE.Raycaster();
+  /** Reused TPS wish basis (camera look / screen-right). */
+  private readonly _moveFwd = new THREE.Vector3();
+  private readonly _moveRight = new THREE.Vector3();
   private didDoubleJump = false;
   /** Seconds left of a fast-turn window (set by faceToward) for crosshair lock. */
   private facingBoost = 0;
@@ -933,20 +942,24 @@ export class Controller {
       }
     }
 
-    // Movement input (camera-relative).
-    // forward() is the camera's view direction projected on the floor; the
-    // camera sits BEHIND the character looking along +forward, so screen-right
-    // is cross(up, -viewDir) = (-fwd.z, 0, fwd.x). The old (fwd.z,0,-fwd.x) was
-    // the negative of that, which mirrored A/D (and the facing that tracks
-    // movement) — it felt like driving the character from the far side of the
-    // screen. Keep this sign so D = screen-right.
-    const fwd = this.forward();
-    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    // Camera-relative WASD (industry TPS). Sample the *rendered* camera after
+    // updateMatrixWorld — a stale identity matrix looks down −Z and inverts
+    // W (backwards) and A (right). Laterality: W = look XZ, D = screen-right.
+    this.camera.updateMatrixWorld(true);
+    tpsMoveBasis(this.camera, this._moveFwd, this._moveRight);
+    if (this._moveFwd.lengthSq() < 1e-6) {
+      tpsMoveBasisFromYaw(this.yaw, this._moveFwd, this._moveRight);
+    }
+    const fwd = this._moveFwd;
+    const right = this._moveRight;
     const move = new THREE.Vector3();
-    if (this.input.down("KeyW") || this.input.down("ArrowUp")) move.add(fwd);
-    if (this.input.down("KeyS") || this.input.down("ArrowDown")) move.sub(fwd);
-    if (this.input.down("KeyD") || this.input.down("ArrowRight")) move.add(right);
-    if (this.input.down("KeyA") || this.input.down("ArrowLeft")) move.sub(right);
+    let ax = 0;
+    let az = 0;
+    if (this.input.down(INPUT.moveForward) || this.input.down("ArrowUp")) az += 1;
+    if (this.input.down(INPUT.moveBack) || this.input.down("ArrowDown")) az -= 1;
+    if (this.input.down(INPUT.moveRight) || this.input.down("ArrowRight")) ax += 1;
+    if (this.input.down(INPUT.moveLeft) || this.input.down("ArrowLeft")) ax -= 1;
+    wishFromWasd(fwd, right, ax, az, move);
 
     // Analog joystick (touch) blends in on top of the keyboard. When the stick is
     // the only input, `analog` drives a proportional speed; the keyboard stays
@@ -1286,15 +1299,11 @@ export class Controller {
       : 0;
     this.smoothedSpeed += (targetSpeed - this.smoothedSpeed) * Math.min(1, 10 * dt);
     if (!this.character.isOneShotActive && this.grounded && !this.isBusy && !this.hoverActive) {
+      this.character.setStrafe?.(lockYaw !== null);
       if (this.character.setLocomotionDirectional) {
-        // Direction-aware weight-blend (GLB Character): project the world move
-        // dir onto the body facing so A/D under a target lock reads as a strafe
-        // (moveX) and forward as moveZ. Degrades to the forward blend on rigs
-        // without strafe clips, so normal play is unchanged.
-        const yaw = this.character.root.rotation.y;
-        const rel = Math.atan2(move.x, move.z) - yaw;
+        const loc = bodyLocalMove(move.x, move.z, this.character.root.rotation.y);
         const mv = this.smoothedSpeed;
-        this.character.setLocomotionDirectional(Math.sin(rel) * mv, Math.cos(rel) * mv, mv);
+        this.character.setLocomotionDirectional(loc.x * mv, loc.z * mv, mv);
       } else if (this.character.setLocomotion) {
         // Weight-blended path (GLB Character): continuous speed + sprint flag so
         // Heroes of Grudge `sprint` clips engage at top speed (not just rate-hack).

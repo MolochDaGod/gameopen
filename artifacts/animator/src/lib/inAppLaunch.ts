@@ -63,8 +63,8 @@ export function nativeModeForZone(zoneId: string): AppMode | null {
       return "account";
     case "minegrudge":
     case "mine-loader-live":
-      // Collection surface: open.grudge-studio.com/realms
-      return "realms";
+      // Voxel play lives on Mine-Loader / GRUDOX — not Open /realms
+      return null;
     case "lobby-island":
     case "water-island":
     case "pirate-islands":
@@ -140,10 +140,7 @@ export function nativeModeForGame(game: GameEntry): AppMode | null {
   if ((game.launch === "native" || game.launch === "editor") && game.nativeMode) {
     return game.nativeMode;
   }
-  // Mine-Loader titles always prefer the Open /realms collection surface
-  if (game.launch === "mine-loader" || game.id === "mine-loader-realms") {
-    return "realms";
-  }
+  // Voxel titles play on GRUDOX / Mine-Loader — Open is library only.
   // Warlord Genesis product plays in Open’s in-app canvas via mode "genesis"
   if (game.id === "warlord-genesis") {
     return "genesis";

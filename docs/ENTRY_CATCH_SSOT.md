@@ -46,6 +46,10 @@ Voxel `#/play` never stays on Open `/realms`. Warlords maps never become GRUDOX 
 | Arcade cabinet (racer, …) | `https://grudox.grudge-studio.com/arcade/play/<id>` |
 | ThreeFlow (Warlords scenes) | `https://threeflow.vercel.app/` |
 | Forge (Studio map deploy) | `https://forge.grudge-studio.com/` |
+| Studio portal / ENGINE | `https://grudge-studio.com/` |
+| Legion AI (chat / agents) | `https://ai.grudge-studio.com/` |
+| Coder IDE | `https://coder.grudge-studio.com/` |
+| Wallet UI | `https://wallet.grudge-studio.com/` |
 
 Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 

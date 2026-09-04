@@ -96,6 +96,8 @@ Pin versions in `artifacts/animator/package.json`. Prefer these roles only.
 | **Map surface rebind** | `Studio.wirePlayerSessionOnMap` (one apply) | Setting ground **or** feet alone |
 | **Combat skills / Getsuga residual** | `meleeStrikeFx` + T0 + epicfight | Alt+Space sandbox ability |
 | **Physics bodies** | Rapier via `@workspace/grudge-physics` | Cannon + Rapier same body |
+| **Library / doors pointer only** | `@workspace/grudge-physics/pointer` (`pointerPresence.ts`) | Importing the Rapier barrel from `App.tsx` (pulls WASM on first paint) |
+| **Play engine** | Dynamic `import("./three/Studio")` on `/danger` and `/play` | Static `import { Studio }` in the library bundle |
 | **Nav AI** | `three-pathfinding` + `yuka` | One-off A* per map forever |
 | **Play camera** | `Controller` sole writer | Orbit + TPC both writing |
 | **Viewer / composer pipeline** | `three` + `postprocessing` + fleet loaders | **`threepipe` as a second engine** (see below) |

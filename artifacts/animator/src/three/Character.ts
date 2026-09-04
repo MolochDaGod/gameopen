@@ -7,6 +7,7 @@ import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
+import { groundFeetLocal } from "./characterDeploy";
 import { FootGrounder, type GroundSampler } from "./anim/legIk";
 import { FLAT_FOOT_SAMPLER } from "./anim/terrainFootSample";
 import { PHYSICS_DT } from "../lib/productionRuntime";
@@ -440,6 +441,12 @@ export class Character {
     this.locoSpeed = _sprinting ? Math.max(s, 0.95) : s;
   }
 
+  setLocomotionDirectional(localX: number, localZ: number, speed: number) {
+    this.setLocomotion(speed, false);
+    void localX;
+    void localZ;
+  }
+
   /** Play a one-shot clip by exact name; returns its duration (sec) or 0. */
   playClipOnce(name: string, fade = 0.12): number {
     const action = this.actions.get(name);
@@ -549,14 +556,14 @@ export class Character {
   }
 
   /**
-   * First bind only: stabilize then clipAction. keepRootPosition true for GLB
-   * native Mixamo (hip bob); false for baked Bip001 (rotation-only).
+   * First bind only: stabilize then clipAction.
+   * Mixamo packs + Bip001 bakes: rotation-only. Physics owns Y.
    */
-  private bindClip(clip: THREE.AnimationClip, keepRootPosition: boolean): THREE.AnimationAction {
+  private bindClip(clip: THREE.AnimationClip, _keepRootPosition?: boolean): THREE.AnimationAction {
     const c = stabilizeClipForMixer(clip, {
       root: this.model!,
       bindHip: bindHipFromRoot(this.model!),
-      keepRootPosition,
+      keepRootPosition: false,
     });
     return this.mixer!.clipAction(c);
   }
@@ -625,6 +632,7 @@ export class Character {
     //   2. footGrounder.apply — terrain foot plant + pelvis drop
     this.footGrounder.beginFrame();
     this.mixer.update(dt);
+    if (this.model) groundFeetLocal(this.model, 0);
     this.footGrounder.apply(dt);
 
     if (this.oneShot) {

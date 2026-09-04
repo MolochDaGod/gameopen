@@ -39,11 +39,13 @@ Do **not** invent a second bag, bank, or lockpick host. Extend the paths below.
 | Character bag | On body | Harvest carry, gear swap |
 | **Camp storage** | At claim until sent home | **RTS** spends here |
 | **Home island bag** | Account (all modes) | Shared fleet vault |
-| Boat hold | On boat | Sail carry |
+| **Boat stash** | On the vehicle (`boat:<id>`) | Sail carry. **→ inventory** only at **home island**, a **safe dock**, or a **friendly island dock** |
 | World loot chests | Pin until picked | Lockpick when required |
 
 Deposit at **claim/camp** → camp storage (not free account).  
 **Send camp → home island** = explicit transfer only.
+
+**Boat stash** (`boat:<id>`): vehicle compartment while sailing. **Convert to inventory** (`transferBoatStashToInventory`) only when `resolveStashUnloadDock` is `home_island` | `safe_dock` | `friendly_dock`. At sea the stash stays on the boat.
 
 ---
 
@@ -52,7 +54,7 @@ Deposit at **claim/camp** → camp storage (not free account).
 | Zone | Lockpick? |
 |------|-----------|
 | **Home island** | **SAFE — never** |
-| Own camp / own boat | Open free |
+| Own camp / own boat stash | Open free (at sea: compartment only; unload to bag at dock) |
 | Dungeons | **Yes** |
 | Treasures / hidden chests in game | **Yes** |
 | Contested area chests | **Yes** |

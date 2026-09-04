@@ -32,6 +32,8 @@ import { ToolboxOverlay } from "./toolbox/ToolboxOverlay";
 import type { ToolDef } from "./toolbox/tools";
 import { FleetBar } from "./FleetBar";
 import { KM } from "../lib/kenneyMobile";
+import { HudViewGrid } from "./hud/HudViewGrid";
+import type { HudLayoutId } from "../hud/hudConfig";
 import "./appShell.css";
 import "./toolbox/toolbox.css";
 
@@ -190,6 +192,9 @@ interface Props {
   showFleetStrip?: boolean;
   /** Danger Room match picker in the fleet strip (off on product hubs). */
   showModeSelect?: boolean;
+  /** HYDRA 12×12 view overlay (HUD edit or ?hudgrid=1). */
+  hudGrid?: boolean;
+  hudLayout?: HudLayoutId;
   children: ReactNode;
 }
 
@@ -202,6 +207,8 @@ export function AppShell({
   music,
   showFleetStrip = true,
   showModeSelect = false,
+  hudGrid = false,
+  hudLayout = "tight",
   children,
 }: Props) {
   const { deviceClass } = useDevice();
@@ -477,6 +484,7 @@ export function AppShell({
             placeholder={config.placeholder}
           />
         )}
+        {hudGrid && <HudViewGrid layout={hudLayout} />}
       </ShellChromeContext.Provider>
     </AssistantSurfaceContext.Provider>
   );

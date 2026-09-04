@@ -20,6 +20,14 @@ describe("Open delivery shelves", () => {
   it("account hub + foundry land on Account", () => {
     expect(deliveryShelf(getGame("account-hub")!)).toBe("account");
     expect(deliveryShelf(getGame("character-foundry")!)).toBe("account");
+    expect(deliveryShelf(getGame("studio-portal")!)).toBe("account");
+    expect(deliveryShelf(getGame("ai-legion")!)).toBe("account");
+    expect(deliveryShelf(getGame("wallet-hub")!)).toBe("account");
+  });
+
+  it("coder lands on Editors", () => {
+    expect(deliveryShelf(getGame("coder-ide")!)).toBe("editors");
+    expect(deliveryShelf(getGame("ui-hydra")!)).toBe("editors");
   });
 
   it("editors: grok-builder, threeflow, forge", () => {

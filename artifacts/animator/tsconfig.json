@@ -14,6 +14,7 @@
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./src/*"],
+      "@workspace/grudge-physics/pointer": ["../../lib/grudge-physics/src/controls/pointerPresence.ts"],
       "@workspace/grudge-physics": ["../../lib/grudge-physics/src/index.ts"],
       "@workspace/api-client-react": ["../../lib/api-client-react/src/index.ts"],
       "@workspace/api-zod": ["../../lib/api-zod/src/index.ts"],

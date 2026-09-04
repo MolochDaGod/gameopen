@@ -320,7 +320,27 @@ describe("stripPositionTracks", () => {
     expect(v[4]).toBeCloseTo(1.0);
   });
 
-  it("stabilizeClipForMixer keeps hip bob, drops foot position", () => {
+  it("stabilizeClipForMixer drops hip and foot position by default", () => {
+    const root = new THREE.Object3D();
+    const hips = new THREE.Bone();
+    hips.name = "mixamorigHips";
+    root.add(hips);
+    const foot = new THREE.Bone();
+    foot.name = "mixamorigLeftFoot";
+    root.add(foot);
+    const clip = new THREE.AnimationClip("idle", 1, [
+      new THREE.VectorKeyframeTrack("mixamorigHips.position", [0, 1], [5, 1, 5, 5, 1.05, 5]),
+      new THREE.VectorKeyframeTrack("mixamorigLeftFoot.position", [0, 1], [0, 0, 0, 0, -0.2, 0]),
+      new THREE.QuaternionKeyframeTrack("mixamorigHips.quaternion", [0, 1], [0, 0, 0, 1, 0, 0, 0, 1]),
+    ]);
+    const out = stabilizeClipForMixer(clip, {
+      root,
+      bindHip: { x: 0, y: 1, z: 0 },
+    });
+    expect(out.tracks.every((t) => t.name.endsWith(".quaternion"))).toBe(true);
+  });
+
+  it("stabilizeClipForMixer can keep hip bob when asked", () => {
     const root = new THREE.Object3D();
     const hips = new THREE.Bone();
     hips.name = "mixamorigHips";

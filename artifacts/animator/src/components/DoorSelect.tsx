@@ -24,7 +24,13 @@ import {
   surfaceForMode,
 } from "../lib/openRoutes";
 import { gameSession, type GameSessionSnapshot } from "../game/GameSession";
-import { loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+import { getStoredToken, loginWithGrudgeId, logoutGrudge } from "../lib/grudgeAuth";
+import {
+  gameLaunchUrl,
+  getGame,
+  type GameEntry,
+} from "../game/gameLibrary";
+import { PRODUCT_STARTS } from "../lib/entryCatch";
 import {
   formatRecentAt,
   getRecentPlays,
@@ -57,6 +63,20 @@ const GROUP_ICON: Record<SurfaceGroup, typeof Swords> = {
 
 type FilterId = "all" | "recent" | SurfaceGroup;
 type HubTab = "library" | "store" | "community";
+
+/** Grudge Studio products the launcher must surface (same Railway account). */
+const STUDIO_CONNECTOR_IDS = [
+  "account-hub",
+  "character-foundry",
+  "studio-portal",
+  "ai-legion",
+  "wallet-hub",
+  "grok-builder",
+  "forge-editor",
+  "threeflow",
+  "coder-ide",
+  "ui-hydra",
+] as const;
 
 /**
  * Steam-style shell: Library (recents + catalog), Store (fleet), Community (friends/party).
@@ -134,6 +154,23 @@ export function DoorSelect({ onEnter }: Props) {
     onEnter(mode);
   };
 
+  const launchStudioProduct = (game: GameEntry) => {
+    if (game.nativeMode && (game.launch === "native" || game.launch === "editor")) {
+      launchMode(game.nativeMode);
+      return;
+    }
+    const url =
+      gameLaunchUrl(game, {
+        token: getStoredToken(),
+        characterId: snap.selectedCharacterId,
+      }) || game.url;
+    if (url) window.location.assign(url);
+  };
+
+  const studioProducts = STUDIO_CONNECTOR_IDS.map((id) => getGame(id)).filter(
+    (g): g is GameEntry => !!g,
+  );
+
   return (
     <div className="steam-lib mmo-shell" data-testid="steam-library" data-tab={tab} data-ui="mmo-4">
       {/* ── Top bar (MMO UI 4 / HUD.psd family chrome) ── */}
@@ -208,8 +245,22 @@ export function DoorSelect({ onEnter }: Props) {
           <InstallAppButton variant="steam" />
           {account ? (
             <div className="steam-user">
-              <span className="steam-user-name">{account.displayName || account.grudgeId}</span>
+              <button
+                type="button"
+                className="steam-user-name"
+                onClick={() => launchMode("account")}
+                title="Open account hub — same Grudge ID as grudge-studio.com"
+              >
+                {account.displayName || account.grudgeId}
+              </button>
               <span className="steam-user-meta">{charCount} characters</span>
+              <button
+                type="button"
+                className="steam-user-btn"
+                onClick={() => launchMode("account")}
+              >
+                Account
+              </button>
               <button
                 type="button"
                 className="steam-user-btn"
@@ -334,10 +385,22 @@ export function DoorSelect({ onEnter }: Props) {
                 <Users size={14} />
                 Lobby
               </button>
+              <button type="button" className="mmo-flow-chip" onClick={() => launchMode("account")}>
+                <Users size={14} />
+                Account
+              </button>
               <button type="button" className="mmo-flow-chip" onClick={() => launchMode("characters")}>
                 <Library size={14} />
                 Characters
               </button>
+              <a
+                className="mmo-flow-chip"
+                href={PRODUCT_STARTS.aiHub}
+                title="Legion AI — same Grudge ID JWT"
+              >
+                <Wrench size={14} />
+                AI
+              </a>
               <button type="button" className="mmo-flow-chip" onClick={() => launchMode("zones")}>
                 <Play size={14} />
                 Zones
@@ -552,6 +615,43 @@ export function DoorSelect({ onEnter }: Props) {
                     </div>
                   </section>
                 ))
+              )}
+
+              {filter === "all" && !query.trim() && (
+                <section className="steam-shelf" data-group="studio">
+                  <h2 className="steam-shelf-title">Grudge Studio products</h2>
+                  <p className="steam-shelf-blurb">
+                    Same Grudge ID + Railway account as grudge-studio.com — launcher, not a second roster.
+                  </p>
+                  <div className="steam-grid">
+                    {studioProducts.map((game) => (
+                      <article
+                        key={game.id}
+                        className="steam-card"
+                        style={{ "--card-accent": game.tone } as React.CSSProperties}
+                        onClick={() => launchStudioProduct(game)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            launchStudioProduct(game);
+                          }
+                        }}
+                        title={game.blurb}
+                        tabIndex={0}
+                        role="button"
+                      >
+                        <div className="steam-card-art">
+                          <img src={poster(game.posterKey)} alt="" draggable={false} />
+                          <span className="steam-card-badge">{game.short}</span>
+                        </div>
+                        <div className="steam-card-meta">
+                          <h3>{game.title}</h3>
+                          <p>{game.short}</p>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
               )}
 
               {filtered.length === 0 && filter !== "recent" && (

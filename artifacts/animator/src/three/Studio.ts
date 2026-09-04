@@ -142,6 +142,7 @@ import {
   heavySignatureRows,
   isHeavy2hWeapon,
 } from "./combat/heavyWeaponCombat";
+import { totemForSlot, type TotemDef } from "./combat/totemCatalog";
 import { ELEMENT_THEME } from "./arsenal/elements";
 import { staffHoverTheme } from "./arsenal/staffHover";
 import { CampBuildSystem } from "./camp/CampBuildSystem";
@@ -496,6 +497,8 @@ const SKILL_COLOR: Record<SkillKind, number> = {
   swordVolley: 0xa8e6ff,
   soul: 0x8fffe0,
   laser: 0xff5a3c,
+  fireTornado: 0xff6a1e,
+  totem: 0xc9a227,
 };
 
 /**
@@ -810,6 +813,16 @@ export class Studio {
   private maxThirst = 80;
   private skillCooldown = 0;
   private skillCooldownMax = 0;
+  /** Live Norse totem deploys (mesh + rise-from-ground). */
+  private liveTotems: {
+    root: THREE.Object3D;
+    riseT: number;
+    riseDur: number;
+    heightM: number;
+    groundY: number;
+    x: number;
+    z: number;
+  }[] = [];
   private swingTimer = 0;
   /** Slash colour of the in-progress swing, used by the clean blade-trail ribbon. */
   private swingColor = 0x9fe8ff;
@@ -5831,6 +5844,130 @@ export class Studio {
    * enemy in range and snares them, onExpire fades the marker. Used by the LED
    * Monk's F-skill.
    */
+  /**
+   * Place a Norse totem 2.2 m ahead of the caster, or 2.2 m from the locked
+   * target for taunt. Same deploy lifecycle as snare/turret.
+   */
+  private deployTotemFromSlot(slot: number, origin: THREE.Vector3, fwd: THREE.Vector3) {
+    const def = totemForSlot(slot);
+    const pose = this.colliderPose();
+    const ground = (pose ? pose.aim : fwd).clone().setY(0);
+    if (ground.lengthSq() < 1e-4) ground.set(0, 0, 1);
+    ground.normalize();
+    let at: THREE.Vector3;
+    if (def.place === "target") {
+      const picked = this.pickTargetInFront(origin, fwd, 22, -0.15);
+      if (picked?.position) {
+        const away = picked.position.clone().sub(origin).setY(0);
+        if (away.lengthSq() < 1e-4) away.copy(ground);
+        away.normalize();
+        at = picked.position.clone().addScaledVector(away, def.offsetM);
+      } else {
+        at = origin.clone().addScaledVector(ground, def.offsetM);
+      }
+    } else {
+      at = origin.clone().addScaledVector(ground, def.offsetM);
+    }
+    at.y = origin.y;
+    this.deployTotem(def, at);
+  }
+
+  private deployTotem(totem: TotemDef, at: THREE.Vector3) {
+    if (!this.character) return;
+    const abilityId =
+      totem.effect === "heal_mist"
+        ? "deploy:totem-heal"
+        : totem.effect === "attack_ward"
+          ? "deploy:totem-ward"
+          : totem.effect === "taunt"
+            ? "deploy:totem-taunt"
+            : totem.effect === "stun"
+              ? "deploy:totem-stun"
+              : "deploy:totem-trap";
+    const def =
+      getAbility(abilityId) ??
+      deployAbility(abilityId.replace("deploy:", ""), "totem", totem.color, {
+        life: totem.life,
+        firstTick: 0.4,
+        interval: 1.0,
+        tail: 0.5,
+      });
+    const base = at.clone();
+    this.abilities.cast(def, {
+      onDeploy: () => {
+        this.vfx.earthBend(base, Math.min(1.6, totem.aoeRadius * 0.38), 0.55);
+        void this.spawnTotemMesh(totem, base);
+        this.setCombatFlash(totem.name.toUpperCase(), 0.5);
+      },
+      onTick: () => this.pulseTotem(totem, base),
+      onExpire: () => {
+        if (this.disposed) return;
+        this.vfx.shockwave(new THREE.Vector3(base.x, 0.05, base.z), totem.color, totem.aoeRadius, 0.45);
+        this.despawnTotemAt(base);
+      },
+    });
+  }
+
+  private pulseTotem(totem: TotemDef, base: THREE.Vector3) {
+    if (this.disposed) return;
+    const r = totem.aoeRadius;
+    this.vfx.shockwave(new THREE.Vector3(base.x, 0.06, base.z), totem.color, r * 0.9, 0.35);
+    if (totem.effect === "heal_mist") {
+      this.sparring?.healPlayer?.(8);
+      this.vfx.auraRing(base.clone().setY(0.2), totem.color, r, 0.5);
+      return;
+    }
+    if (totem.effect === "attack_ward") {
+      this.targets.blast(base, r, 14, this.params.skillForce * 0.35, this.sparCtx);
+      this.vfx.burst(base.clone().setY(0.4), totem.color, 12, r * 0.4);
+      return;
+    }
+    if (totem.effect === "taunt") {
+      this.targets.tauntArea(base, r, 3.4);
+      this.vfx.burst(base.clone().setY(0.5), totem.color, 18, r * 0.25);
+      return;
+    }
+    if (totem.effect === "stun") {
+      this.targets.stun(base, r, 1.1);
+      return;
+    }
+    this.targets.slowArea(base, r, 0.45, 1.15);
+    this.targets.blast(base, r, 8, this.params.skillForce * 0.18, this.sparCtx);
+  }
+
+  private async spawnTotemMesh(totem: TotemDef, at: THREE.Vector3) {
+    try {
+      const { scene } = await loadGltfFirst(totem.meshKey, sharedGltfLoader());
+      const root = scene;
+      // Baked Y-up, feet at 0. Start buried; the pole is the earth spike.
+      root.position.set(at.x, at.y - totem.heightM, at.z);
+      this.scene.add(root);
+      this.liveTotems.push({
+        root,
+        riseT: 0,
+        riseDur: totem.riseSec,
+        heightM: totem.heightM,
+        groundY: at.y,
+        x: at.x,
+        z: at.z,
+      });
+    } catch (err) {
+      console.warn("[totem] mesh load", totem.meshKey, err);
+    }
+  }
+
+  private despawnTotemAt(at: THREE.Vector3) {
+    const keep: typeof this.liveTotems = [];
+    for (const t of this.liveTotems) {
+      const dx = t.x - at.x;
+      const dz = t.z - at.z;
+      if (dx * dx + dz * dz < 0.36) {
+        this.scene.remove(t.root);
+      } else keep.push(t);
+    }
+    this.liveTotems = keep;
+  }
+
   private deploySnareField(at: THREE.Vector3) {
     if (!this.character) return;
     const base = at.clone();
@@ -6368,6 +6505,18 @@ export class Studio {
       return this.doCrossbowSig(signatureIndex!);
     }
 
+    // Norse totem poles (nature staff): deploy 2.2 m ahead, or at the target for taunt.
+    if (this.weaponId === "staffNature" && isSig) {
+      const origin = this.character.root.position.clone();
+      const fwd = this.facing();
+      if (this.character.hasRole?.("cast")) this.character.playRoleOnce?.("cast" as never, 0.1);
+      else if (this.character.hasRole("attack")) this.character.playRoleOnce("attack", 0.1);
+      this.deployTotemFromSlot(signatureIndex!, origin, fwd);
+      const t0 = getT0Skill(this.weaponId, signatureIndex!);
+      this.armSigSlot(signatureIndex!, Math.max(0.8, t0?.cooldown ?? 2.8), 18);
+      return true;
+    }
+
     // Casting-element staff trees (skillPackForWeaponId): staffFire…staffStorm
     // + plain staff when not Soulbinder. Real hotbar labels from fleet pack;
     // cast/impact via deploySandboxVfx; damage/range via sparringBlast.
@@ -6492,6 +6641,13 @@ export class Studio {
       }
       const dur = clip && this.character.hasClip(clip) ? this.character.playClipOnce(clip, 0.12) : 0;
       const kind = t0?.kind ?? sig?.kind ?? "slash";
+      if (kind === "totem") {
+        const slot = signatureIndex!;
+        this.deployTotemFromSlot(slot, origin, fwd);
+        const cd = Math.max(0.8, t0?.cooldown ?? 2.8);
+        this.armSigSlot(slot, cd, 18);
+        return true;
+      }
       const mode = t0?.mode ?? sig?.mode;
       // Motion-math: +MM gap-close toward aim, −MM kite/backstep (ref sheet 2).
       const mm = t0?.mm ?? 0;
@@ -11478,6 +11634,14 @@ export class Studio {
     // Advance data-driven abilities here (same `dt`, adjacent to updatePending)
     // so their cast/impact phases land on the same frame as the legacy schedule.
     this.abilities.update(dt);
+    for (const t of this.liveTotems) {
+      if (t.riseT < t.riseDur) {
+        t.riseT = Math.min(t.riseDur, t.riseT + dt);
+        const u = t.riseT / t.riseDur;
+        const e = 1 - (1 - u) * (1 - u) * (1 - u);
+        t.root.position.set(t.x, t.groundY - t.heightM * (1 - e), t.z);
+      }
+    }
     // Advance the Flanged-Mace throw flight (stun on impact, catch on return,
     // fail-safe recall) and reposition the in-flight mace.
     this.updateMaceThrow(dt);

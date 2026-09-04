@@ -83,12 +83,48 @@ const snareFieldDeploy: AbilityDef = deployAbility("snareField", "nova", COLOR_S
   tail: 0.4,
 });
 
+const totemTrapDeploy: AbilityDef = deployAbility("totem-trap", "totem", 0x6b8f5e, {
+  life: 8.0,
+  firstTick: 0.45,
+  interval: 1.0,
+  tail: 0.5,
+});
+const totemHealDeploy: AbilityDef = deployAbility("totem-heal", "totem", 0xf0a0c8, {
+  life: 9.0,
+  firstTick: 0.4,
+  interval: 1.1,
+  tail: 0.5,
+});
+const totemWardDeploy: AbilityDef = deployAbility("totem-ward", "totem", 0x4aa3ff, {
+  life: 8.0,
+  firstTick: 0.35,
+  interval: 0.85,
+  tail: 0.4,
+});
+const totemTauntDeploy: AbilityDef = deployAbility("totem-taunt", "totem", 0xd4c4a0, {
+  life: 7.0,
+  firstTick: 0.25,
+  interval: 0.9,
+  tail: 0.4,
+});
+const totemStunDeploy: AbilityDef = deployAbility("totem-stun", "totem", 0xc9a227, {
+  life: 7.0,
+  firstTick: 0.35,
+  interval: 1.2,
+  tail: 0.5,
+});
+
 /** Static, id-addressable abilities (projectile + melee + deploy archetypes). */
 export const ABILITIES: Record<string, AbilityDef> = {
   [fireDragonSig.id]: fireDragonSig,
   [bowSlash.id]: bowSlash,
   [dashSkill.id]: dashSkill,
   [snareFieldDeploy.id]: snareFieldDeploy,
+  [totemTrapDeploy.id]: totemTrapDeploy,
+  [totemHealDeploy.id]: totemHealDeploy,
+  [totemWardDeploy.id]: totemWardDeploy,
+  [totemTauntDeploy.id]: totemTauntDeploy,
+  [totemStunDeploy.id]: totemStunDeploy,
 };
 
 /** Look up a static ability definition by id. */

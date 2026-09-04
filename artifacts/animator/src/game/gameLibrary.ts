@@ -3,9 +3,17 @@
  *
  * open.grudge-studio.com is the launcher + deployer shell.
  *
+ * ## Homes (artifacts / dist / packages / deploys — do not collapse brands)
+ *  - **Open** (`open.grudge-studio.com`) — Steam-like **library of all games**.
+ *    Catalog tiles only. Play voxels elsewhere. Danger/Dressing stay Open labs.
+ *  - **GRUDOX** (`grudox.grudge-studio.com`) — **voxel-era play** + cabinets.
+ *    Kernel: threejs-rapier-react-three-controller. Mine-Loader / voxgrudge / arcade.
+ *  - **Warlords** (`client.grudge-studio.com` / grudgewarlords.com) — era=warlords play.
+ *    Editors: **ThreeFlow** (scene) + **Forge / Grok Builder / asset-rig** (Studio tools).
+ *
  * ## Era categories (SSOT for import / deploy — do not invent parallel games)
- *  - **voxel**    — VoxGrudge production, Mine-Loader Realms, DCQ, Z-Brawl, Worldbuilder
- *  - **warlords** — Fantasy flagship **client** (+ Open tools: Danger, Dressing).
+ *  - **voxel**    — VoxGrudge, Mine-Loader Realms, DCQ, Z-Brawl — **play on GRUDOX**
+ *  - **warlords** — Fantasy flagship **client**. Scenes in ThreeFlow; maps deploy Forge.
  *    Home islands, sectors, scatter maps live **inside Warlords**, not as Open tiles.
  *  - **nexus**    — Sci-fi / mech / metaverse / space-adjacent fleet
  *  - **armada**   — Naval / Grim Armada / sail maps
@@ -115,7 +123,7 @@ export const DELIVERY_SHELVES: readonly {
   {
     id: "account",
     label: "Account",
-    blurb: "Grudge ID · campfire roster · bag · wallet · Foundry",
+    blurb: "Grudge ID · Studio portal · bag · wallet · Foundry · Legion AI",
   },
   {
     id: "games",
@@ -227,7 +235,8 @@ export type GameEntry = {
     | "realms"
     | "minegrudge"
     | "survival"
-    | "vox-battle";
+    | "vox-battle"
+    | "ui";
   /** Absolute URL for external / mine-loader */
   url?: string;
   deploy: DeployStack;
@@ -368,6 +377,107 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     status: "live",
   },
   {
+    id: "studio-portal",
+    title: "Grudge Studio",
+    short: "Portal · The ENGINE",
+    blurb:
+      "grudge-studio.com — product index for Open, Foundry, Forge, Warlords, GRUDOX. Not a second login. Account data stays Railway via Open / Grudge ID.",
+    category: "account",
+    tags: ["Studio", "Portal", "Products"],
+    tone: "#66c0f4",
+    posterKey: "library-account",
+    engines: ["html-static"],
+    launch: "external",
+    url: "https://grudge-studio.com/",
+    deploy: { client: "cf-pages", edge: "cloudflare-worker" },
+    playerInfo: "Browse Studio products here. Sign in on Open for the same Grudge ID account.",
+    sources: ["https://grudge-studio.com/", "grudge-studio skill"],
+    featured: true,
+    shelf: "account",
+    status: "live",
+  },
+  {
+    id: "ai-legion",
+    title: "Legion AI",
+    short: "Chat · image · agents",
+    blurb:
+      "ai.grudge-studio.com — Legion hub. Same JWT as Open (`grudge.open.token`). Chat needs sign-in; health is public.",
+    category: "account",
+    tags: ["AI", "Chat", "Legion"],
+    tone: "#9d8bff",
+    posterKey: "library-account",
+    engines: ["html-static"],
+    launch: "external",
+    url: "https://ai.grudge-studio.com/",
+    deploy: { client: "cf-pages", edge: "cloudflare-worker" },
+    playerInfo: "Sign in on Open first. AI uses the same Grudge ID bearer token.",
+    sources: ["F:\\GitHub\\grudge-ai-hub", "ai.grudge-studio.com"],
+    featured: true,
+    shelf: "account",
+    status: "live",
+  },
+  {
+    id: "wallet-hub",
+    title: "Fleet Wallet",
+    short: "GBUX · custodial",
+    blurb:
+      "wallet.grudge-studio.com — wallet product UI on the same Railway account row. Not a second bag.",
+    category: "account",
+    tags: ["Wallet", "GBUX", "Account"],
+    tone: "#e8c547",
+    posterKey: "library-account",
+    engines: ["html-static"],
+    launch: "external",
+    url: "https://wallet.grudge-studio.com/",
+    deploy: { client: "vercel", edge: "cloudflare-worker" },
+    playerInfo: "Same grudge_id wallet as Open Account → Wallet panel.",
+    sources: ["wallet.grudge-studio.com", "grudge-production-wiring"],
+    featured: true,
+    shelf: "account",
+    status: "live",
+  },
+  {
+    id: "coder-ide",
+    title: "Coder",
+    short: "Vibe IDE",
+    blurb:
+      "coder.grudge-studio.com — GrudgeChain Vibe IDE, AI workers, project deliver. Fleet SSO; not a play host.",
+    category: "account",
+    tags: ["Coder", "IDE", "Create", "Editor"],
+    tone: "#7ee0a0",
+    posterKey: "worldbuilder",
+    engines: ["html-static"],
+    launch: "external",
+    url: "https://coder.grudge-studio.com/",
+    deploy: { client: "cf-pages", edge: "cloudflare-worker" },
+    playerInfo: "Create/code with the same Grudge ID. Play still launches from Open library.",
+    sources: ["coder.grudge-studio.com", "grudge-coder skill"],
+    featured: true,
+    shelf: "editors",
+    status: "live",
+  },
+  {
+    id: "ui-hydra",
+    title: "Create UI",
+    short: "HYDRA · hotkeys · assets",
+    blurb:
+      "ui.grudge-studio.com — HUD studio, Input Configurator, CraftPix/CDN assets. Open /ui applies packs to Danger HUD + F1 help.",
+    category: "account",
+    tags: ["UI", "HUD", "Hotkeys", "Editor", "Create"],
+    tone: "#4ade80",
+    posterKey: "dressing",
+    engines: ["html-static"],
+    launch: "native",
+    nativeMode: "ui",
+    url: "https://ui.grudge-studio.com/",
+    deploy: { client: "vercel", edge: "cloudflare-worker" },
+    playerInfo: "Open /ui · Apply pack to Open HUD · Input tab posts hotkeys to F1.",
+    sources: ["ui.grudge-studio.com", "craftpix-rpg-mmo-ui skill"],
+    featured: true,
+    shelf: "editors",
+    status: "live",
+  },
+  {
     id: "grok-builder",
     title: "Grok Builder",
     short: "Agentic game creator",
@@ -392,7 +502,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     title: "ThreeFlow",
     short: "Warlords scene editor",
     blurb:
-      "threeflow.vercel.app — Vue + three r185 scene editor. Elite/Dev Tool handoff ?asset=. Not Forge (R3F map deploy).",
+      "Warlords-era scene editor (Vue + three r185). Elite/Dev Tool handoff ?asset=. Pair with Studio Forge for .gfscene deploy. Not a voxel client.",
     category: "warlords",
     tags: ["Editor", "Three.js", "Scenes", "Handoff"],
     tone: "#7ec8e3",
@@ -418,9 +528,7 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "library-mine",
     icon: "world-editor",
     engines: ["mine-loader", "three"],
-    // Collection surface: open.grudge-studio.com/realms (in-app canvas + SSO)
-    launch: "native",
-    nativeMode: "realms",
+    launch: "external",
     url: MINE_LOADER.clientUrl,
     deploy: {
       client: "vercel",
@@ -508,8 +616,8 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "voxgrudge-battle",
     icon: "pvp",
     engines: ["three"],
-    launch: "native",
-    nativeMode: "vox-battle",
+    launch: "external",
+    url: "https://grudox.grudge-studio.com/voxgrudge/",
     deploy: { client: "vercel", edge: "cloudflare-worker" },
     deployNotes: ["Native Open mode · ships with gameopen SPA"],
     playerInfo: "Pick singles/duos · pre-select weapons · last standing.",
@@ -668,10 +776,33 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "library-brawl",
     icon: "attack",
     engines: ["three", "socketio"],
-    launch: "native",
-    nativeMode: "brawl",
+    launch: "external",
+    url: "https://grudox.grudge-studio.com/arcade/play/brawler",
     deploy: { client: "vercel", server: "railway" },
     sources: ["D:\\GitHub\\gameopen"],
+    featured: true,
+    status: "live",
+  },
+  {
+    id: "grudgeblox",
+    title: "GrudgeBlox",
+    short: "Notblox city · Rapier · Railway WS",
+    blurb:
+      "Voxel GTA-like city (blox.grudge-studio.com). Client Vercel, rooms uWS/Node on Railway — not Colyseus, not GRUDOX. SI 1.8 m islands · Grudge ID + Railway heroes.",
+    category: "voxel",
+    tags: ["Voxel", "City", "Multiplayer", "Rapier", "Notblox"],
+    tone: "#d4a84b",
+    posterKey: "library-voxworld",
+    icon: "explore",
+    engines: ["three", "rapier"],
+    launch: "external",
+    url: "https://blox.grudge-studio.com/",
+    deploy: { client: "vercel", server: "railway" },
+    deployNotes: [
+      "SPA: grudgeblox.vercel.app · WS: wss://grudgeblox-production.up.railway.app (443)",
+      "Do not tag Colyseus. Do not point WS at Vercel.",
+    ],
+    sources: ["F:\\GitHub\\grudgeblox", "https://github.com/MolochDaGod/grudgeblox"],
     featured: true,
     status: "live",
   },
@@ -706,8 +837,8 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "library-voxworld",
     icon: "world-editor",
     engines: ["three"],
-    launch: "native",
-    nativeMode: "voxgrudge-native",
+    launch: "external",
+    url: "https://grudox.grudge-studio.com/voxgrudge/",
     deploy: { client: "vercel" },
     sources: ["D:\\GitHub\\gameopen\\artifacts\\animator\\src\\components\\VoxGrudgeNative.tsx"],
     status: "live",
@@ -830,6 +961,9 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     posterKey: "zones",
     icon: "rally",
     engines: ["three", "colyseus"],
+    deployNotes: [
+      "Colyseus is Warlords lobby/dungeon on Railway — not GrudgeBlox (uWS) and not GRUDOX Carrier.",
+    ],
     launch: "external",
     url: WARLORDS_CLIENT_URL,
     deploy: { client: "vercel", server: "railway" },
@@ -928,7 +1062,6 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     ],
     playerInfo:
       "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat. Magma Core (platforms over lava): ?theme=molten&linear=1",
-      "Forge → ENTER / E. Linear crawl = boss dungeon. WASD · 1–6 cast · Esc leave. Same Grudge Toon races as Combat.",
     sources: [
       "https://grudge-dungeons.vercel.app/",
       "F:\\GitHub\\threejs-procedural-dungeon",
@@ -1198,7 +1331,8 @@ export const GAME_LIBRARY: readonly GameEntry[] = [
     id: "forge-editor",
     title: "Studio Forge",
     short: "Map & model editor",
-    blurb: "Fleet map editor — forge.grudge-studio.com (RTS-Grudge studio).",
+    blurb:
+      "Grudge Studio tools editor — forge.grudge-studio.com. R3F + Rapier + .gfscene deploy for Warlords maps. Scene authoring stays ThreeFlow.",
     category: "warlords",
     tags: ["Forge", "Maps"],
     tone: "#c9a227",

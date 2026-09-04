@@ -131,7 +131,8 @@ export type StabilizeClipOpts = {
   bindHip: { x: number; y: number; z: number };
   /**
    * Keep hips position track for vertical bob (then lock X/Z).
-   * Default true for explorer Mixamo weapon packs.
+   * Default **false** — grounded kits, Mixamo packs, custom blends.
+   * Physics + groundFeetLocal own travel.
    */
   keepRootPosition?: boolean;
   /**
@@ -218,8 +219,8 @@ export function clampMixerDt(dt: number): number {
 /**
  * Best-practice bind pipeline for ONE AnimationMixer on a grounded character:
  * 1. drop tracks that don't bind
- * 2. strip limb/scale position (keep optional hip bob)
- * 3. lock hip X/Z to bind (no root walk-off / spin pedestal)
+ * 2. strip ALL position tracks (Mixamo / retarget / blends) — physics owns Y
+ * 3. lock leftover hip tracks to bind (no root walk-off)
  * 4. sanitize NaN quats / positions
  *
  * Call once per clip clone before mixer.clipAction — never invent a second mixer.
@@ -231,7 +232,7 @@ export function stabilizeClipForMixer(
   let c = filterBindableTracks(opts.root, clip.clone());
   c = stripScaleTracks(c);
   c = stripPositionTracks(c, {
-    keepRootPosition: opts.keepRootPosition !== false,
+    keepRootPosition: opts.keepRootPosition === true,
   });
   const lock =
     opts.lockHorizontalRoot === null

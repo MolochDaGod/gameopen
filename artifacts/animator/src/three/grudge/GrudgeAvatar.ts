@@ -452,6 +452,12 @@ export class GrudgeAvatar implements Avatar {
    * Maps 0..1 speed → idle / walk / run / **sprint** (run clone @ 1.75×).
    * Never selects roll / run-to-roll clips for gait.
    */
+  setLocomotionDirectional(localX: number, localZ: number, speed: number): void {
+    this.setLocomotion(speed, false);
+    void localX;
+    void localZ;
+  }
+
   setLocomotion(speed: number, sprinting = false): void {
     if (!this.mixer) return;
     const s = Math.max(0, Math.min(1, speed));

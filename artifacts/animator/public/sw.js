@@ -7,15 +7,18 @@
  *     (glb/fbx/bin/hdr/ktx2/draco) or /models|/textures|/anims|/audio.
  *     Stale mesh shells caused SI stretch / wrong kits after fleet CDN fixes.
  * v5 (2026-08-19): drop pinned index-BYDtnCzP.js / grudge-open-shell-v4.
+ * v6 (2026-08-31): hashed /assets/* (JS/CSS/wasm) is Vite immutable — do NOT
+ *     treat Rapier wasm as a "heavy mesh" and fetch cache:no-store. That aborted
+ *     first paint and left the library on "Loading library…".
  *
  * Strategy:
  *  - Navigations: network-only (no stale index.html pinning old Vite hashes)
- *  - /assets/*: network-first; cache hit only as offline fallback (JS/CSS only)
+ *  - /assets/*: network-first; cache hit only as offline fallback (JS/CSS/wasm)
  *  - Icons: stale-while-revalidate with guaranteed Response fallback
  *  - Never intercept API/auth; never cache production meshes (CDN SSOT)
  */
-const CACHE = "grudge-open-shell-v5";
-const CACHE_VERSION = 5;
+const CACHE = "grudge-open-shell-v6";
+const CACHE_VERSION = 6;
 const PRECACHE = [
   "/manifest.webmanifest",
   "/favicon.svg",
@@ -27,6 +30,10 @@ const PRECACHE = [
 
 /** Paths that must always hit network / CDN — never Cache API (stretch / mismatch). */
 function isHeavyAssetPath(path) {
+  // Vite hashed bundles live under /assets/ — including Rapier wasm.
+  // Those are content-hashed + Cache-Control immutable. Intercepting them with
+  // cache: "no-store" races the module graph and bricks the boot splash.
+  if (path.startsWith("/assets/")) return false;
   if (
     path.startsWith("/models/") ||
     path.startsWith("/textures/") ||
@@ -37,7 +44,7 @@ function isHeavyAssetPath(path) {
   ) {
     return true;
   }
-  return /\.(glb|gltf|fbx|bin|hdr|exr|ktx2|basis|wasm|mp3|ogg|wav|webm|mp4)(\?|$)/i.test(
+  return /\.(glb|gltf|fbx|bin|hdr|exr|ktx2|basis|mp3|ogg|wav|webm|mp4)(\?|$)/i.test(
     path,
   );
 }

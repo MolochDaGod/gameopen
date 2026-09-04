@@ -96,6 +96,18 @@ export type FleetWeaponSkill = {
   projectile?: SkillProjectileDef;
   /** Ground AoE on impact (m) */
   aoeRadius?: number;
+  /**
+   * Persistent ground totem (Norse poles). Same deploy lifecycle as snare/turret:
+   * placed a few metres ahead of caster, or beside the locked target for taunt.
+   */
+  groundTotem?: {
+    totemId: string;
+    meshPath: string;
+    effect: "heal_mist" | "attack_ward" | "trap" | "taunt" | "stun";
+    place: "caster_forward" | "target";
+    offsetM: number;
+    duration: number;
+  };
 
   // ── Timing & economy ──────────────────────────────────────────────────
   /** Full skill cooldown (s) */

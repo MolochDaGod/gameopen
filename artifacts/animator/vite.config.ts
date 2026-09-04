@@ -59,6 +59,11 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/animator/src/index.ts",
       ),
+      // Pointer-only path — App shell must NOT import the Rapier barrel on first paint.
+      "@workspace/grudge-physics/pointer": path.resolve(
+        import.meta.dirname,
+        "../../lib/grudge-physics/src/controls/pointerPresence.ts",
+      ),
       "@workspace/grudge-physics": path.resolve(
         import.meta.dirname,
         "../../lib/grudge-physics/src/index.ts",
@@ -114,11 +119,25 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     target: "es2022",
+    // Library first paint: do not modulepreload Rapier WASM / yuka / mediapipe.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) =>
+        deps.filter(
+          (d) => !/rapier|engine-|yuka|mediapipe|wasm/i.test(d),
+        ),
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ["three"],
-          engine: ["@dimforge/rapier3d-compat", "yuka"].filter(() => true),
+        manualChunks(id) {
+          if (id.includes("node_modules/three/") || id.includes("\\node_modules\\three\\")) {
+            return "three";
+          }
+          if (id.includes("@dimforge/rapier")) return "rapier";
+          if (id.includes("node_modules/yuka") || id.includes("\\node_modules\\yuka")) {
+            return "yuka";
+          }
+          if (id.includes("@mediapipe")) return "mediapipe";
+          return undefined;
         },
       },
     },

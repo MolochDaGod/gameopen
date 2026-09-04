@@ -105,7 +105,9 @@ export function parseUiKitExport(raw: unknown): UiKitImportResult {
     (k) => (raw as Record<string, unknown>)[k] !== undefined,
   );
   if (skipped.length) {
-    notes.push(`Kit sections not portable to the animator HUD (skipped): ${skipped.join(", ")}.`);
+    notes.push(
+      `Kit sections not portable as appearance tokens (skipped): ${skipped.join(", ")}. Place widgets with hud/viewGrid.ts (HYDRA 1920×1080 · 12×12).`,
+    );
   }
   return out;
 }
