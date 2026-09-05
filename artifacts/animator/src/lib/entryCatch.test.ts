@@ -52,11 +52,21 @@ describe("entryCatch", () => {
     expect(startUrlForIntent("ai")).toBe(PRODUCT_STARTS.aiHub);
     expect(startUrlForIntent("coder")).toBe(PRODUCT_STARTS.coder);
     expect(startUrlForIntent("wallet")).toBe(PRODUCT_STARTS.wallet);
+    expect(startUrlForIntent("trader")).toBe(PRODUCT_STARTS.trader);
+    expect(PRODUCT_STARTS.trader).toContain("trader.grudge-studio.com");
     expect(startUrlForIntent("uiStudio")).toContain("ui.grudge-studio.com");
     expect(startUrlForIntent("uiHotkeys")).toContain("/hotkeys");
     expect(startUrlForIntent("uiAssets")).toContain("/assets");
     expect(startUrlForIntent("account")).toContain("open.grudge-studio.com");
     expect(startUrlForIntent("account")).toMatch(/account/);
+  });
+
+  it("sends /trader off Open to trader.grudge-studio.com", () => {
+    const r = catchEntry({ pathname: "/trader", search: "" });
+    expect(r.kind).toBe("hard_redirect");
+    if (r.kind === "hard_redirect") {
+      expect(r.url).toBe("https://trader.grudge-studio.com/");
+    }
   });
 
   it("sends foundry create intent off Open", () => {

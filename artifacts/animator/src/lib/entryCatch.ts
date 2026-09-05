@@ -29,6 +29,8 @@ export const ENTRY_HOSTS = {
   mineLoader: "https://mineloader.grudge-studio.com",
   /** Client play host (home island · world map · pirate lobby) */
   warlordsClient: "https://client.grudge-studio.com",
+  /** Grudge Studio Trader desk */
+  trader: "https://trader.grudge-studio.com",
 } as const;
 
 /**
@@ -86,6 +88,8 @@ export const PRODUCT_STARTS = {
   coder: "https://coder.grudge-studio.com/",
   /** Wallet product UI (same Railway account row) */
   wallet: "https://wallet.grudge-studio.com/",
+  /** Grudge Studio Trader — same Grudge ID, not a second account */
+  trader: `${ENTRY_HOSTS.trader}/`,
   /** HUD / main-panel UI studio */
   uiStudio: `${ENTRY_HOSTS.ui}/`,
   uiHotkeys: `${ENTRY_HOSTS.ui}/hotkeys`,
@@ -153,6 +157,7 @@ export const ALLOWED_RETURN_HOST_SUFFIXES = [
   "mine-loader.vercel.app",
   "warstrat.grudge-studio.com",
   "warlord-genesis.vercel.app",
+  "trader.grudge-studio.com",
   "localhost",
   "127.0.0.1",
 ] as const;
@@ -263,6 +268,15 @@ export function catchEntry(input: CatchInput): CatchAction {
   const from = (params.get("from") || params.get("source") || "").toLowerCase();
   const modeQ = (params.get("mode") || "").toLowerCase();
   const door = (params.get("door") || "").toLowerCase();
+
+  // ── 0. Trader is its own product host (same Grudge ID, not Open) ──────
+  if (parts[0] === "trader" || door === "trader" || modeQ === "trader") {
+    return {
+      kind: "hard_redirect",
+      url: PRODUCT_STARTS.trader,
+      reason: "trader intent → trader.grudge-studio.com",
+    };
+  }
 
   // ── 1. Foundry / create intent must leave Open SPA ─────────────────────
   // ?mode=create or path /foundry on Open → character foundry create
@@ -636,6 +650,7 @@ export function startUrlForIntent(
     | "ai"
     | "coder"
     | "wallet"
+    | "trader"
     | "uiStudio"
     | "uiHotkeys"
     | "uiAssets",
@@ -730,6 +745,8 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.coder;
     case "wallet":
       return PRODUCT_STARTS.wallet;
+    case "trader":
+      return PRODUCT_STARTS.trader;
     case "uiStudio":
       return PRODUCT_STARTS.uiStudio;
     case "uiHotkeys":

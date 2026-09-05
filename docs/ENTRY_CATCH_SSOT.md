@@ -50,6 +50,7 @@ Voxel `#/play` never stays on Open `/realms`. Warlords maps never become GRUDOX 
 | Legion AI (chat / agents) | `https://ai.grudge-studio.com/` |
 | Coder IDE | `https://coder.grudge-studio.com/` |
 | Wallet UI | `https://wallet.grudge-studio.com/` |
+| Grudge Trader | `https://trader.grudge-studio.com/` |
 
 Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 
