@@ -128,8 +128,8 @@ const CHECKS = [
     rejectHtml: true,
   },
   {
-    name: "ObjectStore Worker discovery",
-    url: "https://objectstore.grudge-studio.com/api/v1",
+    name: "ObjectStore Worker catalog",
+    url: "https://objectstore.grudge-studio.com/api/v1/catalog",
     expectJson: true,
     rejectHtml: true,
     optional: true,
