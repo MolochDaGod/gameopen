@@ -155,7 +155,7 @@ await probe("cdn-gear-presets", `${CDN}/api/v1/grudge6-gear-presets.json`, {
   sample: true,
   critical: true,
 });
-await probe("objectstore-discovery", "https://objectstore.grudge-studio.com/api/v1", {
+await probe("objectstore-catalog", "https://objectstore.grudge-studio.com/api/v1/catalog", {
   expect: "jsonish",
   sample: true,
   critical: true,
