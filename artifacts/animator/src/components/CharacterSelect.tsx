@@ -9,19 +9,16 @@ import "./characterSelect.css";
 
 const STORAGE_KEY = "grudge:selectedCharacter:v1";
 
-/** Featured roster for the entry scene (order = stage left → right). */
-const FEATURED_IDS = ["ikkaku-madarame", "ikkaku-crimson", "ikkaku-azure", "ikkaku-void"] as const;
+/** Voxel-era 4-character pack (`D:\Games\Models\4character`). Not Warlords Toon races. */
+const FEATURED_IDS = ["explorer", "orc", "sanji", "skeleton-warrior"] as const;
 
 /** Poster art for the entry stage (PNG room/brand art — not GLB). */
 function posterFor(id: string): string {
-  if (id === "ikkaku-madarame") return assetUrl("favicon.png");
-  if (id === "ikkaku-crimson") return assetUrl("rooms/danger-scene.png");
-  if (id === "ikkaku-azure") return assetUrl("rooms/dressing-scene.png");
-  if (id === "ikkaku-void") return assetUrl("rooms/voxgrudge-scene.png");
-  if (id === "gunslinger") return assetUrl("emblem.png");
   if (id === "explorer") return assetUrl("favicon.png");
-  if (id === "karate-boss") return assetUrl("rooms/danger-scene.png");
-  if (id === "orc") return assetUrl("rooms/dressing-scene.png");
+  if (id === "orc") return assetUrl("rooms/danger-scene.png");
+  if (id === "sanji") return assetUrl("rooms/voxgrudge-scene.png");
+  if (id === "skeleton-warrior") return assetUrl("rooms/dressing-scene.png");
+  if (id === "gunslinger") return assetUrl("emblem.png");
   return assetUrl("favicon.png");
 }
 
@@ -74,8 +71,8 @@ export function CharacterSelect({ onSelect, initialId }: Props) {
       <div className="charselect-bg" aria-hidden />
       <header className="charselect-head">
         <p className="charselect-kicker">Grudge Studio</p>
-        <h1 className="charselect-title">Choose your fighter</h1>
-        <p className="charselect-sub">Four heroes. One path into the facility.</p>
+        <h1 className="charselect-title">Choose your voxel hero</h1>
+        <p className="charselect-sub">Four era=voxel kits for GRUDOX. One path into campfire.</p>
       </header>
 
       <div className="charselect-stage" role="listbox" aria-label="Characters">

@@ -4,6 +4,8 @@
   "description": "Index of the fleet animation database",
   "database": "content/anims/database.json",
   "states": "content/anims/states.json",
+  "bip001Library": "content/anims/bip001-library.json",
+  "bip001Integrity": "content/manifests/anims.integrity.json",
   "schemas": [
     "content/schemas/anim_clip_entry.schema.json",
     "content/schemas/anim_state.schema.json"

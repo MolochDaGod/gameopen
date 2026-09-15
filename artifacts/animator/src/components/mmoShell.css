@@ -242,6 +242,7 @@
   letter-spacing: 0.06em;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
 }
 .steam-lib.mmo-shell .mmo-flow-chip:hover {
   border-color: #e8c96a;

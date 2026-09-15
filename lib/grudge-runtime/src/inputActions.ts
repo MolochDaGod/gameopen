@@ -194,8 +194,12 @@ export class InputActionMap {
     return this.keys.has(code);
   }
 
-  /** Movement vector xz: forward +Z or -Z depending on host convention.
-   *  Returns { x, z } where -z is forward (Three.js camera convention). */
+  /**
+   * Binding-space axes for menus / overlay maps.
+   * −z is Three default camera-local forward (un-orbited PerspectiveCamera).
+   * Play TPS does **not** use this — Open Controller uses
+   * `@workspace/grudge-physics` `tpsMoveBasis` (+Z look after orbit, +X screen-right).
+   */
   moveAxes(): { x: number; z: number } {
     let x = 0;
     let z = 0;

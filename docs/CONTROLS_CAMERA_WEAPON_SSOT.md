@@ -8,6 +8,23 @@
 
 Changing controls / camera feel / reticle / free-mouse on Open **once** updates **every native mode** in the same SPA. External fleet games (DCQ, RTS, Island) import the same package when they onboard.
 
+## TPS locomotion + combat (industry, existing Controller)
+
+Do **not** add three-player-controller or a second camera writer. Extend `Controller.ts` + `@workspace/grudge-physics` `tpsMoveBasis`.
+
+| Law | Value |
+|-----|--------|
+| Character local | **+Z** art-forward · **+X** right · **+Y** up (laterality box) |
+| Walk WASD | Camera-relative: **W** = flattened camera look, **D** = camera world +X (screen-right) |
+| Matrix | `camera.updateMatrixWorld(true)` before sampling — stale identity looks **−Z** and inverts W/A |
+| Face | Yaw to wish unless target-lock; lock-on → body faces foe, A/D is a **strafe** |
+| Traversal | One capsule KCC (`CollisionProvider` / Rapier) + same height field as foot IK |
+| Camera | One TPS writer (`Controller.updateCamera`). OrbitControls never writes in combat |
+| Combat | One mixer. Weapon pack gait + attack overlay. Skills 1–4 / C parry / X dodge / Alt slide |
+| Aim | Center-screen ray (`screenAimRay`) + DirectionStick — not a second aim system |
+
+Toon play kits: yaw **0** (already +Z). `modelYaw: π` is only for catalog heroes whose author faces the camera. Never stack π on `applyArtForwardPlusZ`.
+
 ## Architecture
 
 ```

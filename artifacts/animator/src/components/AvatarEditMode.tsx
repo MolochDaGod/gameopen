@@ -59,6 +59,7 @@ import {
 } from "../three/avatar/playerHead";
 import { cssHex } from "../three/avatar/pixels";
 import { gameSession } from "../game/GameSession";
+import { saveVoxelAvatar } from "../three/explorer/voxelAvatarSave";
 import "./avatarEdit.css";
 
 interface Props {
@@ -284,6 +285,10 @@ export function AvatarEditMode({ onExit }: Props) {
       } catch {
         /* ignore */
       }
+      saveVoxelAvatar({
+        ...voxelLook,
+        characterId: charId,
+      });
       // NEVER set avatarId:"explorer" here — that hijacks grudge6 / RTS_TOON
       // warlords heroes into the procedural cube body in Danger Room.
       // Modular head lives under voxelLook only; mesh body stays grudge:{race}:{preset}.

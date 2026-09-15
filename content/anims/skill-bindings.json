@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "description": "Shared weapon-skill to animation bindings. Gameplay owns skill IDs and hit windows; each rig lane owns only its compatible clip binding.",
+  "rigLanes": {
+    "mixamo-explorer": {
+      "skeleton": "mixamorig",
+      "sourceRoot": "anim/animations",
+      "runtime": "three/explorer/Animator.ts",
+      "bakeTarget": "Explorer Mixamo clip catalog"
+    },
+    "bip001-baked": {
+      "skeleton": "Bip001",
+      "sourceRoot": "anim source clips",
+      "runtime": "grudge6 AnimationDirector",
+      "bakeTarget": "anims/baked",
+      "rotationOnly": true
+    }
+  },
+  "bindings": [
+    {
+      "animationKey": "anim.sword.slash.v1",
+      "weaponPrefabId": "wpn_sword_iron_01",
+      "skillId": "sword.slash",
+      "role": "attack",
+      "hitWindow": { "start": 0.28, "end": 0.55 },
+      "lanes": {
+        "mixamo-explorer": {
+          "sourceClipId": "animations/sword/melee-attack-backhand",
+          "status": "verify"
+        },
+        "bip001-baked": {
+          "animationDbId": "sword_shield/attack-combo-01-trimmed",
+          "status": "verify"
+        }
+      }
+    },
+    {
+      "animationKey": "anim.sword.dash.v1",
+      "weaponPrefabId": "wpn_sword_iron_01",
+      "skillId": "sword.dash",
+      "role": "dashAttack",
+      "hitWindow": { "start": 0.32, "end": 0.58 },
+      "lanes": {
+        "mixamo-explorer": {
+          "sourceClipId": "animations/sword/slash-advance",
+          "status": "verify"
+        },
+        "bip001-baked": {
+          "animationDbId": "dual_wield/sword_dash_attack",
+          "status": "verify"
+        }
+      }
+    },
+    {
+      "animationKey": "anim.traversal.jump.v1",
+      "skillId": "traversal.jump",
+      "role": "jump",
+      "lanes": {
+        "mixamo-explorer": {
+          "sourceClipId": "animations/bow/standing-jump",
+          "status": "verify"
+        },
+        "bip001-baked": {
+          "animationDbId": "locomotion/jump",
+          "status": "verify"
+        }
+      }
+    },
+    {
+      "animationKey": "anim.traversal.mantle.v1",
+      "skillId": "traversal.mantle",
+      "role": "mantle",
+      "lanes": {
+        "mixamo-explorer": {
+          "sourceClipId": "animations/climb/climbing-to-top",
+          "status": "verify"
+        },
+        "bip001-baked": {
+          "animationDbId": "climb/to_top",
+          "status": "verify"
+        }
+      }
+    },
+    {
+      "animationKey": "anim.harvest.chop.v1",
+      "skillId": "harvest.chop",
+      "role": "harvestChop",
+      "lanes": {
+        "mixamo-explorer": {
+          "sourceClipId": "animations/harvest/chop",
+          "status": "needs-source"
+        },
+        "bip001-baked": {
+          "animationDbId": "locomotion/plant_seed",
+          "status": "verify"
+        }
+      }
+    }
+  ]
+}

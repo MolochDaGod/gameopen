@@ -5,17 +5,17 @@
   "description": "Plant the claim flag to establish camp territory. Grants build rights for structures, production buildings, defensives, and unit halls. Does not gate quick-craft field items (campfire, sleeping bag, torch, etc.).",
   "claim": {
     "buildingUuid": "BLDG-20260604172217-000005-1CD0B077",
-    "name": "Pirate Claim Flag",
+    "name": "Claim Flag",
     "category": "territory",
     "iconUrl": "https://assets.grudge-studio.com/icons/pack/misc/Naturecircle.png",
     "radiusM": 48,
     "grantsBuildRights": true,
     "tags": ["building", "claim", "territory", "pirate"],
     "mesh": {
-      "sourceFbx": "models/pirate/Decor_PirateFlag_00.fbx",
+      "sourceFbx": "uMMORPG/Models/Entities/NPC models/Flag1.FBX",
       "productionGlb": "models/camp/claim-flag.glb",
-      "convert": "grudge-convert fbx2glb --texture-size 1024 --no-colliders",
-      "migrated": "2026-07-17"
+      "convert": "grudge-convert fbx2glb --height 2.4 --texture-size 1024 --no-colliders",
+      "migrated": "2026-08-18"
     },
     "placeableId": "claim_flag",
     "ghost": true
@@ -27,7 +27,8 @@
     { "id": "defensives", "label": "Defensives", "summary": "Walls, watchtowers, gates — claim-gated placeables." },
     { "id": "units", "label": "Units", "summary": "RTS units from production buildings. Level 1–100 → convert to L1 hero." },
     { "id": "buildings", "label": "Buildings", "summary": "Stations, storage, production halls (not quick-craft)." },
-    { "id": "upgrades", "label": "Upgrades", "summary": "Node / structure upgrade tiers (nodeUpgrades SSOT)." }
+    { "id": "upgrades", "label": "Upgrades", "summary": "Node / structure upgrade tiers (nodeUpgrades SSOT)." },
+    { "id": "guild", "label": "Guild emblem", "summary": "Paint your own claim / guild banner on Flag1 cloth." }
   ],
   "quickCraft": {
     "note": "Always placeable without claim rights. Excluded from claim-gated build menu.",

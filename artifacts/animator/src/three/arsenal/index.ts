@@ -13,6 +13,23 @@ export {
   type GunFamilyDef,
   type GunTierDef,
 } from "./gunClass";
+export {
+  ULTIMATE_GUNS,
+  ULTIMATE_GUN_CANONICAL_MODEL,
+  TPS_ARC_RAIDERS,
+  AMMO_STACK_MAX,
+  AMMO_LABEL,
+  ultimateGunById,
+  ultimateGunsForFamily,
+  loadoutForUltimateGun,
+  resolveGunModelFile,
+  ammoTypeForWeaponId,
+  defaultReserveForWeapon,
+  type UltimateGunDef,
+  type AmmoTypeId,
+} from "./ultimateGuns";
+export { GunLootField, allDropableGuns, type GunLootItem, type GunInventorySink } from "./gunLoot";
+export { GunTpsController, type GunTpsState } from "./gunTpsController";
 import { MELEE_WEAPONS } from "./melee";
 import { RANGED_WEAPONS } from "./ranged";
 import { MAGIC_WEAPONS } from "./magic";

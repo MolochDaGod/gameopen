@@ -11,7 +11,7 @@
 import * as THREE from "three";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
-import { assetCandidates, loadTextureFirst } from "./assets";
+import { loadTextureFirst } from "./assets";
 import { prepObjectMaterials } from "./texturePrep";
 
 export type SailEnvOptions = {
@@ -84,8 +84,12 @@ export class SailEnvironment {
     prepObjectMaterials(terrain, { neutralizeMetal: true });
     let sandTex: THREE.Texture | null = null;
     try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { texture } = await loadTextureFirst(
-        ["textures/terrain/sand.jpg", "textures/sand.jpg"],
+        [
+          `${origin}/textures/terrain/sand.jpg`,
+          "/textures/terrain/sand.jpg",
+        ],
         new THREE.TextureLoader(),
         { sRGB: true, mipmaps: true },
       );
@@ -203,8 +207,12 @@ export class SailEnvironment {
   private async buildWater(size: number) {
     let normals: THREE.Texture | null = null;
     try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { texture } = await loadTextureFirst(
-        ["textures/water/waternormals.jpg"],
+        [
+          `${origin}/textures/water/waternormals.jpg`,
+          "/textures/water/waternormals.jpg",
+        ],
         new THREE.TextureLoader(),
         { sRGB: false, mipmaps: true },
       );
@@ -298,5 +306,6 @@ export class SailEnvironment {
 
 /** Resolve preferred sand texture URL candidates for debugging. */
 export function sandTextureCandidates(): string[] {
-  return assetCandidates("textures/terrain/sand.jpg");
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return [`${origin}/textures/terrain/sand.jpg`].filter((u) => u.length > 8);
 }

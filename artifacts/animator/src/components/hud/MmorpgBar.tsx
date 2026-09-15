@@ -124,6 +124,8 @@ export function MmorpgBar({ hud, bind }: Props) {
   const panelAttrs = bind
     ? {
         "data-hud-panel": bind["data-hud-panel"],
+        "data-hydra": bind["data-hydra"],
+        "data-view": bind["data-view"],
         className: `ms-bar ${bind.className}`.trim(),
         style: bind.style as CSSProperties,
         onPointerDown: bind.onPointerDown,

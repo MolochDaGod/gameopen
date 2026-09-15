@@ -76,7 +76,7 @@ const BLOOD_POOL = 16;
 export class HtmlOverlaySystem {
   private renderer: CSS2DRenderer;
   private scene: THREE.Scene;
-  private camera: THREE.Camera;
+  private camera: THREE.Camera | null;
   private container: HTMLElement;
   private root: HTMLDivElement;
   private group = new THREE.Group();
@@ -90,11 +90,11 @@ export class HtmlOverlaySystem {
 
   constructor(container: HTMLElement, scene: THREE.Scene, camera: THREE.Camera) {
     if (!camera) {
-      throw new Error("HtmlOverlaySystem requires a THREE.Camera (was undefined — init order bug)");
+      console.warn("[HtmlOverlaySystem] no camera — overlays disabled (init order)");
     }
     this.container = container;
     this.scene = scene;
-    this.camera = camera;
+    this.camera = camera || null;
 
     // CSS2D host — absolute over WebGL canvas, click-through by default
     this.root = document.createElement("div");

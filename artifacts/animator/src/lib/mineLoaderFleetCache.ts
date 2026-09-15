@@ -101,8 +101,16 @@ export async function bootstrapMineLoaderFleetCache(): Promise<{
     /* non-browser */
   }
 
+  const host =
+    typeof globalThis.location?.hostname === "string"
+      ? globalThis.location.hostname
+      : "";
+  const sameOriginSsot =
+    host === "mineloader.grudge-studio.com" ||
+    host === "mine.grudge-studio.com" ||
+    host.includes("mine-loader");
   const ssotUrls = [
-    "/api/ssot", // Open rewrite if present
+    ...(sameOriginSsot ? ["/api/ssot"] : []),
     `${MINE_LOADER_API}/api/ssot`,
     `${MINE_LOADER_EDGE}/api/ssot`,
     `${MINE_LOADER_VERCEL}/api/ssot`,

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "generator": "@grudge-studio/asset-convert@1.0.0",
-  "source": "F:\\GitHub\\gameopen\\artifacts\\animator\\public\\models\\pirate\\Decor_PirateFlag_00.fbx",
-  "output": "F:\\GitHub\\gameopen\\artifacts\\animator\\public\\models\\camp\\claim-flag.glb",
+  "source": "C:\\Users\\nugye\\AppData\\Local\\Temp\\Flag1.FBX",
+  "output": "C:\\Users\\nugye\\Documents\\gameopen\\artifacts\\animator\\public\\models\\camp\\claim-flag.glb",
   "intermediateBackend": "fbx2gltf",
   "warnings": [],
   "stats": {
@@ -15,23 +15,24 @@
   },
   "aabb": {
     "min": [
-      -0.32499998807907104,
-      -0.675000011920929,
-      -0.07500000298023224
+      -0.1767071783542633,
+      -1.0820194082850995e-17,
+      -0.36379796266555786
     ],
     "max": [
-      0.32499998807907104,
-      0.6750000715255737,
-      0.07500000298023224
+      0.1767071783542633,
+      2.4000000953674316,
+      0.34531551599502563
     ],
     "size": [
-      0.6499999761581421,
-      1.3500000834465027,
-      0.15000000596046448
-    ]
+      0.3534143567085266,
+      2.4000000953674316,
+      0.7091134786605835
+    ],
+    "bodyOnly": false
   },
   "collider": null,
-  "producedAt": "2026-07-17T05:07:50.442Z",
+  "producedAt": "2026-08-18T09:12:14.314Z",
   "production": {
     "format": "glb",
     "yHipGround": true,

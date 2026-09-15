@@ -15,6 +15,7 @@ import type {
 } from "./types.js";
 import { CRIT_MULTIPLIER } from "./types.js";
 import { resolveDefense } from "./defense.js";
+import { dodgeInvincible } from "./fleet/rules.js";
 
 /**
  * Game-agnostic melee combat state machine, modelled on Epic Fight.
@@ -533,7 +534,7 @@ export class CombatController {
 
   private updateDodge(): void {
     const d = this.cfg.dodge;
-    this.invincible = this.timer >= d.iframeStart && this.timer < d.iframeEnd;
+    this.invincible = dodgeInvincible(this.timer, d);
     if (this.timer >= d.duration) {
       this.invincible = false;
       this.toIdle();

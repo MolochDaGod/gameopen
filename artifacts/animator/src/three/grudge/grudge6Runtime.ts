@@ -18,6 +18,8 @@ import {
   loadBakedClip,
   isNonLoopingLocoClip,
   isUnsuitableLocoCycle,
+  isBannedLocomotionClip,
+  isUnpublishedBakeRel,
   resolveAnimPackClips,
   CANONICAL_LOCO,
   type AnimPack,
@@ -124,11 +126,9 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
         ...grudge6RaceMeshCandidates(raceId as Grudge6RaceKey, file),
         RACE_ASSETS[raceId]?.modelUrl,
       ].filter(Boolean) as string[];
-      const lastResort = [
-        arenaCharacterGlbUrl(raceId),
-        arenaCharacterGlbUrlAbsolute(raceId),
-      ];
-      const urls = [...new Set([...primary, ...lastResort])].filter(
+      // Do not append arena / same-origin / vercel. Those 404 and CORS-block
+      // after the CDN miss, then we "fallback" into the wrong body.
+      const urls = [...new Set(primary)].filter(
         (u) =>
           !/30characters/i.test(u) &&
           !/\.fbx($|\?)/i.test(u) &&
@@ -152,6 +152,11 @@ async function loadRaceTemplate(raceId: RaceId): Promise<RaceTemplate> {
             surface: "danger",
             raceId,
           });
+          // Toon play GLB is already +Z (Casting / loadRaceKit). π/2 is FBX-only.
+          gltf.scene.userData.needsArtForward = false;
+          gltf.scene.userData.artForwardProven = true;
+          gltf.scene.userData.artForwardSource = "toon-rts-glb:+z";
+          gltf.scene.userData.importUrl = url;
           return { object: gltf.scene, pipeline: "glb-baked", url };
         } catch (e) {
           lastErr = e;
@@ -201,7 +206,8 @@ function normalizeSkinned(root: THREE.Object3D, pipeline: RaceImportPipeline): v
   const deployed = deployCharacterModel(root, {
     targetHeightM: TARGET_HEIGHT,
     groundY: 0,
-    facePlusZ: "auto",
+    // Play Toon GLB = yaw 0. π/2 only for +X FBX author kits.
+    facePlusZ: false,
     refitIfAbsurd: true,
   });
   forceUniformScale(root);
@@ -302,9 +308,8 @@ export async function ensureGrudge6Materials(
   });
 
   const mapRatio = meshCount > 0 ? mappedMeshes / meshCount : 0;
-  // HARD: modular Toon RTS / grudge6 always uses the race atlas (sRGB, flipY=false).
-  // Sparse/broken GLB maps still count as "mapped" and used to skip rebind → orange sludge.
-  // One path: rebind whenever allowAtlasRebind (default true from loadGrudge6CombatRig).
+  // PLAY Toon RTS GLB: keep embedded maps. forceAtlas is the repeating wrong
+  // (Prefab Lab / yellow kits). Only FBX-author kits pass allowAtlasRebind.
   if (allowAtlasRebind) {
     const mat = await rebindRaceAtlas(model, raceId);
     if (mat) {
@@ -382,7 +387,7 @@ export interface Grudge6LoadedRig {
 export interface LoadGrudge6Opts {
   /** Override gear preset meshes with account / main-panel mesh_ids */
   meshIds?: string[];
-  /** Prefer race FBX atlas rebind (always on). */
+  /** Opt into legacy FBX atlas rebind; baked Toon RTS GLBs keep their materials. */
   rebindAtlas?: boolean;
   /**
    * Force anim pack (combat style picker: samurai / knight / spearman / …).
@@ -450,11 +455,15 @@ export async function loadGrudge6CombatRig(
   normalizeSkinned(model, template.pipeline);
   model.userData.characterDeployed = true;
 
-  // Materials / colors:
-  //  - FBX modular kits: always rebind Toon RTS atlas (flipY=false MeshStandard).
-  //  - GLB-baked: fix embedded maps first; if most skins have no albedo, rebind
-  //    the race atlas (broken/untextured GLB → yellow/grey wash without this).
-  await ensureGrudge6Materials(model, raceId, template.pipeline, opts?.rebindAtlas !== false);
+  // Baked Toon RTS play GLBs own their embedded materials. Rebinding a legacy
+  // atlas here can replace valid submesh materials and produces malformed or
+  // wrong-colour kits. Atlas rebind is FBX-authoring-only and opt-in.
+  await ensureGrudge6Materials(
+    model,
+    raceId,
+    template.pipeline,
+    template.pipeline === "fbx-atlas" && opts?.rebindAtlas === true,
+  );
 
   // Gear hide/show changes skinned AABB — re-ground so feet stay on y=0
   reGroundAfterEquip(model, 0);
@@ -478,6 +487,9 @@ export async function loadGrudge6CombatRig(
   const isLocoRole = (role: string) => role === "walk" || role === "run" || role === "sprint";
 
   const loadRole = async (role: string, rel: string) => {
+    if (isBannedLocomotionClip(rel) || isUnpublishedBakeRel(rel)) {
+      return null;
+    }
     const tryLoad = async (path: string) => {
       let clip = await loadBakedClip(path);
       // Walk/run/sprint: reject roll transitions AND long full-take dumps (Madarame ~5s)
@@ -516,7 +528,6 @@ export async function loadGrudge6CombatRig(
         if (fb && fb !== rel) {
           try {
             const clip = await tryLoad(fb);
-            console.warn(`[grudge6Runtime] ${role} fell back to ${fb} (was ${rel})`, e1, e2);
             clips.set(role, clip);
             roles.set(role, role);
             return clip;

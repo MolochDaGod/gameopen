@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 
 /**
@@ -20,7 +22,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss({ optimize: false })],
+  plugins: [react(), tailwindcss({ optimize: false }), wasm(), topLevelAwait()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
@@ -57,6 +59,11 @@ export default defineConfig({
         import.meta.dirname,
         "../../lib/animator/src/index.ts",
       ),
+      // Pointer-only path — App shell must NOT import the Rapier barrel on first paint.
+      "@workspace/grudge-physics/pointer": path.resolve(
+        import.meta.dirname,
+        "../../lib/grudge-physics/src/controls/pointerPresence.ts",
+      ),
       "@workspace/grudge-physics": path.resolve(
         import.meta.dirname,
         "../../lib/grudge-physics/src/index.ts",
@@ -68,6 +75,15 @@ export default defineConfig({
       "@workspace/grudge-warlords": path.resolve(
         import.meta.dirname,
         "../../lib/grudge-warlords/src/index.ts",
+      ),
+      // Specific subpath first — `@workspace/vfx` would swallow `/footAuraCatalog`.
+      "@workspace/vfx/footAuraCatalog": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/footAuraCatalog.ts",
+      ),
+      "@workspace/vfx": path.resolve(
+        import.meta.dirname,
+        "../../lib/vfx/src/index.ts",
       ),
       // The @workspace/* libs above are aliased to their TS SOURCE, so their
       // bare external imports (e.g. @tanstack/react-query in the generated
@@ -103,11 +119,25 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     target: "es2022",
+    // Library first paint: do not modulepreload Rapier WASM / yuka / mediapipe.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) =>
+        deps.filter(
+          (d) => !/rapier|engine-|yuka|mediapipe|wasm/i.test(d),
+        ),
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ["three"],
-          engine: ["@dimforge/rapier3d-compat", "yuka"].filter(() => true),
+        manualChunks(id) {
+          if (id.includes("node_modules/three/") || id.includes("\\node_modules\\three\\")) {
+            return "three";
+          }
+          if (id.includes("@dimforge/rapier")) return "rapier";
+          if (id.includes("node_modules/yuka") || id.includes("\\node_modules\\yuka")) {
+            return "yuka";
+          }
+          if (id.includes("@mediapipe")) return "mediapipe";
+          return undefined;
         },
       },
     },

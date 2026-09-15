@@ -74,6 +74,7 @@ const THEME: Record<SkillKind, number> = {
   witchMissile: 0xb070ff,
   witchDisk: 0x3dff9a,
   fireTornado: 0xff5510,
+  totem: 0xc9a227,
 };
 
 /** Projectile/spell GLB template paths + their normalised display size. */
@@ -2779,6 +2780,108 @@ export class Vfx {
         lane,
         knockDown: lane === 0,
         onHit: lane === 0 ? opts?.onHit : undefined,
+      });
+    }
+  }
+
+  /**
+   * Small earth-bend at a totem spike: ground heave slabs + dirt clods + shock ring.
+   * The pole itself is the spike (spawned separately, rising from underground).
+   */
+  earthBend(pos: THREE.Vector3, radius = 1.35, life = 0.55) {
+    const dirt = 0x8a5a2a;
+    const rock = 0x6b5344;
+    const gy = pos.y;
+    const ground = new THREE.Vector3(pos.x, gy + 0.04, pos.z);
+    this.shockwave(ground, dirt, radius * 1.15, life);
+
+    const moundGeo = new THREE.CylinderGeometry(radius * 0.55, radius * 0.85, 0.16, 8);
+    const moundMat = new THREE.MeshLambertMaterial({ color: dirt });
+    const mound = new THREE.Mesh(moundGeo, moundMat);
+    mound.position.set(pos.x, gy - 0.08, pos.z);
+    this.add({
+      obj: mound,
+      age: 0,
+      life: life + 0.12,
+      geos: [moundGeo],
+      mats: [moundMat],
+      update: (e) => {
+        const t = e.age / e.life;
+        const heave = t < 0.35 ? t / 0.35 : t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+        mound.position.y = gy - 0.08 + heave * 0.18;
+        mound.scale.set(1 + heave * 0.15, 0.55 + heave, 1 + heave * 0.15);
+        moundMat.transparent = t > 0.72;
+        moundMat.opacity = t > 0.72 ? 1 - (t - 0.72) / 0.28 : 1;
+      },
+    });
+
+    const slabGeo = new THREE.BoxGeometry(1, 1, 1);
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2 + Math.random() * 0.2;
+      const dist = 0.28 + Math.random() * radius * 0.22;
+      const sx = 0.28 + Math.random() * 0.16;
+      const sz = 0.16 + Math.random() * 0.1;
+      const mat = new THREE.MeshLambertMaterial({ color: i % 2 ? rock : dirt });
+      const slab = new THREE.Mesh(slabGeo, mat);
+      slab.scale.set(sx, 0.07, sz);
+      slab.position.set(pos.x + Math.cos(ang) * dist, gy - 0.06, pos.z + Math.sin(ang) * dist);
+      slab.rotation.y = ang + Math.PI / 2;
+      const peak = 0.1 + Math.random() * 0.08;
+      const tilt = (Math.random() - 0.5) * 0.35;
+      this.add({
+        obj: slab,
+        age: 0,
+        life: life + 0.18,
+        geos: i === 0 ? [slabGeo] : [],
+        mats: [mat],
+        update: (e) => {
+          const t = e.age / e.life;
+          const up = t < 0.28 ? t / 0.28 : t < 0.62 ? 1 : Math.max(0.15, 1 - (t - 0.62) / 0.38);
+          slab.position.y = gy - 0.06 + up * peak;
+          slab.rotation.z = tilt * up;
+          mat.transparent = t > 0.75;
+          mat.opacity = t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
+        },
+      });
+    }
+
+    const clodGeo = new THREE.BoxGeometry(1, 1, 1);
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2 + Math.random() * 0.35;
+      const spread = 0.18 + Math.random() * radius * 0.28;
+      const size = 0.05 + Math.random() * 0.07;
+      const mat = new THREE.MeshLambertMaterial({ color: i % 2 ? dirt : rock });
+      const clod = new THREE.Mesh(clodGeo, mat);
+      clod.scale.setScalar(size);
+      clod.position.set(pos.x, gy + 0.03, pos.z);
+      const vel = new THREE.Vector3(
+        Math.cos(ang) * spread * 1.6,
+        1.4 + Math.random() * 0.9,
+        Math.sin(ang) * spread * 1.6,
+      );
+      this.add({
+        obj: clod,
+        age: 0,
+        life: life + 0.2,
+        geos: i === 0 ? [clodGeo] : [],
+        mats: [mat],
+        update: (e, dt) => {
+          vel.y -= 14 * dt;
+          clod.position.addScaledVector(vel, dt);
+          if (clod.position.y < gy + 0.02) {
+            clod.position.y = gy + 0.02;
+            vel.y *= -0.12;
+            vel.x *= 0.55;
+            vel.z *= 0.55;
+          }
+          clod.rotation.x += dt * 3.2;
+          clod.rotation.z += dt * 2.4;
+          const t = e.age / e.life;
+          if (t > 0.65) {
+            mat.transparent = true;
+            mat.opacity = 1 - (t - 0.65) / 0.35;
+          }
+        },
       });
     }
   }

@@ -3,7 +3,9 @@
 **Canonical origin:** https://open.grudge-studio.com  
 **Repo:** `gameopen` · Vercel `gameopen.vercel.app` · CF edge `open.`
 
-Open is the **Steam-like collection shell** for Grudge Studio: one browser app where players sign in, pick a character, browse a library, and play games **without leaving the shell** (native engines or in-app canvas).
+Open is the **Steam-like collection shell and launcher** for Grudge Studio: one browser app where players sign in with **the same Grudge ID / Railway account as grudge-studio.com**, pick a character, browse Studio products (games, editors, AI/chat, production tools), and play era games **without leaving the shell** (native engines or in-app canvas).
+
+**Not a second account.** `grudge-studio.com` is the portal / ENGINE index. **Open** is the signed-in launcher + account connector. Player SSOT is Railway (`grudge_id` + character UUIDs).
 
 ---
 
@@ -24,7 +26,9 @@ Open is the **Steam-like collection shell** for Grudge Studio: one browser app w
 | **Warlord Genesis** | Live MOBA/RTS warcamp with fleet hero | `/genesis` → in-app canvas → `warlord-genesis.vercel.app` |
 | **Arcade (GRUDOX)** | Velocity, zombie, z-brawl under one origin | `/arcade/play/*` (edge → grudox) |
 
-**Library chips** (`DELIVERY_SHELVES` in `gameLibrary.ts`): **Account · Games · Editors · Content**, then era (Voxel / Warlords / Nexus / Armada). Agents: `startUrlForIntent("account"|"danger"|"grokBuilder"|"threeFlow"|"foundryCreate"|"mimic")`.
+**Library chips** (`DELIVERY_SHELVES` in `gameLibrary.ts`): **Account · Games · Editors · Content**, then era (Voxel / Warlords / Nexus / Armada). Hub also shows a **Grudge Studio products** shelf (portal, Legion AI, wallet, Foundry, Forge, ThreeFlow, Coder, **Create UI**). Agents: `startUrlForIntent("account"|"studio"|"ai"|"wallet"|"coder"|"uiStudio"|"uiHotkeys"|"uiAssets"|"danger"|"grokBuilder"|"threeFlow"|"foundryCreate"|"mimic")`.
+
+**UI.* (apply, not embed-only):** Open `/ui` loads `ui.grudge-studio.com` packs. **Apply pack to Open HUD** writes HYDRA comps onto `hudConfig` / `viewGrid` (Danger TightBar). Input Configurator `postMessage` `{ source: 'grudge-ui', type: 'hotkeys' }` fills F1 help. Asset roots: `lib/uiAssets.ts` = CraftPix CSS + `assets.grudge-studio.com` icons (same as `ui-assets-ssot.js`).
 
 ---
 

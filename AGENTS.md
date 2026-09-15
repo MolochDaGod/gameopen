@@ -48,6 +48,7 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 | Weapon skills | `lib/epicfight` + `arsenal/*` |
 | Physics KCC | `lib/grudge-physics` |
 | Outdoor maps | `artifacts/animator/src/three/ForestWorld.ts` + `maps/*` |
+| Mesh packs (isolate, not fuse) | `src/three/packs/openMeshPacks.ts` + `docs/OPEN_MESH_PACKS.md` · camp placeables · `DungeonMaps` |
 | Package pin | `artifacts/animator/package.json` + `docs/OPEN_PACKAGE_SSOT.md` |
 | **Entry catch / anti-loop** | `artifacts/animator/src/lib/entryCatch.ts` + `docs/ENTRY_CATCH_SSOT.md` |
 | **Production pattern** (auth/AI/CDN/campfire) | `artifacts/animator/src/lib/productionSystemsPattern.ts` + `docs/PRODUCTION_SYSTEMS_PATTERN.md` |
@@ -58,6 +59,7 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 | **Back slot prefab** (one equip = effect) | `content/docs/BACK_SLOT_PREFAB.md` · `content/backs/` · `backSlotItems.ts` |
 | Prefab spine points | cast · barrel · blade · blunt · tip · special · physics · effect |
 | Prefab UUID graph | `docs/WEAPON_PREFAB_UUID_SSOT.md` |
+| **Casting play bind** | `Documents/CastingAbilitiesThreeJS` · `docs/SCRIPTABLE_PLAY_SSOT.md` · same spine + UUID |
 | **Voxel era wiring** (avatar/gear/DB) | `docs/VOXEL_ERA_AVATAR_GEAR_WIRING.md` — no parallel stores |
 | Voxel look | `voxelAvatarSave` + `saveData.open.voxelLook` |
 | Voxel characters | Railway `?era=voxel` only (not warlords body on Realms) |
@@ -70,7 +72,7 @@ Do **not** invent a second Open, second Danger Room, or second character pipelin
 2. **Map open** = same Controller, weapon skills, camera; rebind terrain / water / foot IK only.  
 3. **Feet on terrain** = Controller ground height **and** avatar foot sampler from the **same** height field.  
 4. **Anims** = fleet hydrate roles (climb/swim/hurt/death/loco); fill gaps via `ensureFleetRolesReady`, do not invent a new anim service.  
-5. **Characters** = grudge6 SSOT. **`30characters.glb` ALLOWED** as outline/look (disk `_anim_packs/30characters.glb`) + weapon packs under `_anim_packs/*`. Still ban Meshy/capsule stubs.  
+5. **Play body** = Toon RTS `{race}.glb` on **`https://assets.grudge-studio.com/asset-packs/toon-rts-characters/glb/characters/`** via `loadRaceKit` / `loadGrudge6CombatRig`. Never same-origin, never `gameopen.vercel.app`, never FBX+π/2, never forceAtlas, never 30characters as play. `30characters.glb` = outline/look reference only. Physics = Rapier capsule (`grudge-physics`).  
 6. **Scale** = SI metres; human fit ~1.8 m; map scale for ~2 m orc when outdoor.  
 7. **Physics** = Rapier compat + grudge-physics; one authority.  
 8. **Mixer** = `THREE.AnimationMixer` only.  

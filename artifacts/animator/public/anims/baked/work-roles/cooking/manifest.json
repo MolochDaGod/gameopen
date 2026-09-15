@@ -1,0 +1,13 @@
+{
+  "role": "cooking",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": {
+    "idle": "work-roles/cooking/idle",
+    "walk": "work-roles/cooking/walk",
+    "prep": "work-roles/cooking/prep",
+    "cook": "work-roles/cooking/cook",
+    "serve": "work-roles/cooking/serve"
+  },
+  "source": "locomotion/* + harvest/* (Human Crafting FREE + farming Mixamo)"
+}

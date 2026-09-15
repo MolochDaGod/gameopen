@@ -5,6 +5,7 @@
  *
  * Hierarchy (AuxScene → ForgeScene):
  *   tools (Pickaxe, Hammer, Knife, …) + Sketchfab arena set
+ * Harvest hand meshes: Desktop toolsvoxel.glb → models/tools/voxel/toolsvoxel.glb
  *   (AstroCreeper_Short_Curcuit_Variant + chair + computer/rest)
  */
 import * as THREE from "three";

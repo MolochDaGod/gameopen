@@ -152,14 +152,21 @@ describe("CombatController dodge + i-frames", () => {
     const c = setup();
     c.dodge({ x: 0, z: 1 });
     expect(c.getState()).toBe("dodge");
-    advance(c, 0.1); // inside iframe (0.06..0.34)
+
+    advance(c, 0.03); // startup — hittable
+    expect(c.isInvincible()).toBe(false);
+
+    advance(c, 0.07); // ~0.10 — inside [0.06, 0.34)
     expect(c.isInvincible()).toBe(true);
     const evaded = c.applyHit(30, 99);
     expect(evaded.evaded).toBe(true);
     expect(c.getHealth()).toBe(100);
 
-    advance(c, 0.3); // ~0.4 → past iframe, still alive
+    advance(c, 0.3); // ~0.40 — recovery, still in dodge state
     expect(c.isInvincible()).toBe(false);
+    const landed = c.applyHit(20, 5);
+    expect(landed.evaded).toBe(false);
+    expect(c.getHealth()).toBe(80);
   });
 
   it("can dodge-cancel during attack recovery but not during windup/active", () => {

@@ -82,6 +82,11 @@ export function CraftpixHarvestHud({
   const gold = getGbux();
   const hpPct = Math.max(0, Math.min(100, (hud.health / Math.max(1, hud.maxHealth)) * 100));
   const spPct = Math.max(0, Math.min(100, (hud.stamina / Math.max(1, hud.maxStamina)) * 100));
+  const mpPct = Math.max(0, Math.min(100, ((hud.mana ?? 0) / Math.max(1, hud.maxMana ?? 1)) * 100));
+  const o2Pct = Math.max(0, Math.min(100, ((hud.oxygen ?? 0) / Math.max(1, hud.maxOxygen ?? 1)) * 100));
+  const huPct = Math.max(0, Math.min(100, ((hud.hunger ?? 0) / Math.max(1, hud.maxHunger ?? 1)) * 100));
+  const thPct = Math.max(0, Math.min(100, ((hud.thirst ?? 0) / Math.max(1, hud.maxThirst ?? 1)) * 100));
+  const ar = hud.armor ?? 0;
   const xpPct = Math.min(100, unlocks.length * 6);
   const modeColor = MODE_COLOR[mode];
 
@@ -117,6 +122,20 @@ export function CraftpixHarvestHud({
               <span className="cx-stat-label">
                 SP {Math.round(hud.stamina)}/{hud.maxStamina}
               </span>
+            </div>
+            <div className="cx-stat cx-stat-mp" title="Mana">
+              <div className="cx-stat-track">
+                <div className="cx-stat-fill mp" style={{ height: `${mpPct}%` }} />
+              </div>
+              <span className="cx-stat-label">
+                MP {Math.round(hud.mana ?? 0)}/{hud.maxMana ?? 0}
+              </span>
+            </div>
+            <div className="cx-need-row" title={`Armour ${ar} · O2 ${Math.round(hud.oxygen ?? 0)} · Hunger ${Math.round(hud.hunger ?? 0)} · Thirst ${Math.round(hud.thirst ?? 0)}`}>
+              <span>AR {ar}</span>
+              <span>O2 {Math.round(o2Pct)}%</span>
+              <span>HU {Math.round(huPct)}%</span>
+              <span>TH {Math.round(thPct)}%</span>
             </div>
           </div>
 

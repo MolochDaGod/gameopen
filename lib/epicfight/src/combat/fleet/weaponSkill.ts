@@ -96,6 +96,18 @@ export type FleetWeaponSkill = {
   projectile?: SkillProjectileDef;
   /** Ground AoE on impact (m) */
   aoeRadius?: number;
+  /**
+   * Persistent ground totem (Norse poles). Same deploy lifecycle as snare/turret:
+   * placed a few metres ahead of caster, or beside the locked target for taunt.
+   */
+  groundTotem?: {
+    totemId: string;
+    meshPath: string;
+    effect: "heal_mist" | "attack_ward" | "trap" | "taunt" | "stun";
+    place: "caster_forward" | "target";
+    offsetM: number;
+    duration: number;
+  };
 
   // ── Timing & economy ──────────────────────────────────────────────────
   /** Full skill cooldown (s) */
@@ -112,6 +124,21 @@ export type FleetWeaponSkill = {
   force?: number;
   shieldBreak?: boolean;
   unparryable?: boolean;
+
+  // ── Play classes (Casting / ObjectStore SSOT) ──────────────────────────
+  /** melee | bullet | linear | bend */
+  travelMode?: "melee" | "bullet" | "linear" | "bend";
+  /** cct | heightfield | convex | trimesh | followConvex | sensor | hurtbox */
+  colliderClass?:
+    | "cct"
+    | "heightfield"
+    | "convex"
+    | "trimesh"
+    | "followConvex"
+    | "sensor"
+    | "hurtbox";
+  procs?: { id: string; chance?: number; on?: string }[];
+  editable?: boolean | { intensity?: boolean; aoe?: boolean; travelMode?: boolean };
 
   // ── Meta ──────────────────────────────────────────────────────────────
   iconUrl?: string | null;
@@ -166,6 +193,8 @@ export function scaffoldWeaponSkill(
     force: 2,
     castDuration: 0.25,
     activeDuration: 0.2,
+    travelMode: partial.travelMode || (partial.projectile ? "linear" : "melee"),
+    colliderClass: partial.colliderClass || (partial.projectile ? "sensor" : "followConvex"),
     ...partial,
   };
 }

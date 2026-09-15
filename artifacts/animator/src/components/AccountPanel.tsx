@@ -47,6 +47,7 @@ import {
 import { GAME_LIBRARY, SHARED_ACCOUNT_SCHEME, type GameCategory } from "../game/gameLibrary";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CharacterPicker } from "./CharacterPicker";
+import { TraitStoreEmbed } from "./TraitStoreEmbed";
 import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
 import { matIconUrl, warmGameMedia } from "../lib/gameMedia";
 import { warmProductionMedia } from "../lib/productionMedia";
@@ -123,16 +124,27 @@ const CRAFTING_LINKS: Record<EraId, { label: string; href: string }[]> = {
   armada: [{ label: "Open library · Armada", href: "https://open.grudge-studio.com/?door=library" }],
 };
 
+const VOXEL_KIT_IDS = /^(explorer|orc|sanji|skeleton-warrior|striker|brute|skeleton)$/i;
+
 function characterEra(c: GrudgeCharacter): EraId {
+  const base = String(c.config?.baseId || c.classId || "");
+  const pipe = String(c.config?.renderPipeline || c.config?.pipeline || "");
+  const modelBase = String(
+    (c.model3d as { baseModelId?: string } | undefined)?.baseModelId || "",
+  );
+  const looksVoxel =
+    pipe === "voxel" ||
+    pipe === "box_hero" ||
+    VOXEL_KIT_IDS.test(base) ||
+    VOXEL_KIT_IDS.test(modelBase) ||
+    c.config?.baseId === "explorer";
   const raw =
     c.gameEra ||
     (c as { gameEra?: string }).gameEra ||
     (c.config?.gameEra as string | undefined) ||
     (c.saveData?.gameEra as string | undefined) ||
     (c.config?.era as string | undefined) ||
-    (c.config?.baseId === "explorer" || c.config?.renderPipeline === "voxel"
-      ? "voxel"
-      : undefined) ||
+    (looksVoxel ? "voxel" : undefined) ||
     "warlords";
   const e = String(raw).toLowerCase();
   if (e === "voxel" || e === "nexus" || e === "armada" || e === "warlords") return e;
@@ -194,8 +206,24 @@ export function AccountPanel({
   onOpenInApp?: (session: import("../lib/inAppLaunch").InAppEmbedSession) => void;
 }) {
   const [snap, setSnap] = useState<GameSessionSnapshot>(() => gameSession.snapshot);
-  const [era, setEra] = useState<EraId>("warlords");
-  const [panel, setPanel] = useState<PanelId>("overview");
+  const [era, setEra] = useState<EraId>(() => {
+    try {
+      const e = new URLSearchParams(window.location.search).get("era")?.toLowerCase();
+      if (e === "voxel" || e === "nexus" || e === "armada" || e === "warlords") return e;
+    } catch {
+      /* */
+    }
+    return "warlords";
+  });
+  const [panel, setPanel] = useState<PanelId>(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t && PANELS.some((p) => p.id === t)) return t as PanelId;
+    } catch {
+      /* */
+    }
+    return "overview";
+  });
   const [wallet, setWallet] = useState<GrudgeWallet | null>(() => getCachedWallet());
   const [walletStatus, setWalletStatus] = useState<FleetWalletStatus | null>(null);
   const [walletBusy, setWalletBusy] = useState(false);
@@ -312,18 +340,23 @@ export function AccountPanel({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  /** Mine-Loader Realms handoff — voxel era only, Explorer body (never warlords characterId). */
+  /** Mine-Loader / GRUDOX handoff — era=voxel + 4character kit, Railway UUID. */
   const playVoxelRealms = (ch: GrudgeCharacter | null) => {
     if (ch) gameSession.selectCharacter(ch.id);
     const token = getStoredToken();
-    // Dynamic import keeps AccountPanel free of circular mine config weight at boot
+    const kit = String(
+      ch?.config?.baseId ||
+        ch?.classId ||
+        (ch?.model3d as { baseModelId?: string } | undefined)?.baseModelId ||
+        "explorer",
+    );
     void import("../auth/mineLoaderConfig").then(({ openMineLoaderLive }) => {
       openMineLoaderLive({
         surface: "lobby",
         token,
         characterId: ch?.id ?? null,
         characterName: ch?.name ?? null,
-        baseId: "explorer",
+        baseId: kit,
         raceId: ch?.raceId ?? null,
         worldMode: "drc",
       });
@@ -692,9 +725,16 @@ export function AccountPanel({
                         <>
                           <CharacterAvatar character={fill} size={36} />
                           <strong style={{ color: "#eaf4ff", fontSize: 12 }}>{fill.name}</strong>
+                          <span style={{ ...muted, fontSize: 10, fontFamily: "monospace" }}>
+                            {fill.id.slice(0, 8)}…
+                          </span>
                         </>
                       ) : (
-                        <span style={{ ...muted, fontSize: 12 }}>+ Create</span>
+                        <span style={{ ...muted, fontSize: 12 }}>
+                          {era === "voxel"
+                            ? `+ ${["Explorer", "Brute", "Striker", "Skeleton"][i]}`
+                            : "+ Create"}
+                        </span>
                       )}
                     </button>
                   );
@@ -726,9 +766,16 @@ export function AccountPanel({
                               {c.raceId || "—"} · {c.classId || vis.presetId} · L{c.level ?? 1}
                               {c.slotIndex != null ? ` · slot ${c.slotIndex + 1}` : ""}
                             </div>
+                            <div
+                              style={{ fontSize: 11, opacity: 0.75, fontFamily: "monospace" }}
+                              title="Railway characters.id UUID — play handoff"
+                            >
+                              UUID {c.id}
+                            </div>
                             <div style={{ fontSize: 11, opacity: 0.6 }}>
-                              {vis.meshIds.length} meshes · {vis.source}
-                              {c.gameEra ? ` · ${c.gameEra}` : ""}
+                              era {characterEra(c)}
+                              {snap.account?.grudgeId ? ` · account ${snap.account.grudgeId}` : ""}
+                              {c.config?.baseId ? ` · kit ${String(c.config.baseId)}` : ""}
                             </div>
                           </div>
                         </div>
@@ -758,13 +805,21 @@ export function AccountPanel({
                             </button>
                           )}
                           {era === "voxel" && (
-                            <button
-                              type="button"
-                              style={btnPrimary}
-                              onClick={() => playVoxelRealms(c)}
-                            >
-                              Realms
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                style={btnPrimary}
+                                onClick={() => playVoxelRealms(c)}
+                              >
+                                Play
+                              </button>
+                              <a
+                                href={`https://character.grudge-studio.com/?era=voxel`}
+                                style={{ ...btnGhost, textDecoration: "none", fontSize: 12 }}
+                              >
+                                4-kit hub
+                              </a>
+                            </>
                           )}
                         </div>
                       </li>
@@ -775,57 +830,36 @@ export function AccountPanel({
             </section>
 
             <section style={card}>
-              <h3 style={{ ...h3, color: eraTone }}>Equipment · selected</h3>
-              {!selectedChar || !selectedVisual ? (
-                <p style={muted}>Select a character to see current gear.</p>
+              <h3 style={{ ...h3, color: eraTone }}>Trait Store · mesh look</h3>
+              {!selectedChar ? (
+                <p style={muted}>Select a character slot to open the Trait Store.</p>
               ) : (
                 <>
-                  <p style={{ margin: "0 0 10px", fontSize: 14 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 13 }}>
                     <strong>{selectedChar.name}</strong>
                     <span style={muted}>
                       {" "}
-                      · {selectedVisual.raceId}/{selectedVisual.presetId}
+                      · UUID <code>{selectedChar.id}</code>
+                      {" · "}
+                      {selectedVisual?.raceId || selectedChar.raceId || "—"}/
+                      {selectedVisual?.presetId || selectedChar.classId || "—"}
+                      {" · "}
+                      {selectedVisual?.meshIds.length ?? 0} meshes
+                      {" · "}
+                      {selectedVisual?.source || "railway"}
                     </span>
                   </p>
-                  <div style={equipGrid}>
-                    {Object.keys(selectedVisual.slotIcons).length === 0 &&
-                    Object.keys(selectedVisual.slotLabels).length === 0 ? (
-                      <p style={muted}>
-                        No slot map on this character yet — mesh kit:{" "}
-                        {selectedVisual.meshIds.slice(0, 8).join(", ") || "none"}
-                        {selectedVisual.meshIds.length > 8 ? "…" : ""}
-                      </p>
-                    ) : (
-                      Object.entries({
-                        ...Object.fromEntries(
-                          Object.keys(selectedVisual.slotLabels).map((k) => [k, selectedVisual.slotIcons[k] || ""]),
-                        ),
-                        ...selectedVisual.slotIcons,
-                      }).map(([slot, url]) => (
-                        <div key={slot} style={equipCell} title={selectedVisual.slotLabels[slot] || slot}>
-                          <img
-                            src={slotIcon(url, slot.includes("weapon") || slot === "mainHand" ? "attack" : "equip")}
-                            alt=""
-                            width={36}
-                            height={36}
-                            style={{ objectFit: "contain", imageRendering: "pixelated" }}
-                            onError={(e) => {
-                              e.currentTarget.src = iconUrl("equip");
-                            }}
-                          />
-                          <span style={{ fontSize: 10, opacity: 0.85, textAlign: "center" }}>
-                            {selectedVisual.slotLabels[slot] || slot}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  {selectedVisual.meshIds.length > 0 && (
-                    <details style={{ marginTop: 12, fontSize: 11, opacity: 0.75 }}>
-                      <summary>mesh_ids ({selectedVisual.meshIds.length})</summary>
-                      <code style={{ wordBreak: "break-all" }}>{selectedVisual.meshIds.join(", ")}</code>
-                    </details>
-                  )}
+                  <p style={{ ...muted, margin: "0 0 10px", fontSize: 11 }}>
+                    Railway character row + Toon RTS kit visibility. Mesh def UUID =
+                    sha1(grudge-asset:kit#meshId). Owned gear = ledger grudge_uuid. Unarmed body is locked.
+                  </p>
+                  <TraitStoreEmbed
+                    era={era}
+                    characterId={selectedChar.id}
+                    raceId={selectedVisual?.raceId || selectedChar.raceId}
+                    meshIds={selectedVisual?.meshIds || []}
+                    height={640}
+                  />
                 </>
               )}
             </section>

@@ -27,6 +27,7 @@ export default defineConfig({
       { find: "@workspace/api-zod",        replacement: path.resolve(import.meta.dirname, "../../lib/api-zod/src/index.ts") },
       { find: "@workspace/animator",       replacement: path.resolve(import.meta.dirname, "../../lib/animator/src/index.ts") },
       { find: "@workspace/grudge-runtime", replacement: path.resolve(import.meta.dirname, "../../lib/grudge-runtime/src/index.ts") },
+      { find: "@workspace/grudge-physics/pointer", replacement: path.resolve(import.meta.dirname, "../../lib/grudge-physics/src/controls/pointerPresence.ts") },
       { find: "@workspace/grudge-physics", replacement: path.resolve(import.meta.dirname, "../../lib/grudge-physics/src/index.ts") },
       { find: "@workspace/grudge-warlords", replacement: path.resolve(import.meta.dirname, "../../lib/grudge-warlords/src/index.ts") },
       { find: "@workspace/voxel-canonical", replacement: path.resolve(import.meta.dirname, "../../lib/voxel-canonical/src/index.ts") },

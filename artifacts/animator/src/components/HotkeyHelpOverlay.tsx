@@ -7,6 +7,7 @@ import {
   HOTKEY_GROUPS,
   type HotkeyGroup,
 } from "../hud/hotkeyMap";
+import { loadUiHotkeys } from "../hud/uiHotkeysApply";
 import "./hotkeyHelp.css";
 
 type Props = {
@@ -42,9 +43,21 @@ export function HotkeyHelpOverlay({
   activityMode = "combat",
 }: Props) {
   const groups = useMemo(() => {
-    return HOTKEY_GROUPS.map((g) => filterGroup(g, surface, activityMode)).filter(
+    const base = HOTKEY_GROUPS.map((g) => filterGroup(g, surface, activityMode)).filter(
       Boolean,
     ) as HotkeyGroup[];
+    const ui = loadUiHotkeys();
+    if (!ui.bindings.length) return base;
+    const extra: HotkeyGroup = {
+      id: "utility",
+      title: ui.profile ? `UI Studio · ${ui.profile}` : "UI Studio bindings",
+      entries: ui.bindings.map((b) => ({
+        keys: b.keys,
+        action: b.action,
+        tip: b.category,
+      })),
+    };
+    return [...base, extra];
   }, [surface, activityMode]);
 
   useEffect(() => {

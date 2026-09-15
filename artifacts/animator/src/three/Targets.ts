@@ -162,6 +162,11 @@ const KIND_COLOR: Record<SkillKind, number> = {
   swordVolley: 0xa8e6ff,
   soul: 0x8fffe0,
   laser: 0xff5a3c,
+  witchArrow: 0xff6a1e,
+  witchMissile: 0xb070ff,
+  witchDisk: 0x3dff9a,
+  fireTornado: 0xff5510,
+  totem: 0xc9a227,
 };
 
 /** Hooks the Studio passes each frame so opponents can hit the player + fire VFX. */
@@ -343,6 +348,8 @@ export interface CombatTargets {
   raycast(ray: THREE.Ray, maxDist: number, softCos: number): TargetHandle | null;
   stagger(handle: TargetHandle, seconds?: number): void;
   stun(center: THREE.Vector3, radius: number, seconds?: number): number;
+  /** Pull living hostiles to face `center` and step toward it (taunt totem). */
+  tauntArea(center: THREE.Vector3, radius: number, pull?: number): number;
   shieldBreak(center: THREE.Vector3, radius: number, seconds?: number): number;
   slowArea(center: THREE.Vector3, radius: number, mul: number, seconds: number): number;
   /**
@@ -1988,6 +1995,24 @@ export class Targets implements CombatTargets {
       d.state = "idle";
       d.stateT = 0;
       d.pendingSkill = false;
+      hits++;
+    }
+    return hits;
+  }
+
+  tauntArea(center: THREE.Vector3, radius: number, pull = 3.2): number {
+    let hits = 0;
+    const tmp = new THREE.Vector3();
+    for (const d of this.dummies) {
+      if (d.dead || d.faction === "ally") continue;
+      const chest = this.chest(d, tmp);
+      if (chest.distanceTo(center) > radius) continue;
+      const dir = new THREE.Vector3(center.x - d.group.position.x, 0, center.z - d.group.position.z);
+      if (dir.lengthSq() < 1e-6) continue;
+      dir.normalize();
+      d.vel.addScaledVector(dir, pull);
+      d.group.lookAt(center.x, d.group.position.y, center.z);
+      d.state = "approach";
       hits++;
     }
     return hits;

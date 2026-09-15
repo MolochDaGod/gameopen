@@ -13,13 +13,15 @@
 
 export type FleetSurfaceId =
   | "open"
+  | "studio"
   | "grudox"
   | "warlords"
   | "foundry"
   | "poker"
   | "gst"
   | "mine-loader"
-  | "wallet";
+  | "wallet"
+  | "ai";
 
 export type FleetSurface = {
   id: FleetSurfaceId;
@@ -47,6 +49,26 @@ export const FLEET_SURFACES: readonly FleetSurface[] = [
     homeUrl: "https://open.grudge-studio.com/?door=library",
     brandRole: "launcher",
     sameOriginApi: true,
+    eras: ["warlords", "voxel", "nexus", "armada"],
+  },
+  {
+    id: "studio",
+    label: "Grudge Studio",
+    blurb: "Portal / The ENGINE — product index. Same Grudge ID + Railway account as Open.",
+    accountUrl: "https://open.grudge-studio.com/?door=account",
+    homeUrl: "https://grudge-studio.com/",
+    brandRole: "portal",
+    sameOriginApi: false,
+    eras: ["warlords", "voxel", "nexus", "armada"],
+  },
+  {
+    id: "ai",
+    label: "Legion AI",
+    blurb: "ai.grudge-studio.com — chat, image, agents. Bearer JWT from Open / Grudge ID.",
+    accountUrl: "https://open.grudge-studio.com/?door=account",
+    homeUrl: "https://ai.grudge-studio.com/",
+    brandRole: "ai",
+    sameOriginApi: false,
     eras: ["warlords", "voxel", "nexus", "armada"],
   },
   {

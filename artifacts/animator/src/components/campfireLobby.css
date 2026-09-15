@@ -510,3 +510,27 @@
     max-width: 90vw;
   }
 }
+
+html[data-device="phone"] .cfl-kicker,
+html[data-device="phone"] .cfl-sub {
+  display: none;
+}
+html[data-device="phone"] .cfl-head {
+  padding: 6px 10px 0;
+}
+html[data-device="phone"] .cfl-logo {
+  max-height: 28px;
+}
+html[data-device="phone"] .cfl-bar {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+}
+html[data-device="phone"] .cfl-btn {
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+html[data-device="phone"] .cfl-helmet {
+  display: none;
+}

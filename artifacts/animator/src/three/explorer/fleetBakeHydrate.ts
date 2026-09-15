@@ -150,8 +150,8 @@ export async function hydrateExplorerFleetBakes(opts: {
   await tryOne("locomotion/dodge_back", [UNIVERSAL_MOVEMENT.dodgeB]);
   await tryOne("locomotion/dodge_l", [UNIVERSAL_MOVEMENT.dodgeL]);
   await tryOne("locomotion/dodge_r", [UNIVERSAL_MOVEMENT.dodgeR]);
-  await tryOne("longbow/fall-a-loop", [UNIVERSAL_MOVEMENT.jumpAir]);
-  await tryOne("longbow/fall-a-land", [UNIVERSAL_MOVEMENT.land]);
+  await tryOne("locomotion/jump", [UNIVERSAL_MOVEMENT.jumpAir]);
+  await tryOne("locomotion/land_roll", [UNIVERSAL_MOVEMENT.land]);
   await tryOne("polearm/hurt", ["animations/bow/standing-react-small-from-front"]);
   await tryOne("dual_wield/dash", [UNIVERSAL_MOVEMENT.dash, "animations/bow/standing-dive-forward"]);
   await tryOne("dual_wield/attack", ["animations/bow/standing-melee-punch", "animations/striker/punch-to-elbow-combo"]);

@@ -20,6 +20,14 @@ describe("Open delivery shelves", () => {
   it("account hub + foundry land on Account", () => {
     expect(deliveryShelf(getGame("account-hub")!)).toBe("account");
     expect(deliveryShelf(getGame("character-foundry")!)).toBe("account");
+    expect(deliveryShelf(getGame("studio-portal")!)).toBe("account");
+    expect(deliveryShelf(getGame("ai-legion")!)).toBe("account");
+    expect(deliveryShelf(getGame("wallet-hub")!)).toBe("account");
+  });
+
+  it("coder lands on Editors", () => {
+    expect(deliveryShelf(getGame("coder-ide")!)).toBe("editors");
+    expect(deliveryShelf(getGame("ui-hydra")!)).toBe("editors");
   });
 
   it("editors: grok-builder, threeflow, forge", () => {
@@ -33,6 +41,9 @@ describe("Open delivery shelves", () => {
     expect(ids).toContain("mimic-dungeon");
     expect(ids).toContain("danger-room");
     expect(ids).toContain("grudge-dungeons");
+    expect(ids).toContain("magma-core");
+    expect(getGame("grudge-dungeons")!.url).toBe("https://grudge-dungeons.vercel.app/");
+    expect(getGame("magma-core")!.url).toContain("theme=molten");
     expect(getGame("grudge-dungeons")!.url).toBe("https://grudge-dungeons.vercel.app/");
   });
 

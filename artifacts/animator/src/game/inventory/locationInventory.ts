@@ -133,8 +133,37 @@ export function accountIdForVault(
   return fallback || "guest";
 }
 
+/** Vehicle stash — same location as boat hold (`boat:<id>`). Not a second bag. */
+export const BOAT_STASH_PREFIX = "boat:";
+
 export function boatLocationId(boatId: string): string {
-  return `boat:${boatId || "default"}`;
+  return `${BOAT_STASH_PREFIX}${boatId || "default"}`;
+}
+
+export function isBoatStashLocation(locationId: string, kind?: StorageLocationKind | string | null): boolean {
+  if (kind === "boat") return true;
+  return String(locationId || "").startsWith(BOAT_STASH_PREFIX);
+}
+
+/**
+ * Stash is a vehicle compartment at sea.
+ * It becomes bag/account inventory only at a safe dock, home island, or friendly dock.
+ */
+export type StashUnloadDock = "home_island" | "safe_dock" | "friendly_dock" | "none";
+
+export function resolveStashUnloadDock(p: {
+  onHomeIsland?: boolean;
+  atSafeDock?: boolean;
+  atFriendlyDock?: boolean;
+}): StashUnloadDock {
+  if (p.onHomeIsland) return "home_island";
+  if (p.atSafeDock) return "safe_dock";
+  if (p.atFriendlyDock) return "friendly_dock";
+  return "none";
+}
+
+export function canConvertBoatStashToInventory(dock: StashUnloadDock): boolean {
+  return dock === "home_island" || dock === "safe_dock" || dock === "friendly_dock";
 }
 
 export function hiddenChestLocationId(pinId: string): string {
@@ -290,7 +319,7 @@ export function newLocationStorage(
       : kind === "camp"
         ? "Camp storage"
         : kind === "boat"
-          ? "Boat hold"
+          ? "Boat stash"
           : kind === "dungeon_chest"
             ? "Dungeon chest"
             : kind === "contested_chest"
@@ -567,7 +596,7 @@ export async function transferLocationToHomeIsland(opts: {
       ok: false,
       storage,
       account,
-      message: "Camp storage empty",
+      message: storage.kind === "boat" ? "Boat stash empty" : "Camp storage empty",
     };
   }
 
@@ -598,6 +627,41 @@ export async function transferLocationToHomeIsland(opts: {
     account,
     message: `Sent ${n} items to home island bag`,
   };
+}
+
+/**
+ * Boat stash → account inventory. Allowed only at home island, a safe dock,
+ * or a friendly island dock. Same Railway bag — not a second store.
+ */
+export async function transferBoatStashToInventory(opts: {
+  storage: LocationStorageState;
+  accountId: string;
+  dock: StashUnloadDock;
+  includeUniques?: boolean;
+}): Promise<{
+  ok: boolean;
+  storage: LocationStorageState;
+  account: AccountInventoryState;
+  message: string;
+}> {
+  if (!isBoatStashLocation(opts.storage.locationId, opts.storage.kind)) {
+    return {
+      ok: false,
+      storage: opts.storage,
+      account: loadAccountInventory(opts.accountId),
+      message: "Not a boat stash",
+    };
+  }
+  if (!canConvertBoatStashToInventory(opts.dock)) {
+    return {
+      ok: false,
+      storage: opts.storage,
+      account: loadAccountInventory(opts.accountId),
+      message:
+        "Stash becomes inventory only at a safe dock, home island, or friendly island dock",
+    };
+  }
+  return transferLocationToHomeIsland(opts);
 }
 
 /**

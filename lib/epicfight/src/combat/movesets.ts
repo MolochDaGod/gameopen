@@ -1,4 +1,5 @@
 import type { AttackMove, CombatConfig, HitboxSpec, Moveset } from "./types.js";
+import { FLEET_DODGE } from "./fleet/constants.js";
 
 /** A reasonable default hit volume for a one-handed swing (model units). */
 export const DEFAULT_HITBOX: HitboxSpec = { forward: 1.1, up: 1.0, radius: 0.9 };
@@ -12,13 +13,13 @@ export function defaultCombatConfig(overrides: Partial<CombatConfig> = {}): Comb
     staminaRegenDelay: 0.6,
     maxPoise: 50,
     poiseRegenPerSec: 12,
-    // Dodge = WIDEST reaction (T0 timeline ref). I-frames ~0.38s within 0.55s dodge.
+    // Dodge phases from FLEET_DODGE (startup → i-frames → recovery).
     dodge: {
-      duration: 0.55,
-      iframeStart: 0.04,
-      iframeEnd: 0.42,
+      duration: FLEET_DODGE.duration,
+      iframeStart: FLEET_DODGE.iframeStart,
+      iframeEnd: FLEET_DODGE.iframeEnd,
       staminaCost: 20,
-      distance: 3.2,
+      distance: FLEET_DODGE.maxDistance,
     },
     // Block = SAFE / WIDE option (hold). Force gates stop vs chip (see defense.ts).
     block: {

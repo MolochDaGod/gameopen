@@ -33,6 +33,8 @@ const MIXAMO_DIR = path.join(root, "artifacts/animator/public/anim");
 const WEAPON_MAP = path.join(root, "content/anims/weapon-live-packs.json");
 const OUT_INTEGRITY = path.join(root, "content/manifests/anims.integrity.json");
 const OUT_WEAPON_LIVE = path.join(root, "content/manifests/weapon-live-anims.json");
+const OUT_BIP001_LIBRARY = path.join(root, "content/anims/bip001-library.json");
+const OUT_BIP001_INDEX = path.join(root, "content/manifests/bip001-library.index.json");
 
 function sha256File(filePath) {
   const buf = fs.readFileSync(filePath);
@@ -454,12 +456,63 @@ const weaponLiveDoc = {
   summary: integrityDoc.summary,
 };
 
+/**
+ * Game-consumable library of every retargeted Bip001 clip already shipped by
+ * Open. This references the canonical baked JSON files; it never copies clips
+ * into a second package.
+ */
+const bip001Clips = bakedManifest
+  .filter((entry) => !/(^|\/)fx\//i.test(entry.bakeRel))
+  .map((entry) => {
+    const [pack, ...rest] = entry.bakeRel.split("/");
+    return {
+      animationId: `anim.bip001.${entry.bakeRel.replace(/[^a-zA-Z0-9]+/g, ".").replace(/^\.+|\.+$/g, "")}.v1`,
+      rigLane: "bip001-baked",
+      skeleton: "Bip001",
+      pack,
+      role: rest.join("/") || pack,
+      bakeRel: entry.bakeRel,
+      url: `/${entry.file}`,
+      sha256: entry.sha256,
+      bytes: entry.bytes,
+    };
+  });
+
+const bip001LibraryDoc = {
+  version: 1,
+  generatedAt: integrityDoc.generatedAt,
+  rigLane: "bip001-baked",
+  skeleton: "Bip001",
+  baseUrl: "/anims/baked",
+  policy: {
+    rotationOnly: true,
+    mixerOwner: "AnimationDirector",
+    sourceOfTruth: "content/anims/database.json + /anims/baked",
+    forbidden: ["mixamorig tracks without an explicit retarget bake", "locomotion/running"],
+  },
+  clips: bip001Clips,
+};
+
+const bip001IndexDoc = {
+  version: 1,
+  generatedAt: integrityDoc.generatedAt,
+  library: "content/anims/bip001-library.json",
+  rigLane: bip001LibraryDoc.rigLane,
+  skeleton: bip001LibraryDoc.skeleton,
+  clipCount: bip001Clips.length,
+  packs: [...new Set(bip001Clips.map((clip) => clip.pack))].sort(),
+};
+
 if (WRITE) {
   fs.mkdirSync(path.dirname(OUT_INTEGRITY), { recursive: true });
   fs.writeFileSync(OUT_INTEGRITY, JSON.stringify(integrityDoc, null, 2) + "\n");
   fs.writeFileSync(OUT_WEAPON_LIVE, JSON.stringify(weaponLiveDoc, null, 2) + "\n");
+  fs.writeFileSync(OUT_BIP001_LIBRARY, JSON.stringify(bip001LibraryDoc, null, 2) + "\n");
+  fs.writeFileSync(OUT_BIP001_INDEX, JSON.stringify(bip001IndexDoc, null, 2) + "\n");
   console.log(`\nWrote ${path.relative(root, OUT_INTEGRITY)}`);
   console.log(`Wrote ${path.relative(root, OUT_WEAPON_LIVE)}`);
+  console.log(`Wrote ${path.relative(root, OUT_BIP001_LIBRARY)}`);
+  console.log(`Wrote ${path.relative(root, OUT_BIP001_INDEX)}`);
 }
 
 console.log(

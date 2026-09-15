@@ -1,0 +1,14 @@
+{
+  "role": "farming",
+  "skeleton": "Bip001",
+  "stripPositionTracks": true,
+  "clips": {
+    "idle": "work-roles/farming/idle",
+    "walk": "work-roles/farming/walk",
+    "till": "work-roles/farming/till",
+    "plant": "work-roles/farming/plant",
+    "water": "work-roles/farming/water",
+    "reap": "work-roles/farming/reap"
+  },
+  "source": "locomotion/* + harvest/* (Human Crafting FREE + farming Mixamo)"
+}

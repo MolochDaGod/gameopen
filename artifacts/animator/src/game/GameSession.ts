@@ -43,9 +43,9 @@ function loadLocalCharacters(): GrudgeCharacter[] {
 }
 
 /**
- * Hero roster SSOT for Warlords-era client.
- * Order: charactersgrudox 4-slot campfire → local drafts → Railway fleet (era=warlords).
- * Explorers / faction troops are units (see harvestCatalog.listUnitCharacters), not heroes.
+ * Open library roster: all production eras (warlords / voxel / nexus / armada).
+ * Surfaces filter by era — do not drop voxel here or FleetBar / campfire go empty.
+ * Explorers / faction troops (`unit-`) stay out of the hero list.
  */
 function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
   const grudox = loadGrudoxCharacters();
@@ -54,16 +54,24 @@ function mergeRoster(fleet: GrudgeCharacter[]): GrudgeCharacter[] {
   const out: GrudgeCharacter[] = [];
   for (const c of [...grudox, ...local, ...fleet]) {
     if (!c?.id || seen.has(c.id)) continue;
-    // Never treat procedural explorer ids as campfire heroes
     if (c.id === "explorer" || c.id.startsWith("unit-")) continue;
-    // Open play roster is Warlords Toon only — voxel seats stay on GRUDOX / Realms.
-    const era = characterGameEra(c);
-    if (era && era !== "warlords") continue;
-    if (isVoxelCharacter(c)) continue;
     seen.add(c.id);
     out.push(c);
   }
   return out;
+}
+
+export function charactersForEra(
+  chars: GrudgeCharacter[],
+  era: string,
+): GrudgeCharacter[] {
+  const want = era.toLowerCase();
+  return chars.filter((c) => {
+    const e = characterGameEra(c);
+    if (want === "voxel") return e === "voxel" || isVoxelCharacter(c);
+    if (want === "warlords") return !e || e === "warlords";
+    return e === want;
+  });
 }
 
 function loadSelectedCharacterId(): string | null {
@@ -217,8 +225,7 @@ class GameSession {
     if (!this.selectedCharacterId && this.characters[0]) {
       this.selectedCharacterId = this.characters[0].id;
     }
-    // No fleet/local heroes yet — seed a Warlords guest draft so choose-survivor
-    // and Danger Room always have a selectable character.
+    // Empty across every era — seed a Warlords guest draft for Danger only.
     if (!this.characters.length) {
       const draft: GrudgeCharacter = {
         id: `local_guest_${Date.now().toString(36)}`,
@@ -244,7 +251,7 @@ class GameSession {
    * the Lobby character picker's reload action.
    */
   async refreshCharacters(): Promise<GrudgeCharacter[]> {
-    const characters = await fetchCharacters({ eras: ["warlords"] });
+    const characters = await fetchCharacters();
     this.characters = mergeRoster(characters);
     if (this.selectedCharacterId && !this.characters.some((c) => c.id === this.selectedCharacterId)) {
       this.selectedCharacterId = this.characters[0]?.id ?? null;

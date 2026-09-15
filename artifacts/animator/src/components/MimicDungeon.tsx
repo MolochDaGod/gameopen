@@ -10,7 +10,7 @@ import "./hud/craftpixHud.css";
 const INITIAL: MimicDungeonState = {
   phase: "loading",
   prompt: null,
-  hint: "Loading volcano + skinned hero…",
+  hint: "Loading volcano + Toon play kit…",
   playerHp: 100,
   playerMaxHp: 100,
   mimicHp: 120,

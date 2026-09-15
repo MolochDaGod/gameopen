@@ -468,3 +468,26 @@ html.shell-immersive .iagc-root {
     justify-content: center;
   }
 }
+
+.shell-phone-fab {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  z-index: 850;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--km-btn-circle, transparent) center / contain no-repeat;
+  background-color: transparent;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+}
+.shell-phone-fab img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}

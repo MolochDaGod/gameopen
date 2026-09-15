@@ -119,6 +119,7 @@ Avatar customization (voxel)     Weapon package (any combat sandbox)
 
 | Asset | Path / host |
 |-------|-------------|
+| **Voxel-era 4 play kits** | Unpack `D:\Games\Models\4character` → `models/heroes/hero.glb`, `models/orc.glb`, `models/sanji.glb`, `models/skeleton-warrior.glb` (Explorer / Brute / Striker / Skeleton). Catalog: `lib/voxelEraFour.ts`. Campfire + GRUDOX `kit=`. **Not** `models/races/*.glb` (Warlords). |
 | Codex blocks / icons | Mine-Loader generators → R2 / `/api/blocks` |
 | Explorer / TVS props | `assets.grudge-studio.com` · campfire TVS CDN law |
 | Pixel tools / RPG weapon OBJ | Mine `modelLibrary` / CODEX generation docs |

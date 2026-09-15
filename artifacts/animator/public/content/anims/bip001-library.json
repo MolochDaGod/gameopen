@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "description": "Canonical reusable library of already-retargeted Bip001 hero clips. Resolve clips from /anims/baked; verify against the generated integrity inventory.",
+  "rigLane": "bip001-baked",
+  "skeleton": "Bip001",
+  "baseUrl": "/anims/baked",
+  "integrityInventory": "content/manifests/anims.integrity.json",
+  "runtime": {
+    "director": "grudge6 AnimationDirector",
+    "mixerPolicy": "one mixer per skinned character",
+    "trackPolicy": "rotation-only retargeted tracks"
+  },
+  "packs": [
+    "unarmed",
+    "sword_shield",
+    "longbow",
+    "magic",
+    "polearm",
+    "samurai",
+    "hammer",
+    "dual_wield",
+    "ghost_rider",
+    "locomotion",
+    "swim",
+    "climb",
+    "harvest"
+  ],
+  "excludes": [
+    "Mixamo source tracks without an explicit Bip001 retarget bake",
+    "locomotion/running",
+    "FX path data"
+  ]
+}

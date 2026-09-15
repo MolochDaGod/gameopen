@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "updated": "2026-08-11",
+  "pack": "pro_melee_axe",
+  "skeleton": "Bip001",
+  "sourceDir": "anim/pro-melee-axe",
+  "clipCount": 46,
+  "roles": [
+    {
+      "role": "crouch_idle",
+      "file": "crouch idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6666666269302368
+    },
+    {
+      "role": "crouch_stand",
+      "file": "crouch to standing idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.6333333253860474
+    },
+    {
+      "role": "block_idle",
+      "file": "standing block idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.8333333730697632
+    },
+    {
+      "role": "block_hit",
+      "file": "standing block react large.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.3333333730697632
+    },
+    {
+      "role": "disarm_shoulder",
+      "file": "standing disarm over shoulder.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6666666269302368
+    },
+    {
+      "role": "disarm_underarm",
+      "file": "standing disarm underarm.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.7000000476837158
+    },
+    {
+      "role": "idle_look_1",
+      "file": "standing idle looking ver. 1.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 11.266666412353516
+    },
+    {
+      "role": "idle_look_2",
+      "file": "standing idle looking ver. 2.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 7.833333492279053
+    },
+    {
+      "role": "idle",
+      "file": "standing idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.8333333730697632
+    },
+    {
+      "role": "jump",
+      "file": "standing jump.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.899999976158142
+    },
+    {
+      "role": "attack_360_high",
+      "file": "standing melee attack 360 high.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 3.1666667461395264
+    },
+    {
+      "role": "attack_360_low",
+      "file": "standing melee attack 360 low.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.5
+    },
+    {
+      "role": "attack_backhand",
+      "file": "standing melee attack backhand.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 3.1666667461395264
+    },
+    {
+      "role": "attack_down",
+      "file": "standing melee attack downward.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.2666666507720947
+    },
+    {
+      "role": "attack_kick_1",
+      "file": "standing melee attack kick ver. 1.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.8666666746139526
+    },
+    {
+      "role": "attack_kick_2",
+      "file": "standing melee attack kick ver. 2.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.399999976158142
+    },
+    {
+      "role": "combo_1",
+      "file": "standing melee combo attack ver. 1.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 4.666666507720947
+    },
+    {
+      "role": "combo_2",
+      "file": "standing melee combo attack ver. 2.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 4.199999809265137
+    },
+    {
+      "role": "combo_3",
+      "file": "standing melee combo attack ver. 3.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.7333333492279053
+    },
+    {
+      "role": "jump_attack",
+      "file": "standing melee run jump attack.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 3.6666667461395264
+    },
+    {
+      "role": "hit_left",
+      "file": "standing react large from left.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.0333333015441895
+    },
+    {
+      "role": "hit_right",
+      "file": "standing react large from right.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.7666666507720947
+    },
+    {
+      "role": "hit_gut",
+      "file": "standing react large gut.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.600000023841858
+    },
+    {
+      "role": "run_back",
+      "file": "standing run back.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.800000011920929
+    },
+    {
+      "role": "run",
+      "file": "standing run forward.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.7333333492279053
+    },
+    {
+      "role": "taunt_battlecry",
+      "file": "standing taunt battlecry.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.8333332538604736
+    },
+    {
+      "role": "taunt_chest",
+      "file": "standing taunt chest thump.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.8333332538604736
+    },
+    {
+      "role": "turn_left",
+      "file": "standing turn left 90.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.7666666507720947
+    },
+    {
+      "role": "turn_right",
+      "file": "standing turn right 90.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6333333253860474
+    },
+    {
+      "role": "walk_back",
+      "file": "standing walk back.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.3666666746139526
+    },
+    {
+      "role": "walk",
+      "file": "standing walk forward.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.3333333730697632
+    },
+    {
+      "role": "walk_left",
+      "file": "standing walk left.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.2333333492279053
+    },
+    {
+      "role": "walk_right",
+      "file": "standing walk right.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.2666666507720947
+    },
+    {
+      "role": "equip_shoulder",
+      "file": "unarmed equip over shoulder.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6666666269302368
+    },
+    {
+      "role": "equip_underarm",
+      "file": "unarmed equip underarm.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.2333333492279053
+    },
+    {
+      "role": "unarmed_idle_look_1",
+      "file": "unarmed idle looking ver. 1.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 11.266666412353516
+    },
+    {
+      "role": "unarmed_idle_look_2",
+      "file": "unarmed idle looking ver. 2.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 7.833333492279053
+    },
+    {
+      "role": "unarmed_idle",
+      "file": "unarmed idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.899999976158142
+    },
+    {
+      "role": "unarmed_jump_run",
+      "file": "unarmed jump running.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.399999976158142
+    },
+    {
+      "role": "unarmed_jump",
+      "file": "unarmed jump.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2.3333332538604736
+    },
+    {
+      "role": "unarmed_run_back",
+      "file": "unarmed run back.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.7666666507720947
+    },
+    {
+      "role": "unarmed_run",
+      "file": "unarmed run forward.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.800000011920929
+    },
+    {
+      "role": "unarmed_turn_left",
+      "file": "unarmed turn left 90.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.5
+    },
+    {
+      "role": "unarmed_turn_right",
+      "file": "unarmed turn right 90.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.5
+    },
+    {
+      "role": "unarmed_walk_back",
+      "file": "unarmed walk back.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.2999999523162842
+    },
+    {
+      "role": "unarmed_walk",
+      "file": "unarmed walk forward.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.3666666746139526
+    }
+  ],
+  "missing": [
+    {
+      "role": "attack",
+      "file": "standing melee attack horizontal.fbx",
+      "ok": false,
+      "reason": "THREE.FBXLoader: Unknown property type "
+    }
+  ],
+  "note": "Mirror pack at pro_melee_axe_mirror/ for off-hand warrior"
+}

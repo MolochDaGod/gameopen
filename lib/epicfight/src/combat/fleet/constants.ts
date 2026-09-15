@@ -19,14 +19,21 @@ export const FLEET_STAMINA_COST = {
 } as const;
 
 /**
- * Dodge (KeyX) — stamina-scaled travel.
- * Cost = staminaFrac × maxStamina (or remaining). Min dist under lowStaminaRatio.
- * maxDistance is full-stamina travel (+0.5 m over historical 4.4 baseline → 4.9).
+ * Dodge (KeyX) — stamina-scaled travel + phased i-frames (60 Hz).
+ *
+ *   startup  [0, iframeStart)     commit, hittable
+ *   i-frames [iframeStart, iframeEnd)  evade (≈17 frames, not the whole clip)
+ *   recovery [iframeEnd, duration) punishable
+ *
+ * Do not set iframeEnd ≈ duration — that deletes recovery and the test
+ * (and every punish window) never sees a vulnerable dodge.
  */
 export const FLEET_DODGE = {
   duration: 0.72,
   iframeStart: 0.06,
-  iframeEnd: 0.56,
+  iframeEnd: 0.34,
+  /** iframeEnd − iframeStart (active invuln only). */
+  invuln: 0.28,
   /** Full-stamina max travel (metres). */
   maxDistance: 4.9,
   /** Floor when stamina ratio &lt; lowStaminaRatio. */
@@ -36,7 +43,6 @@ export const FLEET_DODGE = {
   /** Below this ratio, distance locks to minDistance. */
   lowStaminaRatio: 0.15,
   cooldown: 0.78,
-  invuln: 0.55,
 } as const;
 
 /** Combat slide (Alt) — trip volume + rear push. */

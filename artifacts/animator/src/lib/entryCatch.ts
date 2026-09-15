@@ -22,12 +22,15 @@ export const ENTRY_HOSTS = {
   warlordGenesis: "https://warlord-genesis.vercel.app",
   id: "https://id.grudge-studio.com",
   ui: "https://ui.grudge-studio.com",
+  traits: "https://traits.grudge.studio",
   forge: "https://forge.grudge-studio.com",
   assets: "https://assets.grudge-studio.com",
   /** Voxel Realms (Mine-Loader) production */
   mineLoader: "https://mineloader.grudge-studio.com",
   /** Client play host (home island · world map · pirate lobby) */
   warlordsClient: "https://client.grudge-studio.com",
+  /** Grudge Studio Trader desk */
+  trader: "https://trader.grudge-studio.com",
 } as const;
 
 /**
@@ -71,8 +74,26 @@ export const PRODUCT_STARTS = {
   openVoxel: `${ENTRY_HOSTS.open}/voxel`,
   /** Open Danger harvest lab */
   openHarvest: `${ENTRY_HOSTS.open}/danger?activity=harvest`,
+  /** Character info / equipment (UUID · mesh bake · owned gear) */
+  equipment: `${ENTRY_HOSTS.open}/equipment`,
+  /** Canonical Trait Store (Unity paperdoll on Main Panel) */
+  traitStore: `${ENTRY_HOSTS.traits}/`,
   /** CDN assets root (binaries — not a SPA mode) */
   assetsCdn: `${ENTRY_HOSTS.assets}`,
+  /** Grudge Studio portal / The ENGINE (marketing + product index, not a second roster) */
+  studioPortal: "https://grudge-studio.com/",
+  /** Legion AI hub — chat / image / agents (JWT from Grudge ID) */
+  aiHub: "https://ai.grudge-studio.com/",
+  /** Vibe IDE */
+  coder: "https://coder.grudge-studio.com/",
+  /** Wallet product UI (same Railway account row) */
+  wallet: "https://wallet.grudge-studio.com/",
+  /** Grudge Studio Trader — same Grudge ID, not a second account */
+  trader: `${ENTRY_HOSTS.trader}/`,
+  /** HUD / main-panel UI studio */
+  uiStudio: `${ENTRY_HOSTS.ui}/`,
+  uiHotkeys: `${ENTRY_HOSTS.ui}/hotkeys`,
+  uiAssets: `${ENTRY_HOSTS.ui}/assets`,
   /** Agentic Three.js editor (Studio tools) */
   grokBuilder: "https://grok-builder.vercel.app/",
   /** Warlords scene editor (not Forge) */
@@ -85,6 +106,9 @@ export const PRODUCT_STARTS = {
   grudgeDungeons: "https://grudge-dungeons.vercel.app/",
   /** Linear boss crawl (entrance → mini-boss → boss arena) */
   grudgeDungeonBoss: "https://grudge-dungeons.vercel.app/?linear=1",
+  /** Magma Core — platforms over lava, Slag Warlord, linear crawl */
+  grudgeDungeonMolten:
+    "https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
 } as const;
 
 /** Cabinets that MUST run on grudox, never Open SPA. */
@@ -133,6 +157,7 @@ export const ALLOWED_RETURN_HOST_SUFFIXES = [
   "mine-loader.vercel.app",
   "warstrat.grudge-studio.com",
   "warlord-genesis.vercel.app",
+  "trader.grudge-studio.com",
   "localhost",
   "127.0.0.1",
 ] as const;
@@ -244,6 +269,15 @@ export function catchEntry(input: CatchInput): CatchAction {
   const modeQ = (params.get("mode") || "").toLowerCase();
   const door = (params.get("door") || "").toLowerCase();
 
+  // ── 0. Trader is its own product host (same Grudge ID, not Open) ──────
+  if (parts[0] === "trader" || door === "trader" || modeQ === "trader") {
+    return {
+      kind: "hard_redirect",
+      url: PRODUCT_STARTS.trader,
+      reason: "trader intent → trader.grudge-studio.com",
+    };
+  }
+
   // ── 1. Foundry / create intent must leave Open SPA ─────────────────────
   // ?mode=create or path /foundry on Open → character foundry create
   if (
@@ -262,6 +296,28 @@ export function catchEntry(input: CatchInput): CatchAction {
       kind: "hard_redirect",
       url: dest.toString(),
       reason: "create/foundry intent → character.grudge-studio.com/foundry",
+    };
+  }
+
+  // ── 1b. Magma Core (platforms over lava) lives on Grudge Dungeons ─────
+  // Open /mimic stays the barrel Test Dungeon. Do not invent a second lava engine.
+  const lavaDoor =
+    door === "lava" ||
+    door === "molten" ||
+    door === "magma" ||
+    door === "magma-core" ||
+    door === "slag";
+  const lavaPath =
+    parts[0] === "lava" ||
+    parts[0] === "molten" ||
+    parts[0] === "magma" ||
+    parts[0] === "magma-core" ||
+    parts[0] === "slag";
+  if (lavaDoor || lavaPath || modeQ === "molten" || modeQ === "lava") {
+    return {
+      kind: "hard_redirect",
+      url: PRODUCT_STARTS.grudgeDungeonMolten,
+      reason: "lava/molten intent → Magma Core crawl (theme=molten&linear=1)",
     };
   }
 
@@ -455,6 +511,10 @@ export function catchEntry(input: CatchInput): CatchAction {
     "annihilate-demo",
     "annihilate",
     "play",
+    "racing",
+    "street-racing",
+    "raver",
+    "raver-racing",
     "genesis",
     "brawl",
     "survival",
@@ -583,7 +643,17 @@ export function startUrlForIntent(
     | "forge"
     | "mimic"
     | "dungeon"
-    | "dungeonBoss",
+    | "dungeonBoss"
+    | "dungeonMolten"
+    | "equipment"
+    | "studio"
+    | "ai"
+    | "coder"
+    | "wallet"
+    | "trader"
+    | "uiStudio"
+    | "uiHotkeys"
+    | "uiAssets",
   opts?: { cabinetId?: string; characterId?: string | null; returnTo?: string },
 ): string {
   switch (intent) {
@@ -595,6 +665,11 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.grudoxVoxelDanger;
     case "account":
       return PRODUCT_STARTS.account;
+    case "equipment": {
+      const u = new URL(PRODUCT_STARTS.equipment);
+      if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);
+      return u.toString();
+    }
     case "campfire":
     case "characters":
       return PRODUCT_STARTS.campfire;
@@ -630,6 +705,8 @@ export function startUrlForIntent(
       return PRODUCT_STARTS.grudgeDungeons;
     case "dungeonBoss":
       return PRODUCT_STARTS.grudgeDungeonBoss;
+    case "dungeonMolten":
+      return PRODUCT_STARTS.grudgeDungeonMolten;
     case "warlordsHome": {
       const u = new URL(PRODUCT_STARTS.warlordsHome);
       if (opts?.characterId) u.searchParams.set("characterId", opts.characterId);
@@ -660,6 +737,22 @@ export function startUrlForIntent(
     }
     case "realms":
       return PRODUCT_STARTS.mineLoader;
+    case "studio":
+      return PRODUCT_STARTS.studioPortal;
+    case "ai":
+      return PRODUCT_STARTS.aiHub;
+    case "coder":
+      return PRODUCT_STARTS.coder;
+    case "wallet":
+      return PRODUCT_STARTS.wallet;
+    case "trader":
+      return PRODUCT_STARTS.trader;
+    case "uiStudio":
+      return PRODUCT_STARTS.uiStudio;
+    case "uiHotkeys":
+      return PRODUCT_STARTS.uiHotkeys;
+    case "uiAssets":
+      return PRODUCT_STARTS.uiAssets;
     default:
       return PRODUCT_STARTS.openHub;
   }

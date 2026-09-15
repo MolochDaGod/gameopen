@@ -35,7 +35,8 @@ There is **one combat product**, with several *related* systems that looked like
 | Surface / panel | UX score | Issues | Verdict |
 |-----------------|----------|--------|---------|
 | **Combat HUD** (`Hud.tsx` + UnitFrame + quickActions) | **A−** | Wings must stay driven by `quickActions` SSOT; icons CDN remap incomplete | **Canonical combat UI** |
-| **Equipment main panel** (`EquipmentScreen`) | **B+** | Pause overlay; must always re-apply mesh_ids | **Canonical main panel** |
+| **Equipment main panel** (`EquipmentScreen`) | **B+** | Pause overlay; armor slots cycle Toon `mesh_ids` | **Canonical main panel (Danger / Toon)** |
+| **Explorer character page** | **B** | Voxel bag / craft grid | **I-key only when `isVoxelCharacter`** |
 | **Account paperdoll** (`AccountPanel` + RacePortraitGrid) | **B+** | Create/select hero; portraits via CharacterAvatar | Keep as **out-of-combat** panel |
 | **Admin / Editor / Anim dock** | **B** | Power-user tabs; hide by default | **Smart tabs** (dock, not always-on) |
 | **Radial (Tab hold)** | **A** | Mode-aware tools | Keep |

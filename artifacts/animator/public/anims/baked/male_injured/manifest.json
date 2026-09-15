@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "updated": "2026-08-11",
+  "pack": "male_injured",
+  "skeleton": "Bip001",
+  "sourceDir": "anim/male-injured",
+  "clipCount": 20,
+  "roles": [
+    {
+      "role": "turn_back_left",
+      "file": "injured backwards turn left.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.7333333492279053
+    },
+    {
+      "role": "turn_back_right",
+      "file": "injured backwards turn right.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.699999988079071
+    },
+    {
+      "role": "hurt_idle",
+      "file": "injured hurting idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 6.0333333015441895
+    },
+    {
+      "role": "idle",
+      "file": "injured idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 9.333333015441895
+    },
+    {
+      "role": "run_back_left",
+      "file": "injured run backwards left turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.5
+    },
+    {
+      "role": "run_back_right",
+      "file": "injured run backwards right turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.5333333611488342
+    },
+    {
+      "role": "run_back",
+      "file": "injured run backwards.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.6000000238418579
+    },
+    {
+      "role": "run_jump",
+      "file": "injured run jump.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.7333333492279053
+    },
+    {
+      "role": "run_left",
+      "file": "injured run left turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.6000000238418579
+    },
+    {
+      "role": "run_right",
+      "file": "injured run right turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.6333333253860474
+    },
+    {
+      "role": "run",
+      "file": "injured run.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.6333333253860474
+    },
+    {
+      "role": "jump",
+      "file": "injured standing jump.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.899999976158142
+    },
+    {
+      "role": "stumble_idle",
+      "file": "injured stumble idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 5.066666603088379
+    },
+    {
+      "role": "turn_left",
+      "file": "injured turn left.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.8999999761581421
+    },
+    {
+      "role": "turn_right",
+      "file": "injured turn right.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 0.699999988079071
+    },
+    {
+      "role": "walk_back",
+      "file": "injured walk backwards.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6666666269302368
+    },
+    {
+      "role": "walk_left",
+      "file": "injured walk left turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 2
+    },
+    {
+      "role": "walk_right",
+      "file": "injured walk right turn.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.8333333730697632
+    },
+    {
+      "role": "walk",
+      "file": "injured walk.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 1.6333333253860474
+    },
+    {
+      "role": "wave_idle",
+      "file": "injured wave idle.fbx",
+      "ok": true,
+      "tracks": 20,
+      "duration": 5.066666603088379
+    }
+  ],
+  "missing": []
+}

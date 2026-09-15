@@ -379,7 +379,8 @@ export class FootGrounder {
     this.smLeft += (ls.offset - this.smLeft) * k;
     this.smRight += (rs.offset - this.smRight) * k;
     const drop = pelvisDropForFeet([this.smLeft, this.smRight]);
-    this.smDrop += (drop - this.smDrop) * k;
+    const rawDrop = drop < -0.08 ? drop : 0;
+    this.smDrop += (rawDrop - this.smDrop) * k;
     this.primed = true;
 
     // Drop the pelvis to the lowest-reaching foot, then re-plant both feet on

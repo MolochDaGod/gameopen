@@ -8,6 +8,7 @@ import { scaffoldWeaponSkill, slashVariantForStage } from "@workspace/epicfight"
 import type { T0SkillDef, T0WeaponKit } from "./t0WeaponSkills";
 import { T0_WEAPON_KITS } from "./t0WeaponSkills";
 import type { SkillKind } from "../types";
+import { totemForSlot } from "../combat/totemCatalog";
 
 function kindToProjectile(kind: SkillKind): FleetWeaponSkill["projectile"] | undefined {
   // Slash waves are melee residual projectiles (weapon edge), not free casts.
@@ -33,7 +34,7 @@ function kindToProjectile(kind: SkillKind): FleetWeaponSkill["projectile"] | und
 }
 
 function kindToCollider(kind: SkillKind): FleetWeaponSkill["collider"] {
-  if (kind === "nova" || kind === "slam") {
+  if (kind === "nova" || kind === "slam" || kind === "totem") {
     return { type: "sphere", radius: 2.2, offset: [0, 0.2, 0] };
   }
   if (kind === "bolt" || kind === "laser") {
@@ -126,7 +127,22 @@ export function t0SkillToFleet(
     castEffectId: skill.kind,
     impactEffectId: skill.kind,
     projectile,
-    aoeRadius: skill.kind === "nova" || skill.kind === "slam" ? 2.4 : undefined,
+    aoeRadius:
+      skill.kind === "nova" || skill.kind === "slam" || skill.kind === "totem" ? 2.4 : undefined,
+    groundTotem:
+      skill.kind === "totem"
+        ? (() => {
+            const t = totemForSlot(slot);
+            return {
+              totemId: t.id,
+              meshPath: t.meshKey,
+              effect: t.effect,
+              place: t.place,
+              offsetM: t.offsetM,
+              duration: t.life,
+            };
+          })()
+        : undefined,
     iconUrl: skill.iconUrl,
     tags: [skill.role, skill.kind, ...(isSamurai2h ? ["samurai", "2h", "getsuga"] : [])],
     attachToHand: "main",

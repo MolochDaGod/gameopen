@@ -232,8 +232,8 @@ export class PhysicsWorld {
    */
   makeCapsuleBody(
     center: { x: number; y: number; z: number },
-    radius = PLAYER_CAPSULE.radius,
-    halfHeight = PLAYER_CAPSULE.halfHeight,
+    radius: number = PLAYER_CAPSULE.radius,
+    halfHeight: number = PLAYER_CAPSULE.halfHeight,
   ): { body: RAPIER.RigidBody; collider: RAPIER.Collider } | null {
     const world = this.world;
     if (!world) return null;

@@ -12,7 +12,9 @@ export type CameraProfileKey =
   | "harvest"
   | "build"
   | "combat-hard"
-  | "combat-soft";
+  | "combat-soft"
+  | "combat-hard-nexus"
+  | "combat-soft-nexus";
 
 /** Fields match ControllerCameraOpts in Open Controller. */
 export interface CameraProfileOpts {
@@ -101,6 +103,29 @@ export const CAMERA_PROFILES: Record<CameraProfileKey, CameraProfileOpts> = {
     cameraHeight: 1.65,
     pitch: 0.28,
   },
+  /** Nexus / GRUDOX — Marvel Rivals-like, slightly further than Warlords/Open. */
+  "combat-hard-nexus": {
+    enableSpringCamera: true,
+    springCameraTime: 0.05,
+    enableOverShoulderView: true,
+    camOverShoulderOffsetRatio: 0.12,
+    camLookAtHeightRatio: 0.92,
+    enableZoom: true,
+    cameraDistance: 5.9,
+    cameraHeight: 1.72,
+    pitch: 0.3,
+  },
+  "combat-soft-nexus": {
+    enableSpringCamera: true,
+    springCameraTime: 0.07,
+    enableOverShoulderView: true,
+    camOverShoulderOffsetRatio: 0.11,
+    camLookAtHeightRatio: 0.88,
+    enableZoom: true,
+    cameraDistance: 6.6,
+    cameraHeight: 1.78,
+    pitch: 0.32,
+  },
 };
 
 export interface ResolveCameraProfileInput {
@@ -110,6 +135,8 @@ export interface ResolveCameraProfileInput {
   /** combat | harvest | build */
   activity?: string;
   hardFocus?: boolean;
+  /** warlords | nexus | voxel | armada */
+  era?: string;
 }
 
 /** Resolve which profile key to apply. */
@@ -119,8 +146,9 @@ export function resolveCameraProfileKey(input: ResolveCameraProfileInput): Camer
   if (input.climbing) return "climb";
   if (input.activity === "harvest") return "harvest";
   if (input.activity === "build") return "build";
-  if (input.hardFocus) return "combat-hard";
-  return "combat-soft";
+  const nexus = String(input.era || "").toLowerCase() === "nexus";
+  if (input.hardFocus) return nexus ? "combat-hard-nexus" : "combat-hard";
+  return nexus ? "combat-soft-nexus" : "combat-soft";
 }
 
 export function cameraProfileOpts(key: CameraProfileKey): CameraProfileOpts {

@@ -47,6 +47,28 @@ describe("entryCatch", () => {
     expect(startUrlForIntent("grudoxDanger")).toContain("/voxgrudge/tvs-showcase.html");
   });
 
+  it("startUrlForIntent studio products stay on fleet hosts", () => {
+    expect(startUrlForIntent("studio")).toBe(PRODUCT_STARTS.studioPortal);
+    expect(startUrlForIntent("ai")).toBe(PRODUCT_STARTS.aiHub);
+    expect(startUrlForIntent("coder")).toBe(PRODUCT_STARTS.coder);
+    expect(startUrlForIntent("wallet")).toBe(PRODUCT_STARTS.wallet);
+    expect(startUrlForIntent("trader")).toBe(PRODUCT_STARTS.trader);
+    expect(PRODUCT_STARTS.trader).toContain("trader.grudge-studio.com");
+    expect(startUrlForIntent("uiStudio")).toContain("ui.grudge-studio.com");
+    expect(startUrlForIntent("uiHotkeys")).toContain("/hotkeys");
+    expect(startUrlForIntent("uiAssets")).toContain("/assets");
+    expect(startUrlForIntent("account")).toContain("open.grudge-studio.com");
+    expect(startUrlForIntent("account")).toMatch(/account/);
+  });
+
+  it("sends /trader off Open to trader.grudge-studio.com", () => {
+    const r = catchEntry({ pathname: "/trader", search: "" });
+    expect(r.kind).toBe("hard_redirect");
+    if (r.kind === "hard_redirect") {
+      expect(r.url).toBe("https://trader.grudge-studio.com/");
+    }
+  });
+
   it("sends foundry create intent off Open", () => {
     const r = catchEntry({ pathname: "/", search: "?mode=create" });
     expect(r.kind).toBe("hard_redirect");
@@ -167,6 +189,8 @@ describe("entryCatch", () => {
     expect(startUrlForIntent("mimic")).toContain("/mimic");
     expect(startUrlForIntent("dungeon")).toBe("https://grudge-dungeons.vercel.app/");
     expect(startUrlForIntent("dungeonBoss")).toContain("linear=1");
+    expect(startUrlForIntent("dungeonMolten")).toContain("theme=molten");
+    expect(startUrlForIntent("dungeonMolten")).toContain("linear=1");
     expect(startUrlForIntent("arcadeCabinet", { cabinetId: "racer" })).toContain(
       "grudox.grudge-studio.com",
     );

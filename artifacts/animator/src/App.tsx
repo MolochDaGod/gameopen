@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { Studio } from "./three/Studio";
+import { lazy, Suspense, useEffect, useRef, useState, useCallback, useMemo } from "react";
+import type { Studio } from "./three/Studio";
 import { AppShell } from "./components/AppShell";
 import type { AssistantConfig } from "./ai/AssistantSurface";
 import { appGuideSystemPrompt } from "./ai/companionPrompt";
 import { buildDangerTools, dangerSystemPrompt } from "./ai/dangerTools";
 import { buildVoxelAiTools, voxelWorldbuilderSystemPrompt } from "./ai/voxelAiTools";
-import { VoxelEditor } from "./three/voxel/VoxelEditor";
+import type { VoxelEditor } from "./three/voxel/VoxelEditor";
 import {
   type ActionSlot,
   type Difficulty,
@@ -73,7 +73,7 @@ import {
   setFreeMouseSticky,
   setPlayPointerCtx,
   setPointerLayer,
-} from "@workspace/grudge-physics";
+} from "@workspace/grudge-physics/pointer";
 import { Hud } from "./components/Hud";
 import { HotkeyHelpOverlay } from "./components/HotkeyHelpOverlay";
 import { DangerStartScreen } from "./components/DangerStartScreen";
@@ -116,13 +116,13 @@ import { TouchControls } from "./components/TouchControls";
 import { StatusBar } from "./components/StatusBar";
 import { StatusDock } from "./components/StatusDock";
 import { DoorSelect } from "./components/DoorSelect";
-import { IntroCinematic } from "./components/IntroCinematic";
 import { CinemaFlowGate } from "./components/CinemaFlowGate";
 import { EditorMode } from "./components/editor/EditorMode";
 import { Lobby } from "./components/Lobby";
 
 import { AccountPanel } from "./components/AccountPanel";
 import { ThreeBrawler } from "./components/ThreeBrawler";
+import { StreetRacingMode } from "./components/StreetRacingMode";
 import { ThreeVoxBattle } from "./components/ThreeVoxBattle";
 import { GrudoxZones } from "./components/GrudoxZones";
 import { InAppGameCanvas } from "./components/InAppGameCanvas";
@@ -144,7 +144,6 @@ import {
 import { normalizeToGrudgeAvatarId, resolveRaceId, resolveRaceModel } from "./lib/raceModel";
 import { applyBackTemplateToMeshIds, RACE_ASSETS } from "./three/grudge";
 import { backEquipTagFromAnyId, backItemIdFromEquip } from "./three/equipment/backSlotItems";
-import { LedMaskMode } from "./components/LedMaskMode";
 import { LandingPage } from "./components/LandingPage";
 import { HelpersLoadScreen } from "./components/HelpersLoadScreen";
 import { AvatarEditMode } from "./components/AvatarEditMode";
@@ -152,7 +151,9 @@ import { AnimEditorUI, type AnimApi } from "./components/AnimEditorUI";
 import { AiAnimatorPanel } from "./components/AiAnimatorPanel";
 import { AnimEditor, type AnimEditorState } from "./three/anim/AnimEditor";
 import { UiStudioMode } from "./components/UiStudioMode";
+import { CharacterInfoMode } from "./components/CharacterInfoMode";
 import { CampfireLobby } from "./components/CampfireLobby";
+import { WarlordGenesis } from "./components/WarlordGenesis";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
 import { RealmsSurface } from "./components/RealmsSurface";
 import { CollectionHealth } from "./components/CollectionHealth";
@@ -179,6 +180,7 @@ import type { DockPanelDef, DockPanelMeta, ToolMenu } from "./components/dock";
 import { DoorOpen, ShieldHalf, SlidersHorizontal, Film, RotateCcw, LayoutDashboard, Swords, BookOpen, Flag } from "lucide-react";
 import { HudEditor } from "./components/hud/HudEditor";
 import { useHudEditor } from "./hud/useHudEditor";
+import { shouldShowHudGrid } from "./hud/viewGrid";
 
 import { resolveHudVars } from "./hud/hudConfig";
 import {
@@ -188,6 +190,13 @@ import {
 } from "./lib/openRoutes";
 import "./index.css";
 import "./components/dock/dock.css";
+
+const IntroCinematic = lazy(() =>
+  import("./components/IntroCinematic").then((m) => ({ default: m.IntroCinematic })),
+);
+const LedMaskMode = lazy(() =>
+  import("./components/LedMaskMode").then((m) => ({ default: m.LedMaskMode })),
+);
 
 /** Engine surface modes — URL map lives in `lib/openRoutes.ts`. */
 type Mode = AppMode;
@@ -1263,10 +1272,14 @@ export default function App() {
     dangerStartOpenRef.current = true;
     const roomMap = inRoomRef.current ? roomMapRef.current : null;
     let studio: Studio | null = null;
+    let cancelled = false;
+    void (async () => {
     try {
       setWebglError(false);
       setWebglErrorDetail("");
       // Playable hero SSOT: era + URL + fleet. Voxel → Mixamo explorer; Warlords → Toon kit.
+      const { Studio: StudioCtor } = await import("./three/Studio");
+      if (cancelled || !mountRef.current) return;
       const playable: DangerPlayableCharacter = resolveDangerPlayable({
         fleetCharacter: gameSession.selectedCharacter(),
         era: dangerEra,
@@ -1279,10 +1292,15 @@ export default function App() {
       const bootWeapon =
         spec.weaponId && spec.weaponId !== "none" ? spec.weaponId : undefined;
 
-      studio = new Studio(mountRef.current, bootId, (h) => hudRef.current(h), {
+      studio = new StudioCtor(mountRef.current, bootId, (h) => hudRef.current(h), {
         meshIds: spec.meshIds ?? null,
         weaponId: bootWeapon,
       });
+      if (cancelled) {
+        studio.dispose();
+        studio = null;
+        return;
+      }
       studio.onCharacterLoaded = () => {
         refreshAnim();
         if (roomMap) void studioRef.current?.enterArena(roomMap);
@@ -1358,11 +1376,14 @@ export default function App() {
       if (inRoomRef.current && netRef.current) studio.attachNet(netRef.current);
       refreshAnim();
     } catch (err) {
+      if (cancelled) return;
       console.error("[Animator] failed to start renderer", err);
       setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
+    })();
     return () => {
+      cancelled = true;
       studio?.dispose();
       studioRef.current = null;
     };
@@ -1386,8 +1407,17 @@ export default function App() {
     setDangerStartOpen(true);
     dangerStartOpenRef.current = true;
     let studio: Studio | null = null;
+    let cancelled = false;
+    void (async () => {
     try {
-      studio = new Studio(mountRef.current, characterId, (h) => hudRef.current(h));
+      const { Studio: StudioCtor } = await import("./three/Studio");
+      if (cancelled || !mountRef.current) return;
+      studio = new StudioCtor(mountRef.current, characterId, (h) => hudRef.current(h));
+      if (cancelled) {
+        studio.dispose();
+        studio = null;
+        return;
+      }
       studio.onCharacterLoaded = () => {
         refreshAnim();
         if (map.play?.kind === "seed-overworld") {
@@ -1423,11 +1453,14 @@ export default function App() {
       applyFleetLoadoutRef.current();
       refreshAnim();
     } catch (err) {
+      if (cancelled) return;
       console.error("[Animator] failed to start play session", err);
       setWebglErrorDetail(err instanceof Error ? err.message : String(err));
       setWebglError(true);
     }
+    })();
     return () => {
+      cancelled = true;
       studio?.dispose();
       studioRef.current = null;
     };
@@ -1438,8 +1471,17 @@ export default function App() {
   useEffect(() => {
     if (mode !== "voxel" || !mountRef.current) return;
     let editor: VoxelEditor | null = null;
+    let cancelled = false;
+    void (async () => {
     try {
-      editor = new VoxelEditor(mountRef.current);
+      const { VoxelEditor: VoxelEditorCtor } = await import("./three/voxel/VoxelEditor");
+      if (cancelled || !mountRef.current) return;
+      editor = new VoxelEditorCtor(mountRef.current);
+      if (cancelled) {
+        editor.dispose();
+        editor = null;
+        return;
+      }
       editor.onStats = (s) => setVeStats(s);
       editor.onTree = (t) => setVeTree(t);
       editor.onSelect = (id) => setVeSel(id);
@@ -1473,10 +1515,13 @@ export default function App() {
       }
       cameFromPlayRef.current = false;
     } catch (err) {
+      if (cancelled) return;
       console.error("[Animator] failed to start voxel editor", err);
       setWebglError(true);
     }
+    })();
     return () => {
+      cancelled = true;
       editor?.dispose();
       voxelRef.current = null;
       setVeStats(null);
@@ -2593,6 +2638,9 @@ export default function App() {
         onToolLaunch={onToolLaunch}
         music={toolboxMusic}
         showFleetStrip={mode !== "doors"}
+        showModeSelect={mode === "danger" || mode === "play"}
+        hudGrid={hudEditing || shouldShowHudGrid()}
+        hudLayout={hudEditor.config.layout}
       >
         {content}
       </AppShell>
@@ -2729,6 +2777,14 @@ export default function App() {
     );
   }
 
+  if (mode === "equipment") {
+    return shell(
+      withScreenTheme(
+        <CharacterInfoMode onExit={() => navigate("doors")} />,
+      ),
+    );
+  }
+
   if (mode === "account") {
     return shell(
       withScreenTheme(
@@ -2749,7 +2805,9 @@ export default function App() {
     return shell(
       withScreenTheme(
         <div className="doors-cinematic">
-          <IntroCinematic />
+          <Suspense fallback={null}>
+            <IntroCinematic />
+          </Suspense>
           <DoorSelect onEnter={navigate} />
         </div>,
       ),
@@ -2767,7 +2825,11 @@ export default function App() {
   }
 
   if (mode === "ledmask") {
-    return shell(<LedMaskMode onExit={() => setMode("doors")} onNavigate={navigate} />);
+    return shell(
+      <Suspense fallback={<HelpersLoadScreen label="LED MASK" />}>
+        <LedMaskMode onExit={() => setMode("doors")} onNavigate={navigate} />
+      </Suspense>,
+    );
   }
 
   if (mode === "avatar") {
@@ -3018,6 +3080,10 @@ export default function App() {
 
   if (mode === "brawl") {
     return shell(<ThreeBrawler variant="brawl" onExit={() => navigate("doors")} />);
+  }
+
+  if (mode === "racing") {
+    return shell(<StreetRacingMode onExit={() => navigate("doors")} />);
   }
 
   if (mode === "vox-battle") {
@@ -3545,11 +3611,13 @@ export default function App() {
           <CampClaimFlagPanel
             open={claimFlagOpen}
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            accountId={accountIdForBag}
             onClose={() => setClaimFlagOpen(false)}
             onBeginPlace={(id) => {
               setClaimFlagOpen(false);
               studioRef.current?.beginPlacePlaceable(id);
             }}
+            onApplyEmblem={(url) => studioRef.current?.applyClaimFlagEmblem(url)}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -3658,10 +3726,11 @@ export default function App() {
               api={touchApi}
               onOpenBag={() => setEquipOpen(true)}
               onOpenSystems={() => setSystemsOpen(true)}
+              onOpenMap={() => setMapPickerOpen(true)}
             />
           )}
 
-          {!dangerStartOpen && (
+          {!dangerStartOpen && !isMobile && (
             <>
               <button
                 type="button"
@@ -3671,7 +3740,13 @@ export default function App() {
               >
                 MAP
               </button>
-              {mapPickerOpen && (
+              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
+                FX
+              </button>
+              {dockOpen && <StatusDock onApply={onApplyStatus} />}
+            </>
+          )}
+          {mapPickerOpen && (
                 <div className="danger-map-picker" role="dialog" aria-label="Test maps">
                   <div className="danger-map-picker-head">
                     <span>Playable maps</span>
@@ -3704,12 +3779,6 @@ export default function App() {
                   </p>
                 </div>
               )}
-              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
-                FX
-              </button>
-              {dockOpen && <StatusDock onApply={onApplyStatus} />}
-            </>
-          )}
 
           {equipOpen &&
             (isVoxelHero ? (
@@ -3860,11 +3929,13 @@ export default function App() {
           <CampClaimFlagPanel
             open={claimFlagOpen}
             characterId={gameSession.snapshot.selectedCharacterId || characterId}
+            accountId={accountIdForBag}
             onClose={() => setClaimFlagOpen(false)}
             onBeginPlace={(id) => {
               setClaimFlagOpen(false);
               studioRef.current?.beginPlacePlaceable(id);
             }}
+            onApplyEmblem={(url) => studioRef.current?.applyClaimFlagEmblem(url)}
           />
           {hud?.mech && <MechHud hud={hud} edit={hudEdit} />}
           <StatusBar statuses={hud?.statuses ?? []} editBind={hudEdit.bind("status")} />
@@ -4002,10 +4073,11 @@ export default function App() {
               api={touchApi}
               onOpenBag={() => setEquipOpen(true)}
               onOpenSystems={() => setSystemsOpen(true)}
+              onOpenMap={() => setMapPickerOpen(true)}
             />
           )}
 
-          {!panelsOpen && !dangerStartOpen && (
+          {!panelsOpen && !dangerStartOpen && !isMobile && (
             <>
               <button
                 type="button"
@@ -4015,7 +4087,13 @@ export default function App() {
               >
                 MAP
               </button>
-              {mapPickerOpen && (
+              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
+                FX
+              </button>
+              {dockOpen && <StatusDock onApply={onApplyStatus} />}
+            </>
+          )}
+          {mapPickerOpen && (
                 <div className="danger-map-picker" role="dialog" aria-label="Test maps">
                   <div className="danger-map-picker-head">
                     <span>Playable maps</span>
@@ -4048,12 +4126,6 @@ export default function App() {
                   </p>
                 </div>
               )}
-              <button className={`fx-toggle ${dockOpen ? "on" : ""}`} onClick={() => setDockOpen((v) => !v)}>
-                FX
-              </button>
-              {dockOpen && <StatusDock onApply={onApplyStatus} />}
-            </>
-          )}
 
           {equipOpen &&
             (isVoxelHero ? (

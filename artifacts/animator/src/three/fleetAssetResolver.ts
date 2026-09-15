@@ -15,7 +15,7 @@
 
 const _viteBase = import.meta.env.BASE_URL || "/";
 
-/** Canonical public CDNs (CORS-enabled on r2-cdn worker). */
+/** Canonical public CDNs (assets Worker CORS is `*` — ObjectStore/workers/cdn). */
 export const FLEET_ASSET_HOSTS = {
   /** Primary binary CDN (R2 grudge-assets via r2-cdn Worker). */
   r2: "https://assets.grudge-studio.com",

@@ -41,6 +41,9 @@ export type CampClaimState = {
     professions: Record<string, number>;
     at: number;
   }>;
+  /** Painted guild / claim-flag cloth (data URL). Account-shared via saveGuildEmblem. */
+  emblemDataUrl?: string | null;
+  guildName?: string;
 };
 
 function defaultState(): CampClaimState {
@@ -51,6 +54,8 @@ function defaultState(): CampClaimState {
     structureLevels: {},
     units: [],
     heroesFromUnits: [],
+    emblemDataUrl: null,
+    guildName: "",
   };
 }
 
@@ -108,6 +113,8 @@ export function loadCampClaimState(characterId: string): CampClaimState {
       structureLevels: parsed.structureLevels || {},
       units: parsed.units || [],
       heroesFromUnits: parsed.heroesFromUnits || [],
+      emblemDataUrl: parsed.emblemDataUrl ?? null,
+      guildName: parsed.guildName || "",
     });
   } catch {
     return ensureDemoRoster(defaultState());

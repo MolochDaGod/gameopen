@@ -31,9 +31,10 @@ Pin versions in `artifacts/animator/package.json`. Prefer these roles only.
 | Package | Role | Pin guide |
 |---------|------|-----------|
 | **`three`** | Renderer, scene, **`AnimationMixer`**, loaders | **^0.185.x** |
-| **`@dimforge/rapier3d-compat`** | Browser WASM physics | **^0.19.x** **SSOT for web** |
+| **`@dimforge/rapier3d-compat`** | Browser WASM physics | **^0.19.x** **SSOT for web** · `vite-plugin-wasm` + top-level-await · one `PhysicsWorld.step` / frame (KCC does **not** extra-step) |
 | `@dimforge/rapier3d` | Optional native; prefer **compat** for Vite | Same major as compat if kept |
-| **`three-mesh-bvh`** | Fast mesh ground / ray queries | ^0.8–0.9 |
+| **`three-mesh-bvh`** | Fast mesh ground / ray queries | ^0.8–0.9 | **Required Open**; **Casting lab** (2026-08) for terrain/harvest pick |
+| **`THREE.InstancedMesh`** | Repeat voxels / grass / VFX / hair | **in-engine** (`VoxelArena`, `SmokeFx`, `hairStrands`, `LedMask`) | Do **not** add a second instancing npm |
 | **`three-pathfinding`** | Navmesh paths (AI) | ^1.3 |
 | **`yuka`** | AI steering / GOAP helpers | ^0.7 |
 | **`postprocessing`** | Bloom / cinema grade (not loco) | ^6 |
@@ -95,6 +96,8 @@ Pin versions in `artifacts/animator/package.json`. Prefer these roles only.
 | **Map surface rebind** | `Studio.wirePlayerSessionOnMap` (one apply) | Setting ground **or** feet alone |
 | **Combat skills / Getsuga residual** | `meleeStrikeFx` + T0 + epicfight | Alt+Space sandbox ability |
 | **Physics bodies** | Rapier via `@workspace/grudge-physics` | Cannon + Rapier same body |
+| **Library / doors pointer only** | `@workspace/grudge-physics/pointer` (`pointerPresence.ts`) | Importing the Rapier barrel from `App.tsx` (pulls WASM on first paint) |
+| **Play engine** | Dynamic `import("./three/Studio")` on `/danger` and `/play` | Static `import { Studio }` in the library bundle |
 | **Nav AI** | `three-pathfinding` + `yuka` | One-off A* per map forever |
 | **Play camera** | `Controller` sole writer | Orbit + TPC both writing |
 | **Viewer / composer pipeline** | `three` + `postprocessing` + fleet loaders | **`threepipe` as a second engine** (see below) |

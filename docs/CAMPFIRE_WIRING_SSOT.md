@@ -4,7 +4,7 @@
 **UI:** `CampfireLobby` + `CampfireLobbyScene` (TVS farm props)  
 **Entry:** `lib/entryCatch.ts` · `lib/openRoutes.ts` · `auth/characterHubLaunch.ts`  
 **Assets:** `lib/productionSystemsPattern.CAMPFIRE_TVS` → `assets.grudge-studio.com/models/campfire-lobby/tvs/*`  
-**Voxel backdrop:** Encament Fruzer bake (`ENCAMPMENT_BACKDROP`) sits **behind** the fire. Play start = Open **Enter Encament** / **Starting Lobby Town** with the selected campfire explorer (`ExplorerCharacter` + `voxelLook`).
+**Voxel backdrop:** Encament Fruzer bake (`ENCAMPMENT_BACKDROP`) sits **behind** the plaza, ground-grounded to the same y=0 as the 4 seats **outside the gate**. Play start = Open **Enter Encament** / **Starting Lobby Town** with the selected campfire explorer (`ExplorerCharacter` + per-character `voxelLook`).
 
 Do **not** invent a second roster hub. Extend this wiring only.
 
@@ -46,7 +46,7 @@ Do **not** invent a second roster hub. Extend this wiring only.
 Railway remains **player** SSOT (characters, bag, island claim).  
 CDN/R2 remains **mesh** SSOT. D1 is **asset index** only.
 
-**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` (length-4, holes stay empty) → Explorer `createAnimatedCharacter` sit/idle on that **slot**. Each seat is that row’s Railway UUID + `saveData.open.voxelLook` (not a shared local draft). Do **not** put Warlords grudge6 bodies in these seats.
+**Voxel seats:** `GET /api/characters?era=voxel` → `buildVoxelCampfireHeroes` (length-4, holes stay empty) → pack kit GLB from `lib/voxelEraFour.ts` (`hero.glb` / `orc.glb` / `sanji.glb` / `skeleton-warrior.glb`, source `D:\Games\Models\4character`). Procedural Explorer is the fallback. Each seat keeps that row's Railway UUID and slot; fallback appearance uses `saveData.open.voxelLook`, never a shared local draft. Do **not** put Warlords grudge6 bodies in these seats.
 
 Encament bake is surface-sampled onto lobby y=0 (do not lift on AABB min.y — ravines float the village).
 

@@ -10,8 +10,8 @@ export type HarvestToolNorm = "axe" | "pick" | "gather" | "any" | string;
 
 export function normalizeHarvestTool(id?: string): HarvestToolNorm {
   const s = String(id || "any").toLowerCase();
-  if (/axe|hatchet|log|chop|wood/.test(s)) return "axe";
   if (/pick|mine|ore/.test(s)) return "pick";
+  if (/axe|hatchet|log|chop|wood/.test(s)) return "axe";
   if (/knife|skin/.test(s)) return "knife";
   if (/hoe|farm/.test(s)) return "hoe";
   if (/shovel|dig|terrain/.test(s)) return "shovel";

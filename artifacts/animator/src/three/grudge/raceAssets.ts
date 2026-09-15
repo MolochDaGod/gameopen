@@ -5,7 +5,7 @@
 // Delivery contract (docs/CHARACTER_MESH_DELIVERY.md + docs/ANIMATION_FLEET_SSOT.md):
 //   mesh  → assets…/asset-packs/toon-rts-characters/glb/characters/{raceId}.glb  (Toon RTS ★ only)
 //   atlas → textures/grudge6/{race}/*.webp (embedded-kept preferred; rebind only if stubs)
-//   anims → bip001-baked lane only: /anims/baked/* then assets…/prod/anims (never Mixamo, never FBX play)
+//   anims → bip001-baked lane only: /anims/baked/* JSON (never Mixamo, never prod/anims GLB)
 //   equip → child mesh visibility via gear presets / mesh_ids (fuzzy keys)
 // HARD: no browser FBX; no metaverse/*.glb; no races/*_Characters.glb as play default.
 
@@ -35,7 +35,7 @@ const CDN = "https://assets.grudge-studio.com";
 export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
   barbarians: {
     id: "barbarians",
-    name: "Barbarians",
+    name: "Barbarian",
     abbr: "BRB",
     color: "#c2410c",
     modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/barbarian.glb`,
@@ -48,7 +48,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
   },
   dwarves: {
     id: "dwarves",
-    name: "Dwarves",
+    name: "Dwarf",
     abbr: "DWF",
     color: "#b45309",
     modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/dwarf.glb`,
@@ -60,7 +60,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
   },
   "high-elves": {
     id: "high-elves",
-    name: "High Elves",
+    name: "Elf",
     abbr: "ELF",
     color: "#0891b2",
     modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/elf.glb`,
@@ -72,7 +72,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
   },
   orcs: {
     id: "orcs",
-    name: "Orcs",
+    name: "Orc",
     abbr: "ORC",
     color: "#15803d",
     modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/orc.glb`,
@@ -96,7 +96,7 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
   },
   "western-kingdoms": {
     id: "western-kingdoms",
-    name: "W. Kingdoms",
+    name: "Human",
     abbr: "WK",
     color: "#1d4ed8",
     modelUrl: `${CDN}/asset-packs/toon-rts-characters/glb/characters/human.glb`,
@@ -109,10 +109,10 @@ export const RACE_ASSETS: Record<RaceId, RaceAsset> = {
 };
 
 export const RACE_IDS: RaceId[] = [
+  "western-kingdoms",
   "barbarians",
-  "dwarves",
   "high-elves",
+  "dwarves",
   "orcs",
   "undead",
-  "western-kingdoms",
 ];

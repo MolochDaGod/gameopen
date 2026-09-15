@@ -80,7 +80,9 @@ export type SkillKind =
   | "witchMissile"
   | "witchDisk"
   /** Ground-skimming 2H skill-3 fire tornado (stylized_fire_tornado pack). */
-  | "fireTornado";
+  | "fireTornado"
+  /** Norse totem pole deploy (heal mist / ward / trap / taunt / stun). */
+  | "totem";
 
 /**
  * Status effects — BinbunVFX-inspired + itch-style body auras
@@ -125,10 +127,12 @@ export interface StatusView {
   kind: StatusKind;
   /** CSS color string. */
   color: string;
-  /** Non-emoji symbol glyph for the chip. */
+  /** Non-emoji solid glyph for the chip. */
   glyph: string;
   remaining: number;
   duration: number;
+  /** CraftPix buff icon URL when mapped (foot-aura pack). */
+  iconUrl?: string;
 }
 
 /**
@@ -931,6 +935,13 @@ export interface Avatar {
    * When present it replaces the discrete {@link playRole}/{@link setLocomotionRate} path.
    */
   setLocomotion?(speed: number, sprinting?: boolean): void;
+  /**
+   * Body-local 8-way intent (laterality): +x right, +z forward, speed 0..1.
+   * Used under target-lock so A/D is a strafe clip, not a turn.
+   */
+  setLocomotionDirectional?(localX: number, localZ: number, speed: number): void;
+  /** When true, locomotion uses directional/strafe clips (body faces aim). */
+  setStrafe?(on: boolean): void;
   /** Role → clip rebinding (locomotion sets / animation director). */
   getRoleClip?(role: AnimRole): string | undefined;
   setRoleClip?(role: AnimRole, clipName: string): boolean;
@@ -994,6 +1005,16 @@ export interface HudSnapshot {
   maxHealth: number;
   stamina: number;
   maxStamina: number;
+  mana?: number;
+  maxMana?: number;
+  armor?: number;
+  maxArmor?: number;
+  oxygen?: number;
+  maxOxygen?: number;
+  hunger?: number;
+  maxHunger?: number;
+  thirst?: number;
+  maxThirst?: number;
   /** Current poise (from the sparring CombatController). */
   poise: number;
   maxPoise: number;

@@ -9,7 +9,7 @@
  * Never store account bag only in localStorage.
  */
 
-import { apiFetch } from "./grudgeAuth";
+import { apiFetch, getStoredToken } from "./grudgeAuth";
 
 /** Era slot row from Railway `accounts.eraSlots`. */
 export type EraSlotInfo = {
@@ -187,6 +187,9 @@ export async function fetchAccountProfile(): Promise<FleetAccountProfile | null>
 }
 
 /** GET /api/account/resources — shared bag across all characters. */
+export const fetchAccountResources = fetchAccountBag;
+
+/** GET /api/account/resources — shared bag across all characters. */
 export async function fetchAccountBag(): Promise<ResourceMap> {
   try {
     const r = await apiFetch("/api/account/resources", { method: "GET" });
@@ -219,6 +222,7 @@ export async function fetchAccountInventory(): Promise<unknown[]> {
 
 /** GET /api/wallet/status — custodial / linked wallet on the same account row. */
 export async function fetchWalletStatus(): Promise<FleetWalletStatus | null> {
+  if (!getStoredToken()) return null;
   try {
     const r = await apiFetch("/api/wallet/status", { method: "GET" });
     if (!r.ok) return null;
@@ -280,6 +284,16 @@ export async function loadSharedAccountBundle(): Promise<{
   island: FleetIslandSummary | null;
   inventory: unknown[];
 }> {
+  if (!getStoredToken()) {
+    return {
+      account: null,
+      wallet: null,
+      nfts: [],
+      resources: {},
+      island: null,
+      inventory: [],
+    };
+  }
   const [account, wallet, nfts, resources, island, inventory] = await Promise.all([
     fetchAccountProfile(),
     fetchWalletStatus(),
@@ -374,13 +388,13 @@ export async function createFleetCharacter(
     ...(input.config || {}),
     equipment,
     open: (equipment as { open?: unknown }).open,
-    // Voxel Realms: Explorer body — never grudge6 kit on Mine-Loader maps
+    // Voxel era: 4character pack kit id (explorer|orc|sanji|skeleton-warrior)
     ...(isVoxel
       ? {
-          baseId: "explorer",
-          avatarKey: "box_hero",
+          baseId: String(input.classId || input.catalogId || "explorer"),
+          avatarKey: "voxel-era-four",
           renderPipeline: "voxel",
-          pipeline: "box_hero",
+          pipeline: "voxel",
         }
       : {}),
     gameEra: era,
@@ -472,9 +486,15 @@ export function characterStudioCreateUrl(opts?: {
   era?: "warlords" | "voxel" | "nexus" | "armada";
   mode?: "create" | "select";
 }): string {
-  const u = new URL("https://character.grudge-studio.com/foundry");
-  u.searchParams.set("era", opts?.era || "warlords");
-  u.searchParams.set("mode", opts?.mode || "create");
+  const era = opts?.era || "warlords";
+  // Voxel 4-character pack hub — not Warlords /foundry selector.
+  const u = new URL(
+    era === "voxel"
+      ? "https://character.grudge-studio.com/"
+      : "https://character.grudge-studio.com/foundry",
+  );
+  u.searchParams.set("era", era);
+  if (era !== "voxel") u.searchParams.set("mode", opts?.mode || "create");
   u.searchParams.set("from", "gameopen");
   u.searchParams.set("open", "1");
   if (opts?.returnTo) u.searchParams.set("redirect_uri", opts.returnTo);

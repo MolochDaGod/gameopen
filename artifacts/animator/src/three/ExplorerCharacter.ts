@@ -264,6 +264,33 @@ export function humanizeClipId(id: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Dressing Room labels for Warlords Bip001 baked clips (not Mixamo filenames). */
+const WARLORD_CLIP_ROLES: Record<string, string> = {
+  idle: "Idle",
+  fightidle: "Fight Idle",
+  walk: "Walk",
+  run: "Run",
+  sprint: "Sprint",
+  attack: "Attack",
+  attack1: "Attack 1",
+  attack2: "Attack 2",
+  attack3: "Attack 3",
+  cast: "Cast",
+  jump: "Jump",
+  death: "Death",
+  dead: "Death",
+  hit: "Hit",
+  hurt: "Hurt",
+  dodge: "Dodge",
+  roll: "Roll",
+};
+
+export function warlordClipLabel(id: string): string {
+  const tail = (id.split("/").pop() ?? id).replace(/\.json$/i, "");
+  const compact = tail.toLowerCase().replace(/[-_\s]+/g, "");
+  return WARLORD_CLIP_ROLES[compact] ?? humanizeClipId(tail);
+}
+
 /** Human-readable label for a preview {@link VERBS verb} (override first, else humanised). */
 export function verbLabel(verb: string): string {
   return VERB_LABEL_OVERRIDES[verb] ?? humanizeClipId(verb);
@@ -323,6 +350,9 @@ export class ExplorerCharacter implements Avatar {
 
   /** 0..1 locomotion intensity requested by the controller's playRole calls. */
   private locoSpeed = 0;
+  /** Body-local wish (+x right, +z forward) for 8-way clips under lock-on. */
+  private locoX = 0;
+  private locoZ = 0;
   /** True while a jump's held airborne pose is active (cleared on landing). */
   private airborne = false;
   private modelYaw = 0;
@@ -501,6 +531,16 @@ export class ExplorerCharacter implements Avatar {
 
   setLocomotionRate(_rate: number): void {
     // The weight-blended locomotion layer owns stride cadence; nothing to do.
+  }
+
+  setLocomotionDirectional(localX: number, localZ: number, speed: number): void {
+    this.locoX = localX;
+    this.locoZ = localZ;
+    this.locoSpeed = THREE.MathUtils.clamp(speed, 0, 1);
+  }
+
+  setStrafe(on: boolean): void {
+    this.animator?.setStrafe(on);
   }
 
   // ---- one-shots ----
@@ -870,6 +910,24 @@ export class ExplorerCharacter implements Avatar {
 
   // ---- per-frame ----
 
+  setGroundSampler(
+    fn: import("./anim/legIk").GroundSampler | null,
+  ): void {
+    this.animator?.setGroundSampler(fn);
+  }
+
+  setFootIk(on: boolean): void {
+    this.animator?.setFootIk(on);
+  }
+
+  rebindFootIk(): void {
+    this.animator?.rebindFootIk();
+  }
+
+  get footIkBound(): boolean {
+    return this.animator?.footIkBound ?? false;
+  }
+
   update(dt: number): void {
     if (!this.animator) return;
     // The controller drives root.position.y; observe the landing here to clear
@@ -879,8 +937,8 @@ export class ExplorerCharacter implements Avatar {
       this.airborne = false;
     }
     this.animator.setLocomotion({
-      x: 0,
-      z: this.locoSpeed > 0.06 ? 1 : 0,
+      x: this.locoX,
+      z: this.locoZ,
       speed: this.locoSpeed,
       running: this.locoSpeed > 0.65,
     });

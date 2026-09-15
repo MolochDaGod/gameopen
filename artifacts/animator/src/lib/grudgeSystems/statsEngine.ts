@@ -154,6 +154,10 @@ export function calculateDerivedStats(attrs: Partial<AttrMap>, level = 1): Deriv
   stats.miningBonus = +(e.STR * 0.2 + e.END * 0.1).toFixed(1);
   stats.craftingBonus = +(e.DEX * 0.2 + e.INT * 0.1).toFixed(1);
   stats.harvestBonus = +(e.END * 0.2 + e.VIT * 0.1).toFixed(1);
+  stats.armor = Math.floor(e.VIT * 0.2 + e.END * 0.6);
+  stats.maxOxygen = Math.floor(80 + e.END * 2 + e.VIT);
+  stats.maxHunger = Math.floor(100 + e.VIT * 1.5);
+  stats.maxThirst = Math.floor(80 + e.END * 1.2 + e.VIT * 0.5);
 
   const physDps =
     stats.meleeAttack *

@@ -1,5 +1,51 @@
 /* Camp Claim Flag hub — territory management shell */
 
+/* ElvGames Retro Inventory 3x — camp storage / AFK harvest */
+.ccf-retro-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(56px, 72px));
+  gap: 8px;
+  padding: 16px 18px 20px;
+  margin: 8px 0 14px;
+  background:
+    url("/ui/retro-inventory/Inventory.png") center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  min-height: 168px;
+}
+.ccf-retro-slot {
+  width: 64px;
+  height: 64px;
+  background: url("/ui/retro-inventory/Inventory_Slot_1.png") center / contain no-repeat;
+  image-rendering: pixelated;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.ccf-retro-slot .qty {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff8dc;
+  text-shadow: 0 1px 2px #000;
+}
+.ccf-retro-slot .name {
+  font-size: 9px;
+  text-align: center;
+  max-width: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f4e4b0;
+}
+.ccf-afk-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
 .ccf-root {
   position: absolute;
   inset: 0;

@@ -4,8 +4,8 @@
   "policy": {
     "preferredHost": "same-origin",
     "bakeRoot": "anims/baked",
-    "prodAnimsRoot": "prod/anims",
-    "prodAnimsCdn": "https://assets.grudge-studio.com/prod/anims",
+    "prodAnimsRoot": "anims/baked",
+    "prodAnimsCdn": "https://open.grudge-studio.com/anims/baked",
     "mixamoRoot": "anim",
     "integrity": "sha256",
     "stripPositionTracks": true,
@@ -13,8 +13,8 @@
     "notes": [
       "Danger heroes: preset mesh_ids only (gear preset weapons) — load baked anims for that weapon family, never equip extra weapon meshes at runtime.",
       "Equip weaponId → animPack (live). Runtime loads only that pack's loco+attack+skills + shared traversal (climb/swim/dodge/roll/harvest/block).",
-      "If pack missing/incomplete, use fallbackPack (still Bip001 baked) then prod/anims CDN.",
-      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON or prod/anims GLB libraries.",
+      "If pack missing/incomplete, use fallbackPack (still Bip001 baked JSON under /anims/baked).",
+      "Mixamo public/anim/* is authoring source — not live on Vercel (.vercelignore **/*.fbx). Ship baked JSON only — prod/anims GLB is a dead 404 path.",
       "Never load locomotion/running (banned run-to-roll)."
     ]
   },

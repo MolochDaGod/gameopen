@@ -1,14 +1,14 @@
 /**
  * Camp Claim Flag hub — UI at the planted claim flag.
  *
- * Pages: Camp Skills · Farming · Taming · Defensives · Units · Buildings · Upgrades
+ * Pages: Camp Skills · Storage · Farming · Taming · Defensives · Units · Buildings · Upgrades · Guild emblem
  *
  * Units: trained from RTS production buildings, level 1–100, then convert to
  * a level-1 hero (T0 equip only) with profession carry-over.
  * Quick-craft (campfire, sleeping bag, …) is listed as excluded, not placeable here.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Flag, X } from "lucide-react";
 import {
   canConvertUnitToHero,
@@ -53,6 +53,7 @@ import {
   listTravelers,
   listPrefabUnits,
 } from "../three/camp";
+import { saveGuildEmblem } from "../three/camp/claimFlagEmblem";
 import { resolveSkillNodeIconUrl } from "../lib/skillTreeIcons";
 import "./campClaimFlag.css";
 
@@ -96,6 +97,8 @@ export type CampClaimFlagPanelProps = {
   initialPage?: CampPageId;
   /** Start Studio placeable ghost (claim-gated structures + flag). */
   onBeginPlace?: (placeableId: string) => void;
+  /** Paint cloth on planted Flag1 claim mesh. */
+  onApplyEmblem?: (dataUrl: string | null) => void;
 };
 
 export function CampClaimFlagPanel({
@@ -105,6 +108,7 @@ export function CampClaimFlagPanel({
   onClose,
   initialPage = "units",
   onBeginPlace,
+  onApplyEmblem,
 }: CampClaimFlagPanelProps) {
   const [page, setPage] = useState<CampPageId>(initialPage);
   const [doc, setDoc] = useState<ClaimFlagDoc | null>(null);
@@ -342,6 +346,17 @@ export function CampClaimFlagPanel({
               onBeginPlace={onBeginPlace}
             />
           )}
+          {page === "guild" && (
+            <GuildEmblemPage
+              accountId={accountId}
+              state={state}
+              onSave={(next, dataUrl) => {
+                persist(next);
+                onApplyEmblem?.(dataUrl);
+                setNotice("Guild emblem painted on claim flag.");
+              }}
+            />
+          )}
           {page === "upgrades" && (
             <UpgradesPage
               upgrades={upgrades}
@@ -374,6 +389,7 @@ const DEFAULT_PAGES: Array<{ id: CampPageId; label: string; summary: string }> =
   { id: "units", label: "Units", summary: "" },
   { id: "buildings", label: "Buildings", summary: "" },
   { id: "upgrades", label: "Upgrades", summary: "" },
+  { id: "guild", label: "Guild emblem", summary: "Paint a claim / guild banner on Flag1 cloth." },
 ];
 
 /**
@@ -404,39 +420,40 @@ function CampStoragePage({
 
   const rows = Object.entries(storage.resources);
   const uniques = storage.items;
+  const cells: Array<{ key: string; label: string; qty?: number }> = [
+    ...rows.map(([tid, qty]) => ({
+      key: tid,
+      label: getItemTemplate(tid)?.name || tid,
+      qty,
+    })),
+    ...uniques.map((it) => ({
+      key: it.instanceId,
+      label: (getItemTemplate(it.templateId)?.name || it.templateId) + (it.grudgeUuid ? " · unique" : ""),
+    })),
+  ];
+  while (cells.length < 10) cells.push({ key: `empty-${cells.length}`, label: "" });
 
   return (
     <>
       <p className="ccf-notice dim">
-        Albion model: harvest deposit at this claim goes to <b>camp storage</b> (
+        Albion model: AFK / auto-harvest at this claim deposits here (
         <code>camp:{claimKey}</code>). RTS spends from here. Home island bag is the shared account
         vault — <b>Send → home island</b> moves goods out.
       </p>
-      <div className="ccf-list">
-        {rows.length === 0 && uniques.length === 0 && (
-          <p className="ccf-notice">Empty — deposit from bag while inside claim radius.</p>
-        )}
-        {rows.map(([tid, qty]) => {
-          const tpl = getItemTemplate(tid);
-          return (
-            <div key={tid} className="ccf-row">
-              <span>
-                {tpl?.name || tid} ×{qty}
-              </span>
-            </div>
-          );
-        })}
-        {uniques.map((it) => {
-          const tpl = getItemTemplate(it.templateId);
-          return (
-            <div key={it.instanceId} className="ccf-row">
-              <span>
-                {tpl?.name || it.templateId}
-                {it.grudgeUuid ? " · unique" : ""}
-              </span>
-            </div>
-          );
-        })}
+      <div className="ccf-retro-grid" aria-label="Camp storage">
+        {cells.slice(0, 10).map((c, i) => (
+          <div
+            key={c.key}
+            className="ccf-retro-slot"
+            style={{
+              backgroundImage: `url(/ui/retro-inventory/Inventory_Slot_${(i % 10) + 1}.png)`,
+            }}
+            title={c.label || "Empty"}
+          >
+            {c.label ? <span className="name">{c.label}</span> : null}
+            {c.qty != null ? <span className="qty">{c.qty}</span> : null}
+          </div>
+        ))}
       </div>
       <button
         type="button"
@@ -723,6 +740,10 @@ function UnitsPage({
         <p className="ccf-notice dim">
           Level to {convertAt} → L{prog?.heroStartLevel ?? 1} hero · T
           {prog?.heroEquipMaxTier ?? 0} equip · professions carry.
+        </p>
+        <p className="ccf-notice">
+          Warlords claim flag: plant flag → garrison AFK harvest (RTS bar <b>Harvest</b>) deposits
+          into this camp Storage (Retro Inventory 3× slots). Worker locomotion at the flag.
         </p>
         {activeUnits.length === 0 && (
           <div className="ccf-empty">No units yet — train from the catalog.</div>
@@ -1199,5 +1220,131 @@ function UpgradesPage({
         </>
       )}
     </>
+  );
+}
+
+const EMBLEM_COLORS = [
+  "#c9a24a",
+  "#8b1e1e",
+  "#1e3a5f",
+  "#1b5e20",
+  "#f4f0e6",
+  "#1a140c",
+  "#2a6f97",
+  "#7b2d8e",
+];
+
+function GuildEmblemPage({
+  accountId,
+  state,
+  onSave,
+}: {
+  accountId: string;
+  state: CampClaimState;
+  onSave: (next: CampClaimState, dataUrl: string | null) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [color, setColor] = useState("#c9a24a");
+  const [guildName, setGuildName] = useState(state.guildName || "");
+  const drawing = useRef(false);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#2a2114";
+    ctx.fillRect(0, 0, c.width, c.height);
+    const src = state.emblemDataUrl;
+    if (!src) return;
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, c.width, c.height);
+    img.src = src;
+  }, [state.emblemDataUrl]);
+
+  const paint = (e: PointerEvent<HTMLCanvasElement>) => {
+    const c = canvasRef.current;
+    if (!c || !drawing.current) return;
+    const r = c.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * c.width;
+    const y = ((e.clientY - r.top) / r.height) * c.height;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  return (
+    <section>
+      <h3 className="ccf-section-title">Guild emblem · claim cloth</h3>
+      <p className="ccf-page-intro">
+        uMMORPG Flag1 mesh. Paint here — applies to planted claim flags (E to open this hub).
+      </p>
+      <label className="ccf-card" style={{ display: "block", marginBottom: 10 }}>
+        Guild name
+        <input
+          value={guildName}
+          onChange={(ev) => setGuildName(ev.target.value)}
+          style={{ width: "100%", marginTop: 6, padding: 6 }}
+          maxLength={32}
+        />
+      </label>
+      <div className="ccf-grid" style={{ gridTemplateColumns: "auto 1fr", gap: 12 }}>
+        <canvas
+          ref={canvasRef}
+          width={256}
+          height={256}
+          style={{
+            width: 220,
+            height: 220,
+            border: "1px solid #c9a24a",
+            touchAction: "none",
+            cursor: "crosshair",
+            background: "#2a2114",
+          }}
+          onPointerDown={(e) => {
+            drawing.current = true;
+            (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
+            paint(e);
+          }}
+          onPointerMove={paint}
+          onPointerUp={() => {
+            drawing.current = false;
+          }}
+        />
+        <div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            {EMBLEM_COLORS.map((hex) => (
+              <button
+                key={hex}
+                type="button"
+                className="ccf-btn"
+                style={{
+                  background: hex,
+                  width: 28,
+                  height: 28,
+                  border: color === hex ? "2px solid #fff" : "1px solid #444",
+                }}
+                onClick={() => setColor(hex)}
+                aria-label={hex}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            className="ccf-btn gold"
+            onClick={() => {
+              const data = canvasRef.current?.toDataURL("image/png") || null;
+              saveGuildEmblem(accountId, data);
+              onSave({ ...state, emblemDataUrl: data, guildName }, data);
+            }}
+          >
+            Apply to claim flag
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

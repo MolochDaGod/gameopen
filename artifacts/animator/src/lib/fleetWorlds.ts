@@ -76,6 +76,8 @@ export const FLEET_WORLD_HOSTS = {
   /** Warlords modular dungeon forge + playable crawl (boss arena on linear) */
   grudgeDungeons: "https://grudge-dungeons.vercel.app/",
   grudgeDungeonsBoss: "https://grudge-dungeons.vercel.app/?linear=1",
+  /** Magma Core — dais + lava-subfloor ring, Slag Warlord */
+  grudgeDungeonsMolten: "https://grudge-dungeons.vercel.app/?theme=molten&linear=1",
 } as const;
 
 export type FleetWorldId =

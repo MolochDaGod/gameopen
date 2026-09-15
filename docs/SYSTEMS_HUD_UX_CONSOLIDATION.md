@@ -89,6 +89,7 @@ This doc is the **best-of consolidation plan**: which game systems are SSOT, wha
 | 6+6 action ids / keys | **`hud/quickActions.ts` (SSOT)** |
 | Portrait URL | `lib/hudPortrait.ts` ← Studio snapshot |
 | Themes / drag editor | `hud/hudConfig.ts` · `useHudEditor` |
+| **2D view grid (AI)** | `hud/viewGrid.ts` — HYDRA 1920×1080 · 12×12 named views · `?hudgrid=1` · `window.__GRUDGE_HUD_VIEW_GRID` |
 | Mech overlay | `MechHud.tsx` (only while piloted) |
 
 ### 2.2 Keybind SSOT (must stay aligned)

@@ -18,6 +18,7 @@ Do **not** invent parallel combat systems or a second avatar store under “pref
 | **Schema** | `content/schemas/weapon_def.schema.json` |
 | **Runtime mount** | `artifacts/animator/src/three/Weapons.ts` + `arsenal/*` |
 | **Spine defaults** | `artifacts/animator/src/three/arsenal/weaponPrefabSpine.ts` |
+| **Casting lab spine** | `CastingAbilitiesThreeJS/src/character/weaponPrefabSpine.js` · `docs/SCRIPTABLE_PLAY_SSOT.md` |
 | **Melee residual** | `three/combat/meleeStrikeFx.ts` + `docs/MELEE_SLASH_FX.md` |
 | **Catalog / icons** | ObjectStore `master-weaponSkills.json` · CDN `assets.grudge-studio.com` |
 | **UUID graph** | `docs/WEAPON_PREFAB_UUID_SSOT.md` |
@@ -99,7 +100,7 @@ Local frame after grip: **+Y along weapon length** for melee/staff; **+Z along b
 | tome | cast (book face) | cast near grip+Y | Off-hand |
 | shield | blunt / special | boss center | Bash, not slash |
 
-Code defaults: `weaponPrefabSpine.ts` → `defaultSpineForFamily(family)`.
+Code defaults: Open `weaponPrefabSpine.ts` · Casting `weaponPrefabSpine.js` → `defaultSpineForFamily(family)`. Same dictionary.
 
 ### 3.3 JSON shape (`mesh.spine` or top-level `spine`)
 

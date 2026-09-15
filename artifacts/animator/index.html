@@ -63,12 +63,42 @@
   </head>
   <body>
     <div id="root">
-      <div class="boot-splash" aria-busy="true">
+      <div class="boot-splash" aria-busy="true" id="boot-splash">
         <strong>Grudge <span>Open</span></strong>
-        <span>Loading library…</span>
+        <span id="boot-splash-msg">Loading library…</span>
         <div class="boot-bar" aria-hidden="true"><i></i></div>
+        <p id="boot-splash-help" hidden style="max-width:28rem;text-align:center;font-size:13px;line-height:1.45;margin:8px 16px 0;">
+          First visit downloads the app shell. If this stays stuck, an old service worker is usually holding a stale bundle.
+        </p>
+        <p id="boot-splash-actions" hidden style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0 0;">
+          <a href="/?purge=1" style="color:#66c0f4">Clear cache and reload</a>
+          <a href="/?nosw=1" style="color:#66c0f4">Open without service worker</a>
+        </p>
       </div>
     </div>
+    <script>
+      (function () {
+        var splash = document.getElementById("boot-splash");
+        if (!splash) return;
+        function stillBooting() {
+          return document.getElementById("boot-splash") && !window.__GRUDGE_OPEN_BOOTED__;
+        }
+        setTimeout(function () {
+          if (!stillBooting()) return;
+          var msg = document.getElementById("boot-splash-msg");
+          var help = document.getElementById("boot-splash-help");
+          if (msg) msg.textContent = "Still loading the library…";
+          if (help) help.hidden = false;
+        }, 8000);
+        setTimeout(function () {
+          if (!stillBooting()) return;
+          var msg = document.getElementById("boot-splash-msg");
+          var actions = document.getElementById("boot-splash-actions");
+          if (msg) msg.textContent = "Library did not start. Recover:";
+          if (actions) actions.hidden = false;
+        }, 16000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://nemesis.grudge-studio.com/friends-widget.js" data-app="gameopen" defer></script>
   </body>

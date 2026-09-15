@@ -31,6 +31,7 @@ describe("voxel campfire roster", () => {
     ).toBe(false);
   });
 
+  it("fills seats from voxel fleet only", () => {
   it("keeps account UUIDs in their slot (holes stay empty)", () => {
     const fleet: GrudgeCharacter[] = [
       { id: "w1", name: "Knight", gameEra: "warlords" },
@@ -38,6 +39,8 @@ describe("voxel campfire roster", () => {
       { id: "v0", name: "Ash", gameEra: "voxel", slotIndex: 0, config: { baseId: "explorer" } },
     ];
     const seats = buildVoxelCampfireHeroes(fleet);
+    expect(seats.map((s) => s.id)).toEqual(["v0", "v1"]);
+    expect(seats.every((s) => s.baseId === "explorer")).toBe(true);
     expect(seats).toHaveLength(4);
     expect(seats[0]?.id).toBe("v0");
     expect(seats[1]?.id).toBe("v1");

@@ -15,7 +15,13 @@ const targets = [
   path.join(root, "artifacts/animator/public/content/anims"),
 ];
 
-const files = ["database.json", "states.json", "weapon-live-packs.json"];
+const files = [
+  "database.json",
+  "states.json",
+  "weapon-live-packs.json",
+  "skill-bindings.json",
+  "bip001-library.json",
+];
 
 for (const t of targets) {
   fs.mkdirSync(t, { recursive: true });

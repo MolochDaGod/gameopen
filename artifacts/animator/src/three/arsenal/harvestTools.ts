@@ -15,6 +15,9 @@
  * - shovel   → height / leveling earth
  * - fishing  → water fishing
  * - buildHammer → modular / RTS / defense / crafting benches
+ *
+ * Hand mesh: `voxelTools.ts` / toolsvoxel.glb isolate on R_hand_container.
+ * Armor: Unity Player race prefabs → Toon mesh_ids (not a second body).
  */
 
 import type { SkillKind } from "../types";

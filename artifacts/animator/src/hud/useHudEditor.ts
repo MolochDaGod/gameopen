@@ -21,10 +21,13 @@ import {
 } from "./hudConfig";
 import type { HudThemeId } from "./hudThemes";
 import { clampQuickSlots, type QuickSlots } from "./quickActions";
+import { PANEL_HYDRA } from "./viewGrid";
 
 /** Props spread onto an editable HUD panel's root element. */
 export interface HudPanelBinding {
   "data-hud-panel": HudPanelId;
+  "data-hydra": string;
+  "data-view": HudPanelId;
   className: string;
   style: CSSProperties;
   onPointerDown?: (e: ReactPointerEvent) => void;
@@ -186,7 +189,13 @@ export function useHudEditor(): HudEditorControls {
         if (layout.hidden) style.display = "none";
 
         if (!editing) {
-          return { "data-hud-panel": id, className: "", style };
+          return {
+            "data-hud-panel": id,
+            "data-hydra": PANEL_HYDRA[id],
+            "data-view": id,
+            className: "",
+            style,
+          };
         }
 
         let cls = "hud-editable";
@@ -225,7 +234,15 @@ export function useHudEditor(): HudEditorControls {
           setSelected(id);
         };
 
-        return { "data-hud-panel": id, className: cls, style, onPointerDown, onContextMenu };
+        return {
+          "data-hud-panel": id,
+          "data-hydra": PANEL_HYDRA[id],
+          "data-view": id,
+          className: cls,
+          style,
+          onPointerDown,
+          onContextMenu,
+        };
       },
     [selected, setPanel],
   );

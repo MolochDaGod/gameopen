@@ -9,6 +9,12 @@ import {
   type WaterBand,
 } from "./dungeon/water";
 import { INPUT } from "./inputContract";
+import {
+  bodyLocalMove,
+  tpsMoveBasis,
+  tpsMoveBasisFromYaw,
+  wishFromWasd,
+} from "@workspace/grudge-physics";
 
 /** Default third-person orbit pitch clamp (radians). The floor stays positive
  *  so the orbit camera never dips under the room floor in normal play. */
@@ -56,7 +62,7 @@ export class Controller {
   /** Transient move-speed multiplier (e.g. the Kiter's Smoke Phantom sprint). */
   private speedMult = 1;
   private bound = 15;
-  private readonly roomBound = 15;
+  private roomBound = 15;
   /** Pluggable world collision (dungeon KCC). Null = flat Danger Room floor. */
   private collision: CollisionProvider | null = null;
   /** Live interior obstacle circles (XZ) for Danger Room push-out collision —
@@ -69,6 +75,11 @@ export class Controller {
    *  their vertical arcs to it instead of a hardcoded floor 0, so they don't
    *  teleport the body off an elevated prop top. */
   private supportY = 0;
+  /**
+   * Outdoor / map height sampler (same field as foot IK).
+   * Null = flat y=0 Danger Room. KCC path still owns collision when set.
+   */
+  private groundHeightAt: ((x: number, z: number) => number | null) | null = null;
   /** Max ledge drop (m) the body walks down smoothly while grounded; anything
    *  deeper transitions to the airborne fall state instead of gluing the feet. */
   private readonly STEP_DOWN = 0.3;
@@ -79,6 +90,9 @@ export class Controller {
   /** Slow constant sink speed (u/s) while inside the water band. */
   private readonly SINK_SPEED = 4;
   private camRay = new THREE.Raycaster();
+  /** Reused TPS wish basis (camera look / screen-right). */
+  private readonly _moveFwd = new THREE.Vector3();
+  private readonly _moveRight = new THREE.Vector3();
   private didDoubleJump = false;
   /** Seconds left of a fast-turn window (set by faceToward) for crosshair lock. */
   private facingBoost = 0;
@@ -364,6 +378,22 @@ export class Controller {
    * flat Danger Room floor + room bounds — Danger Room feel is untouched while
    * no provider is set.
    */
+  /**
+   * Flat-floor XZ half-extent (Danger / brawler). When a Rapier collision
+   * provider is set, this is ignored — the KCC owns the world.
+   */
+  setRoomBound(half: number) {
+    const h = Number.isFinite(half) && half > 1 ? half : 15;
+    this.roomBound = h;
+    if (!this.collision) this.bound = h;
+  }
+
+  /** Feet position (avatar root). Used by VFX / damage — never `controller.position`. */
+  get position(): THREE.Vector3 {
+    return this.character.root.position;
+  }
+
+  setCollision(p: CollisionProvider | null, spawn?: THREE.Vector3) {
   setCollision(
     p: CollisionProvider | null,
     spawn?: THREE.Vector3,
@@ -446,13 +476,27 @@ export class Controller {
   }
 
   /**
+   * Bind the map height field (ForestWorld / Brawler terrain sampler).
+   * Pass null to restore the flat Danger Room floor. Same player session:
+   * Studio.wirePlayerSessionOnMap calls this without rebuilding Controller.
+   */
+  setGroundHeightAt(fn: ((x: number, z: number) => number | null) | null) {
+    this.groundHeightAt = fn;
+  }
+
+  /**
    * Highest walkable support under (x, z) for feet that were at height `fromY`
-   * (room floor or a landable obstacle top). Danger Room (null-collision) path
-   * only — the dungeon KCC owns its floors. Pure math lives in ./support.
+   * (terrain sampler, room floor, or a landable obstacle top). Danger Room
+   * (null-collision) path only — the dungeon KCC owns its floors.
    */
   private supportHeightAt(x: number, z: number, fromY: number): number {
-    if (!this.obstacles) return 0;
-    return supportHeightAt(this.obstacles(), x, z, fromY);
+    let base = 0;
+    if (this.groundHeightAt) {
+      const y = this.groundHeightAt(x, z);
+      if (y != null && Number.isFinite(y)) base = y;
+    }
+    if (!this.obstacles) return base;
+    return Math.max(base, supportHeightAt(this.obstacles(), x, z, fromY));
   }
 
   /** True while a dungeon collision backend is active. */
@@ -898,20 +942,24 @@ export class Controller {
       }
     }
 
-    // Movement input (camera-relative).
-    // forward() is the camera's view direction projected on the floor; the
-    // camera sits BEHIND the character looking along +forward, so screen-right
-    // is cross(up, -viewDir) = (-fwd.z, 0, fwd.x). The old (fwd.z,0,-fwd.x) was
-    // the negative of that, which mirrored A/D (and the facing that tracks
-    // movement) — it felt like driving the character from the far side of the
-    // screen. Keep this sign so D = screen-right.
-    const fwd = this.forward();
-    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    // Camera-relative WASD (industry TPS). Sample the *rendered* camera after
+    // updateMatrixWorld — a stale identity matrix looks down −Z and inverts
+    // W (backwards) and A (right). Laterality: W = look XZ, D = screen-right.
+    this.camera.updateMatrixWorld(true);
+    tpsMoveBasis(this.camera, this._moveFwd, this._moveRight);
+    if (this._moveFwd.lengthSq() < 1e-6) {
+      tpsMoveBasisFromYaw(this.yaw, this._moveFwd, this._moveRight);
+    }
+    const fwd = this._moveFwd;
+    const right = this._moveRight;
     const move = new THREE.Vector3();
-    if (this.input.down("KeyW") || this.input.down("ArrowUp")) move.add(fwd);
-    if (this.input.down("KeyS") || this.input.down("ArrowDown")) move.sub(fwd);
-    if (this.input.down("KeyD") || this.input.down("ArrowRight")) move.add(right);
-    if (this.input.down("KeyA") || this.input.down("ArrowLeft")) move.sub(right);
+    let ax = 0;
+    let az = 0;
+    if (this.input.down(INPUT.moveForward) || this.input.down("ArrowUp")) az += 1;
+    if (this.input.down(INPUT.moveBack) || this.input.down("ArrowDown")) az -= 1;
+    if (this.input.down(INPUT.moveRight) || this.input.down("ArrowRight")) ax += 1;
+    if (this.input.down(INPUT.moveLeft) || this.input.down("ArrowLeft")) ax -= 1;
+    wishFromWasd(fwd, right, ax, az, move);
 
     // Analog joystick (touch) blends in on top of the keyboard. When the stick is
     // the only input, `analog` drives a proportional speed; the keyboard stays
@@ -1251,15 +1299,11 @@ export class Controller {
       : 0;
     this.smoothedSpeed += (targetSpeed - this.smoothedSpeed) * Math.min(1, 10 * dt);
     if (!this.character.isOneShotActive && this.grounded && !this.isBusy && !this.hoverActive) {
+      this.character.setStrafe?.(lockYaw !== null);
       if (this.character.setLocomotionDirectional) {
-        // Direction-aware weight-blend (GLB Character): project the world move
-        // dir onto the body facing so A/D under a target lock reads as a strafe
-        // (moveX) and forward as moveZ. Degrades to the forward blend on rigs
-        // without strafe clips, so normal play is unchanged.
-        const yaw = this.character.root.rotation.y;
-        const rel = Math.atan2(move.x, move.z) - yaw;
+        const loc = bodyLocalMove(move.x, move.z, this.character.root.rotation.y);
         const mv = this.smoothedSpeed;
-        this.character.setLocomotionDirectional(Math.sin(rel) * mv, Math.cos(rel) * mv, mv);
+        this.character.setLocomotionDirectional(loc.x * mv, loc.z * mv, mv);
       } else if (this.character.setLocomotion) {
         // Weight-blended path (GLB Character): continuous speed + sprint flag so
         // Heroes of Grudge `sprint` clips engage at top speed (not just rate-hack).

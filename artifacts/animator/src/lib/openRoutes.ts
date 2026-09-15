@@ -25,6 +25,7 @@ export type AppMode =
   | "danger"
   | "voxel"
   | "play"
+  | "racing"
   | "editor"
   | "lobby"
   /** Multiplayer rooms + community gallery (not the 4-seat character scene). */
@@ -51,7 +52,9 @@ export type AppMode =
   | "mimic"
   | "genesis"
   | "voxgrudge-native"
-  | "account";
+  | "account"
+  /** Character UUID · mesh bake · owned grudge_uuid gear (Main Panel embed). */
+  | "equipment";
 
 export type SurfaceGroup =
   | "hub"
@@ -138,6 +141,19 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     group: "combat",
     tags: ["Playtest", "Map"],
     accent: "#ff9a6a",
+  },
+  {
+    mode: "racing",
+    slug: "racing",
+    aliases: ["street-racing", "street", "raver", "raver-racing"],
+    cabinets: ["racing", "street-racing", "raver"],
+    title: "Street Racing",
+    blurb:
+      "Original neon district circuit — tune the car, hit checkpoints, and chase a clean time.",
+    group: "combat",
+    poster: "racing",
+    tags: ["Racing", "Garage"],
+    accent: "#ff5d8f",
   },
   {
     mode: "genesis",
@@ -393,6 +409,19 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     poster: "avatar",
     tags: ["AI Face", "LED"],
     accent: "#a78bff",
+  },
+  {
+    mode: "equipment",
+    slug: "equipment",
+    aliases: ["character-info", "trait-store", "paperdoll", "mesh-kit", "cnft"],
+    cabinets: ["equipment", "paperdoll"],
+    title: "Character · Equipment",
+    blurb:
+      "Your Railway hero — UUID, mesh bake, cNFT collection, owned bag/ledger gear. All eras.",
+    group: "hub",
+    poster: "library-account",
+    tags: ["Character", "UUID", "Equip"],
+    accent: "#fbbf24",
   },
   {
     mode: "account",

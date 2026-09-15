@@ -2,11 +2,12 @@ import * as THREE from "three";
 import { sharedGltfLoader } from "./loaders/gltf";
 import type { AnimRole, CharacterDef } from "./types";
 import { CHARACTER_HEIGHT_M } from "./types";
-import { filterBindableTracks } from "./clipTracks";
+import { stabilizeClipForMixer, clampMixerDt, bindHipFromRoot } from "./clipTracks";
 import { isUpperBodyTrack } from "./upperBody";
 import { LocomotionBlend } from "./explorer/LocomotionBlend";
 import { sliceClipFraction, type SnippetSpec } from "./snippets";
 import { fitCharacterHeight, restoreCharacterMaterials } from "./fitCharacterHeight";
+import { groundFeetLocal } from "./characterDeploy";
 import { FootGrounder, type GroundSampler } from "./anim/legIk";
 import { FLAT_FOOT_SAMPLER } from "./anim/terrainFootSample";
 import { PHYSICS_DT } from "../lib/productionRuntime";
@@ -103,8 +104,7 @@ export class Character {
     this.mixer = new THREE.AnimationMixer(this.model);
     this.locoBlend = new LocomotionBlend((id) => this.actions.get(id) ?? null);
     for (const clip of animations) {
-      const action = this.mixer.clipAction(filterBindableTracks(this.model, clip));
-      this.actions.set(clip.name, action);
+      this.actions.set(clip.name, this.bindClip(clip, true));
     }
     for (const [role, name] of Object.entries(this.def.clips)) {
       if (name && this.actions.has(name)) this.roleClip.set(role as AnimRole, name);
@@ -152,9 +152,9 @@ export class Character {
         logId: this.def.id,
         hasRole: (role) => this.roleClip.has(role as AnimRole),
         register: (role, clip) => {
-          if (!this.mixer) return;
-          // Allow dual_wield overwrite of dash/hurt/skills (hydrate force path)
-          const action = this.mixer.clipAction(clip);
+          if (!this.mixer || !this.model) return;
+          // Baked Bip001: rotation-only. Allow dual_wield overwrite of dash/hurt/skills.
+          const action = this.bindClip(clip, false);
           this.actions.set(role, action);
           this.actions.set(clip.name, action);
           this.roleClip.set(role as AnimRole, role);
@@ -441,6 +441,12 @@ export class Character {
     this.locoSpeed = _sprinting ? Math.max(s, 0.95) : s;
   }
 
+  setLocomotionDirectional(localX: number, localZ: number, speed: number) {
+    this.setLocomotion(speed, false);
+    void localX;
+    void localZ;
+  }
+
   /** Play a one-shot clip by exact name; returns its duration (sec) or 0. */
   playClipOnce(name: string, fade = 0.12): number {
     const action = this.actions.get(name);
@@ -537,8 +543,29 @@ export class Character {
    */
   addClip(name: string, clip: THREE.AnimationClip): void {
     if (!this.mixer || !this.model) return;
-    const action = this.mixer.clipAction(filterBindableTracks(this.model, clip));
-    this.actions.set(name, action);
+    const stale = this.actions.get(name);
+    if (stale) {
+      try {
+        stale.stop();
+        this.mixer.uncacheAction(stale.getClip());
+      } catch {
+        /* */
+      }
+    }
+    this.actions.set(name, this.bindClip(clip, true));
+  }
+
+  /**
+   * First bind only: stabilize then clipAction.
+   * Mixamo packs + Bip001 bakes: rotation-only. Physics owns Y.
+   */
+  private bindClip(clip: THREE.AnimationClip, _keepRootPosition?: boolean): THREE.AnimationAction {
+    const c = stabilizeClipForMixer(clip, {
+      root: this.model!,
+      bindHip: bindHipFromRoot(this.model!),
+      keepRootPosition: false,
+    });
+    return this.mixer!.clipAction(c);
   }
 
   update(dt: number) {
@@ -546,8 +573,7 @@ export class Character {
     // Fixed substeps match physics (PHYSICS_DT = 1/60) for stable timing.
     // Cap total advance so a long hitch doesn't skip an entire attack clip.
     const FIXED = PHYSICS_DT;
-    const maxAdvance = 0.1;
-    let remain = Math.min(Math.max(0, dt), maxAdvance);
+    let remain = clampMixerDt(dt);
 
     while (remain > 0) {
       const step = remain > FIXED * 1.5 ? FIXED : remain;
@@ -606,6 +632,7 @@ export class Character {
     //   2. footGrounder.apply — terrain foot plant + pelvis drop
     this.footGrounder.beginFrame();
     this.mixer.update(dt);
+    if (this.model) groundFeetLocal(this.model, 0);
     this.footGrounder.apply(dt);
 
     if (this.oneShot) {
@@ -692,7 +719,11 @@ export class Character {
     if (cached) return cached;
     const base = this.actions.get(name);
     if (!base || !this.mixer || !this.model) return null;
-    const clip = filterBindableTracks(this.model, base.getClip().clone());
+    const clip = stabilizeClipForMixer(base.getClip(), {
+      root: this.model,
+      bindHip: bindHipFromRoot(this.model),
+      keepRootPosition: false,
+    });
     clip.tracks = clip.tracks.filter((t) => isUpperBodyTrack(t.name));
     if (clip.tracks.length === 0) return null;
     THREE.AnimationUtils.makeClipAdditive(clip);
@@ -713,8 +744,7 @@ export class Character {
     const parent = this.actions.get(spec.parent)?.getClip();
     if (!parent) return false;
     const sub = sliceClipFraction(parent, spec.from, spec.to, spec.id);
-    const action = this.mixer.clipAction(filterBindableTracks(this.model, sub));
-    this.actions.set(spec.id, action);
+    this.actions.set(spec.id, this.bindClip(sub, true));
     return true;
   }
 

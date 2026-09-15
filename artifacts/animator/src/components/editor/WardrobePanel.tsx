@@ -293,7 +293,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
 
   return (
     <div className="ed-field">
-      <label className="ed-label">Load character (grudge6 Toon RTS)</label>
+      <label className="ed-label">Warlords race (Toon RTS)</label>
       <div className="ed-row" style={{ marginTop: 6 }}>
         <select
           className="ed-select"
@@ -335,7 +335,7 @@ function CharacterLoader({ engine }: { engine: EditorScene }) {
           className="ed-select"
           value={style}
           disabled={busy}
-          title="Combat style reloads Mixamo→Bip001 baked pack"
+          title="Combat style reloads Bip001 weapon pack (sword_shield / magic / longbow / …)"
           onChange={(e) => void applyStyle(e.target.value)}
         >
           <option value="auto">Style · Weapon default</option>

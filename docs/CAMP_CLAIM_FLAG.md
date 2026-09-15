@@ -16,6 +16,7 @@ Planting the **claim flag** (Pirate Claim Flag / territory marker) grants **buil
 | **Units** | RTS units from production buildings |
 | **Buildings** | Claim-gated stations + RTS halls; lists quick-craft as **excluded** |
 | **Upgrades** | Structure levels + `nodeUpgrades.json` tracks |
+| **Guild emblem** | Paint cloth on Flag1 · account `open:guildEmblem:v1:` |
 
 **Fleet SSOT:** [LOCATION_INVENTORY_LOCKPICK_SSOT.md](./LOCATION_INVENTORY_LOCKPICK_SSOT.md) · bag detail [INVENTORY_BAG_ACCOUNT.md](./INVENTORY_BAG_ACCOUNT.md) · `game/inventory/locationInventory.ts`.
 
@@ -49,7 +50,7 @@ Assets: Toon RTS Standard Units + uMMORPG / GenesisGrudge reference; Ultimate Fa
 
 | Step | Path |
 |------|------|
-| Source FBX | `public/models/pirate/Decor_PirateFlag_00.fbx` |
+| Source FBX | uMMORPG `Flag1.FBX` (NPC models) |
 | Production GLB | `public/models/camp/claim-flag.glb` |
 | Convert | `grudge-convert fbx2glb … --texture-size 1024 --no-colliders` |
 | Placeable id | `claim_flag` |

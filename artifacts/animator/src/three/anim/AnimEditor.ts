@@ -195,7 +195,7 @@ export class AnimEditor {
   private async init(): Promise<void> {
     let source: THREE.Object3D;
     try {
-      source = await loadSkeletonSource();
+      source = await loadSkeletonSource(true);
     } catch (err) {
       console.error("[AnimEditor] failed to load skeleton", err);
       return;

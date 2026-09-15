@@ -44,7 +44,7 @@ import type {
 /**
  * Parry / dodge windows aligned to Danger Room T0 reaction timeline ref
  * (docs/ref-combat/block-parry-2.png):
- *   Parry NARROW  ≈ 0.30s  |  Block WIDE (hold)  |  Dodge WIDEST i-frames
+ *   Parry NARROW  ≈ 0.30s  |  Block WIDE (hold)  |  Dodge: startup → i-frames → recovery
  * Age is seconds since the defender pressed the reaction.
  */
 export const PARRY_DEFLECT_WINDOW = 0.3;

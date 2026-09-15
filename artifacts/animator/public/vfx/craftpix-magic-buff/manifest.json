@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "pack": "craftpix-magic-buff-effects-top-down",
+  "sourceZip": "craftpix-net-207889-magic-buff-effects-pack-for-top-down-games.zip",
+  "preview": "https://img.craftpix.net/2026/07/Magic-Buff-Effects-Pack-for-Top-Down-Games2.webp",
+  "license": "https://craftpix.net/file-licenses/",
+  "frameSize": [640, 800],
+  "orientDefault": "ground",
+  "orientNote": "rotation.x = -PI/2 for under-feet ground plane; hybrid adds yBillboard",
+  "effects": {
+    "strength": { "folder": "Strength_Buff", "frames": 12, "icon": "Icons/PNG/Icons_Strength_Buff.png" },
+    "debuff": { "folder": "Debuff", "frames": 16, "icon": "Icons/PNG/Icons_Debuff.png" },
+    "immunity": { "folder": "Immunity", "frames": 16, "icon": "Icons/PNG/Icons_Immunity.png" },
+    "life": { "folder": "Life_Recovery", "frames": 12, "icon": "Icons/PNG/Icons_Life_Recovery.png" },
+    "mana": { "folder": "Mana_Recovery", "frames": 12, "icon": "Icons/PNG/Icons_Mana_Recovery.png" },
+    "revival": { "folder": "Revival", "frames": 16, "icon": "Icons/PNG/Icons_Revival.png" }
+  }
+}

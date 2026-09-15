@@ -37,6 +37,7 @@ Voxel `#/play` never stays on Open `/realms`. Warlords maps never become GRUDOX 
 | Danger Room (all-era lab) | `https://open.grudge-studio.com/danger` (`?era=voxel\|warlords\|nexus\|armada`) |
 | GRUDOX voxel Danger | `https://grudox.grudge-studio.com/voxgrudge/tvs-showcase.html` |
 | Account / roster handoff | `https://open.grudge-studio.com/account` |
+| Character info / equipment | `https://open.grudge-studio.com/equipment` |
 | Sign-in | `https://open.grudge-studio.com/login` |
 | Create hero | `https://character.grudge-studio.com/foundry` |
 | Foundry 4-slot | `https://character.grudge-studio.com/` |
@@ -45,6 +46,11 @@ Voxel `#/play` never stays on Open `/realms`. Warlords maps never become GRUDOX 
 | Arcade cabinet (racer, …) | `https://grudox.grudge-studio.com/arcade/play/<id>` |
 | ThreeFlow (Warlords scenes) | `https://threeflow.vercel.app/` |
 | Forge (Studio map deploy) | `https://forge.grudge-studio.com/` |
+| Studio portal / ENGINE | `https://grudge-studio.com/` |
+| Legion AI (chat / agents) | `https://ai.grudge-studio.com/` |
+| Coder IDE | `https://coder.grudge-studio.com/` |
+| Wallet UI | `https://wallet.grudge-studio.com/` |
+| Grudge Trader | `https://trader.grudge-studio.com/` |
 
 Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 

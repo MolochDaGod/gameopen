@@ -82,4 +82,9 @@ export const SKILL_KIND_ICON: Record<SkillKind, IconName> = {
   swordVolley: "rally",
   soul: "pray",
   laser: "scout",
+  witchArrow: "scout",
+  witchMissile: "siege",
+  witchDisk: "skill-vfx-lab",
+  fireTornado: "siege",
+  totem: "defend",
 };

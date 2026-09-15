@@ -124,7 +124,7 @@
       "id": "grudge-multiverse",
       "stack": { "client": "vercel", "server": "railway" },
       "launch": "external",
-      "url": "https://grudge-multiverse.vercel.app/#room1",
+      "url": "https://grudge-multiverse.vercel.app/?map=bermuda&mode=coop&seed=VALHEIM42#room1",
       "sso": true
     },
     {

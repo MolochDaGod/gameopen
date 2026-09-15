@@ -13,6 +13,11 @@ import {
   createAuraAccents,
   type AuraAccentHandle,
 } from "./auraAccents";
+import {
+  CraftpixFootRing,
+  craftpixIconForStatus,
+  STATUS_TO_FOOT_AURA,
+} from "./craftpixFootRing";
 
 /**
  * Status-effect VFX — shader body shells + accents.
@@ -277,6 +282,8 @@ class StatusAura implements StatusAuraHandle {
   private light: THREE.PointLight;
   private age = 0;
   private bubble: THREE.Mesh | null = null;
+  /** CraftPix under-feet ring (warlords + voxel); null if no pack map. */
+  private craftpix: CraftpixFootRing | null = null;
 
   constructor(
     private scene: THREE.Scene,
@@ -296,12 +303,20 @@ class StatusAura implements StatusAuraHandle {
     this.shell = createHumanoidAuraShell(this.shellMat);
     this.group.add(this.shell);
 
-    // Ground rune footprint
+    // CraftPix top-down buff under feet (XZ plane, rotation.x = -PI/2 baked in geo)
+    const footId = STATUS_TO_FOOT_AURA[def.id];
+    if (footId) {
+      this.craftpix = new CraftpixFootRing(footId, 1.55);
+      this.group.add(this.craftpix.mesh);
+      void this.craftpix.ready();
+    }
+
+    // Soft procedural ring (fallback / extra glow under craftpix)
     const ringMat = new THREE.MeshBasicMaterial({
       color: def.color,
       map: runeRingTexture(),
       transparent: true,
-      opacity: 0.7,
+      opacity: footId ? 0.25 : 0.7,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide,
@@ -364,6 +379,7 @@ class StatusAura implements StatusAuraHandle {
 
   update(dt: number, center: THREE.Vector3) {
     this.age += dt;
+    // Follow character root (warlords grudge6 OR voxel explorer — same path)
     this.group.position.copy(center);
 
     const pulse = 0.88 + Math.sin(this.age * 3.8) * 0.12;
@@ -371,9 +387,14 @@ class StatusAura implements StatusAuraHandle {
     // Subtle shell breathe (extra to shader pulse)
     this.shell.scale.setScalar(1 + Math.sin(this.age * 2.1) * 0.025);
 
+    this.craftpix?.update(dt);
+
     this.ring.rotation.y += dt * 0.85;
     this.ring.scale.setScalar(1.5 * pulse);
-    (this.ring.material as THREE.MeshBasicMaterial).opacity = 0.45 + 0.3 * pulse;
+    const hasCraft = !!this.craftpix;
+    (this.ring.material as THREE.MeshBasicMaterial).opacity = hasCraft
+      ? 0.12 + 0.08 * pulse
+      : 0.45 + 0.3 * pulse;
     (this.glow.material as THREE.MeshBasicMaterial).opacity = 0.1 + 0.1 * pulse;
 
     if (this.bubble) {
@@ -391,6 +412,8 @@ class StatusAura implements StatusAuraHandle {
 
   dispose() {
     this.scene.remove(this.group);
+    this.craftpix?.dispose();
+    this.craftpix = null;
     (this.ring.material as THREE.Material).dispose();
     (this.glow.material as THREE.Material).dispose();
     this.shellMat.dispose();
@@ -538,6 +561,7 @@ export class StatusController {
       const t = this.timers.get(id);
       if (!t) continue;
       const def = STATUS_DEFS[id];
+      const icon = craftpixIconForStatus(id);
       out.push({
         id,
         name: def.name,
@@ -546,6 +570,7 @@ export class StatusController {
         glyph: def.glyph,
         remaining: t.remaining,
         duration: t.duration,
+        iconUrl: icon ?? undefined,
       });
     }
     return out.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "buff" ? -1 : 1));

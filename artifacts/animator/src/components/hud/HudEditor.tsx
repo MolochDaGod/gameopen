@@ -105,6 +105,11 @@ export function HudEditor({ controls, onClose }: Props) {
                 </button>
               ))}
             </div>
+            <div className="hud-editor-sub" style={{ marginTop: 8 }}>
+              2D view grid: HYDRA 1920×1080 · 12×12. Overlay on while editing, or
+              {" "}
+              <code>?hudgrid=1</code>. Contract: <code>window.__GRUDGE_HUD_VIEW_GRID</code>
+            </div>
           </section>
 
           <section className="hud-editor-section">

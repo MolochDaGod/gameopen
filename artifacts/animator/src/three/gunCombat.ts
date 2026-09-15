@@ -11,6 +11,8 @@
  *  - Enemy raised guard = forcefield; consecutive hits / kick break shield
  *
  * SSOT for models, 6-tier ladders, skill/anim/VFX patterns: {@link gunClass}.
+ * Meshes: Poly Pizza Ultimate Guns (`ultimate-guns/`) — see ultimateGuns.ts.
+ * TPS (ADS / reserve / loot): gunTpsController + gunLoot.
  */
 import type { WeaponId } from "./types";
 import {

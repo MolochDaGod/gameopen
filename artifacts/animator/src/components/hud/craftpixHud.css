@@ -156,6 +156,19 @@
 .cx-stat-fill.sp {
   background: linear-gradient(0deg, #185a9a, #6ec8ff);
 }
+.cx-stat-fill.mp {
+  background: linear-gradient(0deg, #3a1a7a, #b07cff);
+}
+.cx-need-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #d8c8a0;
+  padding: 2px 4px 0;
+}
 .cx-stat-label {
   position: relative;
   z-index: 1;
