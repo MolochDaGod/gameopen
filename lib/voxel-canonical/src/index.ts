@@ -9,6 +9,7 @@
  * SSOT: https://github.com/MolochDaGod/mine-loader
  * Live: https://mineloader.grudge-studio.com (#/defs, /api/blocks)
  * Promote / physics / lobby: docs/MINE_LOADER_SSOT.md
+ * Prefab / item / buildable wiring: docs/CODEX_PREFAB_WIRING.md
  */
 
 export * from "./types";
@@ -19,3 +20,4 @@ export * from "./seedWorld";
 export * from "./seedTerrain";
 export * from "./shaderLabCave";
 export * from "./mapAssetScale";
+export * from "./codexWiring";
