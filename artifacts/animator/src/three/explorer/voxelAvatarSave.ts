@@ -153,17 +153,6 @@ export function loadVoxelAvatar(): VoxelAvatarSave | null {
   }
 }
 
-/** Per-character override only — never steal the last global editor draft. */
-export function loadVoxelAvatarForCharacter(characterId: string | null | undefined): VoxelAvatarSave | null {
-  if (!characterId) return null;
-  try {
-    const raw = localStorage.getItem(`${VOXEL_AVATAR_KEY}:${characterId}`);
-    if (raw) {
-      const s = sanitizeVoxelAvatar(JSON.parse(raw));
-      if (s) return s;
-    }
-  } catch {
-    /* ignore */
 /** Per-character override when present. */
 export function loadVoxelAvatarForCharacter(
   characterId: string | null | undefined,

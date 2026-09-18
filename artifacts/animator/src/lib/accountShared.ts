@@ -186,6 +186,94 @@ export async function fetchAccountProfile(): Promise<FleetAccountProfile | null>
   }
 }
 
+/** Update the account display username without changing Grudge ID or provider UUID. */
+export async function updateAccountUsername(username: string): Promise<FleetAccountProfile> {
+  const handle = username.trim();
+  if (handle.length < 2) throw new Error("Username must be at least 2 characters.");
+  if (handle.length > 48) throw new Error("Username must be 48 characters or fewer.");
+  const r = await apiFetch("/api/account", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: handle, displayName: handle }),
+  });
+  const data = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error(String(data.error || "Username update failed."));
+  const profile = await fetchAccountProfile();
+  if (!profile) throw new Error("Username updated, but the account could not be refreshed.");
+  return profile;
+}
+
+/** Treaty — Grudge ID account friends / DMs (Railway SSOT). */
+export type TreatyFriendProfile = {
+  id: string;
+  status: string;
+  accountId: string;
+  grudgeId: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isIncoming: boolean;
+};
+
+export type TreatySocial = {
+  friends: TreatyFriendProfile[];
+  pendingIncoming: TreatyFriendProfile[];
+  pendingOutgoing: TreatyFriendProfile[];
+};
+
+export async function fetchTreatySocial(): Promise<TreatySocial | null> {
+  try {
+    const r = await apiFetch("/api/treaty/social", { method: "GET" });
+    if (!r.ok) return null;
+    return (await r.json()) as TreatySocial;
+  } catch {
+    return null;
+  }
+}
+
+export async function sendTreatyFriendRequest(query: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const r = await apiFetch("/api/treaty/friends/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    const data = (await r.json().catch(() => ({}))) as { error?: string };
+    if (!r.ok) return { ok: false, error: data.error || `Request failed (${r.status})` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
+}
+
+export async function respondTreatyFriendRequest(
+  requestId: string,
+  accept: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const r = await apiFetch(`/api/treaty/friends/${requestId}/respond`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accept }),
+    });
+    const data = (await r.json().catch(() => ({}))) as { error?: string };
+    if (!r.ok) return { ok: false, error: data.error || `Respond failed (${r.status})` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Respond failed" };
+  }
+}
+
+export async function fetchTreatyUnread(): Promise<number> {
+  try {
+    const r = await apiFetch("/api/treaty/unread", { method: "GET" });
+    if (!r.ok) return 0;
+    const data = (await r.json()) as { unread?: number };
+    return Number(data.unread) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 /** GET /api/account/resources — shared bag across all characters. */
 export const fetchAccountResources = fetchAccountBag;
 

@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  CHECKPOINTS_PER_LAP,
+  RACE_LAPS,
+  raceProgress,
+} from "../game/streetRacingState";
+import "./streetRacing.css";
 
 interface Props {
   onExit: () => void;
@@ -13,6 +19,8 @@ interface RaceState {
   heat: number;
   finished: boolean;
 }
+
+type RacePhase = "briefing" | "countdown" | "racing" | "finished";
 
 const initialState: RaceState = {
   speed: 0,
@@ -36,17 +44,44 @@ export function StreetRacingMode({ onExit }: Props) {
   const carRef = useRef({ x: 0.5, distance: 0, pulse: 0 });
   const [state, setState] = useState<RaceState>(initialState);
   const [build, setBuild] = useState("MIDNIGHT // R-01");
-  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<RacePhase>("briefing");
+  const [countdown, setCountdown] = useState(3);
   const stateRef = useRef(state);
-  const startedRef = useRef(started);
+  const phaseRef = useRef<RacePhase>(phase);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
+  const beginRun = () => {
+    carRef.current = { x: 0.5, distance: 0, pulse: 0 };
+    keysRef.current.clear();
+    stateRef.current = initialState;
+    phaseRef.current = "countdown";
+    setState(initialState);
+    setCountdown(3);
+    setPhase("countdown");
+  };
+
   useEffect(() => {
-    startedRef.current = started;
-  }, [started]);
+    phaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    const deadline = performance.now() + 3000;
+    const tick = () => {
+      const remaining = Math.max(0, (deadline - performance.now()) / 1000);
+      setCountdown(remaining);
+      if (remaining === 0) {
+        phaseRef.current = "racing";
+        setPhase("racing");
+      }
+    };
+    const timer = window.setInterval(tick, 50);
+    tick();
+    return () => window.clearInterval(timer);
+  }, [phase]);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -54,7 +89,9 @@ export function StreetRacingMode({ onExit }: Props) {
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code)) {
         event.preventDefault();
       }
-      if (event.code === "Enter") setStarted(true);
+      if (event.code === "Enter" && (phaseRef.current === "briefing" || phaseRef.current === "finished")) beginRun();
+      if (event.code === "KeyR") beginRun();
+      if (event.code === "Escape") onExit();
     };
     const up = (event: KeyboardEvent) => keysRef.current.delete(event.code);
     window.addEventListener("keydown", down);
@@ -63,7 +100,7 @@ export function StreetRacingMode({ onExit }: Props) {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, []);
+  }, [onExit]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -87,31 +124,35 @@ export function StreetRacingMode({ onExit }: Props) {
       const keys = keysRef.current;
       const car = carRef.current;
       const currentState = stateRef.current;
-      const currentStarted = startedRef.current;
-      const boosting = keys.has("Space") && currentState.nitro > 0 && currentStarted;
-      const throttle = currentStarted && !currentState.finished && keys.has("ArrowUp");
-      const braking = keys.has("ArrowDown");
-      const targetSpeed = throttle ? (boosting ? 235 : 175) : braking ? 25 : 70;
+      const currentPhase = phaseRef.current;
+      const racing = currentPhase === "racing";
+      const boosting = racing && keys.has("Space") && currentState.nitro > 0;
+      const throttle = racing && (keys.has("ArrowUp") || keys.has("KeyW"));
+      const braking = racing && (keys.has("ArrowDown") || keys.has("KeyS"));
+      const steering = (keys.has("ArrowRight") || keys.has("KeyD") ? 1 : 0) - (keys.has("ArrowLeft") || keys.has("KeyA") ? 1 : 0);
+      const targetSpeed = racing ? (throttle ? (boosting ? 235 : 175) : braking ? 25 : 70) : 0;
       const nextSpeed = currentState.speed + (targetSpeed - currentState.speed) * elapsed * 2.2;
-      car.x += ((keys.has("ArrowRight") ? 1 : 0) - (keys.has("ArrowLeft") ? 1 : 0)) * elapsed * (0.55 + nextSpeed / 280);
+      car.x += steering * elapsed * (0.55 + nextSpeed / 280);
       car.x = Math.max(0.29, Math.min(0.71, car.x));
-      car.distance += nextSpeed * elapsed * 0.32;
+      if (racing) car.distance += nextSpeed * elapsed * 0.32;
       car.pulse += elapsed * (boosting ? 12 : 4);
-      const nextCheckpoint = Math.min(12, Math.floor(car.distance / 100) + 1);
-      const nextLap = Math.min(3, Math.floor(car.distance / 1200) + 1);
-      const finished = car.distance >= 3600;
-      if (currentStarted && !currentState.finished) {
+      const progress = raceProgress(car.distance);
+      if (racing && !currentState.finished) {
         setState((previous) => {
           const next = {
-          speed: nextSpeed,
-          lap: nextLap,
-          checkpoint: nextCheckpoint,
-          time: previous.time + elapsed,
-          nitro: Math.max(0, previous.nitro + (boosting ? -elapsed * 18 : elapsed * 4)),
-          heat: Math.min(100, Math.max(0, previous.heat + (boosting ? elapsed * 8 : -elapsed * 2))),
-          finished,
+            speed: nextSpeed,
+            lap: progress.lap,
+            checkpoint: progress.checkpoint,
+            time: previous.time + elapsed,
+            nitro: Math.max(0, Math.min(100, previous.nitro + (boosting ? -elapsed * 18 : elapsed * 4))),
+            heat: Math.min(100, Math.max(0, previous.heat + (boosting ? elapsed * 8 : -elapsed * 2))),
+            finished: progress.finished,
           };
           stateRef.current = next;
+          if (progress.finished) {
+            phaseRef.current = "finished";
+            setPhase("finished");
+          }
           return next;
         });
       }
@@ -172,7 +213,7 @@ export function StreetRacingMode({ onExit }: Props) {
       const carY = height * 0.76;
       context.save();
       context.translate(car.x * width, carY);
-      context.rotate((keys.has("ArrowRight") ? 1 : keys.has("ArrowLeft") ? -1 : 0) * 0.035);
+      context.rotate(steering * 0.035);
       if (boosting) {
         context.shadowColor = "#ff5d8f";
         context.shadowBlur = 32;
@@ -215,30 +256,42 @@ export function StreetRacingMode({ onExit }: Props) {
     };
   }, []);
 
+  const hold = (code: string, pressed: boolean) => {
+    if (pressed) keysRef.current.add(code);
+    else keysRef.current.delete(code);
+  };
+
   return (
-    <div style={styles.root}>
+    <div className="street-racing" style={styles.root}>
       <canvas ref={canvasRef} style={styles.canvas} />
-      <header style={styles.header}>
+      <header className="street-racing__header" style={styles.header}>
         <div><strong>RAVER //</strong> STREET CIRCUIT</div>
-        <div style={styles.live}>LOCAL AUTHORITY · DISTRICT 01</div>
+        <div className="street-racing__live" style={styles.live}>LOCAL AUTHORITY · DISTRICT 01</div>
         <button type="button" onClick={onExit} style={styles.button}>EXIT TO LIBRARY</button>
       </header>
-      <aside style={styles.leftPanel}>
+      <aside className="street-racing__build" style={styles.leftPanel}>
         <div style={styles.kicker}>BUILD PROFILE</div>
         <h1>{build}</h1>
         <p style={styles.muted}>A clean line through the city is worth more than raw horsepower.</p>
         {[["POWER", "742 HP"], ["GRIP", "86 / 100"], ["NITRO", "2-STAGE"], ["HEAT", `${Math.round(state.heat)}%`]].map(([label, value]) => <div key={label} style={styles.stat}><span>{label}</span><b>{value}</b></div>)}
         <button type="button" style={styles.buildButton} onClick={() => setBuild(build.includes("R-01") ? "NIGHTSHIFT // R-02" : "MIDNIGHT // R-01")}>SWAP BUILD</button>
       </aside>
-      <section style={styles.hud}>
-        <div style={styles.speed}>{Math.round(state.speed)}<small> KM/H</small></div>
-        <div style={styles.raceLine}><span>LAP {state.lap} / 3</span><span>CHECKPOINT {state.checkpoint} / 12</span><span>{formatTime(state.time)}</span></div>
+      <section className="street-racing__hud" style={styles.hud}>
+        <div className="street-racing__speed" style={styles.speed}>{Math.round(state.speed)}<small> KM/H</small></div>
+        <div className="street-racing__race-line" style={styles.raceLine}><span>LAP {state.lap} / {RACE_LAPS}</span><span>CHECKPOINT {state.checkpoint} / {CHECKPOINTS_PER_LAP}</span><span>{formatTime(state.time)}</span></div>
         <div style={styles.meter}><span style={{ width: `${state.nitro}%` }} /></div>
-        <div style={styles.meterLabel}>NITRO RESERVE <b>{Math.round(state.nitro)}%</b></div>
+        <div className="street-racing__meter-label" style={styles.meterLabel}>NITRO RESERVE <b>{Math.round(state.nitro)}%</b></div>
       </section>
-      {!started && <div style={styles.start}><div style={styles.kicker}>NIGHT RUN // QUALIFIER</div><h2>OWN THE LIGHTS.</h2><p>Arrow keys to drive. Space to deploy nitro.</p><button type="button" style={styles.startButton} onClick={() => setStarted(true)}>START RUN <span>ENTER</span></button></div>}
-      {state.finished && <div style={styles.finish}><div style={styles.kicker}>CLEAN RUN RECORDED</div><h2>{formatTime(state.time)}</h2><button type="button" style={styles.startButton} onClick={() => { carRef.current.distance = 0; setState(initialState); setStarted(false); }}>RUN IT BACK</button></div>}
-      <footer style={styles.footer}><span>W / ARROW UP ACCELERATE</span><span>A D / ARROWS STEER</span><span>SPACE NITRO</span><span>CHECKPOINT ROUTE · 3.6 KM</span></footer>
+      {phase === "briefing" && <div className="street-racing__modal" style={styles.start}><div style={styles.kicker}>NIGHT RUN // QUALIFIER</div><h2>OWN THE LIGHTS.</h2><p>WASD or arrow keys to drive. Space deploys nitro.</p><button type="button" style={styles.startButton} onClick={beginRun}>START RUN <span>ENTER</span></button></div>}
+      {phase === "countdown" && <div style={styles.countdown}>{countdown > 0 ? Math.ceil(countdown) : "GO"}</div>}
+      {phase === "finished" && <div className="street-racing__modal" style={styles.finish}><div style={styles.kicker}>CLEAN RUN RECORDED</div><h2>{formatTime(state.time)}</h2><p style={styles.muted}>District 01 · 3 laps · heat {Math.round(state.heat)}%</p><button type="button" style={styles.startButton} onClick={beginRun}>RUN IT BACK <span>R</span></button></div>}
+      <div className="street-racing__touch" aria-label="Touch driving controls">
+        <button type="button" aria-label="Steer left" onPointerDown={() => hold("ArrowLeft", true)} onPointerUp={() => hold("ArrowLeft", false)} onPointerCancel={() => hold("ArrowLeft", false)}>←</button>
+        <button type="button" aria-label="Accelerate" onPointerDown={() => hold("ArrowUp", true)} onPointerUp={() => hold("ArrowUp", false)} onPointerCancel={() => hold("ArrowUp", false)}>↑</button>
+        <button type="button" aria-label="Steer right" onPointerDown={() => hold("ArrowRight", true)} onPointerUp={() => hold("ArrowRight", false)} onPointerCancel={() => hold("ArrowRight", false)}>→</button>
+        <button type="button" aria-label="Nitro" onPointerDown={() => hold("Space", true)} onPointerUp={() => hold("Space", false)} onPointerCancel={() => hold("Space", false)}>N₂O</button>
+      </div>
+      <footer className="street-racing__footer" style={styles.footer}><span>W / ARROW UP ACCELERATE</span><span>A D / ARROWS STEER</span><span>SPACE NITRO</span><span>R RESTART · ESC EXIT</span></footer>
     </div>
   );
 }
@@ -261,6 +314,7 @@ const styles: Record<string, React.CSSProperties> = {
   meterLabel: { textAlign: "right", color: "#59e6ff", fontSize: 9, letterSpacing: 1, marginTop: 8 },
   start: { position: "absolute", top: "45%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center", width: "min(600px, 80vw)", background: "rgba(7,12,28,.74)", padding: "28px 34px", borderTop: "1px solid #59e6ff", borderBottom: "1px solid #ff5d8f", backdropFilter: "blur(8px)" },
   finish: { position: "absolute", top: "45%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center", minWidth: 300, background: "rgba(7,12,28,.88)", padding: 30, border: "1px solid #59e6ff" },
+  countdown: { position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "#ffffff", fontFamily: "'Bahnschrift Condensed', sans-serif", fontSize: 120, fontWeight: 800, textShadow: "0 0 36px rgba(89,230,255,.8)" },
   startButton: { marginTop: 14, padding: "13px 20px", border: "1px solid #ff5d8f", background: "#ff5d8f", color: "#120b18", cursor: "pointer", fontWeight: 700, letterSpacing: 1.5 },
   footer: { position: "absolute", left: 0, right: 0, bottom: 0, display: "flex", justifyContent: "center", gap: 24, padding: "14px 20px", background: "rgba(4,8,18,.84)", color: "#8da4c2", fontSize: 9, letterSpacing: 1 },
 };

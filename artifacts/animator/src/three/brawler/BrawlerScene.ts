@@ -369,7 +369,6 @@ export class BrawlerScene {
   private readonly nav = new Pathfinding();
   private readonly navZone = "survival-terrain";
   private navReady = false;
-  private playerKcc: CharacterCapsuleKcc | null = null;
   private battleground = false;
   private mapHalf = ARENA_HALF;
   private spawnPoint = new THREE.Vector3(0, 0, 8);
@@ -1037,11 +1036,10 @@ export class BrawlerScene {
             this.spawnRadius = Math.max(18, autoSpawn);
           }
         }
-        const bound = Math.max(22, Math.min(320, half * 0.92));
-        this.worldBound = bound;
         const bound = this.battleground
           ? Math.max(80, half * 0.98)
           : Math.max(22, Math.min(90, half * 0.92));
+        this.worldBound = bound;
         this.controller?.setRoomBound(bound);
         this.mapHalf = half;
 
@@ -1760,13 +1758,6 @@ export class BrawlerScene {
     this.emitState();
   }
 
-  // ── Enemies ────────────────────────────────────────────────────────────────
-  private spawnEnemy() {
-    if (this.enemies.length >= this.maxEnemies || this.phase !== "playing") return;
-    const angle = Math.random() * Math.PI * 2;
-    const r = this.spawnRadius;
-    const pos = new THREE.Vector3(Math.sin(angle) * r, 0, Math.cos(angle) * r);
-    pos.y = this.terrainYAt(pos.x, pos.z);
   // ── Enemies / allies ───────────────────────────────────────────────────────
   private spawnEnemy(opts?: {
     faction?: AgamaFactionId;
@@ -1869,7 +1860,6 @@ export class BrawlerScene {
       navPath: [],
       navTarget: null,
       navRefreshAt: 0,
-    });
       faction,
       role,
       home,
@@ -1968,12 +1958,6 @@ export class BrawlerScene {
     const occluders = this.occluderCache;
     for (const en of this.enemies) {
       en.attackCd = Math.max(0, en.attackCd - dt);
-      const dir = new THREE.Vector3(pp.x - en.pos.x, 0, pp.z - en.pos.z);
-      const dist = dir.length();
-      if (dist > 0.1) {
-        this.moveEnemyOnTerrainNav(en, pp, en.speed * dt);
-        en.pos.y = this.terrainYAt(en.pos.x, en.pos.z);
-        en.mesh.position.copy(en.pos);
       en.mixer?.update(dt);
       const target = this.fighterTarget(en);
       const los = this.fighterLos(en.pos, target, occluders);
@@ -2116,11 +2100,10 @@ export class BrawlerScene {
         if (
           this.terrainHeightAt &&
           !this.controller.hasCollision &&
+          !this.playerKcc &&
           this.controller.state.grounded &&
           this.avatar
         ) {
-        // Soft plant only when KCC is not the collision SSOT (KCC already snaps).
-        if (!this.playerKcc && this.controller.state.grounded && this.avatar) {
           const p = this.avatar.root.position;
           const ty = this.sampleGroundY(p.x, p.z);
           if (ty != null && Math.abs(p.y - ty) < 2.5) {

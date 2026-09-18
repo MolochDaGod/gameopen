@@ -17,6 +17,7 @@
  */
 
 import { FLEET, FLEET_TOKEN_KEYS, apiUrl, buildGrudgeLoginUrl } from "./fleet";
+import { signIn as signInWithPuter, type GrudgeUser as PuterUser } from "../auth/grudgeAuth";
 
 const TOKEN_KEY = "grudge.open.token";
 const ACCOUNT_KEY = "grudge.open.account";
@@ -64,6 +65,29 @@ export const FLEET_CHARACTER_ERAS = [
   "armada",
 ] as const;
 export type FleetCharacterEra = (typeof FLEET_CHARACTER_ERAS)[number];
+
+export type PuterRegistrationResult = {
+  account: GrudgeAccount;
+  puterUser: PuterUser;
+  isNew: boolean;
+};
+
+type FleetAuthResponse = {
+  success?: boolean;
+  token?: string;
+  sessionToken?: string;
+  grudgeId?: string;
+  grudge_id?: string;
+  username?: string;
+  displayName?: string;
+  isNew?: boolean;
+  error?: string;
+  user?: {
+    grudgeId?: string;
+    username?: string;
+    displayName?: string;
+  };
+};
 
 function paramFromSearchOrHash(name: string): string | null {
   if (typeof window === "undefined") return null;
@@ -193,6 +217,65 @@ export function setStoredAccount(account: GrudgeAccount | null): void {
   } catch {
     /* */
   }
+}
+
+/**
+ * Register or sign in with the current Puter identity, then establish the
+ * canonical Railway Grudge account and fleet JWT. Puter UUID remains the
+ * immutable provider key; its editable username is display metadata only.
+ */
+export async function registerWithPuter(): Promise<PuterRegistrationResult | null> {
+  const puterUser = await signInWithPuter();
+  if (!puterUser) return null;
+  if (!puterUser.uuid) throw new Error("Puter did not return an account UUID.");
+  if (puterUser.is_temp) {
+    throw new Error("Temporary Puter accounts cannot register a Grudge ID. Finish Puter sign-up first.");
+  }
+
+  const response = await fetch(apiUrl("/api/auth/puter"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      puterUuid: puterUser.uuid,
+      puterId: puterUser.uuid,
+      puterUsername: puterUser.username,
+      displayName: puterUser.username,
+      email: puterUser.email,
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = (await response.json().catch(() => ({}))) as FleetAuthResponse;
+  if (!response.ok) {
+    throw new Error(data.error || "Puter registration could not establish a Grudge ID.");
+  }
+
+  const token = String(data.sessionToken || data.token || "");
+  const grudgeId = String(
+    data.grudgeId || data.grudge_id || data.user?.grudgeId || "",
+  );
+  const displayName = String(
+    data.username || data.displayName || data.user?.displayName || data.user?.username || puterUser.username,
+  );
+  if (!token || !grudgeId) {
+    throw new Error("Grudge ID registration returned an incomplete session.");
+  }
+
+  const account: GrudgeAccount = {
+    grudgeId,
+    displayName: displayName || undefined,
+    source: "grudge-id",
+  };
+  setStoredToken(token, true);
+  setStoredAccount(account);
+  try {
+    localStorage.setItem("grudge_id", grudgeId);
+    localStorage.setItem("grudge_account_id", grudgeId);
+    if (displayName) localStorage.setItem("grudge_username", displayName);
+  } catch {
+    /* private mode */
+  }
+  return { account, puterUser, isNew: data.isNew === true };
 }
 
 /** True if JWT is missing or past exp (with 60s skew). Non-JWTs treated as valid. */
@@ -456,10 +539,14 @@ export async function loginWithGrudgeId(force = false): Promise<void> {
   if (!force) {
     const token = getStoredToken();
     const cached = getStoredAccount();
-    if (token && cached) {
+    if (token && cached && !isTokenExpired(token)) {
       // Already logged in — silently revalidate but don't redirect.
       void fetchFleetAccount(false);
       return;
+    }
+    if (token || cached) {
+      setStoredToken(null);
+      setStoredAccount(null);
     }
   }
   // Brand return open.grudge-studio.com (not gameopen.vercel.app after 307)
@@ -848,7 +935,11 @@ export async function initFleetAuth(): Promise<{
 
   // Bridge launch JWT → session JWT before account fetch (avoids second redirect).
   if (launchOnly && launch) {
-    await bridgeLaunchToken(launch);
+    const sessionToken = await bridgeLaunchToken(launch);
+    if (!sessionToken && getStoredToken() === launch) {
+      setStoredToken(null);
+      setStoredAccount(null);
+    }
   } else {
     // Stored token may still be a short launch JWT from a prior visit — refresh.
     const t = getStoredToken();

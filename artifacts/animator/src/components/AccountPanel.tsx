@@ -19,6 +19,8 @@ import {
   getStoredToken,
   loginWithGrudgeId,
   logoutGrudge,
+  registerWithPuter,
+  setStoredAccount,
   type GrudgeCharacter,
 } from "../lib/grudgeAuth";
 import { getCachedWallet, ensureWallet, type GrudgeWallet } from "../lib/walletService";
@@ -33,6 +35,7 @@ import {
   getHandoffFrom,
   loadSharedAccountBundle,
   shortAddress,
+  updateAccountUsername,
   type FleetAccountProfile,
   type FleetIslandSummary,
   type FleetNft,
@@ -47,6 +50,7 @@ import {
 import { GAME_LIBRARY, SHARED_ACCOUNT_SCHEME, type GameCategory } from "../game/gameLibrary";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CharacterPicker } from "./CharacterPicker";
+import { FriendsPanel } from "./FriendsPanel";
 import { TraitStoreEmbed } from "./TraitStoreEmbed";
 import { resolveCharacterEquipmentVisualSync } from "../lib/characterEquipmentMesh";
 import { matIconUrl, warmGameMedia } from "../lib/gameMedia";
@@ -60,6 +64,7 @@ type EraId = "warlords" | "voxel" | "nexus" | "armada";
 type PanelId =
   | "overview"
   | "characters"
+  | "friends"
   | "inventory"
   | "wallet"
   | "cnfts"
@@ -96,6 +101,7 @@ const ERAS: { id: EraId; label: string; tone: string; blurb: string }[] = [
 const PANELS: { id: PanelId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "characters", label: "Characters" },
+  { id: "friends", label: "Friends" },
   { id: "inventory", label: "Inventory" },
   { id: "wallet", label: "Wallet" },
   { id: "cnfts", label: "cNFTs" },
@@ -235,6 +241,9 @@ export function AccountPanel({
   const [sharedBusy, setSharedBusy] = useState(false);
   const [handoffFrom] = useState(() => getHandoffFrom());
   const [copiedAddr, setCopiedAddr] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [accountMessage, setAccountMessage] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
 
   useEffect(() => gameSession.subscribe(() => setSnap(gameSession.snapshot)), []);
 
@@ -286,6 +295,51 @@ export function AccountPanel({
     void refreshShared();
     if (snap.account) void refreshWallet();
   }, [refreshShared, refreshWallet, snap.account]);
+
+  useEffect(() => {
+    setUsername(profile?.displayName || snap.account?.displayName || "");
+  }, [profile?.displayName, snap.account?.displayName]);
+
+  const handlePuterRegistration = useCallback(async () => {
+    setAuthBusy(true);
+    setAccountMessage(null);
+    try {
+      const result = await registerWithPuter();
+      if (!result) return;
+      await gameSession.boot();
+      await refreshShared();
+      setUsername(result.puterUser.username);
+      setAccountMessage(
+        result.isNew
+          ? `Grudge ID created for ${result.puterUser.username}.`
+          : `Signed in and synchronized with Puter user ${result.puterUser.username}.`,
+      );
+    } catch (error) {
+      setAccountMessage(error instanceof Error ? error.message : "Puter registration failed.");
+    } finally {
+      setAuthBusy(false);
+    }
+  }, [refreshShared]);
+
+  const handleUsernameSave = useCallback(async () => {
+    setAuthBusy(true);
+    setAccountMessage(null);
+    try {
+      const next = await updateAccountUsername(username);
+      const displayName = next.displayName || username.trim();
+      setProfile(next);
+      if (snap.account) {
+        setStoredAccount({ ...snap.account, displayName });
+        await gameSession.boot();
+      }
+      setUsername(displayName);
+      setAccountMessage(`Username set to ${displayName}. Your Grudge ID is unchanged.`);
+    } catch (error) {
+      setAccountMessage(error instanceof Error ? error.message : "Username update failed.");
+    } finally {
+      setAuthBusy(false);
+    }
+  }, [snap.account, username]);
 
   const walletAddress =
     walletStatus?.walletAddress ||
@@ -408,12 +462,28 @@ export function AccountPanel({
               </button>
             </>
           ) : (
-            <button type="button" style={btnPrimary} onClick={() => void loginWithGrudgeId(false)}>
-              Sign in · Grudge ID
-            </button>
+            <>
+              <button type="button" style={btnPrimary} onClick={() => void loginWithGrudgeId(false)}>
+                Sign in · Grudge ID
+              </button>
+              <button
+                type="button"
+                style={btnGhost}
+                onClick={() => void handlePuterRegistration()}
+                disabled={authBusy}
+              >
+                {authBusy ? "Connecting…" : "Register with Puter"}
+              </button>
+            </>
           )}
         </div>
       </header>
+
+      {accountMessage ? (
+        <div style={banner} role="status">
+          {accountMessage}
+        </div>
+      ) : null}
 
       {handoffFrom && (
         <div style={banner}>
@@ -517,7 +587,36 @@ export function AccountPanel({
               ) : (
                 <dl style={dlWide}>
                   <dt>Display</dt>
-                  <dd>{snap.account.displayName || profile?.displayName || "—"}</dd>
+                  <dd>
+                    <form
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void handleUsernameSave();
+                      }}
+                      style={{ display: "flex", gap: 6, flexWrap: "wrap" }}
+                    >
+                      <input
+                        value={username}
+                        onChange={(event) => setUsername(event.target.value)}
+                        minLength={2}
+                        maxLength={48}
+                        aria-label="Account username"
+                        style={usernameInput}
+                      />
+                      <button type="submit" style={btnGhost} disabled={authBusy || username.trim().length < 2}>
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        style={btnGhost}
+                        onClick={() => void handlePuterRegistration()}
+                        disabled={authBusy}
+                        title="Use your current Puter account name on this Grudge account"
+                      >
+                        Sync Puter name
+                      </button>
+                    </form>
+                  </dd>
                   <dt>Grudge ID</dt>
                   <dd>
                     <code style={{ fontSize: 12 }}>{snap.account.grudgeId || profile?.grudgeId || "—"}</code>
@@ -648,6 +747,49 @@ export function AccountPanel({
                   — 4 slots per era on Railway. Same account bag/wallet; separate playable roster.
                 </p>
               )}
+            </section>
+          </div>
+        )}
+
+        {/* ── Friends (Treaty SSOT + Nexus chat dock) ── */}
+        {panel === "friends" && (
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(240px, 320px) 1fr", gap: 16 }}>
+            <FriendsPanel
+              account={snap.account}
+              characters={snap.characters}
+              selectedCharacterId={snap.selectedCharacterId}
+              currentTitle="Account"
+              onOpenLobby={() => onEnterGame?.("zones")}
+              onSelectCharacter={(id) => gameSession.selectCharacter(id)}
+            />
+            <section style={card}>
+              <h3 style={{ ...h3, color: eraTone }}>Studio friends</h3>
+              <p style={muted}>
+                Friends, DMs, and groups live on your Grudge ID (Railway Treaty). The Nexus TCG
+                sidebar is the chat chrome — same list on Open, Warlords, and Nemesis.
+              </p>
+              <p style={muted}>
+                Add allies by <code>GRUDGE_…</code> or display name. Chat / presence opens the
+                Nexus friends popout.
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                <a
+                  href="https://nemesis.grudge-studio.com/friends?popout=1&app=gameopen"
+                  target="nexus-friends"
+                  rel="noreferrer"
+                  style={{ ...btnPrimary, textDecoration: "none" }}
+                >
+                  Open friends chat
+                </a>
+                <a
+                  href="https://grudgewarlords.com/treaty"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ ...btnGhost, textDecoration: "none" }}
+                >
+                  Treaty inbox
+                </a>
+              </div>
             </section>
           </div>
         )}
@@ -1516,6 +1658,18 @@ const btnGhost: CSSProperties = {
   fontWeight: 650,
   fontSize: 12,
   cursor: "pointer",
+};
+
+const usernameInput: CSSProperties = {
+  minWidth: 150,
+  maxWidth: "100%",
+  padding: "7px 9px",
+  borderRadius: 6,
+  border: "1px solid rgba(110,168,255,0.28)",
+  background: "rgba(4,8,16,0.72)",
+  color: "#eaf4ff",
+  font: "inherit",
+  boxSizing: "border-box",
 };
 
 const linkBtn: CSSProperties = {

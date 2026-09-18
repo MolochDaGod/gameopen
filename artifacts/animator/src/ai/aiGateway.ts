@@ -45,11 +45,23 @@ function readFleetToken(): string | null {
   return readProductionAuthToken();
 }
 
+function readPuterAuthToken(): string | null {
+  try {
+    const p = (globalThis as { puter?: { authToken?: string } }).puter;
+    const t = p?.authToken;
+    return typeof t === "string" && t.trim() ? t.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 function authHeaders(extra?: HeadersInit): Headers {
   const h = new Headers(extra);
   if (!h.has("Content-Type")) h.set("Content-Type", "application/json");
   const token = readFleetToken();
   if (token) h.set("Authorization", `Bearer ${token}`);
+  const puterTok = readPuterAuthToken();
+  if (puterTok) h.set("X-Puter-Token", puterTok);
   return h;
 }
 

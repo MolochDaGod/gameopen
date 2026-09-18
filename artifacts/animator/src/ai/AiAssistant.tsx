@@ -204,9 +204,9 @@ export function AiAssistant({ surface, title, tools, getSystemPrompt, placeholde
         whileTap={{ scale: 0.92 }}
         title={title}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
-        aria-expanded={open}
       >
-        {open ? <X size={18} /> : <img className="ai-fab-portrait" src="/racalvin.png" alt="" />}
+        {open ? <X size={18} /> : <Bot size={18} />}
+        <span className="ai-fab-label">{open ? "Close" : "AI"}</span>
       </motion.button>
     </div>
   );

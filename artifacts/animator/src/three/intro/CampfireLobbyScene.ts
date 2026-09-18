@@ -546,53 +546,6 @@ export class CampfireLobbyScene {
     this.envRoot.add(dirt);
   }
 
-  /**
-   * Encament village behind the plaza (camera +Z). Scale up, grind front
-   * walkable ground to y=0 (same terrain as the 4 seats), gate faces us.
-   */
-  private async loadEncampmentBackdrop(): Promise<void> {
-    try {
-      const root = await loadGltfFirst(this.gltf, encampmentBackdropUrls());
-      if (!root || this.disposed) return;
-      root.name = "encampment-backdrop";
-      root.scale.set(1, 1, 1);
-      root.updateMatrixWorld(true);
-      let box = new THREE.Box3().setFromObject(root);
-      const size = box.getSize(new THREE.Vector3());
-      if (size.y > 80 || size.x > 400) {
-        root.scale.multiplyScalar(0.01);
-        root.updateMatrixWorld(true);
-        box.setFromObject(root);
-      }
-      const width = Math.max(0.5, box.max.x - box.min.x);
-      root.scale.multiplyScalar(ENCAMP_TARGET_W / width);
-      root.updateMatrixWorld(true);
-      box.setFromObject(root);
-      const center = box.getCenter(new THREE.Vector3());
-      root.position.x += -center.x;
-      root.position.z += -center.z;
-      root.position.y -= box.min.y;
-      root.updateMatrixWorld(true);
-      grindWalkableFrontToGround(root);
-      root.updateMatrixWorld(true);
-      box.setFromObject(root);
-      root.position.z += ENCAMP_FRONT_Z - box.max.z;
-      root.updateMatrixWorld(true);
-      box.setFromObject(root);
-      root.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (!m.isMesh) return;
-        m.castShadow = true;
-        m.receiveShadow = true;
-        dressEnvMaterial(m);
-      });
-      this.envRoot.add(root);
-      this.layoutPlazaFromEncampment(box.max.z);
-    } catch (e) {
-      console.warn("[CampfireLobby] Encament backdrop skip", e);
-    }
-  }
-
   /** Seats + fire + camera sit on the road just outside the gate. */
   private layoutPlazaFromEncampment(gateZ: number): void {
     const plazaZ = gateZ + 4.5;

@@ -393,7 +393,6 @@ export class Controller {
     return this.character.root.position;
   }
 
-  setCollision(p: CollisionProvider | null, spawn?: THREE.Vector3) {
   setCollision(
     p: CollisionProvider | null,
     spawn?: THREE.Vector3,
