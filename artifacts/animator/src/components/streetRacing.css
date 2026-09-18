@@ -1,0 +1,99 @@
+.street-racing {
+  container-type: inline-size;
+}
+
+.street-racing__touch {
+  display: none;
+}
+
+.street-racing__touch button {
+  width: 54px;
+  height: 48px;
+  border: 1px solid rgba(89, 230, 255, 0.58);
+  background: rgba(5, 12, 28, 0.84);
+  color: #eaf4ff;
+  font: 700 15px "Bahnschrift", "Segoe UI", sans-serif;
+  touch-action: none;
+}
+
+.street-racing__touch button:last-child {
+  width: 70px;
+  border-color: #ff5d8f;
+  color: #ff8daf;
+}
+
+@container (max-width: 760px) {
+  .street-racing__header {
+    padding: 14px 16px !important;
+  }
+
+  .street-racing__live,
+  .street-racing__footer {
+    display: none !important;
+  }
+
+  .street-racing__build {
+    top: 68px !important;
+    left: 12px !important;
+    width: 170px !important;
+    padding: 12px !important;
+  }
+
+  .street-racing__build p,
+  .street-racing__build h1,
+  .street-racing__build button {
+    display: none;
+  }
+
+  .street-racing__hud {
+    bottom: 96px !important;
+    width: calc(100% - 32px) !important;
+  }
+
+  .street-racing__speed {
+    font-size: 46px !important;
+  }
+
+  .street-racing__race-line {
+    display: grid !important;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 6px;
+    font-size: 8px !important;
+    letter-spacing: 0 !important;
+  }
+
+  .street-racing__race-line span:first-child {
+    text-align: left;
+  }
+
+  .street-racing__race-line span:last-child {
+    text-align: right;
+  }
+
+  .street-racing__meter-label {
+    padding-right: 2px;
+    letter-spacing: 0 !important;
+  }
+
+  .street-racing__modal {
+    box-sizing: border-box;
+    width: calc(100% - 32px) !important;
+    padding: 24px 18px !important;
+  }
+
+  .street-racing__touch {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.3fr);
+    gap: 8px;
+    z-index: 4;
+  }
+
+  .street-racing__touch button,
+  .street-racing__touch button:last-child {
+    width: 100%;
+  }
+}
