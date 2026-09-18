@@ -108,6 +108,32 @@ if (!fs.existsSync(out)) {
   process.exit(1);
 }
 
+// 4b. Rapier WASM sibling — vite-plugin-wasm + manualChunks can emit
+// rapier-*.js that does `new URL("rapier_wasm3d_bg.wasm", import.meta.url)`
+// without copying the .wasm into dist/public/assets. Missing file → blank
+// Open splash ("Loading library…") because the entry TLA never resolves.
+{
+  const wasmSrc = path.join(
+    anim,
+    "node_modules/@dimforge/rapier3d-compat/rapier_wasm3d_bg.wasm",
+  );
+  const assetsDir = path.join(anim, "dist/public/assets");
+  const wasmDest = path.join(assetsDir, "rapier_wasm3d_bg.wasm");
+  if (!fs.existsSync(wasmSrc)) {
+    console.error("[vercel-build] missing Rapier WASM at", wasmSrc);
+    process.exit(1);
+  }
+  if (!fs.existsSync(assetsDir)) {
+    console.error("[vercel-build] missing assets dir", assetsDir);
+    process.exit(1);
+  }
+  fs.copyFileSync(wasmSrc, wasmDest);
+  const st = fs.statSync(wasmDest);
+  console.log(
+    `[vercel-build] staged Rapier WASM → assets/rapier_wasm3d_bg.wasm (${st.size} bytes)`,
+  );
+}
+
 // 5. Purge failed / non-SSOT character packs so Danger Room cannot load them
 const purge = [
   "models/grudge6/30characters.glb",

@@ -67,6 +67,29 @@ const dashSkill: AbilityDef = {
 const COLOR_SNARE_FIELD = 0x86e3a0;
 
 /**
+ * Build a deployable-entity ability (turret / gadget).
+ * MUST stay above module-level seed consts — Rollup rewrites `function` to a
+ * later `const` assignment; calling it before that assignment blanks Open with
+ * `TypeError: … is not a function` during the entry TLA.
+ */
+export function deployAbility(
+  id: string,
+  kind: SkillKind,
+  color: number,
+  opts: { life: number; firstTick: number; interval: number; tail?: number },
+): AbilityDef {
+  const ticks = Math.max(1, Math.floor((opts.life - (opts.tail ?? 0)) / opts.interval));
+  return {
+    id: `deploy:${id}`,
+    name: id,
+    kind,
+    color,
+    target: "aoe",
+    deploy: { life: opts.life, firstTick: opts.firstTick, interval: opts.interval, ticks },
+  };
+}
+
+/**
  * Snare field deployable — the support / zone-control counterpart to the turret,
  * and the second user of the `deploy → tick* → expire` lifecycle. It stands for
  * `life` seconds and, each `interval`, re-pulses a movement slow + chip damage on
@@ -211,31 +234,4 @@ export function kitAbility(id: string, kind: SkillKind, color: number, delay: nu
   };
 }
 
-/**
- * Build a deployable-entity ability (turret / gadget): a persistent autonomous
- * entity that stands for `life` seconds and fires a repeating, self-re-targeting
- * effect — the first after `firstTick`, then one every `interval` — over its
- * lifetime. The tick count is derived from the lifetime exactly as the legacy
- * turret did (`floor((life - tail) / interval)`, min 1, where `tail` is the
- * dead-time at the end where no further tick fits) so the migrated deploy fires
- * the same number of volleys at the same times. The host supplies the spawn
- * visuals (`onDeploy`), each volley (`onTick`, which re-acquires its target),
- * and optional teardown (`onExpire`); the orchestrator owns only the lifetime +
- * the tick schedule, never the targeting. `kind` / `color` are descriptive only.
- */
-export function deployAbility(
-  id: string,
-  kind: SkillKind,
-  color: number,
-  opts: { life: number; firstTick: number; interval: number; tail?: number },
-): AbilityDef {
-  const ticks = Math.max(1, Math.floor((opts.life - (opts.tail ?? 0)) / opts.interval));
-  return {
-    id: `deploy:${id}`,
-    name: id,
-    kind,
-    color,
-    target: "aoe",
-    deploy: { life: opts.life, firstTick: opts.firstTick, interval: opts.interval, ticks },
-  };
-}
+

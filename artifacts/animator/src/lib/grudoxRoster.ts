@@ -204,10 +204,6 @@ export function buildVoxelCampfireHeroes(
       (typeof c.config?.baseId === "string" && c.config.baseId) ||
       (typeof c.raceId === "string" && /orc|sanji|skeleton/i.test(c.raceId) ? c.raceId : "explorer");
     const raceKey = baseIdToRaceKey(baseId) || baseIdToRaceKey(c.raceId);
-    const open =
-      c.saveData && typeof c.saveData === "object"
-        ? ((c.saveData as { open?: { voxelLook?: Record<string, unknown> } }).open ?? null)
-        : null;
     return {
       id: c.id,
       name: c.name,
@@ -216,9 +212,8 @@ export function buildVoxelCampfireHeroes(
       raceLabel: RACE_LABEL[raceKey] || c.raceId || "Explorer",
       slot,
       source,
-      voxelLook:
-        open?.voxelLook && typeof open.voxelLook === "object" ? open.voxelLook : null,
-      voxelLook: voxelLookFromCharacter(c),
+      // Fleet SSOT: saveData.open.voxelLook via helper (not a parallel draft key).
+      voxelLook: voxelLookFromCharacter(c) ?? null,
     };
   };
 
@@ -274,10 +269,8 @@ export type GenesisHeroOption = {
   raceLabel: string;
   slot: number;
   source: "grudox" | "fleet";
-  /** Railway saveData.open.voxelLook — per-character cosmetics. */
-  voxelLook?: Record<string, unknown> | null;
   /** Railway `saveData.open.voxelLook` for this UUID — not a shared wardrobe. */
-  voxelLook?: Record<string, unknown>;
+  voxelLook?: Record<string, unknown> | null;
 };
 
 const RACE_LABEL: Record<string, string> = {

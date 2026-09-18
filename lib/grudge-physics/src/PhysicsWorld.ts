@@ -1,4 +1,4 @@
-import RAPIER from "@dimforge/rapier3d-compat";
+import type RapierNamespace from "@dimforge/rapier3d-compat";
 import {
   GRAVITY_Y,
   PHYSICS_DT,
@@ -8,6 +8,16 @@ import {
 } from "./constants";
 import { CharacterCapsuleKcc } from "./CharacterCapsuleKcc";
 
+type RapierModule = typeof RapierNamespace;
+
+/**
+ * Live Rapier module — assigned by {@link ensureRapier}.
+ * Never statically import `@dimforge/rapier3d-compat` from this file: that
+ * pulls WASM into the library first-paint graph and blanks Open when the
+ * sibling `.wasm` asset is missing.
+ */
+export let RAPIER!: RapierModule;
+
 /**
  * Renderer-agnostic Rapier physics core — SSOT for all Warlords-era scenes.
  *
@@ -16,7 +26,7 @@ import { CharacterCapsuleKcc } from "./CharacterCapsuleKcc";
  * Fixed-step accumulator decouples sim from variable render dt.
  */
 export class PhysicsWorld {
-  world: RAPIER.World | null = null;
+  world: RapierNamespace.World | null = null;
   ready = false;
 
   private accum = 0;
@@ -362,8 +372,14 @@ let initPromise: Promise<void> | null = null;
 
 /** Initialise the Rapier wasm runtime exactly once across all instances. */
 export function ensureRapier(): Promise<void> {
-  if (!initPromise) initPromise = RAPIER.init({});
+  if (!initPromise) {
+    initPromise = (async () => {
+      const mod = await import("@dimforge/rapier3d-compat");
+      RAPIER = mod.default;
+      await RAPIER.init({});
+    })();
+  }
   return initPromise;
 }
 
-export { RAPIER, capsuleCenterOffset };
+export { capsuleCenterOffset };
