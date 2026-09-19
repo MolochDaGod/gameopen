@@ -155,7 +155,6 @@ import { CharacterInfoMode } from "./components/CharacterInfoMode";
 import { CampfireLobby } from "./components/CampfireLobby";
 import { WarlordGenesis } from "./components/WarlordGenesis";
 import { MineGrudgeEditorMode } from "./components/MineGrudgeEditorMode";
-import { RealmsSurface } from "./components/RealmsSurface";
 import { CollectionHealth } from "./components/CollectionHealth";
 import { VoxelEditorUI } from "./components/VoxelEditorUI";
 import { VoxelMapsPanel } from "./components/VoxelMapsPanel";
@@ -2973,9 +2972,11 @@ export default function App() {
   }
 
   if (mode === "realms") {
-    // Collection path /realms — Mine-Loader in-app (SSO canvas)
+    if (typeof window !== "undefined") {
+      window.location.replace("https://mineloader.grudge-studio.com/?from=open-library");
+    }
     return shell(
-      <RealmsSurface onExit={() => navigate("doors")} surface="lobby" />,
+      <div className="p-6 text-sm text-white/60">Opening Mine-Loader Realms…</div>,
     );
   }
 

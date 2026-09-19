@@ -308,14 +308,10 @@ export function warlordsPlayUrl(opts: {
 }
 
 /**
- * Open collection path for Realms (preferred entry from Library / Zones).
- * Resolves to open.grudge-studio.com/realms when on the Open host.
+ * Realms play lives on Mine-Loader. Open /realms is an edge redirect, not a canvas.
  */
 export function openRealmsCollectionPath(): string {
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/realms`;
-  }
-  return "https://open.grudge-studio.com/realms";
+  return "https://mineloader.grudge-studio.com/?from=open-library";
 }
 
 /** Full VoxGrudge open-world (not the in-Open thin voxel editor). */

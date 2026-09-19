@@ -342,10 +342,10 @@ export const OPEN_SURFACES: readonly OpenSurface[] = [
     aliases: ["minegrudge", "mineloader", "mine-loader", "grudox-realms", "worlds"],
     cabinets: ["minegrudge", "realms", "mine-loader"],
     title: "GRUDOX Realms",
-    blurb: "Mine-Loader worlds in Open — lobby, build, co-op (SSO canvas, 1-replica authority).",
+    blurb: "Leaves Open for Mine-Loader (mineloader.grudge-studio.com). Not an in-Open iframe.",
     group: "multiplayer",
     poster: "library-mine",
-    tags: ["Realms", "Voxel", "In-app"],
+    tags: ["Realms", "Voxel", "Mine-Loader"],
     accent: "#7ee0a0",
   },
   {

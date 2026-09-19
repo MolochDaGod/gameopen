@@ -4,6 +4,28 @@
   "installCommand": "echo skip-root-install",
   "outputDirectory": "artifacts/animator/dist/public",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/realms",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "permanent": false
+    },
+    {
+      "source": "/realms/:path*",
+      "destination": "https://mineloader.grudge-studio.com/:path*?from=open-library",
+      "permanent": false
+    },
+    {
+      "source": "/mine",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "permanent": false
+    },
+    {
+      "source": "/mineloader",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/assets/index-BYDtnCzP.js",

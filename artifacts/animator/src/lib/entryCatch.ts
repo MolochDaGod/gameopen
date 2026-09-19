@@ -68,8 +68,8 @@ export const PRODUCT_STARTS = {
   grudoxArcade: `${ENTRY_HOSTS.grudox}/arcade`,
   /** Voxel Realms islands — harvest/craft/build/sail (Mine-Loader) */
   mineLoader: `${ENTRY_HOSTS.mineLoader}/`,
-  /** Open in-app Realms surface */
-  openRealms: `${ENTRY_HOSTS.open}/realms`,
+  /** Voxel Realms — Mine-Loader host (Open /realms is a redirect, not a canvas) */
+  openRealms: `${ENTRY_HOSTS.mineLoader}/`,
   /** Open voxel worldbuilder (deployables / blocks) */
   openVoxel: `${ENTRY_HOSTS.open}/voxel`,
   /** Open Danger harvest lab */

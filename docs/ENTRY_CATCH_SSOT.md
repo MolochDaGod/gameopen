@@ -61,7 +61,7 @@ Helpers: `startUrlForIntent(...)`, `PRODUCT_STARTS`.
 | Incoming | Action |
 |----------|--------|
 | `/arcade/play/racer` (etc. GRUDOX-only) on Open | **Hard redirect** → grudox arcade |
-| `/realms` `/mine` on Open | **Hard redirect** → mine.grudge-studio.com |
+| `/realms` `/mine` on Open | **Edge + client** hard redirect → `mineloader.grudge-studio.com` (Vercel `redirects` in `vercel.json` — do not wait for SPA/SW) |
 | `/voxel` on Open | **Hard redirect** → grudox `/studio/` |
 | `/arcade/play/explorer` | GRUDOX **voxel Danger** tvs-showcase (dressing if `?dressing=1` stays Open editor) |
 | `?mode=create` / `/foundry` on Open | **Hard redirect** → character foundry + safe `returnTo` |
