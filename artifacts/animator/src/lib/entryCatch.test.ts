@@ -206,6 +206,8 @@ describe("entryCatch", () => {
     expect(r.kind).toBe("hard_redirect");
     if (r.kind === "hard_redirect") {
       expect(r.url).toMatch(/mine/i);
+      expect(r.url).toMatch(/surface=lobby/);
+      expect(r.url).toMatch(/#\/lobby/);
     }
   });
 });

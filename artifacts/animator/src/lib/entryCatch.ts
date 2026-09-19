@@ -8,6 +8,8 @@
  */
 
 import type { AppMode } from "./openRoutes";
+import { buildMineLoaderUrl } from "../auth/mineLoaderConfig";
+import { getStoredToken } from "./grudgeAuth";
 
 /** Canonical production hosts (no trailing slash). */
 export const ENTRY_HOSTS = {
@@ -360,13 +362,22 @@ export function catchEntry(input: CatchInput): CatchAction {
 
   // Voxel play stays on GRUDOX / Mine-Loader — Open is the library only.
   if (parts[0] === "realms" || parts[0] === "mine" || parts[0] === "mineloader") {
-    const dest = new URL(PRODUCT_STARTS.mineLoader);
-    dest.searchParams.set("from", "open-library");
-    dest.hash = "/play";
+    let token: string | null = null;
+    if (typeof window !== "undefined") {
+      try {
+        token = getStoredToken();
+      } catch {
+        token = null;
+      }
+    }
     return {
       kind: "hard_redirect",
-      url: dest.toString(),
-      reason: "voxel Realms play → mine.grudge-studio.com (GRUDOX era)",
+      url: buildMineLoaderUrl({
+        surface: "lobby",
+        token,
+        baseId: "explorer",
+      }),
+      reason: "voxel Realms play → Mine-Loader #/lobby (SSO when signed in)",
     };
   }
   if (parts[0] === "voxel") {

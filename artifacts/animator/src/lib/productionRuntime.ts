@@ -21,6 +21,7 @@ import {
   EXPLORER_STARTING_TOWN_DEPLOYMENT,
   hashSeed,
 } from "@workspace/voxel-canonical";
+import { buildMineLoaderUrl } from "../auth/mineLoaderConfig";
 
 export {
   PHYSICS_HZ,
@@ -311,7 +312,7 @@ export function warlordsPlayUrl(opts: {
  * Realms play lives on Mine-Loader. Open /realms is an edge redirect, not a canvas.
  */
 export function openRealmsCollectionPath(): string {
-  return "https://mineloader.grudge-studio.com/?from=open-library";
+  return buildMineLoaderUrl({ surface: "lobby", baseId: "explorer" });
 }
 
 /** Full VoxGrudge open-world (not the in-Open thin voxel editor). */

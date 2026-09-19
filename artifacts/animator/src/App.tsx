@@ -186,6 +186,8 @@ import {
   resolveModeFromLocation,
   syncUrlToMode,
 } from "./lib/openRoutes";
+import { buildMineLoaderUrl } from "./auth/mineLoaderConfig";
+import { getStoredToken } from "./lib/grudgeAuth";
 import "./index.css";
 import "./components/dock/dock.css";
 
@@ -2973,7 +2975,13 @@ export default function App() {
 
   if (mode === "realms") {
     if (typeof window !== "undefined") {
-      window.location.replace("https://mineloader.grudge-studio.com/?from=open-library");
+      window.location.replace(
+        buildMineLoaderUrl({
+          surface: "lobby",
+          token: getStoredToken(),
+          baseId: "explorer",
+        }),
+      );
     }
     return shell(
       <div className="p-6 text-sm text-white/60">Opening Mine-Loader Realms…</div>,

@@ -7,22 +7,22 @@
   "redirects": [
     {
       "source": "/realms",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
       "permanent": false
     },
     {
       "source": "/realms/:path*",
-      "destination": "https://mineloader.grudge-studio.com/:path*?from=open-library",
+      "destination": "https://mineloader.grudge-studio.com/:path*?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
       "permanent": false
     },
     {
       "source": "/mine",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
       "permanent": false
     },
     {
       "source": "/mineloader",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library",
+      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
       "permanent": false
     }
   ],
