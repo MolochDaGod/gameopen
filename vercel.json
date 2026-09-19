@@ -6,27 +6,28 @@
   "framework": null,
   "redirects": [
     {
-      "source": "/realms",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
-      "permanent": false
-    },
-    {
-      "source": "/realms/:path*",
-      "destination": "https://mineloader.grudge-studio.com/:path*?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
-      "permanent": false
-    },
-    {
-      "source": "/mine",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
-      "permanent": false
-    },
-    {
       "source": "/mineloader",
-      "destination": "https://mineloader.grudge-studio.com/?from=open-library&open=1&era=voxel&surface=lobby&entry=lobby",
+      "destination": "/realms",
       "permanent": false
     }
   ],
   "rewrites": [
+    {
+      "source": "/realms",
+      "destination": "/realms-handoff.html"
+    },
+    {
+      "source": "/realms/:path*",
+      "destination": "/realms-handoff.html"
+    },
+    {
+      "source": "/mine",
+      "destination": "/realms-handoff.html"
+    },
+    {
+      "source": "/mine/:path*",
+      "destination": "/realms-handoff.html"
+    },
     {
       "source": "/assets/index-BYDtnCzP.js",
       "destination": "/stale-shell-reload.js"

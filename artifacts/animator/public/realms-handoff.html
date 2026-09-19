@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Opening Realms…</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body style="background:#0b1020;color:#9aa;font:14px/1.4 sans-serif;padding:2rem">
+    Opening Mine-Loader Realms…
+    <script>
+      (function () {
+        var keys = [
+          "grudge_auth_token",
+          "grudge_session_token",
+          "grudge.token",
+          "sso_token",
+        ];
+        var token = "";
+        try {
+          for (var i = 0; i < keys.length; i++) {
+            token = sessionStorage.getItem(keys[i]) || localStorage.getItem(keys[i]) || "";
+            if (token) break;
+          }
+        } catch (e) {}
+        var u = new URL("https://mineloader.grudge-studio.com/");
+        u.searchParams.set("from", "open-library");
+        u.searchParams.set("open", "1");
+        u.searchParams.set("era", "voxel");
+        u.searchParams.set("surface", "lobby");
+        u.searchParams.set("entry", "lobby");
+        u.searchParams.set("baseId", "explorer");
+        if (token) {
+          u.searchParams.set("sso_token", token);
+          u.searchParams.set("grudge_token", token);
+        }
+        u.hash = "/lobby";
+        location.replace(u.toString());
+      })();
+    </script>
+  </body>
+</html>
