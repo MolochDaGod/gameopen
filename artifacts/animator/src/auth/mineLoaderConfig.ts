@@ -179,13 +179,8 @@ export function buildMineLoaderUrl(opts: MineLoaderLaunchOpts = {}): string {
   // Always pin body form for Realms: explorer / box_hero path (never grudge6 race-*).
   if (!opts.baseId) url.searchParams.set("baseId", "explorer");
 
-  // Point SPA API at Railway authority (or same-origin Open proxy when embedded).
-  // Mine-Loader Vercel also rewrites /api/* → Railway; absolute API avoids drift.
-  // On Replit the SPA uses fleetProxy + absolute Builder when rewrites are missing.
-  const api =
-    (opts.apiBase && opts.apiBase.replace(/\/+$/, "")) ||
-    MINE_LOADER_API;
-  url.searchParams.set("api", api);
+  // Do not set api= to Railway in the browser — CORS blocks it and lobby worlds
+  // stay empty. Same-origin /api on mineloader.* rewrites to Railway.
 
   // Ask Realms to re-pull shells after Open detected a new fleet deploy epoch.
   try {
