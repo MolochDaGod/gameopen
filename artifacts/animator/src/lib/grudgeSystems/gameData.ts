@@ -24,6 +24,8 @@ export type SkillNode = {
   /** Absolute CDN URL for UI */
   iconUrl?: string;
   slot?: string;
+  /** SKIL law id from master-weaponSkills. */
+  grudgeUuid?: string;
 };
 
 export type SkillTree = {

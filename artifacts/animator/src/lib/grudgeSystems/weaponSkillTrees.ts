@@ -9,6 +9,8 @@ import { WEAPON_SKILLS, WEAPON_TYPES, type SkillNode } from "./gameData";
 
 type MasterSkill = {
   id?: string;
+  uuid?: string;
+  grudgeUuid?: string;
   name?: string;
   description?: string;
   icon?: string;
@@ -86,6 +88,7 @@ function flattenMasterSkills(wt: MasterWeaponType): SkillNode[] {
         icon: icon || undefined,
         iconUrl,
         slot: slot.type || slot.label,
+        grudgeUuid: s.grudgeUuid || s.uuid,
       });
     }
   }

@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Lights.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Lights.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-0000A2-135CA2AA",
+  "masterUuid": "SKIL-EA1E-9193-7BB8",
   "damageType": "holy",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-0000A2-135CA2AA",
+  "grudgeUuid": "SKIL-EA1E-9193-7BB8",
+  "slotRecipe": true
 }

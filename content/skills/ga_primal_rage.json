@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Burns.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Burns.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-00007D--15D4978",
+  "masterUuid": "SKIL-B7C1-0B6C-4462",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-00007D--15D4978",
+  "grudgeUuid": "SKIL-B7C1-0B6C-4462"
 }

@@ -13,9 +13,19 @@
     "notes": "Madarame bake — polearm/attack3 combo finisher hit"
   },
   "power": 1.2,
-  "cost": { "stamina": 5, "mana": 0 },
+  "cost": {
+    "stamina": 5,
+    "mana": 0
+  },
   "cooldown": 5,
-  "hitWindows": [{ "t": 0.4, "kind": "melee", "radius": 1.7, "angleDeg": 100 }],
+  "hitWindows": [
+    {
+      "t": 0.4,
+      "kind": "melee",
+      "radius": 1.7,
+      "angleDeg": 100
+    }
+  ],
   "vfx": {
     "cast": "#ffe080",
     "impact": "#ffd060",
@@ -24,7 +34,7 @@
   "icon": {
     "path": "icons/pack/weapons/Spear_30.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_30.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -34,7 +44,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-00008C--58E6872",
+  "masterUuid": "SKIL-4C2D-0AC7-B95C",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-00008C--58E6872",
+  "grudgeUuid": "SKIL-4C2D-0AC7-B95C"
 }

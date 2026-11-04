@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Hammer_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Hammer_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "hammer_earthshatter": "SKIL-DC5A-ED58-F115",
+    "hammer_thunderous_charge": "SKIL-8CAA-8C44-0400",
+    "hammer_cataclysm_blow": "SKIL-A354-AD1B-3BB4",
+    "hammer_seismic_slam": "SKIL-9918-CD2D-BCA9"
   }
 }

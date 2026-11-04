@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Electro.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Electro.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000059-42C551A0",
+  "masterUuid": "SKIL-8CAA-8C44-0400",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000059-42C551A0",
+  "grudgeUuid": "SKIL-8CAA-8C44-0400"
 }

@@ -35,7 +35,44 @@
   "icon": {
     "path": "icons/pack/weapons/staff_34.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/staff_34.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
-  }
+  },
+  "skillUuids": {
+    "wand_missile": "SKIL-1DE4-0C8F-30E7",
+    "wand_blink": "SKIL-DCA0-66F9-6FFA",
+    "wand_chain": "SKIL-E534-670A-FCEE",
+    "wand_meteor_shower": "SKIL-F53A-5C44-A329"
+  },
+  "special": true,
+  "craft": {
+    "madeBy": [
+      "Mage",
+      "Priest"
+    ],
+    "how": "Mage and Priest craft the wand and infuse one skill recipe into each slot.",
+    "slotRecipes": [
+      {
+        "slot": "primary",
+        "skillId": "wand_missile",
+        "name": "Magic Missile"
+      },
+      {
+        "slot": "secondary",
+        "skillId": "wand_blink",
+        "name": "Blink"
+      },
+      {
+        "slot": "ability",
+        "skillId": "wand_chain",
+        "name": "Chain Lightning"
+      },
+      {
+        "slot": "ultimate",
+        "skillId": "wand_meteor_shower",
+        "name": "Meteor Shower"
+      }
+    ]
+  },
+  "catalogTypeUuid": "ITEM-20260621232130-000DCA-99331940"
 }

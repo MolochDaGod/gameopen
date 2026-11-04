@@ -13,8 +13,25 @@ const contentRootCandidates = [
   join(__dirname, "../../content"),
   join(__dirname, "../../../content"),
 ];
-const contentRoot =
-  contentRootCandidates.find((p) => existsSync(p)) || contentRootCandidates[0];
+
+/** Prefer the tree that actually holds the catalog skill stamp.
+ *  server/content is a small sandbox mirror and must not hide repo content/. */
+function pickContentRoot(candidates: string[]): string {
+  let best = candidates[0] || ".";
+  let bestCount = -1;
+  for (const p of candidates) {
+    const dir = join(p, "skills");
+    if (!existsSync(dir)) continue;
+    const count = readdirSync(dir).filter((f) => f.endsWith(".json")).length;
+    if (count > bestCount) {
+      best = p;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+const contentRoot = pickContentRoot(contentRootCandidates);
 
 function loadCollection(name: string): unknown[] {
   const dir = join(contentRoot, name);

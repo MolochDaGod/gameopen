@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Dagger_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Dagger_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "dagger_shadow_stab": "SKIL-DBA4-9528-5E5E",
+    "dagger_phantom_dash": "SKIL-C50B-F963-C518",
+    "dagger_vengeful_ambush": "SKIL-2962-A2D6-5547",
+    "dagger_deathgiver": "SKIL-3B9B-B366-9987"
   }
 }

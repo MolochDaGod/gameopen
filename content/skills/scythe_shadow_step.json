@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/smoke.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/smoke.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-0000C7--1452537",
+  "masterUuid": "SKIL-E0B5-93F1-7436",
   "damageType": "shadow",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-0000C7--1452537",
+  "grudgeUuid": "SKIL-E0B5-93F1-7436",
+  "slotRecipe": true
 }

@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Sword_27.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Sword_27.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "gs_cleave": "SKIL-2B1A-2E44-8A5A",
+    "gs_whirlwind": "SKIL-7738-CC48-D650",
+    "gs_bladestorm": "SKIL-8025-84EF-A55A",
+    "gs_apocalypse": "SKIL-CCB3-8768-0734"
   }
 }

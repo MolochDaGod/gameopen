@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Book_1.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Book_1.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-SIG-6FABB6-89B748",
+  "masterUuid": "SKIL-9EE7-2D5D-A6DB",
   "damageType": "arcane",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-SIG-6FABB6-89B748",
+  "grudgeUuid": "SKIL-9EE7-2D5D-A6DB",
+  "catalogSkillId": "tome_ice_nova_frost_lance_glacial_shield_frozen_surge_glacier_page"
 }

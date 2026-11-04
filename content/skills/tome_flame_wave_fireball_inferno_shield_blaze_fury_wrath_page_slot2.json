@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Book_1.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Book_1.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-SIG-ACAEBB-CC2861",
+  "masterUuid": "SKIL-0372-828D-DF7E",
   "damageType": "arcane",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-SIG-ACAEBB-CC2861",
+  "grudgeUuid": "SKIL-0372-828D-DF7E",
+  "catalogSkillId": "tome_flame_wave_fireball_inferno_shield_blaze_fury_wrath_page"
 }

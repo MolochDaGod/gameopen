@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Sword_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Sword_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "sword_vengeful_slash": "SKIL-F79D-9F1B-EE24",
+    "sword_blood_rush": "SKIL-CCEB-0D11-314D",
+    "sword_heroic_cleave": "SKIL-712C-BF82-2597",
+    "sword_crimson_reprisal": "SKIL-E2AA-5EE0-29DA"
   }
 }

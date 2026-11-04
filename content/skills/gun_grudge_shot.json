@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/weapons/blackpowder.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/weapons/blackpowder.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000030--2AC2162",
+  "masterUuid": "SKIL-3A96-3739-45B0",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000030--2AC2162",
+  "grudgeUuid": "SKIL-3A96-3739-45B0"
 }

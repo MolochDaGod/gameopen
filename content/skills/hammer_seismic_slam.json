@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Chaos.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Chaos.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000060-77244E3D",
+  "masterUuid": "SKIL-9918-CD2D-BCA9",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000060-77244E3D",
+  "grudgeUuid": "SKIL-9918-CD2D-BCA9"
 }

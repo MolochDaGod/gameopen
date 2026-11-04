@@ -14,8 +14,18 @@
     "spear_storm"
   ],
   "combo": {
-    "clips": ["attack", "attack2", "attack4", "attack3"],
-    "source": ["attack1_1", "attack1_2", "attack1_4", "attack1_3"],
+    "clips": [
+      "attack",
+      "attack2",
+      "attack4",
+      "attack3"
+    ],
+    "source": [
+      "attack1_1",
+      "attack1_2",
+      "attack1_4",
+      "attack1_3"
+    ],
     "notes": "Base 1_1/1_2 · drive-in 1_4(+MM) · finisher 1_3"
   },
   "mesh": {
@@ -42,7 +52,13 @@
   "icon": {
     "path": "icons/pack/weapons/Spear_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "spear_thrust": "SKIL-0C05-5235-ACDB",
+    "spear_lunge": "SKIL-9CEC-F8B6-03B4",
+    "spear_cyclone": "SKIL-9533-FC3C-F871",
+    "spear_storm": "SKIL-328E-E454-A182"
   }
 }

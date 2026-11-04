@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Slash_07.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Slash_07.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000007-39355B5A",
+  "masterUuid": "SKIL-712C-BF82-2597",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000007-39355B5A",
+  "grudgeUuid": "SKIL-712C-BF82-2597"
 }

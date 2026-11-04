@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Effect.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Effect.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000014--6DD3D1C",
+  "masterUuid": "SKIL-0DD8-F0D4-F573",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000014--6DD3D1C",
+  "grudgeUuid": "SKIL-0DD8-F0D4-F573"
 }

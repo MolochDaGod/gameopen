@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Axe_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Axe_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "axe_rending_chop": "SKIL-3A50-B617-0DA5",
+    "axe_adrenaline_surge": "SKIL-66EF-7E7E-0AD2",
+    "axe_carnage_spin": "SKIL-0DD8-F0D4-F573",
+    "axe_apocalypse_cleave": "SKIL-42ED-609C-6B5A"
   }
 }

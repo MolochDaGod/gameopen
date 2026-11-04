@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Crossbow_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Crossbow_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "xbow_heavy_bolt": "SKIL-9F4A-3E6C-79EB",
+    "xbow_knockback_bolt": "SKIL-E92F-B489-3F8B",
+    "xbow_barrage": "SKIL-B4B4-A2B4-8084",
+    "xbow_sweeping_bolt": "SKIL-B817-B817-A501"
   }
 }

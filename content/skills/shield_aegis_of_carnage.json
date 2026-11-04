@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/shield_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/shield_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-SIG-AE4974-1C833F",
+  "masterUuid": "SKIL-8940-E557-A027",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-SIG-AE4974-1C833F",
+  "grudgeUuid": "SKIL-8940-E557-A027"
 }

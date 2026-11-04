@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Bow_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Bow_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "bow_quick_shot": "SKIL-D141-A515-3631",
+    "bow_multishot": "SKIL-C1E3-7F83-A68F",
+    "bow_bear_trap": "SKIL-61D2-38D6-B68A",
+    "bow_arrow_rain": "SKIL-C4B5-5D9B-DC5C"
   }
 }

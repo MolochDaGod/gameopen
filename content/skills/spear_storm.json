@@ -13,9 +13,18 @@
     "notes": "Madarame bake — polearm/special ultimate presentation"
   },
   "power": 4,
-  "cost": { "stamina": 18, "mana": 0 },
+  "cost": {
+    "stamina": 18,
+    "mana": 0
+  },
   "cooldown": 50,
-  "hitWindows": [{ "t": 0.45, "kind": "aoe", "radius": 4.5 }],
+  "hitWindows": [
+    {
+      "t": 0.45,
+      "kind": "aoe",
+      "radius": 4.5
+    }
+  ],
   "vfx": {
     "cast": "#70c0ff",
     "impact": "#90d0ff",
@@ -24,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Spear_35.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_35.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -34,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000090--77D1ACE",
+  "masterUuid": "SKIL-328E-E454-A182",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000090--77D1ACE",
+  "grudgeUuid": "SKIL-328E-E454-A182"
 }

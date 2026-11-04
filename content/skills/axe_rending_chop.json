@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Axe_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Axe_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-00000E-77322E8B",
+  "masterUuid": "SKIL-3A50-B617-0DA5",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-00000E-77322E8B",
+  "grudgeUuid": "SKIL-3A50-B617-0DA5"
 }

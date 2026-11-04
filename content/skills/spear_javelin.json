@@ -13,14 +13,28 @@
     "notes": "Uses skill2 bake as throw pose stand-in until dedicated throw bake"
   },
   "power": 1.4,
-  "cost": { "stamina": 8, "mana": 0 },
+  "cost": {
+    "stamina": 8,
+    "mana": 0
+  },
   "cooldown": 8,
-  "hitWindows": [{ "t": 0.35, "kind": "projectile", "radius": 0.4, "speed": 28 }],
-  "vfx": { "cast": "#ffe8a0", "impact": "#e8d9a0", "mode": "directional" },
+  "hitWindows": [
+    {
+      "t": 0.35,
+      "kind": "projectile",
+      "radius": 0.4,
+      "speed": 28
+    }
+  ],
+  "vfx": {
+    "cast": "#ffe8a0",
+    "impact": "#e8d9a0",
+    "mode": "directional"
+  },
   "icon": {
     "path": "icons/pack/weapons/Spear_15.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_15.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -30,7 +44,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000089--4D41E0A",
+  "masterUuid": "SKIL-1732-DD6F-8B96",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000089--4D41E0A",
+  "grudgeUuid": "SKIL-1732-DD6F-8B96"
 }

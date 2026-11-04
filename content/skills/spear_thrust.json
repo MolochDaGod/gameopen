@@ -12,17 +12,36 @@
     "status": "ready",
     "notes": "Madarame bake — polearm/attack (rotation-only Bip001)"
   },
-  "comboChain": ["attack", "attack2", "attack4", "attack3"],
+  "comboChain": [
+    "attack",
+    "attack2",
+    "attack4",
+    "attack3"
+  ],
   "comboNotes": "LMB: attack1_1 → 1_2 → 1_4(+MM) → 1_3 finisher",
   "power": 0.9,
-  "cost": { "stamina": 3, "mana": 0 },
+  "cost": {
+    "stamina": 3,
+    "mana": 0
+  },
   "cooldown": 1,
-  "hitWindows": [{ "t": 0.22, "kind": "melee", "radius": 1.5, "angleDeg": 90 }],
-  "vfx": { "cast": "#9fe8ff", "impact": "#c8e8ff", "mode": "slash" },
+  "hitWindows": [
+    {
+      "t": 0.22,
+      "kind": "melee",
+      "radius": 1.5,
+      "angleDeg": 90
+    }
+  ],
+  "vfx": {
+    "cast": "#9fe8ff",
+    "impact": "#c8e8ff",
+    "mode": "slash"
+  },
   "icon": {
     "path": "icons/pack/weapons/Spear_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -32,7 +51,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000086--36C4968",
+  "masterUuid": "SKIL-0C05-5235-ACDB",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000086--36C4968",
+  "grudgeUuid": "SKIL-0C05-5235-ACDB"
 }

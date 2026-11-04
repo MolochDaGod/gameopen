@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Lava.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Lava.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000054--56F60DB",
+  "masterUuid": "SKIL-756E-23AC-7C7E",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000054--56F60DB",
+  "grudgeUuid": "SKIL-756E-23AC-7C7E"
 }

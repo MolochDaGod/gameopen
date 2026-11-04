@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Hammer_21.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Hammer_21.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-00009F--46217A7",
+  "masterUuid": "SKIL-39CD-B107-0BBF",
   "damageType": "holy",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-00009F--46217A7",
+  "grudgeUuid": "SKIL-39CD-B107-0BBF",
+  "slotRecipe": true
 }

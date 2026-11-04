@@ -35,7 +35,13 @@
   "icon": {
     "path": "icons/pack/weapons/Axe_30.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Axe_30.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "ga_brutal": "SKIL-06C6-0D02-1E2F",
+    "ga_primal_rage": "SKIL-B7C1-0B6C-4462",
+    "ga_devastate": "SKIL-30CC-0D06-B9EB",
+    "ga_ragnarok": "SKIL-4205-9FCE-85D3"
   }
 }

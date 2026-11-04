@@ -24,11 +24,43 @@
     "align": "z",
     "status": "ready",
     "points": {
-      "grip": { "pos": [0, 0, 0] },
-      "barrel": { "pos": [0, 0.06, 0.36] },
-      "tip": { "pos": [0, 0.06, 0.36] },
-      "physics": { "pos": [0, 0.05, 0.15], "radius": 0.04, "halfHeight": 0.12 },
-      "effect": { "pos": [0, 0.06, 0.36] }
+      "grip": {
+        "pos": [
+          0,
+          0,
+          0
+        ]
+      },
+      "barrel": {
+        "pos": [
+          0,
+          0.06,
+          0.36
+        ]
+      },
+      "tip": {
+        "pos": [
+          0,
+          0.06,
+          0.36
+        ]
+      },
+      "physics": {
+        "pos": [
+          0,
+          0.05,
+          0.15
+        ],
+        "radius": 0.04,
+        "halfHeight": 0.12
+      },
+      "effect": {
+        "pos": [
+          0,
+          0.06,
+          0.36
+        ]
+      }
     }
   },
   "physics": {
@@ -39,8 +71,14 @@
     "sensor": true
   },
   "effects": {
-    "muzzle": { "at": "barrel", "color": "#fff2a8" },
-    "impact": { "at": "barrel", "color": "#ffb070" }
+    "muzzle": {
+      "at": "barrel",
+      "color": "#fff2a8"
+    },
+    "impact": {
+      "at": "barrel",
+      "color": "#ffb070"
+    }
   },
   "tags": [
     "master-weaponSkills",
@@ -59,7 +97,13 @@
   "icon": {
     "path": "icons/weapons/blackpowder.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/weapons/blackpowder.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "gun_grudge_shot": "SKIL-3A96-3739-45B0",
+    "gun_explosive_round": "SKIL-D29F-24F3-EAB3",
+    "gun_hellfire_barrage": "SKIL-70F2-A904-626B",
+    "gun_demon_blast": "SKIL-7AEF-C069-4A62"
   }
 }

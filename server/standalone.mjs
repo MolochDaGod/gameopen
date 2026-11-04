@@ -23,6 +23,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = existsSync(join(__dirname, "content"))
   ? __dirname
   : join(__dirname, "..");
+
+/** Pick the content tree that holds the catalog skill stamp.
+ *  server/content is a small sandbox mirror and must not hide repo content/. */
+function pickContentRoot(candidates) {
+  let best = candidates[0] || ".";
+  let bestCount = -1;
+  for (const p of candidates) {
+    const dir = join(p, "skills");
+    if (!existsSync(dir)) continue;
+    const count = readdirSync(dir).filter((f) => f.endsWith(".json")).length;
+    if (count > bestCount) {
+      best = p;
+      bestCount = count;
+    }
+  }
+  return best;
+}
 const PORT = Number(process.env.PORT || 8080);
 const ASSETS_CDN = process.env.ASSETS_CDN || "https://assets.grudge-studio.com";
 const GAMEOPEN_PREFIX = process.env.GAMEOPEN_ASSET_PREFIX || "gameopen";
@@ -251,12 +268,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (path.startsWith("/api/content/")) {
-    // Docker (/app/content), server-root Docker (./content), monorepo (../content)
-    const contentRoot = [
+    // Docker (/app/content), server-root Docker (./content), monorepo (../content).
+    // When more than one exists, use the tree with the catalog skill files.
+    const contentRoot = pickContentRoot([
       join(__dirname, "content"),
       join(__dirname, "../content"),
       "/app/content",
-    ].find((p) => existsSync(p)) || join(__dirname, "content");
+    ]);
     const loadCollection = (name) => {
       const dir = join(contentRoot, name);
       if (!existsSync(dir)) return [];

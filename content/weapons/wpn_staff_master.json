@@ -24,11 +24,43 @@
     "align": "y",
     "status": "ready",
     "points": {
-      "grip": { "pos": [0, 0, 0] },
-      "cast": { "pos": [0, 1.45, 0] },
-      "tip": { "pos": [0, 1.45, 0] },
-      "physics": { "pos": [0, 0.8, 0], "radius": 0.05, "halfHeight": 0.7 },
-      "effect": { "pos": [0, 1.45, 0] }
+      "grip": {
+        "pos": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cast": {
+        "pos": [
+          0,
+          1.45,
+          0
+        ]
+      },
+      "tip": {
+        "pos": [
+          0,
+          1.45,
+          0
+        ]
+      },
+      "physics": {
+        "pos": [
+          0,
+          0.8,
+          0
+        ],
+        "radius": 0.05,
+        "halfHeight": 0.7
+      },
+      "effect": {
+        "pos": [
+          0,
+          1.45,
+          0
+        ]
+      }
     }
   },
   "physics": {
@@ -39,8 +71,14 @@
     "sensor": true
   },
   "effects": {
-    "cast": { "at": "cast", "color": "#ff7a1a" },
-    "impact": { "at": "cast", "color": "#ff7a1a" }
+    "cast": {
+      "at": "cast",
+      "color": "#ff7a1a"
+    },
+    "impact": {
+      "at": "cast",
+      "color": "#ff7a1a"
+    }
   },
   "tags": [
     "master-weaponSkills",
@@ -59,7 +97,13 @@
   "icon": {
     "path": "icons/pack/weapons/staff_1.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/staff_1.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
+  },
+  "skillUuids": {
+    "staff_fire_bolt": "SKIL-2F1D-4787-338B",
+    "staff_flame_wave": "SKIL-1D35-5ED8-086C",
+    "staff_inferno_shield": "SKIL-2074-333A-258B",
+    "staff_hellstorm": "SKIL-756E-23AC-7C7E"
   }
 }

@@ -41,8 +41,10 @@ export interface ScriptableSkill {
   kind: SkillKind;
   damageType: string;
   slot: MasterSlotType | "utility";
-  /** Master catalog uuid when present */
+  /** Catalog skill id, or the SKIL law id when the kit has one. */
   masterId?: string;
+  /** SKIL-XXXX-XXXX-XXXX. Same value as master-weaponSkills grudgeUuid. */
+  grudgeUuid?: string;
   /** Projectile tag from catalog */
   projectile?: string | null;
   /** Hit window as fraction of cast/anim [0-1] */
@@ -91,7 +93,8 @@ function kitSkillToScriptable(
     kind: spear?.kind || sk.kind,
     damageType: sk.damageType,
     slot: sk.slot,
-    masterId: sk.id,
+    masterId: sk.grudgeUuid || sk.id,
+    grudgeUuid: sk.grudgeUuid,
     hitWindow: spear?.hitWindow || (sk.castTime > 0.05 ? [0.4, 0.75] : [0.28, 0.55]),
     requiresWeaponType: WEAPON_TO_MASTER[weaponId],
   };

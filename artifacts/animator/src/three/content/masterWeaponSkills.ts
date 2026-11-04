@@ -9,13 +9,15 @@
  *
  * Runtime: fetch once, map to 4-slot T0-shaped kits used by Studio HUD / combat.
  * Prefab JSON under content/skills remains the sandbox anim/VFX layer.
+ * Weapons are not class-gated. WAND, SCYTHE, and MACE are class-made: the
+ * slot's recipeSkillId is the infused skill, and its grudgeUuid is the SKIL law.
  */
 import type { SkillKind, WeaponId } from "../types";
 import { fetchCatalogJson } from "../../lib/fleetSsot";
 import { cdnIconUrl, resolveSlotIconUrl } from "../skillIcons";
 import { spearClipForSkillId } from "../ummorpg/spearCombat";
 
-export const MASTER_WEAPON_SKILLS_VERSION = "3.1.0";
+export const MASTER_WEAPON_SKILLS_VERSION = "3.2.4";
 
 /** Master catalog weapon type ids. */
 export type MasterWeaponTypeId =
@@ -41,11 +43,15 @@ export type MasterSlotType = "primary" | "secondary" | "ability" | "ultimate";
 
 export interface MasterSkill {
   uuid?: string;
+  /** SKIL-XXXX-XXXX-XXXX from sha1(grudge-skill:{id}). Mirrors uuid. */
+  grudgeUuid?: string;
   id: string;
   name: string;
   description?: string;
   icon?: string;
   tier?: number;
+  /** True when this row is the infused slot recipe (wand, scythe, mace). */
+  slotRecipe?: boolean;
   damage?: number;
   cooldown?: number;
   castTime?: number | null;
@@ -60,6 +66,8 @@ export interface MasterSlot {
   type: MasterSlotType;
   label?: string;
   skills: MasterSkill[];
+  /** Catalog id of the one skill infused into this slot. */
+  recipeSkillId?: string;
 }
 
 export interface MasterWeaponType {
@@ -78,7 +86,8 @@ export interface MasterWeaponSkillsCatalog {
   version: string;
   totalSkills: number;
   weaponTypes: MasterWeaponType[];
-  classRestrictions?: Record<string, string[]>;
+  /** Always false. Any class can use any weapon. */
+  classWeaponRestrictions: boolean;
   offhandMechanics?: Record<string, unknown>;
   raw: unknown;
 }
@@ -166,6 +175,8 @@ export interface MasterKitSkill {
   damageType: string;
   slot: MasterSlotType;
   castTime: number;
+  /** Catalog SKIL law id. Absent on placeholders. */
+  grudgeUuid?: string;
 }
 
 export interface MasterWeaponKit {
@@ -199,8 +210,7 @@ export async function loadMasterWeaponSkills(
           version: String(raw.version || MASTER_WEAPON_SKILLS_VERSION),
           totalSkills: Number(raw.totalSkills || 0),
           weaponTypes,
-          classRestrictions:
-            raw.classRestrictions as MasterWeaponSkillsCatalog["classRestrictions"],
+          classWeaponRestrictions: raw.classWeaponRestrictions === true,
           offhandMechanics:
             raw.offhandMechanics as MasterWeaponSkillsCatalog["offhandMechanics"],
           raw,
@@ -225,14 +235,16 @@ export function getCachedMasterWeaponSkills(): MasterWeaponSkillsCatalog | null 
 
 function pickSkill(slot: MasterSlot | undefined, preferTier = 1): MasterSkill | null {
   if (!slot?.skills?.length) return null;
+  if (slot.recipeSkillId) {
+    const recipe = slot.skills.find((s) => s.id === slot.recipeSkillId);
+    if (recipe) return recipe;
+  }
+  const infused = slot.skills.find((s) => s.slotRecipe);
+  if (infused) return infused;
   const sorted = [...slot.skills].sort(
     (a, b) => (a.tier ?? 99) - (b.tier ?? 99) || a.name.localeCompare(b.name),
   );
-  return (
-    sorted.find((s) => (s.tier ?? 1) <= preferTier) ||
-    sorted[0] ||
-    null
-  );
+  return sorted.find((s) => (s.tier ?? 1) <= preferTier) || sorted[0] || null;
 }
 
 function toKitSkill(skill: MasterSkill, slot: MasterSlotType): MasterKitSkill {
@@ -261,6 +273,7 @@ function toKitSkill(skill: MasterSkill, slot: MasterSlotType): MasterKitSkill {
     damageType: skill.damageType || "physical",
     slot,
     castTime: Number(skill.castTime) || 0,
+    grudgeUuid: skill.grudgeUuid || skill.uuid,
   };
 }
 
@@ -380,6 +393,7 @@ export function masterKitToSignatureSkills(kit: MasterWeaponKit): {
   cooldown: number;
   iconUrl?: string | null;
   skillId?: string;
+  grudgeUuid?: string;
   damage?: number;
 }[] {
   const isSpear =
@@ -401,6 +415,7 @@ export function masterKitToSignatureSkills(kit: MasterWeaponKit): {
       cooldown: s.cooldown,
       iconUrl,
       skillId: s.id,
+      grudgeUuid: s.grudgeUuid,
       damage: s.damage,
     };
   });

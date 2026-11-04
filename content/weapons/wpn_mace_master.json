@@ -35,7 +35,45 @@
   "icon": {
     "path": "icons/pack/weapons/Hammer_21.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Hammer_21.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
-  }
+  },
+  "skillUuids": {
+    "mace_holy_strike": "SKIL-39CD-B107-0BBF",
+    "mace_sanctify": "SKIL-EA1E-9193-7BB8",
+    "mace_smite": "SKIL-BBB9-7348-ED6A",
+    "mace_divine_wrath": "SKIL-6335-63B2-5DFC"
+  },
+  "special": true,
+  "craft": {
+    "madeBy": [
+      "Worge",
+      "Verduror"
+    ],
+    "station": "alchemy bowl",
+    "how": "Worge and Verduror craft the grove mace at the alchemy bowl and infuse one skill recipe into each slot.",
+    "slotRecipes": [
+      {
+        "slot": "primary",
+        "skillId": "mace_holy_strike",
+        "name": "Holy Strike"
+      },
+      {
+        "slot": "secondary",
+        "skillId": "mace_sanctify",
+        "name": "Sanctify"
+      },
+      {
+        "slot": "ability",
+        "skillId": "mace_smite",
+        "name": "Smite"
+      },
+      {
+        "slot": "ultimate",
+        "skillId": "mace_divine_wrath",
+        "name": "Divine Wrath"
+      }
+    ]
+  },
+  "catalogTypeUuid": "ITEM-20260621232130-000DBD-92FA6ED1"
 }

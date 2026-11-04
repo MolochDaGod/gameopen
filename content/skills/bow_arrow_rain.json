@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Arrow_08.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Arrow_08.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000022--667C53E",
+  "masterUuid": "SKIL-C4B5-5D9B-DC5C",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000022--667C53E",
+  "grudgeUuid": "SKIL-C4B5-5D9B-DC5C"
 }

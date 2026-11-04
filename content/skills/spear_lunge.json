@@ -12,21 +12,41 @@
     "status": "ready",
     "notes": "Madarame bake — polearm/attack5 lunging skill"
   },
-  "motion": { "kind": "lunge", "dashM": 3.2, "dashDur": 0.34, "mm": 100 },
+  "motion": {
+    "kind": "lunge",
+    "dashM": 3.2,
+    "dashDur": 0.34,
+    "mm": 100
+  },
   "power": 1.2,
-  "cost": { "stamina": 6, "mana": 0 },
+  "cost": {
+    "stamina": 6,
+    "mana": 0
+  },
   "cooldown": 3.2,
-  "hitWindows": [{ "t": 0.35, "kind": "melee", "radius": 1.6, "angleDeg": 70 }],
+  "hitWindows": [
+    {
+      "t": 0.35,
+      "kind": "melee",
+      "radius": 1.6,
+      "angleDeg": 70
+    }
+  ],
   "vfx": {
     "cast": "#80d0ff",
     "impact": "#90d0ff",
     "mode": "charge",
-    "ops": ["charge", "afterimage", "slash", "shockwave"]
+    "ops": [
+      "charge",
+      "afterimage",
+      "slash",
+      "shockwave"
+    ]
   },
   "icon": {
     "path": "icons/pack/weapons/Spear_05.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Spear_05.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -36,7 +56,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-000087--81C8667",
+  "masterUuid": "SKIL-9CEC-F8B6-03B4",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-000087--81C8667",
+  "grudgeUuid": "SKIL-9CEC-F8B6-03B4"
 }

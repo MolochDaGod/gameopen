@@ -35,7 +35,45 @@
   "icon": {
     "path": "icons/pack/weapons/Scythe_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Scythe_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
-  }
+  },
+  "skillUuids": {
+    "scythe_reap": "SKIL-ECBC-B7C4-CA86",
+    "scythe_shadow_step": "SKIL-E0B5-93F1-7436",
+    "scythe_spiral": "SKIL-83C9-2D7A-BEB1",
+    "scythe_grim_reaper": "SKIL-020E-6981-CEDD"
+  },
+  "special": true,
+  "craft": {
+    "madeBy": [
+      "Ranger",
+      "Thief"
+    ],
+    "station": "engineer bench",
+    "how": "Ranger and Thief craft the combat scythe at the engineer bench and infuse one skill recipe into each slot. The harvest scythe stays a flower tool.",
+    "slotRecipes": [
+      {
+        "slot": "primary",
+        "skillId": "scythe_reap",
+        "name": "Reaping Slash"
+      },
+      {
+        "slot": "secondary",
+        "skillId": "scythe_shadow_step",
+        "name": "Shadow Step"
+      },
+      {
+        "slot": "ability",
+        "skillId": "scythe_spiral",
+        "name": "Death Spiral"
+      },
+      {
+        "slot": "ultimate",
+        "skillId": "scythe_grim_reaper",
+        "name": "Grim Reaper"
+      }
+    ]
+  },
+  "catalogTypeUuid": "ITEM-20260621232130-000DE5-A61195C2"
 }

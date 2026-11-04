@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/misc/Flow.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,10 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-0000AE-5F9B08F7",
+  "masterUuid": "SKIL-DCA0-66F9-6FFA",
   "damageType": "arcane",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-0000AE-5F9B08F7",
+  "grudgeUuid": "SKIL-DCA0-66F9-6FFA",
+  "slotRecipe": true
 }

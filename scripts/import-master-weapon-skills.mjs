@@ -4,9 +4,10 @@
  * Usage (from gameopen root):
  *   node scripts/import-master-weapon-skills.mjs
  *
- * Fetches https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json
+ * Fetches the definition catalog (info.grudge-studio.com, proxied by objectstore)
  * and writes T0-tier prefabs (primary/secondary/ability/ultimate) per family
  * for the Danger Room sandbox, following content/docs contracts.
+ * Skill ids stamp SKIL-* from grudgeUuid (sha1 law). Do not mint timestamp SKIL rows.
  */
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -16,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 const MASTER_URL =
   process.env.MASTER_WEAPON_SKILLS_URL ||
-  "https://objectstore.grudge-studio.com/api/v1/master-weaponSkills.json";
+  "https://info.grudge-studio.com/api/v1/master-weaponSkills.json";
 
 const FAMILY_MAP = {
   SWORD: { family: "sword", weaponId: "wpn_sword_master", mesh: "models/weapons/sword.glb" },
@@ -56,10 +57,21 @@ function cdn(path) {
 
 function pickSkill(slot) {
   if (!slot?.skills?.length) return null;
+  if (slot.recipeSkillId) {
+    const recipe = slot.skills.find((s) => s.id === slot.recipeSkillId);
+    if (recipe) return recipe;
+  }
+  const infused = slot.skills.find((s) => s.slotRecipe);
+  if (infused) return infused;
   const sorted = [...slot.skills].sort(
     (a, b) => (a.tier ?? 99) - (b.tier ?? 99) || String(a.name).localeCompare(String(b.name)),
   );
   return sorted.find((s) => (s.tier ?? 1) <= 1) || sorted[0];
+}
+
+let catalogVersionTag = "3.2.4";
+function catalogVersion() {
+  return catalogVersionTag;
 }
 
 function skillPrefab(family, slotType, skill, hotbarSlot) {
@@ -106,7 +118,7 @@ function skillPrefab(family, slotType, skill, hotbarSlot) {
     icon: {
       path: String(skill.icon || "").replace(/^\//, "") || "icons/pack/misc/Flow.png",
       cdnUrl: cdn(skill.icon) || "https://assets.grudge-studio.com/icons/pack/misc/Flow.png",
-      source: "objectstore-master-weaponSkills@3.1.0",
+      source: `objectstore-master-weaponSkills@${catalogVersion()}`,
       status: "ready",
     },
     readiness: {
@@ -116,13 +128,14 @@ function skillPrefab(family, slotType, skill, hotbarSlot) {
       icon: "ready",
       combat: "ready",
     },
-    masterUuid: skill.uuid || null,
+    masterUuid: skill.grudgeUuid || skill.uuid || null,
+    grudgeUuid: skill.grudgeUuid || skill.uuid || null,
     damageType: skill.damageType || "physical",
     ship: true,
   };
 }
 
-function weaponPrefab(meta, masterType, skills, icon) {
+function weaponPrefab(meta, masterType, skills, icon, wt) {
   return {
     id: meta.weaponId,
     itemId: meta.weaponId.replace(/^wpn_/, "itm_"),
@@ -158,9 +171,12 @@ function weaponPrefab(meta, masterType, skills, icon) {
     icon: {
       path: String(icon || "").replace(/^\//, "") || "icons/pack/weapons/Sword_01.png",
       cdnUrl: cdn(icon) || "https://assets.grudge-studio.com/icons/pack/weapons/Sword_01.png",
-      source: "objectstore-master-weaponSkills@3.1.0",
+      source: `objectstore-master-weaponSkills@${catalogVersion()}`,
       status: "ready",
     },
+    ...(wt?.special && wt.craft ? { special: true, craft: wt.craft } : {}),
+    catalogTypeUuid: wt?.uuid || null,
+    skillUuids: Object.fromEntries(skills.filter((s) => s.grudgeUuid).map((s) => [s.id, s.grudgeUuid])),
   };
 }
 
@@ -169,6 +185,7 @@ async function main() {
   const res = await fetch(MASTER_URL);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const catalog = await res.json();
+  catalogVersionTag = catalog.version || catalogVersionTag;
   console.log(
     `[import] version=${catalog.version} types=${catalog.weaponTypes?.length} skills=${catalog.totalSkills}`,
   );
@@ -221,7 +238,7 @@ async function main() {
       hotbar++;
     }
     if (!skills.length) continue;
-    const wpn = weaponPrefab(meta, wt.id, skills, wt.icon);
+    const wpn = weaponPrefab(meta, wt.id, skills, wt.icon, wt);
     writeFileSync(join(weaponsDir, `${wpn.id}.json`), JSON.stringify(wpn, null, 2) + "\n");
     indexWeapons.push({ id: wpn.id, family: meta.family, file: `weapons/${wpn.id}.json` });
     weaponCount++;

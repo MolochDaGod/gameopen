@@ -33,7 +33,7 @@
   "icon": {
     "path": "icons/pack/weapons/Dagger_01.png",
     "cdnUrl": "https://assets.grudge-studio.com/icons/pack/weapons/Dagger_01.png",
-    "source": "objectstore-master-weaponSkills@3.1.0",
+    "source": "objectstore-master-weaponSkills@3.2.4",
     "status": "ready"
   },
   "readiness": {
@@ -43,7 +43,9 @@
     "icon": "ready",
     "combat": "ready"
   },
-  "masterUuid": "SKIL-20260604081946-00003C-1E299088",
+  "masterUuid": "SKIL-DBA4-9528-5E5E",
   "damageType": "physical",
-  "ship": true
+  "ship": true,
+  "uuidLegacy": "SKIL-20260604081946-00003C-1E299088",
+  "grudgeUuid": "SKIL-DBA4-9528-5E5E"
 }
