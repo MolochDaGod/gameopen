@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PlayHudState } from "../../three/editor/types";
+import { IconMissing } from "../IconMissing";
+import { isMissingSkillIcon } from "../../lib/skillTreeIcons";
 
 /**
  * Game-style combat HUD shown while the Dressing Room is in Play mode: a vitals
@@ -50,7 +52,7 @@ export function PlayHud({ hud }: { hud: PlayHudState | null }) {
               className={`play-skill${ready ? " ready" : " cooling"}`}
               data-tip={s.bind ? `${s.label} — press ${s.bind}` : s.label}
             >
-              <span className="play-skill-glyph">{s.glyph}</span>
+              <PlaySkillIcon iconUrl={s.iconUrl} />
               {!ready && <div className="play-skill-cd" style={{ height: `${pct * 100}%` }} />}
               {!ready && <span className="play-skill-cd-num">{Math.ceil(remaining)}</span>}
               <span className="play-skill-bind">{s.bind}</span>
@@ -60,5 +62,22 @@ export function PlayHud({ hud }: { hud: PlayHudState | null }) {
         })}
       </div>
     </div>
+  );
+}
+
+
+function PlaySkillIcon({ iconUrl }: { iconUrl?: string | null }) {
+  const [missing, setMissing] = useState(isMissingSkillIcon(iconUrl));
+  if (missing || isMissingSkillIcon(iconUrl)) {
+    return <IconMissing className="play-skill-glyph" />;
+  }
+  return (
+    <img
+      className="play-skill-glyph"
+      src={iconUrl!}
+      alt=""
+      draggable={false}
+      onError={() => setMissing(true)}
+    />
   );
 }

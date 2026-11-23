@@ -23,4 +23,10 @@ describe("hotkeyMap SSOT", () => {
     const vfx = HOTKEY_GROUPS.find((g) => g.id === "vfx");
     expect(vfx?.entries.some((e) => e.keys.startsWith("Alt+"))).toBe(true);
   });
+
+  it("labels Alt+C as Emberburst, not Fireball", () => {
+    const vfx = HOTKEY_GROUPS.find((g) => g.id === "vfx");
+    expect(vfx?.entries.some((e) => e.keys === "Alt+C" && e.action === "Emberburst")).toBe(true);
+    expect(JSON.stringify(HOTKEY_GROUPS)).not.toMatch(/Fireball/);
+  });
 });
