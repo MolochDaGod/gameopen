@@ -40,4 +40,10 @@ describe("fleetAssetResolver", () => {
     expect(isGlbMagic(glb.buffer)).toBe(true);
     expect(bufferLooksLikeHtml(glb.buffer)).toBe(false);
   });
+  it("never lists github.io for icons", () => {
+    const c = resolveAssetCandidates("icons/pack/weapons/Sword_01.png");
+    expect(c.every((u) => !/github\.io/i.test(u))).toBe(true);
+    expect(c.some((u) => u.includes("assets.grudge-studio.com/icons/pack/weapons/Sword_01.png"))).toBe(true);
+  });
+
 });

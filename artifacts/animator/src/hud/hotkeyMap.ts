@@ -100,7 +100,7 @@ export const HOTKEY_GROUPS: readonly HotkeyGroup[] = [
       { keys: "Alt+F", action: "Frost wave" },
       { keys: "Alt+G", action: "Fire aura" },
       { keys: "Alt+T", action: "Earth surge" },
-      { keys: "Alt+C", action: "Fireball" },
+      { keys: "Alt+C", action: "Emberburst" },
       { keys: "Alt+Space", action: "Getsuga slash" },
     ],
   },

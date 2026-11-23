@@ -74,11 +74,9 @@ export function definitionBaseCandidates(): string[] {
     // Same-origin → ObjectStore Worker root
     origin ? `${origin}/api/os/api/v1` : "",
     env || "",
-    // info Pages last (often 404 in 2026-08). GitHub Pages is CSP-blocked
-    // (connect-src has no molochdagod.github.io) — never probe it from the browser.
+    // info Pages last (often 404 in 2026-08). Never probe github.io (asset law).
     FLEET.objectStoreInfo,
     "https://info.grudge-studio.com/content",
-    "https://molochdagod.github.io/ObjectStore/api/v1",
     origin ? `${origin}/api/os/api/v1` : "",
     env || "",
   ];
