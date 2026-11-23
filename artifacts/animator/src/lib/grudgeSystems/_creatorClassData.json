@@ -279,7 +279,7 @@
           "skills": [
             {
               "id": "fireball",
-              "name": "Fireball",
+              "name": "Emberburst",
               "level": 1,
               "desc": "Hurl a ball of fire dealing splash damage",
               "cost": 1
@@ -384,7 +384,7 @@
             },
             {
               "id": "blink",
-              "name": "Blink",
+              "name": "Flicker Step",
               "level": 3,
               "desc": "Teleport forward 15m instantly",
               "cost": 1

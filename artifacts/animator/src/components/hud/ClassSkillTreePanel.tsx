@@ -25,7 +25,9 @@ import { treeIconName } from "../../lib/gameMedia";
 import {
   resolveSkillNodeIconUrl,
   resolveTreeHeaderIconUrl,
+  isMissingSkillIcon,
 } from "../../lib/skillTreeIcons";
+import { IconMissing } from "../IconMissing";
 import { Icon } from "../Icon";
 import "./craftpixHud.css";
 
@@ -48,6 +50,9 @@ function SkillNodeIcon({
     kind: node.kind,
     treeId,
   });
+  if (isMissingSkillIcon(src)) {
+    return <IconMissing className={className || "cx-node-icon"} />;
+  }
   return (
     <img
       className={className || "cx-node-icon"}
@@ -59,9 +64,14 @@ function SkillNodeIcon({
       draggable={false}
       onError={(e) => {
         const el = e.currentTarget;
-        if (el.dataset.fb) return;
-        el.dataset.fb = "1";
-        el.src = resolveTreeHeaderIconUrl(treeId);
+        el.style.display = "none";
+        const marker = document.createElement("span");
+        marker.className = `${className || "cx-node-icon"} icon-missing`;
+        marker.title = "icon missing";
+        marker.setAttribute("role", "img");
+        marker.setAttribute("aria-label", "icon missing");
+        marker.textContent = "icon missing";
+        el.parentElement?.insertBefore(marker, el.nextSibling);
       }}
     />
   );
@@ -206,20 +216,25 @@ export function ClassSkillTreePanel({
     <div className="cx-skill-panel" data-tree={tree.id} data-domain={domain}>
       <header className="cx-skill-head">
         <div className="cx-skill-head-icon">
-          {tree.iconUrl || tree.icon ? (
-            <img
-              src={resolveTreeHeaderIconUrl(tree.id, tree.iconUrl || tree.icon)}
-              alt=""
-              width={28}
-              height={28}
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <Icon name={treeIconName(tree.id)} size={22} />
-          )}
+          {(() => {
+            const headerSrc = resolveTreeHeaderIconUrl(tree.id, tree.iconUrl || tree.icon);
+            if (!isMissingSkillIcon(headerSrc)) {
+              return (
+                <img
+                  src={headerSrc}
+                  alt=""
+                  width={28}
+                  height={28}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              );
+            }
+            if (tree.iconUrl || tree.icon) return <IconMissing />;
+            return <Icon name={treeIconName(tree.id)} size={22} />;
+          })()}
         </div>
         <div>
           <h3>Class · {tree.name}</h3>

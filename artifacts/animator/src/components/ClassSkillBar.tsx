@@ -2,6 +2,7 @@
  * Upper UI: class skills on Shift+1…5 + passive buff icons with tooltips.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { IconMissing } from "./IconMissing";
 import {
   classAccent,
   ensureClassTreesCached,
@@ -206,7 +207,7 @@ export function ClassSkillBar({ characterId, onCast, visible = true }: Props) {
                 className="csb-buff-glyph"
                 style={p.iconUrl ? { display: "none" } : undefined}
               >
-                {p.glyph}
+                <IconMissing />
               </span>
             </button>
           ))
@@ -258,8 +259,15 @@ export function ClassSkillBar({ characterId, onCast, visible = true }: Props) {
                   draggable={false}
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
+                    const g = e.currentTarget.nextElementSibling as HTMLElement | null;
+                    if (g) g.style.display = "";
                   }}
                 />
+              ) : null}
+              {!s.empty ? (
+                <span style={s.iconUrl ? { display: "none" } : undefined}>
+                  <IconMissing className="csb-slot-icon" />
+                </span>
               ) : null}
               <span className="csb-name">{s.empty ? "·" : s.name}</span>
               {onCd && (

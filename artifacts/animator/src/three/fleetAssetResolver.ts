@@ -23,8 +23,6 @@ export const FLEET_ASSET_HOSTS = {
   gameopenVercel: "https://gameopen.vercel.app",
   /** Skinned grudge6 race GLBs + anim JSON (combat runtime). */
   arena: "https://grudge-arena.grudge-studio.com",
-  /** Static ObjectStore mirror (GitHub pages). */
-  objectStorePages: "https://molochdagod.github.io/ObjectStore",
   /** Definitions SSOT — catalogs JSON (not binaries). */
   infoApi: "https://info.grudge-studio.com/api/v1",
   /** @deprecated Prefer infoApi — public objectstore catalogs often 404. */
@@ -466,9 +464,7 @@ export function resolveAssetCandidates(path: string): string[] {
     ) {
       urls.push(abs(FLEET_ASSET_HOSTS.arena, a));
     }
-    if (a.startsWith("icons/")) {
-      urls.push(abs(FLEET_ASSET_HOSTS.objectStorePages, a));
-    }
+    // icons/ already include R2 via isFleetCdnFirst — never github.io.
   }
 
   const unique = [...new Set(urls.filter(Boolean).map(withFleetEpochBust))].filter(
@@ -587,7 +583,7 @@ export async function loadInfoAssetRegistry(): Promise<Map<string, string> | nul
         baseUrl?: string;
       };
       const map = new Map<string, string>();
-      const base = (data.baseUrl || FLEET_ASSET_HOSTS.objectStorePages).replace(/\/$/, "");
+      const base = (data.baseUrl || FLEET_ASSET_HOSTS.r2).replace(/\/$/, "");
       if (data.assets) {
         for (const a of Object.values(data.assets)) {
           if (a.filename) {
