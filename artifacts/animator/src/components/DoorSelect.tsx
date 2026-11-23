@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { assetUrl } from "../lib/fleet";
 import {
   Download,
   Library,
@@ -12,7 +13,6 @@ import {
   Clock,
   Store,
 } from "lucide-react";
-import { assetUrl } from "../lib/fleet";
 import {
   type AppMode,
   type OpenSurface,
@@ -41,12 +41,10 @@ import { InstallAppButton } from "./InstallAppButton";
 import { FriendsPanel } from "./FriendsPanel";
 import { StoreView } from "./StoreView";
 import { ToolboxEmblem, useShellChrome } from "./AppShell";
+import { RoomPoster } from "./RoomPoster";
 import "./steamLibrary.css";
 import "./mmoShell.css";
 import "./toolbox/toolbox.css";
-
-/** Resolve a room poster from public/rooms/<name>-scene.png (CDN-aware). */
-const poster = (name: string) => assetUrl(`rooms/${name}-scene.png`);
 
 interface Props {
   onEnter: (mode: Exclude<AppMode, "doors" | "play" | "landing">) => void;
@@ -506,11 +504,7 @@ export function DoorSelect({ onEnter }: Props) {
                         onDoubleClick={() => launch(surface)}
                         title={`${surface.title} · ${formatRecentAt(at)}`}
                       >
-                        <img
-                          src={surface.poster ? poster(surface.poster) : poster("lobby")}
-                          alt=""
-                          draggable={false}
-                        />
+                        <RoomPoster name={surface.poster || "lobby"} />
                         <span className="steam-recent-chip-meta">
                           <strong>{surface.title}</strong>
                           <em>{formatRecentAt(at)}</em>
@@ -534,11 +528,7 @@ export function DoorSelect({ onEnter }: Props) {
               {featured && (
                 <section className="steam-hero" style={{ "--hero-accent": featured.accent ?? "#66c0f4" } as React.CSSProperties}>
                   <div className="steam-hero-art">
-                    <img
-                      src={featured.poster ? poster(featured.poster) : poster("lobby")}
-                      alt=""
-                      draggable={false}
-                    />
+                    <RoomPoster name={featured.poster || "lobby"} />
                     <div className="steam-hero-fade" />
                   </div>
                   <div className="steam-hero-body">
@@ -641,7 +631,7 @@ export function DoorSelect({ onEnter }: Props) {
                         role="button"
                       >
                         <div className="steam-card-art">
-                          <img src={poster(game.posterKey)} alt="" draggable={false} />
+                          <RoomPoster name={game.posterKey} />
                           <span className="steam-card-badge">{game.short}</span>
                         </div>
                         <div className="steam-card-meta">
@@ -717,7 +707,6 @@ function LibraryCard({
   onLaunch: () => void;
   readyLabel?: string;
 }) {
-  const img = surface.poster ? poster(surface.poster) : poster("lobby");
   const tags = surface.tags ?? (["Open", "Lab"] as const);
   const accent = surface.accent ?? "#66c0f4";
   return (
@@ -739,7 +728,7 @@ function LibraryCard({
       aria-pressed={active}
     >
       <div className="steam-card-art">
-        <img src={img} alt="" draggable={false} />
+        <RoomPoster name={surface.poster || "lobby"} />
         <span className="steam-card-badge">{tags[0]}</span>
         <span className="steam-card-play" aria-hidden>
           <Play size={18} fill="currentColor" />

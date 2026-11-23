@@ -905,7 +905,7 @@ export const RACE_CHARACTERS: CharacterDef[] = [
   ]),
   raceCatalogDef("race-high-elf", "High Elf", "high-elf", "models/races/high_elf.glb", [
     { label: "Arcane Bolt", clip: "attack", kind: "bolt" },
-    { label: "Blink", clip: "run", kind: "slam", mode: "dash" },
+    { label: "Flicker Step", clip: "run", kind: "slam", mode: "dash" },
   ]),
   raceCatalogDef("race-dwarf", "Dwarf", "dwarf", "models/races/dwarf.glb", [
     { label: "Hammer", clip: "attack", kind: "slam" },
