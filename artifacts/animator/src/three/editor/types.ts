@@ -277,8 +277,8 @@ export interface PlayHudSkill {
   bind: string;
   /** Skill name. */
   label: string;
-  /** Glyph/emoji icon. */
-  glyph: string;
+  /** CDN icon URL. Empty / omitted → missing marker (no emoji). */
+  iconUrl?: string | null;
   /** Cooldown length in seconds (0 = instant). */
   cooldown: number;
   /** `performance.now()` ms timestamp the slot becomes usable again (0 = ready). */

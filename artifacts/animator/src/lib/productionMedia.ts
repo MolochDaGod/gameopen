@@ -15,7 +15,6 @@ import { FLEET, publicUrl } from "./fleet";
 import { fetchCatalogJson } from "./fleetSsot";
 
 const CDN = FLEET.assets.replace(/\/$/, "");
-const OBJECTSTORE_PAGES = "https://molochdagod.github.io/ObjectStore";
 
 export type ProductionItem = {
   id: string;
@@ -214,14 +213,25 @@ export function getProductionMediaIndex(): ProductionMediaIndex | null {
 export function resolveProductionIconUrl(raw: string | null | undefined): string | null {
   if (!raw || !String(raw).trim()) return null;
   const s = String(raw).trim();
-  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("http://") || s.startsWith("https://")) {
+    try {
+      const u = new URL(s);
+      // Catalog rows may still carry historical github.io hosts — use the CDN path.
+      if (u.hostname.endsWith("github.io")) {
+        const path = u.pathname.replace(/^\/ObjectStore/i, "") || u.pathname;
+        return `${CDN}${path.startsWith("/") ? path : `/${path}`}`;
+      }
+    } catch {
+      /* keep the raw URL */
+    }
+    return s;
+  }
   if (s.startsWith("//")) return `https:${s}`;
   if (s.startsWith("/")) {
-    // Prefer ObjectStore Pages for /icons/* historical paths, CDN for models
-    if (s.startsWith("/icons/")) return `${OBJECTSTORE_PAGES}${s}`;
+    // Icons and models come from the assets CDN only — never github.io.
     return `${CDN}${s}`;
   }
-  if (s.startsWith("icons/")) return `${OBJECTSTORE_PAGES}/${s}`;
+  if (s.startsWith("icons/")) return `${CDN}/${s}`;
   // Relative R2 key
   return `${CDN}/${s.replace(/^\//, "")}`;
 }

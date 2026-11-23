@@ -11,13 +11,11 @@ import { iconUrl, type IconName } from "../three/icons";
 /** Binaries (pack weapons/misc) — verified on assets CDN. */
 const ASSETS_CDN = "https://assets.grudge-studio.com";
 /**
- * Skill catalog art (`skill_nobg`, class trees) is served from definitions hosts,
- * NOT assets.grudge-studio.com (probed 404 for skill_nobg on R2, 200 on info).
+ * Skill catalog art (`skill_nobg`, class trees) is served from the assets CDN.
+ * Probed 2026-11-23: assets…/icons/skill_nobg/Warriorskill_01_nobg.png is a real PNG;
+ * info.grudge-studio.com served HTML for the same path. Never github.io.
  */
-const SKILL_ICON_HOSTS = [
-  "https://info.grudge-studio.com",
-  "https://molochdagod.github.io/ObjectStore",
-] as const;
+const SKILL_ICON_HOSTS = [ASSETS_CDN] as const;
 
 /** Paths known to 404 on assets CDN — remap to live pack art. */
 const BROKEN_TO_PACK: Record<string, string> = {
@@ -39,9 +37,8 @@ export type SkillIconSource = {
 
 /**
  * Absolute URL for a skill node image.
- * - skill_nobg / skills/class → info ObjectStore (definitions host)
- * - pack / abilities → assets.grudge-studio.com
- * Never returns empty — always a loadable fallback.
+ * - skill_nobg / skills/class / pack / abilities → assets.grudge-studio.com
+ * Emoji-only icons return "" so the UI can show the missing marker (no stand-in art).
  */
 export function resolveSkillNodeIconUrl(src: SkillIconSource | null | undefined): string {
   if (!src) return fallbackIconUrl("generic");
@@ -51,9 +48,11 @@ export function resolveSkillNodeIconUrl(src: SkillIconSource | null | undefined)
     (x): x is string => typeof x === "string" && x.trim().length > 0,
   );
 
+  const hadEmojiOnly = candidates.length > 0 && candidates.every((c) => isEmojiOrGlyph(c.trim()));
+
   for (const raw of candidates) {
     const t = raw.trim();
-    // Emoji / bare glyph — skip (UI may show glyph separately)
+    // Emoji / bare glyph — never use as art and never substitute another icon
     if (isEmojiOrGlyph(t)) continue;
     // Already absolute or relative path under /icons
     if (t.startsWith("http") || t.startsWith("/") || t.startsWith("icons/")) {
@@ -66,12 +65,20 @@ export function resolveSkillNodeIconUrl(src: SkillIconSource | null | undefined)
     }
   }
 
+  // Emoji was the only icon: show the missing marker, not a stand-in pack image.
+  if (hadEmojiOnly) return "";
+
   return fallbackIconUrl(pickFallbackKey(src));
 }
 
+/** True when resolveSkillNodeIconUrl found no CDN (or local) art. */
+export function isMissingSkillIcon(url: string | null | undefined): boolean {
+  return !url || !String(url).trim();
+}
+
 /**
- * Route relative/absolute icon paths to the host that actually serves them.
- * skill_nobg + skills/class → info; pack/abilities → assets R2.
+ * Route relative/absolute icon paths to the assets CDN.
+ * skill_nobg + skills/class + pack/abilities → assets.grudge-studio.com.
  */
 export function resolveCatalogIconPath(pathOrUrl: string): string | null {
   if (!pathOrUrl) return null;
@@ -91,7 +98,11 @@ export function resolveCatalogIconPath(pathOrUrl: string): string | null {
         return `${ASSETS_CDN}/${BROKEN_TO_PACK[rel]}`;
       }
       if (isSkillCatalogPath(rel) && u.hostname.includes("assets.grudge-studio")) {
-        return preferLocalSkillNobg(`${SKILL_ICON_HOSTS[0]}/${rel}`);
+        return preferLocalSkillNobg(`${ASSETS_CDN}/${rel}`);
+      }
+      if (u.hostname.endsWith("github.io") || u.hostname.includes("info.grudge-studio")) {
+        const stripped = rel.replace(/^ObjectStore\//i, "");
+        return preferLocalSkillNobg(`${ASSETS_CDN}/${stripped}`);
       }
       // Still allow skillIcons remap for pack paths
       return preferLocalSkillNobg(cdnIconUrl(p) || p);
@@ -288,6 +299,7 @@ export function resolveTreeHeaderIconUrl(treeId: string, treeIcon?: string | nul
   if (treeIcon) {
     const u = resolveSkillNodeIconUrl({ icon: treeIcon, treeId });
     if (u) return u;
+    if (isEmojiOrGlyph(treeIcon.trim())) return "";
   }
   const key = pickFallbackKey({ treeId });
   return fallbackIconUrl(key);

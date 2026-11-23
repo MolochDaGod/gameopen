@@ -170,7 +170,7 @@ await probe("objectstore-weapons", "https://objectstore.grudge-studio.com/api/v1
   sample: true,
   critical: true,
 });
-await probe("gh-master-weaponSkills", "https://molochdagod.github.io/ObjectStore/api/v1/master-weaponSkills.json", {
+await probe("cdn-master-weaponSkills", "https://assets.grudge-studio.com/api/v1/master-weaponSkills.json", {
   expect: "jsonish",
   sample: true,
   critical: true,
