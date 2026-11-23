@@ -122,8 +122,8 @@ const CHECKS = [
     rejectHtml: true,
   },
   {
-    name: "GH Pages master-weaponSkills",
-    url: "https://molochdagod.github.io/ObjectStore/api/v1/master-weaponSkills.json",
+    name: "CDN master-weaponSkills",
+    url: "https://assets.grudge-studio.com/api/v1/master-weaponSkills.json",
     expectJson: true,
     rejectHtml: true,
   },

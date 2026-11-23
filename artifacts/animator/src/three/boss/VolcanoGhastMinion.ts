@@ -1,10 +1,10 @@
 /**
  * Ash Ghast — floating ranged volcano enemy / Shadow Call summon.
  *
- * Fire pattern (vfxgrudge.puter.site hotkey **C** = Fireball):
+ * Fire pattern (vfxgrudge.puter.site hotkey **C** = Emberburst):
  *  1. 1.5 s cast (Idle hold + cast aura)
- *  2. Fireball bolt
- *  3. 2.0 s Fireball **cone** sustained flame (flameCone pulses)
+ *  2. Emberburst bolt
+ *  3. 2.0 s Emberburst **cone** sustained flame (flameCone pulses)
  *
  * Clips: Idle | Fire
  */
@@ -161,7 +161,7 @@ export class VolcanoGhastMinion {
         this.phaseT = 0;
         this.coneTick = 0;
         this.launchFireball(playerPos);
-        this.cbs.flash?.("Fireball!", 0.5);
+        this.cbs.flash?.("Emberburst!", 0.5);
       }
       return;
     }

@@ -127,7 +127,7 @@ export const VFX_CATALOG: readonly VfxCatalogEntry[] = [
   },
   {
     id: "fireball",
-    name: "Fireball",
+    name: "Emberburst",
     category: "fire",
     color: 0xff6a1e,
     description: "Classic lobbed fire projectile.",
@@ -227,7 +227,7 @@ export const VFX_SANDBOX_SHORTCUTS: readonly VfxSandboxShortcut[] = [
   { key: "F", code: "KeyF", label: "Frost Wave", effectId: "frost_wave", alt: true },
   { key: "G", code: "KeyG", label: "Aura Ring", effectId: "fire_aura", alt: true },
   { key: "T", code: "KeyT", label: "Earth Surge", effectId: "earth_surge", alt: true },
-  { key: "C", code: "KeyC", label: "Fireball", effectId: "fireball", alt: true },
+  { key: "C", code: "KeyC", label: "Emberburst", effectId: "fireball", alt: true },
   // NO Space / Alt+Space Getsuga here.
   // Slash-wave projectiles are melee combat only (meleeStrikeFx per weapon stage).
 ] as const;

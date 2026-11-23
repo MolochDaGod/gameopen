@@ -136,7 +136,7 @@ export function deploySandboxVfx(vfx: Vfx, effectId: VfxEffectId | string, opts:
       break;
     }
     case "fireball": {
-      // Fireball (Alt+C)
+      // Emberburst (Alt+C)
       const dir = aim.clone().sub(cast);
       if (dir.lengthSq() < 1e-4) dir.copy(fwd);
       dir.normalize();
